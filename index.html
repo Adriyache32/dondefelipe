@@ -116,39 +116,47 @@
 <div class="main-stage" id="main-content">
   <div class="fade-in">
     <h1>Laboratorio del Conocimiento</h1>
-    <p style="text-align:center; font-style:italic; margin-bottom: 40px;">Portal pedagógico — Colegio San Agustín.</p>
-
-    <h2 style="font-family:'Cinzel'; font-size:1.2rem; color:var(--bronze); border-bottom:1px solid var(--gold-leaf); margin-bottom:20px;">🗞️ NOVEDADES & ÚLTIMOS HALLAZGOS</h2>
+    
+    <h2 style="font-family:'Cinzel'; font-size:1.2rem; color:var(--bronze); border-bottom:1px solid var(--gold-leaf); margin-bottom:20px; margin-top: 30px;">🗞️ NOVEDADES</h2>
     
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
       
       <div style="border: 1px solid var(--border-soft); padding: 20px; background: #fdfbf7; border-left: 4px solid var(--gold-leaf);">
         <h3 style="font-family:'Cinzel'; font-size:0.9rem; color:var(--bronze);">ENTREGA TÉCNICA</h3>
-        <p style="font-size: 0.85rem; margin: 10px 0;">Acceso rápido al formulario de Bitácora para III° Medio. Registro de proyectos e ingeniería.</p>
+        <p style="font-size: 0.85rem; margin: 10px 0;">Acceso rápido al formulario de Bitácora para III° Medio. Registro de proyectos de ingeniería.</p>
         <button onclick="loadContent('3medio')" style="background:var(--bronze); color:white; border:none; padding:5px 10px; font-family:'Cinzel'; font-size:0.7rem; cursor:pointer;">ABRIR FORMULARIO</button>
       </div>
 
-      <div style="border: 1px solid var(--border-soft); padding: 20px; background: #fdfbf7; border-left: 4px solid #4a7c59;">
-        <h3 style="font-family:'Cinzel'; font-size:0.9rem; color:#4a7c59;">🏆 CUADRO DE HONOR</h3>
-        <p style="font-size: 0.85rem; margin: 10px 0;"><b>Búsqueda del Tesoro:</b> Los ganadores de la sesión de hoy en Villa Alemana han sido registrados.</p>
-        <a href="#" onclick="loadContent('biblioteca')" style="font-size:0.7rem; color:var(--bronze); text-decoration:underline;">VER RESULTADOS EN DRIVE</a>
-      </div>
-
-      <div style="border: 1px solid var(--border-soft); padding: 20px; background: #fdfbf7; border-left: 4px solid #8e735b;">
-        <h3 style="font-family:'Cinzel'; font-size:0.9rem; color:var(--bronze);">📂 NUEVO RECURSO</h3>
-        <p style="font-size: 0.85rem; margin: 10px 0;">Se han subido las guías de campo para la observación de flora nativa en la sección Biblioteca.</p>
+      <div style="border: 1px solid var(--border-soft); padding: 20px; background: #fdfbf7; border-left: 4px solid var(--bronze);">
+        <h3 style="font-family:'Cinzel'; font-size:0.9rem; color:var(--bronze);">RECURSOS COMPARTIDOS</h3>
+        <p style="font-size: 0.85rem; margin: 10px 0;">Explora la biblioteca de archivos, guías y materiales del curso en la carpeta de Drive.</p>
+        <button onclick="loadContent('biblioteca')" style="background:var(--gold-leaf); color:white; border:none; padding:5px 10px; font-family:'Cinzel'; font-size:0.7rem; cursor:pointer;">VER ARCHIVOS</button>
       </div>
 
     </div>
   </div>
 </div>
 
-
 <script>
   function loadContent(page) {
     const content = document.getElementById('main-content');
+    const novedadesHTML = `
+      <h2 style="font-family:'Cinzel'; font-size:1.2rem; color:var(--bronze); border-bottom:1px solid var(--gold-leaf); margin-bottom:20px; margin-top: 30px;">🗞️ NOVEDADES</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+        <div style="border: 1px solid var(--border-soft); padding: 20px; background: #fdfbf7; border-left: 4px solid var(--gold-leaf);">
+          <h3 style="font-family:'Cinzel'; font-size:0.9rem; color:var(--bronze);">ENTREGA TÉCNICA</h3>
+          <p style="font-size: 0.85rem; margin: 10px 0;">Acceso rápido al formulario de Bitácora para III° Medio. Registro de proyectos de ingeniería.</p>
+          <button onclick="loadContent('3medio')" style="background:var(--bronze); color:white; border:none; padding:5px 10px; font-family:'Cinzel'; font-size:0.7rem; cursor:pointer;">ABRIR FORMULARIO</button>
+        </div>
+        <div style="border: 1px solid var(--border-soft); padding: 20px; background: #fdfbf7; border-left: 4px solid var(--bronze);">
+          <h3 style="font-family:'Cinzel'; font-size:0.9rem; color:var(--bronze);">RECURSOS COMPARTIDOS</h3>
+          <p style="font-size: 0.85rem; margin: 10px 0;">Explora la biblioteca de archivos, guías y materiales del curso en la carpeta de Drive.</p>
+          <button onclick="loadContent('biblioteca')" style="background:var(--gold-leaf); color:white; border:none; padding:5px 10px; font-family:'Cinzel'; font-size:0.7rem; cursor:pointer;">VER ARCHIVOS</button>
+        </div>
+      </div>`;
+
     const pages = {
-      'home': `<div class="fade-in"><h1>Laboratorio del Conocimiento</h1><p style="text-align:center;">Portal pedagógico — Colegio San Agustín.</p></div>`,
+      'home': `<div class="fade-in"><h1>Laboratorio del Conocimiento</h1>${novedadesHTML}</div>`,
       '3medio': `
         <div class="fade-in">
           <h1>III° Medio: Ingeniería y Diseño</h1>
@@ -171,7 +179,8 @@
     };
     
     if(!pages[page]) {
-      content.innerHTML = `<div class="fade-in"><h1>${page.toUpperCase()}</h1><p style="text-align:center;">Módulo en preparación.</p></div>`;
+      const titulos = { '6basico':'Sexto Básico', '7basico':'Séptimo Básico', '8basico':'Octavo Básico', '1medio':'Primero Medio', '2medio':'Segundo Medio', '4medio':'Cuarto Medio' };
+      content.innerHTML = `<div class="fade-in"><h1>${titulos[page] || page.toUpperCase()}</h1><p style="text-align:center;">Módulo en preparación.</p></div>`;
     } else {
       content.innerHTML = pages[page];
     }
