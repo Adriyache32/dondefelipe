@@ -40,23 +40,25 @@
     font-weight: 700; font-size: 1.4rem; letter-spacing: 2px;
   }
 
-  .nav-menu { display: flex; list-style: none; gap: 1.5rem; }
+  .nav-menu { display: flex; list-style: none; gap: 1rem; align-items: center; }
   .dropdown { position: relative; }
   .drop-btn {
     background: none; border: none; font-family: 'Cinzel', serif;
-    font-size: 0.85rem; color: var(--text-main); cursor: pointer; padding: 0.5rem;
+    font-size: 0.8rem; color: var(--text-main); cursor: pointer; padding: 0.5rem;
+    letter-spacing: 1px;
   }
 
   .drop-content {
     display: none; position: absolute; background: var(--ivory);
-    min-width: 200px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-    border: 1px solid var(--border-soft); top: 100%; right: 0;
+    min-width: 180px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    border: 1px solid var(--border-soft); top: 100%; left: 0;
   }
 
   .dropdown:hover .drop-content { display: block; }
   .drop-content a {
-    display: block; padding: 0.8rem 1.5rem; color: var(--text-main);
+    display: block; padding: 0.7rem 1.2rem; color: var(--text-main);
     text-decoration: none; border-bottom: 1px solid var(--border-soft);
+    font-size: 0.9rem;
   }
 
   .main-stage {
@@ -67,15 +69,20 @@
     position: relative; min-height: 60vh;
   }
 
-  h1 { font-family: 'Cinzel', serif; text-align: center; color: var(--bronze); margin-bottom: 2rem; font-size: clamp(1.8rem, 5vw, 2.8rem); }
+  h1 { font-family: 'Cinzel', serif; text-align: center; color: var(--bronze); margin-bottom: 2rem; font-size: clamp(1.6rem, 4vw, 2.4rem); }
 
-  .embed-container { margin-top: 30px; padding: 5px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+  .embed-container { margin-top: 30px; padding: 5px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+
+  .btn-direct {
+    background: var(--gold-leaf); color: white; border: none; padding: 0.6rem 1.2rem;
+    font-family: 'Cinzel', serif; font-size: 0.75rem; cursor: pointer; border-radius: 2px;
+    text-decoration: none; display: inline-block; transition: background 0.3s;
+  }
+  .btn-direct:hover { background: var(--bronze); }
 
   @media (max-width: 768px) {
     nav { flex-direction: column; padding: 1rem; }
-    .nav-menu { width: 100%; flex-direction: column; gap: 0.5rem; margin-top: 1rem; }
-    .drop-btn { width: 100%; text-align: center; border: 1px solid var(--border-soft); }
-    .drop-content { position: static; width: 100%; box-shadow: none; }
+    .nav-menu { width: 100%; flex-wrap: wrap; justify-content: center; margin-top: 1rem; }
     .main-stage { padding: 1.5rem; width: 96%; }
   }
 
@@ -89,10 +96,24 @@
   <a href="#" class="nav-brand" onclick="loadContent('home')">PROFE FELIPE</a>
   <ul class="nav-menu">
     <li class="dropdown">
-      <button class="drop-btn">Cursos Media ▾</button>
+      <button class="drop-btn">BÁSICA ▾</button>
       <div class="drop-content">
-        <a href="#" onclick="loadContent('3medio')">3° Medio</a>
+        <a href="#" onclick="loadContent('6basico')">Sexto Básico</a>
+        <a href="#" onclick="loadContent('7basico')">Séptimo Básico</a>
+        <a href="#" onclick="loadContent('8basico')">Octavo Básico</a>
       </div>
+    </li>
+    <li class="dropdown">
+      <button class="drop-btn">MEDIA ▾</button>
+      <div class="drop-content">
+        <a href="#" onclick="loadContent('1medio')">Primero Medio</a>
+        <a href="#" onclick="loadContent('2medio')">Segundo Medio</a>
+        <a href="#" onclick="loadContent('3medio')">Tercero Medio</a>
+        <a href="#" onclick="loadContent('4medio')">Cuarto Medio</a>
+      </div>
+    </li>
+    <li>
+      <a href="#" class="btn-direct" onclick="loadContent('biblioteca')">BIBLIOTECA DRIVE 📁</a>
     </li>
   </ul>
 </nav>
@@ -100,7 +121,7 @@
 <div class="main-stage" id="main-content">
   <div class="fade-in">
     <h1>Laboratorio del Conocimiento</h1>
-    <p class="welcome-text">Bienvenido al portal pedagógico de Ciencias.</p>
+    <p style="text-align:center; font-style:italic;">Portal pedagógico — Colegio San Agustín.</p>
   </div>
 </div>
 
@@ -108,24 +129,36 @@
   function loadContent(page) {
     const content = document.getElementById('main-content');
     const pages = {
-      'home': `<div class="fade-in"><h1>Laboratorio del Conocimiento</h1><p class="welcome-text">Iniciando sistema...</p></div>`,
+      'home': `<div class="fade-in"><h1>Laboratorio del Conocimiento</h1><p style="text-align:center;">Bienvenido al portal de ciencias.</p></div>`,
       '3medio': `
         <div class="fade-in">
           <h1>III° Medio: Ingeniería y Diseño</h1>
-          
           <h2 style="font-family:'Cinzel'; font-size:1.1rem; color:var(--bronze); border-bottom:1px solid var(--gold-leaf); margin-top:2rem;">01. BITÁCORA DE INVESTIGACIÓN</h2>
           <div class="embed-container" style="background: #070a14; border: 8px solid #d4af37;">
             <iframe src="bitacora_tech.html" style="width: 100%; height: 950px; border: none; display: block;"></iframe>
           </div>
-
-          <h2 style="font-family:'Cinzel'; font-size:1.1rem; color:var(--bronze); border-bottom:1px solid var(--gold-leaf); margin-top:4rem;">02. REPOSITORIO DE ARCHIVOS</h2>
-          <p style="font-style:italic; margin-top:10px;">Documentos y guías compartidas de la unidad.</p>
-          <div class="embed-container" style="background: #fff; border: 1px solid var(--border-soft);">
+          <h2 style="font-family:'Cinzel'; font-size:1.1rem; color:var(--bronze); border-bottom:1px solid var(--gold-leaf); margin-top:4rem;">02. REPOSITORIO DEL CURSO</h2>
+          <div class="embed-container">
             <iframe src="https://drive.google.com/embeddedfolderview?id=16lV-JJhPM_3S8B6OP4NZSywTfPa-p3gn#list" style="width:100%; height:500px; border:0;"></iframe>
+          </div>
+        </div>`,
+      'biblioteca': `
+        <div class="fade-in">
+          <h1>Biblioteca General</h1>
+          <p style="text-align:center; margin-bottom:20px;">Acceso a recursos generales, textos y material de apoyo.</p>
+          <div class="embed-container" style="border: 2px solid var(--gold-leaf);">
+            <iframe src="https://drive.google.com/embeddedfolderview?id=1_8SD_30CH4lAwBrLSg4sw9yKZiC9kNNJ#list" style="width:100%; height:700px; border:0;"></iframe>
           </div>
         </div>`
     };
-    content.innerHTML = pages[page] || `<h1>En construcción</h1>`;
+    
+    if(!pages[page]) {
+      // Título amigable para las páginas vacías
+      const titulo = page.replace('basico', ' Básico').replace('medio', ' Medio').toUpperCase();
+      content.innerHTML = `<div class="fade-in"><h1>${titulo}</h1><p style="text-align:center;">Módulo en preparación.</p></div>`;
+    } else {
+      content.innerHTML = pages[page];
+    }
   }
 </script>
 </body>
