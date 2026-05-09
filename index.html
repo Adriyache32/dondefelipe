@@ -1,10 +1,456 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Aula de Ciencias</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Donde el Profe Felipe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #d4a520;
+    --gold-light: #f0c840;
+    --gold-dim: #8b6a14;
+    --parchment: #f0dba5;
+    --parchment-dark: #c9a85c;
+    --stone-dark: #0d0a06;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: var(--stone-dark);
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(60,40,10,0.6) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(40,60,20,0.3) 0%, transparent 50%);
+    font-family: 'IM Fell English', serif;
+    color: var(--parchment);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .stars {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      radial-gradient(1px 1px at 10% 15%, rgba(240,200,100,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 40%, rgba(240,200,100,0.35) 0%, transparent 100%),
+      radial-gradient(1px 1px at 40% 8%, rgba(255,255,200,0.45) 0%, transparent 100%),
+      radial-gradient(1px 1px at 55% 30%, rgba(240,200,100,0.25) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 12%, rgba(255,255,200,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 85% 25%, rgba(240,200,100,0.35) 0%, transparent 100%),
+      radial-gradient(1px 1px at 15% 60%, rgba(200,220,255,0.35) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 55%, rgba(200,220,255,0.25) 0%, transparent 100%),
+      radial-gradient(2px 2px at 5% 45%, rgba(255,220,80,0.4) 0%, transparent 100%),
+      radial-gradient(2px 2px at 95% 35%, rgba(255,220,80,0.35) 0%, transparent 100%),
+      radial-gradient(2px 2px at 50% 5%, rgba(200,230,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 33% 70%, rgba(240,200,100,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 78% 80%, rgba(255,255,200,0.35) 0%, transparent 100%);
+  }
+
+  .page { position: relative; z-index: 1; }
+
+  /* ══ NAVBAR ══ */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(13,10,6,0.93);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(212,165,32,0.3);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px;
+  }
+
+  .nav-brand {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.25em;
+    color: var(--gold);
+    text-decoration: none;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .nav-brand em { font-style: normal; color: var(--parchment-dark); }
+
+  .nav-links { display: flex; align-items: center; gap: 0.25rem; list-style: none; }
+
+  /* Trigger button */
+  .nav-item { position: relative; }
+
+  .nav-btn {
+    display: flex; align-items: center; gap: 0.5rem;
+    background: none; border: 1px solid transparent; cursor: pointer;
+    font-family: 'Cinzel', serif; font-size: 0.63rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--parchment-dark); padding: 0.5rem 0.9rem;
+    transition: all 0.22s ease; white-space: nowrap;
+  }
+  .nav-btn:hover, .nav-item.open .nav-btn {
+    color: var(--gold-light);
+    border-color: rgba(212,165,32,0.35);
+    background: rgba(212,165,32,0.05);
+  }
+  .chevron { font-size: 0.48rem; color: var(--gold-dim); transition: transform 0.22s ease; }
+  .nav-item.open .chevron { transform: rotate(180deg); }
+
+  /* Dropdown panel */
+  .dropdown {
+    position: absolute; top: calc(100% + 6px);
+    background: rgba(16,11,5,0.97);
+    border: 1px solid rgba(212,165,32,0.35);
+    min-width: 230px;
+    opacity: 0; pointer-events: none;
+    transform: translateY(-8px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 200;
+  }
+  .dropdown::before, .dropdown::after {
+    content: ''; position: absolute;
+    width: 10px; height: 10px;
+    border-style: solid; border-color: var(--gold-dim); opacity: 0.45;
+  }
+  .dropdown::before { top: 4px; left: 4px; border-width: 1px 0 0 1px; }
+  .dropdown::after  { bottom: 4px; right: 4px; border-width: 0 1px 1px 0; }
+
+  .nav-item.open .dropdown { opacity: 1; pointer-events: auto; transform: translateY(0); }
+  .dropdown-left  { left: 0; }
+  .dropdown-right { right: 0; }
+
+  .dd-head {
+    font-family: 'Cinzel', serif; font-size: 0.48rem;
+    letter-spacing: 0.38em; color: var(--gold-dim);
+    text-transform: uppercase;
+    padding: 0.65rem 1rem 0.4rem;
+    border-bottom: 1px solid rgba(212,165,32,0.18);
+  }
+
+  .dd-section { padding: 0.3rem 0; border-bottom: 1px solid rgba(212,165,32,0.1); }
+  .dd-section:last-child { border-bottom: none; }
+
+  .dd-label {
+    font-family: 'Cinzel', serif; font-size: 0.46rem;
+    letter-spacing: 0.28em; color: rgba(139,106,20,0.55);
+    text-transform: uppercase; padding: 0.3rem 1rem 0.05rem;
+  }
+
+  .dropdown a {
+    display: flex; align-items: center; gap: 0.65rem;
+    padding: 0.5rem 1rem;
+    font-family: 'Cinzel', serif; font-size: 0.6rem;
+    letter-spacing: 0.08em; color: var(--parchment-dark);
+    text-decoration: none; transition: all 0.17s ease;
+  }
+  .dropdown a:hover {
+    color: var(--gold-light); background: rgba(212,165,32,0.07); padding-left: 1.3rem;
+  }
+  .d-icon { font-size: 1.05rem; line-height: 1; flex-shrink: 0; opacity: 0.8; }
+  .d-info { display: flex; flex-direction: column; gap: 1px; flex: 1; }
+  .d-info strong { font-weight: 700; }
+  .d-sub {
+    font-family: 'IM Fell English', serif; font-style: italic;
+    font-size: 0.58rem; color: rgba(180,150,80,0.5); letter-spacing: 0;
+  }
+  .ai-badge {
+    margin-left: auto; flex-shrink: 0;
+    font-family: 'Cinzel', serif; font-size: 0.4rem;
+    letter-spacing: 0.15em; color: var(--gold-dim);
+    border: 1px solid rgba(212,165,32,0.28); padding: 1px 5px;
+  }
+
+  .dd-note {
+    font-family: 'IM Fell English', serif; font-style: italic;
+    font-size: 0.6rem; color: rgba(180,150,80,0.4);
+    padding: 0.5rem 1rem 0.6rem; line-height: 1.5;
+  }
+
+  /* Mobile hamburger */
+  .hamburger {
+    display: none; flex-direction: column; gap: 5px;
+    background: none; border: none; cursor: pointer; padding: 6px;
+  }
+  .hamburger span { display: block; width: 20px; height: 1.5px; background: var(--gold-dim); }
+
+  /* ══ HERO ══ */
+  .hero {
+    min-height: calc(100vh - 56px);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 4rem 2rem 2rem;
+  }
+
+  .hero-eyebrow {
+    font-family: 'Cinzel', serif; font-size: 0.65rem;
+    letter-spacing: 0.45em; color: var(--gold-dim);
+    text-transform: uppercase; margin-bottom: 1rem;
+    animation: fadeUp 0.7s ease 0.1s both;
+  }
+
+  .ornament {
+    display: flex; align-items: center; gap: 0.75rem;
+    width: 100%; max-width: 440px; margin-bottom: 0.5rem;
+    animation: fadeUp 0.7s ease 0.2s both;
+  }
+  .orn-line { flex: 1; height: 1px; background: linear-gradient(to right, transparent, var(--gold-dim), transparent); }
+  .orn-d { width: 6px; height: 6px; background: var(--gold-dim); transform: rotate(45deg); flex-shrink: 0; }
+
+  .hero-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(2.4rem, 7.5vw, 5.2rem); font-weight: 700;
+    line-height: 1.05; color: var(--gold-light);
+    text-shadow: 0 0 60px rgba(212,165,32,0.3), 2px 2px 0 rgba(0,0,0,0.9);
+    margin-bottom: 1rem;
+    animation: fadeUp 0.7s ease 0.3s both;
+  }
+
+  .hero-sub {
+    font-family: 'IM Fell English', serif; font-style: italic;
+    font-size: clamp(1rem, 2.5vw, 1.3rem); color: var(--parchment-dark);
+    opacity: 0.85; margin-bottom: 0.5rem;
+    animation: fadeUp 0.7s ease 0.42s both;
+  }
+
+  .hero-place {
+    font-family: 'Cinzel', serif; font-size: 0.58rem;
+    letter-spacing: 0.35em; color: rgba(180,150,80,0.4);
+    text-transform: uppercase; margin-bottom: 2.5rem;
+    animation: fadeUp 0.7s ease 0.52s both;
+  }
+
+  .hero-pills {
+    display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
+    animation: fadeUp 0.7s ease 0.64s both;
+  }
+  .pill {
+    font-family: 'Cinzel', serif; font-size: 0.54rem;
+    letter-spacing: 0.22em; color: var(--gold-dim);
+    border: 1px solid rgba(212,165,32,0.22); padding: 0.42rem 1rem;
+    text-transform: uppercase;
+    animation: pulse-b 3s ease-in-out infinite;
+  }
+  .pill:nth-child(2) { animation-delay: 1s; }
+  .pill:nth-child(3) { animation-delay: 2s; }
+  @keyframes pulse-b {
+    0%,100% { border-color: rgba(212,165,32,0.22); }
+    50% { border-color: rgba(212,165,32,0.55); color: var(--parchment-dark); }
+  }
+
+  /* ══ FRIEZE ══ */
+  .frieze {
+    overflow: hidden;
+    border-top: 1px solid rgba(212,165,32,0.18);
+    border-bottom: 1px solid rgba(212,165,32,0.18);
+    padding: 1.1rem 0;
+    background: linear-gradient(to right, transparent, rgba(25,16,4,0.5), transparent);
+  }
+  .frieze-track {
+    display: flex; width: max-content;
+    animation: scroll-f 32s linear infinite;
+  }
+  .frieze-track:hover { animation-play-state: paused; }
+  @keyframes scroll-f { to { transform: translateX(-50%); } }
+
+  .sci {
+    display: flex; align-items: center; gap: 0.55rem;
+    padding: 0 1.8rem;
+    border-right: 1px solid rgba(212,165,32,0.12);
+    white-space: nowrap;
+  }
+  .sci-i { font-size: 1.2rem; opacity: 0.7; }
+  .sci-n {
+    font-family: 'Cinzel', serif; font-size: 0.58rem;
+    letter-spacing: 0.12em; color: var(--gold-dim); text-transform: uppercase;
+  }
+  .sci-y {
+    font-family: 'IM Fell English', serif; font-style: italic;
+    font-size: 0.54rem; color: rgba(180,150,80,0.35);
+  }
+
+  /* ══ FOOTER ══ */
+  footer {
+    text-align: center; padding: 1.5rem 2rem;
+    border-top: 1px solid rgba(212,165,32,0.12);
+  }
+  footer p {
+    font-family: 'Cinzel', serif; font-size: 0.52rem;
+    letter-spacing: 0.3em; color: rgba(180,150,80,0.35); text-transform: uppercase;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ══ MOBILE ══ */
+  @media (max-width: 660px) {
+    .nav-links {
+      display: none; flex-direction: column;
+      position: fixed; top: 56px; left: 0; right: 0; bottom: 0;
+      background: rgba(13,10,6,0.98); overflow-y: auto;
+      padding: 1rem; gap: 0.4rem; z-index: 99;
+    }
+    .nav-links.open { display: flex; }
+    .hamburger { display: flex; }
+    .dropdown {
+      position: static; opacity: 1 !important; pointer-events: auto !important;
+      transform: none !important; border: none;
+      background: rgba(0,0,0,0.25); display: none;
+    }
+    .nav-item.open .dropdown { display: block; }
+    .dropdown-right { right: auto; }
+    .nav-btn { width: 100%; justify-content: space-between; border-color: rgba(212,165,32,0.18); }
+  }
+</style>
 </head>
 <body>
-    <h1>🔬 Bienvenidos al Aula de Ciencias</h1>
-    <p>Este sitio está en construcción. Pronto encontrarás aquí tus desafíos e IA personalizadas.</p>
+
+<div class="stars"></div>
+
+<div class="page">
+
+  <!-- NAVBAR -->
+  <nav>
+    <a href="index.html" class="nav-brand">⚜ <em>Profe Felipe</em></a>
+
+    <ul class="nav-links" id="navLinks">
+
+      <!-- CURSOS -->
+      <li class="nav-item" id="mCursos">
+        <button class="nav-btn" onclick="toggle('mCursos')">
+          Cursos <span class="chevron">▾</span>
+        </button>
+        <div class="dropdown dropdown-left">
+          <div class="dd-head">Selecciona tu curso</div>
+          <div class="dd-section">
+            <div class="dd-label">⚜ Enseñanza Básica</div>
+            <a href="6basico/index.html"><span class="d-icon">🌿</span><span class="d-info"><strong>6° Básico</strong><span class="d-sub">Ciencias Naturales</span></span></a>
+            <a href="7basico/index.html"><span class="d-icon">🔬</span><span class="d-info"><strong>7° Básico</strong><span class="d-sub">Ciencias Naturales</span></span></a>
+            <a href="8basico/index.html"><span class="d-icon">⚗️</span><span class="d-info"><strong>8° Básico</strong><span class="d-sub">Ciencias Naturales</span></span></a>
+          </div>
+          <div class="dd-section">
+            <div class="dd-label">⚜ Enseñanza Media</div>
+            <a href="1medio/index.html"><span class="d-icon">🧲</span><span class="d-info"><strong>1° Medio</strong><span class="d-sub">Física · Biología</span></span></a>
+            <a href="2medio/index.html"><span class="d-icon">🌊</span><span class="d-info"><strong>2° Medio</strong><span class="d-sub">Física · Biología</span></span></a>
+            <a href="3medio/index.html"><span class="d-icon">🧬</span><span class="d-info"><strong>3° Medio</strong><span class="d-sub">Física · Ccs. Ciudadanía</span></span></a>
+            <a href="4medio/index.html"><span class="d-icon">⚛️</span><span class="d-info"><strong>4° Medio</strong><span class="d-sub">Ccs. Ciudadanía</span></span></a>
+          </div>
+        </div>
+      </li>
+
+      <!-- ÁREAS DE ESTUDIO -->
+      <li class="nav-item" id="mAreas">
+        <button class="nav-btn" onclick="toggle('mAreas')">
+          Áreas de Estudio <span class="chevron">▾</span>
+        </button>
+        <div class="dropdown dropdown-right" style="min-width:275px;">
+          <div class="dd-head">Asistente de IA por área</div>
+          <div class="dd-section">
+            <a href="ia/fisica.html">
+              <span class="d-icon">⚡</span>
+              <span class="d-info"><strong>Física</strong><span class="d-sub">Fuerzas, energía, movimiento</span></span>
+              <span class="ai-badge">IA ✦</span>
+            </a>
+            <a href="ia/biologia.html">
+              <span class="d-icon">🧬</span>
+              <span class="d-info"><strong>Biología</strong><span class="d-sub">Células, sistemas, evolución</span></span>
+              <span class="ai-badge">IA ✦</span>
+            </a>
+            <a href="ia/ciencias-naturales.html">
+              <span class="d-icon">🌿</span>
+              <span class="d-info"><strong>Ciencias Naturales</strong><span class="d-sub">Tierra, materia, energía</span></span>
+              <span class="ai-badge">IA ✦</span>
+            </a>
+            <a href="ia/ciencias-ciudadania.html">
+              <span class="d-icon">🌍</span>
+              <span class="d-info"><strong>Ccs. para la Ciudadanía</strong><span class="d-sub">Sociedad, salud y ambiente</span></span>
+              <span class="ai-badge">IA ✦</span>
+            </a>
+            <a href="ia/salud.html">
+              <span class="d-icon">🩺</span>
+              <span class="d-info"><strong>Ciencias de la Salud</strong><span class="d-sub">Anatomía, fisiología, salud</span></span>
+              <span class="ai-badge">IA ✦</span>
+            </a>
+          </div>
+          <div class="dd-section">
+            <p class="dd-note">Cada área tiene un asistente entrenado con los contenidos del curso. <em>Integración API próximamente.</em></p>
+          </div>
+        </div>
+      </li>
+
+    </ul>
+
+    <button class="hamburger" onclick="toggleMobile()" aria-label="Menú">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <p class="hero-eyebrow">Colegio San Agustín · Villa Alemana</p>
+    <div class="ornament">
+      <div class="orn-line"></div>
+      <div class="orn-d"></div>
+      <div class="orn-d" style="opacity:0.35;transform:rotate(45deg)scale(0.55);margin:0 -0.35rem;"></div>
+      <div class="orn-d"></div>
+      <div class="orn-line"></div>
+    </div>
+    <h1 class="hero-title">Donde el<br>Profe Felipe</h1>
+    <p class="hero-sub">Laboratorio del Conocimiento</p>
+    <p class="hero-place">Ciencias · Física · Biología · Ciudadanía</p>
+    <div class="hero-pills">
+      <div class="pill">↑ Selecciona tu curso</div>
+      <div class="pill">✦ Explora las áreas</div>
+      <div class="pill">⚗ Conversa con la IA</div>
+    </div>
+  </section>
+
+  <!-- SCIENTISTS FRIEZE -->
+  <div class="frieze">
+    <div class="frieze-track">
+      <div class="sci"><span class="sci-i">🔭</span><span class="sci-n">Galileo Galilei</span><span class="sci-y">1564–1642</span></div>
+      <div class="sci"><span class="sci-i">🌍</span><span class="sci-n">Nicolás Copérnico</span><span class="sci-y">1473–1543</span></div>
+      <div class="sci"><span class="sci-i">🦋</span><span class="sci-n">Charles Darwin</span><span class="sci-y">1809–1882</span></div>
+      <div class="sci"><span class="sci-i">🍎</span><span class="sci-n">Isaac Newton</span><span class="sci-y">1643–1727</span></div>
+      <div class="sci"><span class="sci-i">⚗️</span><span class="sci-n">Marie Curie</span><span class="sci-y">1867–1934</span></div>
+      <div class="sci"><span class="sci-i">🪐</span><span class="sci-n">Johannes Kepler</span><span class="sci-y">1571–1630</span></div>
+      <div class="sci"><span class="sci-i">⚡</span><span class="sci-n">Nikola Tesla</span><span class="sci-y">1856–1943</span></div>
+      <div class="sci"><span class="sci-i">🧬</span><span class="sci-n">Rosalind Franklin</span><span class="sci-y">1920–1958</span></div>
+      <div class="sci"><span class="sci-i">🌌</span><span class="sci-n">Albert Einstein</span><span class="sci-y">1879–1955</span></div>
+      <div class="sci"><span class="sci-i">🧪</span><span class="sci-n">Antoine Lavoisier</span><span class="sci-y">1743–1794</span></div>
+      <!-- duplicate for seamless loop -->
+      <div class="sci"><span class="sci-i">🔭</span><span class="sci-n">Galileo Galilei</span><span class="sci-y">1564–1642</span></div>
+      <div class="sci"><span class="sci-i">🌍</span><span class="sci-n">Nicolás Copérnico</span><span class="sci-y">1473–1543</span></div>
+      <div class="sci"><span class="sci-i">🦋</span><span class="sci-n">Charles Darwin</span><span class="sci-y">1809–1882</span></div>
+      <div class="sci"><span class="sci-i">🍎</span><span class="sci-n">Isaac Newton</span><span class="sci-y">1643–1727</span></div>
+      <div class="sci"><span class="sci-i">⚗️</span><span class="sci-n">Marie Curie</span><span class="sci-y">1867–1934</span></div>
+      <div class="sci"><span class="sci-i">🪐</span><span class="sci-n">Johannes Kepler</span><span class="sci-y">1571–1630</span></div>
+      <div class="sci"><span class="sci-i">⚡</span><span class="sci-n">Nikola Tesla</span><span class="sci-y">1856–1943</span></div>
+      <div class="sci"><span class="sci-i">🧬</span><span class="sci-n">Rosalind Franklin</span><span class="sci-y">1920–1958</span></div>
+      <div class="sci"><span class="sci-i">🌌</span><span class="sci-n">Albert Einstein</span><span class="sci-y">1879–1955</span></div>
+      <div class="sci"><span class="sci-i">🧪</span><span class="sci-n">Antoine Lavoisier</span><span class="sci-y">1743–1794</span></div>
+    </div>
+  </div>
+
+  <footer>
+    <p>⚜ &nbsp; Profe Felipe · Colegio San Agustín · Villa Alemana &nbsp; ⚜</p>
+  </footer>
+
+</div>
+
+<script>
+  function toggle(id) {
+    const item = document.getElementById(id);
+    document.querySelectorAll('.nav-item').forEach(i => { if(i.id !== id) i.classList.remove('open'); });
+    item.classList.toggle('open');
+  }
+  function toggleMobile() {
+    document.getElementById('navLinks').classList.toggle('open');
+  }
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.nav-item') && !e.target.closest('.hamburger'))
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('open'));
+  });
+</script>
+
 </body>
 </html>
