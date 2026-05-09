@@ -25,7 +25,6 @@
     line-height: 1.6;
   }
 
-  /* NAVEGACIÓN */
   nav {
     background: var(--ivory);
     border-bottom: 3px solid var(--gold-leaf);
@@ -60,7 +59,6 @@
     text-decoration: none; border-bottom: 1px solid var(--border-soft);
   }
 
-  /* ESCENARIO PRINCIPAL */
   .main-stage {
     width: 92%; max-width: 1000px; margin: 2rem auto;
     background: var(--ivory); padding: 3rem;
@@ -69,19 +67,10 @@
     position: relative; min-height: 60vh;
   }
 
-  .main-stage::before {
-    content: '⚜'; position: absolute; top: 15px; left: 15px;
-    color: var(--gold-leaf); font-size: 1.2rem;
-  }
+  h1 { font-family: 'Cinzel', serif; text-align: center; color: var(--bronze); margin-bottom: 2rem; font-size: clamp(1.8rem, 5vw, 2.8rem); }
 
-  h1 {
-    font-family: 'Cinzel', serif; text-align: center; color: var(--bronze);
-    margin-bottom: 2rem; font-size: clamp(1.8rem, 5vw, 2.8rem);
-  }
+  .embed-container { margin-top: 30px; padding: 5px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
 
-  .welcome-text { text-align: center; font-size: clamp(1rem, 3vw, 1.3rem); font-style: italic; }
-
-  /* RESPONSIVIDAD */
   @media (max-width: 768px) {
     nav { flex-direction: column; padding: 1rem; }
     .nav-menu { width: 100%; flex-direction: column; gap: 0.5rem; margin-top: 1rem; }
@@ -100,17 +89,8 @@
   <a href="#" class="nav-brand" onclick="loadContent('home')">PROFE FELIPE</a>
   <ul class="nav-menu">
     <li class="dropdown">
-      <button class="drop-btn">Cursos Básica ▾</button>
-      <div class="drop-content">
-        <a href="#" onclick="loadContent('6basico')">6° Básico</a>
-        <a href="#" onclick="loadContent('7basico')">7° Básico</a>
-      </div>
-    </li>
-    <li class="dropdown">
       <button class="drop-btn">Cursos Media ▾</button>
       <div class="drop-content">
-        <a href="#" onclick="loadContent('1medio')">1° Medio</a>
-        <a href="#" onclick="loadContent('2medio')">2° Medio</a>
         <a href="#" onclick="loadContent('3medio')">3° Medio</a>
       </div>
     </li>
@@ -120,9 +100,7 @@
 <div class="main-stage" id="main-content">
   <div class="fade-in">
     <h1>Laboratorio del Conocimiento</h1>
-    <div class="welcome-text">
-      <p>Bienvenido al portal pedagógico. Selecciona un curso para comenzar la misión.</p>
-    </div>
+    <p class="welcome-text">Bienvenido al portal pedagógico de Ciencias.</p>
   </div>
 </div>
 
@@ -130,20 +108,25 @@
   function loadContent(page) {
     const content = document.getElementById('main-content');
     const pages = {
-      'home': `<div class="fade-in"><h1>Laboratorio del Conocimiento</h1><p class="welcome-text">Iniciando sesión en el sistema...</p></div>`,
+      'home': `<div class="fade-in"><h1>Laboratorio del Conocimiento</h1><p class="welcome-text">Iniciando sistema...</p></div>`,
       '3medio': `
         <div class="fade-in">
           <h1>III° Medio: Ingeniería y Diseño</h1>
-          <p class="welcome-text">Completa la bitácora técnica de tu proyecto científico.</p>
-          <div style="margin-top: 30px; background: #070a14; padding: 5px; border: 8px solid #d4af37; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-            <iframe src="bitacora_tech.html" style="width: 100%; height: 850px; border: none; display: block;" title="Bitácora Tech"></iframe>
+          
+          <h2 style="font-family:'Cinzel'; font-size:1.1rem; color:var(--bronze); border-bottom:1px solid var(--gold-leaf); margin-top:2rem;">01. BITÁCORA DE INVESTIGACIÓN</h2>
+          <div class="embed-container" style="background: #070a14; border: 8px solid #d4af37;">
+            <iframe src="bitacora_tech.html" style="width: 100%; height: 950px; border: none; display: block;"></iframe>
           </div>
-        </div>`,
-      'default': `<div class="fade-in"><h1>En construcción</h1><p>Pronto habrá material científico aquí.</p></div>`
+
+          <h2 style="font-family:'Cinzel'; font-size:1.1rem; color:var(--bronze); border-bottom:1px solid var(--gold-leaf); margin-top:4rem;">02. REPOSITORIO DE ARCHIVOS</h2>
+          <p style="font-style:italic; margin-top:10px;">Documentos y guías compartidas de la unidad.</p>
+          <div class="embed-container" style="background: #fff; border: 1px solid var(--border-soft);">
+            <iframe src="https://drive.google.com/embeddedfolderview?id=16lV-JJhPM_3S8B6OP4NZSywTfPa-p3gn#list" style="width:100%; height:500px; border:0;"></iframe>
+          </div>
+        </div>`
     };
-    content.innerHTML = pages[page] || pages['default'];
+    content.innerHTML = pages[page] || `<h1>En construcción</h1>`;
   }
 </script>
-
 </body>
 </html>
