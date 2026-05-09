@@ -6,98 +6,123 @@
 <title>BITÁCORA::TECH — III° Medio</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-
 <style>
-  :root { --primary: #00f2ff; --accent: #f0c840; --bg: #070a14; }
-  body { background: var(--bg); color: #c3cce9; font-family: 'Courier New', monospace; padding: 15px; }
-  .card { border: 1px solid #1d2640; padding: 20px; margin-bottom: 20px; background: rgba(15,20,40,0.7); }
-  h2 { color: var(--primary); font-size: 1.2rem; margin-bottom: 15px; border-bottom: 1px solid var(--primary); }
-  label { display: block; margin-top: 10px; color: var(--accent); font-size: 0.8rem; }
-  input, textarea { width: 100%; background: #0c1120; border: 1px solid #1d2640; color: #00f2ff; padding: 8px; margin-top: 5px; }
-  .controls { display: flex; gap: 10px; margin-top: 20px; }
-  button { 
-    background: none; border: 1px solid var(--primary); color: var(--primary); 
-    padding: 10px 15px; cursor: pointer; font-family: inherit; font-size: 0.8rem;
-  }
+  :root { --primary: #00f2ff; --accent: #f0c840; --bg: #070a14; --text: #c3cce9; }
+  body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; padding: 20px; }
+  .card { border: 1px solid #1d2640; padding: 20px; margin-bottom: 20px; background: rgba(15,20,40,0.8); border-radius: 4px; }
+  h2 { color: var(--primary); font-size: 1.1rem; margin-bottom: 15px; border-bottom: 1px solid var(--primary); letter-spacing: 2px; }
+  label { display: block; margin-top: 15px; color: var(--accent); font-size: 0.8rem; text-transform: uppercase; }
+  input, textarea { width: 100%; background: #0c1120; border: 1px solid #1d2640; color: var(--primary); padding: 10px; margin-top: 5px; font-family: inherit; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .controls { display: flex; gap: 15px; margin-top: 30px; position: sticky; bottom: 0; background: var(--bg); padding: 10px; border-top: 1px solid #1d2640; }
+  button { background: none; border: 1px solid var(--primary); color: var(--primary); padding: 12px 20px; cursor: pointer; font-family: inherit; font-weight: bold; }
   button:hover { background: rgba(0,242,255,0.1); }
   .btn-email { border-color: var(--accent); color: var(--accent); }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 
 <div class="card">
-  <h2>01_IDENTIFICACIÓN</h2>
-  <label>TÍTULO DEL PROYECTO</label>
+  <h2>01_DATOS_GENERALES</h2>
+  <label>Título del Proyecto</label>
   <input type="text" id="p-title">
-  <label>EQUIPO / ESTUDIANTE</label>
-  <input type="text" id="p-team">
+  <div class="grid">
+    <div>
+      <label>Integrantes del Equipo</label>
+      <textarea id="p-members" rows="3"></textarea>
+    </div>
+    <div>
+      <label>Roles Asignados</label>
+      <textarea id="p-roles" rows="3"></textarea>
+    </div>
+  </div>
 </div>
 
 <div class="card">
-  <h2>02_EL_PROBLEMA</h2>
-  <label>CONTEXTO Y DESAFÍO</label>
+  <h2>02_PLANTEAMIENTO</h2>
+  <label>Descripción del Problema</label>
   <textarea id="p-problem" rows="4"></textarea>
+  <label>Pregunta de Investigación</label>
+  <input type="text" id="p-question">
+</div>
+
+<div class="card">
+  <h2>03_DISEÑO_EXPERIMENTAL</h2>
+  <label>Hipótesis</label>
+  <textarea id="p-hypothesis" rows="3"></textarea>
+  <div class="grid">
+    <div>
+      <label>Variable Independiente</label>
+      <input type="text" id="v-indep">
+    </div>
+    <div>
+      <label>Variable Dependiente</label>
+      <input type="text" id="v-dep">
+    </div>
+  </div>
 </div>
 
 <div class="controls">
-  <button onclick="exportarPDF()">DESCARGAR PDF</button>
+  <button onclick="exportarPDF()">GUARDAR PDF</button>
   <button id="btn-email" class="btn-email" onclick="enviarAlProfe()">ENVIAR AL PROFE ⚜️</button>
 </div>
 
 <script>
-  (function() {
-      // Tu Public Key ya integrada
-      emailjs.init("_CmZvn9OMlsXqgdv4");
-  })();
+  (function() { emailjs.init("_CmZvn9OMlsXqgdv4"); })();
 
-  function snapshot() {
-      return {
-          title: document.getElementById('p-title').value,
-          team: document.getElementById('p-team').value,
-          problem: document.getElementById('p-problem').value
-      };
+  function getFormData() {
+    return {
+      title: document.getElementById('p-title').value,
+      members: document.getElementById('p-members').value,
+      roles: document.getElementById('p-roles').value,
+      problem: document.getElementById('p-problem').value,
+      question: document.getElementById('p-question').value,
+      hypothesis: document.getElementById('p-hypothesis').value,
+      v_indep: document.getElementById('v-indep').value,
+      v_dep: document.getElementById('v-dep').value
+    };
   }
 
   async function enviarAlProfe() {
-      const s = snapshot();
-      const btn = document.getElementById("btn-email");
-      if(!s.team) { alert("Por favor, ingresa tu nombre o el de tu equipo."); return; }
+    const d = getFormData();
+    const btn = document.getElementById("btn-email");
+    if(!d.members) { alert("Ingresa los integrantes."); return; }
+    btn.innerText = "TRANSMITIENDO...";
+    btn.disabled = true;
 
-      btn.innerText = "TRANSMITIENDO...";
-      btn.disabled = true;
+    const templateParams = {
+      from_name: d.members,
+      project_title: d.title,
+      summary: `Pregunta: ${d.question}\nHipótesis: ${d.hypothesis}`
+    };
 
-      const templateParams = {
-          from_name: s.team,
-          project_title: s.title,
-          summary: s.problem
-      };
-
-      try {
-          // Nota: Revisa que en EmailJS tu servicio se llame 'default_service' 
-          // y tu plantilla 'template_bitacora'
-          await emailjs.send('default_service', 'template_bitacora', templateParams);
-          alert("¡Misión cumplida! Bitácora enviada al Profe Felipe.");
-          btn.innerText = "ENVIADO ✓";
-      } catch (err) {
-          console.error(err);
-          alert("Error de conexión. Descarga el PDF y envíalo manualmente.");
-          btn.innerText = "REINTENTAR";
-          btn.disabled = false;
-      }
+    try {
+      await emailjs.send('default_service', 'template_bitacora', templateParams);
+      alert("¡Enviado con éxito!");
+      btn.innerText = "ENVIADO ✓";
+    } catch (err) {
+      alert("Error al enviar. Descarga el PDF.");
+      btn.innerText = "REINTENTAR";
+      btn.disabled = false;
+    }
   }
 
   function exportarPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      const s = snapshot();
-      doc.setFont("courier");
-      doc.text("BITÁCORA TÉCNICA :: III MEDIO", 10, 10);
-      doc.text("-----------------------------", 10, 15);
-      doc.text("Proyecto: " + s.title, 10, 25);
-      doc.text("Equipo: " + s.team, 10, 35);
-      doc.text("Problema:", 10, 45);
-      doc.text(s.problem, 10, 55, { maxWidth: 180 });
-      doc.save("bitacora_" + s.team + ".pdf");
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const d = getFormData();
+    doc.setFont("courier", "bold");
+    doc.text("BITÁCORA TÉCNICA :: III MEDIO", 10, 15);
+    doc.setFontSize(10);
+    doc.text("PROYECTO: " + d.title, 10, 25);
+    doc.text("EQUIPO: " + d.members, 10, 32);
+    doc.text("------------------------------------------", 10, 38);
+    doc.text("PREGUNTA: " + d.question, 10, 48, {maxWidth: 180});
+    doc.text("HIPÓTESIS: " + d.hypothesis, 10, 60, {maxWidth: 180});
+    doc.text("V. INDEP: " + d.v_indep, 10, 80);
+    doc.text("V. DEP: " + d.v_dep, 10, 87);
+    doc.save("Bitacora_" + d.members + ".pdf");
   }
 </script>
 </body>
