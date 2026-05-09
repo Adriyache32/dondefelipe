@@ -45,7 +45,6 @@
   .drop-btn {
     background: none; border: none; font-family: 'Cinzel', serif;
     font-size: 0.8rem; color: var(--text-main); cursor: pointer; padding: 0.5rem;
-    letter-spacing: 1px;
   }
 
   .drop-content {
@@ -58,7 +57,6 @@
   .drop-content a {
     display: block; padding: 0.7rem 1.2rem; color: var(--text-main);
     text-decoration: none; border-bottom: 1px solid var(--border-soft);
-    font-size: 0.9rem;
   }
 
   .main-stage {
@@ -76,9 +74,8 @@
   .btn-direct {
     background: var(--gold-leaf); color: white; border: none; padding: 0.6rem 1.2rem;
     font-family: 'Cinzel', serif; font-size: 0.75rem; cursor: pointer; border-radius: 2px;
-    text-decoration: none; display: inline-block; transition: background 0.3s;
+    text-decoration: none; display: inline-block;
   }
-  .btn-direct:hover { background: var(--bronze); }
 
   @media (max-width: 768px) {
     nav { flex-direction: column; padding: 1rem; }
@@ -112,16 +109,14 @@
         <a href="#" onclick="loadContent('4medio')">Cuarto Medio</a>
       </div>
     </li>
-    <li>
-      <a href="#" class="btn-direct" onclick="loadContent('biblioteca')">BIBLIOTECA DRIVE 📁</a>
-    </li>
+    <li><a href="#" class="btn-direct" onclick="loadContent('biblioteca')">BIBLIOTECA DRIVE 📁</a></li>
   </ul>
 </nav>
 
 <div class="main-stage" id="main-content">
   <div class="fade-in">
     <h1>Laboratorio del Conocimiento</h1>
-    <p style="text-align:center; font-style:italic;">Portal pedagógico — Colegio San Agustín.</p>
+    <p style="text-align:center; font-style:italic;">Bienvenido al portal científico.</p>
   </div>
 </div>
 
@@ -129,13 +124,13 @@
   function loadContent(page) {
     const content = document.getElementById('main-content');
     const pages = {
-      'home': `<div class="fade-in"><h1>Laboratorio del Conocimiento</h1><p style="text-align:center;">Bienvenido al portal de ciencias.</p></div>`,
+      'home': `<div class="fade-in"><h1>Laboratorio del Conocimiento</h1><p style="text-align:center;">Portal pedagógico — Colegio San Agustín.</p></div>`,
       '3medio': `
         <div class="fade-in">
           <h1>III° Medio: Ingeniería y Diseño</h1>
           <h2 style="font-family:'Cinzel'; font-size:1.1rem; color:var(--bronze); border-bottom:1px solid var(--gold-leaf); margin-top:2rem;">01. BITÁCORA DE INVESTIGACIÓN</h2>
           <div class="embed-container" style="background: #070a14; border: 8px solid #d4af37;">
-            <iframe src="bitacora_tech.html" style="width: 100%; height: 950px; border: none; display: block;"></iframe>
+            <iframe src="bitacora_tech.html" style="width: 100%; height: 1100px; border: none; display: block;"></iframe>
           </div>
           <h2 style="font-family:'Cinzel'; font-size:1.1rem; color:var(--bronze); border-bottom:1px solid var(--gold-leaf); margin-top:4rem;">02. REPOSITORIO DEL CURSO</h2>
           <div class="embed-container">
@@ -145,7 +140,6 @@
       'biblioteca': `
         <div class="fade-in">
           <h1>Biblioteca General</h1>
-          <p style="text-align:center; margin-bottom:20px;">Acceso a recursos generales, textos y material de apoyo.</p>
           <div class="embed-container" style="border: 2px solid var(--gold-leaf);">
             <iframe src="https://drive.google.com/embeddedfolderview?id=1_8SD_30CH4lAwBrLSg4sw9yKZiC9kNNJ#list" style="width:100%; height:700px; border:0;"></iframe>
           </div>
@@ -153,9 +147,7 @@
     };
     
     if(!pages[page]) {
-      // Título amigable para las páginas vacías
-      const titulo = page.replace('basico', ' Básico').replace('medio', ' Medio').toUpperCase();
-      content.innerHTML = `<div class="fade-in"><h1>${titulo}</h1><p style="text-align:center;">Módulo en preparación.</p></div>`;
+      content.innerHTML = `<div class="fade-in"><h1>${page.toUpperCase()}</h1><p style="text-align:center;">Módulo en preparación.</p></div>`;
     } else {
       content.innerHTML = pages[page];
     }

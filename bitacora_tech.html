@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BITÁCORA::TECH — III° Medio</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <style>
   :root { --primary: #00f2ff; --accent: #f0c840; --bg: #070a14; --text: #c3cce9; }
   body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; padding: 20px; }
@@ -17,8 +16,7 @@
   .controls { display: flex; gap: 15px; margin-top: 30px; position: sticky; bottom: 0; background: var(--bg); padding: 10px; border-top: 1px solid #1d2640; }
   button { background: none; border: 1px solid var(--primary); color: var(--primary); padding: 12px 20px; cursor: pointer; font-family: inherit; font-weight: bold; }
   button:hover { background: rgba(0,242,255,0.1); }
-  .btn-email { border-color: var(--accent); color: var(--accent); }
-  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+  .btn-drive { border-color: var(--accent); color: var(--accent); }
 </style>
 </head>
 <body>
@@ -28,48 +26,42 @@
   <label>Título del Proyecto</label>
   <input type="text" id="p-title">
   <div class="grid">
-    <div>
-      <label>Integrantes del Equipo</label>
-      <textarea id="p-members" rows="3"></textarea>
-    </div>
-    <div>
-      <label>Roles Asignados</label>
-      <textarea id="p-roles" rows="3"></textarea>
-    </div>
+    <div><label>Integrantes</label><textarea id="p-members" rows="2"></textarea></div>
+    <div><label>Roles</label><textarea id="p-roles" rows="2"></textarea></div>
   </div>
 </div>
 
 <div class="card">
   <h2>02_PLANTEAMIENTO</h2>
   <label>Descripción del Problema</label>
-  <textarea id="p-problem" rows="4"></textarea>
+  <textarea id="p-problem" rows="3"></textarea>
   <label>Pregunta de Investigación</label>
   <input type="text" id="p-question">
 </div>
 
 <div class="card">
-  <h2>03_DISEÑO_EXPERIMENTAL</h2>
+  <h2>03_HIPÓTESIS_Y_VARIABLES</h2>
   <label>Hipótesis</label>
-  <textarea id="p-hypothesis" rows="3"></textarea>
+  <textarea id="p-hypothesis" rows="2"></textarea>
   <div class="grid">
-    <div>
-      <label>Variable Independiente</label>
-      <input type="text" id="v-indep">
-    </div>
-    <div>
-      <label>Variable Dependiente</label>
-      <input type="text" id="v-dep">
-    </div>
+    <div><label>V. Independiente</label><input type="text" id="v-indep"></div>
+    <div><label>V. Dependiente</label><input type="text" id="v-dep"></div>
   </div>
 </div>
 
+<div class="card">
+  <h2>04_DISEÑO_EXPERIMENTAL</h2>
+  <label>Materiales</label><textarea id="p-materials" rows="2"></textarea>
+  <label>Procedimiento</label><textarea id="p-procedure" rows="4"></textarea>
+</div>
+
 <div class="controls">
-  <button onclick="exportarPDF()">GUARDAR PDF</button>
-  <button id="btn-email" class="btn-email" onclick="enviarAlProfe()">ENVIAR AL PROFE ⚜️</button>
+  <button onclick="exportarPDF()">GUARDAR PDF LOCAL</button>
+  <button id="btn-drive" class="btn-drive" onclick="enviarAlDrive()">ENTREGAR A DRIVE ⚜️</button>
 </div>
 
 <script>
-  (function() { emailjs.init("_CmZvn9OMlsXqgdv4"); })();
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyFcG4150ORc85aIqbrAmtfBrZAol-iXB2I4RDEFMB87ESzTpE7vpoYIYpSPWL28Mas/exec";
 
   function getFormData() {
     return {
@@ -80,29 +72,31 @@
       question: document.getElementById('p-question').value,
       hypothesis: document.getElementById('p-hypothesis').value,
       v_indep: document.getElementById('v-indep').value,
-      v_dep: document.getElementById('v-dep').value
+      v_dep: document.getElementById('v-dep').value,
+      materials: document.getElementById('p-materials').value,
+      procedure: document.getElementById('p-procedure').value
     };
   }
 
-  async function enviarAlProfe() {
+  async function enviarAlDrive() {
     const d = getFormData();
-    const btn = document.getElementById("btn-email");
-    if(!d.members) { alert("Ingresa los integrantes."); return; }
-    btn.innerText = "TRANSMITIENDO...";
+    const btn = document.getElementById("btn-drive");
+    if(!d.members || !d.title) { alert("Completa los datos generales."); return; }
+    
+    btn.innerText = "SUBIENDO...";
     btn.disabled = true;
 
-    const templateParams = {
-      from_name: d.members,
-      project_title: d.title,
-      summary: `Pregunta: ${d.question}\nHipótesis: ${d.hypothesis}`
-    };
-
     try {
-      await emailjs.send('default_service', 'template_bitacora', templateParams);
-      alert("¡Enviado con éxito!");
-      btn.innerText = "ENVIADO ✓";
+      await fetch(WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify(d),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      alert("¡Éxito! Tu bitácora se ha guardado en la carpeta del curso.");
+      btn.innerText = "ENTREGADO ✓";
     } catch (err) {
-      alert("Error al enviar. Descarga el PDF.");
+      alert("Error de conexión. Usa 'Guardar PDF' y envíalo manualmente.");
       btn.innerText = "REINTENTAR";
       btn.disabled = false;
     }
@@ -120,9 +114,7 @@
     doc.text("------------------------------------------", 10, 38);
     doc.text("PREGUNTA: " + d.question, 10, 48, {maxWidth: 180});
     doc.text("HIPÓTESIS: " + d.hypothesis, 10, 60, {maxWidth: 180});
-    doc.text("V. INDEP: " + d.v_indep, 10, 80);
-    doc.text("V. DEP: " + d.v_dep, 10, 87);
-    doc.save("Bitacora_" + d.members + ".pdf");
+    doc.save("Bitacora_" + d.title + ".pdf");
   }
 </script>
 </body>
