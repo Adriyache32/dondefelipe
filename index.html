@@ -19,7 +19,6 @@
 
   body {
     background-color: var(--marble);
-    /* Textura sutil de mármol */
     background-image: 
       linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0.8)),
       url('https://www.transparenttextures.com/patterns/white-marble.png');
@@ -28,7 +27,7 @@
     line-height: 1.6;
   }
 
-  /* ══ NAVEGACIÓN ESTILO TEMPLO ══ */
+  /* ══ NAVEGACIÓN RESPONSIVA ══ */
   nav {
     background: var(--ivory);
     border-bottom: 3px solid var(--gold-leaf);
@@ -40,6 +39,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: all 0.3s ease;
   }
 
   .nav-brand {
@@ -51,7 +51,7 @@
     letter-spacing: 2px;
   }
 
-  .nav-menu { display: flex; list-style: none; gap: 2rem; }
+  .nav-menu { display: flex; list-style: none; gap: 1.5rem; }
 
   .dropdown { position: relative; }
 
@@ -59,7 +59,7 @@
     background: none;
     border: none;
     font-family: 'Cinzel', serif;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--text-main);
     cursor: pointer;
     padding: 0.5rem;
@@ -77,6 +77,7 @@
     border: 1px solid var(--border-soft);
     padding: 0.5rem 0;
     top: 100%;
+    right: 0; /* Alineado a la derecha para evitar desbordes */
   }
 
   .dropdown:hover .drop-content { display: block; }
@@ -90,28 +91,23 @@
     border-bottom: 1px solid var(--border-soft);
   }
 
-  .drop-content a:hover {
-    background: var(--marble);
-    color: var(--gold-leaf);
-  }
-
-  /* ══ CONTENEDOR CENTRAL (EL "PODIO") ══ */
+  /* ══ CONTENEDOR CENTRAL FLEXIBLE ══ */
   .main-stage {
+    width: 92%;
     max-width: 1000px;
-    margin: 3rem auto;
+    margin: 2rem auto;
     background: var(--ivory);
-    padding: 4rem;
+    padding: 3rem;
     border: 1px solid var(--border-soft);
     box-shadow: 0 10px 30px rgba(0,0,0,0.03);
     position: relative;
     min-height: 60vh;
   }
 
-  /* Esquinas decorativas estilo Ikariam */
   .main-stage::before {
     content: '⚜';
     position: absolute;
-    top: 10px; left: 10px;
+    top: 15px; left: 15px;
     color: var(--gold-leaf);
     font-size: 1.2rem;
   }
@@ -121,34 +117,62 @@
     text-align: center;
     color: var(--bronze);
     margin-bottom: 2rem;
-    font-size: 2.5rem;
+    font-size: clamp(1.8rem, 5vw, 2.8rem); /* Tamaño fluido */
   }
 
   .welcome-text {
     text-align: center;
-    font-size: 1.3rem;
+    font-size: clamp(1rem, 3vw, 1.3rem);
     font-style: italic;
   }
 
-  /* ══ FOOTER ══ */
   footer {
     text-align: center;
     padding: 2rem;
     font-family: 'Cinzel', serif;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--bronze);
     letter-spacing: 1px;
+    opacity: 0.7;
   }
 
-  /* Clase para animar la carga de contenido */
-  .fade-in {
-    animation: fadeIn 0.5s ease-in;
+  /* 📱 MEDIA QUERIES PARA CELULARES */
+  @media (max-width: 768px) {
+    nav {
+      flex-direction: column;
+      padding: 1rem;
+    }
+
+    .nav-menu {
+      width: 100%;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .drop-btn {
+      width: 100%;
+      text-align: center;
+      padding: 0.8rem;
+      border: 1px solid var(--border-soft);
+    }
+
+    .drop-content {
+      position: static;
+      width: 100%;
+      box-shadow: none;
+      background: rgba(0,0,0,0.02);
+    }
+
+    .main-stage {
+      padding: 1.5rem;
+      width: 96%;
+      margin: 1rem auto;
+    }
   }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+  .fade-in { animation: fadeIn 0.5s ease-in; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
 <body>
@@ -187,59 +211,43 @@
   <div class="fade-in">
     <h1>Laboratorio del Conocimiento</h1>
     <div class="welcome-text">
-      <p>Bienvenido, buscador del saber. Selecciona tu curso en el menú superior para comenzar la exploración científica.</p>
-    </div>
-    <div style="text-align: center; margin-top: 3rem; color: var(--gold-leaf); font-size: 3rem;">
-      ⚗️
+      <p>Bienvenido al portal central de Ciencias. Selecciona tu nivel para acceder al material y desafíos.</p>
     </div>
   </div>
 </div>
 
 <footer>
-  COLEGIO SAN AGUSTÍN · CIENCIAS NATURALES · 2026
+  COLEGIO SAN AGUSTÍN · VILLA ALEMANA · 2026
 </footer>
 
 <script>
-  // Esta función simula la carga de páginas dentro del mismo sitio
   function loadContent(page) {
     const content = document.getElementById('main-content');
-    
-    // Aquí definimos qué texto mostrar para cada "página"
     const pages = {
       'home': `
         <div class="fade-in">
           <h1>Laboratorio del Conocimiento</h1>
-          <p class="welcome-text">Bienvenido al portal central de Ciencias.</p>
-        </div>`,
-      '6basico': `
-        <div class="fade-in">
-          <h1>6° Año Básico</h1>
-          <p>Explorando los sistemas de la Tierra y la vida.</p>
-          <ul>
-            <li>Material de estudio: Fotosíntesis</li>
-            <li>Desafío: El ciclo del agua</li>
-          </ul>
+          <p class="welcome-text">Iniciando sesión en el sistema pedagógico...</p>
         </div>`,
       '1medio': `
         <div class="fade-in">
           <h1>1° Año Medio</h1>
-          <p>Introducción a la Biología Celular y Física de Ondas.</p>
-          <button style="margin-top:20px; padding:10px; background:var(--gold-leaf); color:white; border:none; cursor:pointer;">
-            Ver Nube del Curso
-          </button>
+          <p><strong>Unidad Actual:</strong> Biología Celular y Física de Ondas.</p>
+          <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-soft);">
+          <h3>Desafío de la Semana:</h3>
+          <p>¿Cómo influye la frecuencia en la propagación del sonido?</p>
         </div>`,
       'ia-biologia': `
         <div class="fade-in">
-          <h1>Asistente de Biología</h1>
-          <p><em>Módulo de IA en desarrollo...</em></p>
-          <div style="border: 1px solid var(--border-soft); padding: 20px; background: var(--marble);">
-            Pregúntame sobre células, genética o evolución.
+          <h1>Tutor IA Biología</h1>
+          <p><em>En conexión con la red de conocimiento...</em></p>
+          <div style="margin-top:20px; padding: 15px; border-left: 4px solid var(--gold-leaf); background: #fafafa;">
+             "La célula es la unidad básica de la vida..."
           </div>
         </div>`
     };
 
-    // Actualizamos el contenido central
-    content.innerHTML = pages[page] || `<h1>Página en construcción</h1><p>Pronto habrá material aquí.</p>`;
+    content.innerHTML = pages[page] || `<h1>En construcción</h1><p>Estamos preparando este módulo científico.</p>`;
   }
 </script>
 
