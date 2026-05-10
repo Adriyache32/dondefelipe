@@ -484,7 +484,8 @@ footer a:hover{color:var(--gold);}
       <li class="dropdown">
         <button class="drop-btn" id="btn-basica">BÁSICA ▾</button>
         <div class="drop-content">
-          <a href="#" class="soon">VI° Básico  <span class="soon-badge">Próximamente</span></a>
+          <a href="#" id="link-6basico"
+             onclick="go('6basico');closeMobile();return false;">VI° Básico</a>
           <a href="#" class="soon">VII° Básico <span class="soon-badge">Próximamente</span></a>
           <a href="#" class="soon">VIII° Básico<span class="soon-badge">Próximamente</span></a>
         </div>
@@ -552,11 +553,12 @@ document.addEventListener('click',e=>{
 
 /* ── ROUTER ─────────────────────────────────── */
 const ROUTES={
-  home:rHome,'3medio':r3,'4medio':r4,biblioteca:rLib,
+  home:rHome,'3medio':r3,'4medio':r4,'6basico':r6basico,biblioteca:rLib,
   juegos:rJuegos,
   'juego-snake':    s=>rGameEmbed(s,'juego_snake.html','🐍 Snake','El legendario juego de la serpiente · 1976'),
   'juego-memoria':  s=>rGameEmbed(s,'juego_memoria.html','🃏 Memoria','Encuentra todos los pares de cartas'),
-  'juego-tres':     s=>rGameEmbed(s,'juego_tictactoe.html','❌ Tres en Raya','El clásico juego de X y O')
+  'juego-tres':     s=>rGameEmbed(s,'juego_tictactoe.html','❌ Tres en Raya','El clásico juego de X y O'),
+  'juego-ahorcado': s=>rGameEmbed(s,'juego_ahorcado.html','💀 Ahorcado','Adivina la palabra letra a letra')
 };
 let currentPage=null;
 
@@ -583,7 +585,7 @@ function go(page){
 }
 
 function setActiveNav(page){
-  const navPage=page.startsWith('juego-')?'juegos':page;
+  const navPage=page.startsWith('juego-')?'juegos':page==='6basico'?'6basico':page;
   document.querySelectorAll('.drop-btn').forEach(b=>b.classList.remove('active-menu'));
   document.querySelectorAll('.drop-content a:not(.soon)').forEach(a=>a.classList.remove('active-link'));
   document.querySelectorAll('.nav-lib').forEach(a=>a.classList.remove('active-link'));
@@ -669,6 +671,23 @@ function r3(stage){
     </div>`;
 }
 
+/* ── PAGE: 6° BÁSICO ────────────────────────── */
+function r6basico(stage){
+  stage.innerHTML=`
+    <div class="fade-in">
+      <div class="tablet-header"><h1>VI° BÁSICO: INVESTIGACIÓN CIENTÍFICA</h1></div>
+      <div class="embed-wrap">
+        <div class="embed-bar">
+          <span>📔 Bitácora de Investigación Escolar — Registro y seguimiento del proyecto</span>
+          <a href="bitacora_6basico.html" target="_blank" class="btn-s">↗ Pantalla completa</a>
+        </div>
+        <iframe src="bitacora_6basico.html" class="embed-frame"
+                title="Bitácora VI° Básico" loading="lazy"
+                style="min-height:900px;"></iframe>
+      </div>
+    </div>`;
+}
+
 /* ── PAGE: 4° MEDIO ─────────────────────────── */
 function r4(stage){
   stage.innerHTML=`
@@ -724,6 +743,12 @@ function rJuegos(stage){
           <h3>❌ TRES EN RAYA</h3>
           <p>El eterno juego de X y O. Juega con un amigo o desafía a la CPU.<br>
              <em style="font-size:.78rem;opacity:.65;">Juego ancestral · Código libre</em></p>
+        </div>
+        <div class="card c-sea card-click" onclick="go('juego-ahorcado')" tabindex="0"
+             onkeydown="if(event.key==='Enter')go('juego-ahorcado')">
+          <h3>💀 AHORCADO</h3>
+          <p>Adivina la palabra oculta antes de que el dibujo se complete. Animales, países, ciencia y deportes.<br>
+             <em style="font-size:.78rem;opacity:.65;">Clásico de lápiz y papel · Código libre</em></p>
         </div>
       </div>
     </div>`;

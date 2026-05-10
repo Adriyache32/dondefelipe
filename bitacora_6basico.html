@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bitácora Científica · VI° Básico</title>
+<!--
+=======================================================
+  APPS SCRIPT — pegar en script.google.com (nuevo proyecto)
+  Luego desplegar como app web:
+    Ejecutar como: Yo
+    Quién puede acceder: Cualquier usuario
+  Copiar la URL y pegarla en SCRIPT_URL abajo.
+=======================================================
+
+function doGet(e) {
+  if (e.parameter.action === 'load') {
+    var code = e.parameter.code;
+    var hoja = getHoja();
+    var vals = hoja.getDataRange().getValues();
+    for (var i = 1; i < vals.length; i++) {
+      if (vals[i][0] === code) {
+        return resp({ok:true, nombre:vals[i][1], curso:vals[i][2],
+                     guardado:vals[i][4], datos: vals[i][5] ? JSON.parse(vals[i][5]) : {}});
+      }
+    }
+    return resp({error:'Código no encontrado'});
+  }
+  return resp({error:'Acción inválida'});
+}
+
+function doPost(e) {
+  var action = e.parameter.action;
+  var hoja = getHoja();
+  if (action === 'register') {
+    var code = 'INV' + new Date().getTime().toString(36).toUpperCase().slice(-4)
+               + Math.random().toString(36).toUpperCase().slice(2,5);
+    hoja.appendRow([code, e.parameter.nombre, e.parameter.curso,
+                    new Date().toLocaleString('es-CL'), '', '{}']);
+    return resp({ok:true, code:code});
+  }
+  if (action === 'save') {
+    var vals = hoja.getDataRange().getValues();
+    for (var i = 1; i < vals.length; i++) {
+      if (vals[i][0] === e.parameter.code) {
+        var now = new Date().toLocaleString('es-CL');
+        hoja.getRange(i+1,5).setValue(now);
+        hoja.getRange(i+1,6).setValue(e.parameter.datos);
+        return resp({ok:true, guardado:now});
+      }
+    }
+    return resp({error:'Código no encontrado'});
+  }
+  return resp({error:'Acción inválida'});
+}
+
+function getHoja() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var h = ss.getSheetByName('Bitacoras6B');
+  if (!h) {
+    h = ss.insertSheet('Bitacoras6B');
+    h.appendRow(['Código','Nombre','Curso','Registro','Último guardado','Datos JSON']);
+    h.setFrozenRows(1);
+    h.setColumnWidth(6,400);
+  }
+  return h;
+}
+
+function resp(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+=======================================================
+-->
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --azul:#1a4a8a;--azul-claro:#2d6cc0;--verde:#2e7d5e;--verde-claro:#3aab7a;
+  --amarillo:#f5c842;--rojo:#d94f3d;--gris:#f4f6fa;--texto:#1a2340;
+  --borde:#d0d8e8;--radio:12px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--gris);color:var(--texto);min-height:100vh}
+
+/* ── HEADER ── */
+.hdr{background:linear-gradient(135deg,var(--azul),var(--azul-claro));
+  color:#fff;padding:1rem 1.5rem;text-align:center;position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 10px rgba(0,0,0,.2)}
+.hdr h1{font-size:1.2rem;letter-spacing:1px}
+.hdr p{font-size:.8rem;opacity:.8;margin-top:2px}
+.badge-code{display:inline-block;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);
+  border-radius:20px;padding:3px 14px;font-size:.85rem;font-family:monospace;letter-spacing:2px;
+  margin-top:4px;cursor:pointer;transition:background .2s}
+.badge-code:hover{background:rgba(255,255,255,.35)}
+
+/* ── SCREENS ── */
+.screen{display:none;max-width:620px;margin:0 auto;padding:1.5rem 1rem}
+.screen.active{display:block}
+
+/* ── CARD ── */
+.card{background:#fff;border:1px solid var(--borde);border-radius:var(--radio);
+  padding:1.8rem 1.6rem;box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:1rem}
+.card h2{font-size:1.25rem;color:var(--azul);margin-bottom:.5rem}
+.card p{font-size:.9rem;color:#555;line-height:1.6;margin-bottom:1rem}
+
+/* ── INICIO ── */
+.btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:1rem}
+@media(max-width:420px){.btn-grid{grid-template-columns:1fr}}
+.btn-opcion{padding:1.2rem 1rem;border:2px solid var(--borde);border-radius:var(--radio);
+  background:#fff;cursor:pointer;text-align:center;transition:all .2s;font-size:.9rem}
+.btn-opcion:hover{border-color:var(--azul-claro);background:#eef4ff;transform:translateY(-2px)}
+.btn-opcion .ico{font-size:2rem;display:block;margin-bottom:.5rem}
+.btn-opcion strong{display:block;color:var(--azul);font-size:1rem}
+
+/* ── FORMS ── */
+.campo{margin-bottom:1.1rem}
+.campo label{display:block;font-size:.85rem;font-weight:600;color:var(--azul);margin-bottom:5px}
+.campo input,.campo select,.campo textarea{
+  width:100%;padding:.65rem .9rem;border:2px solid var(--borde);border-radius:8px;
+  font-size:.95rem;font-family:inherit;transition:border-color .2s;background:#fff;color:var(--texto)}
+.campo input:focus,.campo select:focus,.campo textarea:focus{
+  outline:none;border-color:var(--azul-claro);box-shadow:0 0 0 3px rgba(45,108,192,.12)}
+.campo textarea{resize:vertical;min-height:80px;line-height:1.5}
+.ayuda{font-size:.78rem;color:#888;margin-top:4px;font-style:italic}
+
+/* ── CÓDIGO REVEAL ── */
+.code-reveal{text-align:center;padding:1.5rem 0}
+.code-big{font-size:2.2rem;font-family:monospace;letter-spacing:6px;font-weight:700;
+  color:var(--azul);background:#eef4ff;border:2px dashed var(--azul-claro);
+  border-radius:12px;padding:.8rem 1.5rem;display:inline-block;margin:1rem 0}
+.aviso{background:#fff8e1;border:1px solid #f5c842;border-radius:8px;
+  padding:.8rem 1rem;font-size:.85rem;color:#7a5a00;margin:.8rem 0}
+
+/* ── PROGRESO ── */
+.progreso-wrap{background:#fff;border-bottom:1px solid var(--borde);
+  padding:.8rem 1rem;position:sticky;top:68px;z-index:90}
+.progreso-bar{max-width:620px;margin:0 auto}
+.progreso-label{font-size:.78rem;color:#666;margin-bottom:6px;text-align:center}
+.progreso-steps{display:flex;gap:4px;align-items:center}
+.step-dot{flex:1;height:6px;border-radius:3px;background:var(--borde);transition:background .3s}
+.step-dot.done{background:var(--verde-claro)}
+.step-dot.active{background:var(--azul-claro)}
+
+/* ── PASO FORM ── */
+.paso-header{display:flex;align-items:center;gap:12px;margin-bottom:1.2rem;
+  padding-bottom:1rem;border-bottom:2px solid var(--gris)}
+.paso-ico{font-size:2rem;line-height:1}
+.paso-titulo{font-size:1.15rem;font-weight:700;color:var(--azul)}
+.paso-num{font-size:.78rem;color:#888}
+
+/* ── BOTONES ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:.7rem 1.4rem;border:none;border-radius:8px;cursor:pointer;
+  font-size:.92rem;font-weight:600;font-family:inherit;transition:all .2s;text-decoration:none}
+.btn-prim{background:var(--azul-claro);color:#fff}
+.btn-prim:hover{background:var(--azul);transform:translateY(-1px)}
+.btn-verde{background:var(--verde-claro);color:#fff}
+.btn-verde:hover{background:var(--verde)}
+.btn-sec{background:#fff;color:var(--azul);border:2px solid var(--borde)}
+.btn-sec:hover{border-color:var(--azul-claro);background:#f0f5ff}
+.btn-full{width:100%;margin-top:.5rem}
+.btn-amarillo{background:var(--amarillo);color:#333}
+.btn-amarillo:hover{background:#e5b800}
+
+.nav-btns{display:flex;gap:10px;margin-top:1.2rem;flex-wrap:wrap}
+.nav-btns .btn-prim{flex:2}
+.nav-btns .btn-sec{flex:1}
+
+/* ── GUARDAR STATUS ── */
+.save-bar{display:flex;align-items:center;gap:8px;font-size:.8rem;
+  color:#888;margin-top:.8rem;padding:.5rem .8rem;background:#f8f9fb;
+  border-radius:6px;border:1px solid var(--borde)}
+.save-dot{width:8px;height:8px;border-radius:50%;background:#ccc;flex-shrink:0}
+.save-dot.ok{background:#3aab7a}
+.save-dot.guardando{background:#f5c842;animation:pulse .8s infinite}
+.save-dot.error{background:var(--rojo)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── ERROR / SUCCESS ── */
+.msg{padding:.8rem 1rem;border-radius:8px;font-size:.88rem;margin:.6rem 0;display:none}
+.msg.show{display:block}
+.msg.error{background:#fdecea;color:#b71c1c;border:1px solid #f5c6c6}
+.msg.ok{background:#e8f5e9;color:#1b5e20;border:1px solid #c8e6c9}
+
+/* ── LOADING ── */
+.spinner{display:inline-block;width:20px;height:20px;border:3px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <h1>🔬 Bitácora Científica</h1>
+  <p>VI° Básico · Prof. Felipe Jiménez · Viña del Mar</p>
+  <div id="hdr-code" style="display:none">
+    <span class="badge-code" id="hdr-code-val" onclick="copiarCodigo()" title="Clic para copiar"></span>
+  </div>
+</div>
+
+<!-- PROGRESO (visible en form) -->
+<div class="progreso-wrap" id="progreso-wrap" style="display:none">
+  <div class="progreso-bar">
+    <div class="progreso-label" id="prog-label">Paso 1 de 8</div>
+    <div class="progreso-steps" id="prog-dots"></div>
+  </div>
+</div>
+
+<!-- ══ SCREEN: INICIO ══ -->
+<div class="screen active" id="s-inicio">
+  <div class="card" style="text-align:center;padding-top:2rem">
+    <div style="font-size:3rem;margin-bottom:.5rem">🔬</div>
+    <h2 style="font-size:1.4rem;margin-bottom:.5rem">Bitácora de Investigación</h2>
+    <p>Registra paso a paso tu investigación científica escolar.<br>
+       Tu trabajo se guarda en la nube y puedes continuar desde cualquier computador.</p>
+    <div class="btn-grid">
+      <button class="btn-opcion" onclick="show('s-registro')">
+        <span class="ico">✨</span>
+        <strong>Nueva investigación</strong>
+        <span style="font-size:.8rem;color:#888">Comenzar desde cero</span>
+      </button>
+      <button class="btn-opcion" onclick="show('s-cargar')">
+        <span class="ico">📂</span>
+        <strong>Continuar</strong>
+        <span style="font-size:.8rem;color:#888">Tengo mi código</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN: REGISTRO ══ -->
+<div class="screen" id="s-registro">
+  <div class="card">
+    <h2>✨ Nueva Investigación</h2>
+    <p>Ingresa tus datos para crear tu bitácora personal.</p>
+    <div class="campo">
+      <label>Nombre completo</label>
+      <input id="r-nombre" type="text" placeholder="Ej: Ana García Pérez" autocomplete="name">
+    </div>
+    <div class="campo">
+      <label>Curso</label>
+      <select id="r-curso">
+        <option value="">— Selecciona tu curso —</option>
+        <option>6°A</option><option>6°B</option><option>6°C</option>
+        <option>6°D</option><option>6°E</option><option>6°F</option>
+      </select>
+    </div>
+    <div id="msg-reg" class="msg error"></div>
+    <button class="btn btn-prim btn-full" id="btn-reg" onclick="registrar()">
+      Crear mi bitácora →
+    </button>
+    <button class="btn btn-sec btn-full" onclick="show('s-inicio')" style="margin-top:8px">
+      ← Volver
+    </button>
+  </div>
+</div>
+
+<!-- ══ SCREEN: CÓDIGO GENERADO ══ -->
+<div class="screen" id="s-codigo">
+  <div class="card">
+    <h2>🎉 ¡Bitácora creada!</h2>
+    <div class="code-reveal">
+      <p>Tu código de acceso es:</p>
+      <div class="code-big" id="codigo-display">—</div>
+      <div class="aviso">
+        ⚠️ <strong>Anota este código en tu cuaderno.</strong>
+        Lo necesitarás para continuar tu investigación desde otro computador.
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:1rem">
+        <button class="btn btn-sec" onclick="copiarCodigo()">📋 Copiar código</button>
+        <button class="btn btn-prim" onclick="iniciarForm()">Comenzar investigación →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN: CARGAR ══ -->
+<div class="screen" id="s-cargar">
+  <div class="card">
+    <h2>📂 Continuar Investigación</h2>
+    <p>Ingresa el código que recibiste cuando creaste tu bitácora.</p>
+    <div class="campo">
+      <label>Tu código</label>
+      <input id="c-codigo" type="text" placeholder="Ej: INV4K2XA"
+             style="font-size:1.3rem;letter-spacing:4px;text-transform:uppercase;text-align:center"
+             oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div id="msg-load" class="msg error"></div>
+    <button class="btn btn-prim btn-full" id="btn-load" onclick="cargar()">
+      Cargar mi investigación →
+    </button>
+    <button class="btn btn-sec btn-full" onclick="show('s-inicio')" style="margin-top:8px">
+      ← Volver
+    </button>
+  </div>
+</div>
+
+<!-- ══ SCREEN: FORMULARIO ══ -->
+<div class="screen" id="s-form">
+  <div class="card">
+    <div class="paso-header">
+      <span class="paso-ico" id="paso-ico">🔬</span>
+      <div>
+        <div class="paso-num" id="paso-num">Paso 1 de 8</div>
+        <div class="paso-titulo" id="paso-titulo">Título</div>
+      </div>
+    </div>
+    <div id="paso-campos"></div>
+    <div class="save-bar">
+      <div class="save-dot" id="save-dot"></div>
+      <span id="save-txt">Sin cambios</span>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-sec" id="btn-ant" onclick="anterior()">← Anterior</button>
+      <button class="btn btn-prim" id="btn-sig" onclick="siguiente()">Siguiente →</button>
+    </div>
+    <button class="btn btn-verde btn-full" style="margin-top:8px" onclick="guardarManual()">
+      💾 Guardar ahora
+    </button>
+    <button class="btn btn-sec btn-full" style="margin-top:6px;font-size:.8rem" onclick="exportarPDF()">
+      📄 Descargar PDF
+    </button>
+  </div>
+</div>
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* ═══════════════════════════════════════════════
+   CONFIGURA AQUÍ la URL de tu Apps Script
+   (después de desplegarlo como app web)
+═══════════════════════════════════════════════ */
+const SCRIPT_URL_BIT = 'TU_URL_AQUI';
+
+/* ── PASOS DE LA INVESTIGACIÓN ── */
+const PASOS = [
+  { id:'datos', icon:'👤', titulo:'Mis Datos',
+    campos:[
+      {id:'titulo_inv', label:'Título de mi investigación', tipo:'input',
+       ayuda:'Ej: "¿Cómo afecta la luz al crecimiento de las plantas?"'},
+      {id:'fecha_inicio', label:'Fecha de inicio', tipo:'date'},
+      {id:'resumen', label:'¿De qué trata mi investigación? (1-2 frases)', tipo:'textarea', rows:3,
+       ayuda:'Describe brevemente de qué se trata tu experimento.'}
+    ]
+  },
+  { id:'pregunta', icon:'❓', titulo:'Mi Pregunta de Investigación',
+    campos:[
+      {id:'pregunta', label:'¿Qué quiero descubrir?', tipo:'textarea', rows:3,
+       ayuda:'Escribe una pregunta que puedas responder con un experimento. Empieza con ¿Cómo...?, ¿Qué pasa si...? o ¿Por qué...?'},
+      {id:'motivacion', label:'¿Por qué me interesa este tema?', tipo:'textarea', rows:3, ayuda:''}
+    ]
+  },
+  { id:'hipotesis', icon:'💡', titulo:'Mi Hipótesis',
+    campos:[
+      {id:'hipotesis', label:'Mi predicción', tipo:'textarea', rows:4,
+       ayuda:'Completa la oración: "Si _________, entonces _________, porque _________."'},
+      {id:'base_hipotesis', label:'¿En qué me baso para pensar eso?', tipo:'textarea', rows:3,
+       ayuda:'¿Qué sabes sobre el tema que te hizo pensar en esa predicción?'}
+    ]
+  },
+  { id:'variables', icon:'🔀', titulo:'Variables del Experimento',
+    campos:[
+      {id:'var_ind', label:'¿Qué voy a cambiar? (Variable independiente)', tipo:'textarea', rows:2,
+       ayuda:'Lo que tú decides cambiar a propósito.'},
+      {id:'var_dep', label:'¿Qué voy a medir? (Variable dependiente)', tipo:'textarea', rows:2,
+       ayuda:'Lo que cambia como resultado de tu experimento.'},
+      {id:'var_ctrl', label:'¿Qué mantendré igual? (Variables controladas)', tipo:'textarea', rows:3,
+       ayuda:'Las condiciones que no cambiarás para que el experimento sea justo.'}
+    ]
+  },
+  { id:'materiales', icon:'🧰', titulo:'Materiales',
+    campos:[
+      {id:'materiales', label:'Lista de materiales (uno por línea)', tipo:'textarea', rows:10,
+       ayuda:'Incluye cantidades. Ej:\n- 3 macetas\n- 100 ml de agua\n- Tierra de jardín'}
+    ]
+  },
+  { id:'procedimiento', icon:'📋', titulo:'Procedimiento',
+    campos:[
+      {id:'procedimiento', label:'Pasos del experimento (numerados)', tipo:'textarea', rows:12,
+       ayuda:'Sé muy específico. Otra persona debería poder repetir tu experimento leyendo solo tus instrucciones.\n\n1.\n2.\n3.'}
+    ]
+  },
+  { id:'observaciones', icon:'📊', titulo:'Observaciones y Datos',
+    campos:[
+      {id:'observaciones', label:'¿Qué observé durante el experimento?', tipo:'textarea', rows:5,
+       ayuda:'Describe lo que viste, oliste, sentiste o mediste en cada etapa.'},
+      {id:'datos', label:'Mis datos (tabla o registros)', tipo:'textarea', rows:7,
+       ayuda:'Puedes usar formato de tabla:\nDía | Medición A | Medición B\n 1  |    5 cm    |    3 cm\n 2  |    7 cm    |    4 cm'}
+    ]
+  },
+  { id:'conclusion', icon:'🎯', titulo:'Resultados y Conclusión',
+    campos:[
+      {id:'resultados', label:'Resumen de resultados', tipo:'textarea', rows:4,
+       ayuda:'¿Qué encontraste? ¿Qué datos o cambios observaste?'},
+      {id:'conclusion', label:'Conclusión', tipo:'textarea', rows:5,
+       ayuda:'¿Se comprobó tu hipótesis? ¿Por qué sí o por qué no? ¿Qué aprendiste? ¿Qué harías diferente?'},
+      {id:'bibliografia', label:'Fuentes consultadas (opcional)', tipo:'textarea', rows:3,
+       ayuda:'Libros, sitios web u otras fuentes.\nEj: García, J. (2023). Ciencias naturales 6°. Editorial SM.'}
+    ]
+  }
+];
+
+/* ── ESTADO ── */
+let estado = { codigo:null, nombre:null, curso:null, paso:0, datos:{} };
+let autoSaveTimer = null;
+let hayPendiente = false;
+
+/* ── NAVEGACIÓN DE PANTALLAS ── */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ── REGISTRO ── */
+async function registrar(){
+  const nombre = document.getElementById('r-nombre').value.trim();
+  const curso  = document.getElementById('r-curso').value;
+  const msgEl  = document.getElementById('msg-reg');
+  if(!nombre){ showMsg(msgEl,'Escribe tu nombre completo.'); return; }
+  if(!curso)  { showMsg(msgEl,'Selecciona tu curso.'); return; }
+  hideMsg(msgEl);
+
+  const btn = document.getElementById('btn-reg');
+  btn.innerHTML='<span class="spinner"></span> Creando...';
+  btn.disabled=true;
+
+  try{
+    const fd = new URLSearchParams();
+    fd.append('action','register');
+    fd.append('nombre',nombre);
+    fd.append('curso',curso);
+    const res = await fetch(SCRIPT_URL_BIT,{method:'POST',body:fd});
+    const data = await res.json();
+    if(!data.ok){ showMsg(msgEl, data.error||'Error al crear la bitácora.'); return; }
+    estado.codigo  = data.code;
+    estado.nombre  = nombre;
+    estado.curso   = curso;
+    estado.datos   = {};
+    document.getElementById('codigo-display').textContent = data.code;
+    show('s-codigo');
+  }catch(e){
+    showMsg(msgEl,'No se pudo conectar. Revisa tu conexión e intenta de nuevo.');
+  }finally{
+    btn.innerHTML='Crear mi bitácora →';
+    btn.disabled=false;
+  }
+}
+
+/* ── CARGAR ── */
+async function cargar(){
+  const code  = document.getElementById('c-codigo').value.trim().toUpperCase();
+  const msgEl = document.getElementById('msg-load');
+  if(code.length < 5){ showMsg(msgEl,'El código parece muy corto. Revísalo.'); return; }
+  hideMsg(msgEl);
+
+  const btn = document.getElementById('btn-load');
+  btn.innerHTML='<span class="spinner"></span> Cargando...';
+  btn.disabled=true;
+
+  try{
+    const res = await fetch(`${SCRIPT_URL_BIT}?action=load&code=${encodeURIComponent(code)}`);
+    const data = await res.json();
+    if(!data.ok){ showMsg(msgEl, data.error||'No se encontró ese código.'); return; }
+    estado.codigo = code;
+    estado.nombre = data.nombre;
+    estado.curso  = data.curso;
+    estado.datos  = data.datos || {};
+    estado.paso   = 0;
+    iniciarForm();
+  }catch(e){
+    showMsg(msgEl,'No se pudo conectar. Revisa tu conexión e intenta de nuevo.');
+  }finally{
+    btn.innerHTML='Cargar mi investigación →';
+    btn.disabled=false;
+  }
+}
+
+/* ── INICIAR FORMULARIO ── */
+function iniciarForm(){
+  if(SCRIPT_URL_BIT === 'TU_URL_AQUI'){
+    alert('⚠️ El profesor aún no ha configurado la URL del servidor.\n\nContacta al Profe Felipe para activar el guardado en la nube.');
+    return;
+  }
+  document.getElementById('hdr-code').style.display='block';
+  document.getElementById('hdr-code-val').textContent = estado.codigo;
+  document.getElementById('progreso-wrap').style.display='block';
+  renderProgreso();
+  renderPaso();
+  show('s-form');
+  iniciarAutoSave();
+}
+
+/* ── RENDER PROGRESO ── */
+function renderProgreso(){
+  const dots = document.getElementById('prog-dots');
+  dots.innerHTML = PASOS.map((p,i)=>`
+    <div class="step-dot ${i<estado.paso?'done':i===estado.paso?'active':''}"></div>
+  `).join('');
+  document.getElementById('prog-label').textContent =
+    `${PASOS[estado.paso].icon} Paso ${estado.paso+1} de ${PASOS.length}: ${PASOS[estado.paso].titulo}`;
+}
+
+/* ── RENDER PASO ── */
+function renderPaso(){
+  const p = PASOS[estado.paso];
+  document.getElementById('paso-ico').textContent  = p.icon;
+  document.getElementById('paso-titulo').textContent= p.titulo;
+  document.getElementById('paso-num').textContent  = `Paso ${estado.paso+1} de ${PASOS.length}`;
+  document.getElementById('btn-ant').style.visibility = estado.paso===0 ? 'hidden':'visible';
+  document.getElementById('btn-sig').textContent =
+    estado.paso === PASOS.length-1 ? 'Finalizar ✓' : 'Siguiente →';
+
+  const camposEl = document.getElementById('paso-campos');
+  camposEl.innerHTML = p.campos.map(c=>`
+    <div class="campo">
+      <label for="f-${c.id}">${c.label}</label>
+      ${c.tipo==='textarea'
+        ? `<textarea id="f-${c.id}" rows="${c.rows||4}" placeholder="${c.ayuda||''}"
+             oninput="marcarPendiente()">${esc(estado.datos[c.id]||'')}</textarea>`
+        : c.tipo==='date'
+        ? `<input id="f-${c.id}" type="date" value="${esc(estado.datos[c.id]||'')}"
+             oninput="marcarPendiente()">`
+        : `<input id="f-${c.id}" type="text" placeholder="${c.ayuda||''}"
+             value="${esc(estado.datos[c.id]||'')}" oninput="marcarPendiente()">`
+      }
+      ${c.tipo!=='date'&&c.ayuda ? `<div class="ayuda">${c.ayuda.replace(/\n/g,'<br>')}</div>`:'' }
+    </div>
+  `).join('');
+  setSaveStatus('idle');
+}
+
+/* ── RECOGER DATOS DEL PASO ACTUAL ── */
+function recogerPaso(){
+  PASOS[estado.paso].campos.forEach(c=>{
+    const el = document.getElementById(`f-${c.id}`);
+    if(el) estado.datos[c.id] = el.value;
+  });
+}
+
+/* ── NAVEGACIÓN ── */
+async function siguiente(){
+  recogerPaso();
+  await guardar();
+  if(estado.paso < PASOS.length-1){
+    estado.paso++;
+    renderProgreso();
+    renderPaso();
+    window.scrollTo({top:0,behavior:'smooth'});
+  } else {
+    mostrarResumen();
+  }
+}
+
+function anterior(){
+  recogerPaso();
+  guardar();
+  if(estado.paso > 0){
+    estado.paso--;
+    renderProgreso();
+    renderPaso();
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+}
+
+/* ── GUARDAR ── */
+function marcarPendiente(){
+  hayPendiente = true;
+  setSaveStatus('pending');
+}
+
+function iniciarAutoSave(){
+  clearInterval(autoSaveTimer);
+  autoSaveTimer = setInterval(()=>{ if(hayPendiente){ recogerPaso(); guardar(); } }, 30000);
+}
+
+async function guardar(){
+  if(!estado.codigo) return;
+  setSaveStatus('saving');
+  try{
+    const fd = new URLSearchParams();
+    fd.append('action','save');
+    fd.append('code', estado.codigo);
+    fd.append('datos', JSON.stringify(estado.datos));
+    const res  = await fetch(SCRIPT_URL_BIT,{method:'POST',body:fd});
+    const data = await res.json();
+    if(data.ok){
+      hayPendiente = false;
+      setSaveStatus('ok', data.guardado);
+    } else {
+      setSaveStatus('error');
+    }
+  }catch(e){
+    setSaveStatus('error');
+  }
+}
+
+async function guardarManual(){
+  recogerPaso();
+  await guardar();
+}
+
+/* ── STATUS GUARDAR ── */
+function setSaveStatus(st, tiempo){
+  const dot = document.getElementById('save-dot');
+  const txt = document.getElementById('save-txt');
+  dot.className = 'save-dot';
+  if(st==='saving'){ dot.classList.add('guardando'); txt.textContent='Guardando…'; }
+  else if(st==='ok'){ dot.classList.add('ok'); txt.textContent='Guardado '+(tiempo?'a las '+tiempo:'✓'); }
+  else if(st==='error'){ dot.classList.add('error'); txt.textContent='Error al guardar. Reintenta.'; }
+  else if(st==='pending'){ txt.textContent='Hay cambios sin guardar'; }
+  else { txt.textContent='Sin cambios recientes'; }
+}
+
+/* ── RESUMEN FINAL ── */
+function mostrarResumen(){
+  const card = document.querySelector('#s-form .card');
+  card.innerHTML=`
+    <div style="text-align:center;padding:1rem 0">
+      <div style="font-size:3rem;margin-bottom:.5rem">🎉</div>
+      <h2 style="color:var(--verde)">¡Investigación completada!</h2>
+      <p style="margin:.8rem 0 1.2rem">Tu bitácora ha sido guardada con el código:</p>
+      <div class="code-big">${estado.codigo}</div>
+      <p style="font-size:.85rem;color:#666;margin:.8rem 0">Puedes seguir editando en cualquier momento con tu código.</p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:1rem">
+        <button class="btn btn-sec" onclick="estado.paso=0;renderProgreso();renderPaso();document.querySelector('#s-form .card').innerHTML=origCard;">
+          ← Revisar investigación
+        </button>
+        <button class="btn btn-verde" onclick="exportarPDF()">📄 Descargar PDF</button>
+      </div>
+    </div>`;
+}
+
+/* ── COPIAR CÓDIGO ── */
+function copiarCodigo(){
+  if(!estado.codigo) return;
+  navigator.clipboard.writeText(estado.codigo).then(()=>{
+    const el = document.getElementById('hdr-code-val');
+    const orig = el.textContent;
+    el.textContent = '¡Copiado!';
+    setTimeout(()=>el.textContent=orig, 1500);
+  });
+}
+
+/* ── EXPORTAR PDF ── */
+function exportarPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  let y = 20;
+  const addLine = (txt, size=11, bold=false)=>{
+    doc.setFontSize(size);
+    doc.setFont('helvetica', bold?'bold':'normal');
+    const lines = doc.splitTextToSize(String(txt), 170);
+    lines.forEach(l=>{ if(y>280){doc.addPage();y=20;} doc.text(l,20,y); y+=size*0.5; });
+    y+=3;
+  };
+  addLine('BITÁCORA DE INVESTIGACIÓN CIENTÍFICA',14,true);
+  addLine(`Código: ${estado.codigo}   |   Nombre: ${estado.nombre}   |   Curso: ${estado.curso}`,9);
+  doc.setDrawColor(100);doc.line(20,y,190,y);y+=6;
+  PASOS.forEach((p,idx)=>{
+    addLine(`${p.icon} ${p.titulo.toUpperCase()}`,12,true);
+    p.campos.forEach(c=>{
+      const val = estado.datos[c.id]||'';
+      if(val.trim()){
+        addLine(c.label+':',10,true);
+        addLine(val,10);
+      }
+    });
+    y+=4;
+  });
+  doc.save(`Bitacora_${estado.nombre?.replace(/ /g,'_')}_${estado.codigo}.pdf`);
+}
+
+/* ── HELPERS ── */
+function showMsg(el,txt){ el.textContent=txt; el.classList.add('show'); }
+function hideMsg(el){ el.classList.remove('show'); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+</script>
+</body>
+</html>
