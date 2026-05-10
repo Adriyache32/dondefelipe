@@ -182,6 +182,31 @@
 <div class="hint">© Prof. Felipe Jiménez · Búsqueda del Tesoro Física</div>
 
 <script>
+
+ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyFcG4150ORc85aIqbrAmtfBrZAol-iXB2I4RDEFMB87ESzTpE7vpoYIYpSPWL28Mas/exec";
+
+async function registrarGanadores() {
+  const equipo = prompt("¡Felicidades! Ingresa el nombre de tu equipo para el Cuadro de Honor:");
+  if(!equipo) return;
+
+  const data = {
+    title: "GANADOR_TESORO",
+    members: equipo,
+    roles: "Exploradores de 4to Medio",
+    problem: "Misión Completada",
+    question: "Código Estelar Descifrado",
+    hypothesis: "N/A", v_indep: "N/A", v_dep: "N/A",
+    materials: "Ingenio", procedure: "Juego Tesoros Espacio"
+  };
+
+  try {
+    await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+    alert("¡Equipo registrado! El Profe Felipe verá tu nombre en el Drive.");
+  } catch(e) { console.error("Error al registrar"); }
+}
+
+// Busca la función win() o showSuccess() en tu archivo original 
+// y añade la llamada al final: registrarGanadores();
 // ── CONFIG ──────────────────────────────────────────────────────────────────
 const CORRECT = 500;
 const STATIONS = [
