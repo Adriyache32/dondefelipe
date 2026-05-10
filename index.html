@@ -4,530 +4,735 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aula de Ciencias | Profe Felipe</title>
-
-<!-- Google Fonts con display=swap: si falla (sin internet), cae en las fuentes del sistema -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 
 <style>
-/* ── TOKENS ─────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════
+   TOKENS  — paleta mediterránea / Ikariam
+═══════════════════════════════════════════════ */
 :root {
-  --marble:      #f4f1ea;
-  --ivory:       #ffffff;
-  --bronze:      #8e735b;
-  --gold-leaf:   #c5a059;
-  --green-honor: #4a7c59;
-  --text-main:   #3a352f;
-  --text-soft:   #7a6f64;
-  --border-soft: rgba(142,115,91,0.2);
-  --shadow-card: 0 10px 30px rgba(0,0,0,0.05);
+  --sea-deep:    #08182e;
+  --sea-mid:     #112843;
+  --sea-light:   #1a4068;
+  --gold:        #c9a84c;
+  --gold-light:  #e8c870;
+  --gold-dark:   #8b6914;
+  --marble:      #f5f0e8;
+  --stone:       #ede5d0;
+  --ivory:       #faf7f2;
+  --bronze:      #8e6a35;
+  --text:        #2a1f10;
+  --text-soft:   #6a5840;
+  --laurel:      #4a7c59;
+  --terracotta:  #a04a2a;
+  --border-gold: rgba(201,168,76,.3);
 
-  /* Fallback seguro si Google Fonts no carga */
-  --font-display: 'Cinzel', 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
-  --font-body:    'Cormorant Garamond', 'Georgia', 'Times New Roman', serif;
+  --ff-title: 'Cinzel','Palatino Linotype',Palatino,serif;
+  --ff-body:  'Cormorant Garamond',Georgia,'Times New Roman',serif;
 }
 
-*{ box-sizing:border-box; margin:0; padding:0; }
+/* ═══════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
 
 body{
-  background-color: var(--marble);
-  background-image:
-    linear-gradient(rgba(255,255,255,0.82),rgba(255,255,255,0.82)),
-    url('https://www.transparenttextures.com/patterns/white-marble.png');
-  font-family: var(--font-body);
-  color: var(--text-main);
-  line-height: 1.7;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  font-family:var(--ff-body);
+  color:var(--text);
+  /* Animated aegean sea background */
+  background:linear-gradient(145deg,#08182e 0%,#0e2440 40%,#152e50 70%,#0a1e36 100%);
+  background-size:400% 400%;
+  animation:seaShift 16s ease infinite;
 }
 
-/* ── NAV ─────────────────────────────────────────────────────────── */
+@keyframes seaShift{
+  0%  {background-position:0% 50%;}
+  50% {background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+
+/* Subtle water-line overlay */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(
+    0deg,transparent,transparent 3px,
+    rgba(255,255,255,.012) 3px,rgba(255,255,255,.012) 4px
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   GOLD FRIEZE (top decorative strip)
+═══════════════════════════════════════════════ */
+.frieze{
+  position:relative;z-index:10;
+  height:7px;flex-shrink:0;
+  background:repeating-linear-gradient(
+    90deg,
+    var(--gold-dark) 0,var(--gold-dark) 6px,
+    var(--gold)      6px,var(--gold)      18px,
+    #f0d87a           18px,#f0d87a          20px,
+    var(--gold)      20px,var(--gold)      32px,
+    var(--gold-dark) 32px,var(--gold-dark) 38px
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   NAV
+═══════════════════════════════════════════════ */
 nav{
-  background: var(--ivory);
-  border-bottom: 3px solid var(--gold-leaf);
-  padding: 0.9rem 2rem;
-  position: sticky; top:0; z-index:1000;
-  display: flex; justify-content:space-between; align-items:center;
-  gap: 1rem;
+  position:sticky;top:0;z-index:200;flex-shrink:0;
+  background:rgba(6,18,34,.94);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border-bottom:2px solid var(--gold-dark);
+  box-shadow:0 4px 30px rgba(0,0,0,.45);
 }
-.nav-brand{
-  font-family: var(--font-display);
-  color: var(--bronze); text-decoration:none;
-  font-weight:700; font-size:1.35rem; letter-spacing:2px;
-  flex-shrink:0;
-  transition: color .2s;
-}
-.nav-brand:hover{ color: var(--gold-leaf); }
 
-.nav-menu{ display:flex; list-style:none; gap:0.5rem; align-items:center; flex-wrap:wrap; }
+.nav-inner{
+  max-width:1100px;margin:0 auto;
+  padding:0 1.2rem;
+  height:58px;
+  display:flex;align-items:stretch;justify-content:space-between;
+  position:relative;
+}
+
+/* Brand */
+.nav-brand{
+  display:flex;align-items:center;gap:9px;
+  font-family:var(--ff-title);
+  color:var(--gold-light);text-decoration:none;
+  font-size:1.05rem;letter-spacing:3px;
+  padding:0 .5rem;
+  border-bottom:2px solid transparent;
+  transition:color .2s,border-color .2s;
+  flex-shrink:0;
+}
+.nav-brand:hover{color:#fff;border-bottom-color:var(--gold);}
+.brand-icon{font-size:1.2rem;line-height:1;}
+
+/* Hamburger */
+.hamburger{
+  display:none;flex-direction:column;justify-content:center;gap:5px;
+  background:none;border:none;cursor:pointer;
+  padding:0 .5rem;height:100%;
+  z-index:300;
+}
+.hamburger span{
+  display:block;width:24px;height:2px;
+  background:var(--gold);border-radius:2px;
+  transition:transform .3s,opacity .3s;
+}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.hamburger.open span:nth-child(2){opacity:0;}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+
+/* Menu list */
+.nav-menu{
+  display:flex;align-items:stretch;list-style:none;gap:0;
+}
 
 /* Dropdown */
-.dropdown{ position:relative; }
+.dropdown{position:relative;display:flex;align-items:stretch;}
+
 .drop-btn{
-  background:none; border:none; cursor:pointer; padding:0.5rem 0.6rem;
-  font-family: var(--font-display); font-size:0.78rem; letter-spacing:1px;
-  color: var(--text-main);
-  border-bottom: 2px solid transparent;
-  transition: color .2s, border-color .2s;
+  background:none;border:none;cursor:pointer;height:100%;
+  padding:0 1rem;
+  font-family:var(--ff-title);font-size:.7rem;letter-spacing:1.5px;
+  color:rgba(255,255,255,.65);
+  display:flex;align-items:center;gap:4px;
+  border-bottom:2px solid transparent;
+  transition:color .2s,border-color .2s;
 }
-.drop-btn:hover{ color: var(--gold-leaf); }
-.drop-btn.active-menu{ color:var(--bronze); border-bottom-color: var(--gold-leaf); }
+.drop-btn:hover,.drop-btn.active-menu{
+  color:var(--gold-light);border-bottom-color:var(--gold);
+}
 
 .drop-content{
-  display:none; position:absolute; top:calc(100% + 4px); left:0;
-  background: var(--ivory); min-width:195px;
-  box-shadow:0 8px 24px rgba(0,0,0,0.1);
-  border:1px solid var(--border-soft);
-  border-top:2px solid var(--gold-leaf);
-  z-index:200;
+  display:none;position:absolute;top:100%;left:0;
+  min-width:205px;
+  background:rgba(5,15,28,.97);
+  border:1px solid var(--gold-dark);border-top:2px solid var(--gold);
+  box-shadow:0 12px 40px rgba(0,0,0,.6);
+  z-index:300;
 }
-.dropdown:hover .drop-content{ display:block; }
+.dropdown:hover .drop-content{display:block;}
 
 .drop-content a{
-  display:flex; align-items:center; justify-content:space-between;
-  padding:0.65rem 1.1rem;
-  color: var(--text-main); text-decoration:none;
-  font-size:0.88rem; font-family: var(--font-body);
-  border-bottom:1px solid var(--border-soft);
-  transition: background .15s, color .15s;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:.68rem 1.1rem;
+  color:rgba(255,255,255,.65);text-decoration:none;font-size:.85rem;
+  border-bottom:1px solid rgba(201,168,76,.08);
+  transition:background .15s,color .15s;
 }
-.drop-content a:last-child{ border-bottom:none; }
-.drop-content a:hover{ background:#faf8f3; color:var(--bronze); }
+.drop-content a:last-child{border-bottom:none;}
+.drop-content a:hover{background:rgba(201,168,76,.1);color:var(--gold-light);}
+.drop-content a.active-link{color:var(--gold);background:rgba(201,168,76,.07);}
+.drop-content a.active-link::after{content:'◂';font-size:.65rem;color:var(--gold);}
+.drop-content a.soon{color:rgba(255,255,255,.28);pointer-events:none;}
 
-/* Active link highlight */
-.drop-content a.active-link{
-  color: var(--bronze); font-weight:600;
-  background:#faf8f3;
-}
-.drop-content a.active-link::after{ content:'◂'; font-size:.7rem; color:var(--gold-leaf); }
-
-/* Disabled / próximamente */
-.drop-content a.soon{
-  color:#bbb; cursor:default; pointer-events:none;
-}
 .soon-badge{
-  font-size:.65rem; background:#f0ece4; color:#aaa;
-  padding:1px 6px; border-radius:10px; letter-spacing:.5px;
+  font-size:.6rem;padding:1px 7px;border-radius:10px;
+  background:rgba(255,255,255,.05);color:rgba(255,255,255,.28);
 }
 
-/* BIBLIOTECA button */
-.btn-direct{
-  background: var(--gold-leaf); color:white; border:none;
-  padding:0.55rem 1.1rem; font-family:var(--font-display);
-  font-size:0.74rem; letter-spacing:1px;
-  cursor:pointer; border-radius:2px; text-decoration:none;
-  display:inline-block; transition:background .2s, box-shadow .2s;
+/* Library link */
+.nav-lib{
+  display:flex;align-items:center;gap:6px;padding:0 1rem;
+  font-family:var(--ff-title);font-size:.68rem;letter-spacing:1.5px;
+  color:rgba(255,255,255,.65);text-decoration:none;
+  border-bottom:2px solid transparent;
+  transition:color .2s,border-color .2s;
 }
-.btn-direct:hover{
-  background:var(--bronze);
-  box-shadow:0 4px 16px rgba(142,115,91,0.25);
-}
-.btn-direct.active-link{ background:var(--bronze); }
+.nav-lib:hover,.nav-lib.active-link{color:var(--gold-light);border-bottom-color:var(--gold);}
 
-/* ── MAIN STAGE ──────────────────────────────────────────────────── */
-.main-stage{
-  width:92%; max-width:1000px;
+/* ═══════════════════════════════════════════════
+   MAIN PANEL  (floating stone tablet)
+═══════════════════════════════════════════════ */
+.main-panel{
+  position:relative;z-index:10;
+  width:94%;max-width:1000px;
   margin:2rem auto;
-  background:var(--ivory);
-  padding:3rem;
-  border:1px solid var(--border-soft);
-  box-shadow: var(--shadow-card);
-  min-height:60vh;
   flex:1;
 }
 
-h1{
-  font-family:var(--font-display); text-align:center;
-  color:var(--bronze); margin-bottom:2rem;
-  font-size:clamp(1.5rem,4vw,2.2rem);
-}
-h2.section-head{
-  font-family:var(--font-display); font-size:1rem; letter-spacing:1px;
-  color:var(--bronze);
-  border-bottom:1px solid var(--gold-leaf);
-  padding-bottom:8px; margin:1.8rem 0 1.2rem;
-}
-
-/* Cards grid */
-.cards-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-  gap:20px;
-}
-.card{
-  border:1px solid var(--border-soft);
-  padding:20px; background:#fdfbf7;
-  border-radius:2px;
-  transition: box-shadow .2s, transform .2s;
-}
-.card:hover{ box-shadow:0 6px 20px rgba(0,0,0,0.07); transform:translateY(-2px); }
-.card.accent-green { border-left:4px solid var(--green-honor); }
-.card.accent-gold  { border-left:4px solid var(--gold-leaf); }
-.card.accent-bronze{ border-left:4px solid var(--bronze); }
-.card h3{
-  font-family:var(--font-display); font-size:0.85rem;
-  margin-bottom:10px; letter-spacing:.5px;
-}
-.card p{ font-size:0.88rem; color:var(--text-soft); line-height:1.6; }
-
-/* Winners list */
-.winner-item{
-  display:flex; align-items:flex-start; gap:10px;
-  padding:8px 0; border-bottom:1px solid var(--border-soft);
-  font-size:.88rem;
-}
-.winner-item:last-child{ border-bottom:none; }
-.winner-item .trophy{ font-size:1.1rem; flex-shrink:0; }
-.winner-item strong{ display:block; color:var(--text-main); }
-.winner-item span{ font-size:.75rem; color:#999; }
-.winners-loading{ font-size:.82rem; color:#bbb; font-style:italic; }
-
-/* Callout box (4° medio mission) */
-.mission-box{
-  margin:2rem auto; text-align:center;
-  padding:2.5rem 2rem;
-  border:2px dashed var(--bronze);
-  max-width:520px;
-  background:#fdfbf7;
-  border-radius:4px;
-}
-.mission-box h3{
-  font-family:var(--font-display); color:var(--bronze);
-  margin-bottom:12px; letter-spacing:1px;
-}
-.mission-box p{ font-size:.92rem; color:var(--text-soft); margin-bottom:20px; }
-.mission-badge{
-  display:inline-block; background:#e8f5ec;
-  color:var(--green-honor); padding:4px 12px;
-  border-radius:20px; font-size:.78rem;
-  font-family:var(--font-display); letter-spacing:.5px;
-  margin-bottom:20px;
+.tablet{
+  background:var(--ivory);
+  border:1px solid rgba(201,168,76,.2);
+  border-radius:3px;
+  padding:2.8rem 3rem;
+  position:relative;overflow:hidden;
+  box-shadow:
+    0 0 0 1px rgba(201,168,76,.08),
+    0 2px 8px rgba(0,0,0,.2),
+    0 20px 60px rgba(0,0,0,.5);
 }
 
-/* Embed / iframe */
-.embed-wrapper{ position:relative; margin-top:24px; }
-.embed-toolbar{
-  display:flex; justify-content:flex-end; align-items:center;
-  gap:10px; padding:8px 10px;
-  background:#faf8f3; border:1px solid var(--border-soft);
-  border-bottom:none; border-radius:2px 2px 0 0;
-}
-.embed-toolbar span{ font-size:.78rem; color:var(--text-soft); flex:1; font-style:italic; }
-.embed-toolbar a{
-  font-size:.72rem; font-family:var(--font-display); letter-spacing:.5px;
-  color:var(--bronze); text-decoration:none;
-  border:1px solid var(--border-soft); padding:4px 10px;
-  border-radius:2px; transition: background .15s;
-}
-.embed-toolbar a:hover{ background:#faf3e6; }
-.embed-frame{
-  width:100%; border:1px solid var(--border-soft);
-  min-height:1100px; display:block;
-  border-radius:0 0 2px 2px;
+/* Subtle stone grain */
+.tablet::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:
+    radial-gradient(ellipse at 20% 20%,rgba(201,168,76,.04) 0%,transparent 60%),
+    radial-gradient(ellipse at 80% 80%,rgba(201,168,76,.03) 0%,transparent 50%);
 }
 
-/* Coming soon page */
-.coming-soon{
-  text-align:center; padding:4rem 2rem;
-  color:var(--text-soft);
-}
-.coming-soon .cs-icon{ font-size:3rem; margin-bottom:1rem; display:block; }
-.coming-soon h2{ font-family:var(--font-display); color:var(--bronze); margin-bottom:.8rem; }
-.coming-soon p{ font-size:.92rem; max-width:400px; margin:0 auto; }
-
-/* Footer */
-footer{
-  background:var(--ivory); border-top:1px solid var(--border-soft);
-  padding:1.2rem 2rem;
+/* ═══════════════════════════════════════════════
+   TABLET HEADER  (section title bar)
+═══════════════════════════════════════════════ */
+.tablet-header{
   text-align:center;
-  font-size:.78rem; color:#bbb;
-  font-family:var(--font-display); letter-spacing:1px;
+  padding-bottom:1.6rem;margin-bottom:1.8rem;
+  border-bottom:1px solid rgba(201,168,76,.25);
+  position:relative;
 }
-footer a{ color:var(--gold-leaf); text-decoration:none; }
-footer a:hover{ text-decoration:underline; }
+.tablet-header::before,.tablet-header::after{
+  content:'⬥';font-size:.8rem;color:var(--gold);opacity:.6;
+  position:absolute;bottom:-1px;
+}
+.tablet-header::before{left:0;}
+.tablet-header::after{right:0;}
 
-/* Animations */
-.fade-in{ animation:fadeIn .45s ease-in; }
-@keyframes fadeIn{ from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);} }
+.tablet-header h1{margin-bottom:.3rem;}
 
-/* ── RESPONSIVE ──────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════
+   TYPOGRAPHY
+═══════════════════════════════════════════════ */
+h1{
+  font-family:var(--ff-title);
+  font-size:clamp(1.4rem,4vw,2rem);
+  letter-spacing:3px;
+  color:var(--bronze);
+}
+h1.shimmer{
+  background:linear-gradient(90deg,var(--gold-dark),var(--gold),var(--gold-light),var(--gold),var(--gold-dark));
+  background-size:300%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  animation:shimmer 5s linear infinite;
+}
+@keyframes shimmer{0%{background-position:0%}100%{background-position:300%}}
+
+.page-sub{font-size:.82rem;color:var(--text-soft);letter-spacing:1.5px;font-style:italic;}
+
+h2.sh{
+  font-family:var(--ff-title);font-size:.85rem;letter-spacing:1.5px;
+  color:var(--bronze);
+  padding-bottom:7px;margin:2rem 0 1.2rem;
+  border-bottom:1px solid rgba(201,168,76,.25);
+  display:flex;align-items:center;gap:8px;
+}
+h2.sh::before{content:'⬧';color:var(--gold);font-size:.7rem;}
+
+/* ═══════════════════════════════════════════════
+   CARDS
+═══════════════════════════════════════════════ */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:18px;}
+
+.card{
+  background:var(--marble);
+  border:1px solid rgba(201,168,76,.18);
+  border-radius:2px;padding:1.4rem 1.25rem;
+  position:relative;
+  transition:transform .22s,box-shadow .22s;
+}
+/* Top gold sweep on hover */
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--gold-dark),var(--gold),var(--gold-dark));
+  opacity:0;transition:opacity .25s;border-radius:2px 2px 0 0;
+}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.1);}
+.card:hover::before{opacity:1;}
+.card-click{cursor:pointer;}
+
+.card h3{
+  font-family:var(--ff-title);font-size:.8rem;letter-spacing:.8px;margin-bottom:10px;
+}
+.card p{font-size:.88rem;color:var(--text-soft);line-height:1.65;}
+
+.card.c-sea   {border-left:3px solid #2d6a9f;} .card.c-sea    h3{color:#1a4e7a;}
+.card.c-gold  {border-left:3px solid var(--gold);} .card.c-gold   h3{color:var(--bronze);}
+.card.c-laurel{border-left:3px solid var(--laurel);} .card.c-laurel h3{color:#3d6b4a;}
+
+/* ═══════════════════════════════════════════════
+   WINNERS
+═══════════════════════════════════════════════ */
+.winner{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:8px 0;border-bottom:1px solid rgba(201,168,76,.12);
+  font-size:.87rem;
+}
+.winner:last-child{border-bottom:none;}
+.winner .t{font-size:1rem;flex-shrink:0;margin-top:1px;}
+.winner strong{display:block;color:var(--text);}
+.winner span{font-size:.72rem;color:#aaa;}
+.loading{font-size:.82rem;color:#aaa;font-style:italic;}
+
+/* ═══════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════ */
+.btn-p{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  background:linear-gradient(135deg,var(--gold-dark),var(--gold));
+  color:#fff;border:none;cursor:pointer;
+  padding:.65rem 1.4rem;
+  font-family:var(--ff-title);font-size:.72rem;letter-spacing:1px;
+  border-radius:2px;text-decoration:none;
+  transition:box-shadow .2s,transform .15s;
+}
+.btn-p:hover{box-shadow:0 4px 20px rgba(201,168,76,.5);transform:translateY(-1px);}
+
+.btn-s{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  background:transparent;
+  color:var(--bronze);border:1px solid rgba(201,168,76,.38);
+  padding:.55rem 1.1rem;
+  font-family:var(--ff-title);font-size:.7rem;letter-spacing:1px;
+  border-radius:2px;cursor:pointer;text-decoration:none;
+  transition:background .15s,color .15s;
+}
+.btn-s:hover{background:rgba(201,168,76,.1);color:var(--gold-dark);}
+
+/* ═══════════════════════════════════════════════
+   MISSION BOX  (dark panel)
+═══════════════════════════════════════════════ */
+.mission{
+  background:linear-gradient(135deg,var(--sea-deep),var(--sea-mid));
+  border:1px solid var(--gold-dark);border-radius:4px;
+  padding:2rem 1.8rem;text-align:center;
+  position:relative;overflow:hidden;margin:1.5rem 0;
+}
+.mission::before,.mission::after{
+  content:'⚓';font-size:5rem;position:absolute;
+  color:var(--gold);opacity:.04;
+}
+.mission::before{top:-15px;left:-15px;}
+.mission::after{bottom:-20px;right:-10px;transform:rotate(20deg);}
+.mission h3{font-family:var(--ff-title);color:var(--gold-light);font-size:1.1rem;letter-spacing:2px;margin-bottom:.7rem;}
+.mission p{color:rgba(255,255,255,.6);font-size:.88rem;margin-bottom:.9rem;line-height:1.6;}
+.mission-topics{font-size:.74rem;color:rgba(255,255,255,.28);letter-spacing:1px;margin-bottom:1.4rem;}
+.badge{
+  display:inline-block;margin-bottom:1rem;
+  background:rgba(74,124,89,.3);color:#6ecf8a;
+  border:1px solid rgba(74,124,89,.4);
+  padding:2px 13px;border-radius:20px;
+  font-size:.7rem;font-family:var(--ff-title);letter-spacing:.5px;
+}
+
+/* ═══════════════════════════════════════════════
+   EMBED
+═══════════════════════════════════════════════ */
+.embed-wrap{margin-top:1.4rem;}
+.embed-bar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 12px;
+  background:var(--stone);
+  border:1px solid rgba(201,168,76,.2);border-bottom:none;
+  font-size:.78rem;color:var(--text-soft);
+}
+.embed-frame{width:100%;border:1px solid rgba(201,168,76,.2);display:block;}
+
+/* ═══════════════════════════════════════════════
+   COMING SOON
+═══════════════════════════════════════════════ */
+.cs{text-align:center;padding:4rem 1.5rem;}
+.cs-ico{font-size:3rem;display:block;margin-bottom:1rem;}
+.cs h2{font-family:var(--ff-title);color:var(--bronze);margin-bottom:.8rem;letter-spacing:1px;}
+.cs p{font-size:.9rem;color:var(--text-soft);max-width:360px;margin:0 auto;}
+
+/* ═══════════════════════════════════════════════
+   WAVE DIVIDER  (bottom of tablet header on home)
+═══════════════════════════════════════════════ */
+.wave-sep{
+  width:100%;overflow:hidden;line-height:0;margin-bottom:1.5rem;margin-top:-1rem;
+}
+.wave-sep svg{display:block;width:100%;height:24px;}
+
+/* ═══════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════ */
+footer{
+  position:relative;z-index:10;flex-shrink:0;
+  background:rgba(4,10,20,.95);
+  border-top:2px solid var(--gold-dark);
+  padding:1rem 2rem;text-align:center;
+  font-family:var(--ff-title);font-size:.68rem;
+  letter-spacing:1px;color:rgba(255,255,255,.28);
+}
+footer a{color:var(--gold-dark);text-decoration:none;transition:color .2s;}
+footer a:hover{color:var(--gold);}
+
+/* ═══════════════════════════════════════════════
+   TRANSITIONS
+═══════════════════════════════════════════════ */
+.fade-in{animation:fadeIn .4s ease-out;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:translateY(0);}}
+
+/* ═══════════════════════════════════════════════
+   MOBILE  ≤ 768px
+═══════════════════════════════════════════════ */
 @media(max-width:768px){
-  nav{ flex-direction:column; padding:.9rem 1rem; gap:.6rem; }
-  .nav-menu{ width:100%; justify-content:center; }
-  .main-stage{ padding:1.5rem; width:96%; }
-  .drop-content{ min-width:160px; }
+
+  /* Show hamburger, hide desktop menu */
+  .hamburger{display:flex;}
+  .nav-menu{
+    display:none;
+    position:absolute;top:100%;left:0;right:0;
+    flex-direction:column;
+    background:rgba(4,12,24,.98);
+    border-bottom:2px solid var(--gold-dark);
+    max-height:80vh;overflow-y:auto;
+    z-index:300;
+    padding-bottom:.8rem;
+    /* slide-down animation */
+    animation:slideDown .25s ease-out;
+  }
+  .nav-menu.open{display:flex;}
+  @keyframes slideDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+
+  /* Dropdowns always expanded inside mobile menu */
+  .dropdown{flex-direction:column;}
+  .drop-btn{
+    width:100%;justify-content:space-between;
+    padding:.9rem 1.2rem;height:auto;
+    font-size:.75rem;
+    border-bottom:1px solid rgba(255,255,255,.06);
+    border-left:none;border-right:none;border-top:none;
+  }
+  .drop-content{
+    display:block!important;position:static;
+    background:rgba(255,255,255,.03);
+    border:none;border-top:none;box-shadow:none;
+    min-width:unset;
+  }
+  .drop-content a{padding:.65rem 1.8rem;font-size:.83rem;}
+  .nav-lib{padding:.9rem 1.2rem;height:auto;border-bottom:1px solid rgba(255,255,255,.06);border-right:none;}
+
+  /* Content */
+  .tablet{padding:1.4rem 1rem;}
+  .main-panel{width:97%;margin:1rem auto;}
+  .grid{grid-template-columns:1fr;}
+  .mission{padding:1.5rem 1.1rem;}
+
+  /* Touch targets ≥ 44px */
+  .btn-p,.btn-s{min-height:44px;padding:.75rem 1.2rem;}
+  .drop-content a{min-height:44px;}
 }
 </style>
 </head>
 <body>
 
-<!-- ── NAV ──────────────────────────────────────────────────────── -->
+<!-- Gold frieze -->
+<div class="frieze"></div>
+
+<!-- ══ NAV ══════════════════════════════════════ -->
 <nav>
-  <a href="#" class="nav-brand" onclick="go('home');return false;">PROFE FELIPE</a>
+  <div class="nav-inner">
+    <a href="#" class="nav-brand" onclick="go('home');return false;">
+      <span class="brand-icon">🏛️</span>PROFE FELIPE
+    </a>
 
-  <ul class="nav-menu">
-    <!-- BÁSICA -->
-    <li class="dropdown">
-      <button class="drop-btn" id="btn-basica">BÁSICA ▾</button>
-      <div class="drop-content">
-        <a href="#" class="soon">Sexto Básico  <span class="soon-badge">Próximamente</span></a>
-        <a href="#" class="soon">Séptimo Básico<span class="soon-badge">Próximamente</span></a>
-        <a href="#" class="soon">Octavo Básico <span class="soon-badge">Próximamente</span></a>
-      </div>
-    </li>
+    <button class="hamburger" id="ham" aria-label="Abrir menú" onclick="toggleNav()">
+      <span></span><span></span><span></span>
+    </button>
 
-    <!-- MEDIA -->
-    <li class="dropdown">
-      <button class="drop-btn" id="btn-media">MEDIA ▾</button>
-      <div class="drop-content">
-        <a href="#" class="soon">I° Medio  <span class="soon-badge">Próximamente</span></a>
-        <a href="#" class="soon">II° Medio <span class="soon-badge">Próximamente</span></a>
-        <a href="#" id="link-3medio" onclick="go('3medio');return false;">III° Medio</a>
-        <a href="#" id="link-4medio" onclick="go('4medio');return false;">IV° Medio</a>
-      </div>
-    </li>
-
-    <li>
-      <a href="#" id="link-biblioteca" class="btn-direct"
-         onclick="go('biblioteca');return false;">BIBLIOTECA 📁</a>
-    </li>
-  </ul>
+    <ul class="nav-menu" id="nav-menu">
+      <!-- BÁSICA -->
+      <li class="dropdown">
+        <button class="drop-btn" id="btn-basica">BÁSICA ▾</button>
+        <div class="drop-content">
+          <a href="#" class="soon">VI° Básico  <span class="soon-badge">Próximamente</span></a>
+          <a href="#" class="soon">VII° Básico <span class="soon-badge">Próximamente</span></a>
+          <a href="#" class="soon">VIII° Básico<span class="soon-badge">Próximamente</span></a>
+        </div>
+      </li>
+      <!-- MEDIA -->
+      <li class="dropdown">
+        <button class="drop-btn" id="btn-media">MEDIA ▾</button>
+        <div class="drop-content">
+          <a href="#" class="soon">I° Medio  <span class="soon-badge">Próximamente</span></a>
+          <a href="#" class="soon">II° Medio <span class="soon-badge">Próximamente</span></a>
+          <a href="#" id="link-3medio"
+             onclick="go('3medio');closeMobile();return false;">III° Medio</a>
+          <a href="#" id="link-4medio"
+             onclick="go('4medio');closeMobile();return false;">IV° Medio</a>
+        </div>
+      </li>
+      <!-- BIBLIOTECA -->
+      <li>
+        <a href="#" id="link-biblioteca" class="nav-lib"
+           onclick="go('biblioteca');closeMobile();return false;">📁 BIBLIOTECA</a>
+      </li>
+    </ul>
+  </div>
 </nav>
 
-<!-- ── MAIN STAGE ────────────────────────────────────────────────── -->
-<main class="main-stage" id="main-content"></main>
+<!-- ══ CONTENT ══════════════════════════════════ -->
+<div class="main-panel">
+  <div class="tablet">
+    <main id="main-content"></main>
+  </div>
+</div>
 
-<!-- ── FOOTER ───────────────────────────────────────────────────── -->
+<!-- ══ FOOTER ═══════════════════════════════════ -->
 <footer>
-  <span>© <span id="yr"></span> Prof. Felipe Jiménez · Aula de Ciencias · Viña del Mar</span>
-  &nbsp;·&nbsp;
-  <a href="mailto:">Contacto</a>
+  © <span id="yr"></span> Prof. Felipe Jiménez &nbsp;·&nbsp; Aula de Ciencias &nbsp;·&nbsp; Viña del Mar
+  &nbsp;|&nbsp; <a href="mailto:">Contacto</a>
 </footer>
 
-<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- ════════════════════════════════════════════ -->
 <script>
-// ── CONFIG ─────────────────────────────────────────────────────────
+/* ── CONFIG ─────────────────────────────────── */
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyFcG4150ORc85aIqbrAmtfBrZAol-iXB2I4RDEFMB87ESzTpE7vpoYIYpSPWL28Mas/exec';
 document.getElementById('yr').textContent = new Date().getFullYear();
 
-// ── ROUTER ─────────────────────────────────────────────────────────
-const ROUTES = { home:renderHome, '3medio':render3Medio, '4medio':render4Medio, biblioteca:renderBiblioteca };
-let currentPage = null;
+/* ── MOBILE NAV ─────────────────────────────── */
+function toggleNav(){
+  const m=document.getElementById('nav-menu');
+  const h=document.getElementById('ham');
+  const open=m.classList.toggle('open');
+  h.classList.toggle('open',open);
+  h.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+}
+function closeMobile(){
+  document.getElementById('nav-menu').classList.remove('open');
+  document.getElementById('ham').classList.remove('open');
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('nav')) closeMobile();
+});
 
-function go(page) {
-  const stage = document.getElementById('main-content');
-  const renderer = ROUTES[page];
+/* ── ROUTER ─────────────────────────────────── */
+const ROUTES={home:rHome,'3medio':r3,'4medio':r4,biblioteca:rLib};
+let currentPage=null;
 
-  // Update active nav
-  updateActiveNav(page);
-
-  if (!renderer) {
-    stage.innerHTML = `
-      <div class="fade-in coming-soon">
-        <span class="cs-icon">🔭</span>
-        <h2>Módulo en preparación</h2>
+function go(page){
+  const stage=document.getElementById('main-content');
+  setActiveNav(page);
+  const fn=ROUTES[page];
+  if(!fn){
+    stage.innerHTML=`
+      <div class="fade-in cs">
+        <span class="cs-ico">🔭</span>
+        <h2>Módulo en Preparación</h2>
         <p>Este contenido estará disponible próximamente.<br>
            Consulta con el profe para más información.</p>
       </div>`;
     return;
   }
-
-  // Clear and render
-  stage.innerHTML = '';
-  renderer(stage);
-  currentPage = page;
+  stage.innerHTML='';
+  fn(stage);
+  currentPage=page;
+  // On mobile, scroll to content
+  if(window.innerWidth<=768)
+    document.querySelector('.main-panel').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-function updateActiveNav(page) {
-  // Reset all nav buttons
-  document.querySelectorAll('.drop-btn').forEach(b => b.classList.remove('active-menu'));
-  document.querySelectorAll('.drop-content a:not(.soon)').forEach(a => a.classList.remove('active-link'));
-  document.querySelectorAll('.btn-direct').forEach(b => b.classList.remove('active-link'));
-
-  // Activate matching link
-  const link = document.getElementById(`link-${page}`);
-  if (link) {
+function setActiveNav(page){
+  document.querySelectorAll('.drop-btn').forEach(b=>b.classList.remove('active-menu'));
+  document.querySelectorAll('.drop-content a:not(.soon)').forEach(a=>a.classList.remove('active-link'));
+  document.querySelectorAll('.nav-lib').forEach(a=>a.classList.remove('active-link'));
+  const link=document.getElementById(`link-${page}`);
+  if(link){
     link.classList.add('active-link');
-    // Also activate the parent dropdown button
-    const parent = link.closest('.dropdown');
-    if (parent) parent.querySelector('.drop-btn').classList.add('active-menu');
+    const dd=link.closest('.dropdown');
+    if(dd) dd.querySelector('.drop-btn').classList.add('active-menu');
   }
-  if (page === 'biblioteca') {
+  if(page==='biblioteca')
     document.getElementById('link-biblioteca').classList.add('active-link');
-  }
 }
 
-// ── PAGE: HOME ─────────────────────────────────────────────────────
-function renderHome(stage) {
-  stage.innerHTML = `
+/* ── PAGE: HOME ─────────────────────────────── */
+function rHome(stage){
+  stage.innerHTML=`
     <div class="fade-in">
-      <h1>Laboratorio del Conocimiento</h1>
+      <div class="tablet-header">
+        <h1 class="shimmer">AULA DE CIENCIAS</h1>
+        <p class="page-sub">Prof. Felipe Jiménez &nbsp;·&nbsp; Viña del Mar</p>
+      </div>
 
-      <h2 class="section-head">🗞️ NOVEDADES &amp; CUADRO DE HONOR</h2>
-      <div class="cards-grid">
+      <!-- Wave decoration -->
+      <div class="wave-sep" aria-hidden="true">
+        <svg viewBox="0 0 900 24" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,12 C150,24 300,0 450,12 C600,24 750,0 900,12 L900,24 L0,24 Z"
+                fill="rgba(201,168,76,0.07)"/>
+          <path d="M0,16 C150,4 300,20 450,12 C600,4 750,20 900,12"
+                fill="none" stroke="rgba(201,168,76,0.25)" stroke-width="1"/>
+        </svg>
+      </div>
 
-        <div class="card accent-green">
-          <h3 style="color:var(--green-honor);">🏆 ÚLTIMOS GANADORES</h3>
-          <div id="winners-list">
-            <p class="winners-loading">Consultando el cuadro de honor…</p>
-          </div>
+      <h2 class="sh">NOVEDADES &amp; CUADRO DE HONOR</h2>
+      <div class="grid">
+        <div class="card c-laurel">
+          <h3>🏆 ÚLTIMOS GANADORES</h3>
+          <div id="wl"><p class="loading">Consultando el cuadro de honor…</p></div>
         </div>
-
-        <div class="card accent-gold">
-          <h3 style="color:var(--bronze);">📚 ACCESOS RÁPIDOS</h3>
-          <p style="margin-bottom:14px;">Navega directamente a los módulos activos.</p>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <button onclick="go('4medio')"
-              style="background:var(--gold-leaf);color:white;border:none;padding:7px 12px;
-                     font-family:var(--font-display);font-size:.72rem;cursor:pointer;
-                     letter-spacing:.5px;text-align:left;transition:background .15s;"
-              onmouseover="this.style.background='var(--bronze)'"
-              onmouseout="this.style.background='var(--gold-leaf)'">
+        <div class="card c-gold">
+          <h3>⚡ ACCESOS RÁPIDOS</h3>
+          <p style="margin-bottom:14px;">Accede directamente a los módulos activos.</p>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <button class="btn-p" onclick="go('4medio')" style="width:100%;">
               🚀 IV° Medio — Búsqueda del Tesoro
             </button>
-            <button onclick="go('3medio')"
-              style="background:var(--bronze);color:white;border:none;padding:7px 12px;
-                     font-family:var(--font-display);font-size:.72rem;cursor:pointer;
-                     letter-spacing:.5px;text-align:left;transition:background .15s;"
-              onmouseover="this.style.background='var(--gold-leaf)'"
-              onmouseout="this.style.background='var(--bronze)'">
+            <button class="btn-s" onclick="go('3medio')" style="width:100%;">
               🛠️ III° Medio — Bitácora
             </button>
           </div>
         </div>
-
       </div>
 
-      <h2 class="section-head">📅 MÓDULOS ACTIVOS</h2>
-      <div class="cards-grid">
-        <div class="card accent-bronze" style="cursor:pointer;" onclick="go('4medio')">
-          <h3 style="color:var(--bronze);">IV° MEDIO · FÍSICA</h3>
+      <h2 class="sh" style="margin-top:2.2rem;">MÓDULOS ACTIVOS</h2>
+      <div class="grid">
+        <div class="card c-sea card-click" onclick="go('4medio')" tabindex="0"
+             onkeydown="if(event.key==='Enter')go('4medio')">
+          <h3>IV° MEDIO · FÍSICA</h3>
           <p>🎮 <strong>Búsqueda del Tesoro Espacial</strong> — Unidad 1: Fuerzas Centrales.<br>
-             5 estaciones: MRU, Velocidad Relativa, MRUA, Fuerzas, DCL.</p>
+             MRU · Vel. Relativa · MRUA · Fuerzas · DCL</p>
         </div>
-        <div class="card accent-bronze" style="cursor:pointer;" onclick="go('3medio')">
-          <h3 style="color:var(--bronze);">III° MEDIO · INGENIERÍA</h3>
-          <p>🛠️ Bitácora de trabajo técnico. Accede al cuaderno digital de la asignatura.</p>
+        <div class="card c-gold card-click" onclick="go('3medio')" tabindex="0"
+             onkeydown="if(event.key==='Enter')go('3medio')">
+          <h3>III° MEDIO · INGENIERÍA</h3>
+          <p>🛠️ Bitácora de trabajo técnico. Cuaderno digital interactivo de la asignatura.</p>
         </div>
       </div>
     </div>`;
-
-  fetchWinners();
+  fetchWinners('wl');
 }
 
-// ── PAGE: 3° MEDIO ─────────────────────────────────────────────────
-function render3Medio(stage) {
-  stage.innerHTML = `
+/* ── PAGE: 3° MEDIO ─────────────────────────── */
+function r3(stage){
+  stage.innerHTML=`
     <div class="fade-in">
-      <h1>III° Medio: Ingeniería</h1>
-      <div class="embed-wrapper">
-        <div class="embed-toolbar">
+      <div class="tablet-header"><h1>III° MEDIO: INGENIERÍA</h1></div>
+      <div class="embed-wrap">
+        <div class="embed-bar">
           <span>Bitácora técnica — contenido interactivo</span>
-          <a href="bitacora_tech.html" target="_blank">↗ Pantalla completa</a>
+          <a href="bitacora_tech.html" target="_blank" class="btn-s">↗ Pantalla completa</a>
         </div>
         <iframe src="bitacora_tech.html" class="embed-frame"
-                title="Bitácora III° Medio"
-                loading="lazy"
-                style="min-height:1100px;border:1px solid var(--border-soft);">
-        </iframe>
+                title="Bitácora III° Medio" loading="lazy"
+                style="min-height:1100px;"></iframe>
       </div>
     </div>`;
 }
 
-// ── PAGE: 4° MEDIO ─────────────────────────────────────────────────
-function render4Medio(stage) {
-  stage.innerHTML = `
+/* ── PAGE: 4° MEDIO ─────────────────────────── */
+function r4(stage){
+  stage.innerHTML=`
     <div class="fade-in">
-      <h1>IV° Medio: Física Estelar</h1>
-
-      <div class="mission-box">
-        <span class="mission-badge">✅ DESAFÍO ACTIVO</span>
-        <h3>🚀 Búsqueda del Tesoro Espacial</h3>
-        <p>Recorre 5 estaciones, resuelve los problemas de física, descifra los
-           crucigramas y suma los códigos para desbloquear el tesoro del universo.</p>
-        <p style="font-size:.82rem;color:#aaa;margin:-10px 0 20px;">
+      <div class="tablet-header"><h1>IV° MEDIO: FÍSICA ESTELAR</h1></div>
+      <div class="mission">
+        <span class="badge">✅ DESAFÍO ACTIVO</span>
+        <h3>🚀 BÚSQUEDA DEL TESORO ESPACIAL</h3>
+        <p>Recorre 5 estaciones, resuelve los problemas de física,<br>
+           descifra los crucigramas y suma los códigos.</p>
+        <p class="mission-topics">
           MRU &nbsp;·&nbsp; Velocidad Relativa &nbsp;·&nbsp; MRUA &nbsp;·&nbsp;
           Fuerzas &nbsp;·&nbsp; DCL
         </p>
-        <a href="tesoros_espacio.html" target="_blank" class="btn-direct"
-           style="font-size:.82rem;padding:.7rem 1.6rem;letter-spacing:1px;">
-          INICIAR MISIÓN 🚀
-        </a>
+        <a href="tesoros_espacio.html" target="_blank" class="btn-p"
+           style="font-size:.8rem;padding:.8rem 2rem;">INICIAR MISIÓN 🚀</a>
       </div>
-
-      <h2 class="section-head">🏆 CUADRO DE HONOR — IV° Medio</h2>
-      <div id="winners-list-4">
-        <p class="winners-loading">Consultando resultados…</p>
-      </div>
+      <h2 class="sh">CUADRO DE HONOR — IV° Medio</h2>
+      <div id="wl4"><p class="loading">Consultando resultados…</p></div>
     </div>`;
-
-  fetchWinners('winners-list-4');
+  fetchWinners('wl4');
 }
 
-// ── PAGE: BIBLIOTECA ───────────────────────────────────────────────
-function renderBiblioteca(stage) {
-  stage.innerHTML = `
+/* ── PAGE: BIBLIOTECA ───────────────────────── */
+function rLib(stage){
+  stage.innerHTML=`
     <div class="fade-in">
-      <h1>Biblioteca General</h1>
-      <div class="embed-wrapper">
-        <div class="embed-toolbar">
+      <div class="tablet-header"><h1>BIBLIOTECA GENERAL</h1></div>
+      <div class="embed-wrap">
+        <div class="embed-bar">
           <span>Google Drive — Materiales de la asignatura</span>
           <a href="https://drive.google.com/drive/folders/1_8SD_30CH4lAwBrLSg4sw9yKZiC9kNNJ"
-             target="_blank">↗ Abrir en Drive</a>
+             target="_blank" class="btn-s">↗ Abrir en Drive</a>
         </div>
         <iframe
           src="https://drive.google.com/embeddedfolderview?id=1_8SD_30CH4lAwBrLSg4sw9yKZiC9kNNJ#list"
-          class="embed-frame"
-          title="Biblioteca Google Drive"
-          style="min-height:700px;">
-        </iframe>
+          class="embed-frame" title="Biblioteca" style="min-height:700px;"></iframe>
       </div>
     </div>`;
 }
 
-// ── FETCH WINNERS ──────────────────────────────────────────────────
-// Requiere que el Google Apps Script implemente doGet() retornando JSON:
-// [{ members:"Nombre1, Nombre2", timestamp:"2025-05-09 10:30" }, ...]
-async function fetchWinners(containerId = 'winners-list') {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-
-  try {
-    const res = await fetch(`${SCRIPT_URL}?action=getWinners`, { signal: AbortSignal.timeout(6000) });
-    const data = await res.json();
-
-    if (Array.isArray(data) && data.length > 0) {
-      el.innerHTML = data.slice(0, 6).map(w => `
-        <div class="winner-item">
-          <span class="trophy">🏆</span>
+/* ── FETCH WINNERS ──────────────────────────── */
+async function fetchWinners(id){
+  const el=document.getElementById(id);
+  if(!el) return;
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),6000);
+  try{
+    const res=await fetch(`${SCRIPT_URL}?action=getWinners`,{signal:ctrl.signal});
+    clearTimeout(timer);
+    const data=await res.json();
+    if(Array.isArray(data)&&data.length>0){
+      el.innerHTML=data.slice(0,6).map(w=>`
+        <div class="winner">
+          <span class="t">🏆</span>
           <div>
-            <strong>${escHtml(w.members || w.team || 'Equipo explorador')}</strong>
-            <span>${escHtml(w.timestamp || w.date || '')}</span>
+            <strong>${esc(w.members||w.team||'Equipo explorador')}</strong>
+            <span>${esc(w.timestamp||w.date||'')}</span>
           </div>
         </div>`).join('');
-    } else {
-      el.innerHTML = noWinnersMsg();
-    }
-  } catch(e) {
-    // Sin conexión o doGet() no implementado → mostrar mensaje estático
-    el.innerHTML = noWinnersMsg();
-  }
+    } else { el.innerHTML=noW(); }
+  }catch(e){ clearTimeout(timer); el.innerHTML=noW(); }
 }
 
-function noWinnersMsg() {
-  return `<p style="font-size:.85rem;color:var(--text-soft);font-style:italic;">
-    ¡Esperando a los primeros exploradores en descifrar el código estelar! 🚀
-  </p>`;
+function noW(){
+  return `<p class="loading">¡Esperando a los primeros exploradores en descifrar el código estelar! 🚀</p>`;
 }
-
-function escHtml(str) {
-  return String(str)
+function esc(s){
+  return String(s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── BOOT ───────────────────────────────────────────────────────────
+/* ── BOOT ───────────────────────────────────── */
 go('home');
 </script>
 </body>
