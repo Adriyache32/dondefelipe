@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ahorcado</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#1a1a2e;min-height:100vh;font-family:sans-serif;color:#fff;
+      display:flex;flex-direction:column;align-items:center;padding:16px;gap:12px}
+    h2{color:#58a6ff;font-size:1.3rem;letter-spacing:1px;margin-top:4px}
+
+    /* CATEGORÍA */
+    .cats{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+    .cat{padding:5px 14px;background:#161b22;border:2px solid #30363d;border-radius:8px;
+      color:#aaa;cursor:pointer;font-size:.8rem;transition:all .2s}
+    .cat.active{border-color:#58a6ff;color:#58a6ff;background:#1f2f3a}
+    .cat:hover:not(.active){border-color:#58a6ff55}
+
+    /* DIBUJO */
+    canvas{background:#0d1117;border:1px solid #30363d;border-radius:8px}
+
+    /* PALABRA */
+    .letras{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:4px 0}
+    .letra-slot{width:28px;text-align:center;border-bottom:2px solid #58a6ff;
+      font-size:1.3rem;font-weight:bold;padding-bottom:2px;min-height:34px}
+
+    #pista{font-size:.8rem;color:#888;font-style:italic}
+    #estado{font-size:1rem;min-height:1.4rem;font-weight:600}
+    #intentos{font-size:.85rem;color:#aaa}
+
+    /* TECLADO */
+    .teclado{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;max-width:380px}
+    .tecla{width:34px;height:34px;background:#161b22;border:1px solid #30363d;
+      border-radius:6px;color:#fff;cursor:pointer;font-size:.85rem;font-weight:600;
+      transition:all .15s;-webkit-tap-highlight-color:transparent}
+    .tecla:hover:not(:disabled){background:#1f2f3a;border-color:#58a6ff}
+    .tecla:disabled{opacity:.25;cursor:default}
+    .tecla.acierto{background:#1a3a1a;border-color:#3aab7a;color:#3aab7a}
+    .tecla.fallo{background:#3a1a1a;border-color:#f85149;color:#f85149}
+
+    button#btn-nuevo{padding:7px 22px;background:#238636;color:#fff;border:none;
+      border-radius:8px;font-size:.9rem;cursor:pointer}
+    button#btn-nuevo:hover{background:#2ea043}
+  </style>
+</head>
+<body>
+  <h2>💀 AHORCADO</h2>
+
+  <div class="cats">
+    <button class="cat active" id="c-animales" onclick="setCat('animales')">🐾 Animales</button>
+    <button class="cat" id="c-paises" onclick="setCat('paises')">🌍 Países</button>
+    <button class="cat" id="c-ciencia" onclick="setCat('ciencia')">🔬 Ciencia</button>
+    <button class="cat" id="c-deportes" onclick="setCat('deportes')">⚽ Deportes</button>
+  </div>
+
+  <canvas id="c" width="200" height="200"></canvas>
+
+  <div class="letras" id="letras"></div>
+  <div id="pista"></div>
+  <div id="estado"></div>
+  <div id="intentos">Errores: 0 / 6</div>
+
+  <div class="teclado" id="teclado"></div>
+  <button id="btn-nuevo" onclick="nuevaPartida()">🔄 Nueva palabra</button>
+
+<script>
+const PALABRAS = {
+  animales:[
+    {p:'ELEFANTE',h:'Animal terrestre más grande'},
+    {p:'DELFIN',h:'Mamífero marino inteligente'},
+    {p:'CAMELLO',h:'Animal del desierto con joroba'},
+    {p:'MARIPOSA',h:'Insecto con alas coloridas'},
+    {p:'COCODRILO',h:'Reptil de agua dulce'},
+    {p:'PINGÜINO',h:'Ave que no vuela, vive en el frío'},
+    {p:'JIRAFA',h:'Animal con cuello muy largo'},
+    {p:'TIBURON',h:'Gran pez depredador del mar'},
+    {p:'CANGURO',h:'Animal australiano con bolsa'},
+    {p:'TORTUGA',h:'Reptil de caparazón duro'},
+  ],
+  paises:[
+    {p:'AUSTRALIA',h:'País y continente a la vez'},
+    {p:'JAPON',h:'País del sol naciente'},
+    {p:'EGIPTO',h:'País de las pirámides'},
+    {p:'BRASIL',h:'País más grande de Sudamérica'},
+    {p:'NORUEGA',h:'País de los fiordos'},
+    {p:'CANADA',h:'País con la hoja de arce'},
+    {p:'TAILANDIA',h:'País del sudeste asiático'},
+    {p:'MARRUECOS',h:'País del norte de África'},
+    {p:'ARGENTINA',h:'País vecino de Chile'},
+    {p:'ISLANDIA',h:'Isla volcánica en el norte'},
+  ],
+  ciencia:[
+    {p:'FOTOSINTESIS',h:'Proceso que usan las plantas para hacer energía'},
+    {p:'GRAVEDAD',h:'Fuerza que nos mantiene en la tierra'},
+    {p:'ATOMO',h:'Partícula más pequeña de la materia'},
+    {p:'VOLCÁN',h:'Abertura en la tierra que expulsa lava'},
+    {p:'ECLIPSE',h:'Cuando un astro tapa a otro'},
+    {p:'CELULA',h:'Unidad básica de los seres vivos'},
+    {p:'MAGNETISMO',h:'Fuerza de atracción del imán'},
+    {p:'METEORITO',h:'Roca del espacio que cae a la Tierra'},
+    {p:'OXIGENO',h:'Gas que respiramos'},
+    {p:'TELESCOPIO',h:'Instrumento para ver objetos lejanos'},
+  ],
+  deportes:[
+    {p:'ATLETISMO',h:'Deporte de pista y campo'},
+    {p:'ESGRIMA',h:'Deporte con espadas'},
+    {p:'KARATE',h:'Arte marcial japonés'},
+    {p:'GIMNASIA',h:'Deporte de flexibilidad y acrobacia'},
+    {p:'NATACION',h:'Deporte acuático'},
+    {p:'VOLEIBOL',h:'Deporte de red con balón'},
+    {p:'CICLISMO',h:'Deporte en bicicleta'},
+    {p:'RUGBY',h:'Deporte con pelota ovalada'},
+    {p:'BOXEO',h:'Deporte de golpes con guantes'},
+    {p:'ARQUERIA',h:'Deporte con arco y flecha'},
+  ]
+};
+
+const MAX_ERRORES = 6;
+let cat='animales', palabra='', pista='', descubiertas=new Set(), usadas=new Set(), errores=0;
+const ctx = document.getElementById('c').getContext('2d');
+
+function setCat(c){
+  cat=c;
+  document.querySelectorAll('.cat').forEach(b=>b.classList.remove('active'));
+  document.getElementById('c-'+c).classList.add('active');
+  nuevaPartida();
+}
+
+function nuevaPartida(){
+  const lista = PALABRAS[cat];
+  const item  = lista[Math.floor(Math.random()*lista.length)];
+  palabra    = item.p.normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();
+  pista      = item.h;
+  descubiertas = new Set();
+  usadas       = new Set();
+  errores      = 0;
+  document.getElementById('pista').textContent = '💡 Pista: '+pista;
+  document.getElementById('estado').textContent='';
+  document.getElementById('intentos').textContent='Errores: 0 / '+MAX_ERRORES;
+  renderLetras(); renderTeclado(); dibujar();
+}
+
+function renderLetras(){
+  document.getElementById('letras').innerHTML = [...palabra].map(l=>
+    `<div class="letra-slot">${l===' '?'&nbsp;':descubiertas.has(l)?l:''}</div>`
+  ).join('');
+}
+
+function renderTeclado(){
+  const tk = document.getElementById('teclado');
+  tk.innerHTML='';
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l=>{
+    const b=document.createElement('button');
+    b.className='tecla';
+    b.textContent=l;
+    if(usadas.has(l)){
+      b.disabled=true;
+      b.classList.add(palabra.includes(l)?'acierto':'fallo');
+    }
+    b.onclick=()=>intentar(l);
+    tk.appendChild(b);
+  });
+}
+
+function intentar(l){
+  if(usadas.has(l)||errores>=MAX_ERRORES)return;
+  usadas.add(l);
+  if(palabra.includes(l)){
+    [...palabra].forEach(c=>{ if(c===l) descubiertas.add(c); });
+    renderLetras();
+    if([...palabra].every(c=>c===' '||descubiertas.has(c))){
+      document.getElementById('estado').style.color='#3aab7a';
+      document.getElementById('estado').textContent='🎉 ¡Ganaste!';
+      bloquearTeclado();
+    }
+  }else{
+    errores++;
+    document.getElementById('intentos').textContent=`Errores: ${errores} / ${MAX_ERRORES}`;
+    dibujar();
+    if(errores>=MAX_ERRORES){
+      renderLetras(); // reveal all
+      document.getElementById('letras').innerHTML=[...palabra].map(l=>
+        `<div class="letra-slot" style="${!descubiertas.has(l)&&l!==' '?'color:#f85149':''}">
+          ${l===' '?'&nbsp;':l}
+        </div>`).join('');
+      document.getElementById('estado').style.color='#f85149';
+      document.getElementById('estado').textContent='💀 Era: '+palabra;
+      bloquearTeclado();
+    }
+  }
+  renderTeclado();
+}
+
+function bloquearTeclado(){
+  document.querySelectorAll('.tecla').forEach(b=>b.disabled=true);
+}
+
+/* ── DIBUJO DEL AHORCADO ── */
+function dibujar(){
+  ctx.clearRect(0,0,200,200);
+  ctx.strokeStyle='#58a6ff'; ctx.lineWidth=3; ctx.lineCap='round';
+  // Base
+  lin(20,190,180,190); lin(60,190,60,20); lin(60,20,120,20); lin(120,20,120,50);
+  if(errores>0){ // cabeza
+    ctx.beginPath();ctx.arc(120,65,15,0,Math.PI*2);ctx.stroke();
+  }
+  if(errores>1) lin(120,80,120,130); // cuerpo
+  if(errores>2) lin(120,95,95,115);  // brazo izq
+  if(errores>3) lin(120,95,145,115); // brazo der
+  if(errores>4) lin(120,130,100,160);// pierna izq
+  if(errores>5) lin(120,130,140,160);// pierna der
+}
+function lin(x1,y1,x2,y2){
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+}
+
+nuevaPartida();
+</script>
+</body>
+</html>

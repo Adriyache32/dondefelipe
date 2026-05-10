@@ -6,79 +6,165 @@
   <title>Juego de Memoria</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{background:#1a1a2e;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;color:#fff;padding:16px}
-    h2{color:#ffd700;font-size:1.4rem;margin-bottom:8px;letter-spacing:1px}
-    #info{margin-bottom:14px;font-size:.95rem;color:#aaa;text-align:center}
-    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:380px;width:100%}
-    .card{aspect-ratio:1;background:#16213e;border:2px solid #0f3460;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.9rem;cursor:pointer;transition:transform .15s,background .2s;user-select:none;-webkit-tap-highlight-color:transparent}
-    .card:hover:not(.matched):not(.flipped){transform:scale(1.06);background:#1e2d50}
-    .card.flipped{background:#0f3460;border-color:#4a7fc1}
-    .card.matched{background:#1a3a1a;border-color:#ffd700;opacity:.75;cursor:default}
-    #btn{margin-top:18px;padding:8px 28px;background:#ffd700;color:#1a1a2e;border:none;border-radius:8px;font-size:1rem;font-weight:bold;cursor:pointer}
+    body{background:#1a1a2e;display:flex;flex-direction:column;align-items:center;
+      justify-content:flex-start;min-height:100vh;font-family:sans-serif;color:#fff;
+      padding:14px;gap:10px}
+    h2{color:#ffd700;font-size:1.3rem;letter-spacing:1px;margin-top:4px}
+
+    /* CONTROLES */
+    .controles{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+    .ctrl-group{display:flex;gap:4px}
+    .ctrl-btn{padding:5px 12px;background:#16213e;border:2px solid #0f3460;border-radius:8px;
+      color:#aaa;cursor:pointer;font-size:.8rem;transition:all .2s}
+    .ctrl-btn.active{border-color:#ffd700;color:#ffd700;background:#1e2d50}
+    .ctrl-btn:hover:not(.active){border-color:#4a7fc1;color:#fff}
+
+    /* INFO */
+    #info{font-size:.9rem;color:#aaa;text-align:center}
+
+    /* GRID */
+    .grid{display:grid;gap:6px;max-width:440px;width:100%}
+    .grid.g4{grid-template-columns:repeat(4,1fr)}
+    .grid.g5{grid-template-columns:repeat(5,1fr)}
+    .grid.g6{grid-template-columns:repeat(6,1fr)}
+
+    /* CARTA */
+    .carta{aspect-ratio:1;background:#16213e;border:2px solid #0f3460;border-radius:10px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:1.8rem;cursor:pointer;
+      transition:transform .15s,background .2s;user-select:none;
+      -webkit-tap-highlight-color:transparent}
+    .carta:hover:not(.matched):not(.flipped){transform:scale(1.06);background:#1e2d50}
+    .carta.flipped{background:#0f3460;border-color:#4a7fc1}
+    .carta.matched{background:#1a3a1a;border-color:#ffd700;opacity:.75;cursor:default}
+    .grid.g5 .carta,.grid.g6 .carta{font-size:1.4rem;border-radius:8px}
+
+    /* BOTÓN */
+    #btn{padding:7px 22px;background:#ffd700;color:#1a1a2e;border:none;border-radius:8px;
+      font-size:.95rem;font-weight:bold;cursor:pointer;flex-shrink:0}
     #btn:hover{background:#ffe94d}
-    #win{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);align-items:center;justify-content:center;flex-direction:column;z-index:99}
+
+    /* WIN */
+    #win{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);
+      align-items:center;justify-content:center;z-index:99}
     #win.show{display:flex}
-    #win-box{background:#16213e;border:2px solid #ffd700;border-radius:16px;padding:2rem 3rem;text-align:center}
-    #win-box h3{color:#ffd700;font-size:1.6rem;margin-bottom:.5rem}
-    #win-box p{color:#aaa;margin-bottom:1rem}
-    #win-box button{padding:8px 24px;background:#ffd700;color:#1a1a2e;border:none;border-radius:8px;font-size:1rem;font-weight:bold;cursor:pointer}
+    #win-box{background:#16213e;border:2px solid #ffd700;border-radius:16px;
+      padding:2rem 2.5rem;text-align:center;max-width:320px;width:90%}
+    #win-box h3{color:#ffd700;font-size:1.5rem;margin-bottom:.4rem}
+    #win-box p{color:#aaa;margin-bottom:1rem;font-size:.9rem}
+    #win-box button{padding:8px 22px;background:#ffd700;color:#1a1a2e;border:none;
+      border-radius:8px;font-size:.95rem;font-weight:bold;cursor:pointer}
   </style>
 </head>
 <body>
   <h2>🃏 JUEGO DE MEMORIA</h2>
-  <div id="info">Intentos: 0 &nbsp;|&nbsp; Pares: 0 / 8</div>
-  <div class="grid" id="grid"></div>
+
+  <div class="controles">
+    <div class="ctrl-group">
+      <button class="ctrl-btn active" id="d-facil"  onclick="setDif('facil')">Fácil 4×4</button>
+      <button class="ctrl-btn"        id="d-medio"  onclick="setDif('medio')">Medio 4×5</button>
+      <button class="ctrl-btn"        id="d-dificil" onclick="setDif('dificil')">Difícil 5×6</button>
+    </div>
+    <div class="ctrl-group">
+      <button class="ctrl-btn active" id="t-espacio"  onclick="setTema('espacio')">🚀 Espacio</button>
+      <button class="ctrl-btn"        id="t-animales" onclick="setTema('animales')">🐾 Animales</button>
+      <button class="ctrl-btn"        id="t-ciencia"  onclick="setTema('ciencia')">🔬 Ciencia</button>
+      <button class="ctrl-btn"        id="t-frutas"   onclick="setTema('frutas')">🍎 Frutas</button>
+    </div>
+  </div>
+
+  <div id="info">Intentos: 0 &nbsp;|&nbsp; Pares: 0 / –</div>
+
+  <div class="grid g4" id="grid"></div>
+
   <button id="btn" onclick="init()">🔄 Reiniciar</button>
 
   <div id="win">
     <div id="win-box">
-      <h3>¡Felicitaciones! 🎉</h3>
+      <h3>🎉 ¡Ganaste!</h3>
       <p id="win-msg"></p>
       <button onclick="document.getElementById('win').classList.remove('show');init()">Jugar de nuevo</button>
     </div>
   </div>
 
 <script>
-const EMOJIS=['🚀','⭐','🌙','🪐','☄️','🔭','👽','🛸'];
-let flipped=[],matched=0,moves=0,lock=false;
+const TEMAS = {
+  espacio:  ['🚀','⭐','🌙','🪐','☄️','🔭','👽','🛸','🌌','🌠','🌍','☀️','🌊','🌋','💫'],
+  animales: ['🐶','🐱','🐸','🦁','🐧','🦊','🐨','🦋','🐬','🦜','🐙','🦒','🐺','🦅','🐝'],
+  ciencia:  ['🔬','⚗️','🧲','💡','🔋','⚡','🧪','🌡️','🔭','🧬','💊','🔩','🧮','📡','🛰️'],
+  frutas:   ['🍎','🍊','🍋','🍇','🍓','🍑','🍍','🥭','🍒','🫐','🍌','🥝','🍈','🍏','🫒']
+};
 
-function shuffle(arr){return arr.sort(()=>Math.random()-.5);}
+const DIFS = {
+  facil:   { pares:8,  cols:'g4' },
+  medio:   { pares:10, cols:'g5' },
+  dificil: { pares:15, cols:'g6' }
+};
+
+let dif='facil', tema='espacio';
+let flipped=[], matched=0, moves=0, total=0, lock=false;
+
+function setDif(d){
+  dif=d;
+  document.querySelectorAll('[id^="d-"]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('d-'+d).classList.add('active');
+  init();
+}
+
+function setTema(t){
+  tema=t;
+  document.querySelectorAll('[id^="t-"]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('t-'+t).classList.add('active');
+  init();
+}
+
+function shuffle(arr){ return [...arr].sort(()=>Math.random()-.5); }
 
 function init(){
-  matched=0;moves=0;flipped=[];lock=false;
+  const cfg   = DIFS[dif];
+  const emojis = shuffle(TEMAS[tema]).slice(0, cfg.pares);
+  total = cfg.pares;
+  matched=0; moves=0; flipped=[]; lock=false;
   updInfo();
-  const pairs=shuffle([...EMOJIS,...EMOJIS]);
-  const grid=document.getElementById('grid');
-  grid.innerHTML='';
-  pairs.forEach((emoji,i)=>{
-    const d=document.createElement('div');
-    d.className='card';d.dataset.val=emoji;d.textContent='❓';
+
+  const grid = document.getElementById('grid');
+  grid.className = `grid ${cfg.cols}`;
+  grid.innerHTML = '';
+
+  shuffle([...emojis,...emojis]).forEach(emoji=>{
+    const d = document.createElement('div');
+    d.className='carta';
+    d.dataset.val=emoji;
+    d.textContent='❓';
     d.addEventListener('click',()=>flip(d));
     grid.appendChild(d);
   });
 }
 
 function updInfo(){
-  document.getElementById('info').textContent=`Intentos: ${moves}  |  Pares: ${matched} / 8`;
+  document.getElementById('info').textContent =
+    `Intentos: ${moves}  |  Pares: ${matched} / ${total}`;
 }
 
 function flip(card){
   if(lock||flipped.length===2||card.classList.contains('matched')||card.classList.contains('flipped'))return;
-  card.classList.add('flipped');card.textContent=card.dataset.val;
+  card.classList.add('flipped'); card.textContent=card.dataset.val;
   flipped.push(card);
   if(flipped.length===2){
-    moves++;lock=true;updInfo();
+    moves++; lock=true; updInfo();
     if(flipped[0].dataset.val===flipped[1].dataset.val){
       flipped.forEach(c=>c.classList.add('matched'));
-      matched++;updInfo();flipped=[];lock=false;
-      if(matched===8){
-        document.getElementById('win-msg').textContent=`Completaste el tablero en ${moves} intentos.`;
+      matched++; updInfo(); flipped=[]; lock=false;
+      if(matched===total){
+        const stars = moves<=total+2?'⭐⭐⭐':moves<=total*1.5?'⭐⭐':'⭐';
+        document.getElementById('win-msg').textContent=
+          `${stars} Completaste ${total} pares en ${moves} intentos.`;
         setTimeout(()=>document.getElementById('win').classList.add('show'),400);
       }
     }else{
       setTimeout(()=>{
         flipped.forEach(c=>{c.classList.remove('flipped');c.textContent='❓';});
-        flipped=[];lock=false;
+        flipped=[]; lock=false;
       },900);
     }
   }
