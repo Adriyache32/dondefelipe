@@ -5,389 +5,141 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tesoros del Espacio — Física 4° Medio</title>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{
-    background:#03050F;
-    color:#fff;
-    font-family:'Segoe UI',Arial,sans-serif;
-    min-height:100vh;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    overflow:hidden;
-    position:relative;
+  :root { --primary: #00f2ff; --error: #ff4d4d; --bg: #03050F; }
+  body {
+    background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif;
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    overflow: hidden; margin: 0;
   }
-
-  /* ── Stars canvas ── */
-  #stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
-
-  /* ── Main card ── */
-  .card{
-    position:relative;z-index:10;
-    background:rgba(13,27,42,0.85);
-    border:2px solid #1B7F8B;
-    border-radius:18px;
-    padding:42px 50px 46px;
-    max-width:560px;
-    width:92%;
-    text-align:center;
-    backdrop-filter:blur(6px);
-    box-shadow:0 0 60px rgba(27,127,139,0.25),0 0 120px rgba(232,97,10,0.1);
+  .card {
+    background: rgba(13, 27, 42, 0.9); border: 2px solid #1B7F8B;
+    border-radius: 18px; padding: 40px; max-width: 500px; width: 90%;
+    text-align: center; backdrop-filter: blur(10px); box-shadow: 0 0 40px rgba(27,127,139,0.3);
   }
-
-  .rocket{font-size:64px;display:block;margin-bottom:12px;animation:float 3s ease-in-out infinite;}
-  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
-
-  h1{
-    font-size:2rem;font-weight:800;letter-spacing:2px;
-    background:linear-gradient(90deg,#E8610A,#F5A623,#E8610A);
-    background-size:200%;
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-    animation:shimmer 3s linear infinite;
-    margin-bottom:6px;
+  h1 { font-size: 1.5rem; color: var(--primary); margin-bottom: 20px; letter-spacing: 2px; }
+  input {
+    background: #0c1120; border: 1px solid #1B7F8B; color: var(--primary);
+    padding: 15px; font-size: 1.5rem; text-align: center; width: 100px; border-radius: 8px;
+    margin-bottom: 20px; outline: none;
   }
-  @keyframes shimmer{0%{background-position:0%;}100%{background-position:200%;}}
-
-  .subtitle{font-size:1rem;color:#1B7F8B;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;}
-  .unit{font-size:.85rem;color:#607080;margin-bottom:30px;}
-
-  .divider{height:1px;background:linear-gradient(90deg,transparent,#1B7F8B,transparent);margin:20px 0;}
-
-  .prompt{font-size:.95rem;color:#B0C4D0;margin-bottom:20px;line-height:1.6;}
-
-  /* ── Input group ── */
-  .input-group{display:flex;gap:10px;justify-content:center;margin-bottom:20px;}
-  #codeInput{
-    font-size:2rem;font-weight:700;
-    width:160px;
-    text-align:center;
-    background:#0a1525;
-    border:2px solid #1B7F8B;
-    border-radius:10px;
-    color:#E8610A;
-    padding:12px 8px;
-    outline:none;
-    letter-spacing:6px;
-    font-family:'Courier New',monospace;
-    transition:border-color .3s,box-shadow .3s;
+  .btn-tech {
+    background: none; border: 1px solid var(--primary); color: var(--primary);
+    padding: 12px 24px; cursor: pointer; font-weight: bold; transition: 0.3s;
   }
-  #codeInput:focus{border-color:#E8610A;box-shadow:0 0 18px rgba(232,97,10,0.35);}
-  #codeInput.shake{animation:shake .4s ease;}
-  @keyframes shake{0%,100%{transform:translateX(0);}20%,60%{transform:translateX(-8px);}40%,80%{transform:translateX(8px);}}
-
-  button{
-    font-size:1rem;font-weight:700;
-    padding:12px 24px;
-    border:none;border-radius:10px;
-    background:linear-gradient(135deg,#E8610A,#FF8C38);
-    color:#fff;cursor:pointer;
-    transition:transform .15s,box-shadow .3s;
-    letter-spacing:1px;
-    text-transform:uppercase;
-  }
-  button:hover{transform:scale(1.05);box-shadow:0 6px 24px rgba(232,97,10,0.5);}
-  button:active{transform:scale(.97);}
-
-  /* ── Result messages ── */
-  #result{min-height:60px;transition:opacity .4s;}
-  .msg-error{
-    background:rgba(180,30,30,0.2);
-    border:1px solid #B44;
-    border-radius:10px;
-    padding:14px 20px;
-    color:#FF8080;
-    font-size:.95rem;
-  }
-  .msg-success{
-    background:rgba(27,127,139,0.15);
-    border:1px solid #1B7F8B;
-    border-radius:10px;
-    padding:20px;
-    color:#fff;
-  }
-  .msg-success h2{font-size:1.6rem;color:#E8610A;margin-bottom:10px;}
-  .msg-success p{font-size:.9rem;color:#90C8D0;line-height:1.7;}
-
-  /* ── Subjects list ── */
-  .subjects{
-    display:flex;flex-direction:column;gap:8px;
-    margin:16px 0;text-align:left;
-  }
-  .subj{
-    display:flex;align-items:center;gap:10px;
-    background:rgba(27,127,139,0.12);
-    border-radius:8px;padding:8px 14px;
-    font-size:.88rem;color:#C0D8E0;
-  }
-  .subj-icon{font-size:1.2rem;}
-
-  /* ── Confetti ── */
-  .confetti-piece{
-    position:fixed;top:-20px;z-index:20;
-    width:10px;height:10px;border-radius:2px;
-    animation:fall linear forwards;
-    pointer-events:none;
-  }
-  @keyframes fall{
-    0%  {transform:translateY(0) rotate(0deg);opacity:1;}
-    80% {opacity:1;}
-    100%{transform:translateY(105vh) rotate(720deg);opacity:0;}
-  }
-
-  /* ── Star-streak on success ── */
-  .streak{
-    position:fixed;z-index:15;width:3px;height:60px;
-    background:linear-gradient(transparent,rgba(255,255,255,.6),transparent);
-    animation:streak linear forwards;pointer-events:none;border-radius:2px;
-  }
-  @keyframes streak{
-    0%  {transform:translateX(-20vw) translateY(-60px) rotate(-40deg);opacity:0;}
-    20% {opacity:1;}
-    100%{transform:translateX(120vw) translateY(60vh) rotate(-40deg);opacity:0;}
-  }
-
-  /* ── Hint at bottom ── */
-  .hint{
-    position:relative;z-index:10;
-    margin-top:18px;
-    font-size:.75rem;color:#2A3A4A;
-    letter-spacing:1px;
+  .btn-tech:hover { background: rgba(0,242,255,0.1); box-shadow: 0 0 15px var(--primary); }
+  #error-msg { color: var(--error); display: none; margin-top: 15px; font-size: 0.9rem; }
+  
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
   }
 </style>
 </head>
 <body>
 
-<canvas id="stars"></canvas>
-
 <div class="card">
-  <span class="rocket">🚀</span>
-  <h1>TESOROS DEL ESPACIO</h1>
-  <div class="subtitle">Física 4° Medio</div>
-  <div class="unit">Unidad 1 · Fuerzas Centrales</div>
-
-  <div class="divider"></div>
-  <p class="prompt">Has recorrido las 5 estaciones del universo.<br>
-  Ingresa el <strong>código total</strong> para desbloquear el tesoro cósmico:</p>
-
-  <div class="input-group">
-    <input type="number" id="codeInput" placeholder="_ _ _" min="0" max="9999"
-           onkeydown="if(event.key==='Enter')checkCode()">
-    <button onclick="checkCode()">🔓 Desbloquear</button>
-  </div>
-
-  <div id="result"></div>
+  <h1>SISTEMA DE ACCESO ESTELAR</h1>
+  <p style="margin-bottom: 20px; opacity: 0.8;">Ingresa el código de frecuencia para liberar el tesoro.</p>
+  
+  <input type="password" id="code-input" maxlength="3" placeholder="***">
+  <br>
+  <button class="btn-tech" onclick="verifyCode()">VERIFICAR CÓDIGO</button>
+  
+  <p id="error-msg">⚠️ FRECUENCIA INCORRECTA: INTERFERENCIA DETECTADA</p>
 </div>
 
-<div class="hint">© Prof. Felipe Jiménez · Búsqueda del Tesoro Física</div>
-
 <script>
+  const CORRECT_CODE = "500";
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyFcG4150ORc85aIqbrAmtfBrZAol-iXB2I4RDEFMB87ESzTpE7vpoYIYpSPWL28Mas/exec";
 
- const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyFcG4150ORc85aIqbrAmtfBrZAol-iXB2I4RDEFMB87ESzTpE7vpoYIYpSPWL28Mas/exec";
+  // ── SISTEMA DE SONIDOS ESPACIALES ──
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-async function registrarGanadores() {
-  const equipo = prompt("¡Felicidades! Ingresa el nombre de tu equipo para el Cuadro de Honor:");
-  if(!equipo) return;
+  function playSound(type) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
 
-  const data = {
-    title: "GANADOR_TESORO",
-    members: equipo,
-    roles: "Exploradores de 4to Medio",
-    problem: "Misión Completada",
-    question: "Código Estelar Descifrado",
-    hypothesis: "N/A", v_indep: "N/A", v_dep: "N/A",
-    materials: "Ingenio", procedure: "Juego Tesoros Espacio"
-  };
-
-  try {
-    await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
-    alert("¡Equipo registrado! El Profe Felipe verá tu nombre en el Drive.");
-  } catch(e) { console.error("Error al registrar"); }
-}
-
-// Busca la función win() o showSuccess() en tu archivo original 
-// y añade la llamada al final: registrarGanadores();
-// ── CONFIG ──────────────────────────────────────────────────────────────────
-const CORRECT = 500;
-const STATIONS = [
-  {icon:'🚌', name:'Movimiento Rectilíneo Uniforme (MRU)'},
-  {icon:'⚡', name:'Velocidad Relativa'},
-  {icon:'🛸', name:'MRUA — Movimiento Uniformemente Acelerado'},
-  {icon:'🔭', name:'Fuerzas y Segunda Ley de Newton'},
-  {icon:'🌌', name:'Diagrama de Cuerpo Libre (DCL)'}
-];
-
-// ── STARS ────────────────────────────────────────────────────────────────────
-(function initStars(){
-  const canvas = document.getElementById('stars');
-  const ctx = canvas.getContext('2d');
-  let W, H, stars=[], meteors=[];
-
-  function resize(){
-    W=canvas.width=window.innerWidth;
-    H=canvas.height=window.innerHeight;
+    if (type === 'success') {
+      // Alerta Espacial Heroica
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.5);
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.5);
+    } else {
+      // Castigo: Agujero Negro / Descompresión
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.8);
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.8);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.8);
+    }
   }
-  resize();
-  window.addEventListener('resize',()=>{resize();spawnStars();});
 
-  function spawnStars(){
-    stars=[];
-    const n = Math.floor(W*H/3200);
-    for(let i=0;i<n;i++){
-      stars.push({
-        x:Math.random()*W, y:Math.random()*H,
-        r:Math.random()*1.5+0.2,
-        alpha:Math.random(),
-        speed:Math.random()*0.008+0.002,
-        phase:Math.random()*Math.PI*2
+  // ── LÓGICA DE REGISTRO ──
+  async function registrarGanadores() {
+    const equipo = prompt("¡CÓDIGO CORRECTO! 🚀\nIngresa el nombre de tu equipo para el Cuadro de Honor:");
+    if (!equipo) return;
+
+    const data = {
+      title: "GANADOR_TESORO_ESPACIAL",
+      members: equipo,
+      roles: "Exploradores de 4to Medio",
+      problem: "Misión: Tesoros del Espacio completada.",
+      question: "Código 500 verificado",
+      hypothesis: "Física Estelar",
+      v_indep: "N/A", v_dep: "N/A",
+      materials: "Ingenio Espacial", 
+      procedure: "Descifrado de códigos de ondas y partículas"
+    };
+
+    try {
+      await fetch(WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify(data)
       });
+      alert("¡Transmisión enviada! El Profe Felipe publicará al equipo ganador en las Novedades.");
+    } catch (e) {
+      console.error("Error de transmisión");
     }
   }
-  spawnStars();
 
-  function spawnMeteor(){
-    meteors.push({
-      x:Math.random()*W*0.6+W*0.2,
-      y:-20,
-      vx:Math.random()*3+1,
-      vy:Math.random()*4+3,
-      len:Math.random()*80+40,
-      alpha:1,
-      life:0
-    });
-  }
-
-  setInterval(spawnMeteor,2800);
-
-  let t=0;
-  function draw(){
-    ctx.clearRect(0,0,W,H);
-    // deep space gradient
-    const bg=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H));
-    bg.addColorStop(0,'#040818');bg.addColorStop(1,'#010308');
-    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-    // nebula
-    const neb=ctx.createRadialGradient(W*0.7,H*0.3,0,W*0.7,H*0.3,W*0.4);
-    neb.addColorStop(0,'rgba(27,127,139,0.06)');neb.addColorStop(1,'transparent');
-    ctx.fillStyle=neb;ctx.fillRect(0,0,W,H);
-    const neb2=ctx.createRadialGradient(W*0.2,H*0.7,0,W*0.2,H*0.7,W*0.3);
-    neb2.addColorStop(0,'rgba(232,97,10,0.04)');neb2.addColorStop(1,'transparent');
-    ctx.fillStyle=neb2;ctx.fillRect(0,0,W,H);
-
-    // stars
-    t+=0.016;
-    for(const s of stars){
-      const a=0.3+0.7*(0.5+0.5*Math.sin(t*s.speed*100+s.phase));
-      ctx.beginPath();
-      ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-      ctx.fillStyle=`rgba(200,220,255,${a})`;
-      ctx.fill();
+  function verifyCode() {
+    const input = document.getElementById('code-input').value;
+    const errorMsg = document.getElementById('error-msg');
+    
+    if (input === CORRECT_CODE) {
+      playSound('success');
+      registrarGanadores().then(() => {
+        showSuccess();
+      });
+    } else {
+      playSound('fail');
+      errorMsg.style.display = 'block';
+      const card = document.querySelector('.card');
+      card.style.animation = 'shake 0.5s';
+      setTimeout(() => card.style.animation = '', 500);
     }
-
-    // meteors
-    for(let i=meteors.length-1;i>=0;i--){
-      const m=meteors[i];
-      m.x+=m.vx; m.y+=m.vy; m.life++;
-      m.alpha=Math.max(0,1-m.life/60);
-      if(m.alpha<=0){meteors.splice(i,1);continue;}
-      ctx.save();
-      const g=ctx.createLinearGradient(m.x,m.y,m.x-m.vx/m.vy*m.len,m.y-m.len);
-      g.addColorStop(0,`rgba(255,255,255,${m.alpha})`);
-      g.addColorStop(1,'transparent');
-      ctx.strokeStyle=g;
-      ctx.lineWidth=1.5;
-      ctx.beginPath();ctx.moveTo(m.x,m.y);ctx.lineTo(m.x-m.vx/m.vy*m.len,m.y-m.len);ctx.stroke();
-      ctx.restore();
-    }
-    requestAnimationFrame(draw);
-  }
-  draw();
-})();
-
-// ── CODE CHECK ───────────────────────────────────────────────────────────────
-function checkCode(){
-  const inp=document.getElementById('codeInput');
-  const val=parseInt(inp.value,10);
-  const res=document.getElementById('result');
-
-  if(isNaN(val)||inp.value.trim()===''){
-    showError(res,'Por favor ingresa un código numérico.');
-    return;
   }
 
-  if(val===CORRECT){
-    showSuccess(res);
-  } else {
-    const diff=Math.abs(val-CORRECT);
-    let hint='';
-    if(diff<=5)hint=' Estás muy cerca, revisa algún cálculo.';
-    else if(diff<=50)hint=' Revisa la suma de todos los códigos.';
-    else hint=' Verifica los problemas de cada estación.';
-    showError(res,`Código incorrecto (${val}).${hint}`);
-    inp.classList.remove('shake');
-    void inp.offsetWidth;
-    inp.classList.add('shake');
+  function showSuccess() {
+    document.querySelector('.card').innerHTML = `
+      <div style="animation: fadeIn 1s ease;">
+        <h2 style="color:#f0c840;">¡ACCESO CONCEDIDO!</h2>
+        <p style="margin:20px 0;">Has sincronizado la frecuencia 500 con éxito.</p>
+        <p style="font-size:0.8rem; color:var(--primary);">SISTEMA DESBLOQUEADO</p>
+        <button class="btn-tech" onclick="window.close()" style="margin-top:20px;">SALIR DEL SISTEMA</button>
+      </div>`;
   }
-}
-
-function showError(el,msg){
-  el.innerHTML=`<div class="msg-error">🚫 ${msg}</div>`;
-}
-
-function showSuccess(el){
-  // Build station list
-  const subjsHTML = STATIONS.map(s=>`
-    <div class="subj"><span class="subj-icon">${s.icon}</span><span>${s.name}</span></div>
-  `).join('');
-
-  el.innerHTML=`
-    <div class="msg-success">
-      <h2>🏆 ¡TESORO DESBLOQUEADO!</h2>
-      <p>¡Felicitaciones, exploradores del universo!<br>
-      Han demostrado dominar los fundamentos de la física.</p>
-      <div class="subjects">${subjsHTML}</div>
-      <p>🌟 Código <strong>${CORRECT}</strong> verificado con éxito.<br>
-      Han completado la misión con brillantez cósmica. 🚀</p>
-    </div>`;
-
-  launchConfetti();
-  launchStreaks();
-}
-
-function launchConfetti(){
-  const colors=['#E8610A','#F5A623','#1B7F8B','#4FC3F7','#FFFFFF','#FF6B6B','#A8E6CF'];
-  for(let i=0;i<120;i++){
-    setTimeout(()=>{
-      const el=document.createElement('div');
-      el.className='confetti-piece';
-      el.style.left=Math.random()*100+'vw';
-      el.style.background=colors[Math.floor(Math.random()*colors.length)];
-      el.style.width=(Math.random()*10+5)+'px';
-      el.style.height=(Math.random()*10+5)+'px';
-      el.style.borderRadius=Math.random()>0.5?'50%':'3px';
-      const dur=(Math.random()*2+2);
-      el.style.animationDuration=dur+'s';
-      el.style.animationDelay=(Math.random()*1.5)+'s';
-      document.body.appendChild(el);
-      setTimeout(()=>el.remove(),(dur+1.5)*1000);
-    }, i*30);
-  }
-}
-
-function launchStreaks(){
-  for(let i=0;i<8;i++){
-    setTimeout(()=>{
-      const el=document.createElement('div');
-      el.className='streak';
-      el.style.top=(Math.random()*40)+'vh';
-      el.style.left='-20vw';
-      const dur=(Math.random()*1+1.2);
-      el.style.animationDuration=dur+'s';
-      document.body.appendChild(el);
-      setTimeout(()=>el.remove(),(dur+0.5)*1000);
-    },i*200);
-  }
-}
 </script>
+
 </body>
 </html>
