@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tres en Raya</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0d1117;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;color:#fff;padding:16px}
+    h2{color:#58a6ff;font-size:1.4rem;margin-bottom:6px;letter-spacing:1px}
+    #status{margin:10px 0;font-size:1.05rem;color:#aaa;min-height:1.5rem;text-align:center}
+    .board{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:min(320px,90vw)}
+    .cell{aspect-ratio:1;background:#161b22;border:2px solid #30363d;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:2.4rem;cursor:pointer;transition:background .15s;-webkit-tap-highlight-color:transparent}
+    .cell:hover{background:#1c2128}
+    .cell.x{color:#f85149}
+    .cell.o{color:#58a6ff}
+    .cell.win{background:#1f2f3a;border-color:#388bfd}
+    .cell.done{cursor:default}
+    #score{margin:14px 0 6px;color:#8b949e;font-size:.9rem;text-align:center}
+    #btn{padding:8px 28px;background:#238636;color:#fff;border:none;border-radius:8px;font-size:1rem;cursor:pointer}
+    #btn:hover{background:#2ea043}
+    #mode{margin-bottom:12px;display:flex;gap:8px}
+    #mode button{padding:6px 16px;border:2px solid #30363d;border-radius:6px;background:#161b22;color:#aaa;cursor:pointer;font-size:.85rem}
+    #mode button.active{border-color:#58a6ff;color:#58a6ff;background:#1f2f3a}
+  </style>
+</head>
+<body>
+  <h2>❌ TRES EN RAYA ⭕</h2>
+  <div id="mode">
+    <button id="btn-2p" class="active" onclick="setMode('2p')">2 Jugadores</button>
+    <button id="btn-cpu" onclick="setMode('cpu')">vs CPU</button>
+  </div>
+  <div id="status">Turno de ❌</div>
+  <div class="board" id="board"></div>
+  <div id="score">❌: 0 &nbsp;|&nbsp; ⭕: 0 &nbsp;|&nbsp; Empates: 0</div>
+  <button id="btn" onclick="newGame()">🔄 Nueva Partida</button>
+
+<script>
+const LINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+let board,turn,over,wins={X:0,O:0,D:0},mode='2p',cells;
+
+function setMode(m){
+  mode=m;
+  document.getElementById('btn-2p').classList.toggle('active',m==='2p');
+  document.getElementById('btn-cpu').classList.toggle('active',m==='cpu');
+  newGame();
+}
+
+function newGame(){
+  board=Array(9).fill('');turn='X';over=false;
+  renderBoard();setStatus('Turno de ❌');
+}
+
+function renderBoard(){
+  const b=document.getElementById('board');
+  b.innerHTML='';
+  cells=Array.from({length:9},(_,i)=>{
+    const c=document.createElement('div');
+    c.className='cell';
+    c.addEventListener('click',()=>move(i));
+    b.appendChild(c);return c;
+  });
+}
+
+function setStatus(s){document.getElementById('status').textContent=s;}
+
+function move(i){
+  if(board[i]||over)return;
+  place(i,turn);
+  const w=checkWin(turn);
+  if(w){endGame(w,turn);}
+  else if(board.every(v=>v)){endGame(null,'D');}
+  else{
+    turn=turn==='X'?'O':'X';
+    setStatus(`Turno de ${turn==='X'?'❌':'⭕'}`);
+    if(mode==='cpu'&&turn==='O'&&!over)setTimeout(cpuMove,350);
+  }
+}
+
+function place(i,t){
+  board[i]=t;
+  cells[i].textContent=t==='X'?'❌':'⭕';
+  cells[i].classList.add(t.toLowerCase(),'done');
+}
+
+function cpuMove(){
+  // Try to win, then block, then center, then random
+  let idx=findBest('O')||findBest('X')||(board[4]===''?4:null)||rnd();
+  move(idx);
+}
+
+function findBest(t){
+  for(const l of LINES){
+    const vals=l.map(i=>board[i]);
+    if(vals.filter(v=>v===t).length===2&&vals.includes(''))
+      return l[vals.indexOf('')];
+  }
+  return null;
+}
+
+function rnd(){
+  const empty=board.map((v,i)=>v===''?i:-1).filter(i=>i>=0);
+  return empty[Math.floor(Math.random()*empty.length)];
+}
+
+function checkWin(t){
+  for(const l of LINES)if(l.every(i=>board[i]===t))return l;
+  return null;
+}
+
+function endGame(winLine,t){
+  over=true;
+  if(t==='D'){wins.D++;setStatus('¡Empate! 🤝');}
+  else{
+    wins[t]++;
+    winLine.forEach(i=>cells[i].classList.add('win'));
+    setStatus(`¡${t==='X'?'❌':'⭕'} gana! 🎉`);
+  }
+  document.getElementById('score').innerHTML=`❌: ${wins.X} &nbsp;|&nbsp; ⭕: ${wins.O} &nbsp;|&nbsp; Empates: ${wins.D}`;
+}
+
+newGame();
+</script>
+</body>
+</html>

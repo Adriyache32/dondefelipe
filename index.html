@@ -506,6 +506,11 @@ footer a:hover{color:var(--gold);}
         <a href="#" id="link-biblioteca" class="nav-lib"
            onclick="go('biblioteca');closeMobile();return false;">📁 BIBLIOTECA</a>
       </li>
+      <!-- JUEGOS -->
+      <li>
+        <a href="#" id="link-juegos" class="nav-lib"
+           onclick="go('juegos');closeMobile();return false;">🎮 JUEGOS</a>
+      </li>
     </ul>
   </div>
 </nav>
@@ -520,7 +525,7 @@ footer a:hover{color:var(--gold);}
 <!-- ══ FOOTER ═══════════════════════════════════ -->
 <footer>
   © <span id="yr"></span> Prof. Felipe Jiménez &nbsp;·&nbsp; Aula de Ciencias &nbsp;·&nbsp; Viña del Mar
-  &nbsp;|&nbsp; <a href="mailto:">Contacto</a>
+  &nbsp;|&nbsp; <a href="mailto:fjimenez321@gmail.com">fjimenez321@gmail.com</a>
 </footer>
 
 <!-- ════════════════════════════════════════════ -->
@@ -546,7 +551,13 @@ document.addEventListener('click',e=>{
 });
 
 /* ── ROUTER ─────────────────────────────────── */
-const ROUTES={home:rHome,'3medio':r3,'4medio':r4,biblioteca:rLib};
+const ROUTES={
+  home:rHome,'3medio':r3,'4medio':r4,biblioteca:rLib,
+  juegos:rJuegos,
+  'juego-snake':    s=>rGameEmbed(s,'juego_snake.html','🐍 Snake','El legendario juego de la serpiente · 1976'),
+  'juego-memoria':  s=>rGameEmbed(s,'juego_memoria.html','🃏 Memoria','Encuentra todos los pares de cartas'),
+  'juego-tres':     s=>rGameEmbed(s,'juego_tictactoe.html','❌ Tres en Raya','El clásico juego de X y O')
+};
 let currentPage=null;
 
 function go(page){
@@ -572,17 +583,16 @@ function go(page){
 }
 
 function setActiveNav(page){
+  const navPage=page.startsWith('juego-')?'juegos':page;
   document.querySelectorAll('.drop-btn').forEach(b=>b.classList.remove('active-menu'));
   document.querySelectorAll('.drop-content a:not(.soon)').forEach(a=>a.classList.remove('active-link'));
   document.querySelectorAll('.nav-lib').forEach(a=>a.classList.remove('active-link'));
-  const link=document.getElementById(`link-${page}`);
+  const link=document.getElementById(`link-${navPage}`);
   if(link){
     link.classList.add('active-link');
     const dd=link.closest('.dropdown');
     if(dd) dd.querySelector('.drop-btn').classList.add('active-menu');
   }
-  if(page==='biblioteca')
-    document.getElementById('link-biblioteca').classList.add('active-link');
 }
 
 /* ── PAGE: HOME ─────────────────────────────── */
@@ -664,22 +674,76 @@ function r4(stage){
   stage.innerHTML=`
     <div class="fade-in">
       <div class="tablet-header"><h1>IV° MEDIO: FÍSICA ESTELAR</h1></div>
-      <div class="mission">
-        <span class="badge">✅ DESAFÍO ACTIVO</span>
-        <h3>🚀 BÚSQUEDA DEL TESORO ESPACIAL</h3>
-        <p>Recorre 5 estaciones, resuelve los problemas de física,<br>
-           descifra los crucigramas y suma los códigos.</p>
-        <p class="mission-topics">
-          MRU &nbsp;·&nbsp; Velocidad Relativa &nbsp;·&nbsp; MRUA &nbsp;·&nbsp;
-          Fuerzas &nbsp;·&nbsp; DCL
-        </p>
-        <a href="tesoros_espacio.html" target="_blank" class="btn-p"
-           style="font-size:.8rem;padding:.8rem 2rem;">INICIAR MISIÓN 🚀</a>
+      <div class="embed-wrap">
+        <div class="embed-bar">
+          <span>🚀 Búsqueda del Tesoro Espacial — MRU · Vel. Relativa · MRUA · Fuerzas · DCL</span>
+          <a href="tesoros_espacio.html" target="_blank" class="btn-s">↗ Pantalla completa</a>
+        </div>
+        <iframe src="tesoros_espacio.html" class="embed-frame"
+                title="Búsqueda del Tesoro Espacial" loading="lazy"
+                style="min-height:820px;"></iframe>
       </div>
       <h2 class="sh">CUADRO DE HONOR — IV° Medio</h2>
       <div id="wl4"><p class="loading">Consultando resultados…</p></div>
     </div>`;
   fetchWinners('wl4');
+}
+
+/* ── PAGE: JUEGOS ───────────────────────────── */
+function rJuegos(stage){
+  stage.innerHTML=`
+    <div class="fade-in">
+      <div class="tablet-header">
+        <h1 class="shimmer">🎮 SALA DE JUEGOS</h1>
+        <p class="page-sub">Clásicos de código libre · Solo HTML, CSS y JavaScript</p>
+      </div>
+      <div class="wave-sep" aria-hidden="true">
+        <svg viewBox="0 0 900 24" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,12 C150,24 300,0 450,12 C600,24 750,0 900,12 L900,24 L0,24 Z"
+                fill="rgba(201,168,76,0.07)"/>
+          <path d="M0,16 C150,4 300,20 450,12 C600,4 750,20 900,12"
+                fill="none" stroke="rgba(201,168,76,0.25)" stroke-width="1"/>
+        </svg>
+      </div>
+      <h2 class="sh">ELIGE TU JUEGO</h2>
+      <div class="grid">
+        <div class="card c-sea card-click" onclick="go('juego-snake')" tabindex="0"
+             onkeydown="if(event.key==='Enter')go('juego-snake')">
+          <h3>🐍 SNAKE</h3>
+          <p>Guía la serpiente, come manzanas y no chocarte con las paredes ni contigo mismo.<br>
+             <em style="font-size:.78rem;opacity:.65;">Clásico de 1976 · Código libre</em></p>
+        </div>
+        <div class="card c-gold card-click" onclick="go('juego-memoria')" tabindex="0"
+             onkeydown="if(event.key==='Enter')go('juego-memoria')">
+          <h3>🃏 MEMORIA</h3>
+          <p>Voltea las cartas y encuentra todos los pares. Entrena tu memoria visual.<br>
+             <em style="font-size:.78rem;opacity:.65;">Clásico de 1960 · Código libre</em></p>
+        </div>
+        <div class="card c-laurel card-click" onclick="go('juego-tres')" tabindex="0"
+             onkeydown="if(event.key==='Enter')go('juego-tres')">
+          <h3>❌ TRES EN RAYA</h3>
+          <p>El eterno juego de X y O. Juega con un amigo o desafía a la CPU.<br>
+             <em style="font-size:.78rem;opacity:.65;">Juego ancestral · Código libre</em></p>
+        </div>
+      </div>
+    </div>`;
+}
+
+function rGameEmbed(stage, file, title, desc){
+  stage.innerHTML=`
+    <div class="fade-in">
+      <div class="tablet-header"><h1>${title}</h1></div>
+      <p style="text-align:center;color:var(--bronze);margin-bottom:1rem;">${desc}</p>
+      <div style="text-align:center;margin-bottom:1rem;">
+        <button class="btn-s" onclick="go('juegos')">← Volver a Juegos</button>
+        <a href="${file}" target="_blank" class="btn-s" style="margin-left:8px;">↗ Pantalla completa</a>
+      </div>
+      <div class="embed-wrap">
+        <iframe src="${file}" class="embed-frame"
+                title="${title}" loading="lazy"
+                style="min-height:560px;"></iframe>
+      </div>
+    </div>`;
 }
 
 /* ── PAGE: BIBLIOTECA ───────────────────────── */
