@@ -4,97 +4,531 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aula de Ciencias | Profe Felipe</title>
+
+<!-- Google Fonts con display=swap: si falla (sin internet), cae en las fuentes del sistema -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
 <style>
-  :root {
-    --marble: #f4f1ea; --ivory: #ffffff; --bronze: #8e735b;
-    --gold-leaf: #c5a059; --text-main: #3a352f; --border-soft: rgba(142, 115, 91, 0.2);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background-color: var(--marble);
-    background-image: linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0.8)), url('https://www.transparenttextures.com/patterns/white-marble.png');
-    font-family: 'Cormorant Garamond', serif; color: var(--text-main); line-height: 1.6;
-  }
-  nav {
-    background: var(--ivory); border-bottom: 3px solid var(--gold-leaf);
-    padding: 1rem 2rem; position: sticky; top: 0; z-index: 1000;
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  .nav-brand { font-family: 'Cinzel', serif; color: var(--bronze); text-decoration: none; font-weight: 700; font-size: 1.4rem; letter-spacing: 2px; }
-  .nav-menu { display: flex; list-style: none; gap: 1rem; align-items: center; }
-  .dropdown { position: relative; }
-  .drop-btn { background: none; border: none; font-family: 'Cinzel', serif; font-size: 0.8rem; color: var(--text-main); cursor: pointer; padding: 0.5rem; }
-  .drop-content { display: none; position: absolute; background: var(--ivory); min-width: 180px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); border: 1px solid var(--border-soft); top: 100%; left: 0; }
-  .dropdown:hover .drop-content { display: block; }
-  .drop-content a { display: block; padding: 0.7rem 1.2rem; color: var(--text-main); text-decoration: none; border-bottom: 1px solid var(--border-soft); }
-  .main-stage { width: 92%; max-width: 1000px; margin: 2rem auto; background: var(--ivory); padding: 3rem; border: 1px solid var(--border-soft); box-shadow: 0 10px 30px rgba(0,0,0,0.03); min-height: 60vh; }
-  h1 { font-family: 'Cinzel', serif; text-align: center; color: var(--bronze); margin-bottom: 2rem; font-size: clamp(1.6rem, 4vw, 2.4rem); }
-  .embed-container { margin-top: 30px; padding: 5px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-  .btn-direct { background: var(--gold-leaf); color: white; border: none; padding: 0.6rem 1.2rem; font-family: 'Cinzel', serif; font-size: 0.75rem; cursor: pointer; border-radius: 2px; text-decoration: none; display: inline-block; }
-  @media (max-width: 768px) { nav { flex-direction: column; padding: 1rem; } .nav-menu { width: 100%; flex-wrap: wrap; justify-content: center; margin-top: 1rem; } .main-stage { padding: 1.5rem; width: 96%; } }
-  .fade-in { animation: fadeIn 0.5s ease-in; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+/* ── TOKENS ─────────────────────────────────────────────────────── */
+:root {
+  --marble:      #f4f1ea;
+  --ivory:       #ffffff;
+  --bronze:      #8e735b;
+  --gold-leaf:   #c5a059;
+  --green-honor: #4a7c59;
+  --text-main:   #3a352f;
+  --text-soft:   #7a6f64;
+  --border-soft: rgba(142,115,91,0.2);
+  --shadow-card: 0 10px 30px rgba(0,0,0,0.05);
+
+  /* Fallback seguro si Google Fonts no carga */
+  --font-display: 'Cinzel', 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+  --font-body:    'Cormorant Garamond', 'Georgia', 'Times New Roman', serif;
+}
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+
+body{
+  background-color: var(--marble);
+  background-image:
+    linear-gradient(rgba(255,255,255,0.82),rgba(255,255,255,0.82)),
+    url('https://www.transparenttextures.com/patterns/white-marble.png');
+  font-family: var(--font-body);
+  color: var(--text-main);
+  line-height: 1.7;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── NAV ─────────────────────────────────────────────────────────── */
+nav{
+  background: var(--ivory);
+  border-bottom: 3px solid var(--gold-leaf);
+  padding: 0.9rem 2rem;
+  position: sticky; top:0; z-index:1000;
+  display: flex; justify-content:space-between; align-items:center;
+  gap: 1rem;
+}
+.nav-brand{
+  font-family: var(--font-display);
+  color: var(--bronze); text-decoration:none;
+  font-weight:700; font-size:1.35rem; letter-spacing:2px;
+  flex-shrink:0;
+  transition: color .2s;
+}
+.nav-brand:hover{ color: var(--gold-leaf); }
+
+.nav-menu{ display:flex; list-style:none; gap:0.5rem; align-items:center; flex-wrap:wrap; }
+
+/* Dropdown */
+.dropdown{ position:relative; }
+.drop-btn{
+  background:none; border:none; cursor:pointer; padding:0.5rem 0.6rem;
+  font-family: var(--font-display); font-size:0.78rem; letter-spacing:1px;
+  color: var(--text-main);
+  border-bottom: 2px solid transparent;
+  transition: color .2s, border-color .2s;
+}
+.drop-btn:hover{ color: var(--gold-leaf); }
+.drop-btn.active-menu{ color:var(--bronze); border-bottom-color: var(--gold-leaf); }
+
+.drop-content{
+  display:none; position:absolute; top:calc(100% + 4px); left:0;
+  background: var(--ivory); min-width:195px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.1);
+  border:1px solid var(--border-soft);
+  border-top:2px solid var(--gold-leaf);
+  z-index:200;
+}
+.dropdown:hover .drop-content{ display:block; }
+
+.drop-content a{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0.65rem 1.1rem;
+  color: var(--text-main); text-decoration:none;
+  font-size:0.88rem; font-family: var(--font-body);
+  border-bottom:1px solid var(--border-soft);
+  transition: background .15s, color .15s;
+}
+.drop-content a:last-child{ border-bottom:none; }
+.drop-content a:hover{ background:#faf8f3; color:var(--bronze); }
+
+/* Active link highlight */
+.drop-content a.active-link{
+  color: var(--bronze); font-weight:600;
+  background:#faf8f3;
+}
+.drop-content a.active-link::after{ content:'◂'; font-size:.7rem; color:var(--gold-leaf); }
+
+/* Disabled / próximamente */
+.drop-content a.soon{
+  color:#bbb; cursor:default; pointer-events:none;
+}
+.soon-badge{
+  font-size:.65rem; background:#f0ece4; color:#aaa;
+  padding:1px 6px; border-radius:10px; letter-spacing:.5px;
+}
+
+/* BIBLIOTECA button */
+.btn-direct{
+  background: var(--gold-leaf); color:white; border:none;
+  padding:0.55rem 1.1rem; font-family:var(--font-display);
+  font-size:0.74rem; letter-spacing:1px;
+  cursor:pointer; border-radius:2px; text-decoration:none;
+  display:inline-block; transition:background .2s, box-shadow .2s;
+}
+.btn-direct:hover{
+  background:var(--bronze);
+  box-shadow:0 4px 16px rgba(142,115,91,0.25);
+}
+.btn-direct.active-link{ background:var(--bronze); }
+
+/* ── MAIN STAGE ──────────────────────────────────────────────────── */
+.main-stage{
+  width:92%; max-width:1000px;
+  margin:2rem auto;
+  background:var(--ivory);
+  padding:3rem;
+  border:1px solid var(--border-soft);
+  box-shadow: var(--shadow-card);
+  min-height:60vh;
+  flex:1;
+}
+
+h1{
+  font-family:var(--font-display); text-align:center;
+  color:var(--bronze); margin-bottom:2rem;
+  font-size:clamp(1.5rem,4vw,2.2rem);
+}
+h2.section-head{
+  font-family:var(--font-display); font-size:1rem; letter-spacing:1px;
+  color:var(--bronze);
+  border-bottom:1px solid var(--gold-leaf);
+  padding-bottom:8px; margin:1.8rem 0 1.2rem;
+}
+
+/* Cards grid */
+.cards-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:20px;
+}
+.card{
+  border:1px solid var(--border-soft);
+  padding:20px; background:#fdfbf7;
+  border-radius:2px;
+  transition: box-shadow .2s, transform .2s;
+}
+.card:hover{ box-shadow:0 6px 20px rgba(0,0,0,0.07); transform:translateY(-2px); }
+.card.accent-green { border-left:4px solid var(--green-honor); }
+.card.accent-gold  { border-left:4px solid var(--gold-leaf); }
+.card.accent-bronze{ border-left:4px solid var(--bronze); }
+.card h3{
+  font-family:var(--font-display); font-size:0.85rem;
+  margin-bottom:10px; letter-spacing:.5px;
+}
+.card p{ font-size:0.88rem; color:var(--text-soft); line-height:1.6; }
+
+/* Winners list */
+.winner-item{
+  display:flex; align-items:flex-start; gap:10px;
+  padding:8px 0; border-bottom:1px solid var(--border-soft);
+  font-size:.88rem;
+}
+.winner-item:last-child{ border-bottom:none; }
+.winner-item .trophy{ font-size:1.1rem; flex-shrink:0; }
+.winner-item strong{ display:block; color:var(--text-main); }
+.winner-item span{ font-size:.75rem; color:#999; }
+.winners-loading{ font-size:.82rem; color:#bbb; font-style:italic; }
+
+/* Callout box (4° medio mission) */
+.mission-box{
+  margin:2rem auto; text-align:center;
+  padding:2.5rem 2rem;
+  border:2px dashed var(--bronze);
+  max-width:520px;
+  background:#fdfbf7;
+  border-radius:4px;
+}
+.mission-box h3{
+  font-family:var(--font-display); color:var(--bronze);
+  margin-bottom:12px; letter-spacing:1px;
+}
+.mission-box p{ font-size:.92rem; color:var(--text-soft); margin-bottom:20px; }
+.mission-badge{
+  display:inline-block; background:#e8f5ec;
+  color:var(--green-honor); padding:4px 12px;
+  border-radius:20px; font-size:.78rem;
+  font-family:var(--font-display); letter-spacing:.5px;
+  margin-bottom:20px;
+}
+
+/* Embed / iframe */
+.embed-wrapper{ position:relative; margin-top:24px; }
+.embed-toolbar{
+  display:flex; justify-content:flex-end; align-items:center;
+  gap:10px; padding:8px 10px;
+  background:#faf8f3; border:1px solid var(--border-soft);
+  border-bottom:none; border-radius:2px 2px 0 0;
+}
+.embed-toolbar span{ font-size:.78rem; color:var(--text-soft); flex:1; font-style:italic; }
+.embed-toolbar a{
+  font-size:.72rem; font-family:var(--font-display); letter-spacing:.5px;
+  color:var(--bronze); text-decoration:none;
+  border:1px solid var(--border-soft); padding:4px 10px;
+  border-radius:2px; transition: background .15s;
+}
+.embed-toolbar a:hover{ background:#faf3e6; }
+.embed-frame{
+  width:100%; border:1px solid var(--border-soft);
+  min-height:1100px; display:block;
+  border-radius:0 0 2px 2px;
+}
+
+/* Coming soon page */
+.coming-soon{
+  text-align:center; padding:4rem 2rem;
+  color:var(--text-soft);
+}
+.coming-soon .cs-icon{ font-size:3rem; margin-bottom:1rem; display:block; }
+.coming-soon h2{ font-family:var(--font-display); color:var(--bronze); margin-bottom:.8rem; }
+.coming-soon p{ font-size:.92rem; max-width:400px; margin:0 auto; }
+
+/* Footer */
+footer{
+  background:var(--ivory); border-top:1px solid var(--border-soft);
+  padding:1.2rem 2rem;
+  text-align:center;
+  font-size:.78rem; color:#bbb;
+  font-family:var(--font-display); letter-spacing:1px;
+}
+footer a{ color:var(--gold-leaf); text-decoration:none; }
+footer a:hover{ text-decoration:underline; }
+
+/* Animations */
+.fade-in{ animation:fadeIn .45s ease-in; }
+@keyframes fadeIn{ from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);} }
+
+/* ── RESPONSIVE ──────────────────────────────────────────────────── */
+@media(max-width:768px){
+  nav{ flex-direction:column; padding:.9rem 1rem; gap:.6rem; }
+  .nav-menu{ width:100%; justify-content:center; }
+  .main-stage{ padding:1.5rem; width:96%; }
+  .drop-content{ min-width:160px; }
+}
 </style>
 </head>
 <body>
+
+<!-- ── NAV ──────────────────────────────────────────────────────── -->
 <nav>
-  <a href="#" class="nav-brand" onclick="loadContent('home')">PROFE FELIPE</a>
+  <a href="#" class="nav-brand" onclick="go('home');return false;">PROFE FELIPE</a>
+
   <ul class="nav-menu">
+    <!-- BÁSICA -->
     <li class="dropdown">
-      <button class="drop-btn">BÁSICA ▾</button>
+      <button class="drop-btn" id="btn-basica">BÁSICA ▾</button>
       <div class="drop-content">
-        <a href="#" onclick="loadContent('6basico')">Sexto Básico</a>
-        <a href="#" onclick="loadContent('7basico')">Séptimo Básico</a>
-        <a href="#" onclick="loadContent('8basico')">Octavo Básico</a>
+        <a href="#" class="soon">Sexto Básico  <span class="soon-badge">Próximamente</span></a>
+        <a href="#" class="soon">Séptimo Básico<span class="soon-badge">Próximamente</span></a>
+        <a href="#" class="soon">Octavo Básico <span class="soon-badge">Próximamente</span></a>
       </div>
     </li>
+
+    <!-- MEDIA -->
     <li class="dropdown">
-      <button class="drop-btn">MEDIA ▾</button>
+      <button class="drop-btn" id="btn-media">MEDIA ▾</button>
       <div class="drop-content">
-        <a href="#" onclick="loadContent('1medio')">Primero Medio</a>
-        <a href="#" onclick="loadContent('2medio')">Segundo Medio</a>
-        <a href="#" onclick="loadContent('3medio')">Tercero Medio</a>
-        <a href="#" onclick="loadContent('4medio')">Cuarto Medio</a>
+        <a href="#" class="soon">I° Medio  <span class="soon-badge">Próximamente</span></a>
+        <a href="#" class="soon">II° Medio <span class="soon-badge">Próximamente</span></a>
+        <a href="#" id="link-3medio" onclick="go('3medio');return false;">III° Medio</a>
+        <a href="#" id="link-4medio" onclick="go('4medio');return false;">IV° Medio</a>
       </div>
     </li>
-    <li><a href="#" class="btn-direct" onclick="loadContent('biblioteca')">BIBLIOTECA DRIVE 📁</a></li>
+
+    <li>
+      <a href="#" id="link-biblioteca" class="btn-direct"
+         onclick="go('biblioteca');return false;">BIBLIOTECA 📁</a>
+    </li>
   </ul>
 </nav>
 
-<div class="main-stage" id="main-content">
-  <div class="fade-in">
-    <h1>Laboratorio del Conocimiento</h1>
-    <h2 style="font-family:'Cinzel'; font-size:1.2rem; color:var(--bronze); border-bottom:1px solid var(--gold-leaf); margin-bottom:20px; margin-top: 30px;">🗞️ NOVEDADES & CUADRO DE HONOR</h2>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-      
-      <div style="border: 1px solid var(--border-soft); padding: 20px; background: #fdfbf7; border-left: 4px solid #4a7c59;">
-        <h3 style="font-family:'Cinzel'; font-size:0.9rem; color:#4a7c59;">🏆 ÚLTIMOS GANADORES</h3>
-        <p style="font-size: 0.85rem; margin: 10px 0;"><b>Física IV° Medio:</b> ¡Esperando a los primeros exploradores en descifrar el código estelar!</p>
-      </div>
+<!-- ── MAIN STAGE ────────────────────────────────────────────────── -->
+<main class="main-stage" id="main-content"></main>
 
-      <div style="border: 1px solid var(--border-soft); padding: 20px; background: #fdfbf7; border-left: 4px solid var(--gold-leaf);">
-        <h3 style="font-family:'Cinzel'; font-size:0.9rem; color:var(--bronze);">ENTREGA TÉCNICA</h3>
-        <p style="font-size: 0.85rem; margin: 10px 0;">Acceso rápido a Bitácora III° Medio.</p>
-        <button onclick="loadContent('3medio')" style="background:var(--bronze); color:white; border:none; padding:5px 10px; font-family:'Cinzel'; font-size:0.7rem; cursor:pointer;">IR A BITÁCORA</button>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- ── FOOTER ───────────────────────────────────────────────────── -->
+<footer>
+  <span>© <span id="yr"></span> Prof. Felipe Jiménez · Aula de Ciencias · Viña del Mar</span>
+  &nbsp;·&nbsp;
+  <a href="mailto:">Contacto</a>
+</footer>
 
+<!-- ══════════════════════════════════════════════════════════════ -->
 <script>
-  function loadContent(page) {
-    const content = document.getElementById('main-content');
-    const pages = {
-      'home': `<div class="fade-in"><h1>Laboratorio del Conocimiento</h1><h2 style="font-family:'Cinzel'; font-size:1.2rem; color:var(--bronze); border-bottom:1px solid var(--gold-leaf); margin-bottom:20px; margin-top: 30px;">🗞️ NOVEDADES</h2><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;"><div style="border: 1px solid var(--border-soft); padding: 20px; background: #fdfbf7; border-left: 4px solid #4a7c59;"><h3 style="font-family:'Cinzel'; font-size:0.9rem; color:#4a7c59;">🏆 ÚLTIMOS GANADORES</h3><p style="font-size: 0.85rem; margin: 10px 0;">¡Esperando resultados de la misión!</p></div><div style="border: 1px solid var(--border-soft); padding: 20px; background: #fdfbf7; border-left: 4px solid var(--gold-leaf);"><h3 style="font-family:'Cinzel'; font-size:0.9rem; color:var(--bronze);">BITÁCORA</h3><button onclick="loadContent('3medio')" style="background:var(--bronze); color:white; border:none; padding:5px 10px; font-family:'Cinzel'; font-size:0.7rem; cursor:pointer;">ABRIR</button></div></div></div>`,
-      '3medio': `<div class="fade-in"><h1>III° Medio: Ingeniería</h1><div class="embed-container" style="background:#070a14; border:8px solid #d4af37;"><iframe src="bitacora_tech.html" style="width:100%; height:1100px; border:none;"></iframe></div></div>`,
-      '4medio': `<div class="fade-in"><h1>IV° Medio: Física Estelar</h1><div style="margin:40px auto; text-align:center; padding:30px; border:2px dashed var(--bronze); max-width:500px;"><h3 style="font-family:'Cinzel'; color:var(--bronze); margin-bottom:15px;">🎮 DESAFÍO ACTIVO</h3><p>Misión: Búsqueda de Tesoros Espaciales.</p><br><a href="tesoros_espacio.html" target="_blank" class="btn-direct">INICIAR MISIÓN 🚀</a></div></div>`,
-      'biblioteca': `<div class="fade-in"><h1>Biblioteca General</h1><div class="embed-container"><iframe src="https://drive.google.com/embeddedfolderview?id=1_8SD_30CH4lAwBrLSg4sw9yKZiC9kNNJ#list" style="width:100%; height:700px; border:0;"></iframe></div></div>`
-    };
-    if(!pages[page]) {
-      content.innerHTML = `<div class="fade-in"><h1>Módulo en preparación</h1></div>`;
-    } else { content.innerHTML = pages[page]; }
+// ── CONFIG ─────────────────────────────────────────────────────────
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyFcG4150ORc85aIqbrAmtfBrZAol-iXB2I4RDEFMB87ESzTpE7vpoYIYpSPWL28Mas/exec';
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+// ── ROUTER ─────────────────────────────────────────────────────────
+const ROUTES = { home:renderHome, '3medio':render3Medio, '4medio':render4Medio, biblioteca:renderBiblioteca };
+let currentPage = null;
+
+function go(page) {
+  const stage = document.getElementById('main-content');
+  const renderer = ROUTES[page];
+
+  // Update active nav
+  updateActiveNav(page);
+
+  if (!renderer) {
+    stage.innerHTML = `
+      <div class="fade-in coming-soon">
+        <span class="cs-icon">🔭</span>
+        <h2>Módulo en preparación</h2>
+        <p>Este contenido estará disponible próximamente.<br>
+           Consulta con el profe para más información.</p>
+      </div>`;
+    return;
   }
+
+  // Clear and render
+  stage.innerHTML = '';
+  renderer(stage);
+  currentPage = page;
+}
+
+function updateActiveNav(page) {
+  // Reset all nav buttons
+  document.querySelectorAll('.drop-btn').forEach(b => b.classList.remove('active-menu'));
+  document.querySelectorAll('.drop-content a:not(.soon)').forEach(a => a.classList.remove('active-link'));
+  document.querySelectorAll('.btn-direct').forEach(b => b.classList.remove('active-link'));
+
+  // Activate matching link
+  const link = document.getElementById(`link-${page}`);
+  if (link) {
+    link.classList.add('active-link');
+    // Also activate the parent dropdown button
+    const parent = link.closest('.dropdown');
+    if (parent) parent.querySelector('.drop-btn').classList.add('active-menu');
+  }
+  if (page === 'biblioteca') {
+    document.getElementById('link-biblioteca').classList.add('active-link');
+  }
+}
+
+// ── PAGE: HOME ─────────────────────────────────────────────────────
+function renderHome(stage) {
+  stage.innerHTML = `
+    <div class="fade-in">
+      <h1>Laboratorio del Conocimiento</h1>
+
+      <h2 class="section-head">🗞️ NOVEDADES &amp; CUADRO DE HONOR</h2>
+      <div class="cards-grid">
+
+        <div class="card accent-green">
+          <h3 style="color:var(--green-honor);">🏆 ÚLTIMOS GANADORES</h3>
+          <div id="winners-list">
+            <p class="winners-loading">Consultando el cuadro de honor…</p>
+          </div>
+        </div>
+
+        <div class="card accent-gold">
+          <h3 style="color:var(--bronze);">📚 ACCESOS RÁPIDOS</h3>
+          <p style="margin-bottom:14px;">Navega directamente a los módulos activos.</p>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <button onclick="go('4medio')"
+              style="background:var(--gold-leaf);color:white;border:none;padding:7px 12px;
+                     font-family:var(--font-display);font-size:.72rem;cursor:pointer;
+                     letter-spacing:.5px;text-align:left;transition:background .15s;"
+              onmouseover="this.style.background='var(--bronze)'"
+              onmouseout="this.style.background='var(--gold-leaf)'">
+              🚀 IV° Medio — Búsqueda del Tesoro
+            </button>
+            <button onclick="go('3medio')"
+              style="background:var(--bronze);color:white;border:none;padding:7px 12px;
+                     font-family:var(--font-display);font-size:.72rem;cursor:pointer;
+                     letter-spacing:.5px;text-align:left;transition:background .15s;"
+              onmouseover="this.style.background='var(--gold-leaf)'"
+              onmouseout="this.style.background='var(--bronze)'">
+              🛠️ III° Medio — Bitácora
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <h2 class="section-head">📅 MÓDULOS ACTIVOS</h2>
+      <div class="cards-grid">
+        <div class="card accent-bronze" style="cursor:pointer;" onclick="go('4medio')">
+          <h3 style="color:var(--bronze);">IV° MEDIO · FÍSICA</h3>
+          <p>🎮 <strong>Búsqueda del Tesoro Espacial</strong> — Unidad 1: Fuerzas Centrales.<br>
+             5 estaciones: MRU, Velocidad Relativa, MRUA, Fuerzas, DCL.</p>
+        </div>
+        <div class="card accent-bronze" style="cursor:pointer;" onclick="go('3medio')">
+          <h3 style="color:var(--bronze);">III° MEDIO · INGENIERÍA</h3>
+          <p>🛠️ Bitácora de trabajo técnico. Accede al cuaderno digital de la asignatura.</p>
+        </div>
+      </div>
+    </div>`;
+
+  fetchWinners();
+}
+
+// ── PAGE: 3° MEDIO ─────────────────────────────────────────────────
+function render3Medio(stage) {
+  stage.innerHTML = `
+    <div class="fade-in">
+      <h1>III° Medio: Ingeniería</h1>
+      <div class="embed-wrapper">
+        <div class="embed-toolbar">
+          <span>Bitácora técnica — contenido interactivo</span>
+          <a href="bitacora_tech.html" target="_blank">↗ Pantalla completa</a>
+        </div>
+        <iframe src="bitacora_tech.html" class="embed-frame"
+                title="Bitácora III° Medio"
+                loading="lazy"
+                style="min-height:1100px;border:1px solid var(--border-soft);">
+        </iframe>
+      </div>
+    </div>`;
+}
+
+// ── PAGE: 4° MEDIO ─────────────────────────────────────────────────
+function render4Medio(stage) {
+  stage.innerHTML = `
+    <div class="fade-in">
+      <h1>IV° Medio: Física Estelar</h1>
+
+      <div class="mission-box">
+        <span class="mission-badge">✅ DESAFÍO ACTIVO</span>
+        <h3>🚀 Búsqueda del Tesoro Espacial</h3>
+        <p>Recorre 5 estaciones, resuelve los problemas de física, descifra los
+           crucigramas y suma los códigos para desbloquear el tesoro del universo.</p>
+        <p style="font-size:.82rem;color:#aaa;margin:-10px 0 20px;">
+          MRU &nbsp;·&nbsp; Velocidad Relativa &nbsp;·&nbsp; MRUA &nbsp;·&nbsp;
+          Fuerzas &nbsp;·&nbsp; DCL
+        </p>
+        <a href="tesoros_espacio.html" target="_blank" class="btn-direct"
+           style="font-size:.82rem;padding:.7rem 1.6rem;letter-spacing:1px;">
+          INICIAR MISIÓN 🚀
+        </a>
+      </div>
+
+      <h2 class="section-head">🏆 CUADRO DE HONOR — IV° Medio</h2>
+      <div id="winners-list-4">
+        <p class="winners-loading">Consultando resultados…</p>
+      </div>
+    </div>`;
+
+  fetchWinners('winners-list-4');
+}
+
+// ── PAGE: BIBLIOTECA ───────────────────────────────────────────────
+function renderBiblioteca(stage) {
+  stage.innerHTML = `
+    <div class="fade-in">
+      <h1>Biblioteca General</h1>
+      <div class="embed-wrapper">
+        <div class="embed-toolbar">
+          <span>Google Drive — Materiales de la asignatura</span>
+          <a href="https://drive.google.com/drive/folders/1_8SD_30CH4lAwBrLSg4sw9yKZiC9kNNJ"
+             target="_blank">↗ Abrir en Drive</a>
+        </div>
+        <iframe
+          src="https://drive.google.com/embeddedfolderview?id=1_8SD_30CH4lAwBrLSg4sw9yKZiC9kNNJ#list"
+          class="embed-frame"
+          title="Biblioteca Google Drive"
+          style="min-height:700px;">
+        </iframe>
+      </div>
+    </div>`;
+}
+
+// ── FETCH WINNERS ──────────────────────────────────────────────────
+// Requiere que el Google Apps Script implemente doGet() retornando JSON:
+// [{ members:"Nombre1, Nombre2", timestamp:"2025-05-09 10:30" }, ...]
+async function fetchWinners(containerId = 'winners-list') {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+
+  try {
+    const res = await fetch(`${SCRIPT_URL}?action=getWinners`, { signal: AbortSignal.timeout(6000) });
+    const data = await res.json();
+
+    if (Array.isArray(data) && data.length > 0) {
+      el.innerHTML = data.slice(0, 6).map(w => `
+        <div class="winner-item">
+          <span class="trophy">🏆</span>
+          <div>
+            <strong>${escHtml(w.members || w.team || 'Equipo explorador')}</strong>
+            <span>${escHtml(w.timestamp || w.date || '')}</span>
+          </div>
+        </div>`).join('');
+    } else {
+      el.innerHTML = noWinnersMsg();
+    }
+  } catch(e) {
+    // Sin conexión o doGet() no implementado → mostrar mensaje estático
+    el.innerHTML = noWinnersMsg();
+  }
+}
+
+function noWinnersMsg() {
+  return `<p style="font-size:.85rem;color:var(--text-soft);font-style:italic;">
+    ¡Esperando a los primeros exploradores en descifrar el código estelar! 🚀
+  </p>`;
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── BOOT ───────────────────────────────────────────────────────────
+go('home');
 </script>
 </body>
 </html>
