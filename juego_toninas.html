@@ -8,146 +8,108 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{
   background:linear-gradient(160deg,#003d6b 0%,#005f99 50%,#0080b3 100%);
-  min-height:100vh;font-family:'Segoe UI',sans-serif;
+  min-height:100vh;font-family:'Segoe UI',Tahoma,sans-serif;
   display:flex;flex-direction:column;align-items:center;
   padding:14px;gap:10px;
 }
-
-h1{color:#fff;font-size:1.3rem;text-align:center;letter-spacing:.5px;
-   text-shadow:0 2px 8px rgba(0,0,0,.3);}
-h1 span{font-size:1.6rem;}
-
+h1{color:#fff;font-size:1.4rem;text-align:center;
+   text-shadow:0 2px 8px rgba(0,0,0,.35);margin-top:4px;}
 .subtitulo{color:rgba(255,255,255,.8);font-size:.82rem;text-align:center;}
-
-/* INFO BAR */
-.info{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+.info{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
 .pill{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);
   border:1px solid rgba(255,255,255,.25);border-radius:20px;
-  padding:5px 14px;color:#fff;font-size:.82rem;font-weight:600;}
+  padding:5px 16px;color:#fff;font-size:.85rem;font-weight:600;}
 .pill span{opacity:.7;font-weight:400;}
-
-/* MENSAJE */
 #mensaje{font-size:.95rem;color:#fff;min-height:1.4rem;text-align:center;
-  font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.3);}
+  font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,.3);}
 
 /* GRID */
 .grid{
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:8px;
-  width:100%;max-width:520px;
+  gap:8px;width:100%;max-width:400px;
 }
 
 /* CARTA */
-.carta{
-  aspect-ratio:.85;
-  perspective:600px;
-  cursor:pointer;
-}
+.carta{aspect-ratio:1;perspective:700px;cursor:pointer;}
 .carta-inner{
-  width:100%;height:100%;
-  position:relative;
+  width:100%;height:100%;position:relative;
   transform-style:preserve-3d;
-  transition:transform .45s cubic-bezier(.4,0,.2,1);
-  border-radius:12px;
+  transition:transform .42s cubic-bezier(.4,0,.2,1);
+  border-radius:14px;
 }
 .carta.volteada .carta-inner{transform:rotateY(180deg);}
 
 .cara{
-  position:absolute;inset:0;
-  border-radius:12px;
-  display:flex;align-items:center;justify-content:center;
+  position:absolute;inset:0;border-radius:14px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
   backface-visibility:hidden;-webkit-backface-visibility:hidden;
-  border:2px solid rgba(255,255,255,.15);
-  box-shadow:0 3px 10px rgba(0,0,0,.2);
+  border:2px solid rgba(255,255,255,.18);
+  box-shadow:0 4px 14px rgba(0,0,0,.22);
 }
 
-/* DORSO */
+/* DORSO — ola de fondo */
 .dorso{
-  background:linear-gradient(135deg,#004a80,#006bb3);
-  font-size:1.6rem;
-  flex-direction:column;gap:4px;
+  background:linear-gradient(135deg,#004a80,#00719e);
+  font-size:1.5rem;gap:3px;
 }
-.dorso-wave{font-size:.85rem;opacity:.4;letter-spacing:2px;}
+.ola{font-size:.75rem;opacity:.4;letter-spacing:3px;color:#fff;}
 
-/* FRENTE EMOJI */
-.frente.tipo-emoji{
-  background:linear-gradient(135deg,#0099cc,#00c2e0);
+/* FRENTE */
+.frente{
   transform:rotateY(180deg);
-  font-size:2.4rem;
-  flex-direction:column;gap:6px;
+  background:linear-gradient(135deg,#0099cc,#00c4e4);
+  font-size:2.5rem;
 }
-.tag-emoji{font-size:.58rem;color:rgba(255,255,255,.75);font-weight:700;
-  letter-spacing:.8px;text-transform:uppercase;}
-
-/* FRENTE HECHO */
-.frente.tipo-hecho{
-  background:linear-gradient(135deg,#007a5e,#009e78);
-  transform:rotateY(180deg);
-  padding:10px 8px;
-  text-align:center;
-}
-.hecho-txt{font-size:.72rem;color:#fff;line-height:1.45;font-weight:600;}
-.tag-hecho{font-size:.58rem;color:rgba(255,255,255,.7);font-weight:700;
-  letter-spacing:.8px;text-transform:uppercase;margin-top:5px;}
 
 /* MATCHED */
-.carta.matched .cara.frente{
-  box-shadow:0 0 0 3px #ffd700,0 4px 18px rgba(255,215,0,.4);
+.carta.matched .frente{
+  background:linear-gradient(135deg,#007a5e,#00b87a)!important;
+  box-shadow:0 0 0 3px #ffd700,0 4px 18px rgba(255,215,0,.35);
   border-color:#ffd700;
 }
-.carta.matched{animation:pulse .4s ease-out;}
-@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
+.carta.matched{animation:pop .38s ease-out;}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
 
 /* BOTÓN */
-#btn-nuevo{
-  padding:9px 26px;background:#ffd700;color:#003d6b;border:none;
+#btn{padding:9px 28px;background:#ffd700;color:#003d6b;border:none;
   border-radius:20px;font-size:.9rem;font-weight:700;cursor:pointer;
-  box-shadow:0 3px 12px rgba(0,0,0,.2);
-  transition:transform .15s,box-shadow .15s;
-}
-#btn-nuevo:hover{transform:translateY(-2px);box-shadow:0 5px 18px rgba(0,0,0,.25);}
+  box-shadow:0 3px 14px rgba(0,0,0,.22);transition:transform .15s;}
+#btn:hover{transform:translateY(-2px);}
 
 /* WIN */
-#win{display:none;position:fixed;inset:0;background:rgba(0,30,60,.8);
+#win{display:none;position:fixed;inset:0;background:rgba(0,30,60,.82);
   align-items:center;justify-content:center;z-index:99;}
 #win.show{display:flex;}
-#win-box{background:#fff;border-radius:20px;padding:2rem 2.5rem;
-  text-align:center;max-width:320px;width:90%;}
-#win-box .trofeo{font-size:3rem;display:block;margin-bottom:.5rem;}
+#win-box{background:#fff;border-radius:22px;padding:2rem 2.5rem;
+  text-align:center;max-width:300px;width:90%;}
+#win-box .ico{font-size:3.5rem;display:block;margin-bottom:.5rem;}
 #win-box h2{color:#003d6b;font-size:1.3rem;margin-bottom:.4rem;}
-#win-box p{color:#555;font-size:.88rem;margin-bottom:1.2rem;}
+#win-box p{color:#555;font-size:.88rem;margin-bottom:1.2rem;line-height:1.5;}
 #win-box button{padding:9px 24px;background:#005f99;color:#fff;border:none;
-  border-radius:12px;font-size:.9rem;font-weight:700;cursor:pointer;}
-#win-box button:hover{background:#003d6b;}
-
-@media(max-width:400px){
-  .grid{grid-template-columns:repeat(4,1fr);gap:5px;}
-  .frente.tipo-emoji{font-size:1.8rem;}
-  .hecho-txt{font-size:.65rem;}
-}
+  border-radius:14px;font-size:.9rem;font-weight:700;cursor:pointer;}
 </style>
 </head>
 <body>
 
-<h1><span>🐬</span> MEMORICE DE TONINAS</h1>
-<p class="subtitulo">Empareja cada imagen con su dato sobre la tonina chilena</p>
+<h1>🐬 Memorice de Toninas</h1>
+<p class="subtitulo">¡Encuentra los 8 pares del mundo marino!</p>
 
 <div class="info">
-  <div class="pill"><span>Pares: </span><span id="info-pares">0 / 8</span></div>
-  <div class="pill"><span>Intentos: </span><span id="info-intentos">0</span></div>
+  <div class="pill"><span>Pares: </span><span id="pares">0 / 8</span></div>
+  <div class="pill"><span>Intentos: </span><span id="intentos">0</span></div>
 </div>
 
-<div id="mensaje">¡Encuentra los 8 pares! 🌊</div>
+<div id="mensaje">¡Voltea las cartas y encuentra los pares! 🌊</div>
 
 <div class="grid" id="grid"></div>
 
-<button id="btn-nuevo" onclick="init()">🔄 Nueva partida</button>
+<button id="btn" onclick="init()">🔄 Nueva partida</button>
 
 <div id="win">
   <div id="win-box">
-    <span class="trofeo" id="win-trofeo">🏆</span>
-    <h2>¡Felicitaciones! 🐬</h2>
+    <span class="ico" id="win-ico">🏆</span>
+    <h2>¡Lo lograste! 🐬</h2>
     <p id="win-msg"></p>
     <button onclick="document.getElementById('win').classList.remove('show');init()">
       Jugar de nuevo
@@ -156,95 +118,68 @@ h1 span{font-size:1.6rem;}
 </div>
 
 <script>
-const PARES = [
-  { emoji:'🌊', hecho:'Viven en las costas del Pacífico de Chile' },
-  { emoji:'🐟', hecho:'Comen peces, pulpos y crustáceos' },
-  { emoji:'👨‍👩‍👧', hecho:'Viven en grupos llamados manadas' },
-  { emoji:'🫁', hecho:'Respiran aire como tú, ¡son mamíferos!' },
-  { emoji:'🍼', hecho:'La mamá amamanta a su cría con leche' },
-  { emoji:'📡', hecho:'Usan ecos para encontrar su comida' },
-  { emoji:'🚀', hecho:'Nadan a más de 30 km por hora' },
-  { emoji:'🛡️', hecho:'Están en peligro y necesitan protección' },
-];
+const EMOJIS = ['🐬','🐟','🌊','🦑','🦐','🐙','🦀','🌿'];
 
-let volteadas=[], matched=0, intentos=0, lock=false;
+let vol=[], matched=0, intentos=0, lock=false;
 
 function shuffle(a){ return [...a].sort(()=>Math.random()-.5); }
 
 function init(){
-  volteadas=[]; matched=0; intentos=0; lock=false;
-  document.getElementById('info-pares').textContent   = '0 / 8';
-  document.getElementById('info-intentos').textContent= '0';
-  document.getElementById('mensaje').textContent       = '¡Encuentra los 8 pares! 🌊';
+  vol=[]; matched=0; intentos=0; lock=false;
+  document.getElementById('pares').textContent    = '0 / 8';
+  document.getElementById('intentos').textContent = '0';
+  document.getElementById('mensaje').textContent  = '¡Voltea las cartas y encuentra los pares! 🌊';
   document.getElementById('win').classList.remove('show');
 
-  const cards = [];
-  PARES.forEach((p,i)=>{
-    cards.push({ id:i, tipo:'emoji', emoji:p.emoji, hecho:p.hecho });
-    cards.push({ id:i, tipo:'hecho', emoji:p.emoji, hecho:p.hecho });
-  });
-
   const grid = document.getElementById('grid');
-  grid.innerHTML='';
-  shuffle(cards).forEach(c=>{
+  grid.innerHTML = '';
+  shuffle([...EMOJIS,...EMOJIS]).forEach(emoji=>{
     const el = document.createElement('div');
-    el.className='carta';
-    el.dataset.id   = c.id;
-    el.dataset.tipo = c.tipo;
+    el.className = 'carta';
+    el.dataset.val = emoji;
     el.innerHTML = `
       <div class="carta-inner">
         <div class="cara dorso">
           <span>🐬</span>
-          <span class="dorso-wave">〜〜〜</span>
+          <span class="ola">〜〜〜〜</span>
         </div>
-        <div class="cara frente tipo-${c.tipo}">
-          ${c.tipo==='emoji'
-            ? `<span>${c.emoji}</span><span class="tag-emoji">¿Cuál dato?</span>`
-            : `<span class="hecho-txt">${c.hecho}</span><span class="tag-hecho">¿Qué imagen?</span>`
-          }
-        </div>
+        <div class="cara frente">${emoji}</div>
       </div>`;
-    el.addEventListener('click',()=>voltear(el));
+    el.addEventListener('click', ()=>voltear(el));
     grid.appendChild(el);
   });
 }
 
 function voltear(el){
-  if(lock||el.classList.contains('volteada')||el.classList.contains('matched')) return;
+  if(lock || el.classList.contains('volteada') || el.classList.contains('matched')) return;
   el.classList.add('volteada');
-  volteadas.push(el);
-
-  if(volteadas.length===2){
+  vol.push(el);
+  if(vol.length===2){
     intentos++;
-    document.getElementById('info-intentos').textContent = intentos;
+    document.getElementById('intentos').textContent = intentos;
     lock=true;
-
-    const [a,b] = volteadas;
-    if(a.dataset.id===b.dataset.id && a.dataset.tipo!==b.dataset.tipo){
-      // ¡Par correcto!
+    const [a,b]=vol;
+    if(a.dataset.val===b.dataset.val){
       a.classList.add('matched'); b.classList.add('matched');
       matched++;
-      document.getElementById('info-pares').textContent = `${matched} / 8`;
-      document.getElementById('mensaje').textContent =
-        matched===8 ? '¡Eres un experto en toninas! 🐬✨' :
-        ['¡Muy bien! 🎉','¡Excelente! ⭐','¡Correcto! 🐟','¡Genial! 🌊'][Math.floor(Math.random()*4)];
-      volteadas=[]; lock=false;
+      document.getElementById('pares').textContent = `${matched} / 8`;
+      const frases=['¡Muy bien! 🎉','¡Genial! ⭐','¡Correcto! 🐟','¡Fantástico! 🌊','¡Sí! 🐬'];
+      document.getElementById('mensaje').textContent = frases[Math.floor(Math.random()*frases.length)];
+      vol=[]; lock=false;
       if(matched===8){
-        const estrellas = intentos<=10?'⭐⭐⭐':intentos<=14?'⭐⭐':'⭐';
-        setTimeout(()=>{
-          document.getElementById('win-trofeo').textContent =
-            intentos<=10?'🏆':intentos<=14?'🥈':'🥉';
-          document.getElementById('win-msg').textContent =
-            `${estrellas} Completaste los 8 pares en ${intentos} intentos. ¡Eres un experto en toninas!`;
-          document.getElementById('win').classList.add('show');
-        },500);
+        const ico = intentos<=10?'🏆':intentos<=14?'🥈':'🥉';
+        const stars= intentos<=10?'⭐⭐⭐':intentos<=14?'⭐⭐':'⭐';
+        document.getElementById('win-ico').textContent=ico;
+        document.getElementById('win-msg').textContent=
+          `${stars} Completaste los 8 pares en ${intentos} intentos. ¡Eres un experto en el mundo marino!`;
+        setTimeout(()=>document.getElementById('win').classList.add('show'),500);
       }
     } else {
-      document.getElementById('mensaje').textContent = 'Eso no es un par... ¡sigue intentando! 🔍';
+      document.getElementById('mensaje').textContent = 'Ese no es el par... ¡sigue buscando! 🔍';
       setTimeout(()=>{
         a.classList.remove('volteada'); b.classList.remove('volteada');
-        volteadas=[]; lock=false;
-        document.getElementById('mensaje').textContent = '¡Encuentra los pares! 🌊';
+        vol=[]; lock=false;
+        document.getElementById('mensaje').textContent='¡Voltea las cartas y encuentra los pares! 🌊';
       },1000);
     }
   }

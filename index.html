@@ -527,13 +527,19 @@ footer a:hover{color:var(--gold);}
 <footer>
   © <span id="yr"></span> Prof. Felipe Jiménez &nbsp;·&nbsp; Aula de Ciencias &nbsp;·&nbsp; Viña del Mar
   &nbsp;|&nbsp; <a href="mailto:fjimenez321@gmail.com">fjimenez321@gmail.com</a>
+  &nbsp;|&nbsp; <span id="visitas" style="opacity:.45;"></span>
 </footer>
 
 <!-- ════════════════════════════════════════════ -->
 <script>
 /* ── CONFIG ─────────────────────────────────── */
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyFcG4150ORc85aIqbrAmtfBrZAol-iXB2I4RDEFMB87ESzTpE7vpoYIYpSPWL28Mas/exec';
+const BIT_URL    = 'https://script.google.com/macros/s/AKfycbynkNahV2m9Bbtu7XAxNXbHvY7jzPblpeCeBud9mJC8d_oQs7dgbI6uwuSF8K5DTyi51g/exec';
 document.getElementById('yr').textContent = new Date().getFullYear();
+fetch(`${BIT_URL}?action=visita`)
+  .then(r=>r.json())
+  .then(d=>{ if(d.ok) document.getElementById('visitas').textContent='Visitas: '+d.visitas; })
+  .catch(()=>{});
 
 /* ── MOBILE NAV ─────────────────────────────── */
 function toggleNav(){
@@ -558,8 +564,9 @@ const ROUTES={
   'juego-snake':    s=>rGameEmbed(s,'juego_snake.html','🐍 Snake','El legendario juego de la serpiente · 1976'),
   'juego-memoria':  s=>rGameEmbed(s,'juego_memoria.html','🃏 Memoria','Encuentra todos los pares de cartas'),
   'juego-tres':     s=>rGameEmbed(s,'juego_tictactoe.html','❌ Tres en Raya','El clásico juego de X y O'),
-  'juego-ahorcado': s=>rGameEmbed(s,'juego_ahorcado.html','💀 Ahorcado','Adivina la palabra letra a letra'),
-  'juego-toninas':  s=>rGameEmbed(s,'juego_toninas.html','🐬 Memorice de Toninas','Empareja cada imagen con su dato sobre la tonina chilena')
+  'juego-ahorcado':          s=>rGameEmbed(s,'juego_ahorcado.html','💀 Ahorcado','Adivina la palabra letra a letra'),
+  'juego-toninas':           s=>rGameEmbed(s,'juego_toninas.html','🐬 Memorice de Toninas','Encuentra los 8 pares del mundo marino'),
+  'juego-laberinto-toninas': s=>rGameEmbed(s,'juego_laberinto_toninas.html','🐬 Laberinto de Toninas','¡Ayuda a la tonina a encontrar su alimento!','660px')
 };
 let currentPage=null;
 
@@ -759,8 +766,14 @@ function rJuegos(stage){
         <div class="card c-laurel card-click" onclick="go('juego-toninas')" tabindex="0"
              onkeydown="if(event.key==='Enter')go('juego-toninas')">
           <h3>🐬 MEMORICE DE TONINAS</h3>
-          <p>Empareja cada imagen con su dato sobre la tonina chilena. ¡Aprende mientras juegas!<br>
+          <p>Encuentra los 8 pares de imágenes del mundo marino. ¡Solo imágenes, sin texto!<br>
              <em style="font-size:.78rem;opacity:.65;">Educativo · Tonina del Pacífico</em></p>
+        </div>
+        <div class="card c-sea card-click" onclick="go('juego-laberinto-toninas')" tabindex="0"
+             onkeydown="if(event.key==='Enter')go('juego-laberinto-toninas')">
+          <h3>🌊 LABERINTO DE TONINAS</h3>
+          <p>Guía a la tonina por el laberinto hasta encontrar su alimento. ¡3 niveles de dificultad!<br>
+             <em style="font-size:.78rem;opacity:.65;">Educativo · Flechas o desliza en pantalla</em></p>
         </div>
       </div>
     </div>`;
