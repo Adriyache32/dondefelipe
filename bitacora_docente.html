@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vista Docente · Bitácoras VI° Básico</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --azul:#1a4a8a;--azul-claro:#2d6cc0;--verde:#2e7d5e;--verde-claro:#3aab7a;
+  --amarillo:#f5c842;--rojo:#d94f3d;--gris:#f4f6fa;--texto:#1a2340;
+  --borde:#d0d8e8;--radio:10px;
+}
+body{background:var(--gris);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  color:var(--texto);min-height:100vh;}
+.header{background:var(--azul);color:#fff;padding:14px 20px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.header h1{font-size:1.1rem;letter-spacing:.5px;}
+.header p{font-size:.78rem;opacity:.75;margin-top:2px;}
+.wrap{max-width:960px;margin:0 auto;padding:16px;}
+
+/* LISTA */
+#view-lista{}
+.search-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.search-bar input{flex:1;min-width:180px;padding:8px 12px;border:1px solid var(--borde);
+  border-radius:8px;font-size:.9rem;color:var(--texto);}
+.search-bar select{padding:8px 10px;border:1px solid var(--borde);border-radius:8px;
+  font-size:.85rem;color:var(--texto);background:#fff;}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+.stat-box{background:#fff;border:1px solid var(--borde);border-radius:8px;
+  padding:10px 16px;text-align:center;min-width:100px;}
+.stat-box .n{font-size:1.5rem;font-weight:700;color:var(--azul-claro);}
+.stat-box .l{font-size:.72rem;color:#888;margin-top:2px;}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:var(--radio);
+  overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+thead th{background:var(--azul);color:#fff;padding:10px 14px;
+  text-align:left;font-size:.78rem;letter-spacing:.5px;font-weight:600;}
+tbody tr{border-bottom:1px solid var(--borde);transition:background .15s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#f0f5ff;cursor:pointer;}
+td{padding:10px 14px;font-size:.88rem;}
+td.code{font-family:monospace;color:var(--azul-claro);font-weight:600;font-size:.85rem;}
+td.curso{text-align:center;}
+.badge-prog{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:600;}
+.badge-prog.completo{background:#e8f5e9;color:#2e7d32;}
+.badge-prog.parcial{background:#fff8e1;color:#f57f17;}
+.badge-prog.inicio{background:#fce4ec;color:#c62828;}
+.empty{text-align:center;padding:40px;color:#aaa;font-size:.9rem;}
+.loading-msg{text-align:center;padding:40px;color:#888;}
+
+/* DETALLE */
+#view-detalle{display:none;}
+.det-header{background:#fff;border:1px solid var(--borde);border-radius:var(--radio);
+  padding:16px 20px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.det-avatar{width:46px;height:46px;border-radius:50%;background:var(--azul);
+  color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
+.det-info h2{font-size:1.1rem;color:var(--azul);}
+.det-info p{font-size:.8rem;color:#888;margin-top:3px;}
+.det-actions{margin-left:auto;display:flex;gap:8px;}
+.btn{padding:7px 16px;border-radius:8px;border:none;cursor:pointer;font-size:.82rem;font-weight:600;}
+.btn-sec{background:var(--gris);color:var(--texto);border:1px solid var(--borde);}
+.btn-sec:hover{background:#e8edf5;}
+.btn-print{background:var(--azul);color:#fff;}
+.btn-print:hover{background:var(--azul-claro);}
+
+.secciones{display:flex;flex-direction:column;gap:10px;}
+.seccion{background:#fff;border:1px solid var(--borde);border-radius:var(--radio);overflow:hidden;}
+.sec-titulo{background:var(--azul);color:#fff;padding:9px 16px;
+  font-size:.82rem;font-weight:600;letter-spacing:.3px;display:flex;align-items:center;gap:7px;}
+.sec-body{padding:14px 16px;display:grid;gap:12px;}
+.campo-doc{display:flex;flex-direction:column;gap:4px;}
+.campo-doc .etiqueta{font-size:.72rem;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+.campo-doc .valor{font-size:.9rem;line-height:1.6;white-space:pre-wrap;color:var(--texto);}
+.campo-doc .valor.vacio{color:#ccc;font-style:italic;}
+.dos-col{grid-template-columns:1fr 1fr;}
+
+@media(max-width:600px){.dos-col{grid-template-columns:1fr;}}
+
+/* PRINT */
+@media print{
+  body{background:#fff;}
+  .header,.det-actions,.search-bar,.stats,#view-lista{display:none!important;}
+  #view-detalle{display:block!important;}
+  .seccion{break-inside:avoid;margin-bottom:12px;border:1px solid #ccc;}
+  .sec-titulo{background:#1a4a8a!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>📋 Vista Docente · Bitácoras de Investigación</h1>
+    <p>VI° Básico · Ciencias Naturales</p>
+  </div>
+  <div id="header-right" style="font-size:.78rem;opacity:.7;">Cargando...</div>
+</div>
+
+<!-- ── VISTA LISTA ── -->
+<div class="wrap" id="view-lista">
+  <div id="loading-msg" class="loading-msg">⏳ Cargando bitácoras...</div>
+
+  <div id="contenido-lista" style="display:none;">
+    <div class="stats" id="stats-box"></div>
+    <div class="search-bar">
+      <input type="text" id="buscador" placeholder="Buscar por nombre o código..." oninput="filtrar()">
+      <select id="filtro-curso" onchange="filtrar()">
+        <option value="">Todos los cursos</option>
+      </select>
+    </div>
+    <table id="tabla">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Curso</th>
+          <th>Registro</th>
+          <th>Último guardado</th>
+          <th>Progreso</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-body"></tbody>
+    </table>
+    <div id="tabla-empty" class="empty" style="display:none;">
+      No se encontraron bitácoras con ese filtro.
+    </div>
+  </div>
+</div>
+
+<!-- ── VISTA DETALLE ── -->
+<div class="wrap" id="view-detalle">
+  <div class="det-header">
+    <div class="det-avatar" id="det-avatar">👤</div>
+    <div class="det-info">
+      <h2 id="det-nombre">—</h2>
+      <p id="det-meta">—</p>
+    </div>
+    <div class="det-actions">
+      <button class="btn btn-sec" onclick="volverLista()">← Volver a la lista</button>
+      <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir / PDF</button>
+    </div>
+  </div>
+  <div class="secciones" id="secciones-det"></div>
+</div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbynkNahV2m9Bbtu7XAxNXbHvY7jzPblpeCeBud9mJC8d_oQs7dgbI6uwuSF8K5DTyi51g/exec';
+
+let todosLosAlumnos = [];
+
+/* ── CARGA INICIAL ── */
+async function cargarLista() {
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=list`);
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    todosLosAlumnos = data.rows || [];
+    renderLista(todosLosAlumnos);
+    renderStats(todosLosAlumnos);
+    renderCursos(todosLosAlumnos);
+    document.getElementById('loading-msg').style.display = 'none';
+    document.getElementById('contenido-lista').style.display = 'block';
+    document.getElementById('header-right').textContent =
+      `${todosLosAlumnos.length} bitácora${todosLosAlumnos.length!==1?'s':''} registrada${todosLosAlumnos.length!==1?'s':''}`;
+  } catch(e) {
+    document.getElementById('loading-msg').innerHTML =
+      `<span style="color:#c00;">⚠️ No se pudo cargar la lista. Verifica que el Apps Script esté activo.<br><small>${e.message}</small></span>`;
+  }
+}
+
+function progreso(row) {
+  if (!row.guardado) return 0;
+  if (!row.datos) return 10;
+  try {
+    const d = typeof row.datos === 'string' ? JSON.parse(row.datos) : row.datos;
+    const campos = ['titulo_inv','pregunta','hipotesis','var_ind','materiales',
+                    'procedimiento','observaciones','conclusion'];
+    const llenos = campos.filter(k => d[k] && d[k].trim()).length;
+    return Math.round(llenos / campos.length * 100);
+  } catch { return 10; }
+}
+
+function badgeProg(pct) {
+  if (pct >= 80) return `<span class="badge-prog completo">${pct}% completo</span>`;
+  if (pct >= 30) return `<span class="badge-prog parcial">${pct}% en progreso</span>`;
+  return `<span class="badge-prog inicio">${pct>0?pct+'% iniciado':'Sin guardar'}</span>`;
+}
+
+function renderLista(rows) {
+  const tbody = document.getElementById('tabla-body');
+  if (rows.length === 0) {
+    tbody.innerHTML = '';
+    document.getElementById('tabla-empty').style.display = 'block';
+    return;
+  }
+  document.getElementById('tabla-empty').style.display = 'none';
+  tbody.innerHTML = rows.map(r => `
+    <tr onclick="verDetalle('${r.code}')">
+      <td class="code">${r.code}</td>
+      <td>${esc(r.nombre)}</td>
+      <td class="curso">${esc(r.curso)}</td>
+      <td>${esc(r.registro||'—')}</td>
+      <td>${esc(r.guardado||'Sin guardar')}</td>
+      <td>${badgeProg(progreso(r))}</td>
+    </tr>`).join('');
+}
+
+function renderStats(rows) {
+  const total     = rows.length;
+  const guardados = rows.filter(r => r.guardado).length;
+  const cursos    = [...new Set(rows.map(r => r.curso).filter(Boolean))].length;
+  document.getElementById('stats-box').innerHTML = `
+    <div class="stat-box"><div class="n">${total}</div><div class="l">Registros</div></div>
+    <div class="stat-box"><div class="n">${guardados}</div><div class="l">Con guardado</div></div>
+    <div class="stat-box"><div class="n">${total-guardados}</div><div class="l">Sin guardar</div></div>
+    <div class="stat-box"><div class="n">${cursos}</div><div class="l">Cursos</div></div>`;
+}
+
+function renderCursos(rows) {
+  const sel    = document.getElementById('filtro-curso');
+  const cursos = [...new Set(rows.map(r => r.curso).filter(Boolean))].sort();
+  cursos.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c; o.textContent = c;
+    sel.appendChild(o);
+  });
+}
+
+function filtrar() {
+  const q  = document.getElementById('buscador').value.toLowerCase();
+  const cu = document.getElementById('filtro-curso').value;
+  const filtrados = todosLosAlumnos.filter(r =>
+    (!q || r.nombre.toLowerCase().includes(q) || r.code.toLowerCase().includes(q)) &&
+    (!cu || r.curso === cu)
+  );
+  renderLista(filtrados);
+}
+
+/* ── DETALLE ── */
+async function verDetalle(code) {
+  document.getElementById('view-lista').style.display = 'none';
+  document.getElementById('view-detalle').style.display = 'block';
+  document.getElementById('det-nombre').textContent = '⏳ Cargando...';
+  document.getElementById('secciones-det').innerHTML = '';
+
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=load&code=${encodeURIComponent(code)}`);
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+
+    const d = data.datos || {};
+    document.getElementById('det-avatar').textContent = '👤';
+    document.getElementById('det-nombre').textContent = data.nombre;
+    document.getElementById('det-meta').textContent =
+      `${data.curso} · Código: ${code} · Último guardado: ${data.guardado || 'Sin guardar'}`;
+
+    document.getElementById('secciones-det').innerHTML = secciones(d);
+  } catch(e) {
+    document.getElementById('det-nombre').textContent = 'Error al cargar';
+    document.getElementById('secciones-det').innerHTML =
+      `<div style="color:#c00;padding:20px;">⚠️ ${e.message}</div>`;
+  }
+}
+
+function volverLista() {
+  document.getElementById('view-detalle').style.display = 'none';
+  document.getElementById('view-lista').style.display = 'block';
+}
+
+function campo(etiqueta, valor) {
+  const v = (valor||'').trim();
+  return `<div class="campo-doc">
+    <span class="etiqueta">${etiqueta}</span>
+    <span class="valor${v?'':' vacio'}">${v ? esc(v) : 'Sin completar'}</span>
+  </div>`;
+}
+
+function secciones(d) {
+  return `
+  <div class="seccion">
+    <div class="sec-titulo">👤 Paso 1 — Datos del proyecto</div>
+    <div class="sec-body dos-col">
+      ${campo('Título de la investigación', d.titulo_inv)}
+      ${campo('Fecha de inicio', d.fecha_inicio)}
+      ${campo('Resumen', d.resumen)}
+    </div>
+  </div>
+  <div class="seccion">
+    <div class="sec-titulo">❓ Paso 2 — Pregunta de investigación</div>
+    <div class="sec-body">
+      ${campo('¿Qué quiero descubrir?', d.pregunta)}
+      ${campo('¿Por qué me interesa este tema?', d.motivacion)}
+    </div>
+  </div>
+  <div class="seccion">
+    <div class="sec-titulo">💡 Paso 3 — Hipótesis</div>
+    <div class="sec-body">
+      ${campo('Mi predicción (Si…, entonces…, porque…)', d.hipotesis)}
+      ${campo('¿En qué me baso?', d.base_hipotesis)}
+    </div>
+  </div>
+  <div class="seccion">
+    <div class="sec-titulo">🔀 Paso 4 — Variables del experimento</div>
+    <div class="sec-body dos-col">
+      ${campo('Variable independiente (lo que cambio)', d.var_ind)}
+      ${campo('Variable dependiente (lo que mido)', d.var_dep)}
+      ${campo('Variables controladas (lo que mantengo igual)', d.var_ctrl)}
+    </div>
+  </div>
+  <div class="seccion">
+    <div class="sec-titulo">🧰 Paso 5 — Materiales</div>
+    <div class="sec-body">
+      ${campo('Lista de materiales', d.materiales)}
+    </div>
+  </div>
+  <div class="seccion">
+    <div class="sec-titulo">📋 Paso 6 — Procedimiento</div>
+    <div class="sec-body">
+      ${campo('Pasos del experimento', d.procedimiento)}
+    </div>
+  </div>
+  <div class="seccion">
+    <div class="sec-titulo">📊 Paso 7 — Observaciones y datos</div>
+    <div class="sec-body">
+      ${campo('¿Qué observé?', d.observaciones)}
+      ${campo('Mis datos (tabla o registros)', d.datos)}
+    </div>
+  </div>
+  <div class="seccion">
+    <div class="sec-titulo">🎯 Paso 8 — Resultados y conclusión</div>
+    <div class="sec-body">
+      ${campo('Resumen de resultados', d.resultados)}
+      ${campo('Conclusión', d.conclusion)}
+      ${campo('Fuentes consultadas', d.bibliografia)}
+    </div>
+  </div>`;
+}
+
+function esc(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+cargarLista();
+</script>
+</body>
+</html>
