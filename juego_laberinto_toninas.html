@@ -7,135 +7,185 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{
-  background:linear-gradient(160deg,#001f3f 0%,#003d6b 55%,#005f99 100%);
+  background:linear-gradient(160deg,#001a2e 0%,#002d4a 55%,#004068 100%);
   min-height:100vh;font-family:'Segoe UI',Tahoma,sans-serif;
   display:flex;flex-direction:column;align-items:center;
-  padding:12px;gap:8px;user-select:none;
+  padding:10px;gap:7px;user-select:none;
 }
-h1{color:#fff;font-size:1.3rem;text-align:center;
-   text-shadow:0 2px 8px rgba(0,0,0,.4);margin-top:2px;}
-.subtitulo{color:rgba(255,255,255,.75);font-size:.8rem;text-align:center;}
+h1{color:#fff;font-size:1.25rem;text-align:center;
+   text-shadow:0 2px 10px rgba(0,0,0,.5);margin-top:2px;letter-spacing:.3px;}
+.subtitulo{color:rgba(255,255,255,.65);font-size:.76rem;text-align:center;}
 
-.info-bar{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
-.pill{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);
-  border:1px solid rgba(255,255,255,.22);border-radius:20px;
-  padding:4px 14px;color:#fff;font-size:.82rem;font-weight:600;}
-.pill span{opacity:.65;font-weight:400;}
+/* BARRA DE INFO */
+.info-bar{
+  display:flex;gap:8px;justify-content:center;flex-wrap:wrap;width:100%;max-width:420px;
+}
+.pill{
+  background:rgba(255,255,255,.12);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.2);border-radius:16px;
+  padding:5px 13px;color:#fff;font-size:.8rem;font-weight:600;
+  display:flex;align-items:center;gap:5px;flex:1;justify-content:center;
+  min-width:80px;
+}
+.pill .ico{font-size:.85rem;}
+.pill .lbl{opacity:.6;font-size:.68rem;font-weight:400;}
+.pill.puntaje{background:rgba(255,215,0,.18);border-color:rgba(255,215,0,.35);color:#ffd700;}
 
-#canvas-wrap{position:relative;}
-canvas{border-radius:12px;display:block;
-  box-shadow:0 6px 30px rgba(0,0,0,.45),0 0 0 2px rgba(255,255,255,.1);}
+/* NIVELES */
+.nivel-bar{display:flex;gap:6px;justify-content:center;}
+.lvl-btn{
+  padding:5px 14px;border:2px solid rgba(255,255,255,.2);border-radius:12px;
+  background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);
+  font-size:.75rem;font-weight:600;cursor:pointer;transition:all .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.lvl-btn.active{border-color:#7ec8e3;color:#7ec8e3;background:rgba(126,200,227,.1);}
+.lvl-btn:hover:not(.active){border-color:rgba(255,255,255,.4);color:#fff;}
 
-/* WIN OVERLAY sobre el canvas */
-#overlay{display:none;position:absolute;inset:0;border-radius:12px;
-  background:rgba(0,30,60,.88);align-items:center;justify-content:center;
-  flex-direction:column;gap:10px;text-align:center;padding:20px;}
+/* CANVAS WRAP */
+#canvas-wrap{position:relative;border-radius:14px;overflow:hidden;}
+canvas{display:block;}
+
+/* OVERLAY WIN */
+#overlay{
+  display:none;position:absolute;inset:0;
+  background:rgba(0,20,40,.92);
+  align-items:center;justify-content:center;
+  flex-direction:column;gap:8px;text-align:center;padding:20px;
+}
 #overlay.show{display:flex;}
-#overlay .ov-ico{font-size:3rem;}
-#overlay h2{color:#ffd700;font-size:1.2rem;letter-spacing:.5px;}
-#overlay p{color:rgba(255,255,255,.85);font-size:.85rem;}
-.ov-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px;}
-.ov-btn{padding:8px 18px;border:none;border-radius:14px;font-size:.85rem;
-  font-weight:700;cursor:pointer;}
-.ov-btn.primary{background:#ffd700;color:#003d6b;}
-.ov-btn.secondary{background:rgba(255,255,255,.15);color:#fff;
-  border:1px solid rgba(255,255,255,.3);}
+.ov-ico{font-size:2.8rem;}
+.ov-titulo{color:#ffd700;font-size:1.2rem;font-weight:700;letter-spacing:.5px;}
+.ov-msg{color:rgba(255,255,255,.85);font-size:.82rem;line-height:1.5;}
+.ov-puntaje{
+  background:rgba(255,215,0,.15);border:1px solid rgba(255,215,0,.4);
+  border-radius:12px;padding:8px 20px;color:#ffd700;font-size:1.1rem;font-weight:700;
+}
+.ov-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:4px;}
+.ov-btn{
+  padding:8px 18px;border:none;border-radius:12px;
+  font-size:.82rem;font-weight:700;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.ov-btn.primary{background:#ffd700;color:#001a2e;}
+.ov-btn.secondary{background:rgba(255,255,255,.12);color:#fff;
+  border:1px solid rgba(255,255,255,.25);}
 
 /* D-PAD */
-.dpad{display:grid;grid-template-areas:"  up  " "lt rt" " dn ";
-  gap:5px;margin-top:4px;}
-.dpad button{
-  width:52px;height:52px;border:none;border-radius:14px;
-  background:rgba(255,255,255,.18);backdrop-filter:blur(6px);
-  color:#fff;font-size:1.3rem;cursor:pointer;
-  border:1px solid rgba(255,255,255,.25);
-  transition:background .12s,transform .1s;
-  -webkit-tap-highlight-color:transparent;
-  display:flex;align-items:center;justify-content:center;
+.dpad{
+  display:grid;
+  grid-template-areas:". up ." "lt . rt" ". dn .";
+  grid-template-columns:1fr 1fr 1fr;
+  gap:5px;margin-top:2px;
 }
-.dpad button:active{background:rgba(255,255,255,.35);transform:scale(.93);}
-.dpad .up{grid-area:up;margin:0 auto;}
-.dpad .mid{grid-area:lt/lt/rt/rt;display:flex;gap:5px;}
-.dpad .dn{grid-area:dn;margin:0 auto;}
+.dpad button{
+  width:50px;height:50px;border:none;border-radius:12px;
+  background:rgba(255,255,255,.15);backdrop-filter:blur(6px);
+  color:#fff;font-size:1.2rem;cursor:pointer;
+  border:1px solid rgba(255,255,255,.22);
+  transition:background .12s,transform .1s;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent;
+}
+.dpad button:active{background:rgba(126,200,227,.35);transform:scale(.92);}
+.dpad .d-up{grid-area:up;}
+.dpad .d-lt{grid-area:lt;}
+.dpad .d-rt{grid-area:rt;}
+.dpad .d-dn{grid-area:dn;}
 
-#btn-nuevo{padding:8px 24px;background:#ffd700;color:#003d6b;border:none;
-  border-radius:18px;font-size:.88rem;font-weight:700;cursor:pointer;
-  box-shadow:0 3px 12px rgba(0,0,0,.25);transition:transform .15s;}
-#btn-nuevo:hover{transform:translateY(-2px);}
+.btn-reiniciar{
+  padding:8px 22px;background:rgba(255,255,255,.12);color:#fff;
+  border:1px solid rgba(255,255,255,.25);border-radius:16px;
+  font-size:.82rem;font-weight:600;cursor:pointer;
+  transition:background .15s;-webkit-tap-highlight-color:transparent;
+}
+.btn-reiniciar:hover{background:rgba(255,255,255,.22);}
 
 @media(max-width:380px){
-  .dpad button{width:46px;height:46px;font-size:1.1rem;}
+  .dpad button{width:44px;height:44px;font-size:1rem;}
 }
 </style>
 </head>
 <body>
 
 <h1>🐬 Laberinto de Toninas</h1>
-<p class="subtitulo">¡Ayuda a la tonina a encontrar su alimento! 🐟</p>
+<p class="subtitulo">¡Guía a la tonina hasta su alimento antes de que se acabe el tiempo!</p>
+
+<div class="nivel-bar">
+  <button class="lvl-btn active" onclick="setNivel(0,this)">Fácil</button>
+  <button class="lvl-btn"       onclick="setNivel(1,this)">Medio</button>
+  <button class="lvl-btn"       onclick="setNivel(2,this)">Difícil</button>
+</div>
 
 <div class="info-bar">
-  <div class="pill"><span>Nivel: </span><span id="info-nivel">1</span></div>
-  <div class="pill"><span>Pasos: </span><span id="info-pasos">0</span></div>
+  <div class="pill"><span class="ico">⏱️</span><span id="info-tiempo">0:00</span><span class="lbl">tiempo</span></div>
+  <div class="pill"><span class="ico">👣</span><span id="info-pasos">0</span><span class="lbl">pasos</span></div>
+  <div class="pill puntaje"><span class="ico">⭐</span><span id="info-puntaje">—</span><span class="lbl">puntos</span></div>
 </div>
 
 <div id="canvas-wrap">
   <canvas id="c"></canvas>
   <div id="overlay">
     <div class="ov-ico" id="ov-ico">🐟</div>
-    <h2 id="ov-titulo">¡Encontraste el alimento!</h2>
-    <p id="ov-msg"></p>
+    <div class="ov-titulo" id="ov-titulo">¡Encontraste el alimento!</div>
+    <div class="ov-msg" id="ov-msg"></div>
+    <div class="ov-puntaje" id="ov-puntaje"></div>
     <div class="ov-btns">
-      <button class="ov-btn primary" id="btn-siguiente" onclick="siguienteNivel()">
-        Siguiente nivel →
-      </button>
-      <button class="ov-btn secondary" onclick="init()">🔄 Reiniciar</button>
+      <button class="ov-btn primary"   id="btn-sig" onclick="siguienteNivel()">Siguiente →</button>
+      <button class="ov-btn secondary" onclick="init()">🔄 Reintentar</button>
     </div>
   </div>
 </div>
 
 <div class="dpad">
-  <button class="up"  onclick="mv(0,-1)">▲</button>
-  <div class="mid">
-    <button onclick="mv(-1,0)">◀</button>
-    <button onclick="mv(1,0)">▶</button>
-  </div>
-  <button class="dn" onclick="mv(0,1)">▼</button>
+  <button class="d-up" onclick="mv(0,-1)">▲</button>
+  <button class="d-lt" onclick="mv(-1,0)">◀</button>
+  <button class="d-rt" onclick="mv(1,0)">▶</button>
+  <button class="d-dn" onclick="mv(0,1)">▼</button>
 </div>
-
-<button id="btn-nuevo" onclick="init()">🔄 Reiniciar nivel</button>
+<button class="btn-reiniciar" onclick="init()">🔄 Reiniciar nivel</button>
 
 <script>
-/* ── CONFIG DE NIVELES ── */
+/* ══════════════════════════════════════════
+   CONFIGURACIÓN DE NIVELES
+══════════════════════════════════════════ */
 const NIVELES = [
-  { cols:7,  rows:7,  label:'1 — Fácil' },
-  { cols:10, rows:10, label:'2 — Medio' },
-  { cols:13, rows:13, label:'3 — Difícil' },
+  { cols:7,  rows:7,  baseScore:500,  timeLimite:90  },
+  { cols:10, rows:10, baseScore:1000, timeLimite:150 },
+  { cols:13, rows:13, baseScore:2000, timeLimite:220 },
 ];
-let nivelIdx=0, walls=[], px=0, py=0, pasos=0, ganado=false;
+let nivelIdx = 0;
+
+/* Estado */
+let walls=[], px=0, py=0, pasos=0, ganado=false, dir='right';
+let startTime=null, elapsed=0, timerInterval=null;
 
 const canvas = document.getElementById('c');
 const ctx    = canvas.getContext('2d');
 
-/* ── TAMAÑO ADAPTABLE ── */
+/* ══════════════════════════════════════════
+   TAMAÑO ADAPTABLE
+══════════════════════════════════════════ */
 function canvasSize(){
-  return Math.min(window.innerWidth - 32, 390);
+  return Math.min(window.innerWidth - 24, 400);
 }
 
-/* ── GENERACIÓN DE LABERINTO (DFS recursivo) ── */
+/* ══════════════════════════════════════════
+   GENERACIÓN DEL LABERINTO (DFS)
+══════════════════════════════════════════ */
 function genMaze(cols, rows){
   const w = Array.from({length:rows}, ()=>
     Array.from({length:cols}, ()=>({t:true,r:true,b:true,l:true}))
   );
   const vis = Array.from({length:rows}, ()=>new Array(cols).fill(false));
   const dirs = [[0,-1,'t','b'],[1,0,'r','l'],[0,1,'b','t'],[-1,0,'l','r']];
-  function shuffle(a){ return [...a].sort(()=>Math.random()-.5); }
+  function shuf(a){ return [...a].sort(()=>Math.random()-.5); }
   function dfs(x,y){
     vis[y][x]=true;
-    for(const [dx,dy,d1,d2] of shuffle(dirs)){
+    for(const [dx,dy,d1,d2] of shuf(dirs)){
       const nx=x+dx, ny=y+dy;
       if(nx>=0&&nx<cols&&ny>=0&&ny<rows&&!vis[ny][nx]){
-        w[y][x][d1]=false; w[ny][nx][d2]=false;
-        dfs(nx,ny);
+        w[y][x][d1]=false; w[ny][nx][d2]=false; dfs(nx,ny);
       }
     }
   }
@@ -143,28 +193,214 @@ function genMaze(cols, rows){
   return w;
 }
 
-/* ── INICIALIZAR ── */
+/* ══════════════════════════════════════════
+   TIMER
+══════════════════════════════════════════ */
+function startTimer(){
+  if(startTime!==null) return;
+  startTime = Date.now();
+  timerInterval = setInterval(()=>{
+    elapsed = (Date.now()-startTime)/1000;
+    updateInfoBar();
+  }, 200);
+}
+function stopTimer(){ clearInterval(timerInterval); timerInterval=null; }
+
+function fmtTime(s){
+  const m=Math.floor(s/60), sec=Math.floor(s%60);
+  return `${m}:${sec.toString().padStart(2,'0')}`;
+}
+
+/* ══════════════════════════════════════════
+   PUNTAJE
+══════════════════════════════════════════ */
+function calcPuntaje(){
+  const cfg = NIVELES[nivelIdx];
+  const minPasos = cfg.cols + cfg.rows - 2; // mínimo teórico
+  const stepPen  = Math.max(0, (pasos - minPasos) * 4);
+  const timePen  = Math.floor(elapsed * 2);
+  return Math.max(0, cfg.baseScore - stepPen - timePen);
+}
+
+function updateInfoBar(){
+  document.getElementById('info-tiempo').textContent  = fmtTime(elapsed);
+  document.getElementById('info-pasos').textContent   = pasos;
+  if(startTime!==null && !ganado){
+    const p = calcPuntaje();
+    document.getElementById('info-puntaje').textContent = p;
+  }
+}
+
+/* ══════════════════════════════════════════
+   INICIALIZAR
+══════════════════════════════════════════ */
+function setNivel(idx, btn){
+  nivelIdx = idx;
+  document.querySelectorAll('.lvl-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  init();
+}
+
 function init(){
+  stopTimer();
   const sz   = canvasSize();
   const cfg  = NIVELES[nivelIdx];
-  const cols = cfg.cols, rows = cfg.rows;
-  canvas.width  = sz;
-  canvas.height = sz;
-  walls  = genMaze(cols, rows);
-  px=0; py=0; pasos=0; ganado=false;
-  document.getElementById('info-nivel').textContent = cfg.label;
-  document.getElementById('info-pasos').textContent = '0';
+  canvas.width = canvas.height = sz;
+  walls  = genMaze(cfg.cols, cfg.rows);
+  px=0; py=0; pasos=0; ganado=false; dir='right';
+  startTime=null; elapsed=0;
+  document.getElementById('info-tiempo').textContent  = '0:00';
+  document.getElementById('info-pasos').textContent   = '0';
+  document.getElementById('info-puntaje').textContent = '—';
   document.getElementById('overlay').classList.remove('show');
-  document.getElementById('btn-siguiente').style.display =
+  document.getElementById('btn-sig').style.display =
     nivelIdx < NIVELES.length-1 ? 'inline-flex' : 'none';
   draw();
 }
 
 function siguienteNivel(){
-  if(nivelIdx<NIVELES.length-1){ nivelIdx++; init(); }
+  if(nivelIdx < NIVELES.length-1){
+    nivelIdx++;
+    document.querySelectorAll('.lvl-btn').forEach((b,i)=>
+      b.classList.toggle('active', i===nivelIdx));
+    init();
+  }
 }
 
-/* ── DIBUJO ── */
+/* ══════════════════════════════════════════
+   DIBUJO DE LA TONINA
+   Lomo negro, vientre blanco — como la tonina overa chilena
+══════════════════════════════════════════ */
+function drawTonina(cx, cy, r, direction){
+  ctx.save();
+  ctx.translate(cx, cy);
+  const ang = {right:0, left:Math.PI, down:Math.PI/2, up:-Math.PI/2};
+  ctx.rotate(ang[direction]||0);
+
+  const bw = r * 1.55;  // ancho del cuerpo
+  const bh = r * 0.62;  // alto del cuerpo
+
+  /* — COLA (detrás del cuerpo) — */
+  ctx.fillStyle = '#111827';
+  // fluke superior
+  ctx.beginPath();
+  ctx.moveTo(-bw*0.85, 0);
+  ctx.bezierCurveTo(-bw*1.15,-bh*0.15, -bw*1.4,-bh*0.7, -bw*1.25,-bh*0.72);
+  ctx.bezierCurveTo(-bw*1.05,-bh*0.72, -bw*0.95,-bh*0.18, -bw*0.85, 0);
+  ctx.fill();
+  // fluke inferior
+  ctx.beginPath();
+  ctx.moveTo(-bw*0.85, 0);
+  ctx.bezierCurveTo(-bw*1.15, bh*0.15, -bw*1.4, bh*0.7, -bw*1.25, bh*0.72);
+  ctx.bezierCurveTo(-bw*1.05, bh*0.72, -bw*0.95, bh*0.18, -bw*0.85, 0);
+  ctx.fill();
+
+  /* — CUERPO COMPLETO (lomo negro) — */
+  ctx.beginPath();
+  ctx.ellipse(0, 0, bw, bh, 0, 0, Math.PI*2);
+  ctx.fillStyle = '#111827';
+  ctx.fill();
+
+  /* — VIENTRE BLANCO (parte inferior) — */
+  ctx.beginPath();
+  ctx.ellipse(bw*0.08, bh*0.18, bw*0.82, bh*0.52, 0, 0, Math.PI);
+  ctx.fillStyle = '#f0f4f8';
+  ctx.fill();
+
+  /* — ALETA PECTORAL izquierda (debajo) — */
+  ctx.beginPath();
+  ctx.moveTo(bw*0.15, bh*0.55);
+  ctx.bezierCurveTo(bw*0.0, bh*0.95, -bw*0.25, bh*0.85, -bw*0.1, bh*0.55);
+  ctx.fillStyle = '#0f172a';
+  ctx.fill();
+
+  /* — ALETA DORSAL — */
+  ctx.beginPath();
+  ctx.moveTo(bw*0.05, -bh*0.95);
+  ctx.bezierCurveTo(bw*0.25, -bh*1.35, bw*0.5, -bh*1.2, bw*0.45, -bh*0.95);
+  ctx.bezierCurveTo(bw*0.35, -bh*0.98, bw*0.15, -bh*0.97, bw*0.05, -bh*0.95);
+  ctx.fillStyle = '#0f172a';
+  ctx.fill();
+
+  /* — MANCHA LATERAL gris tenue (característica de la tonina overa) — */
+  ctx.beginPath();
+  ctx.ellipse(-bw*0.1, -bh*0.05, bw*0.55, bh*0.22, -0.1, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(148,163,184,0.3)';
+  ctx.fill();
+
+  /* — HOCICO REDONDEADO (tonina overa no tiene rostro pronunciado) — */
+  ctx.beginPath();
+  ctx.ellipse(bw*0.88, -bh*0.08, bw*0.18, bh*0.28, 0.15, 0, Math.PI*2);
+  ctx.fillStyle = '#111827';
+  ctx.fill();
+
+  /* — OJO — */
+  ctx.beginPath();
+  ctx.arc(bw*0.62, -bh*0.18, r*0.115, 0, Math.PI*2);
+  ctx.fillStyle = '#f8fafc';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(bw*0.64, -bh*0.18, r*0.07, 0, Math.PI*2);
+  ctx.fillStyle = '#020617';
+  ctx.fill();
+  /* brillo del ojo */
+  ctx.beginPath();
+  ctx.arc(bw*0.66, -bh*0.21, r*0.025, 0, Math.PI*2);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/* ══════════════════════════════════════════
+   DIBUJO DEL PESCADO (meta)
+══════════════════════════════════════════ */
+function drawPescado(cx, cy, r){
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  /* cuerpo */
+  ctx.beginPath();
+  ctx.ellipse(0, 0, r*0.9, r*0.55, 0, 0, Math.PI*2);
+  ctx.fillStyle = '#f97316';
+  ctx.fill();
+  ctx.strokeStyle = '#ea580c';
+  ctx.lineWidth = r*0.06;
+  ctx.stroke();
+
+  /* cola */
+  ctx.beginPath();
+  ctx.moveTo(-r*0.85, 0);
+  ctx.lineTo(-r*1.3, -r*0.5);
+  ctx.lineTo(-r*1.3,  r*0.5);
+  ctx.closePath();
+  ctx.fillStyle = '#fb923c';
+  ctx.fill();
+
+  /* aleta dorsal */
+  ctx.beginPath();
+  ctx.moveTo(-r*0.1, -r*0.55);
+  ctx.lineTo( r*0.2, -r*0.95);
+  ctx.lineTo( r*0.45,-r*0.55);
+  ctx.fillStyle = '#fed7aa';
+  ctx.fill();
+
+  /* ojo */
+  ctx.beginPath();
+  ctx.arc(r*0.4, -r*0.08, r*0.14, 0, Math.PI*2);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(r*0.42, -r*0.08, r*0.08, 0, Math.PI*2);
+  ctx.fillStyle = '#1e293b';
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/* ══════════════════════════════════════════
+   DIBUJO PRINCIPAL
+══════════════════════════════════════════ */
 function draw(){
   const sz   = canvas.width;
   const cfg  = NIVELES[nivelIdx];
@@ -174,118 +410,145 @@ function draw(){
 
   ctx.clearRect(0,0,sz,sz);
 
-  /* Fondo del laberinto */
-  ctx.fillStyle='#003a5e';
+  /* Fondo oceánico con gradiente */
+  const bg = ctx.createLinearGradient(0,0,sz,sz);
+  bg.addColorStop(0,'#001525');
+  bg.addColorStop(1,'#002a45');
+  ctx.fillStyle = bg;
   ctx.fillRect(0,0,sz,sz);
 
-  /* Celdas visitables */
+  /* Burbujas decorativas de fondo */
+  ctx.fillStyle = 'rgba(126,200,227,.04)';
+  for(let i=0;i<8;i++){
+    const bx = ((i*137)%sz), by = ((i*97+50)%sz);
+    ctx.beginPath();
+    ctx.arc(bx,by,(i%3+1)*cw*0.3,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  /* Celdas del laberinto */
   for(let y=0;y<rows;y++){
     for(let x=0;x<cols;x++){
       const cx=x*cw, cy=y*ch;
-      /* brillo suave en el camino de salida (solo meta y origen) */
+      /* Destello en inicio y meta */
+      if(x===0&&y===0){
+        const g=ctx.createRadialGradient(cx+cw/2,cy+ch/2,0,cx+cw/2,cy+ch/2,cw);
+        g.addColorStop(0,'rgba(100,210,255,.14)'); g.addColorStop(1,'transparent');
+        ctx.fillStyle=g; ctx.fillRect(cx,cy,cw,ch);
+      }
       if(x===cols-1&&y===rows-1){
-        ctx.fillStyle='rgba(255,215,0,.12)';
-        ctx.fillRect(cx,cy,cw,ch);
-      } else if(x===0&&y===0){
-        ctx.fillStyle='rgba(100,200,255,.1)';
-        ctx.fillRect(cx,cy,cw,ch);
+        const g=ctx.createRadialGradient(cx+cw/2,cy+ch/2,0,cx+cw/2,cy+ch/2,cw);
+        g.addColorStop(0,'rgba(255,215,0,.18)'); g.addColorStop(1,'transparent');
+        ctx.fillStyle=g; ctx.fillRect(cx,cy,cw,ch);
       }
     }
   }
 
   /* Paredes */
-  ctx.strokeStyle='#7ec8e3';
-  ctx.lineWidth  = Math.max(2, cw*0.09);
-  ctx.lineCap='round';
+  ctx.strokeStyle = '#3b82f6';
+  ctx.lineWidth   = Math.max(1.5, cw * 0.1);
+  ctx.lineCap = 'round';
 
   for(let y=0;y<rows;y++){
     for(let x=0;x<cols;x++){
       const cx=x*cw, cy=y*ch;
       const w=walls[y][x];
-      if(w.t){ line(cx,cy,cx+cw,cy); }
-      if(w.l){ line(cx,cy,cx,cy+ch); }
-      if(x===cols-1&&w.r){ line(cx+cw,cy,cx+cw,cy+ch); }
-      if(y===rows-1&&w.b){ line(cx,cy+ch,cx+cw,cy+ch); }
+      if(w.t) seg(cx,cy,cx+cw,cy);
+      if(w.l) seg(cx,cy,cx,cy+ch);
+      if(x===cols-1&&w.r) seg(cx+cw,cy,cx+cw,cy+ch);
+      if(y===rows-1&&w.b) seg(cx,cy+ch,cx+cw,cy+ch);
     }
   }
 
-  /* Emojis — usa tamaño proporcional a la celda */
-  const fs = Math.max(12, Math.min(cw, ch)*0.65);
-  ctx.font         = `${fs}px serif`;
-  ctx.textAlign    = 'center';
-  ctx.textBaseline = 'middle';
+  /* Pez meta */
+  const fishR = Math.min(cw,ch)*0.32;
+  drawPescado((cols-1)*cw+cw/2, (rows-1)*ch+ch/2, fishR);
 
-  /* Meta: pez 🐟 con brillo */
-  const gx=(cols-1)*cw+cw/2, gy=(rows-1)*ch+ch/2;
-  if(!ganado){
-    const grad=ctx.createRadialGradient(gx,gy,0,gx,gy,cw);
-    grad.addColorStop(0,'rgba(255,220,0,.25)');
-    grad.addColorStop(1,'rgba(255,220,0,0)');
-    ctx.fillStyle=grad;
-    ctx.beginPath(); ctx.arc(gx,gy,cw*.7,0,Math.PI*2); ctx.fill();
-  }
-  ctx.fillText('🐟',gx,gy);
-
-  /* Jugador: tonina 🐬 */
-  ctx.fillText('🐬',px*cw+cw/2,py*ch+ch/2);
+  /* Tonina jugador */
+  const toR = Math.min(cw,ch)*0.34;
+  drawTonina(px*cw+cw/2, py*ch+ch/2, toR, dir);
 }
 
-function line(x1,y1,x2,y2){
+function seg(x1,y1,x2,y2){
   ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
 }
 
-/* ── MOVIMIENTO ── */
+/* ══════════════════════════════════════════
+   MOVIMIENTO
+══════════════════════════════════════════ */
 function mv(dx,dy){
   if(ganado) return;
-  const cfg  = NIVELES[nivelIdx];
+  startTimer(); // arrancar al primer movimiento
+  const cfg = NIVELES[nivelIdx];
   const nx=px+dx, ny=py+dy;
   if(nx<0||nx>=cfg.cols||ny<0||ny>=cfg.rows) return;
   const w=walls[py][px];
   if(dx===1&&w.r)return; if(dx===-1&&w.l)return;
   if(dy===1&&w.b)return; if(dy===-1&&w.t)return;
+
+  if(dx===1)dir='right'; else if(dx===-1)dir='left';
+  else if(dy===1)dir='down'; else dir='up';
+
   px=nx; py=ny; pasos++;
-  document.getElementById('info-pasos').textContent=pasos;
+  updateInfoBar();
   draw();
   if(px===cfg.cols-1&&py===cfg.rows-1) ganar();
 }
 
+/* ══════════════════════════════════════════
+   VICTORIA
+══════════════════════════════════════════ */
 function ganar(){
   ganado=true;
+  stopTimer();
+  elapsed=(Date.now()-startTime)/1000;
   draw();
-  const ol=document.getElementById('overlay');
-  const stars=pasos<=(NIVELES[nivelIdx].cols*NIVELES[nivelIdx].rows*0.5)?'⭐⭐⭐':
-               pasos<=(NIVELES[nivelIdx].cols*NIVELES[nivelIdx].rows)?'⭐⭐':'⭐';
-  document.getElementById('ov-ico').textContent='🐟';
-  document.getElementById('ov-titulo').textContent='¡Encontraste el alimento!';
-  document.getElementById('ov-msg').textContent=
-    `${stars} Llegaste en ${pasos} pasos. ¡La tonina está muy feliz!`;
-  document.getElementById('btn-siguiente').textContent=
-    nivelIdx<NIVELES.length-1?'Siguiente nivel →':'¡Completaste todos los niveles! 🏆';
-  ol.classList.add('show');
+
+  const puntaje = calcPuntaje();
+  document.getElementById('info-puntaje').textContent = puntaje;
+
+  const cfg = NIVELES[nivelIdx];
+  const minP = cfg.cols + cfg.rows - 2;
+  const stars =
+    puntaje >= cfg.baseScore*0.75 ? '⭐⭐⭐' :
+    puntaje >= cfg.baseScore*0.4  ? '⭐⭐'   : '⭐';
+
+  document.getElementById('ov-ico').textContent     = '🐟';
+  document.getElementById('ov-titulo').textContent  = '¡Encontraste el alimento!';
+  document.getElementById('ov-msg').textContent     =
+    `${stars}  Tiempo: ${fmtTime(elapsed)} · Pasos: ${pasos}`;
+  document.getElementById('ov-puntaje').textContent = `${puntaje} puntos`;
+  document.getElementById('btn-sig').textContent    =
+    nivelIdx < NIVELES.length-1 ? 'Siguiente nivel →' : '¡Máximo nivel! 🏆';
+  document.getElementById('btn-sig').style.display  = 'inline-flex';
+  if(nivelIdx === NIVELES.length-1)
+    document.getElementById('btn-sig').onclick = ()=>init();
+
+  setTimeout(()=>document.getElementById('overlay').classList.add('show'), 400);
 }
 
-/* ── TECLADO ── */
+/* ══════════════════════════════════════════
+   CONTROLES
+══════════════════════════════════════════ */
 document.addEventListener('keydown',e=>{
-  const map={'ArrowUp':[0,-1],'ArrowDown':[0,1],'ArrowLeft':[-1,0],'ArrowRight':[1,0],
-             'w':[0,-1],'s':[0,1],'a':[-1,0],'d':[1,0]};
+  const map={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],
+             w:[0,-1],s:[0,1],a:[-1,0],d:[1,0]};
   if(map[e.key]){ e.preventDefault(); mv(...map[e.key]); }
 });
 
-/* ── TOUCH SWIPE ── */
 let tx0,ty0;
 canvas.addEventListener('touchstart',e=>{
   tx0=e.touches[0].clientX; ty0=e.touches[0].clientY; e.preventDefault();
 },{passive:false});
 canvas.addEventListener('touchend',e=>{
-  const dx=e.changedTouches[0].clientX-tx0;
-  const dy=e.changedTouches[0].clientY-ty0;
-  if(Math.abs(dx)>Math.abs(dy)) mv(dx>0?1:-1,0);
-  else                           mv(0,dy>0?1:-1);
+  const dx=e.changedTouches[0].clientX-tx0, dy=e.changedTouches[0].clientY-ty0;
+  const thresh=15;
+  if(Math.abs(dx)<thresh&&Math.abs(dy)<thresh) return;
+  Math.abs(dx)>Math.abs(dy) ? mv(dx>0?1:-1,0) : mv(0,dy>0?1:-1);
   e.preventDefault();
 },{passive:false});
 
-/* ── RESIZE ── */
-window.addEventListener('resize',()=>{ init(); });
+window.addEventListener('resize',()=>init());
 
 init();
 </script>
