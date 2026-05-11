@@ -507,6 +507,11 @@ footer a:hover{color:var(--gold);}
         <a href="#" id="link-juegos" class="nav-lib"
            onclick="go('juegos');closeMobile();return false;">🎮 JUEGOS</a>
       </li>
+      <!-- MAESTROS -->
+      <li>
+        <a href="#" id="link-maestros" class="nav-lib"
+           onclick="go('maestros');closeMobile();return false;">🎓 MAESTROS</a>
+      </li>
       <!-- BIBLIOTECA -->
       <li>
         <a href="#" id="link-biblioteca" class="nav-lib"
@@ -558,7 +563,9 @@ const ROUTES={
   'juego-snake':    s=>rGameEmbed(s,'juego_snake.html','🐍 Snake','El legendario juego de la serpiente · 1976'),
   'juego-memoria':  s=>rGameEmbed(s,'juego_memoria.html','🃏 Memoria','Encuentra todos los pares de cartas'),
   'juego-tres':     s=>rGameEmbed(s,'juego_tictactoe.html','❌ Tres en Raya','El clásico juego de X y O'),
-  'juego-ahorcado': s=>rGameEmbed(s,'juego_ahorcado.html','💀 Ahorcado','Adivina la palabra letra a letra')
+  'juego-ahorcado': s=>rGameEmbed(s,'juego_ahorcado.html','💀 Ahorcado','Adivina la palabra letra a letra'),
+  maestros:rMaestros,
+  'maestro-chino':  s=>rGameEmbed(s,'maestro_chino.html','🀄 MAESTRO MING · 学中文','Tutor de Chino Mandarín con IA · 8 lecciones interactivas','640px')
 };
 let currentPage=null;
 
@@ -585,7 +592,7 @@ function go(page){
 }
 
 function setActiveNav(page){
-  const navPage=page.startsWith('juego-')?'juegos':page==='6basico'?'6basico':page;
+  const navPage=page.startsWith('juego-')?'juegos':page.startsWith('maestro-')?'maestros':page;
   document.querySelectorAll('.drop-btn').forEach(b=>b.classList.remove('active-menu'));
   document.querySelectorAll('.drop-content a:not(.soon)').forEach(a=>a.classList.remove('active-link'));
   document.querySelectorAll('.nav-lib').forEach(a=>a.classList.remove('active-link'));
@@ -754,19 +761,60 @@ function rJuegos(stage){
     </div>`;
 }
 
-function rGameEmbed(stage, file, title, desc){
+function rGameEmbed(stage, file, title, desc, minH){
+  const isMaestro = file.startsWith('maestro_');
+  const backPage  = isMaestro ? 'maestros' : 'juegos';
+  const backLabel = isMaestro ? '← Volver a Maestros' : '← Volver a Juegos';
   stage.innerHTML=`
     <div class="fade-in">
       <div class="tablet-header"><h1>${title}</h1></div>
       <p style="text-align:center;color:var(--bronze);margin-bottom:1rem;">${desc}</p>
       <div style="text-align:center;margin-bottom:1rem;">
-        <button class="btn-s" onclick="go('juegos')">← Volver a Juegos</button>
+        <button class="btn-s" onclick="go('${backPage}')">${backLabel}</button>
         <a href="${file}" target="_blank" class="btn-s" style="margin-left:8px;">↗ Pantalla completa</a>
       </div>
       <div class="embed-wrap">
         <iframe src="${file}" class="embed-frame"
                 title="${title}" loading="lazy"
-                style="min-height:560px;"></iframe>
+                style="min-height:${minH||'560px'};"></iframe>
+      </div>
+    </div>`;
+}
+
+/* ── PAGE: MAESTROS ─────────────────────────── */
+function rMaestros(stage){
+  stage.innerHTML=`
+    <div class="fade-in">
+      <div class="tablet-header">
+        <h1 class="shimmer">🎓 SALA DE MAESTROS</h1>
+        <p class="page-sub">Tutores con Inteligencia Artificial · Aprende a tu ritmo · En español</p>
+      </div>
+      <div class="wave-sep" aria-hidden="true">
+        <svg viewBox="0 0 900 24" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,12 C150,24 300,0 450,12 C600,24 750,0 900,12 L900,24 L0,24 Z"
+                fill="rgba(201,168,76,0.07)"/>
+          <path d="M0,16 C150,4 300,20 450,12 C600,4 750,20 900,12"
+                fill="none" stroke="rgba(201,168,76,0.25)" stroke-width="1"/>
+        </svg>
+      </div>
+      <h2 class="sh">ELIGE TU MAESTRO</h2>
+      <div class="grid">
+        <div class="card c-sea card-click" onclick="go('maestro-chino')" tabindex="0"
+             onkeydown="if(event.key==='Enter')go('maestro-chino')">
+          <h3>🀄 MAESTRO MING</h3>
+          <p>Tutor de <strong>Chino Mandarín</strong>. Aprende pinyin, tonos, saludos y caracteres en 8 lecciones interactivas con preguntas de opción múltiple.<br>
+             <em style="font-size:.78rem;opacity:.65;">Powered by Claude AI · Español → 中文</em></p>
+        </div>
+        <div class="card c-gold" style="pointer-events:none;opacity:.45;">
+          <h3>🔢 MAESTRO DE MATEMÁTICAS</h3>
+          <p>Tutor interactivo de matemáticas para enseñanza básica y media. Álgebra, geometría y más.<br>
+             <em style="font-size:.78rem;opacity:.65;">Próximamente</em></p>
+        </div>
+        <div class="card c-laurel" style="pointer-events:none;opacity:.45;">
+          <h3>🌍 ENGLISH TEACHER</h3>
+          <p>Aprende inglés con un tutor paciente, desde vocabulario básico hasta conversación fluida.<br>
+             <em style="font-size:.78rem;opacity:.65;">Próximamente</em></p>
+        </div>
       </div>
     </div>`;
 }
