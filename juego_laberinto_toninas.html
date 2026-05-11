@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>🐬 Laberinto de Toninas</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:linear-gradient(160deg,#001f3f 0%,#003d6b 55%,#005f99 100%);
+  min-height:100vh;font-family:'Segoe UI',Tahoma,sans-serif;
+  display:flex;flex-direction:column;align-items:center;
+  padding:12px;gap:8px;user-select:none;
+}
+h1{color:#fff;font-size:1.3rem;text-align:center;
+   text-shadow:0 2px 8px rgba(0,0,0,.4);margin-top:2px;}
+.subtitulo{color:rgba(255,255,255,.75);font-size:.8rem;text-align:center;}
+
+.info-bar{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.pill{background:rgba(255,255,255,.15);backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.22);border-radius:20px;
+  padding:4px 14px;color:#fff;font-size:.82rem;font-weight:600;}
+.pill span{opacity:.65;font-weight:400;}
+
+#canvas-wrap{position:relative;}
+canvas{border-radius:12px;display:block;
+  box-shadow:0 6px 30px rgba(0,0,0,.45),0 0 0 2px rgba(255,255,255,.1);}
+
+/* WIN OVERLAY sobre el canvas */
+#overlay{display:none;position:absolute;inset:0;border-radius:12px;
+  background:rgba(0,30,60,.88);align-items:center;justify-content:center;
+  flex-direction:column;gap:10px;text-align:center;padding:20px;}
+#overlay.show{display:flex;}
+#overlay .ov-ico{font-size:3rem;}
+#overlay h2{color:#ffd700;font-size:1.2rem;letter-spacing:.5px;}
+#overlay p{color:rgba(255,255,255,.85);font-size:.85rem;}
+.ov-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px;}
+.ov-btn{padding:8px 18px;border:none;border-radius:14px;font-size:.85rem;
+  font-weight:700;cursor:pointer;}
+.ov-btn.primary{background:#ffd700;color:#003d6b;}
+.ov-btn.secondary{background:rgba(255,255,255,.15);color:#fff;
+  border:1px solid rgba(255,255,255,.3);}
+
+/* D-PAD */
+.dpad{display:grid;grid-template-areas:"  up  " "lt rt" " dn ";
+  gap:5px;margin-top:4px;}
+.dpad button{
+  width:52px;height:52px;border:none;border-radius:14px;
+  background:rgba(255,255,255,.18);backdrop-filter:blur(6px);
+  color:#fff;font-size:1.3rem;cursor:pointer;
+  border:1px solid rgba(255,255,255,.25);
+  transition:background .12s,transform .1s;
+  -webkit-tap-highlight-color:transparent;
+  display:flex;align-items:center;justify-content:center;
+}
+.dpad button:active{background:rgba(255,255,255,.35);transform:scale(.93);}
+.dpad .up{grid-area:up;margin:0 auto;}
+.dpad .mid{grid-area:lt/lt/rt/rt;display:flex;gap:5px;}
+.dpad .dn{grid-area:dn;margin:0 auto;}
+
+#btn-nuevo{padding:8px 24px;background:#ffd700;color:#003d6b;border:none;
+  border-radius:18px;font-size:.88rem;font-weight:700;cursor:pointer;
+  box-shadow:0 3px 12px rgba(0,0,0,.25);transition:transform .15s;}
+#btn-nuevo:hover{transform:translateY(-2px);}
+
+@media(max-width:380px){
+  .dpad button{width:46px;height:46px;font-size:1.1rem;}
+}
+</style>
+</head>
+<body>
+
+<h1>🐬 Laberinto de Toninas</h1>
+<p class="subtitulo">¡Ayuda a la tonina a encontrar su alimento! 🐟</p>
+
+<div class="info-bar">
+  <div class="pill"><span>Nivel: </span><span id="info-nivel">1</span></div>
+  <div class="pill"><span>Pasos: </span><span id="info-pasos">0</span></div>
+</div>
+
+<div id="canvas-wrap">
+  <canvas id="c"></canvas>
+  <div id="overlay">
+    <div class="ov-ico" id="ov-ico">🐟</div>
+    <h2 id="ov-titulo">¡Encontraste el alimento!</h2>
+    <p id="ov-msg"></p>
+    <div class="ov-btns">
+      <button class="ov-btn primary" id="btn-siguiente" onclick="siguienteNivel()">
+        Siguiente nivel →
+      </button>
+      <button class="ov-btn secondary" onclick="init()">🔄 Reiniciar</button>
+    </div>
+  </div>
+</div>
+
+<div class="dpad">
+  <button class="up"  onclick="mv(0,-1)">▲</button>
+  <div class="mid">
+    <button onclick="mv(-1,0)">◀</button>
+    <button onclick="mv(1,0)">▶</button>
+  </div>
+  <button class="dn" onclick="mv(0,1)">▼</button>
+</div>
+
+<button id="btn-nuevo" onclick="init()">🔄 Reiniciar nivel</button>
+
+<script>
+/* ── CONFIG DE NIVELES ── */
+const NIVELES = [
+  { cols:7,  rows:7,  label:'1 — Fácil' },
+  { cols:10, rows:10, label:'2 — Medio' },
+  { cols:13, rows:13, label:'3 — Difícil' },
+];
+let nivelIdx=0, walls=[], px=0, py=0, pasos=0, ganado=false;
+
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+
+/* ── TAMAÑO ADAPTABLE ── */
+function canvasSize(){
+  return Math.min(window.innerWidth - 32, 390);
+}
+
+/* ── GENERACIÓN DE LABERINTO (DFS recursivo) ── */
+function genMaze(cols, rows){
+  const w = Array.from({length:rows}, ()=>
+    Array.from({length:cols}, ()=>({t:true,r:true,b:true,l:true}))
+  );
+  const vis = Array.from({length:rows}, ()=>new Array(cols).fill(false));
+  const dirs = [[0,-1,'t','b'],[1,0,'r','l'],[0,1,'b','t'],[-1,0,'l','r']];
+  function shuffle(a){ return [...a].sort(()=>Math.random()-.5); }
+  function dfs(x,y){
+    vis[y][x]=true;
+    for(const [dx,dy,d1,d2] of shuffle(dirs)){
+      const nx=x+dx, ny=y+dy;
+      if(nx>=0&&nx<cols&&ny>=0&&ny<rows&&!vis[ny][nx]){
+        w[y][x][d1]=false; w[ny][nx][d2]=false;
+        dfs(nx,ny);
+      }
+    }
+  }
+  dfs(0,0);
+  return w;
+}
+
+/* ── INICIALIZAR ── */
+function init(){
+  const sz   = canvasSize();
+  const cfg  = NIVELES[nivelIdx];
+  const cols = cfg.cols, rows = cfg.rows;
+  canvas.width  = sz;
+  canvas.height = sz;
+  walls  = genMaze(cols, rows);
+  px=0; py=0; pasos=0; ganado=false;
+  document.getElementById('info-nivel').textContent = cfg.label;
+  document.getElementById('info-pasos').textContent = '0';
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('btn-siguiente').style.display =
+    nivelIdx < NIVELES.length-1 ? 'inline-flex' : 'none';
+  draw();
+}
+
+function siguienteNivel(){
+  if(nivelIdx<NIVELES.length-1){ nivelIdx++; init(); }
+}
+
+/* ── DIBUJO ── */
+function draw(){
+  const sz   = canvas.width;
+  const cfg  = NIVELES[nivelIdx];
+  const cols = cfg.cols, rows = cfg.rows;
+  const cw   = sz / cols;
+  const ch   = sz / rows;
+
+  ctx.clearRect(0,0,sz,sz);
+
+  /* Fondo del laberinto */
+  ctx.fillStyle='#003a5e';
+  ctx.fillRect(0,0,sz,sz);
+
+  /* Celdas visitables */
+  for(let y=0;y<rows;y++){
+    for(let x=0;x<cols;x++){
+      const cx=x*cw, cy=y*ch;
+      /* brillo suave en el camino de salida (solo meta y origen) */
+      if(x===cols-1&&y===rows-1){
+        ctx.fillStyle='rgba(255,215,0,.12)';
+        ctx.fillRect(cx,cy,cw,ch);
+      } else if(x===0&&y===0){
+        ctx.fillStyle='rgba(100,200,255,.1)';
+        ctx.fillRect(cx,cy,cw,ch);
+      }
+    }
+  }
+
+  /* Paredes */
+  ctx.strokeStyle='#7ec8e3';
+  ctx.lineWidth  = Math.max(2, cw*0.09);
+  ctx.lineCap='round';
+
+  for(let y=0;y<rows;y++){
+    for(let x=0;x<cols;x++){
+      const cx=x*cw, cy=y*ch;
+      const w=walls[y][x];
+      if(w.t){ line(cx,cy,cx+cw,cy); }
+      if(w.l){ line(cx,cy,cx,cy+ch); }
+      if(x===cols-1&&w.r){ line(cx+cw,cy,cx+cw,cy+ch); }
+      if(y===rows-1&&w.b){ line(cx,cy+ch,cx+cw,cy+ch); }
+    }
+  }
+
+  /* Emojis — usa tamaño proporcional a la celda */
+  const fs = Math.max(12, Math.min(cw, ch)*0.65);
+  ctx.font         = `${fs}px serif`;
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+
+  /* Meta: pez 🐟 con brillo */
+  const gx=(cols-1)*cw+cw/2, gy=(rows-1)*ch+ch/2;
+  if(!ganado){
+    const grad=ctx.createRadialGradient(gx,gy,0,gx,gy,cw);
+    grad.addColorStop(0,'rgba(255,220,0,.25)');
+    grad.addColorStop(1,'rgba(255,220,0,0)');
+    ctx.fillStyle=grad;
+    ctx.beginPath(); ctx.arc(gx,gy,cw*.7,0,Math.PI*2); ctx.fill();
+  }
+  ctx.fillText('🐟',gx,gy);
+
+  /* Jugador: tonina 🐬 */
+  ctx.fillText('🐬',px*cw+cw/2,py*ch+ch/2);
+}
+
+function line(x1,y1,x2,y2){
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+}
+
+/* ── MOVIMIENTO ── */
+function mv(dx,dy){
+  if(ganado) return;
+  const cfg  = NIVELES[nivelIdx];
+  const nx=px+dx, ny=py+dy;
+  if(nx<0||nx>=cfg.cols||ny<0||ny>=cfg.rows) return;
+  const w=walls[py][px];
+  if(dx===1&&w.r)return; if(dx===-1&&w.l)return;
+  if(dy===1&&w.b)return; if(dy===-1&&w.t)return;
+  px=nx; py=ny; pasos++;
+  document.getElementById('info-pasos').textContent=pasos;
+  draw();
+  if(px===cfg.cols-1&&py===cfg.rows-1) ganar();
+}
+
+function ganar(){
+  ganado=true;
+  draw();
+  const ol=document.getElementById('overlay');
+  const stars=pasos<=(NIVELES[nivelIdx].cols*NIVELES[nivelIdx].rows*0.5)?'⭐⭐⭐':
+               pasos<=(NIVELES[nivelIdx].cols*NIVELES[nivelIdx].rows)?'⭐⭐':'⭐';
+  document.getElementById('ov-ico').textContent='🐟';
+  document.getElementById('ov-titulo').textContent='¡Encontraste el alimento!';
+  document.getElementById('ov-msg').textContent=
+    `${stars} Llegaste en ${pasos} pasos. ¡La tonina está muy feliz!`;
+  document.getElementById('btn-siguiente').textContent=
+    nivelIdx<NIVELES.length-1?'Siguiente nivel →':'¡Completaste todos los niveles! 🏆';
+  ol.classList.add('show');
+}
+
+/* ── TECLADO ── */
+document.addEventListener('keydown',e=>{
+  const map={'ArrowUp':[0,-1],'ArrowDown':[0,1],'ArrowLeft':[-1,0],'ArrowRight':[1,0],
+             'w':[0,-1],'s':[0,1],'a':[-1,0],'d':[1,0]};
+  if(map[e.key]){ e.preventDefault(); mv(...map[e.key]); }
+});
+
+/* ── TOUCH SWIPE ── */
+let tx0,ty0;
+canvas.addEventListener('touchstart',e=>{
+  tx0=e.touches[0].clientX; ty0=e.touches[0].clientY; e.preventDefault();
+},{passive:false});
+canvas.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-tx0;
+  const dy=e.changedTouches[0].clientY-ty0;
+  if(Math.abs(dx)>Math.abs(dy)) mv(dx>0?1:-1,0);
+  else                           mv(0,dy>0?1:-1);
+  e.preventDefault();
+},{passive:false});
+
+/* ── RESIZE ── */
+window.addEventListener('resize',()=>{ init(); });
+
+init();
+</script>
+</body>
+</html>
