@@ -2,323 +2,314 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Super Snake Arcade</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Arcade Pro</title>
   <style>
     :root {
-      --bg-color: #050505;
-      --primary-color: #00ff41; /* Verde neón */
-      --accent-color: #ff00ff; /* Magenta neón */
-      --text-color: #e0e0e0;
-      --panel-bg: rgba(20, 20, 20, 0.8);
-      --font-family: 'Courier New', Courier, monospace;
+      --neon-green: #00ff41;
+      --neon-red: #ff3131;
+      --neon-blue: #00d4ff;
+      --bg-dark: #0a0a0a;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background-color: var(--bg-color);
+      background-color: var(--bg-dark);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      font-family: var(--font-family);
-      color: var(--text-color);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #fff;
       overflow: hidden;
     }
 
-    /* Pantalla de inicio y Game Over */
-    #overlay {
+    /* Contenedor Principal */
+    #game-container {
+      position: relative;
+      border: 4px solid #333;
+      box-shadow: 0 0 50px rgba(0, 255, 65, 0.1);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    /* Interfaz Superior */
+    #ui-bar {
+      width: 400px;
+      background: #1a1a1a;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      padding: 15px;
+      border-bottom: 2px solid #333;
+      text-align: center;
+    }
+    .stat-label { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+    .stat-value { font-size: 1.1rem; font-weight: bold; color: var(--neon-green); }
+
+    canvas { display: block; background: #000; cursor: none; }
+
+    /* Pantallas de Superposición (Overlays) */
+    .overlay {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.85);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      z-index: 10;
-      text-align: center;
-      backdrop-filter: blur(5px);
+      background: rgba(0,0,0,0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      transition: opacity 0.3s;
     }
-    #overlay h1 {
-      font-size: 3rem;
-      color: var(--primary-color);
-      text-shadow: 0 0 10px var(--primary-color), 0 0 20px var(--primary-color);
-      margin-bottom: 20px;
-    }
-    #overlay input {
-      background: transparent;
-      border: 2px solid var(--primary-color);
-      color: var(--primary-color);
+    .hidden { display: none; }
+
+    h1 { font-size: 2.5rem; color: var(--neon-green); margin-bottom: 20px; text-shadow: 0 0 15px var(--neon-green); }
+    
+    input {
+      background: #222;
+      border: 2px solid var(--neon-green);
+      color: #fff;
       padding: 10px;
       font-size: 1.2rem;
-      font-family: var(--font-family);
       text-align: center;
       margin-bottom: 20px;
-      outline: none;
+      width: 150px;
+      text-transform: uppercase;
     }
-    #overlay button {
-      background: var(--primary-color);
+
+    button {
+      background: var(--neon-green);
       color: #000;
       border: none;
-      padding: 10px 20px;
-      font-size: 1.2rem;
-      font-family: var(--font-family);
+      padding: 12px 30px;
+      font-size: 1rem;
+      font-weight: bold;
       cursor: pointer;
-      transition: background 0.3s;
+      border-radius: 4px;
+      transition: transform 0.2s, background 0.2s;
     }
-    #overlay button:hover { background: #00cc33; }
-    #final-score { font-size: 1.5rem; margin-bottom: 10px; }
+    button:hover { transform: scale(1.05); background: #00cc33; }
 
-    /* Panel de control superior */
-    #ui-top {
-      display: flex;
-      justify-content: space-around;
-      width: 400px;
-      background: var(--panel-bg);
-      padding: 10px;
-      border: 2px solid #333;
-      border-bottom: none;
-      border-radius: 8px 8px 0 0;
-    }
-    .ui-item { text-align: center; }
-    .ui-label { font-size: 0.8rem; color: #888; text-transform: uppercase; }
-    .ui-value { font-size: 1.2rem; font-weight: bold; }
-    #player-tag { color: var(--accent-color); }
-    #lives-display { color: #f55; }
-
-    /* Canvas del juego */
-    canvas {
-      border: 4px solid #333;
-      border-radius: 0 0 8px 8px;
-      background: #000; /* Fondo negro para el canvas */
-      display: block;
-      max-width: 100%;
-      box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
-    }
-
-    /* Mensajes inferiores */
-    #msg {
-      margin-top: 15px;
-      font-size: 0.8rem;
-      color: #666;
-      text-align: center;
-      max-width: 400px;
-    }
-
-    /* Ocultar elementos */
-    .hidden { display: none !important; }
-
-    /* Estilo para los emojis de comida */
-    .food-emoji { font-size: 1.2rem; }
+    #lives { color: var(--neon-red); letter-spacing: 2px; }
+    #msg { margin-top: 15px; font-size: 0.8rem; color: #555; }
   </style>
 </head>
 <body>
 
-  <div id="overlay">
-    <div id="start-screen">
-      <h1>SUPER SNAKE</h1>
-      <p style="margin-bottom: 10px;">Introduce tus iniciales (ARCADE STYLE):</p>
-      <input type="text" id="player-input" maxlength="3" placeholder="AAA" value="PLY">
-      <br>
-      <button onclick="startGame()">EMPEZAR JUEGO</button>
+  <div id="game-container">
+    <div id="ui-bar">
+      <div>
+        <div class="stat-label">Jugador</div>
+        <div id="ui-player" class="stat-value">---</div>
+      </div>
+      <div>
+        <div class="stat-label">Puntos</div>
+        <div id="ui-score" class="stat-value">0</div>
+      </div>
+      <div>
+        <div class="stat-label">Vidas</div>
+        <div id="lives" class="stat-value">❤❤❤</div>
+      </div>
     </div>
-    <div id="gameover-screen" class="hidden">
-      <h1>FIN DEL JUEGO</h1>
-      <p id="final-score"></p>
-      <p id="final-time"></p>
-      <button onclick="resetToStart()">VOLVER AL INICIO</button>
-    </div>
-  </div>
 
-  <div id="ui-top">
-    <div class="ui-item">
-      <div class="ui-label">Jugador</div>
-      <div class="ui-value" id="player-tag">---</div>
-    </div>
-    <div class="ui-item">
-      <div class="ui-label">Puntos</div>
-      <div class="ui-value" id="score">0</div>
-    </div>
-    <div class="ui-item">
-      <div class="ui-label">Vidas</div>
-      <div class="ui-value" id="lives-display">❤❤❤</div>
-    </div>
-    <div class="ui-item">
-      <div class="ui-label">Tiempo</div>
-      <div class="ui-value" id="timer">00:00</div>
-    </div>
-  </div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
 
-  <canvas id="c" width="400" height="400"></canvas>
+    <div id="start-overlay" class="overlay">
+      <h1>SNAKE ARCADE</h1>
+      <input type="text" id="player-name" maxlength="3" value="AAA">
+      <button id="start-btn">INSERT COIN</button>
+      <div id="msg">Usa las flechas o WASD</div>
+    </div>
 
-  <div id="msg">
-    Usa las Flechas o WASD para moverte.<br>
-    En móvil: desliza sobre el área del juego.
+    <div id="death-overlay" class="overlay hidden">
+      <h1 style="color:var(--neon-red); text-shadow: 0 0 15px var(--neon-red);">GAME OVER</h1>
+      <div id="final-stats" style="margin-bottom: 20px; text-align: center;"></div>
+      <button id="restart-btn">REINTENTAR</button>
+    </div>
   </div>
 
 <script>
-// --- Configuración y Variables Globales ---
-const c = document.getElementById('c'), ctx = c.getContext('2d');
-const S = 20, COLS = c.width / S, ROWS = c.height / S; // Tamaño celda, Columnas, Filas
-const INITIAL_LIVES = 3;
+/**
+ * LÓGICA DEL JUEGO - VERSIÓN MEJORADA
+ */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const gridSize = 20;
+const tileCount = canvas.width / gridSize;
 
-// Emojis para la comida (ratoncitos, mamíferos pequeños)
-const foodEmojis = ['🐭', '🐹', '🐰', '🐿️'];
+// Variables de estado
+let snake, food, direction, nextDirection, score, lives, gameLoop, isRunning = false;
+let playerName = "AAA";
+const foodTypes = ['🐭', '🐹', '🐰', '🐿️'];
 
-let snake, dir, nextDir, food, score, lives, gameLoop, gameTimer;
-let running = false;
-let startTime, elapsedTime = 0;
-let playerName = "PLY";
+// Elementos DOM
+const startOverlay = document.getElementById('start-overlay');
+const deathOverlay = document.getElementById('death-overlay');
+const uiScore = document.getElementById('ui-score');
+const uiLives = document.getElementById('lives');
+const uiPlayer = document.getElementById('ui-player');
 
-// Elementos de la UI
-const uiPlayerTag = document.getElementById('player-tag');
-const uiScore = document.getElementById('score');
-const uiLives = document.getElementById('lives-display');
-const uiTimer = document.getElementById('timer');
-const uiOverlay = document.getElementById('overlay');
-const startScreen = document.getElementById('start-screen');
-const gameoverScreen = document.getElementById('gameover-screen');
-const finalScoreTxt = document.getElementById('final-score');
-const finalTimeTxt = document.getElementById('final-time');
-const playerInput = document.getElementById('player-input');
+// --- Inicialización ---
 
-// --- Funciones de Control del Juego ---
-
-// Inicia el juego desde la pantalla de inicio
-function startGame() {
-  playerName = playerInput.value.toUpperCase() || "PLY";
-  uiPlayerTag.textContent = playerName;
-  startScreen.classList.add('hidden');
-  uiOverlay.classList.add('hidden');
-  init();
-}
-
-// Reinicia el estado para volver a la pantalla de inicio
-function resetToStart() {
-  gameoverScreen.classList.add('hidden');
-  startScreen.classList.remove('hidden');
-  uiOverlay.classList.remove('hidden');
-  resetUI();
-}
-
-// Inicializa una nueva partida
-function init() {
-  snake = [{x: 10, y: 10}, {x: 9, y: 10}, {x: 8, y: 10}]; // Serpiente inicial
-  dir = {x: 1, y: 0}; nextDir = {x: 1, y: 0}; // Dirección inicial
+function initGame() {
+  playerName = document.getElementById('player-name').value.toUpperCase() || "AAA";
+  uiPlayer.textContent = playerName;
+  
   score = 0;
-  lives = INITIAL_LIVES;
-  elapsedTime = 0;
-  running = true;
-  food = newFood(); // Genera comida inicial
+  lives = 3;
+  resetRound();
+  
+  startOverlay.classList.add('hidden');
+  deathOverlay.classList.add('hidden');
+  
+  if (gameLoop) clearInterval(gameLoop);
+  gameLoop = setInterval(update, 100); // Velocidad base
+  isRunning = true;
+}
+
+function resetRound() {
+  snake = [
+    {x: 10, y: 10},
+    {x: 9, y: 10},
+    {x: 8, y: 10}
+  ];
+  direction = {x: 1, y: 0};
+  nextDirection = {x: 1, y: 0};
+  spawnFood();
   updateUI();
-  
-  clearInterval(gameLoop);
-  clearInterval(gameTimer);
-  
-  gameLoop = setInterval(tick, 110); // Bucle principal (velocidad ligeramente aumentada)
-  startTime = Date.now();
-  gameTimer = setInterval(updateTimer, 1000); // Bucle del temporizador
 }
 
-// Resetea los valores mostrados en la UI
-function resetUI() {
-  uiScore.textContent = '0';
-  uiLives.textContent = '❤❤❤';
-  uiTimer.textContent = '00:00';
-  uiPlayerTag.textContent = '---';
+function spawnFood() {
+  food = {
+    x: Math.floor(Math.random() * tileCount),
+    y: Math.floor(Math.random() * tileCount),
+    icon: foodTypes[Math.floor(Math.random() * foodTypes.length)]
+  };
+  // Evitar que la comida aparezca sobre la serpiente
+  if (snake.some(seg => seg.x === food.x && seg.y === food.y)) spawnFood();
 }
 
-// Actualiza los marcadores en pantalla
-function updateUI() {
-  uiScore.textContent = score;
-  let livesStr = '';
-  for(let i=0; i<INITIAL_LIVES; i++) {
-    livesStr += (i < lives) ? '❤' : '🖤'; // Corazones llenos y vacíos
-  }
-  uiLives.textContent = livesStr;
-}
+// --- Motor del Juego ---
 
-// Actualiza el temporizador cada segundo
-function updateTimer() {
-  if (!running) return;
-  elapsedTime = Math.floor((Date.now() - startTime) / 1000);
-  const minutes = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
-  const seconds = (elapsedTime % 60).toString().padStart(2, '0');
-  uiTimer.textContent = `${minutes}:${seconds}`;
-}
+function update() {
+  if (!isRunning) return;
 
-// Genera una nueva posición válida para la comida (evitando la serpiente)
-function newFood() {
-  let f;
-  const type = foodEmojis[Math.floor(Math.random() * foodEmojis.length)]; // Elige un emoji aleatorio
-  do {
-    f = {
-      x: Math.floor(Math.random() * COLS),
-      y: Math.floor(Math.random() * ROWS),
-      type: type
-    };
-  } while (snake.some(s => s.x === f.x && s.y === f.y)); // Comprueba colisión con la serpiente
-  return f;
-}
+  direction = nextDirection;
+  const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
 
-// --- Bucle Principal del Juego (Tick) ---
-function tick() {
-  if (!running) return;
-  
-  dir = nextDir; // Aplica la siguiente dirección
-  const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y}; // Calcula nueva cabeza
+  // 1. Colisión con Paredes (Teletransporte)
+  if (head.x < 0) head.x = tileCount - 1;
+  else if (head.x >= tileCount) head.x = 0;
+  if (head.y < 0) head.y = tileCount - 1;
+  else if (head.y >= tileCount) head.y = 0;
 
-  // --- Comprobación de Colisiones ---
-  
-  // Colisión con paredes (atravesarlas)
-  if (head.x < 0) head.x = COLS - 1;
-  else if (head.x >= COLS) head.x = 0;
-  if (head.y < 0) head.y = ROWS - 1;
-  else if (head.y >= ROWS) head.y = 0;
-
-  // Colisión consigo misma
-  if (snake.some(s => s.x === head.x && s.y === head.y)) {
-    loseLife();
+  // 2. Colisión con el Cuerpo
+  if (snake.some(seg => seg.x === head.x && seg.y === head.y)) {
+    handleDeath();
     return;
   }
 
-  snake.unshift(head); // Añade nueva cabeza
+  snake.unshift(head);
 
-  // --- Comprobación de Comida ---
+  // 3. Comer Comida
   if (head.x === food.x && head.y === food.y) {
-    score += 10; // Suma puntos
+    score += 10;
     updateUI();
-    food = newFood(); // Genera nueva comida
-    // Efecto visual rápido al comer (opcional, requeriría más código de dibujo)
+    spawnFood();
   } else {
-    snake.pop(); // Quita la cola si no come (movimiento normal)
+    snake.pop();
   }
 
-  draw(); // Dibuja el estado actual
+  draw();
 }
 
-// Maneja la pérdida de una vida
-function loseLife() {
+function handleDeath() {
   lives--;
   updateUI();
+  
   if (lives <= 0) {
     gameOver();
   } else {
-    // Pequeña pausa y reinicio de posición tras perder vida
-    running = false;
-    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
-    ctx.fillRect(0, 0, c.width, c.height);
+    // Pausa momentánea al perder una vida
+    isRunning = false;
+    ctx.fillStyle = 'rgba(255,0,0,0.4)';
+    ctx.fillRect(0,0, canvas.width, canvas.height);
     setTimeout(() => {
-      snake = [{x: 10, y: 10}, {x: 9, y: 10}, {x: 8, y: 10}];
-      dir = {x: 1, y: 0}; nextDir = {x: 1, y: 0};
-      running = true;
+      resetRound();
+      isRunning = true;
     }, 1000);
   }
 }
 
-// Maneja el fin del juego
 function gameOver() {
-  running = false;
+  isRunning = false;
   clearInterval(gameLoop);
-  clearInterval(gameTimer);
-  
-  finalScore
+  document.getElementById('final-stats').innerHTML = `
+    <p>PLAYER: ${playerName}</p>
+    <p style="font-size: 1.5rem; color: var(--neon-green)">SCORE: ${score}</p>
+  `;
+  deathOverlay.classList.remove('hidden');
+}
+
+// --- Dibujado (Calidad Visual) ---
+
+function draw() {
+  // Fondo
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Rejilla sutil
+  ctx.strokeStyle = '#111';
+  for(let i=0; i<canvas.width; i+=gridSize) {
+    ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(canvas.width,i); ctx.stroke();
+  }
+
+  // Comida
+  ctx.font = "16px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(food.icon, food.x * gridSize + gridSize/2, food.y * gridSize + gridSize/2);
+
+  // Serpiente
+  snake.forEach((seg, i) => {
+    const isHead = i === 0;
+    ctx.fillStyle = isHead ? varColor('--neon-green') : '#008f11';
+    
+    // Efecto neón en la cabeza
+    if (isHead) {
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = varColor('--neon-green');
+    } else {
+      ctx.shadowBlur = 0;
+    }
+
+    // Dibujar segmento redondeado
+    const padding = 2;
+    drawRoundedRect(
+      seg.x * gridSize + padding, 
+      seg.y * gridSize + padding, 
+      gridSize - padding*2, 
+      gridSize - padding*2, 
+      isHead ? 8 : 4
+    );
+  });
+}
+
+function drawRoundedRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.fill();
+}
+
+function varColor(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function updateUI() {
+  uiScore.textContent = score;
+  uiLives.textContent = "
