@@ -14,6 +14,8 @@
             --dark: #0f172a;
             --fem-pink: #ff4d94;
             --fem-purple: #801d5e;
+            --played-bg: rgba(255, 255, 255, 0.02);
+            --played-text: #71717a;
         }
 
         body {
@@ -116,7 +118,7 @@
             gap: 15px;
         }
 
-        /* Tarjetas */
+        /* Tarjetas de Partido */
         .match-card {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -125,7 +127,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            transition: transform 0.3s, background 0.3s;
+            transition: all 0.3s ease;
             position: relative;
         }
 
@@ -137,6 +139,17 @@
         .male .match-card:hover { border-color: var(--gold); }
         .female .match-card:hover { border-color: var(--fem-pink); }
 
+        /* Estilo para partidos jugados */
+        .match-card.played {
+            background: var(--played-bg);
+            border-color: rgba(255, 255, 255, 0.05);
+            opacity: 0.8;
+        }
+        
+        .match-card.played .team {
+            color: #d1d5db;
+        }
+
         .date-badge {
             padding: 4px 15px;
             border-radius: 20px;
@@ -147,6 +160,11 @@
 
         .male .date-badge { background: var(--gold); color: var(--dark); }
         .female .date-badge { background: var(--fem-pink); color: white; }
+
+        .match-card.played .date-badge {
+            background: #3f3f46;
+            color: #a1a1aa;
+        }
 
         .vs-container {
             display: flex;
@@ -179,6 +197,14 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
+        .match-card.played .vs-circle {
+            background: var(--gold);
+            font-size: 0.75rem;
+            width: 50px;
+            border-radius: 5px;
+            height: 28px;
+        }
+
         .female .vs-circle { background: #fdf2f8; color: var(--fem-purple); }
 
         .venue {
@@ -188,6 +214,12 @@
             display: flex;
             align-items: center;
             gap: 6px;
+        }
+
+        .match-card.played .venue {
+            color: var(--gold);
+            font-weight: bold;
+            text-transform: uppercase;
         }
 
         .play-fair {
@@ -209,20 +241,15 @@
             border: 2px solid var(--gold);
             background: rgba(251, 191, 36, 0.05);
         }
-
-        .female .final-card {
-            border-color: var(--fem-pink);
-            background: rgba(255, 77, 148, 0.05);
-        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <i class="fa-solid fa-trophy" style="font-size: 2.2rem; color: var(--gold);"></i>
+        <i class="fa-solid fa-futbol" style="font-size: 2.2rem; color: var(--gold);"></i>
         <h2>Match Center 2026</h2>
-        <p>Calendario Oficial del Campeonato San Agustín</p>
+        <p>Seguimiento del Campeonato San Agustín</p>
     </div>
 
     <div class="category-selector">
@@ -238,7 +265,17 @@
     <div id="male-view" class="section-view male active">
         <div class="phase-title">Fase Clasificatoria Masculina</div>
         <div class="grid">
-            <div class="match-card"><div class="date-badge">12 MAY</div><div class="vs-container"><div class="team">8vo Básico</div><div class="vs-circle">VS</div><div class="team">1ro Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <!-- Partido ya jugado -->
+            <div class="match-card played">
+                <div class="date-badge">12 DE MAYO</div>
+                <div class="vs-container">
+                    <div class="team">8vo Básico</div>
+                    <div class="vs-circle">4 - 4</div>
+                    <div class="team">1ro Medio</div>
+                </div>
+                <div class="venue"><i class="fa-solid fa-check-circle"></i> Resultado Final</div>
+            </div>
+
             <div class="match-card"><div class="date-badge">26 MAY</div><div class="vs-container"><div class="team">2do Medio</div><div class="vs-circle">VS</div><div class="team">3ro Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
             <div class="match-card"><div class="date-badge">09 JUN</div><div class="vs-container"><div class="team">3ro Medio</div><div class="vs-circle">VS</div><div class="team">4to Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
             <div class="match-card"><div class="date-badge">07 JUL</div><div class="vs-container"><div class="team">8vo Básico</div><div class="vs-circle">VS</div><div class="team">2do Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
@@ -279,17 +316,14 @@
     </div>
 
     <div class="play-fair">
-        <i class="fa-solid fa-handshake"></i> "El respeto al rival es nuestra mayor victoria. Juega limpio."
+        <i class="fa-solid fa-handshake-angle"></i> "Competir con honor, ganar con humildad."
     </div>
 </div>
 
 <script>
     function showCat(cat, btn) {
-        // Eliminar clases active de botones
         document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-
-        // Mostrar sección correspondiente
         document.querySelectorAll('.section-view').forEach(s => s.classList.remove('active'));
         document.getElementById(cat + '-view').classList.add('active');
     }
