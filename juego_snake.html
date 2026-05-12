@@ -3,110 +3,322 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Snake</title>
+  <title>Super Snake Arcade</title>
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{background:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:monospace;color:#fff}
-    h2{color:#0f0;font-size:1.4rem;margin-bottom:8px;letter-spacing:2px}
-    #score{font-size:1.1rem;margin-bottom:10px;color:#0f0}
-    canvas{border:2px solid #0f0;border-radius:4px;display:block;max-width:100%}
-    #msg{margin-top:10px;font-size:.85rem;color:#666;text-align:center}
-    #best{color:#ff0;font-size:.9rem;margin-bottom:6px}
+    :root {
+      --bg-color: #050505;
+      --primary-color: #00ff41; /* Verde neón */
+      --accent-color: #ff00ff; /* Magenta neón */
+      --text-color: #e0e0e0;
+      --panel-bg: rgba(20, 20, 20, 0.8);
+      --font-family: 'Courier New', Courier, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: var(--font-family);
+      color: var(--text-color);
+      overflow: hidden;
+    }
+
+    /* Pantalla de inicio y Game Over */
+    #overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 10;
+      text-align: center;
+      backdrop-filter: blur(5px);
+    }
+    #overlay h1 {
+      font-size: 3rem;
+      color: var(--primary-color);
+      text-shadow: 0 0 10px var(--primary-color), 0 0 20px var(--primary-color);
+      margin-bottom: 20px;
+    }
+    #overlay input {
+      background: transparent;
+      border: 2px solid var(--primary-color);
+      color: var(--primary-color);
+      padding: 10px;
+      font-size: 1.2rem;
+      font-family: var(--font-family);
+      text-align: center;
+      margin-bottom: 20px;
+      outline: none;
+    }
+    #overlay button {
+      background: var(--primary-color);
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1.2rem;
+      font-family: var(--font-family);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    #overlay button:hover { background: #00cc33; }
+    #final-score { font-size: 1.5rem; margin-bottom: 10px; }
+
+    /* Panel de control superior */
+    #ui-top {
+      display: flex;
+      justify-content: space-around;
+      width: 400px;
+      background: var(--panel-bg);
+      padding: 10px;
+      border: 2px solid #333;
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+    }
+    .ui-item { text-align: center; }
+    .ui-label { font-size: 0.8rem; color: #888; text-transform: uppercase; }
+    .ui-value { font-size: 1.2rem; font-weight: bold; }
+    #player-tag { color: var(--accent-color); }
+    #lives-display { color: #f55; }
+
+    /* Canvas del juego */
+    canvas {
+      border: 4px solid #333;
+      border-radius: 0 0 8px 8px;
+      background: #000; /* Fondo negro para el canvas */
+      display: block;
+      max-width: 100%;
+      box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+    }
+
+    /* Mensajes inferiores */
+    #msg {
+      margin-top: 15px;
+      font-size: 0.8rem;
+      color: #666;
+      text-align: center;
+      max-width: 400px;
+    }
+
+    /* Ocultar elementos */
+    .hidden { display: none !important; }
+
+    /* Estilo para los emojis de comida */
+    .food-emoji { font-size: 1.2rem; }
   </style>
 </head>
 <body>
-  <h2>🐍 SNAKE</h2>
-  <div id="score">Puntos: 0</div>
-  <div id="best">Récord: 0</div>
-  <canvas id="c" width="400" height="400"></canvas>
-  <div id="msg">Flechas del teclado para mover · R para reiniciar<br>En móvil: desliza sobre el canvas</div>
-<script>
-const c=document.getElementById('c'),ctx=c.getContext('2d');
-const S=20,COLS=20,ROWS=20;
-let snake,dir,nextDir,food,score,best=0,loop,running=false;
 
-function init(){
-  snake=[{x:10,y:10},{x:9,y:10},{x:8,y:10}];
-  dir={x:1,y:0};nextDir={x:1,y:0};
-  score=0;running=true;
-  food=newFood();
-  document.getElementById('score').textContent='Puntos: 0';
-  clearInterval(loop);
-  loop=setInterval(tick,130);
+  <div id="overlay">
+    <div id="start-screen">
+      <h1>SUPER SNAKE</h1>
+      <p style="margin-bottom: 10px;">Introduce tus iniciales (ARCADE STYLE):</p>
+      <input type="text" id="player-input" maxlength="3" placeholder="AAA" value="PLY">
+      <br>
+      <button onclick="startGame()">EMPEZAR JUEGO</button>
+    </div>
+    <div id="gameover-screen" class="hidden">
+      <h1>FIN DEL JUEGO</h1>
+      <p id="final-score"></p>
+      <p id="final-time"></p>
+      <button onclick="resetToStart()">VOLVER AL INICIO</button>
+    </div>
+  </div>
+
+  <div id="ui-top">
+    <div class="ui-item">
+      <div class="ui-label">Jugador</div>
+      <div class="ui-value" id="player-tag">---</div>
+    </div>
+    <div class="ui-item">
+      <div class="ui-label">Puntos</div>
+      <div class="ui-value" id="score">0</div>
+    </div>
+    <div class="ui-item">
+      <div class="ui-label">Vidas</div>
+      <div class="ui-value" id="lives-display">❤❤❤</div>
+    </div>
+    <div class="ui-item">
+      <div class="ui-label">Tiempo</div>
+      <div class="ui-value" id="timer">00:00</div>
+    </div>
+  </div>
+
+  <canvas id="c" width="400" height="400"></canvas>
+
+  <div id="msg">
+    Usa las Flechas o WASD para moverte.<br>
+    En móvil: desliza sobre el área del juego.
+  </div>
+
+<script>
+// --- Configuración y Variables Globales ---
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+const S = 20, COLS = c.width / S, ROWS = c.height / S; // Tamaño celda, Columnas, Filas
+const INITIAL_LIVES = 3;
+
+// Emojis para la comida (ratoncitos, mamíferos pequeños)
+const foodEmojis = ['🐭', '🐹', '🐰', '🐿️'];
+
+let snake, dir, nextDir, food, score, lives, gameLoop, gameTimer;
+let running = false;
+let startTime, elapsedTime = 0;
+let playerName = "PLY";
+
+// Elementos de la UI
+const uiPlayerTag = document.getElementById('player-tag');
+const uiScore = document.getElementById('score');
+const uiLives = document.getElementById('lives-display');
+const uiTimer = document.getElementById('timer');
+const uiOverlay = document.getElementById('overlay');
+const startScreen = document.getElementById('start-screen');
+const gameoverScreen = document.getElementById('gameover-screen');
+const finalScoreTxt = document.getElementById('final-score');
+const finalTimeTxt = document.getElementById('final-time');
+const playerInput = document.getElementById('player-input');
+
+// --- Funciones de Control del Juego ---
+
+// Inicia el juego desde la pantalla de inicio
+function startGame() {
+  playerName = playerInput.value.toUpperCase() || "PLY";
+  uiPlayerTag.textContent = playerName;
+  startScreen.classList.add('hidden');
+  uiOverlay.classList.add('hidden');
+  init();
 }
 
-function newFood(){
+// Reinicia el estado para volver a la pantalla de inicio
+function resetToStart() {
+  gameoverScreen.classList.add('hidden');
+  startScreen.classList.remove('hidden');
+  uiOverlay.classList.remove('hidden');
+  resetUI();
+}
+
+// Inicializa una nueva partida
+function init() {
+  snake = [{x: 10, y: 10}, {x: 9, y: 10}, {x: 8, y: 10}]; // Serpiente inicial
+  dir = {x: 1, y: 0}; nextDir = {x: 1, y: 0}; // Dirección inicial
+  score = 0;
+  lives = INITIAL_LIVES;
+  elapsedTime = 0;
+  running = true;
+  food = newFood(); // Genera comida inicial
+  updateUI();
+  
+  clearInterval(gameLoop);
+  clearInterval(gameTimer);
+  
+  gameLoop = setInterval(tick, 110); // Bucle principal (velocidad ligeramente aumentada)
+  startTime = Date.now();
+  gameTimer = setInterval(updateTimer, 1000); // Bucle del temporizador
+}
+
+// Resetea los valores mostrados en la UI
+function resetUI() {
+  uiScore.textContent = '0';
+  uiLives.textContent = '❤❤❤';
+  uiTimer.textContent = '00:00';
+  uiPlayerTag.textContent = '---';
+}
+
+// Actualiza los marcadores en pantalla
+function updateUI() {
+  uiScore.textContent = score;
+  let livesStr = '';
+  for(let i=0; i<INITIAL_LIVES; i++) {
+    livesStr += (i < lives) ? '❤' : '🖤'; // Corazones llenos y vacíos
+  }
+  uiLives.textContent = livesStr;
+}
+
+// Actualiza el temporizador cada segundo
+function updateTimer() {
+  if (!running) return;
+  elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+  const minutes = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
+  const seconds = (elapsedTime % 60).toString().padStart(2, '0');
+  uiTimer.textContent = `${minutes}:${seconds}`;
+}
+
+// Genera una nueva posición válida para la comida (evitando la serpiente)
+function newFood() {
   let f;
-  do{ f={x:Math.floor(Math.random()*COLS),y:Math.floor(Math.random()*ROWS)}; }
-  while(snake.some(s=>s.x===f.x&&s.y===f.y));
+  const type = foodEmojis[Math.floor(Math.random() * foodEmojis.length)]; // Elige un emoji aleatorio
+  do {
+    f = {
+      x: Math.floor(Math.random() * COLS),
+      y: Math.floor(Math.random() * ROWS),
+      type: type
+    };
+  } while (snake.some(s => s.x === f.x && s.y === f.y)); // Comprueba colisión con la serpiente
   return f;
 }
 
-function tick(){
-  dir=nextDir;
-  const head={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
-  if(head.x<0||head.x>=COLS||head.y<0||head.y>=ROWS||snake.some(s=>s.x===head.x&&s.y===head.y)){
-    clearInterval(loop);running=false;
-    if(score>best){best=score;document.getElementById('best').textContent='Récord: '+best;}
-    ctx.fillStyle='rgba(0,0,0,.65)';
-    ctx.fillRect(0,0,400,400);
-    ctx.fillStyle='#f55';ctx.font='bold 38px monospace';ctx.textAlign='center';
-    ctx.fillText('FIN DEL JUEGO',200,185);
-    ctx.font='18px monospace';ctx.fillStyle='#aaa';
-    ctx.fillText('Puntos: '+score,200,218);
-    ctx.fillText('R = reiniciar',200,248);
+// --- Bucle Principal del Juego (Tick) ---
+function tick() {
+  if (!running) return;
+  
+  dir = nextDir; // Aplica la siguiente dirección
+  const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y}; // Calcula nueva cabeza
+
+  // --- Comprobación de Colisiones ---
+  
+  // Colisión con paredes (atravesarlas)
+  if (head.x < 0) head.x = COLS - 1;
+  else if (head.x >= COLS) head.x = 0;
+  if (head.y < 0) head.y = ROWS - 1;
+  else if (head.y >= ROWS) head.y = 0;
+
+  // Colisión consigo misma
+  if (snake.some(s => s.x === head.x && s.y === head.y)) {
+    loseLife();
     return;
   }
-  snake.unshift(head);
-  if(head.x===food.x&&head.y===food.y){
-    score++;document.getElementById('score').textContent='Puntos: '+score;food=newFood();
-  }else{snake.pop();}
-  draw();
+
+  snake.unshift(head); // Añade nueva cabeza
+
+  // --- Comprobación de Comida ---
+  if (head.x === food.x && head.y === food.y) {
+    score += 10; // Suma puntos
+    updateUI();
+    food = newFood(); // Genera nueva comida
+    // Efecto visual rápido al comer (opcional, requeriría más código de dibujo)
+  } else {
+    snake.pop(); // Quita la cola si no come (movimiento normal)
+  }
+
+  draw(); // Dibuja el estado actual
 }
 
-function draw(){
-  ctx.fillStyle='#111';ctx.fillRect(0,0,400,400);
-  // grid
-  ctx.strokeStyle='#1a1a1a';ctx.lineWidth=.5;
-  for(let i=0;i<=COLS;i++){ctx.beginPath();ctx.moveTo(i*S,0);ctx.lineTo(i*S,400);ctx.stroke();}
-  for(let j=0;j<=ROWS;j++){ctx.beginPath();ctx.moveTo(0,j*S);ctx.lineTo(400,j*S);ctx.stroke();}
-  // food
-  ctx.fillStyle='#f55';ctx.beginPath();
-  ctx.arc(food.x*S+S/2,food.y*S+S/2,S/2-1,0,Math.PI*2);ctx.fill();
-  // snake
-  snake.forEach((seg,i)=>{
-    ctx.fillStyle=i===0?'#00ff41':'#00aa2a';
-    ctx.fillRect(seg.x*S+1,seg.y*S+1,S-2,S-2);
-  });
+// Maneja la pérdida de una vida
+function loseLife() {
+  lives--;
+  updateUI();
+  if (lives <= 0) {
+    gameOver();
+  } else {
+    // Pequeña pausa y reinicio de posición tras perder vida
+    running = false;
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+    ctx.fillRect(0, 0, c.width, c.height);
+    setTimeout(() => {
+      snake = [{x: 10, y: 10}, {x: 9, y: 10}, {x: 8, y: 10}];
+      dir = {x: 1, y: 0}; nextDir = {x: 1, y: 0};
+      running = true;
+    }, 1000);
+  }
 }
 
-document.addEventListener('keydown',e=>{
-  if(!running&&(e.key==='r'||e.key==='R')){init();return;}
-  switch(e.key){
-    case'ArrowUp':   if(dir.y===0){nextDir={x:0,y:-1};}break;
-    case'ArrowDown': if(dir.y===0){nextDir={x:0,y:1};}break;
-    case'ArrowLeft': if(dir.x===0){nextDir={x:-1,y:0};}break;
-    case'ArrowRight':if(dir.x===0){nextDir={x:1,y:0};}break;
-    case'r':case'R':if(running)return;init();return;
-  }
-  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key))e.preventDefault();
-});
-
-let tx=0,ty=0;
-c.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
-c.addEventListener('touchend',e=>{
-  if(!running){init();return;}
-  const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;
-  if(Math.abs(dx)>Math.abs(dy)){
-    if(dx>20&&dir.x===0)nextDir={x:1,y:0};
-    else if(dx<-20&&dir.x===0)nextDir={x:-1,y:0};
-  }else{
-    if(dy>20&&dir.y===0)nextDir={x:0,y:1};
-    else if(dy<-20&&dir.y===0)nextDir={x:0,y:-1};
-  }
-},{passive:true});
-
-init();draw();
-</script>
-</body>
-</html>
+// Maneja el fin del juego
+function gameOver() {
+  running = false;
+  clearInterval(gameLoop);
+  clearInterval(gameTimer);
+  
+  finalScore
