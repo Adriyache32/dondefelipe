@@ -9,12 +9,10 @@
 
 <style>
 /* ═══════════════════════════════════════════════
-   TOKENS  — paleta mediterránea / Ikariam
+   TOKENS  — Estética de Piedra y Mar
 ═══════════════════════════════════════════════ */
 :root {
   --sea-deep:    #08182e;
-  --sea-mid:     #112843;
-  --sea-light:   #1a4068;
   --gold:        #c9a84c;
   --gold-light:  #e8c870;
   --gold-dark:   #8b6914;
@@ -24,17 +22,10 @@
   --bronze:      #8e6a35;
   --text:        #2a1f10;
   --text-soft:   #6a5840;
-  --laurel:      #4a7c59;
-  --terracotta:  #a04a2a;
-  --border-gold: rgba(201,168,76,.3);
-
-  --ff-title: 'Cinzel','Palatino Linotype',Palatino,serif;
-  --ff-body:  'Cormorant Garamond',Georgia,'Times New Roman',serif;
+  --ff-title: 'Cinzel','Palatino Linotype',serif;
+  --ff-body:  'Cormorant Garamond',serif;
 }
 
-/* ═══════════════════════════════════════════════
-   RESET & BASE
-═══════════════════════════════════════════════ */
 *{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
 
@@ -43,811 +34,185 @@ body{
   display:flex;flex-direction:column;
   font-family:var(--ff-body);
   color:var(--text);
-  /* Animated aegean sea background */
-  background:linear-gradient(145deg,#08182e 0%,#0e2440 40%,#152e50 70%,#0a1e36 100%);
-  background-size:400% 400%;
-  animation:seaShift 16s ease infinite;
+  background: linear-gradient(135deg, #08182e 0%, #152e50 100%);
+  background-attachment: fixed;
 }
 
-@keyframes seaShift{
-  0%  {background-position:0% 50%;}
-  50% {background-position:100% 50%;}
-  100%{background-position:0% 50%;}
-}
-
-/* Subtle water-line overlay */
-body::before{
-  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:repeating-linear-gradient(
-    0deg,transparent,transparent 3px,
-    rgba(255,255,255,.012) 3px,rgba(255,255,255,.012) 4px
-  );
-}
-
-/* ═══════════════════════════════════════════════
-   GOLD FRIEZE (top decorative strip)
-═══════════════════════════════════════════════ */
+/* FRISO DECORATIVO */
 .frieze{
-  position:relative;z-index:10;
-  height:7px;flex-shrink:0;
-  background:repeating-linear-gradient(
-    90deg,
-    var(--gold-dark) 0,var(--gold-dark) 6px,
-    var(--gold)      6px,var(--gold)      18px,
-    #f0d87a           18px,#f0d87a          20px,
-    var(--gold)      20px,var(--gold)      32px,
-    var(--gold-dark) 32px,var(--gold-dark) 38px
-  );
+  height:7px;
+  background:repeating-linear-gradient(90deg, var(--gold-dark) 0, var(--gold-dark) 6px, var(--gold) 6px, var(--gold) 18px);
+  z-index:100;
 }
 
-/* ═══════════════════════════════════════════════
-   NAV
-═══════════════════════════════════════════════ */
+/* NAVEGACIÓN */
 nav{
-  position:sticky;top:0;z-index:200;flex-shrink:0;
-  background:rgba(6,18,34,.94);
-  backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);
+  position:sticky;top:0;z-index:200;
+  background:rgba(6,18,34,.95);
+  backdrop-filter:blur(10px);
   border-bottom:2px solid var(--gold-dark);
-  box-shadow:0 4px 30px rgba(0,0,0,.45);
 }
 
 .nav-inner{
   max-width:1100px;margin:0 auto;
-  padding:0 1.2rem;
-  height:62px;
-  display:flex;align-items:stretch;justify-content:space-between;
-  position:relative;
+  height:65px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1.5rem;
 }
 
-/* Brand */
 .nav-brand{
-  display:flex;align-items:center;gap:9px;
   font-family:var(--ff-title);
   color:var(--gold-light);text-decoration:none;
-  font-size:1.05rem;letter-spacing:3px;
-  padding:0 .5rem;
-  border-bottom:2px solid transparent;
-  transition:color .2s,border-color .2s;
-  flex-shrink:0;
+  font-size:1.1rem;letter-spacing:3px;
+  cursor: pointer;
 }
-.nav-brand:hover{color:#fff;border-bottom-color:var(--gold);}
-.brand-icon{font-size:1.2rem;line-height:1;}
 
-/* Hamburger */
-.hamburger{
-  display:none;flex-direction:column;justify-content:center;gap:5px;
-  background:none;border:none;cursor:pointer;
-  padding:0 .5rem;height:100%;
-  z-index:300;
-}
-.hamburger span{
-  display:block;width:24px;height:2px;
-  background:var(--gold);border-radius:2px;
-  transition:transform .3s,opacity .3s;
-}
-.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
-.hamburger.open span:nth-child(2){opacity:0;}
-.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
-
-/* Menu list */
 .nav-menu{
-  display:flex;align-items:stretch;list-style:none;gap:0;
+  display:flex;list-style:none;gap:1.5rem;
+  align-items: center;
 }
 
-/* Dropdown */
-.dropdown{position:relative;display:flex;align-items:stretch;}
+.dropdown{position:relative;}
 
 .drop-btn{
-  background:none;border:none;cursor:pointer;height:100%;
-  padding:0 1.1rem;
+  background:none;border:none;cursor:pointer;
   font-family:var(--ff-title);font-size:.8rem;letter-spacing:1.5px;
-  color:rgba(255,255,255,.9);
-  display:flex;align-items:center;gap:4px;
-  border-bottom:2px solid transparent;
-  transition:color .2s,border-color .2s;
+  color:white;display:flex;align-items:center;gap:5px;
+  padding:10px 0;
+  text-decoration: none;
+  transition: color 0.3s;
 }
-.drop-btn:hover,.drop-btn.active-menu{
-  color:var(--gold-light);border-bottom-color:var(--gold);
+
+.drop-btn:hover {
+    color: var(--gold-light);
 }
 
 .drop-content{
   display:none;position:absolute;top:100%;left:0;
-  min-width:205px;
-  background:rgba(5,15,28,.97);
-  border:1px solid var(--gold-dark);border-top:2px solid var(--gold);
-  box-shadow:0 12px 40px rgba(0,0,0,.6);
-  z-index:300;
+  min-width:200px;
+  background:#050f1c;
+  border:1px solid var(--gold-dark);
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
 }
+
 .dropdown:hover .drop-content{display:block;}
 
 .drop-content a{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:.72rem 1.2rem;
-  color:rgba(255,255,255,.88);text-decoration:none;font-size:.9rem;
-  border-bottom:1px solid rgba(201,168,76,.1);
-  transition:background .15s,color .15s;
+  display:block;padding:12px 20px;
+  color:white;text-decoration:none;font-size:.9rem;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  font-family: var(--ff-body);
 }
-.drop-content a:last-child{border-bottom:none;}
-.drop-content a:hover{background:rgba(201,168,76,.12);color:var(--gold-light);}
-.drop-content a.active-link{color:var(--gold);background:rgba(201,168,76,.1);}
-.drop-content a.active-link::after{content:'◂';font-size:.65rem;color:var(--gold);}
-.drop-content a.soon{color:rgba(255,255,255,.38);pointer-events:none;}
+.drop-content a:hover{background:rgba(201,168,76,0.2);color:var(--gold-light);}
 
-.soon-badge{
-  font-size:.6rem;padding:1px 7px;border-radius:10px;
-  background:rgba(255,255,255,.05);color:rgba(255,255,255,.28);
-}
-
-/* Top-level nav links (Biblioteca, Juegos) */
-.nav-lib{
-  display:flex;align-items:center;gap:6px;padding:0 1.1rem;
-  font-family:var(--ff-title);font-size:.8rem;letter-spacing:1.5px;
-  color:rgba(255,255,255,.9);text-decoration:none;
-  border-bottom:2px solid transparent;
-  transition:color .2s,border-color .2s;
-}
-.nav-lib:hover,.nav-lib.active-link{color:var(--gold-light);border-bottom-color:var(--gold);}
-
-/* ═══════════════════════════════════════════════
-   MAIN PANEL  (floating stone tablet)
-═══════════════════════════════════════════════ */
+/* PANEL PRINCIPAL */
 .main-panel{
-  position:relative;z-index:10;
-  width:94%;max-width:1000px;
-  margin:2rem auto;
-  flex:1;
+  width:95%;max-width:1000px;
+  margin:2rem auto;flex:1;
 }
 
 .tablet{
   background:var(--ivory);
-  border:1px solid rgba(201,168,76,.2);
-  border-radius:3px;
-  padding:2.8rem 3rem;
-  position:relative;overflow:hidden;
-  box-shadow:
-    0 0 0 1px rgba(201,168,76,.08),
-    0 2px 8px rgba(0,0,0,.2),
-    0 20px 60px rgba(0,0,0,.5);
+  border:1px solid rgba(201,168,76,.3);
+  border-radius:4px;
+  padding:2.5rem;
+  box-shadow:0 20px 50px rgba(0,0,0,0.4);
 }
 
-/* Subtle stone grain */
-.tablet::after{
-  content:'';position:absolute;inset:0;pointer-events:none;
-  background-image:
-    radial-gradient(ellipse at 20% 20%,rgba(201,168,76,.04) 0%,transparent 60%),
-    radial-gradient(ellipse at 80% 80%,rgba(201,168,76,.03) 0%,transparent 50%);
-}
-
-/* ═══════════════════════════════════════════════
-   TABLET HEADER  (section title bar)
-═══════════════════════════════════════════════ */
-.tablet-header{
-  text-align:center;
-  padding-bottom:1.6rem;margin-bottom:1.8rem;
-  border-bottom:1px solid rgba(201,168,76,.25);
-  position:relative;
-}
-.tablet-header::before,.tablet-header::after{
-  content:'⬥';font-size:.8rem;color:var(--gold);opacity:.6;
-  position:absolute;bottom:-1px;
-}
-.tablet-header::before{left:0;}
-.tablet-header::after{right:0;}
-
-.tablet-header h1{margin-bottom:.3rem;}
-
-/* ═══════════════════════════════════════════════
-   TYPOGRAPHY
-═══════════════════════════════════════════════ */
 h1{
-  font-family:var(--ff-title);
-  font-size:clamp(1.4rem,4vw,2rem);
-  letter-spacing:3px;
-  color:var(--bronze);
+  font-family:var(--ff-title);text-align:center;
+  color:var(--bronze);letter-spacing:4px;margin-bottom:1.5rem;
 }
-h1.shimmer{
-  background:linear-gradient(90deg,var(--gold-dark),var(--gold),var(--gold-light),var(--gold),var(--gold-dark));
-  background-size:300%;
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;
-  animation:shimmer 5s linear infinite;
-}
-@keyframes shimmer{0%{background-position:0%}100%{background-position:300%}}
 
-.page-sub{font-size:.82rem;color:var(--text-soft);letter-spacing:1.5px;font-style:italic;}
-
-h2.sh{
-  font-family:var(--ff-title);font-size:.85rem;letter-spacing:1.5px;
-  color:var(--bronze);
-  padding-bottom:7px;margin:2rem 0 1.2rem;
-  border-bottom:1px solid rgba(201,168,76,.25);
-  display:flex;align-items:center;gap:8px;
-}
-h2.sh::before{content:'⬧';color:var(--gold);font-size:.7rem;}
-
-/* ═══════════════════════════════════════════════
-   CARDS
-═══════════════════════════════════════════════ */
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:18px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
 
 .card{
   background:var(--marble);
-  border:1px solid rgba(201,168,76,.18);
-  border-radius:2px;padding:1.4rem 1.25rem;
-  position:relative;
-  transition:transform .22s,box-shadow .22s;
+  border:1px solid rgba(201,168,76,.2);
+  padding:1.5rem;border-left:4px solid var(--gold);
 }
-/* Top gold sweep on hover */
-.card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:3px;
-  background:linear-gradient(90deg,var(--gold-dark),var(--gold),var(--gold-dark));
-  opacity:0;transition:opacity .25s;border-radius:2px 2px 0 0;
-}
-.card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.1);}
-.card:hover::before{opacity:1;}
-.card-click{cursor:pointer;}
 
-.card h3{
-  font-family:var(--ff-title);font-size:.8rem;letter-spacing:.8px;margin-bottom:10px;
-}
-.card p{font-size:.88rem;color:var(--text-soft);line-height:1.65;}
-
-.card.c-sea   {border-left:3px solid #2d6a9f;} .card.c-sea    h3{color:#1a4e7a;}
-.card.c-gold  {border-left:3px solid var(--gold);} .card.c-gold   h3{color:var(--bronze);}
-.card.c-laurel{border-left:3px solid var(--laurel);} .card.c-laurel h3{color:#3d6b4a;}
-
-/* ═══════════════════════════════════════════════
-   WINNERS
-═══════════════════════════════════════════════ */
-.winner{
-  display:flex;align-items:flex-start;gap:10px;
-  padding:8px 0;border-bottom:1px solid rgba(201,168,76,.12);
-  font-size:.87rem;
-}
-.winner:last-child{border-bottom:none;}
-.winner .t{font-size:1rem;flex-shrink:0;margin-top:1px;}
-.winner strong{display:block;color:var(--text);}
-.winner span{font-size:.72rem;color:#aaa;}
-.loading{font-size:.82rem;color:#aaa;font-style:italic;}
-
-/* ═══════════════════════════════════════════════
-   BUTTONS
-═══════════════════════════════════════════════ */
 .btn-p{
-  display:inline-flex;align-items:center;justify-content:center;gap:6px;
-  background:linear-gradient(135deg,var(--gold-dark),var(--gold));
-  color:#fff;border:none;cursor:pointer;
-  padding:.7rem 1.6rem;
-  font-family:var(--ff-title);font-size:.82rem;letter-spacing:1px;
-  border-radius:2px;text-decoration:none;
-  transition:box-shadow .2s,transform .15s;
-}
-.btn-p:hover{box-shadow:0 4px 20px rgba(201,168,76,.5);transform:translateY(-1px);}
-
-.btn-s{
-  display:inline-flex;align-items:center;justify-content:center;gap:6px;
-  background:transparent;
-  color:var(--bronze);border:1.5px solid rgba(201,168,76,.5);
-  padding:.6rem 1.2rem;
-  font-family:var(--ff-title);font-size:.78rem;letter-spacing:1px;
-  border-radius:2px;cursor:pointer;text-decoration:none;
-  transition:background .15s,color .15s,border-color .15s;
-}
-.btn-s:hover{background:rgba(201,168,76,.12);color:var(--gold-dark);border-color:rgba(201,168,76,.7);}
-
-/* ═══════════════════════════════════════════════
-   MISSION BOX  (dark panel)
-═══════════════════════════════════════════════ */
-.mission{
-  background:linear-gradient(135deg,var(--sea-deep),var(--sea-mid));
-  border:1px solid var(--gold-dark);border-radius:4px;
-  padding:2rem 1.8rem;text-align:center;
-  position:relative;overflow:hidden;margin:1.5rem 0;
-}
-.mission::before,.mission::after{
-  content:'⚓';font-size:5rem;position:absolute;
-  color:var(--gold);opacity:.04;
-}
-.mission::before{top:-15px;left:-15px;}
-.mission::after{bottom:-20px;right:-10px;transform:rotate(20deg);}
-.mission h3{font-family:var(--ff-title);color:var(--gold-light);font-size:1.1rem;letter-spacing:2px;margin-bottom:.7rem;}
-.mission p{color:rgba(255,255,255,.6);font-size:.88rem;margin-bottom:.9rem;line-height:1.6;}
-.mission-topics{font-size:.74rem;color:rgba(255,255,255,.28);letter-spacing:1px;margin-bottom:1.4rem;}
-.badge{
-  display:inline-block;margin-bottom:1rem;
-  background:rgba(74,124,89,.3);color:#6ecf8a;
-  border:1px solid rgba(74,124,89,.4);
-  padding:2px 13px;border-radius:20px;
-  font-size:.7rem;font-family:var(--ff-title);letter-spacing:.5px;
+  display:inline-block;margin-top:1rem;
+  background:var(--gold-dark);color:white;
+  padding:10px 20px;text-decoration:none;
+  font-family:var(--ff-title);font-size:0.75rem;
+  cursor: pointer;
 }
 
-/* ═══════════════════════════════════════════════
-   EMBED
-═══════════════════════════════════════════════ */
-.embed-wrap{margin-top:1.4rem;}
-.embed-bar{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:8px 12px;
-  background:var(--stone);
-  border:1px solid rgba(201,168,76,.2);border-bottom:none;
-  font-size:.78rem;color:var(--text-soft);
+.embed-frame{
+  width:100%;height:700px;border:1px solid var(--stone);
+  margin-top:1rem;background: white;
 }
-.embed-frame{width:100%;border:1px solid rgba(201,168,76,.2);display:block;}
 
-/* ═══════════════════════════════════════════════
-   COMING SOON
-═══════════════════════════════════════════════ */
-.cs{text-align:center;padding:4rem 1.5rem;}
-.cs-ico{font-size:3rem;display:block;margin-bottom:1rem;}
-.cs h2{font-family:var(--ff-title);color:var(--bronze);margin-bottom:.8rem;letter-spacing:1px;}
-.cs p{font-size:.9rem;color:var(--text-soft);max-width:360px;margin:0 auto;}
-
-/* ═══════════════════════════════════════════════
-   WAVE DIVIDER  (bottom of tablet header on home)
-═══════════════════════════════════════════════ */
-.wave-sep{
-  width:100%;overflow:hidden;line-height:0;margin-bottom:1.5rem;margin-top:-1rem;
-}
-.wave-sep svg{display:block;width:100%;height:24px;}
-
-/* ═══════════════════════════════════════════════
-   FOOTER
-═══════════════════════════════════════════════ */
 footer{
-  position:relative;z-index:10;flex-shrink:0;
-  background:rgba(4,10,20,.95);
-  border-top:2px solid var(--gold-dark);
-  padding:1rem 2rem;text-align:center;
-  font-family:var(--ff-title);font-size:.68rem;
-  letter-spacing:1px;color:rgba(255,255,255,.28);
-}
-footer a{color:var(--gold-dark);text-decoration:none;transition:color .2s;}
-footer a:hover{color:var(--gold);}
-
-/* ═══════════════════════════════════════════════
-   TRANSITIONS
-═══════════════════════════════════════════════ */
-.fade-in{animation:fadeIn .4s ease-out;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:translateY(0);}}
-
-/* ═══════════════════════════════════════════════
-   MOBILE  ≤ 768px
-═══════════════════════════════════════════════ */
-@media(max-width:768px){
-
-  /* Show hamburger, hide desktop menu */
-  .hamburger{display:flex;}
-  .nav-menu{
-    display:none;
-    position:absolute;top:100%;left:0;right:0;
-    flex-direction:column;
-    background:rgba(4,12,24,.98);
-    border-bottom:2px solid var(--gold-dark);
-    max-height:80vh;overflow-y:auto;
-    z-index:300;
-    padding-bottom:.8rem;
-    /* slide-down animation */
-    animation:slideDown .25s ease-out;
-  }
-  .nav-menu.open{display:flex;}
-  @keyframes slideDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
-
-  /* Dropdowns always expanded inside mobile menu */
-  .dropdown{flex-direction:column;}
-  .drop-btn{
-    width:100%;justify-content:space-between;
-    padding:.9rem 1.2rem;height:auto;
-    font-size:.75rem;
-    border-bottom:1px solid rgba(255,255,255,.06);
-    border-left:none;border-right:none;border-top:none;
-  }
-  .drop-content{
-    display:block!important;position:static;
-    background:rgba(255,255,255,.03);
-    border:none;border-top:none;box-shadow:none;
-    min-width:unset;
-  }
-  .drop-content a{padding:.65rem 1.8rem;font-size:.83rem;}
-  .nav-lib{padding:.9rem 1.2rem;height:auto;border-bottom:1px solid rgba(255,255,255,.06);border-right:none;}
-
-  /* Content */
-  .tablet{padding:1.4rem 1rem;}
-  .main-panel{width:97%;margin:1rem auto;}
-  .grid{grid-template-columns:1fr;}
-  .mission{padding:1.5rem 1.1rem;}
-
-  /* Touch targets ≥ 44px */
-  .btn-p,.btn-s{min-height:44px;padding:.75rem 1.2rem;}
-  .drop-content a{min-height:44px;}
+  background:#040a14;color:rgba(255,255,255,0.3);
+  text-align:center;padding:1.5rem;font-size:0.7rem;
+  font-family:var(--ff-title);border-top:2px solid var(--gold-dark);
 }
 </style>
 </head>
 <body>
 
-<!-- Gold frieze -->
 <div class="frieze"></div>
 
-<!-- ══ NAV ══════════════════════════════════════ -->
 <nav>
   <div class="nav-inner">
-    <a href="#" class="nav-brand" onclick="go('home');return false;">
-      <span class="brand-icon">🏛️</span>PROFE FELIPE
-    </a>
-
-    <button class="hamburger" id="ham" aria-label="Abrir menú" onclick="toggleNav()">
-      <span></span><span></span><span></span>
-    </button>
-
-    <ul class="nav-menu" id="nav-menu">
-      <!-- BÁSICA -->
+    <a href="#" class="nav-brand" onclick="render('home')">🏛️ PROFE FELIPE</a>
+    <ul class="nav-menu">
       <li class="dropdown">
-        <button class="drop-btn" id="btn-basica">BÁSICA ▾</button>
+        <button class="drop-btn">MEDIA ▾</button>
         <div class="drop-content">
-          <a href="#" id="link-6basico"
-             onclick="go('6basico');closeMobile();return false;">VI° Básico</a>
-          <a href="#" class="soon">VII° Básico <span class="soon-badge">Próximamente</span></a>
-          <a href="#" class="soon">VIII° Básico<span class="soon-badge">Próximamente</span></a>
+          <a href="#">III° Medio</a>
+          <a href="#">IV° Medio</a>
         </div>
       </li>
-      <!-- MEDIA -->
-      <li class="dropdown">
-        <button class="drop-btn" id="btn-media">MEDIA ▾</button>
-        <div class="drop-content">
-          <a href="#" class="soon">I° Medio  <span class="soon-badge">Próximamente</span></a>
-          <a href="#" class="soon">II° Medio <span class="soon-badge">Próximamente</span></a>
-          <a href="#" id="link-3medio"
-             onclick="go('3medio');closeMobile();return false;">III° Medio</a>
-          <a href="#" id="link-4medio"
-             onclick="go('4medio');closeMobile();return false;">IV° Medio</a>
-        </div>
-      </li>
-      <!-- JUEGOS -->
-      <li>
-        <a href="#" id="link-juegos" class="nav-lib"
-           onclick="go('juegos');closeMobile();return false;">🎮 JUEGOS</a>
-      </li>
-      <!-- BIBLIOTECA -->
-      <li>
-        <a href="#" id="link-biblioteca" class="nav-lib"
-           onclick="go('biblioteca');closeMobile();return false;">📁 BIBLIOTECA</a>
-      </li>
+      <li><a href="#" onclick="render('futbol')" class="drop-btn">⚽ DEPORTES</a></li>
+      <li><a href="#" class="drop-btn">BIBLIOTECA</a></li>
     </ul>
   </div>
 </nav>
 
-<!-- ══ CONTENT ══════════════════════════════════ -->
 <div class="main-panel">
-  <div class="tablet">
-    <main id="main-content"></main>
+  <div class="tablet" id="content">
+    <!-- Contenido dinámico -->
   </div>
 </div>
 
-<!-- ══ FOOTER ═══════════════════════════════════ -->
 <footer>
-  © <span id="yr"></span> Prof. Felipe Jiménez &nbsp;·&nbsp; Aula de Ciencias &nbsp;·&nbsp; Viña del Mar
-  &nbsp;|&nbsp; <a href="mailto:fjimenez321@gmail.com">fjimenez321@gmail.com</a>
-  &nbsp;|&nbsp; <span id="visitas" style="opacity:.45;"></span>
+  AULA DE CIENCIAS © 2026 - PROF. FELIPE JIMÉNEZ
 </footer>
 
-<!-- ════════════════════════════════════════════ -->
 <script>
-/* ── CONFIG ─────────────────────────────────── */
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyFcG4150ORc85aIqbrAmtfBrZAol-iXB2I4RDEFMB87ESzTpE7vpoYIYpSPWL28Mas/exec';
-const BIT_URL    = 'https://script.google.com/macros/s/AKfycbynkNahV2m9Bbtu7XAxNXbHvY7jzPblpeCeBud9mJC8d_oQs7dgbI6uwuSF8K5DTyi51g/exec';
-document.getElementById('yr').textContent = new Date().getFullYear();
-fetch(`${BIT_URL}?action=visita`)
-  .then(r=>r.json())
-  .then(d=>{ if(d.ok) document.getElementById('visitas').textContent='Visitas: '+d.visitas; })
-  .catch(()=>{});
+const content = document.getElementById('content');
 
-/* ── MOBILE NAV ─────────────────────────────── */
-function toggleNav(){
-  const m=document.getElementById('nav-menu');
-  const h=document.getElementById('ham');
-  const open=m.classList.toggle('open');
-  h.classList.toggle('open',open);
-  h.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
-}
-function closeMobile(){
-  document.getElementById('nav-menu').classList.remove('open');
-  document.getElementById('ham').classList.remove('open');
-}
-document.addEventListener('click',e=>{
-  if(!e.target.closest('nav')) closeMobile();
-});
-
-/* ── ROUTER ─────────────────────────────────── */
-const ROUTES={
-  home:rHome,'3medio':r3,'4medio':r4,'6basico':r6basico,biblioteca:rLib,
-  juegos:rJuegos,
-  'juego-snake':    s=>rGameEmbed(s,'juego_snake.html','🐍 Snake','El legendario juego de la serpiente · 1976'),
-  'juego-memoria':  s=>rGameEmbed(s,'juego_memoria.html','🃏 Memoria','Encuentra todos los pares de cartas'),
-  'juego-tres':     s=>rGameEmbed(s,'juego_tictactoe.html','❌ Tres en Raya','El clásico juego de X y O'),
-  'juego-ahorcado':          s=>rGameEmbed(s,'juego_ahorcado.html','💀 Ahorcado','Adivina la palabra letra a letra'),
-  'juego-toninas':           s=>rGameEmbed(s,'juego_toninas.html','🐬 Memorice de Toninas','Encuentra los 8 pares del mundo marino'),
-  'juego-laberinto-toninas': s=>rGameEmbed(s,'juego_laberinto_toninas.html','🐬 La Tonina de Amanda','¡Ayuda a la tonina a encontrar su alimento!','660px')
-};
-let currentPage=null;
-
-function go(page){
-  const stage=document.getElementById('main-content');
-  setActiveNav(page);
-  const fn=ROUTES[page];
-  if(!fn){
-    stage.innerHTML=`
-      <div class="fade-in cs">
-        <span class="cs-ico">🔭</span>
-        <h2>Módulo en Preparación</h2>
-        <p>Este contenido estará disponible próximamente.<br>
-           Consulta con el profe para más información.</p>
-      </div>`;
-    return;
-  }
-  stage.innerHTML='';
-  fn(stage);
-  currentPage=page;
-  // On mobile, scroll to content
-  if(window.innerWidth<=768)
-    document.querySelector('.main-panel').scrollIntoView({behavior:'smooth',block:'start'});
-}
-
-function setActiveNav(page){
-  const navPage=page.startsWith('juego-')?'juegos':page;
-  document.querySelectorAll('.drop-btn').forEach(b=>b.classList.remove('active-menu'));
-  document.querySelectorAll('.drop-content a:not(.soon)').forEach(a=>a.classList.remove('active-link'));
-  document.querySelectorAll('.nav-lib').forEach(a=>a.classList.remove('active-link'));
-  const link=document.getElementById(`link-${navPage}`);
-  if(link){
-    link.classList.add('active-link');
-    const dd=link.closest('.dropdown');
-    if(dd) dd.querySelector('.drop-btn').classList.add('active-menu');
+function render(page) {
+  if(page === 'home') {
+    content.innerHTML = `
+      <h1>AULA DE CIENCIAS</h1>
+      <div class="grid">
+        <div class="card">
+          <h3>DEPORTES</h3>
+          <p>Revisa la tabla de posiciones actualizada del Campeonato San Agustín 2026.</p>
+          <a href="#" class="btn-p" onclick="render('futbol')">VER TABLA</a>
+        </div>
+        <div class="card">
+          <h3>CIENCIAS</h3>
+          <p>Material de estudio y bitácoras para enseñanza media y básica.</p>
+        </div>
+      </div>
+    `;
+  } else if(page === 'futbol') {
+    content.innerHTML = `
+      <h1>CAMPEONATO SAN AGUSTÍN</h1>
+      <iframe src="tablafutbol.html" class="embed-frame"></iframe>
+    `;
   }
 }
 
-/* ── PAGE: HOME ─────────────────────────────── */
-function rHome(stage){
-  stage.innerHTML=`
-    <div class="fade-in">
-      <div class="tablet-header">
-        <h1 class="shimmer">AULA DE CIENCIAS</h1>
-        <p class="page-sub">Prof. Felipe Jiménez &nbsp;·&nbsp; Viña del Mar</p>
-      </div>
-
-      <!-- Wave decoration -->
-      <div class="wave-sep" aria-hidden="true">
-        <svg viewBox="0 0 900 24" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0,12 C150,24 300,0 450,12 C600,24 750,0 900,12 L900,24 L0,24 Z"
-                fill="rgba(201,168,76,0.07)"/>
-          <path d="M0,16 C150,4 300,20 450,12 C600,4 750,20 900,12"
-                fill="none" stroke="rgba(201,168,76,0.25)" stroke-width="1"/>
-        </svg>
-      </div>
-
-      <h2 class="sh">NOVEDADES &amp; CUADRO DE HONOR</h2>
-      <div class="grid">
-        <div class="card c-laurel">
-          <h3>🏆 ÚLTIMOS GANADORES</h3>
-          <div id="wl"><p class="loading">Consultando el cuadro de honor…</p></div>
-        </div>
-        <div class="card c-gold">
-          <h3>⚡ ACCESOS RÁPIDOS</h3>
-          <p style="margin-bottom:14px;">Accede directamente a los módulos activos.</p>
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <button class="btn-p" onclick="go('4medio')" style="width:100%;">
-              🚀 IV° Medio — Búsqueda del Tesoro
-            </button>
-            <button class="btn-s" onclick="go('3medio')" style="width:100%;">
-              🛠️ III° Medio — Bitácora
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <h2 class="sh" style="margin-top:2.2rem;">MÓDULOS ACTIVOS</h2>
-      <div class="grid">
-        <div class="card c-sea card-click" onclick="go('4medio')" tabindex="0"
-             onkeydown="if(event.key==='Enter')go('4medio')">
-          <h3>IV° MEDIO · FÍSICA</h3>
-          <p>🎮 <strong>Búsqueda del Tesoro Espacial</strong> — Unidad 1: Fuerzas Centrales.<br>
-             MRU · Vel. Relativa · MRUA · Fuerzas · DCL</p>
-        </div>
-        <div class="card c-gold card-click" onclick="go('3medio')" tabindex="0"
-             onkeydown="if(event.key==='Enter')go('3medio')">
-          <h3>III° MEDIO · INGENIERÍA</h3>
-          <p>🛠️ Bitácora de trabajo técnico. Cuaderno digital interactivo de la asignatura.</p>
-        </div>
-      </div>
-    </div>`;
-  fetchWinners('wl');
-}
-
-/* ── PAGE: 3° MEDIO ─────────────────────────── */
-function r3(stage){
-  stage.innerHTML=`
-    <div class="fade-in">
-      <div class="tablet-header"><h1>III° MEDIO: INGENIERÍA</h1></div>
-      <div class="embed-wrap">
-        <div class="embed-bar">
-          <span>Bitácora técnica — contenido interactivo</span>
-          <a href="bitacora_tech.html" target="_blank" class="btn-s">↗ Pantalla completa</a>
-        </div>
-        <iframe src="bitacora_tech.html" class="embed-frame"
-                title="Bitácora III° Medio" loading="lazy"
-                style="min-height:1100px;"></iframe>
-      </div>
-    </div>`;
-}
-
-/* ── PAGE: 6° BÁSICO ────────────────────────── */
-function r6basico(stage){
-  stage.innerHTML=`
-    <div class="fade-in">
-      <div class="tablet-header"><h1>VI° BÁSICO: INVESTIGACIÓN CIENTÍFICA</h1></div>
-      <div style="text-align:right;margin-bottom:.6rem;">
-        <a href="bitacora_docente.html" target="_blank" class="btn-s" style="font-size:.72rem;">
-          📋 Vista docente
-        </a>
-      </div>
-      <div class="embed-wrap">
-        <div class="embed-bar">
-          <span>📔 Bitácora de Investigación Escolar — Registro y seguimiento del proyecto</span>
-          <a href="bitacora_6basico.html" target="_blank" class="btn-s">↗ Pantalla completa</a>
-        </div>
-        <iframe src="bitacora_6basico.html" class="embed-frame"
-                title="Bitácora VI° Básico" loading="lazy"
-                style="min-height:900px;"></iframe>
-      </div>
-    </div>`;
-}
-
-/* ── PAGE: 4° MEDIO ─────────────────────────── */
-function r4(stage){
-  stage.innerHTML=`
-    <div class="fade-in">
-      <div class="tablet-header"><h1>IV° MEDIO: FÍSICA ESTELAR</h1></div>
-      <div class="embed-wrap">
-        <div class="embed-bar">
-          <span>🚀 Búsqueda del Tesoro Espacial — MRU · Vel. Relativa · MRUA · Fuerzas · DCL</span>
-          <a href="tesoros_espacio.html" target="_blank" class="btn-s">↗ Pantalla completa</a>
-        </div>
-        <iframe src="tesoros_espacio.html" class="embed-frame"
-                title="Búsqueda del Tesoro Espacial" loading="lazy"
-                style="min-height:820px;"></iframe>
-      </div>
-      <h2 class="sh">CUADRO DE HONOR — IV° Medio</h2>
-      <div id="wl4"><p class="loading">Consultando resultados…</p></div>
-    </div>`;
-  fetchWinners('wl4');
-}
-
-/* ── PAGE: JUEGOS ───────────────────────────── */
-function rJuegos(stage){
-  stage.innerHTML=`
-    <div class="fade-in">
-      <div class="tablet-header">
-        <h1 class="shimmer">🎮 SALA DE JUEGOS</h1>
-        <p class="page-sub">Clásicos de código libre · Solo HTML, CSS y JavaScript</p>
-      </div>
-      <div class="wave-sep" aria-hidden="true">
-        <svg viewBox="0 0 900 24" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0,12 C150,24 300,0 450,12 C600,24 750,0 900,12 L900,24 L0,24 Z"
-                fill="rgba(201,168,76,0.07)"/>
-          <path d="M0,16 C150,4 300,20 450,12 C600,4 750,20 900,12"
-                fill="none" stroke="rgba(201,168,76,0.25)" stroke-width="1"/>
-        </svg>
-      </div>
-      <h2 class="sh">ELIGE TU JUEGO</h2>
-      <div class="grid">
-        <div class="card c-sea card-click" onclick="go('juego-snake')" tabindex="0"
-             onkeydown="if(event.key==='Enter')go('juego-snake')">
-          <h3>🐍 SNAKE</h3>
-          <p>Guía la serpiente, come manzanas y no chocarte con las paredes ni contigo mismo.<br>
-             <em style="font-size:.78rem;opacity:.65;">Clásico de 1976 · Código libre</em></p>
-        </div>
-        <div class="card c-gold card-click" onclick="go('juego-memoria')" tabindex="0"
-             onkeydown="if(event.key==='Enter')go('juego-memoria')">
-          <h3>🃏 MEMORIA</h3>
-          <p>Voltea las cartas y encuentra todos los pares. Entrena tu memoria visual.<br>
-             <em style="font-size:.78rem;opacity:.65;">Clásico de 1960 · Código libre</em></p>
-        </div>
-        <div class="card c-laurel card-click" onclick="go('juego-tres')" tabindex="0"
-             onkeydown="if(event.key==='Enter')go('juego-tres')">
-          <h3>❌ TRES EN RAYA</h3>
-          <p>El eterno juego de X y O. Juega con un amigo o desafía a la CPU.<br>
-             <em style="font-size:.78rem;opacity:.65;">Juego ancestral · Código libre</em></p>
-        </div>
-        <div class="card c-sea card-click" onclick="go('juego-ahorcado')" tabindex="0"
-             onkeydown="if(event.key==='Enter')go('juego-ahorcado')">
-          <h3>💀 AHORCADO</h3>
-          <p>Adivina la palabra oculta antes de que el dibujo se complete. Animales, países, ciencia y deportes.<br>
-             <em style="font-size:.78rem;opacity:.65;">Clásico de lápiz y papel · Código libre</em></p>
-        </div>
-        <div class="card c-laurel card-click" onclick="go('juego-toninas')" tabindex="0"
-             onkeydown="if(event.key==='Enter')go('juego-toninas')">
-          <h3>🐬 MEMORICE DE TONINAS</h3>
-          <p>Encuentra los 8 pares de imágenes del mundo marino. ¡Solo imágenes, sin texto!<br>
-             <em style="font-size:.78rem;opacity:.65;">Educativo · Tonina del Pacífico</em></p>
-        </div>
-        <div class="card c-sea card-click" onclick="go('juego-laberinto-toninas')" tabindex="0"
-             onkeydown="if(event.key==='Enter')go('juego-laberinto-toninas')">
-          <h3>🌊 LA TONINA DE AMANDA</h3>
-          <p>Guía a la tonina por el laberinto hasta encontrar su alimento. ¡3 niveles de dificultad!<br>
-             <em style="font-size:.78rem;opacity:.65;">Educativo · Flechas o desliza en pantalla</em></p>
-        </div>
-      </div>
-    </div>`;
-}
-
-function rGameEmbed(stage, file, title, desc){
-  stage.innerHTML=`
-    <div class="fade-in">
-      <div class="tablet-header"><h1>${title}</h1></div>
-      <p style="text-align:center;color:var(--bronze);margin-bottom:1rem;">${desc}</p>
-      <div style="text-align:center;margin-bottom:1rem;">
-        <button class="btn-s" onclick="go('juegos')">← Volver a Juegos</button>
-        <a href="${file}" target="_blank" class="btn-s" style="margin-left:8px;">↗ Pantalla completa</a>
-      </div>
-      <div class="embed-wrap">
-        <iframe src="${file}" class="embed-frame"
-                title="${title}" loading="lazy"
-                style="min-height:560px;"></iframe>
-      </div>
-    </div>`;
-}
-
-/* ── PAGE: BIBLIOTECA ───────────────────────── */
-function rLib(stage){
-  stage.innerHTML=`
-    <div class="fade-in">
-      <div class="tablet-header"><h1>BIBLIOTECA GENERAL</h1></div>
-      <div class="embed-wrap">
-        <div class="embed-bar">
-          <span>Google Drive — Materiales de la asignatura</span>
-          <a href="https://drive.google.com/drive/folders/1_8SD_30CH4lAwBrLSg4sw9yKZiC9kNNJ"
-             target="_blank" class="btn-s">↗ Abrir en Drive</a>
-        </div>
-        <iframe
-          src="https://drive.google.com/embeddedfolderview?id=1_8SD_30CH4lAwBrLSg4sw9yKZiC9kNNJ#list"
-          class="embed-frame" title="Biblioteca" style="min-height:700px;"></iframe>
-      </div>
-    </div>`;
-}
-
-/* ── FETCH WINNERS ──────────────────────────── */
-async function fetchWinners(id){
-  const el=document.getElementById(id);
-  if(!el) return;
-  const ctrl=new AbortController();
-  const timer=setTimeout(()=>ctrl.abort(),6000);
-  try{
-    const res=await fetch(`${SCRIPT_URL}?action=getWinners`,{signal:ctrl.signal});
-    clearTimeout(timer);
-    const data=await res.json();
-    if(Array.isArray(data)&&data.length>0){
-      el.innerHTML=data.slice(0,6).map(w=>`
-        <div class="winner">
-          <span class="t">🏆</span>
-          <div>
-            <strong>${esc(w.members||w.team||'Equipo explorador')}</strong>
-            <span>${esc(w.timestamp||w.date||'')}</span>
-          </div>
-        </div>`).join('');
-    } else { el.innerHTML=noW(); }
-  }catch(e){ clearTimeout(timer); el.innerHTML=noW(); }
-}
-
-function noW(){
-  return `<p class="loading">¡Esperando a los primeros exploradores en descifrar el código estelar! 🚀</p>`;
-}
-function esc(s){
-  return String(s)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-/* ── BOOT ───────────────────────────────────── */
-go('home');
+// Carga inicial
+render('home');
 </script>
+
 </body>
 </html>
