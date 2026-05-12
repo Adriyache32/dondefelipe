@@ -38,7 +38,6 @@ body{
   background-attachment: fixed;
 }
 
-/* FRISO DECORATIVO */
 .frieze{
   height:7px;
   background:repeating-linear-gradient(90deg, var(--gold-dark) 0, var(--gold-dark) 6px, var(--gold) 6px, var(--gold) 18px);
@@ -83,9 +82,7 @@ nav{
   transition: color 0.3s;
 }
 
-.drop-btn:hover {
-    color: var(--gold-light);
-}
+.drop-btn:hover { color: var(--gold-light); }
 
 .drop-content{
   display:none;position:absolute;top:100%;left:0;
@@ -141,7 +138,7 @@ h1{
 }
 
 .embed-frame{
-  width:100%;height:700px;border:1px solid var(--stone);
+  width:100%;height:780px;border:1px solid var(--stone);
   margin-top:1rem;background: white;
 }
 
@@ -167,16 +164,20 @@ footer{
           <a href="#">IV° Medio</a>
         </div>
       </li>
-      <li><a href="#" onclick="render('futbol')" class="drop-btn">⚽ DEPORTES</a></li>
+      <li class="dropdown">
+        <button class="drop-btn">⚽ DEPORTES ▾</button>
+        <div class="drop-content">
+          <a href="#" onclick="render('futbol_varones')">Liga Varones</a>
+          <a href="#" onclick="render('futbol_damas')">Liga Damas</a>
+        </div>
+      </li>
       <li><a href="#" class="drop-btn">BIBLIOTECA</a></li>
     </ul>
   </div>
 </nav>
 
 <div class="main-panel">
-  <div class="tablet" id="content">
-    <!-- Contenido dinámico -->
-  </div>
+  <div class="tablet" id="content"></div>
 </div>
 
 <footer>
@@ -192,27 +193,33 @@ function render(page) {
       <h1>AULA DE CIENCIAS</h1>
       <div class="grid">
         <div class="card">
-          <h3>DEPORTES</h3>
-          <p>Revisa la tabla de posiciones actualizada del Campeonato San Agustín 2026.</p>
-          <a href="#" class="btn-p" onclick="render('futbol')">VER TABLA</a>
+          <h3>CAMPEONATO 2026</h3>
+          <p>Resultados actualizados del Campeonato San Agustín.</p>
+          <div style="display:flex; gap:10px; flex-wrap: wrap;">
+            <a href="#" class="btn-p" onclick="render('futbol_varones')">LIGA VARONES</a>
+            <a href="#" class="btn-p" onclick="render('futbol_damas')" style="background:#801d5e">LIGA DAMAS</a>
+          </div>
         </div>
         <div class="card">
           <h3>CIENCIAS</h3>
-          <p>Material de estudio y bitácoras para enseñanza media y básica.</p>
+          <p>Bitácoras y material de estudio disponible.</p>
         </div>
       </div>
     `;
-  } else if(page === 'futbol') {
+  } else if(page === 'futbol_varones') {
     content.innerHTML = `
-      <h1>CAMPEONATO SAN AGUSTÍN</h1>
+      <h1>LIGA VARONES 2026</h1>
       <iframe src="tablafutbol.html" class="embed-frame"></iframe>
+    `;
+  } else if(page === 'futbol_damas') {
+    content.innerHTML = `
+      <h1>LIGA DAMAS 2026</h1>
+      <iframe src="tablafutbol_fem.html" class="embed-frame"></iframe>
     `;
   }
 }
 
-// Carga inicial
 render('home');
 </script>
-
 </body>
 </html>
