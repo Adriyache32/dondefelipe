@@ -9,10 +9,12 @@
 
 <style>
 /* ═══════════════════════════════════════════════
-   TOKENS  — Estética de Piedra y Mar
+   TOKENS  — paleta mediterránea / Ikariam
 ═══════════════════════════════════════════════ */
 :root {
   --sea-deep:    #08182e;
+  --sea-mid:     #112843;
+  --sea-light:   #1a4068;
   --gold:        #c9a84c;
   --gold-light:  #e8c870;
   --gold-dark:   #8b6914;
@@ -22,10 +24,17 @@
   --bronze:      #8e6a35;
   --text:        #2a1f10;
   --text-soft:   #6a5840;
-  --ff-title: 'Cinzel','Palatino Linotype',serif;
-  --ff-body:  'Cormorant Garamond',serif;
+  --laurel:      #4a7c59;
+  --terracotta:  #a04a2a;
+  --border-gold: rgba(201,168,76,.3);
+
+  --ff-title: 'Cinzel','Palatino Linotype',Palatino,serif;
+  --ff-body:  'Cormorant Garamond',Georgia,'Times New Roman',serif;
 }
 
+/* ═══════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════ */
 *{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
 
@@ -34,149 +43,261 @@ body{
   display:flex;flex-direction:column;
   font-family:var(--ff-body);
   color:var(--text);
-  background: linear-gradient(135deg, #08182e 0%, #152e50 100%);
-  background-attachment: fixed;
+  background:linear-gradient(145deg,#08182e 0%,#0e2440 40%,#152e50 70%,#0a1e36 100%);
+  background-size:400% 400%;
+  animation:seaShift 16s ease infinite;
+}
+
+@keyframes seaShift{
+  0%  {background-position:0% 50%;}
+  50% {background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(
+    0deg,transparent,transparent 3px,
+    rgba(255,255,255,.012) 3px,rgba(255,255,255,.012) 4px
+  );
 }
 
 .frieze{
-  height:7px;
-  background:repeating-linear-gradient(90deg, var(--gold-dark) 0, var(--gold-dark) 6px, var(--gold) 6px, var(--gold) 18px);
-  z-index:100;
+  position:relative;z-index:10;
+  height:7px;flex-shrink:0;
+  background:repeating-linear-gradient(
+    90deg,
+    var(--gold-dark) 0,var(--gold-dark) 6px,
+    var(--gold)      6px,var(--gold)      18px,
+    #f0d87a           18px,#f0d87a          20px,
+    var(--gold)      20px,var(--gold)      32px,
+    var(--gold-dark) 32px,var(--gold-dark) 38px
+  );
 }
 
-/* NAVEGACIÓN */
+/* ═══════════════════════════════════════════════
+   NAV
+═══════════════════════════════════════════════ */
 nav{
-  position:sticky;top:0;z-index:200;
-  background:rgba(6,18,34,.95);
-  backdrop-filter:blur(10px);
+  position:sticky;top:0;z-index:200;flex-shrink:0;
+  background:rgba(6,18,34,.94);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
   border-bottom:2px solid var(--gold-dark);
+  box-shadow:0 4px 30px rgba(0,0,0,.45);
 }
 
 .nav-inner{
   max-width:1100px;margin:0 auto;
-  height:65px;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 1.5rem;
+  padding:0 1.2rem;
+  height:62px;
+  display:flex;align-items:stretch;justify-content:space-between;
+  position:relative;
 }
 
 .nav-brand{
+  display:flex;align-items:center;gap:9px;
   font-family:var(--ff-title);
   color:var(--gold-light);text-decoration:none;
-  font-size:1.1rem;letter-spacing:3px;
-  cursor: pointer;
+  font-size:1.05rem;letter-spacing:3px;
+  padding:0 .5rem;
+  border-bottom:2px solid transparent;
+  transition:color .2s,border-color .2s;
+  flex-shrink:0;
 }
+.nav-brand:hover{color:#fff;border-bottom-color:var(--gold);}
+
+.hamburger{
+  display:none;flex-direction:column;justify-content:center;gap:5px;
+  background:none;border:none;cursor:pointer;
+  padding:0 .5rem;height:100%;
+  z-index:300;
+}
+.hamburger span{
+  display:block;width:24px;height:2px;
+  background:var(--gold);border-radius:2px;
+  transition:transform .3s,opacity .3s;
+}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.hamburger.open span:nth-child(2){opacity:0;}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
 
 .nav-menu{
-  display:flex;list-style:none;gap:1.5rem;
-  align-items: center;
+  display:flex;align-items:stretch;list-style:none;gap:0;
 }
 
-.dropdown{position:relative;}
+.dropdown{position:relative;display:flex;align-items:stretch;}
 
 .drop-btn{
-  background:none;border:none;cursor:pointer;
+  background:none;border:none;cursor:pointer;height:100%;
+  padding:0 1.1rem;
   font-family:var(--ff-title);font-size:.8rem;letter-spacing:1.5px;
-  color:white;display:flex;align-items:center;gap:5px;
-  padding:10px 0;
-  text-decoration: none;
-  transition: color 0.3s;
+  color:rgba(255,255,255,.9);
+  display:flex;align-items:center;gap:4px;
+  border-bottom:2px solid transparent;
+  transition:color .2s,border-color .2s;
 }
-
-.drop-btn:hover { color: var(--gold-light); }
+.drop-btn:hover,.drop-btn.active-menu{
+  color:var(--gold-light);border-bottom-color:var(--gold);
+}
 
 .drop-content{
   display:none;position:absolute;top:100%;left:0;
-  min-width:200px;
-  background:#050f1c;
-  border:1px solid var(--gold-dark);
-  box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  min-width:205px;
+  background:rgba(5,15,28,.97);
+  border:1px solid var(--gold-dark);border-top:2px solid var(--gold);
+  box-shadow:0 12px 40px rgba(0,0,0,.6);
+  z-index:300;
 }
-
 .dropdown:hover .drop-content{display:block;}
 
 .drop-content a{
-  display:block;padding:12px 20px;
-  color:white;text-decoration:none;font-size:.9rem;
-  border-bottom:1px solid rgba(255,255,255,0.05);
-  font-family: var(--ff-body);
+  display:flex;justify-content:space-between;align-items:center;
+  padding:.72rem 1.2rem;
+  color:rgba(255,255,255,.88);text-decoration:none;font-size:.9rem;
+  border-bottom:1px solid rgba(201,168,76,.1);
+  transition:background .15s,color .15s;
 }
-.drop-content a:hover{background:rgba(201,168,76,0.2);color:var(--gold-light);}
+.drop-content a:last-child{border-bottom:none;}
+.drop-content a:hover{background:rgba(201,168,76,0.12);color:var(--gold-light);}
+.drop-content a.active-link{color:var(--gold);background:rgba(201,168,76,.1);}
 
-/* PANEL PRINCIPAL */
+.nav-lib{
+  display:flex;align-items:center;gap:6px;padding:0 1.1rem;
+  font-family:var(--ff-title);font-size:.8rem;letter-spacing:1.5px;
+  color:rgba(255,255,255,.9);text-decoration:none;
+  border-bottom:2px solid transparent;
+  transition:color .2s,border-color .2s;
+}
+.nav-lib:hover,.nav-lib.active-link{color:var(--gold-light);border-bottom-color:var(--gold);}
+
+/* ═══════════════════════════════════════════════
+   MAIN PANEL
+═══════════════════════════════════════════════ */
 .main-panel{
-  width:95%;max-width:1000px;
-  margin:2rem auto;flex:1;
+  position:relative;z-index:10;
+  width:94%;max-width:1000px;
+  margin:2rem auto;
+  flex:1;
 }
 
 .tablet{
   background:var(--ivory);
-  border:1px solid rgba(201,168,76,.3);
-  border-radius:4px;
-  padding:2.5rem;
-  box-shadow:0 20px 50px rgba(0,0,0,0.4);
+  border:1px solid rgba(201,168,76,.2);
+  border-radius:3px;
+  padding:2.8rem 3rem;
+  position:relative;overflow:hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+}
+
+.tablet-header{
+  text-align:center;
+  padding-bottom:1.6rem;margin-bottom:1.8rem;
+  border-bottom:1px solid rgba(201,168,76,.25);
+  position:relative;
 }
 
 h1{
-  font-family:var(--ff-title);text-align:center;
-  color:var(--bronze);letter-spacing:4px;margin-bottom:1.5rem;
-  text-transform: uppercase;
+  font-family:var(--ff-title);
+  font-size:clamp(1.4rem,4vw,2rem);
+  letter-spacing:3px;
+  color:var(--bronze);
 }
+h1.shimmer{
+  background:linear-gradient(90deg,var(--gold-dark),var(--gold),var(--gold-light),var(--gold),var(--gold-dark));
+  background-size:300%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  animation:shimmer 5s linear infinite;
+}
+@keyframes shimmer{0%{background-position:0%}100%{background-position:300%}}
 
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
+.page-sub{font-size:.82rem;color:var(--text-soft);letter-spacing:1.5px;font-style:italic;}
+
+h2.sh{
+  font-family:var(--ff-title);font-size:.85rem;letter-spacing:1.5px;
+  color:var(--bronze);
+  padding-bottom:7px;margin:2rem 0 1.2rem;
+  border-bottom:1px solid rgba(201,168,76,.25);
+  display:flex;align-items:center;gap:8px;
+}
+h2.sh::before{content:'⬧';color:var(--gold);font-size:.7rem;}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:18px;}
 
 .card{
   background:var(--marble);
-  border:1px solid rgba(201,168,76,.2);
-  padding:1.5rem;border-left:4px solid var(--gold);
-  display: flex;
-  flex-direction: column;
+  border:1px solid rgba(201,168,76,.18);
+  border-radius:2px;padding:1.4rem 1.25rem;
+  position:relative;
+  transition:transform .22s,box-shadow .22s;
 }
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.1);}
+.card-click{cursor:pointer;}
 
-.card h3 {
-  font-family: var(--ff-title);
-  font-size: 0.9rem;
-  letter-spacing: 1px;
-  margin-bottom: 0.8rem;
-  color: var(--bronze);
+.card h3{
+  font-family:var(--ff-title);font-size:.8rem;letter-spacing:.8px;margin-bottom:10px;
 }
+.card p{font-size:.88rem;color:var(--text-soft);line-height:1.65;}
 
-.card p {
-  font-size: 0.95rem;
-  line-height: 1.5;
-  color: var(--text-soft);
-  flex-grow: 1;
+.card.c-sea   {border-left:3px solid #2d6a9f;} .card.c-sea    h3{color:#1a4e7a;}
+.card.c-gold  {border-left:3px solid var(--gold);} .card.c-gold   h3{color:var(--bronze);}
+.card.c-laurel{border-left:3px solid var(--laurel);} .card.c-laurel h3{color:#3d6b4a;}
+.card.c-fem   {border-left:3px solid #ff4d94;} .card.c-fem    h3{color:#801d5e;}
+
+.winner{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:8px 0;border-bottom:1px solid rgba(201,168,76,0.12);
+  font-size:.87rem;
 }
+.winner strong{display:block;color:var(--text);}
+.loading{font-size:.82rem;color:#aaa;font-style:italic;}
 
 .btn-p{
-  display:inline-block;margin-top:1.2rem;
-  background:var(--gold-dark);color:white;
-  padding:10px 20px;text-decoration:none;
-  font-family:var(--ff-title);font-size:0.75rem;
-  cursor: pointer;
-  text-align: center;
-  transition: background 0.3s;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  background:linear-gradient(135deg,var(--gold-dark),var(--gold));
+  color:#fff;border:none;cursor:pointer;
+  padding:.7rem 1.6rem;
+  font-family:var(--ff-title);font-size:.82rem;letter-spacing:1px;
+  border-radius:2px;text-decoration:none;
 }
 
-.btn-p:hover { background: var(--bronze); }
-
-.embed-frame{
-  width:100%;height:780px;border:1px solid var(--stone);
-  margin-top:1rem;background: white;
+.btn-s{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  background:transparent;
+  color:var(--bronze);border:1.5px solid rgba(201,168,76,.5);
+  padding:.6rem 1.2rem;
+  font-family:var(--ff-title);font-size:.78rem;letter-spacing:1px;
+  border-radius:2px;cursor:pointer;text-decoration:none;
 }
+
+.embed-frame{width:100%;border:1px solid rgba(201,168,76,0.2);display:block;margin-top:1rem;min-height:600px;}
 
 footer{
-  background:#040a14;color:rgba(255,255,255,0.3);
-  text-align:center;padding:1.5rem;font-size:0.7rem;
-  font-family:var(--ff-title);border-top:2px solid var(--gold-dark);
+  background:rgba(4,10,20,.95);
+  border-top:2px solid var(--gold-dark);
+  padding:1rem 2rem;text-align:center;
+  font-family:var(--ff-title);font-size:.68rem;
+  letter-spacing:1px;color:rgba(255,255,255,.28);
 }
 
-.fade-in {
-  animation: fadeIn 0.5s ease-in;
-}
+.fade-in{animation:fadeIn .4s ease-out;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:translateY(0);}}
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+@media(max-width:768px){
+  .hamburger{display:flex;}
+  .nav-menu{
+    display:none;
+    position:absolute;top:100%;left:0;right:0;
+    flex-direction:column;
+    background:rgba(4,12,24,.98);
+    border-bottom:2px solid var(--gold-dark);
+    max-height:80vh;overflow-y:auto;
+    z-index:300;
+  }
+  .nav-menu.open{display:flex;}
+  .dropdown{flex-direction:column;}
+  .drop-content{display:block!important;position:static;background:rgba(255,255,255,0.03);}
 }
 </style>
 </head>
@@ -186,95 +307,183 @@ footer{
 
 <nav>
   <div class="nav-inner">
-    <a href="#" class="nav-brand" onclick="render('home')">🏛️ PROFE FELIPE</a>
-    <ul class="nav-menu">
+    <a href="#" class="nav-brand" onclick="go('home');return false;">
+      <span class="brand-icon">🏛️</span>PROFE FELIPE
+    </a>
+
+    <button class="hamburger" id="ham" onclick="toggleNav()">
+      <span></span><span></span><span></span>
+    </button>
+
+    <ul class="nav-menu" id="nav-menu">
+      <li class="dropdown">
+        <button class="drop-btn">BÁSICA ▾</button>
+        <div class="drop-content">
+          <a href="#" onclick="go('6basico');closeMobile();return false;">VI° Básico</a>
+          <a href="#" onclick="go('7basico');closeMobile();return false;">VII° Básico</a>
+          <a href="#" onclick="go('8basico');closeMobile();return false;">VIII° Básico</a>
+        </div>
+      </li>
       <li class="dropdown">
         <button class="drop-btn">MEDIA ▾</button>
         <div class="drop-content">
-          <a href="#">III° Medio</a>
-          <a href="#">IV° Medio</a>
+          <a href="#" onclick="go('1medio');closeMobile();return false;">I° Medio</a>
+          <a href="#" onclick="go('2medio');closeMobile();return false;">II° Medio</a>
+          <a href="#" onclick="go('3medio');closeMobile();return false;">III° Medio</a>
+          <a href="#" onclick="go('4medio');closeMobile();return false;">IV° Medio</a>
         </div>
       </li>
       <li class="dropdown">
         <button class="drop-btn">⚽ DEPORTES ▾</button>
         <div class="drop-content">
-          <a href="#" onclick="render('futbol_varones')">Liga Varones</a>
-          <a href="#" onclick="render('futbol_damas')">Liga Damas</a>
+          <a href="#" onclick="go('futbol_varones');closeMobile();return false;">Liga Varones</a>
+          <a href="#" onclick="go('futbol_damas');closeMobile();return false;">Liga Damas</a>
         </div>
       </li>
-      <li><a href="#" onclick="render('juegos')" class="drop-btn">🎮 JUEGOS</a></li>
-      <li><a href="#" class="drop-btn">BIBLIOTECA</a></li>
+      <li><a href="#" onclick="go('juegos');closeMobile();return false;" class="nav-lib">🎮 JUEGOS</a></li>
+      <li><a href="#" onclick="go('biblioteca');closeMobile();return false;" class="nav-lib">📁 BIBLIOTECA</a></li>
     </ul>
   </div>
 </nav>
 
 <div class="main-panel">
-  <div class="tablet" id="content"></div>
+  <div class="tablet">
+    <main id="main-content"></main>
+  </div>
 </div>
 
 <footer>
-  AULA DE CIENCIAS © 2026 - PROF. FELIPE JIMÉNEZ
+  © <span id="yr"></span> Prof. Felipe Jiménez &nbsp;·&nbsp; Aula de Ciencias &nbsp;·&nbsp; Viña del Mar
 </footer>
 
 <script>
-const content = document.getElementById('content');
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyFcG4150ORc85aIqbrAmtfBrZAol-iXB2I4RDEFMB87ESzTpE7vpoYIYpSPWL28Mas/exec';
 
-function render(page) {
-  content.classList.remove('fade-in');
-  void content.offsetWidth; // Trigger reflow
-  content.classList.add('fade-in');
+const ROUTES = {
+  home: rHome,
+  '1medio': s => rComing(s, 'I° Medio'),
+  '2medio': s => rComing(s, 'II° Medio'),
+  '3medio': r3,
+  '4medio': r4,
+  '6basico': r6,
+  '7basico': s => rComing(s, 'VII° Básico'),
+  '8basico': s => rComing(s, 'VIII° Básico'),
+  'futbol_varones': rFutbolVarones,
+  'futbol_damas': rFutbolDamas,
+  juegos: rJuegos,
+  biblioteca: rLib,
+  'juego-snake': s => rGame(s, 'juego_snake.html', '🐍 Snake'),
+  'juego-memoria': s => rGame(s, 'juego_memoria.html', '🃏 Memoria'),
+  'juego-tres': s => rGame(s, 'juego_tictactoe.html', '❌ Tres en Raya'),
+  'juego-memorice-toninas': s => rGame(s, 'juego_memorice_toninas.html', '🐬 Memorice Toninas'),
+  'juego-laberinto-toninas': s => rGame(s, 'juego_laberinto_toninas.html', '🌀 Laberinto Toninas')
+};
 
-  if(page === 'home') {
-    content.innerHTML = `
-      <h1>AULA DE CIENCIAS</h1>
-      <div class="grid">
-        <div class="card">
-          <h3>CAMPEONATO 2026</h3>
-          <p>Resultados actualizados del Campeonato San Agustín. Ligas Varones y Damas.</p>
-          <div style="display:flex; gap:10px; flex-wrap: wrap;">
-            <a href="#" class="btn-p" onclick="render('futbol_varones')">VARONES</a>
-            <a href="#" class="btn-p" onclick="render('futbol_damas')" style="background:#801d5e">DAMAS</a>
-          </div>
-        </div>
-        <div class="card">
-          <h3>SALA DE JUEGOS</h3>
-          <p>Desafíos interactivos y juegos de ingenio científico para todas las edades.</p>
-          <a href="#" class="btn-p" onclick="render('juegos')">ENTRAR A JUGAR</a>
-        </div>
-        <div class="card">
-          <h3>CIENCIAS</h3>
-          <p>Bitácoras, guías y material de estudio disponible para descarga.</p>
-          <a href="#" class="btn-p" style="background: #2a4a35">VER MATERIAL</a>
-        </div>
-      </div>
-    `;
-  } else if(page === 'futbol_varones') {
-    content.innerHTML = `
-      <h1>LIGA VARONES 2026</h1>
-      <iframe src="tablafutbol.html" class="embed-frame"></iframe>
-    `;
-  } else if(page === 'futbol_damas') {
-    content.innerHTML = `
-      <h1>LIGA DAMAS 2026</h1>
-      <iframe src="tablafutbol_fem.html" class="embed-frame"></iframe>
-    `;
-  } else if(page === 'juegos') {
-    content.innerHTML = `
-      <h1>SALA DE JUEGOS</h1>
-      <div class="grid">
-        <div class="card" style="border-left-color: #2d6a9f;">
-          <h3>PRÓXIMAMENTE</h3>
-          <p>Estamos preparando simuladores y juegos de trivia científica. ¡Vuelve pronto para el primer lanzamiento!</p>
-        </div>
-      </div>
-    `;
-  }
+function go(page){
+  const stage = document.getElementById('main-content');
+  const fn = ROUTES[page];
+  if(!fn) return;
+  stage.innerHTML = '';
+  fn(stage);
 }
 
-// Carga inicial
-render('home');
+function rHome(stage){
+  stage.innerHTML = `
+    <div class="fade-in">
+      <div class="tablet-header">
+        <h1 class="shimmer">AULA DE CIENCIAS</h1>
+        <p class="page-sub">Prof. Felipe Jiménez &nbsp;·&nbsp; Viña del Mar</p>
+      </div>
+
+      <h2 class="sh">NOVEDADES & CUADRO DE HONOR</h2>
+      <div class="grid">
+        <div class="card c-laurel">
+          <h3>🏆 ÚLTIMOS GANADORES</h3>
+          <div id="wl"><p class="loading">Consultando resultados...</p></div>
+        </div>
+        <div class="card c-gold">
+          <h3>⚽ DEPORTES 2026</h3>
+          <p>Revisa las tablas de posiciones del Campeonato San Agustín.</p>
+          <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+            <button class="btn-p" onclick="go('futbol_varones')" style="flex:1">Varones</button>
+            <button class="btn-p" onclick="go('futbol_damas')" style="flex:1; background:#801d5e">Damas</button>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="sh" style="margin-top:2.2rem;">ACCESOS RÁPIDOS</h2>
+      <div class="grid">
+        <div class="card c-sea card-click" onclick="go('4medio')">
+          <h3>IV° MEDIO · FÍSICA</h3>
+          <p>🎮 Búsqueda del Tesoro Espacial — Fuerzas Centrales y Dinámica.</p>
+        </div>
+        <div class="card c-laurel card-click" onclick="go('juegos')">
+          <h3>🎮 SALA DE JUEGOS</h3>
+          <p>Desafíos de ingenio y clásicos de código para el recreo.</p>
+        </div>
+      </div>
+    </div>`;
+  fetchWinners('wl');
+}
+
+function r3(s){ s.innerHTML = '<h1>III° Medio: Ingeniería</h1><iframe src="bitacora_tech.html" class="embed-frame" style="height:800px"></iframe>'; }
+function r4(s){ s.innerHTML = '<h1>IV° Medio: Física</h1><iframe src="tesoros_espacio.html" class="embed-frame" style="height:800px"></iframe>'; }
+function r6(s){ s.innerHTML = '<h1>VI° Básico: Ciencias</h1><iframe src="bitacora_6basico.html" class="embed-frame" style="height:800px"></iframe>'; }
+function rLib(s){ s.innerHTML = '<h1>Biblioteca General</h1><iframe src="https://drive.google.com/embeddedfolderview?id=1_8SD_30CH4lAwBrLSg4sw9yKZiC9kNNJ#list" class="embed-frame" style="height:700px"></iframe>'; }
+
+function rJuegos(stage){
+  stage.innerHTML = `
+    <div class="fade-in">
+      <div class="tablet-header"><h1>🎮 SALA DE JUEGOS</h1></div>
+      <div class="grid">
+        <div class="card c-sea card-click" onclick="go('juego-memorice-toninas')">
+          <h3>🐬 MEMORICE TONINAS</h3>
+          <p>Entrena tu memoria con los habitantes del mar.</p>
+        </div>
+        <div class="card c-fem card-click" onclick="go('juego-laberinto-toninas')">
+          <h3>🌀 LABERINTO TONINAS</h3>
+          <p>Ayuda a la tonina a encontrar su camino en el océano.</p>
+        </div>
+        <div class="card c-sea card-click" onclick="go('juego-snake')">
+          <h3>🐍 SNAKE</h3>
+          <p>El legendario juego de la serpiente. No choques con las paredes.</p>
+        </div>
+        <div class="card c-gold card-click" onclick="go('juego-memoria')">
+          <h3>🃏 MEMORIA CLÁSICO</h3>
+          <p>Encuentra los pares de cartas y entrena tu memoria visual.</p>
+        </div>
+        <div class="card c-laurel card-click" onclick="go('juego-tres')">
+          <h3>❌ TRES EN RAYA</h3>
+          <p>Desafía a la CPU en el clásico juego de estrategia.</p>
+        </div>
+      </div>
+    </div>`;
+}
+
+function rFutbolVarones(s){ s.innerHTML = '<h1>LIGA VARONES 2026</h1><iframe src="tablafutbol.html" class="embed-frame" style="height:750px"></iframe>'; }
+function rFutbolDamas(s){ s.innerHTML = '<h1>LIGA DAMAS 2026</h1><iframe src="tablafutbol_fem.html" class="embed-frame" style="height:750px"></iframe>'; }
+
+function rGame(s, file, name){
+  s.innerHTML = `<div class="fade-in"><h1>${name}</h1><button class="btn-s" onclick="go('juegos')" style="margin-bottom:10px;">← Volver a Juegos</button><iframe src="${file}" class="embed-frame" style="height:600px; background:white;"></iframe></div>`;
+}
+
+function rComing(s, name){ s.innerHTML = `<div class="fade-in" style="text-align:center; padding:3rem"><h2>🔭 ${name}</h2><p>Módulo en preparación. Disponible próximamente.</p><button class="btn-s" onclick="go('home')">Ir al Inicio</button></div>`; }
+
+async function fetchWinners(id){
+  const el = document.getElementById(id);
+  try {
+    const res = await fetch(`${SCRIPT_URL}?action=getWinners`);
+    const data = await res.json();
+    if(data && data.length > 0) {
+      el.innerHTML = data.slice(0,5).map(w => `<div class="winner"><span>🏆</span><div><strong>${w.members || w.team}</strong></div></div>`).join('');
+    } else { el.innerHTML = '<p class="loading">Esperando exploradores...</p>'; }
+  } catch(e) { el.innerHTML = '<p class="loading">¡Pronto habrá ganadores!</p>'; }
+}
+
+function toggleNav(){ document.getElementById('nav-menu').classList.toggle('open'); }
+function closeMobile(){ document.getElementById('nav-menu').classList.remove('open'); }
+document.getElementById('yr').textContent = new Date().getFullYear();
+go('home');
 </script>
-</body>
-</html>
 </body>
 </html>
