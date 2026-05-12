@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario Copa San Agustín 2026</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --pitch: #1b4d3e;
+            --grass: #22c55e;
+            --gold: #fbbf24;
+            --white: #ffffff;
+            --dark: #0f172a;
+            --fem-pink: #ff4d94;
+            --fem-purple: #801d5e;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.95)), 
+                        url('https://images.unsplash.com/photo-1551958219-acbc608c6377?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-attachment: fixed;
+            color: var(--white);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h2 {
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--gold);
+            margin: 10px 0;
+        }
+
+        /* Selector de Categoría */
+        .category-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .cat-btn {
+            padding: 12px 25px;
+            border: 2px solid transparent;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cat-btn.active.male {
+            background: var(--grass);
+            border-color: var(--gold);
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+        }
+
+        .cat-btn.active.female {
+            background: var(--fem-pink);
+            border-color: #fff;
+            box-shadow: 0 0 15px rgba(255, 77, 148, 0.4);
+        }
+
+        .cat-btn:hover:not(.active) {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* Secciones */
+        .section-view {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .section-view.active {
+            display: block;
+        }
+
+        .phase-title {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 5px solid var(--gold);
+            padding: 10px 20px;
+            margin: 25px 0 15px 0;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .female .phase-title {
+            border-left-color: var(--fem-pink);
+            background: rgba(255, 77, 148, 0.1);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        /* Tarjetas */
+        .match-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.3s, background 0.3s;
+            position: relative;
+        }
+
+        .match-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .male .match-card:hover { border-color: var(--gold); }
+        .female .match-card:hover { border-color: var(--fem-pink); }
+
+        .date-badge {
+            padding: 4px 15px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .male .date-badge { background: var(--gold); color: var(--dark); }
+        .female .date-badge { background: var(--fem-pink); color: white; }
+
+        .vs-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .team {
+            flex: 1;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .vs-circle {
+            width: 34px;
+            height: 34px;
+            background: var(--white);
+            color: var(--dark);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 0.65rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .female .vs-circle { background: #fdf2f8; color: var(--fem-purple); }
+
+        .venue {
+            margin-top: 15px;
+            font-size: 0.7rem;
+            color: #ccc;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .play-fair {
+            margin-top: 50px;
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            font-style: italic;
+            color: #aaa;
+            font-size: 0.8rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .final-card {
+            border: 2px solid var(--gold);
+            background: rgba(251, 191, 36, 0.05);
+        }
+
+        .female .final-card {
+            border-color: var(--fem-pink);
+            background: rgba(255, 77, 148, 0.05);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <i class="fa-solid fa-trophy" style="font-size: 2.2rem; color: var(--gold);"></i>
+        <h2>Match Center 2026</h2>
+        <p>Calendario Oficial del Campeonato San Agustín</p>
+    </div>
+
+    <div class="category-selector">
+        <button class="cat-btn active male" onclick="showCat('male', this)">
+            <i class="fa-solid fa-mars"></i> Rama Varones
+        </button>
+        <button class="cat-btn female" onclick="showCat('female', this)">
+            <i class="fa-solid fa-venus"></i> Rama Damas
+        </button>
+    </div>
+
+    <!-- MASCULINO -->
+    <div id="male-view" class="section-view male active">
+        <div class="phase-title">Fase Clasificatoria Masculina</div>
+        <div class="grid">
+            <div class="match-card"><div class="date-badge">12 MAY</div><div class="vs-container"><div class="team">8vo Básico</div><div class="vs-circle">VS</div><div class="team">1ro Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <div class="match-card"><div class="date-badge">26 MAY</div><div class="vs-container"><div class="team">2do Medio</div><div class="vs-circle">VS</div><div class="team">3ro Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <div class="match-card"><div class="date-badge">09 JUN</div><div class="vs-container"><div class="team">3ro Medio</div><div class="vs-circle">VS</div><div class="team">4to Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <div class="match-card"><div class="date-badge">07 JUL</div><div class="vs-container"><div class="team">8vo Básico</div><div class="vs-circle">VS</div><div class="team">2do Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <div class="match-card"><div class="date-badge">21 JUL</div><div class="vs-container"><div class="team">3ro Medio</div><div class="vs-circle">VS</div><div class="team">1ro Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <div class="match-card"><div class="date-badge">04 AGO</div><div class="vs-container"><div class="team">4to Medio</div><div class="vs-circle">VS</div><div class="team">8vo Básico</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <div class="match-card"><div class="date-badge">18 AGO</div><div class="vs-container"><div class="team">2do Medio</div><div class="vs-circle">VS</div><div class="team">4to Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <div class="match-card"><div class="date-badge">01 SEP</div><div class="vs-container"><div class="team">2do Medio</div><div class="vs-circle">VS</div><div class="team">1ro Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <div class="match-card"><div class="date-badge">22 SEP</div><div class="vs-container"><div class="team">8vo Básico</div><div class="vs-circle">VS</div><div class="team">3ro Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <div class="match-card"><div class="date-badge">06 OCT</div><div class="vs-container"><div class="team">1ro Medio</div><div class="vs-circle">VS</div><div class="team">4to Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+        </div>
+        <div class="phase-title">Fase Final Masculina</div>
+        <div class="grid">
+            <div class="match-card final-card"><div class="date-badge">20 OCT</div><div class="vs-container"><div class="team">1er LUGAR</div><div class="vs-circle">SF1</div><div class="team">4to LUGAR</div></div><div class="venue">SEMIFINAL A</div></div>
+            <div class="match-card final-card"><div class="date-badge">03 NOV</div><div class="vs-container"><div class="team">2do LUGAR</div><div class="vs-circle">SF2</div><div class="team">3er LUGAR</div></div><div class="venue">SEMIFINAL B</div></div>
+        </div>
+    </div>
+
+    <!-- FEMENINO -->
+    <div id="female-view" class="section-view female">
+        <div class="phase-title">Fase Clasificatoria Femenina</div>
+        <div class="grid">
+            <div class="match-card"><div class="date-badge">19 MAY</div><div class="vs-container"><div class="team">8vo Básico</div><div class="vs-circle">VS</div><div class="team">1ro Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <div class="match-card"><div class="date-badge">02 JUN</div><div class="vs-container"><div class="team">2do Medio</div><div class="vs-circle">VS</div><div class="team">3ro Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <div class="match-card"><div class="date-badge">16 JUN</div><div class="vs-container"><div class="team">3ro Medio</div><div class="vs-circle">VS</div><div class="team">4to Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <div class="match-card"><div class="date-badge">14 JUL</div><div class="vs-container"><div class="team">8vo Básico</div><div class="vs-circle">VS</div><div class="team">2do Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <div class="match-card"><div class="date-badge">28 JUL</div><div class="vs-container"><div class="team">3ro Medio</div><div class="vs-circle">VS</div><div class="team">1ro Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <div class="match-card"><div class="date-badge">11 AGO</div><div class="vs-container"><div class="team">4to Medio</div><div class="vs-circle">VS</div><div class="team">8vo Básico</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <div class="match-card"><div class="date-badge">25 AGO</div><div class="vs-container"><div class="team">2do Medio</div><div class="vs-circle">VS</div><div class="team">4to Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <div class="match-card"><div class="date-badge">08 SEP</div><div class="vs-container"><div class="team">2do Medio</div><div class="vs-circle">VS</div><div class="team">1ro Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <div class="match-card"><div class="date-badge">29 SEP</div><div class="vs-container"><div class="team">8vo Básico</div><div class="vs-circle">VS</div><div class="team">3ro Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <div class="match-card"><div class="date-badge">13 OCT</div><div class="vs-container"><div class="team">1ro Medio</div><div class="vs-circle">VS</div><div class="team">4to Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+        </div>
+        <div class="phase-title">Fase Final Femenina</div>
+        <div class="grid">
+            <div class="match-card final-card"><div class="date-badge">27 OCT</div><div class="vs-container"><div class="team">1er LUGAR</div><div class="vs-circle">SF1</div><div class="team">4to LUGAR</div></div><div class="venue">SEMIFINAL A</div></div>
+            <div class="match-card final-card"><div class="date-badge">10 NOV</div><div class="vs-container"><div class="team">2do LUGAR</div><div class="vs-circle">SF2</div><div class="team">3er LUGAR</div></div><div class="venue">SEMIFINAL B</div></div>
+        </div>
+    </div>
+
+    <div class="play-fair">
+        <i class="fa-solid fa-handshake"></i> "El respeto al rival es nuestra mayor victoria. Juega limpio."
+    </div>
+</div>
+
+<script>
+    function showCat(cat, btn) {
+        // Eliminar clases active de botones
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Mostrar sección correspondiente
+        document.querySelectorAll('.section-view').forEach(s => s.classList.remove('active'));
+        document.getElementById(cat + '-view').classList.add('active');
+    }
+</script>
+
+</body>
+</html>
