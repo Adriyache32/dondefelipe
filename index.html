@@ -25,16 +25,12 @@
   --text:        #2a1f10;
   --text-soft:   #6a5840;
   --laurel:      #4a7c59;
-  --terracotta:  #a04a2a;
   --border-gold: rgba(201,168,76,.3);
 
   --ff-title: 'Cinzel','Palatino Linotype',Palatino,serif;
   --ff-body:  'Cormorant Garamond',Georgia,'Times New Roman',serif;
 }
 
-/* ═══════════════════════════════════════════════
-   RESET & BASE
-═══════════════════════════════════════════════ */
 *{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
 
@@ -54,14 +50,6 @@ body{
   100%{background-position:0% 50%;}
 }
 
-body::before{
-  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:repeating-linear-gradient(
-    0deg,transparent,transparent 3px,
-    rgba(255,255,255,.012) 3px,rgba(255,255,255,.012) 4px
-  );
-}
-
 .frieze{
   position:relative;z-index:100;
   height:7px;flex-shrink:0;
@@ -75,9 +63,6 @@ body::before{
   );
 }
 
-/* ═══════════════════════════════════════════════
-   NAV
-═══════════════════════════════════════════════ */
 nav{
   position:sticky;top:0;z-index:200;flex-shrink:0;
   background:rgba(6,18,34,.94);
@@ -106,17 +91,6 @@ nav{
   flex-shrink:0;
 }
 .nav-brand:hover{color:#fff;border-bottom-color:var(--gold);}
-
-.hamburger{
-  display:none;flex-direction:column;justify-content:center;gap:5px;
-  background:none;border:none;cursor:pointer;
-  padding:0 .5rem;height:100%;
-  z-index:300;
-}
-.hamburger span{
-  display:block;width:24px;height:2px;
-  background:var(--gold);border-radius:2px;
-}
 
 .nav-menu{
   display:flex;align-items:stretch;list-style:none;gap:0;
@@ -156,18 +130,6 @@ nav{
 }
 .drop-content a:hover{background:rgba(201,168,76,0.12);color:var(--gold-light);}
 
-.nav-lib{
-  display:flex;align-items:center;gap:6px;padding:0 1.1rem;
-  font-family:var(--ff-title);font-size:.8rem;letter-spacing:1.5px;
-  color:rgba(255,255,255,.9);text-decoration:none;
-  border-bottom:2px solid transparent;
-  transition:color .2s,border-color .2s;
-}
-.nav-lib:hover{color:var(--gold-light);border-bottom-color:var(--gold);}
-
-/* ═══════════════════════════════════════════════
-   MAIN PANEL
-═══════════════════════════════════════════════ */
 .main-panel{
   position:relative;z-index:10;
   width:94%;max-width:1000px;
@@ -182,13 +144,6 @@ nav{
   padding:2.8rem 3rem;
   position:relative;overflow:hidden;
   box-shadow: 0 20px 60px rgba(0,0,0,.5);
-}
-
-.tablet-header{
-  text-align:center;
-  padding-bottom:1.6rem;margin-bottom:1.8rem;
-  border-bottom:1px solid rgba(201,168,76,.25);
-  position:relative;
 }
 
 h1{
@@ -218,15 +173,6 @@ h1.shimmer{
   transition:transform .22s,box-shadow .22s;
 }
 .card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.1);}
-
-.card h3{
-  font-family:var(--ff-title);font-size:.8rem;letter-spacing:.8px;margin-bottom:10px;
-}
-.card p{font-size:.88rem;color:var(--text-soft);line-height:1.5;}
-
-.card.c-sea   {border-left:3px solid #2d6a9f;} .card.c-sea    h3{color:#1a4e7a;}
-.card.c-gold  {border-left:3px solid var(--gold);} .card.c-gold   h3{color:var(--bronze);}
-.card.c-laurel{border-left:3px solid var(--laurel);} .card.c-laurel h3{color:#3d6b4a;}
 
 .btn-p{
   display:inline-flex;align-items:center;justify-content:center;gap:6px;
@@ -258,18 +204,6 @@ footer{
 
 .fade-in{animation:fadeIn 0.4s ease-out;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:translateY(0);}}
-
-@media(max-width:768px){
-  .hamburger{display:flex;}
-  .nav-menu{
-    display:none;position:absolute;top:100%;left:0;right:0;
-    flex-direction:column;background:rgba(4,12,24,.98);
-    border-bottom:2px solid var(--gold-dark);
-  }
-  .nav-menu.open{display:flex;}
-  .dropdown{flex-direction:column;}
-  .drop-content{display:block!important;position:static;background:rgba(255,255,255,0.03);}
-}
 </style>
 </head>
 <body>
@@ -278,15 +212,8 @@ footer{
 
 <nav>
   <div class="nav-inner">
-    <a href="#" class="nav-brand" onclick="go('home');return false;">
-      <span class="brand-icon">🏛️</span>PROFE FELIPE
-    </a>
-
-    <button class="hamburger" id="ham" onclick="toggleNav()">
-      <span></span><span></span><span></span>
-    </button>
-
-    <ul class="nav-menu" id="nav-menu">
+    <a href="#" class="nav-brand" onclick="go('home');return false;">🏛️ PROFE FELIPE</a>
+    <ul class="nav-menu">
       <li class="dropdown">
         <button class="drop-btn">BÁSICA ▾</button>
         <div class="drop-content">
@@ -309,12 +236,13 @@ footer{
         <div class="drop-content">
           <a href="#" onclick="go('futbol_varones')">Liga Varones</a>
           <a href="#" onclick="go('futbol_damas')">Liga Damas</a>
-          <a href="#" onclick="go('calendario_futbol')">📅 Calendario de partidos</a>
-          <a href="#" onclick="go('bases_futbol')">📜 Bases del campeonato</a>
+          <a href="#" onclick="go('goleadores')">⚽ Goleadores</a>
+          <a href="#" onclick="go('calendario_futbol')">📅 Calendario</a>
+          <a href="#" onclick="go('bases_futbol')">📜 Bases</a>
         </div>
       </li>
-      <li><a href="#" onclick="go('juegos')" class="nav-lib">🎮 JUEGOS</a></li>
-      <li><a href="#" onclick="go('biblioteca')" class="nav-lib">📁 BIBLIOTECA</a></li>
+      <li><a href="#" onclick="go('juegos')" class="drop-btn">🎮 JUEGOS</a></li>
+      <li><a href="#" onclick="go('biblioteca')" class="drop-btn">📁 BIBLIOTECA</a></li>
     </ul>
   </div>
 </nav>
@@ -326,7 +254,7 @@ footer{
 </div>
 
 <footer>
-  AULA DE CIENCIAS © <span id="yr"></span> · PROF. FELIPE JIMÉNEZ · VIÑA DEL MAR
+  AULA DE CIENCIAS © <span id="yr"></span> · PROF. FELIPE JIMÉNEZ
 </footer>
 
 <script>
@@ -343,15 +271,11 @@ const ROUTES = {
   '8basico': s => rComing(s, 'VIII° Básico'),
   'futbol_varones': rFutbolVarones,
   'futbol_damas': rFutbolDamas,
+  'goleadores': rGoleadores,
   'bases_futbol': rBasesFutbol,
   'calendario_futbol': rCalendarioFutbol,
   juegos: rJuegos,
-  biblioteca: rLib,
-  'game-snake': s => rGame(s, 'juego_snake.html', '🐍 Snake'),
-  'game-memoria': s => rGame(s, 'juego_memoria.html', '🃏 Memoria Clásico'),
-  'game-tres': s => rGame(s, 'juego_tictactoe.html', '❌ Tres en Raya'),
-  'game-toninas-mem': s => rGame(s, 'juego_memorice_toninas.html', '🐬 Memorice Toninas'),
-  'game-toninas-lab': s => rGame(s, 'juego_laberinto_toninas.html', '🌀 Laberinto Toninas')
+  biblioteca: rLib
 };
 
 function go(page){
@@ -373,99 +297,43 @@ function rHome(stage){
 
       <h2 class="sh">NOVEDADES & DEPORTES</h2>
       <div class="grid">
-        <div class="card c-laurel">
-          <h3>🏆 ÚLTIMOS GANADORES</h3>
-          <div id="winners-list"><p style="font-size:0.85rem; color:#aaa; font-style:italic;">Consultando el oráculo...</p></div>
-        </div>
         <div class="card c-gold">
           <h3>⚽ CAMPEONATO 2026</h3>
-          <p>Ligas activas. Revisa las tablas, las fechas de los partidos y el reglamento.</p>
+          <p>Ligas activas. Revisa goleadores, fechas y reglamento.</p>
           <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
-            <button class="btn-p" onclick="go('futbol_varones')" style="flex:1">Varones</button>
-            <button class="btn-p" onclick="go('futbol_damas')" style="flex:1; background:#801d5e">Damas</button>
+            <button class="btn-p" onclick="go('goleadores')" style="flex:1">Goleadores</button>
+            <button class="btn-s" onclick="go('calendario_futbol')" style="flex:1">Calendario</button>
           </div>
-          <button class="btn-s" onclick="go('calendario_futbol')" style="width:100%; margin-top:10px;">📅 Calendario de Partidos</button>
         </div>
-      </div>
-
-      <h2 class="sh" style="margin-top:2.2rem;">MÓDULOS ACTIVOS</h2>
-      <div class="grid">
-        <div class="card c-sea" style="cursor:pointer" onclick="go('4medio')">
-          <h3>IV° MEDIO · FÍSICA</h3>
-          <p>Módulo interactivo: Fuerzas Centrales y Dinámica Estelar.</p>
-        </div>
-        <div class="card c-laurel" style="cursor:pointer" onclick="go('juegos')">
+        <div class="card c-laurel">
           <h3>🎮 SALA DE JUEGOS</h3>
-          <p>Desafíos de ingenio, clásicos y las Toninas Marinas.</p>
+          <p>Nuevos desafíos de las Toninas Marinas ya disponibles.</p>
+          <button class="btn-p" onclick="go('juegos')" style="width:100%; margin-top:10px;">IR A JUGAR</button>
         </div>
       </div>
     </div>`;
-  fetchWinners();
 }
+
+function rGoleadores(s){ s.innerHTML = '<h1>TABLA DE GOLEADORES</h1><iframe src="goleadores.html" class="embed-frame"></iframe>'; }
+function r3(s){ s.innerHTML = '<h1>III° Medio</h1><iframe src="bitacora_tech.html" class="embed-frame"></iframe>'; }
+function r4(s){ s.innerHTML = '<h1>IV° Medio</h1><iframe src="tesoros_espacio.html" class="embed-frame"></iframe>'; }
+function r6(s){ s.innerHTML = '<h1>VI° Básico</h1><iframe src="bitacora_6basico.html" class="embed-frame"></iframe>'; }
+function rLib(s){ s.innerHTML = '<h1>Biblioteca</h1><iframe src="https://drive.google.com/embeddedfolderview?id=1_8SD_30CH4lAwBrLSg4sw9yKZiC9kNNJ#list" class="embed-frame"></iframe>'; }
+function rFutbolVarones(s){ s.innerHTML = '<h1>LIGA VARONES</h1><iframe src="tablafutbol.html" class="embed-frame"></iframe>'; }
+function rFutbolDamas(s){ s.innerHTML = '<h1>LIGA DAMAS</h1><iframe src="tablafutbol_fem.html" class="embed-frame"></iframe>'; }
+function rBasesFutbol(s){ s.innerHTML = '<h1>BASES</h1><iframe src="bases_campeonato.html" class="embed-frame"></iframe>'; }
+function rCalendarioFutbol(s){ s.innerHTML = '<h1>CALENDARIO</h1><iframe src="calendario_futbol.html" class="embed-frame"></iframe>'; }
 
 function rJuegos(stage){
-  stage.innerHTML = `
-    <div class="fade-in">
-      <div class="tablet-header"><h1>🎮 SALA DE JUEGOS</h1></div>
-      <div class="grid">
-        <div class="card c-sea" style="cursor:pointer" onclick="go('game-toninas-mem')">
-          <h3>🐬 MEMORICE TONINAS</h3>
-          <p>Entrena tu memoria visual con los habitantes del océano.</p>
-        </div>
-        <div class="card c-laurel" style="cursor:pointer" onclick="go('game-toninas-lab')">
-          <h3>🌀 LABERINTO TONINAS</h3>
-          <p>Ayuda a la tonina a escapar encontrando el camino.</p>
-        </div>
-        <div class="card c-gold" style="cursor:pointer" onclick="go('game-snake')">
-          <h3>🐍 SNAKE</h3>
-          <p>El clásico juego de la serpiente en código retro.</p>
-        </div>
-      </div>
-    </div>`;
-}
-
-function r3(s){ s.innerHTML = '<h1>III° Medio: Tecnología</h1><iframe src="bitacora_tech.html" class="embed-frame"></iframe>'; }
-function r4(s){ s.innerHTML = '<h1>IV° Medio: Física</h1><iframe src="tesoros_espacio.html" class="embed-frame"></iframe>'; }
-function r6(s){ s.innerHTML = '<h1>VI° Básico: Ciencias</h1><iframe src="bitacora_6basico.html" class="embed-frame"></iframe>'; }
-function rLib(s){ s.innerHTML = '<h1>Biblioteca General</h1><iframe src="https://drive.google.com/embeddedfolderview?id=1_8SD_30CH4lAwBrLSg4sw9yKZiC9kNNJ#list" class="embed-frame"></iframe>'; }
-function rFutbolVarones(s){ s.innerHTML = '<h1>LIGA VARONES 2026</h1><iframe src="tablafutbol.html" class="embed-frame"></iframe>'; }
-function rFutbolDamas(s){ s.innerHTML = '<h1>LIGA DAMAS 2026</h1><iframe src="tablafutbol_fem.html" class="embed-frame"></iframe>'; }
-function rBasesFutbol(s){ s.innerHTML = '<h1>BASES DEL CAMPEONATO</h1><iframe src="bases_campeonato.html" class="embed-frame"></iframe>'; }
-function rCalendarioFutbol(s){ s.innerHTML = '<h1>CALENDARIO DE PARTIDOS</h1><iframe src="calendario_futbol.html" class="embed-frame"></iframe>'; }
-
-function rGame(s, file, name){
-  s.innerHTML = `
-    <div class="fade-in">
-      <h1>${name}</h1>
-      <button class="btn-s" onclick="go('juegos')" style="margin-bottom:15px;">← Volver a Juegos</button>
-      <iframe src="${file}" class="embed-frame" style="background:white; border-radius:8px;"></iframe>
-    </div>`;
+  stage.innerHTML = `<h1>🎮 SALA DE JUEGOS</h1><p>Pronto más juegos aquí.</p>`;
 }
 
 function rComing(s, name){
-  s.innerHTML = `
-    <div class="fade-in" style="text-align:center; padding:4rem 2rem;">
-      <h2>🔭 ${name}</h2>
-      <p style="color:#666; margin-top:1rem;">Módulo en preparación.</p>
-      <button class="btn-p" onclick="go('home')" style="margin-top:2rem;">Volver al Inicio</button>
-    </div>`;
+  s.innerHTML = `<div style="text-align:center; padding:4rem 2rem;"><h2>🔭 ${name}</h2><p>Módulo en preparación.</p></div>`;
 }
 
-async function fetchWinners(){
-  const el = document.getElementById('winners-list');
-  try {
-    const res = await fetch(`${SCRIPT_URL}?action=getWinners`);
-    const data = await res.json();
-    if(data && data.length > 0) {
-      el.innerHTML = data.slice(0,5).map(w => `<div style="padding:5px 0; border-bottom:1px solid #eee; font-size:0.9rem;">🏆 <strong>${w.members || w.team}</strong></div>`).join('');
-    } else { el.innerHTML = '<p style="font-size:0.85rem; color:#888;">Sin ganadores registrados.</p>'; }
-  } catch(e) { el.innerHTML = '<p style="font-size:0.85rem; color:#888;">¡Pronto aparecerán!</p>'; }
-}
-
-function toggleNav(){ document.getElementById('ham').parentElement.querySelector('.nav-menu').classList.toggle('open'); }
 document.getElementById('yr').textContent = new Date().getFullYear();
 go('home');
 </script>
-
 </body>
 </html>
