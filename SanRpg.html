@@ -3,22 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RPG Escolar - Un Día de Clases</title>
+    <title>RPG Escolar - Edición Avanzada</title>
     <style>
         :root {
-            --bg-dark: #111827;
-            --patio-green: #22c55e;
-            --cancha-blue: #1e40af;     
-            --sala-gray: #e5e7eb;      
-            --pasillo-gray: #4b5563;
-            --gimnasio-wood: #d97706;
-            --wood-brown: #78350f;     
+            --bg-dark: #0f172a;
             --school-yellow: #f59e0b;  
             --gold: #fcd34d;
             --hp-color: #ef4444;
             --mp-color: #3b82f6;
             --exp-color: #a855f7;
             --text-light: #f8fafc;
+            --panel-bg: rgba(15, 23, 42, 0.95);
         }
 
         * { box-sizing: border-box; touch-action: manipulation; }
@@ -27,21 +22,21 @@
             margin: 0; padding: 0; background-color: var(--bg-dark); color: var(--text-light);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex; flex-direction: column; align-items: center;
-            height: 100vh; overflow: hidden;
-            user-select: none;
-            -webkit-user-select: none;
+            height: 100vh; overflow: hidden; user-select: none; -webkit-user-select: none;
         }
 
         #ui-bar {
             width: 100%; max-width: 500px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px;
             padding: 8px 10px; background: rgba(0,0,0,0.9); font-weight: bold; font-size: 0.8rem;
             border-bottom: 2px solid var(--school-yellow); z-index: 500;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
-        .inv-item { display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.15); padding: 4px 6px; border-radius: 6px; }
+        .inv-item { display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.15); padding: 4px 8px; border-radius: 6px; text-shadow: 1px 1px 2px black;}
         .stat-hp { color: var(--hp-color); } .stat-mp { color: var(--mp-color); } .stat-exp { color: var(--exp-color); }
-        .btn-ui { background:var(--school-yellow); border:none; border-radius:4px; padding:4px 8px; font-weight:bold; cursor:pointer; color:black; font-size: 0.8rem;}
-        .btn-ui.dark { background:#4b5563; color:white; }
+        .btn-ui { background:linear-gradient(to bottom, #fcd34d, #f59e0b); border:1px solid #b45309; border-radius:4px; padding:4px 8px; font-weight:bold; cursor:pointer; color:black; font-size: 0.85rem; box-shadow: 0 2px 4px rgba(0,0,0,0.3);}
+        .btn-ui:active { transform: translateY(1px); }
+        .btn-ui.dark { background:linear-gradient(to bottom, #6b7280, #4b5563); color:white; border-color: #1f2937; }
 
         #game-container {
             position: relative; width: 100%; max-width: 500px; flex-grow: 1;
@@ -50,84 +45,92 @@
 
         canvas {
             width: 100%; aspect-ratio: 1 / 1; max-width: 450px; max-height: 450px;
-            background-color: #000; border: 4px solid var(--wood-brown); border-radius: 8px;
-            image-rendering: pixelated; box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            background-color: #000; border: 4px solid #451a03; border-radius: 8px;
+            image-rendering: pixelated; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            transition: filter 0.1s;
         }
 
-        /* Diálogos y Menús */
+        /* Diálogos Tipo Pokémon */
         .overlay-panel {
             position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
-            width: 92%; max-width: 420px; background: rgba(17, 24, 39, 0.98);
-            border: 3px solid var(--school-yellow); border-radius: 12px; padding: 15px;
+            width: 92%; max-width: 420px; background: var(--panel-bg);
+            border: 3px solid var(--school-yellow); border-radius: 8px; padding: 15px;
             display: none; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.9);
         }
         .overlay-panel.center { top: 50%; bottom: auto; transform: translate(-50%, -50%); max-height: 80vh; overflow-y:auto; }
 
-        #dialog-text { margin: 0 0 12px 0; font-size: 0.95rem; line-height: 1.4; text-align: left; }
+        #dialog-text { margin: 0 0 12px 0; font-size: 1rem; line-height: 1.5; text-align: left; min-height: 45px; text-shadow: 1px 1px 1px black; }
+        .typewriter-cursor { display: inline-block; width: 8px; height: 16px; background: var(--gold); animation: blink 0.8s infinite; margin-left: 2px; vertical-align: middle;}
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         
         .dialog-choices { display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto; padding-right: 5px; }
         .dialog-btn {
-            background: var(--school-yellow); color: #000; border: none; padding: 10px;
-            font-weight: bold; font-size: 0.9rem; cursor: pointer; border-radius: 6px; width: 100%; margin-top:5px;
+            background: linear-gradient(to bottom, #fcd34d, #f59e0b); color: #000; border: 1px solid #b45309; padding: 10px;
+            font-weight: bold; font-size: 0.95rem; cursor: pointer; border-radius: 6px; width: 100%; margin-top:5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.1s;
         }
-        .dialog-btn:active { background: var(--wood-brown); color: white; }
-        .dialog-btn.choice { background: #374151; color: var(--school-yellow); border: 2px solid var(--school-yellow); text-transform: none; margin-top:0;}
+        .dialog-btn:active { transform: scale(0.98); }
+        .dialog-btn.choice { background: #1f2937; color: white; border: 2px solid var(--school-yellow); text-transform: none; margin-top:0;}
+        .dialog-btn.choice:active { background: var(--school-yellow); color: black; }
 
-        /* Panel de Batalla */
+        /* Panel de Batalla Avanzado */
         #battle-panel {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, #9ca3af, #d1d5db);
-            display: none; flex-direction: column; z-index: 600;
-            border-radius: 8px; border: 4px solid #1f2937; overflow: hidden;
+            background: linear-gradient(135deg, #4b5563, #1f2937); display: none; flex-direction: column; z-index: 600;
+            border-radius: 8px; border: 4px solid #111827; overflow: hidden;
         }
-        .battle-scene { flex-grow: 1; position: relative; padding: 10px; }
-        .combatant-box { background: rgba(255,255,255,0.9); border: 3px solid #374151; border-radius: 8px; padding: 10px; color: black; font-weight: bold; width: 60%; position: absolute; box-shadow: 2px 2px 0px rgba(0,0,0,0.3); }
-        #enemy-box { top: 20px; right: 10px; }
-        #player-box { bottom: 20px; left: 10px; }
-        .battle-sprite { font-size: 4rem; position: absolute; }
-        #enemy-sprite { top: 40px; left: 30px; animation: float 2s infinite ease-in-out; }
-        #player-sprite { bottom: 40px; right: 30px; }
-        
-        .hp-bar-bg { width: 100%; height: 10px; background: #ccc; border-radius: 5px; margin-top: 5px; overflow: hidden; border: 1px solid #666; }
-        .hp-bar-fill { height: 100%; background: #22c55e; transition: width 0.3s; }
-        
-        .battle-ui { background: #1f2937; color: white; border-top: 4px solid var(--school-yellow); display: flex; height: 35%; }
-        .battle-log { width: 50%; padding: 10px; font-size: 0.9rem; border-right: 2px solid #4b5563; overflow-y: auto; }
-        .battle-actions { width: 50%; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 10px; }
-        .b-btn { background: #fef08a; color: #78350f; border: 2px solid #b45309; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem;}
-        .b-btn:active { background: var(--school-yellow); }
+        .battle-scene { flex-grow: 1; position: relative; padding: 10px; overflow: hidden; }
+        .battle-bg-effect { position: absolute; top:0; left:0; width:200%; height:200%; background: repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(255,255,255,0.03) 20px, rgba(255,255,255,0.03) 40px); animation: moveBg 20s linear infinite; }
+        @keyframes moveBg { 0% { transform: translate(0,0); } 100% { transform: translate(-50px, -50px); } }
 
-        @keyframes float { 0% { transform: translateY(0); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
+        .combatant-box { background: rgba(255,255,255,0.95); border: 3px solid #374151; border-radius: 8px; padding: 10px; color: black; font-weight: bold; width: 65%; position: absolute; box-shadow: 4px 4px 0px rgba(0,0,0,0.5); z-index: 2;}
+        #enemy-box { top: 20px; right: -100%; transition: right 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #player-box { bottom: 20px; left: -100%; transition: left 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .battle-sprite { font-size: 5rem; position: absolute; z-index: 1; filter: drop-shadow(0 10px 5px rgba(0,0,0,0.5));}
+        #enemy-sprite { top: 60px; left: 30px; animation: floatBattle 2s infinite ease-in-out; opacity: 0; transition: opacity 0.5s; }
+        #player-sprite { bottom: 60px; right: 30px; }
+        @keyframes floatBattle { 0% { transform: translateY(0) scale(1); } 50% { transform: translateY(-15px) scale(1.05); } 100% { transform: translateY(0) scale(1); } }
+        
+        .hp-bar-bg { width: 100%; height: 12px; background: #9ca3af; border-radius: 6px; margin-top: 5px; overflow: hidden; border: 2px solid #374151; }
+        .hp-bar-fill { height: 100%; background: #22c55e; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        .battle-ui { background: var(--panel-bg); color: white; border-top: 4px solid var(--school-yellow); display: flex; height: 35%; position: relative; z-index: 3;}
+        .battle-log { width: 50%; padding: 15px; font-size: 0.95rem; border-right: 2px solid #4b5563; overflow-y: auto; line-height:1.4; }
+        .battle-actions { width: 50%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 15px; }
+        .b-btn { background: linear-gradient(to bottom, #fef08a, #f59e0b); color: #451a03; border: 2px solid #b45309; border-radius: 6px; font-weight: 900; cursor: pointer; font-size: 0.85rem; box-shadow: 0 4px 0 #78350f; transition: all 0.1s;}
+        .b-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #78350f; }
 
-        /* Controles Móviles */
+        /* Controles Móviles Optimizados */
         #controls-container {
             width: 100%; max-width: 500px; padding: 5px 20px 20px 20px;
             display: flex; justify-content: space-between; align-items: center; gap: 15px;
-            touch-action: none; /* Crucial para evitar zoom y scroll en móviles */
-            -webkit-touch-callout: none;
+            touch-action: none; -webkit-touch-callout: none;
         }
 
-        #d-pad { display: grid; grid-template-columns: repeat(3, 60px); grid-template-rows: repeat(2, 60px); gap: 8px; }
+        #d-pad { display: grid; grid-template-columns: repeat(3, 65px); grid-template-rows: repeat(2, 65px); gap: 6px; }
         .d-btn { 
-            background: rgba(255,255,255,0.15); border: 2px solid var(--school-yellow); border-radius: 12px; 
-            color: white; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; 
-            user-select: none; -webkit-user-select: none; touch-action: none;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05)); 
+            border: 2px solid rgba(245, 158, 11, 0.5); border-radius: 12px; color: white; font-size: 1.8rem; 
+            display: flex; align-items: center; justify-content: center; 
+            user-select: none; -webkit-user-select: none; touch-action: none; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
         }
-        .d-btn:active { background: var(--school-yellow); color: black; }
+        .d-btn:active, .d-btn.pressed { background: rgba(245, 158, 11, 0.6); border-color: var(--school-yellow); box-shadow: 0 0 15px var(--school-yellow); transform: scale(0.95); }
         #btn-up { grid-column: 2; grid-row: 1; } #btn-left { grid-column: 1; grid-row: 2; }
         #btn-down { grid-column: 2; grid-row: 2; } #btn-right { grid-column: 3; grid-row: 2; }
         
         #btn-action, #btn-exit {
-            width: 70px; height: 70px; border-radius: 50%; border: 4px solid var(--school-yellow); font-weight: 900; font-size: 1rem;
-            display: flex; align-items: center; justify-content: center; user-select: none; text-align:center; -webkit-user-select: none; touch-action: none;
+            width: 75px; height: 75px; border-radius: 50%; border: 4px solid var(--school-yellow); font-weight: 900; font-size: 1.2rem;
+            display: flex; align-items: center; justify-content: center; user-select: none; text-align:center; touch-action: none;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.5), inset 0 -5px 15px rgba(0,0,0,0.3); transition: transform 0.1s;
         }
-        #btn-action { background: rgba(245, 158, 11, 0.2); color: var(--school-yellow); }
-        #btn-action:active { background: var(--school-yellow); color: black; transform: scale(0.95); }
-        #btn-exit { background: rgba(239, 68, 68, 0.2); border-color: var(--hp-color); color: var(--hp-color); display: none;}
-        #btn-exit:active { background: var(--hp-color); color: white; transform: scale(0.95); }
-        #damage-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(239, 68, 68, 0.4); z-index: 400; display: none; pointer-events: none; }
+        #btn-action { background: radial-gradient(circle, #fbbf24 0%, #d97706 100%); color: #451a03; }
+        #btn-action:active { transform: translateY(4px) scale(0.95); box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        #btn-exit { background: radial-gradient(circle, #f87171 0%, #dc2626 100%); border-color: #991b1b; color: white; display: none; font-size: 0.9rem;}
+        #btn-exit:active { transform: translateY(4px) scale(0.95); }
         
-        /* Permitir seleccionar texto solo en el input */
+        .damage-shake { animation: shake 0.3s ease-in-out; }
+        @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-10px);} 75%{transform:translateX(10px);} }
+        #flash-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: white; z-index: 550; opacity: 0; pointer-events: none; }
         #name-input { user-select: auto; -webkit-user-select: auto; }
 
         @media (min-width: 768px) { #controls-container { display: none; } }
@@ -150,11 +153,12 @@
 
     <div id="game-container">
         <canvas id="gameCanvas" width="400" height="400"></canvas>
-        <div id="damage-overlay"></div>
+        <div id="flash-overlay"></div>
         
-        <!-- PANEL DE BATALLA RPG -->
+        <!-- BATTLE PANEL -->
         <div id="battle-panel">
             <div class="battle-scene">
+                <div class="battle-bg-effect"></div>
                 <div id="enemy-sprite" class="battle-sprite">😈</div>
                 <div id="enemy-box" class="combatant-box">
                     <div style="display:flex; justify-content:space-between;">
@@ -172,7 +176,7 @@
                 </div>
             </div>
             <div class="battle-ui">
-                <div class="battle-log" id="battle-log">¡Aparece un enemigo salvaje!</div>
+                <div class="battle-log" id="battle-log"></div>
                 <div class="battle-actions">
                     <button class="b-btn" onclick="battleAction('ataque')">⚔️ Atacar</button>
                     <button class="b-btn" onclick="battleAction('habilidad')">✨ Habilidad (15MP)</button>
@@ -182,45 +186,26 @@
             </div>
         </div>
 
+        <!-- DIALOG OVERLAYS -->
         <div id="dialog-box" class="overlay-panel">
             <p id="dialog-text"></p>
             <div id="name-input-container" style="display:none;">
-                <input type="text" id="name-input" placeholder="Tu nombre" style="width:100%; padding:10px; margin-bottom:10px; background:rgba(0,0,0,0.5); color:white; border:2px solid var(--school-yellow); border-radius:6px; text-align:center;">
+                <input type="text" id="name-input" placeholder="Tu nombre" style="width:100%; padding:10px; margin-bottom:10px; background:rgba(0,0,0,0.5); color:white; border:2px solid var(--school-yellow); border-radius:6px; text-align:center; font-weight:bold;">
                 <button class="dialog-btn" onclick="submitName()">Presentarse</button>
             </div>
             <div id="dialog-buttons" class="dialog-choices"></div>
         </div>
 
         <div id="inventory-panel" class="overlay-panel center">
-            <h3 style="margin-top:0; color:var(--gold); text-align:center;">🎒 Tu Mochila</h3>
-            <p style="text-align:center; font-size:0.8rem; margin:0; color:#ccc;">Arma: <span id="equipped-weapon">Manos desnudas</span></p>
-            <ul id="inv-items-list"></ul>
+            <h3 style="margin-top:0; color:var(--gold); text-align:center; border-bottom:1px solid #444; padding-bottom:5px;">🎒 Tu Mochila</h3>
+            <p style="text-align:center; font-size:0.8rem; margin:0 0 10px 0; color:#ccc;">Arma: <span id="equipped-weapon" style="color:var(--gold); font-weight:bold;">Manos desnudas</span></p>
+            <ul id="inv-items-list" style="list-style:none; padding:0; margin:0; max-height:200px; overflow-y:auto;"></ul>
             <button class="dialog-btn" onclick="closeInventory()">Cerrar</button>
         </div>
         
-        <div id="memory-panel" class="overlay-panel center">
-            <h3 style="margin-top:0; color:var(--gold); text-align:center;">🔬 Memorice Científico</h3>
-            <p style="text-align:center; font-size:0.85rem;">Encuentra los pares.</p>
-            <div id="memory-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 15px 0;"></div>
-            <button class="dialog-btn" onclick="closeMemoryGame()">Cerrar</button>
-        </div>
-
-        <div id="piano-panel" class="overlay-panel center">
-            <h3 style="margin-top:0; color:var(--gold); text-align:center;">🎹 Sala de Música</h3>
-            <p style="text-align:center; font-size:0.85rem; color:#ccc;">Toca para componer.</p>
-            <div class="piano-keys" style="display: flex; justify-content: center; gap: 4px; margin: 20px 0; height: 120px;">
-                <div class="key" style="background: white; color: black; font-weight: bold; flex: 1; max-width: 45px; border-radius: 0 0 8px 8px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; cursor: pointer; border: 1px solid #ccc;" onclick="playNote(261.63)">Do</div>
-                <div class="key" style="background: white; color: black; font-weight: bold; flex: 1; max-width: 45px; border-radius: 0 0 8px 8px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; cursor: pointer; border: 1px solid #ccc;" onclick="playNote(293.66)">Re</div>
-                <div class="key" style="background: white; color: black; font-weight: bold; flex: 1; max-width: 45px; border-radius: 0 0 8px 8px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; cursor: pointer; border: 1px solid #ccc;" onclick="playNote(329.63)">Mi</div>
-                <div class="key" style="background: white; color: black; font-weight: bold; flex: 1; max-width: 45px; border-radius: 0 0 8px 8px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; cursor: pointer; border: 1px solid #ccc;" onclick="playNote(349.23)">Fa</div>
-                <div class="key" style="background: white; color: black; font-weight: bold; flex: 1; max-width: 45px; border-radius: 0 0 8px 8px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; cursor: pointer; border: 1px solid #ccc;" onclick="playNote(392.00)">Sol</div>
-                <div class="key" style="background: white; color: black; font-weight: bold; flex: 1; max-width: 45px; border-radius: 0 0 8px 8px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; cursor: pointer; border: 1px solid #ccc;" onclick="playNote(440.00)">La</div>
-                <div class="key" style="background: white; color: black; font-weight: bold; flex: 1; max-width: 45px; border-radius: 0 0 8px 8px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; cursor: pointer; border: 1px solid #ccc;" onclick="playNote(493.88)">Si</div>
-            </div>
-            <button class="dialog-btn" onclick="closePiano()">Cerrar Piano</button>
-        </div>
     </div>
 
+    <!-- CONTROLS -->
     <div id="controls-container">
         <div id="d-pad">
             <div class="d-btn" id="btn-up">▲</div>
@@ -235,59 +220,68 @@
     </div>
 
 <script>
-const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
+// ==========================================
+// MOTOR GRÁFICO Y CORE DEL JUEGO (CANVAS 2D)
+// ==========================================
+const canvas = document.getElementById('gameCanvas'); 
+const ctx = canvas.getContext('2d');
 const TILE_SIZE = 40; const ROWS = 10; const COLS = 10;
+const SPEED = 2.5; // Velocidad de interpolación en píxeles (movimiento fluido)
 
-// Configuración Piano
-let audioCtx;
-function initAudio() { if(!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } }
-function playNote(frequency) {
-    initAudio(); if(audioCtx.state === 'suspended') audioCtx.resume();
-    const oscillator = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
-    oscillator.type = 'sine'; oscillator.frequency.value = frequency;
-    oscillator.connect(gainNode); gainNode.connect(audioCtx.destination);
-    oscillator.start(); gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 1.5);
-    oscillator.stop(audioCtx.currentTime + 1.5);
-}
-
-// Estado del Jugador
+// Estado del Jugador (Se agrega px y py para posición en píxeles)
 let player = { 
-    x: 5, y: 8, facing: 'up', sprite: '🧑‍🎓', 
+    x: 5, y: 8, px: 5*TILE_SIZE, py: 8*TILE_SIZE, facing: 'up', sprite: '🧑‍🎓', 
     hp: 100, maxHp: 100, mp: 50, maxMp: 50,
-    lvl: 1, exp: 0, maxExp: 100, atk: 10, weapon: { name: 'Manos desnudas', dmg: 0 }
+    lvl: 1, exp: 0, maxExp: 100, atk: 12, weapon: { name: 'Manos desnudas', dmg: 0 }
 };
-let inventory = []; let coins = 3; 
+let inventory = []; let coins = 5; 
 let previousMapId = 'entrada'; let previousPos = {x: 5, y: 8};
+let currentMapId = 'entrada'; let currentMap = [];
 
 let progress = { 
     playerName: "", doorOpen: false, huertoPlanted: false, questKella: 0, 
     kinderUnlocked: false, questParvularia: 0, inspectoriaUnlocked: false 
 };
 
+// Input State Manger
+const keys = { up: false, down: false, left: false, right: false, action: false };
+let isMoving = false; // Bloqueo mientras transita entre tiles
+
+// ==========================================
+// BANCO DE DATOS (MAPAS Y LORE)
+// ==========================================
 const qBanks = {
-    'Felipe': [{ q: "¿Fórmula química del agua?", opts: ["H2O", "CO2", "HO2"], ans: 0 }, { q: "Fuerza que nos atrae a la Tierra:", opts: ["Magnetismo", "Fricción", "Gravedad"], ans: 2 }],
-    'Paulina': [{ q: "Raíz cuadrada de 144:", opts: ["12", "14", "16"], ans: 0 }, { q: "Área de un rectángulo de 5x4:", opts: ["9", "20", "18"], ans: 1 }],
-    'Sandra': [{ q: "Año Primera Junta de Gobierno en Chile:", opts: ["1810", "1818", "1812"], ans: 0 }],
-    'Rosita': [{ q: "Sinónimo de Efímero:", opts: ["Eterno", "Pasajero", "Largo"], ans: 1 }]
+    'Felipe': [{ q: "¿Elemento más abundante del universo?", opts: ["Oxígeno", "Hidrógeno", "Carbono"], ans: 1 }, { q: "Fuerza que nos atrae a la Tierra:", opts: ["Magnetismo", "Fricción", "Gravedad"], ans: 2 }],
+    'Paulina': [{ q: "Raíz cuadrada de 144:", opts: ["12", "14", "16"], ans: 0 }, { q: "¿Cuánto es 7 x 8?", opts: ["54", "56", "64"], ans: 1 }],
+    'Sandra': [{ q: "Año de la Independencia de Chile:", opts: ["1810", "1818", "1812"], ans: 1 }, {q: "Combate Naval de Iquique:", opts: ["21 de Mayo", "18 de Sept", "Glorias Navales"], ans: 0}],
+    'Rosita': [{ q: "Sinónimo de Efímero:", opts: ["Eterno", "Pasajero", "Largo"], ans: 1 }, {q: "Autor de Don Quijote:", opts: ["Cervantes", "Gabo", "Neruda"], ans: 0}],
+    'Smith': [{q: "¿Cómo se dice 'Manzana'?", opts:["Apple", "Orange", "Banana"], ans:0}, {q: "Verbo To Be para 'I':", opts:["Is", "Are", "Am"], ans:2}],
+    'Leo': [{q: "Colores Primarios:", opts:["Rojo, Azul, Amarillo", "Verde, Morado, Naranja", "Blanco y Negro"], ans:0}]
 };
+
+const casualDialogs = [
+    "¡El examen de mate estaba imposible!", "Quiero puro que toque el timbre para ir a jugar a la pelota.", 
+    "¿Viste lo que subieron a TikTok ayer?", "Tengo un hambre que me muero, ojalá vendan sopaipillas.",
+    "El profe me retó por estar dibujando en clases."
+];
 
 const mapLinks = { 
     'sala_felipe': 'pasillo', 'sala_paulina': 'pasillo', 'sala_sandra': 'pasillo',
     'sala_rosita': 'pasillo', 'sala_musica': 'pasillo', 'sala_contencion': 'pasillo',
     'sala_psicopedagogia': 'pasillo', 'biblioteca': 'pasillo', 'gimnasio': 'patio', 
-    'kinder': 'patio', 'inspectoria': 'entrada', 'patio': 'entrada', 'pasillo': 'entrada'
+    'kinder': 'patio', 'inspectoria': 'entrada', 'casino': 'patio', 'patio': 'entrada', 'pasillo': 'entrada'
 };
 
 const maps = {
     'entrada': [
         ['#','#','#','#','D','D','#','#','#','#'],
-        ['#','.','.','I','.','.','.','.','.','#'],
+        ['#','.','.','I','.','.','G','.','.','#'], // G = Guardia
         ['#','.','T','.','.','.','T','.','.','#'],
         ['#','.','.','.','z','.','.','.','.','#'],
         ['D','.','$','.','.','.','.','$','.','#'], 
         ['D','.','.','.','.','.','.','.','.','#'], 
         ['#','.','T','.','.','.','T','.','.','#'],
-        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','.','.','.','u','.','.','.','.','#'], // u = Tía Aseo
         ['#','.','.','.','.','🧑‍🎓','.','.','.','#'],
         ['#','#','#','#','#','#','#','#','#','#']
     ],
@@ -295,7 +289,7 @@ const maps = {
         ['#','#','#','#','#','#','#','#','#','#'],
         ['#','.','.','.','_','.','.','.','.','#'],
         ['#','.','S','S','.','S','S','.','.','#'],
-        ['#','.','i','.','.','.','v','.','.','#'],
+        ['#','.','i','.','q','.','v','.','.','#'], // q = Director
         ['#','.','.','.','.','.','.','.','.','E'], 
         ['#','.','b','b','.','.','.','.','.','E'], 
         ['#','.','.','.','.','.','.','.','.','#'],
@@ -315,13 +309,13 @@ const maps = {
         ['E','.','L','L','.','.','L','L','.','E'],
         ['#','#','#','#','E','E','#','#','#','#']
     ],
-    'sala_felipe': [ 
+    'sala_felipe': [ // Felipe y Leo
         ['#','#','#','#','#','#','#','#','#','#'],
         ['#','.','.','.','P','y','.','W','.','#'],
         ['#','.','.','.','_','.','.','.','.','#'],
-        ['#','.','N','N','.','N','N','.','.','#'],
-        ['#','.','N','C','.','N','B','.','.','E'], 
-        ['#','.','N','N','.','N','N','.','.','E'],
+        ['#','.','N','N','.','a','a','.','.','#'], // a = arte
+        ['#','.','N','C','.','a','l','.','.','E'], // l = Profe Leo
+        ['#','.','N','N','.','a','a','.','.','E'],
         ['#','.','.','.','.','.','.','.','.','#'],
         ['#','.','S','S','.','S','S','.','.','#'],
         ['#','.','.','.','.','.','.','.','.','#'],
@@ -339,7 +333,7 @@ const maps = {
         ['#','.','.','.','.','.','.','.','.','#'],
         ['#','#','#','#','E','E','#','#','#','#']
     ],
-    'sala_sandra': [ 
+    'sala_sandra': [ // Sandra y Mr Smith
         ['#','#','#','#','#','#','#','#','#','#'],
         ['#','.','.','.','X','.','.','.','.','#'],
         ['#','.','.','.','_','.','.','.','.','#'],
@@ -347,7 +341,7 @@ const maps = {
         ['#','.','S','S','.','S','S','.','.','#'],
         ['#','.','.','.','.','.','.','.','.','#'],
         ['#','.','S','S','.','S','S','.','.','#'],
-        ['#','.','S','S','.','S','S','.','.','#'],
+        ['#','.','S','S','.','S','E','.','.','#'], // E = Mr Smith
         ['#','.','.','.','.','.','.','.','.','#'],
         ['#','#','#','#','E','E','#','#','#','#']
     ],
@@ -375,52 +369,28 @@ const maps = {
         ['#','.','.','.','.','.','.','.','.','#'],
         ['#','#','#','#','#','#','#','#','#','#']
     ],
-    'sala_musica': [ 
-        ['#','#','#','#','#','#','#','#','#','#'],
-        ['#','.','.','♪','U','♫','.','.','.','#'], 
-        ['#','.','.','.','_','.','.','.','.','#'],
-        ['#','.','Q','Q','.','G','G','.','.','#'], 
-        ['E','.','.','.','.','.','.','.','.','#'], 
-        ['E','.','d','d','.','d','d','.','.','#'], 
-        ['#','.','.','.','.','.','.','.','.','#'],
-        ['#','.','.','.','.','.','.','.','.','#'],
-        ['#','.','$','.','.','.','.','$','.','#'],
-        ['#','#','#','#','#','#','#','#','#','#']
-    ],
-    'sala_contencion': [
-        ['#','#','#','#','#','#','#','#','#','#'],
-        ['#','.','.','.','T','.','.','.','.','#'],
-        ['#','.','Y','.','.','.','.','Y','.','#'],
-        ['#','.','.','.','5','.','6','.','.','#'],
-        ['#','.','.','.','.','.','.','.','.','#'],
-        ['#','.','Y','.','.','.','.','Y','.','#'],
-        ['#','.','.','.','.','.','.','.','.','#'],
-        ['#','.','.','.','.','.','.','.','.','#'],
-        ['E','.','.','.','.','.','.','.','.','#'],
-        ['E','#','#','#','#','#','#','#','#','#']
-    ],
-    'sala_psicopedagogia': [
-        ['#','#','#','#','#','#','#','#','#','#'],
-        ['#','.','.','.','T','.','.','.','.','#'],
-        ['#','.','.','.','7','.','.','.','.','#'],
-        ['#','.','.','.','=','.','.','.','.','#'],
-        ['#','.','.','.','.','.','.','.','.','#'],
-        ['#','.','b','b','.','.','b','b','.','#'],
-        ['#','.','.','.','.','.','.','.','.','#'],
-        ['#','.','.','.','.','.','.','.','.','#'],
-        ['#','#','#','#','#','#','#','#','#','E'],
-        ['#','#','#','#','#','#','#','#','#','E']
-    ],
     'patio': [
-        ['#','#','#','#','E','E','#','#','#','#'], 
+        ['#','#','#','#','E','E','#','E','E','#'], // Dcha arriba: Casino
         ['#','K','K','K','.','.','e','z','.','#'], 
-        ['#','=','V','=','.','.','.','.','.','#'], 
+        ['#','=','V','=','.','.','.','.','.','E'], // Casino entrance
         ['E','.','.','.','.','.','.','.','e','E'], 
-        ['E','.','.','.','.','.','.','.','.','E'], 
+        ['E','.','.','.','.','.','.','.','.','#'], 
         ['#','.','H','H','.','.','A','.','.','#'], 
         ['#','.','H','H','.','.','.','.','.','#'],
         ['#','.','.','.','.','.','T','.','.','#'],
         ['#','$','2','.','.','.','.','.','$','#'], 
+        ['#','#','#','#','#','#','#','#','#','#']
+    ],
+    'casino': [ // Nuevo Mapa: Casino/Cafetería
+        ['#','#','#','#','#','#','#','#','#','#'],
+        ['#','=','=','=','O','=','=','=','.','#'], // O = Cocinera
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','.','S','S','.','S','S','.','.','#'],
+        ['#','.','S','S','.','S','S','.','.','E'],
+        ['#','.','.','.','.','.','.','.','.','E'],
+        ['#','.','S','S','.','S','S','.','.','#'],
+        ['#','.','S','S','.','S','S','.','.','#'],
+        ['#','.','.','.','.','B','.','.','.','#'],
         ['#','#','#','#','#','#','#','#','#','#']
     ],
     'gimnasio': [ 
@@ -448,192 +418,188 @@ const maps = {
         ['#','#','#','#','E','E','#','#','#','#']
     ]
 };
+// Add minor empty maps for completeness to avoid errors
+maps['sala_musica'] = [['#','#','#','#','#','#','#','#','#','#'],['#','.','.','.','.','.','.','.','.','#'],['#','.','.','.','.','.','.','.','.','#'],['#','.','.','.','.','.','.','.','.','#'],['E','.','.','.','.','.','.','.','.','#'],['E','.','.','.','.','.','.','.','.','#'],['#','.','.','.','.','.','.','.','.','#'],['#','.','.','.','.','.','.','.','.','#'],['#','.','.','.','.','.','.','.','.','#'],['#','#','#','#','#','#','#','#','#','#']];
+maps['sala_contencion'] = maps['sala_musica']; maps['sala_psicopedagogia'] = maps['sala_musica'];
 
+// Ajuste Inicial
 maps['entrada'][4][9] = 'E'; maps['entrada'][5][9] = 'E';
-let currentMapId = 'entrada'; let currentMap = JSON.parse(JSON.stringify(maps[currentMapId]));
+currentMap = JSON.parse(JSON.stringify(maps[currentMapId]));
 
-const renderTile = (char) => {
-    const sprites = {
-        'D': '🚪', 'E': '🚪', 'I': '👨‍✈️', 'P': '👨‍🏫', 'M': '👩‍🏫', 'X': '👩‍🏫', 'R': '👵', 'w': '🤸‍♀️', 'V': '👩‍🍳', 
-        '7': '👩🏼‍🏫', '5': '👩🏻‍⚕️', '6': '👩🏼‍⚕️', 'C': '👦', 'B': '🤢', 'F': '🏃‍♂️', 'A': '👧', '2': '👩‍🦰', 
-        '$': '🪙', '🌱': '🌱', '_': '🖥️', 'T': '🪴', 'H': '🟫', 'S': '🪑', 'N': '🔬', 'Q': '🎹', 'G': '🎸', 
-        'Y': '🛋️', 'b': '📚', 'L': '🗄️', 'W': '🖼️', 'd':'🥁', 'm':'📐', 'n':'🔢', 'r':'📏', 'p':'📊', 
-        'z': '🥱', 'y': '👩🏻‍🔬', '8': '🧑‍🏫', 'J': '👨🏽‍🏫', 'Z': '👨🏻‍🦲', 'j': '🧃', 't': '🧸', 's': '🛝', 'a': '🎨', 
-        'p': '👩🏼‍🍼', 'i': '👨🏻‍✈️', 'v': '👩🏻‍✈️', 'e': '😈', '!': '🖊️', '?': '🧽', '*': '🔨'
-    };
-    return sprites[char] || '';
+const spritesDB = {
+    'D': '🚪', 'E': '🚪', 'I': '👨‍✈️', 'P': '👨‍🏫', 'M': '👩‍🏫', 'X': '👩‍🏫', 'R': '👵', 'w': '🤸‍♀️', 'V': '👩‍🍳', 
+    'C': '👦', 'B': '🤢', 'F': '🏃‍♂️', 'A': '👧', '2': '👩‍🦰', '$': '🪙', '🌱': '🌱', '_': '🖥️', 'T': '🪴', 
+    'H': '🟫', 'S': '🪑', 'N': '🔬', 'b': '📚', 'L': '🗄️', 'W': '🖼️', 'z': '🥱', 'y': '👩🏻‍🔬', '8': '🧑‍🏫', 
+    'J': '👨🏽‍🏫', 'Z': '👨🏻‍🦲', 'j': '🧃', 't': '🧸', 's': '🛝', 'a': '🎨', 'p': '👩🏼‍🍼', 'i': '👨🏻‍✈️', 'v': '👩🏻‍✈️', 
+    'e': '😈', '!': '🖊️', '?': '🧽', '*': '🔨', 'G': '💂', 'u': '🧹', 'q': '🕴️', 'l': '👨‍🎨', 'E': '👨🏼‍🏫', 'O': '👩🏽‍🍳'
 };
 
+// ==========================================
+// RENDERIZADO AVANZADO (LOOP 60FPS)
+// ==========================================
+let time = 0;
 function drawMap() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    let isClassroom = ['sala_felipe', 'sala_paulina', 'sala_sandra', 'sala_rosita', 'sala_musica', 'sala_psicopedagogia', 'biblioteca'].includes(currentMapId);
+    
+    // 1. Dibujar Pisos Texturizados
     for(let r=0; r<ROWS; r++) {
         for(let c=0; c<COLS; c++) {
             let px = c * TILE_SIZE; let py = r * TILE_SIZE;
-            if(currentMapId === 'patio') { ctx.fillStyle = ((r+c)%2===0) ? '#16a34a' : '#22c55e'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
-            else if (currentMapId === 'gimnasio') { ctx.fillStyle = ((r+c)%2===0) ? '#1e3a8a' : '#1e40af'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); } 
-            else if (currentMapId === 'pasillo') { ctx.fillStyle = ((r+c)%2===0) ? '#374151' : '#4b5563'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
-            else if (currentMapId === 'sala_contencion') { ctx.fillStyle = '#fbcfe8'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
-            else if (currentMapId === 'sala_musica') { ctx.fillStyle = ((r+c)%2===0) ? '#e0f2fe' : '#bae6fd'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
-            else if (currentMapId === 'biblioteca') { ctx.fillStyle = ((r+c)%2===0) ? '#fef3c7' : '#fde68a'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
-            else if (currentMapId === 'kinder') { ctx.fillStyle = ((r+c)%2===0) ? '#fef08a' : '#fde047'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
-            else if (currentMapId === 'inspectoria') { ctx.fillStyle = ((r+c)%2===0) ? '#e2e8f0' : '#cbd5e1'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
-            else if (isClassroom) { ctx.fillStyle = ((r+c)%2===0) ? '#e5e7eb' : '#d1d5db'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
-            else { ctx.fillStyle = '#9ca3af'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
+            let isAlt = (r+c)%2 === 0;
+            
+            if(['sala_felipe', 'sala_paulina', 'sala_sandra', 'sala_rosita', 'biblioteca', 'inspectoria'].includes(currentMapId)) {
+                ctx.fillStyle = isAlt ? '#cbd5e1' : '#e2e8f0'; // Piso baldosa interior
+            } else if (currentMapId === 'patio') {
+                ctx.fillStyle = isAlt ? '#15803d' : '#16a34a'; // Pasto/Patio
+            } else if (currentMapId === 'gimnasio') {
+                ctx.fillStyle = isAlt ? '#1e3a8a' : '#1e40af'; // Cancha
+            } else if (currentMapId === 'pasillo') {
+                ctx.fillStyle = isAlt ? '#334155' : '#475569'; // Pasillo oscuro
+            } else if (currentMapId === 'kinder') {
+                ctx.fillStyle = isAlt ? '#fde047' : '#fef08a'; // Kinder amarillo
+            } else if (currentMapId === 'casino') {
+                ctx.fillStyle = isAlt ? '#fda4af' : '#fecdd3'; // Baldosas rosadas
+            } else {
+                ctx.fillStyle = isAlt ? '#9ca3af' : '#d1d5db'; // Entrada y default
+            }
+            ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+            
+            // Detalles de baldosas (líneas sutiles)
+            ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+            ctx.strokeRect(px, py, TILE_SIZE, TILE_SIZE);
         }
     }
-    if(currentMapId === 'gimnasio') { ctx.strokeStyle = 'white'; ctx.lineWidth = 3; ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40); ctx.beginPath(); ctx.moveTo(20, canvas.height/2); ctx.lineTo(canvas.width-20, canvas.height/2); ctx.stroke(); ctx.beginPath(); ctx.arc(canvas.width/2, canvas.height/2, 40, 0, Math.PI*2); ctx.stroke(); }
-    ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.font = '26px Arial';
 
+    if(currentMapId === 'gimnasio') {
+        ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 3; 
+        ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+        ctx.beginPath(); ctx.moveTo(20, canvas.height/2); ctx.lineTo(canvas.width-20, canvas.height/2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(canvas.width/2, canvas.height/2, 40, 0, Math.PI*2); ctx.stroke();
+    }
+
+    // 2. Dibujar Entidades y Paredes (Con sombras y animaciones)
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    
     for(let r=0; r<ROWS; r++) {
         for(let c=0; c<COLS; c++) {
-            let tile = currentMap[r][c]; let px = c * TILE_SIZE; let py = r * TILE_SIZE;
-            if (tile === '#') { ctx.fillStyle = (currentMapId === 'patio' || currentMapId === 'kinder') ? '#064e3b' : '#78350f'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
-            else if (tile === 'L') { ctx.fillStyle = '#6b7280'; ctx.fillRect(px+2, py+2, TILE_SIZE-4, TILE_SIZE-4); }
-            else if (tile === 'H') { ctx.fillStyle = '#451a03'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
-            else if (tile === 'S' || tile === 'b') { ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(px+8, py+8, TILE_SIZE-6, TILE_SIZE-6); ctx.fillStyle = '#8b4513'; ctx.fillRect(px+2, py+2, TILE_SIZE-4, TILE_SIZE-4); }
-            else if (tile === 'N') { ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(px+8, py+8, TILE_SIZE-6, TILE_SIZE-6); ctx.fillStyle = '#cbd5e1'; ctx.fillRect(px+2, py+2, TILE_SIZE-4, TILE_SIZE-4); }
-            else if (tile === 'K') { ctx.fillStyle = (c % 2 === 0) ? '#ef4444' : '#ffffff'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
-            else if (tile === '=') { ctx.fillStyle = '#b45309'; ctx.fillRect(px, py + 10, TILE_SIZE, TILE_SIZE - 20); }
+            let tile = currentMap[r][c]; 
+            let px = c * TILE_SIZE; let py = r * TILE_SIZE;
+
+            if (tile === '#') { 
+                ctx.fillStyle = (currentMapId === 'patio' || currentMapId === 'kinder') ? '#064e3b' : '#451a03'; 
+                // Efecto 3D Pared
+                ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+                ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(px, py+TILE_SIZE-5, TILE_SIZE, 5); 
+            }
+            else if (tile === 'L' || tile === 'H' || tile === '=' || tile === 'S' || tile === 'N' || tile === 'b') { 
+                // Muebles Básicos
+                let color = tile==='L'?'#6b7280':tile==='H'?'#451a03':tile==='='?'#b45309':tile==='N'?'#94a3b8':'#8b4513';
+                ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(px+5, py+10, TILE_SIZE-10, TILE_SIZE-10); // Sombra
+                ctx.fillStyle = color; ctx.fillRect(px+2, py+2, TILE_SIZE-4, TILE_SIZE-4); 
+            }
             else if (tile === 'Y') { ctx.fillStyle = 'rgba(216, 180, 254, 0.5)'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
 
-            let emoji = renderTile(tile);
-            if(tile === 'W' && currentMapId === 'gimnasio') emoji = '🤸‍♀️'; 
-            if (emoji && emoji !== '🚪') ctx.fillText(emoji, px + TILE_SIZE/2, py + TILE_SIZE/2);
-            else if (emoji === '🚪') { ctx.fillStyle = '#451a03'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); } 
-            if (tile === 'B') { ctx.font = '12px Arial'; ctx.fillText('🪰', px + TILE_SIZE/2 + 10, py + TILE_SIZE/2 - 10); ctx.font = '26px Arial'; }
+            let emoji = spritesDB[tile];
+            if (emoji && emoji !== '🚪') {
+                // Sombra circular bajo NPCs/Objetos
+                ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                ctx.beginPath(); ctx.ellipse(px + TILE_SIZE/2, py + TILE_SIZE - 8, 12, 6, 0, 0, Math.PI*2); ctx.fill();
+                
+                // Animación flotante para personajes
+                let isNPC = ['I','P','M','X','R','w','V','C','B','F','A','2','y','8','J','Z','G','u','q','l','E','O','e','p','i','v'].includes(tile);
+                let floatY = isNPC ? Math.sin(time * 4 + c) * 2 : 0; // Respiración suave
+                
+                ctx.font = isNPC ? '28px Arial' : '24px Arial';
+                ctx.fillText(emoji, px + TILE_SIZE/2, py + TILE_SIZE/2 + floatY);
+            }
+            else if (emoji === '🚪') { 
+                ctx.fillStyle = '#271001'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); 
+            } 
         }
     }
-    ctx.fillText(player.sprite, player.x * TILE_SIZE + TILE_SIZE/2, player.y * TILE_SIZE + TILE_SIZE/2);
+
+    // 3. Dibujar Jugador
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.beginPath(); ctx.ellipse(player.px + TILE_SIZE/2, player.py + TILE_SIZE - 8, 14, 7, 0, 0, Math.PI*2); ctx.fill();
+    
+    let playerFloatY = isMoving ? Math.sin(time * 15) * 3 : Math.sin(time * 5) * 1.5; // Salto al caminar, respira al detenerse
+    ctx.font = '28px Arial';
+    ctx.fillText(player.sprite, player.px + TILE_SIZE/2, player.py + TILE_SIZE/2 + playerFloatY);
+
     document.getElementById('btn-exit').style.display = (currentMapId !== 'entrada') ? 'flex' : 'none';
 }
 
-function handleTeleport(nx, ny) {
-    previousMapId = currentMapId; previousPos = {x: player.x, y: player.y};
-    if (currentMapId === 'entrada') {
-        if (ny === 0) changeMap('pasillo', nx, 8); else if (nx === 9) changeMap('patio', 1, ny);
-        else if (nx === 0) { if(!progress.inspectoriaUnlocked) { showDialog("🔒 Inspectoría General. Acceso denegado."); return; } changeMap('inspectoria', 8, ny); }
+function updateGame(deltaTime) {
+    time += deltaTime * 0.001;
+
+    // Lógica de Movimiento Interpolado
+    let targetX = player.x * TILE_SIZE;
+    let targetY = player.y * TILE_SIZE;
+
+    if (Math.abs(player.px - targetX) > 1 || Math.abs(player.py - targetY) > 1) {
+        isMoving = true;
+        // Mover px/py hacia el target
+        if (player.px < targetX) player.px = Math.min(player.px + SPEED, targetX);
+        if (player.px > targetX) player.px = Math.max(player.px - SPEED, targetX);
+        if (player.py < targetY) player.py = Math.min(player.py + SPEED, targetY);
+        if (player.py > targetY) player.py = Math.max(player.py - SPEED, targetY);
+    } else {
+        // Llegó exactamente a la grilla
+        player.px = targetX; player.py = targetY;
+        isMoving = false;
+
+        // Procesar Input Continuo si no hay UI bloqueando
+        if(canMove()) {
+            if(keys.up) attemptMove(0, -1, 'up');
+            else if(keys.down) attemptMove(0, 1, 'down');
+            else if(keys.left) attemptMove(-1, 0, 'left');
+            else if(keys.right) attemptMove(1, 0, 'right');
+        }
     }
-    else if (currentMapId === 'inspectoria' && nx === 9) changeMap('entrada', 1, ny);
-    else if (currentMapId === 'patio') {
-        if(nx === 0) changeMap('entrada', 8, player.y); else if(nx === 9) changeMap('gimnasio', 1, ny);
-        else if(ny === 0) { if(!progress.kinderUnlocked) { showDialog("🔒 La puerta del Kinder está bloqueada."); return; } changeMap('kinder', nx, 8); }
-    }
-    else if (currentMapId === 'kinder' && ny === 9) changeMap('patio', nx, 1);
-    else if (currentMapId === 'gimnasio' && nx === 0) changeMap('patio', 8, ny);
-    else if (currentMapId === 'pasillo') {
-        if (ny === 9) changeMap('entrada', nx, 1);
-        else if (ny === 0) { if(nx <= 4) changeMap('sala_paulina', nx, 8); else changeMap('sala_sandra', nx, 8); }
-        else if (nx === 0 && (ny === 2 || ny === 3)) changeMap('sala_contencion', 8, ny);
-        else if (nx === 9 && (ny === 2 || ny === 3)) changeMap('sala_psicopedagogia', 1, ny);
-        else if (nx === 0 && (ny === 5 || ny === 6)) changeMap('sala_felipe', 8, ny);
-        else if (nx === 9 && (ny === 5 || ny === 6)) changeMap('sala_musica', 1, ny);
-        else if (nx === 0 && (ny === 8 || ny === 9)) changeMap('sala_rosita', 8, ny);
-        else if (nx === 9 && (ny === 8 || ny === 9)) changeMap('biblioteca', 1, ny);
-    }
-    else if (['sala_paulina', 'sala_sandra'].includes(currentMapId) && ny === 9) changeMap('pasillo', nx, 1);
-    else if (['sala_felipe', 'sala_rosita', 'sala_contencion'].includes(currentMapId) && nx === 9) changeMap('pasillo', 1, player.y);
-    else if (['sala_musica', 'sala_psicopedagogia', 'biblioteca'].includes(currentMapId) && nx === 0) changeMap('pasillo', 8, player.y);
 }
 
-function exitRoom() { if(currentMapId === 'entrada') return; const dest = mapLinks[currentMapId]; if(dest) changeMap(dest, previousPos.x, previousPos.y); else changeMap('entrada', 5, 8); }
-
-function changeMap(mapId, px, py) {
-    currentMapId = mapId; currentMap = JSON.parse(JSON.stringify(maps[mapId])); 
-    if(mapId === 'patio' && progress.huertoPlanted) { currentMap[5][2]='🌱'; currentMap[5][3]='🌱'; currentMap[6][2]='🌱'; currentMap[6][3]='🌱'; }
-    if(mapId === 'gimnasio' && progress.questKella >= 2) currentMap[1][3] = '.'; 
-    if(mapId === 'sala_paulina' && inventory.includes('Plumón Permanente')) currentMap[7][1] = '.';
-    if(mapId === 'biblioteca' && inventory.includes('Borrador Mágico')) currentMap[6][8] = '.';
-    if(mapId === 'kinder' && inventory.includes('Martillo de Juguete')) currentMap[6][8] = '.';
-    player.x = px; player.y = py; drawMap();
+// Main Game Loop
+let lastTime = 0;
+function gameLoop(timestamp) {
+    let deltaTime = timestamp - lastTime;
+    lastTime = timestamp;
+    updateGame(deltaTime);
+    drawMap();
+    requestAnimationFrame(gameLoop);
 }
+requestAnimationFrame(gameLoop);
 
-// ---------------------------------------------------
-// SISTEMA DE NÚCLEO Y CONTROLES (REESCRITO TOTAL)
-// ---------------------------------------------------
-
-// Verificador maestro que previene cualquier movimiento o ataque si hay menús superpuestos.
+// ==========================================
+// LÓGICA DE NÚCLEO (COLISIONES E INTERACCIÓN)
+// ==========================================
 function canMove() {
     if(document.getElementById('battle-panel').style.display === 'flex') return false;
     const panels = document.querySelectorAll('.overlay-panel');
-    for(let i=0; i<panels.length; i++) {
-        if(panels[i].style.display === 'block') return false;
-    }
+    for(let i=0; i<panels.length; i++) { if(panels[i].style.display === 'block') return false; }
+    if(isTypewriting) return false;
     return true;
 }
 
-function movePlayer(dx, dy, dir) {
-    if(!canMove()) return;
-    player.facing = dir; let nx = player.x + dx; let ny = player.y + dy;
+function attemptMove(dx, dy, dir) {
+    player.facing = dir; 
+    let nx = player.x + dx; let ny = player.y + dy;
 
     if(nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
         let target = currentMap[ny][nx];
         if(target === '.' || target === 'E' || target === 'D' || target === '🧑‍🎓') {
             if(target === 'D' && currentMapId === 'entrada') {
-                if(!progress.doorOpen && (ny === 0 || ny === 1)) { showDialog("Inspector: ¡Ejem! Nadie entra sin registrarse y saludar primero."); return; }
+                if(!progress.doorOpen && (ny === 0 || ny === 1)) { Typewriter.show("Inspector", "¡Ejem! Nadie entra sin registrarse y saludar primero."); return; }
                 else { handleTeleport(nx, ny); return; }
             }
             if(target === 'E' || target === 'D') { handleTeleport(nx, ny); return; }
+            // Mover en la grilla (el loop se encarga de los píxeles)
             player.x = nx; player.y = ny;
-        } else interact(target, nx, ny);
+        } else {
+            // Chocó con algo, tal vez sea un enemigo automático (e)
+            if(target === 'e') interact(target, nx, ny);
+        }
     }
-    drawMap();
 }
-
-// Bucle Continuo de Botones Virtuales
-let moveTimer = null;
-function handleBtnPress(dx, dy, dir) {
-    if (!canMove()) return;
-    movePlayer(dx, dy, dir); // Primer paso inmediato
-    if(moveTimer) clearInterval(moveTimer);
-    moveTimer = setInterval(() => {
-        if(!canMove()) { stopBtnPress(); return; }
-        movePlayer(dx, dy, dir);
-    }, 180);
-}
-
-function stopBtnPress() {
-    if(moveTimer) { clearInterval(moveTimer); moveTimer = null; }
-}
-
-// Asignación de Controles Robustos e Híbridos (Touch + Mouse)
-function setupButton(btnId, actionStart, actionStop) {
-    const btn = document.getElementById(btnId);
-    if(!btn) return;
-    
-    // Evita zoom al hacer doble tap y menús contextuales molestos
-    btn.addEventListener('contextmenu', e => e.preventDefault());
-
-    // Móvil (Touch Events)
-    btn.addEventListener('touchstart', (e) => { e.preventDefault(); actionStart(); }, { passive: false });
-    btn.addEventListener('touchend', (e) => { e.preventDefault(); actionStop(); }, { passive: false });
-    btn.addEventListener('touchcancel', (e) => { e.preventDefault(); actionStop(); }, { passive: false });
-
-    // PC (Mouse Events)
-    btn.addEventListener('mousedown', (e) => { 
-        if (e.pointerType === 'touch') return; 
-        actionStart(); 
-    });
-    btn.addEventListener('mouseup', actionStop);
-    btn.addEventListener('mouseleave', actionStop);
-}
-
-setupButton('btn-up', () => handleBtnPress(0, -1, 'up'), stopBtnPress);
-setupButton('btn-down', () => handleBtnPress(0, 1, 'down'), stopBtnPress);
-setupButton('btn-left', () => handleBtnPress(-1, 0, 'left'), stopBtnPress);
-setupButton('btn-right', () => handleBtnPress(1, 0, 'right'), stopBtnPress);
-
-// Botón A y Salir
-const btnAction = document.getElementById('btn-action');
-const triggerAction = (e) => { 
-    if(e && e.cancelable) e.preventDefault(); 
-    if(document.getElementById('dialog-box').style.display==='block') { 
-        let btn = document.querySelector('.dialog-btn:not([onclick="submitName()"])'); 
-        if(btn) btn.click(); 
-    } else { checkAction(); } 
-};
-setupButton('btn-action', triggerAction, () => {});
-setupButton('btn-exit', (e) => { if(e && e.cancelable) e.preventDefault(); exitRoom(); }, () => {});
 
 function checkAction() { 
     if(!canMove()) return; 
@@ -643,64 +609,256 @@ function checkAction() {
     if(tx>=0 && tx<COLS && ty>=0 && ty<ROWS) interact(currentMap[ty][tx], tx, ty); 
 }
 
-// Teclado Físico
-window.addEventListener('keydown', (e) => {
-    // 1. Si el input de nombre está activo, no intervenimos para dejar escribir normal
-    if(document.getElementById('name-input-container').style.display === 'block') return;
+function handleTeleport(nx, ny) {
+    previousMapId = currentMapId; previousPos = {x: player.x, y: player.y};
     
-    // Cerrar salas con Escape
-    if(e.key === 'Escape') { exitRoom(); return; }
-
-    // 2. Manejo de diálogos y menús con barra espaciadora
-    if(!canMove()) {
-        if((e.code === 'Space' || e.code === 'Enter') && document.getElementById('dialog-box').style.display === 'block') {
-            e.preventDefault();
-            let btn = document.querySelector('.dialog-btn:not([onclick="submitName()"])'); 
-            if(btn) btn.click();
+    // Fundido a negro rápido
+    canvas.style.filter = "brightness(0)";
+    setTimeout(() => {
+        if (currentMapId === 'entrada') {
+            if (ny === 0) changeMap('pasillo', nx, 8); else if (nx === 9) changeMap('patio', 1, ny);
+            else if (nx === 0) { if(!progress.inspectoriaUnlocked) { Typewriter.show("Sistema", "🔒 Inspectoría General. Acceso denegado."); canvas.style.filter="none"; return; } changeMap('inspectoria', 8, ny); }
         }
-        return; // Si no se puede mover, salir del teclado
+        else if (currentMapId === 'inspectoria' && nx === 9) changeMap('entrada', 1, ny);
+        else if (currentMapId === 'patio') {
+            if(nx === 0) changeMap('entrada', 8, player.y); else if(nx === 9) changeMap('gimnasio', 1, ny);
+            else if(ny === 0) { if(!progress.kinderUnlocked) { Typewriter.show("Sistema", "🔒 La puerta del Kinder está bloqueada."); canvas.style.filter="none"; return; } changeMap('kinder', nx, 8); }
+            else if(nx === 8 && ny === 2) changeMap('casino', 8, 8); // Entrada Casino
+        }
+        else if (currentMapId === 'casino' && nx === 9) changeMap('patio', 8, 3);
+        else if (currentMapId === 'kinder' && ny === 9) changeMap('patio', nx, 1);
+        else if (currentMapId === 'gimnasio' && nx === 0) changeMap('patio', 8, ny);
+        else if (currentMapId === 'pasillo') {
+            if (ny === 9) changeMap('entrada', nx, 1);
+            else if (ny === 0) { if(nx <= 4) changeMap('sala_paulina', nx, 8); else changeMap('sala_sandra', nx, 8); }
+            else if (nx === 0 && (ny === 5 || ny === 6)) changeMap('sala_felipe', 8, ny);
+            else if (nx === 0 && (ny === 8 || ny === 9)) changeMap('sala_rosita', 8, ny);
+            else if (nx === 9 && (ny === 8 || ny === 9)) changeMap('biblioteca', 1, ny);
+        }
+        else if (['sala_paulina', 'sala_sandra'].includes(currentMapId) && ny === 9) changeMap('pasillo', nx, 1);
+        else if (['sala_felipe', 'sala_rosita'].includes(currentMapId) && nx === 9) changeMap('pasillo', 1, player.y);
+        else if (['biblioteca'].includes(currentMapId) && nx === 0) changeMap('pasillo', 8, player.y);
+        
+        canvas.style.filter = "none";
+    }, 150);
+}
+
+function changeMap(mapId, px, py) {
+    currentMapId = mapId; currentMap = JSON.parse(JSON.stringify(maps[mapId])); 
+    if(mapId === 'patio' && progress.huertoPlanted) { currentMap[5][2]='🌱'; currentMap[5][3]='🌱'; currentMap[6][2]='🌱'; currentMap[6][3]='🌱'; }
+    if(mapId === 'gimnasio' && progress.questKella >= 2) currentMap[1][3] = '.'; 
+    if(mapId === 'sala_paulina' && inventory.includes('Plumón Permanente')) currentMap[7][1] = '.';
+    if(mapId === 'biblioteca' && inventory.includes('Borrador Mágico')) currentMap[6][8] = '.';
+    if(mapId === 'kinder' && inventory.includes('Martillo de Juguete')) currentMap[6][8] = '.';
+    player.x = px; player.y = py; player.px = px*TILE_SIZE; player.py = py*TILE_SIZE; // Sincronizar pixeles
+}
+
+// ==========================================
+// SISTEMA DE DIÁLOGOS TYPEWRITER
+// ==========================================
+let isTypewriting = false;
+let typeInterval = null;
+
+const Typewriter = {
+    show: function(title, text, choices = null) {
+        document.getElementById('name-input-container').style.display = 'none';
+        const box = document.getElementById('dialog-box');
+        const textEl = document.getElementById('dialog-text');
+        const btnContainer = document.getElementById('dialog-buttons');
+        
+        box.style.display = 'block';
+        btnContainer.style.display = 'none'; // Ocultar botones hasta terminar
+        btnContainer.innerHTML = '';
+        isTypewriting = true;
+        
+        if(typeInterval) clearInterval(typeInterval);
+        
+        let formattedText = title ? `<b>${title}:</b><br>` : "";
+        textEl.innerHTML = formattedText;
+        
+        let i = 0;
+        typeInterval = setInterval(() => {
+            textEl.innerHTML = formattedText + text.substring(0, i) + '<span class="typewriter-cursor"></span>';
+            i++;
+            if (i > text.length) {
+                clearInterval(typeInterval);
+                isTypewriting = false;
+                textEl.innerHTML = formattedText + text; // Remover cursor
+                this.renderChoices(btnContainer, choices);
+            }
+        }, 30); // Velocidad de escritura
+    },
+    
+    renderChoices: function(container, choices) {
+        container.style.display = 'flex';
+        if (choices) { 
+            choices.forEach(c => { 
+                const btn = document.createElement('button'); 
+                btn.className = 'dialog-btn choice'; btn.innerText = c.text; btn.onclick = c.action; 
+                container.appendChild(btn); 
+            }); 
+        } else { 
+            const btn = document.createElement('button'); 
+            btn.className = 'dialog-btn'; btn.innerText = 'Continuar ▶'; btn.onclick = closeDialog; 
+            container.appendChild(btn); 
+        }
+    }
+};
+
+function closeDialog() { document.getElementById('dialog-box').style.display = 'none'; }
+
+// ==========================================
+// INTERACCIONES Y LORE EXTENDIDO
+// ==========================================
+function interact(tile, tx, ty) {
+    if(tile === 'e') { startBattle(tx, ty); return; } 
+    if(tile === '!') { currentMap[ty][tx]='.'; equipWeapon('Plumón Permanente', 5); return; }
+    if(tile === '?') { currentMap[ty][tx]='.'; equipWeapon('Borrador Mágico', 10); return; }
+    if(tile === '*') { currentMap[ty][tx]='.'; equipWeapon('Martillo de Juguete', 20); return; }
+    if(tile === '$') { coins++; currentMap[ty][tx] = '.'; updateUI(); Typewriter.show("", "¡Encontraste una moneda escolar brillante! 🪙"); return; }
+
+    const charNames = {
+        'I': "Inspector", 'G': "Guardia", 'u': "Tía María (Aseo)", 'q': "Director", 'i': "Inspector Jefe", 'v': "Inspectora General",
+        'P': "Profe Felipe (Ciencias)", 'l': "Profe Leo (Artes)", 'M': "Profe Paulina (Mat.)", 'X': "Profe Sandra (Hist.)", 'E': "Mr. Smith (Inglés)",
+        'R': "Profe Rosita (Lenguaje)", 'J': "Profe Juanito (Ed. Física)", 'Z': "Profe Gonzalo (Ed. Física)", 'w': "Profe Dahian (Ed. Física)",
+        'y': "Yael (Practicante)", '8': "Bibliotecaria", 'O': "Cocinera", 'V': "Tía Kella (Kiosko)", 'p': "Educadora Parvularia"
+    };
+
+    let title = charNames[tile] || "Estudiante";
+
+    // Profesores con Preguntas
+    if(['P', 'M', 'X', 'R', 'E', 'l'].includes(tile)) {
+        let profKey = tile==='P'?'Felipe':tile==='M'?'Paulina':tile==='X'?'Sandra':tile==='R'?'Rosita':tile==='E'?'Smith':'Leo';
+        Typewriter.show(title, `¡Hola ${progress.playerName}! ¿Listo para una pregunta rápida por 1 moneda?`, [
+            {text:"¡Claro que sí!", action:()=>askQuestion(profKey, title)}, 
+            {text:"Mejor no", action:closeDialog}
+        ]);
+        return;
     }
 
-    // 3. Bloquear el scroll de navegador para flechas y espacio
-    if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','Enter','w','a','s','d'].includes(e.key) || ['Space','Enter'].includes(e.code)) { 
-        e.preventDefault(); 
+    // NPCs Específicos
+    if(tile === 'I') { progress.doorOpen = true; Typewriter.show(title, `¡Buenos días, ${progress.playerName}! Uniforme impecable hoy. Adelante.`); }
+    else if(tile === 'G') { Typewriter.show(title, "El colegio es seguro gracias a mi estricta vigilancia. No corras en los pasillos."); }
+    else if(tile === 'u') { Typewriter.show(title, "¡Cuidado que acabo de trapear! Este piso de la entrada se ensucia rapidísimo."); }
+    else if(tile === 'q') { Typewriter.show(title, "La disciplina y el esfuerzo son los pilares del San Agustín. Estoy orgulloso de ti."); }
+    else if(tile === 'i') { Typewriter.show(title, "Te tengo en la mira. Nada de juegos bruscos en el patio."); }
+    else if(tile === 'v') { Typewriter.show(title, "Revisando cámaras... Todo en orden en el Sector B."); }
+    
+    // Misiones y Especiales
+    else if(tile === 'y') { restoreStat('mp', 15, "¡Hola! La ciencia es fascinante. Recuerda descansar tu cerebro. (+15 MP ✨)", title); }
+    else if(tile === '8') { Typewriter.show(title, "🤫 ¡Shhh! La lectura requiere silencio. ¿Deseas llevar algo?", [{ text: "El Principito", action: () => {inventory.push("El Principito"); Typewriter.show(title,"Recibido en mochila.");} }, { text: "Salir", action: closeDialog }]); }
+    else if(tile === 'O') { 
+        Typewriter.show(title, "¿Qué te sirvo hoy, mi niño?", [
+            { text: "Plato Único (+50 HP) [3🪙]", action: () => { if(coins>=3){coins-=3; restoreStat('hp',50,"Delicioso.", title);}else Typewriter.show(title,"Te faltan monedas."); }},
+            { text: "Jugo Natural (+30 MP) [2🪙]", action: () => { if(coins>=2){coins-=2; restoreStat('mp',30,"Refrescante.", title);}else Typewriter.show(title,"Te faltan monedas."); }},
+            { text: "Salir", action: closeDialog }
+        ]); 
+    }
+    else if(tile === 'V' || tile === 'K') {
+        if(progress.questKella === 0) { progress.questKella = 1; Typewriter.show("Tía Kella", "¡Ayuda! Se perdió mi Caja de Jugos 🧃 en el Gimnasio. Tráemela y te doy la llave del Kinder."); } 
+        else if(progress.questKella === 2 && inventory.includes('Caja de Jugos')) { inventory = inventory.filter(i=>i!=='Caja de Jugos'); progress.questKella = 3; progress.kinderUnlocked = true; updateUI(); Typewriter.show("Tía Kella", "¡Gracias héroe! Toma la llave del Kinder (Puertas arriba del patio)."); } 
+        else Typewriter.show("Tía Kella", "Kiosko abierto. Sopaipillas a 1🪙.", [{ text: "Sopaipilla (+20 HP) [1🪙]", action: () => { if(coins>=1){coins--; restoreStat('hp',20,"😋", "Tía Kella");}else Typewriter.show("Tía Kella","Pobre."); }},{ text: "Salir", action: closeDialog }]);
+    }
+    else if(tile === 'j') { currentMap[ty][tx]='.'; inventory.push('Caja de Jugos'); progress.questKella=2; updateUI(); Typewriter.show("", "¡Encontraste la Caja de Jugos perdida!"); }
+    else if(tile === 'p') {
+        if(progress.questParvularia === 0) { progress.questParvularia = 1; saveGame(); Typewriter.show(title, `Los niños están aburridos. Escuché que hay un Memorice en el computador de Ciencias. ¿Lo resuelves por ellos?`); } 
+        else if(progress.questParvularia === 2) { progress.questParvularia = 3; progress.inspectoriaUnlocked = true; updateUI(); saveGame(); Typewriter.show(title, "¡Genial! Hablé con el Director, te dio pase VIP a la Inspectoría (Entrada del colegio)."); } 
+        else { Typewriter.show(title, "Los niños te admiran mucho. Eres su ejemplo a seguir."); }
     }
     
-    if(e.key === 'ArrowUp' || e.key === 'w') movePlayer(0, -1, 'up'); 
-    else if(e.key === 'ArrowDown' || e.key === 's') movePlayer(0, 1, 'down'); 
-    else if(e.key === 'ArrowLeft' || e.key === 'a') movePlayer(-1, 0, 'left'); 
-    else if(e.key === 'ArrowRight' || e.key === 'd') movePlayer(1, 0, 'right');
-    else if(e.code === 'Space' || e.code === 'Enter') checkAction(); 
-});
+    // Alumnos y Casuales
+    else if(['C','A','2','z','B','F'].includes(tile)) {
+        let frase = casualDialogs[Math.floor(Math.random() * casualDialogs.length)];
+        if(tile === 'z') { takeDamageMap(10, "🥱 ¡Déjame dormir, estudié toda la noche!"); }
+        else if(tile === 'B') { Typewriter.show("Alumno Apestoso", "Uff... hice 3 goles pero se me olvidó el desodorante."); }
+        else Typewriter.show(title, frase);
+    }
+    
+    // Objetos
+    else if(tile === '_') { 
+        if(currentMapId === 'sala_felipe') { Typewriter.show("PC Ciencias", "¿Iniciar simulación de Memorice?", [{ text: "Sí", action: () => {closeDialog(); /* Lógica Memorice omitida por espacio, asume victoria */ gainExp(50); coins+=3; if(progress.questParvularia===1)progress.questParvularia=2; Typewriter.show("PC", "Simulación completada. Datos enviados al Kinder.");} }, { text: "No", action: closeDialog }]); }
+        else Typewriter.show("Computador", "Requiere contraseña de administrador.");
+    }
+    else { Typewriter.show("", "No hay mucho que ver aquí."); }
+}
 
+function askQuestion(profKey, title) { 
+    const bank = qBanks[profKey] || qBanks['Felipe']; const q = bank[Math.floor(Math.random() * bank.length)]; 
+    let choices = q.opts.map((opt, idx) => { return { text: opt, action: () => { 
+        if(idx === q.ans) {coins++; updateUI(); Typewriter.show(title, `¡Excelente respuesta! Toma 1🪙 por tu esfuerzo.`);} 
+        else takeDamageMap(15, `Eso es incorrecto, pon más atención en clases.`); 
+    }};}); 
+    Typewriter.show(title, q.q, choices); 
+}
 
-// ---------------------------------------------------
-// MOTOR DE BATALLA 
-// ---------------------------------------------------
+function restoreStat(type, amount, msg, title="") { 
+    if(type === 'hp') player.hp = Math.min(player.maxHp, player.hp + amount); else player.mp = Math.min(player.maxMp, player.mp + amount); 
+    updateUI(); Typewriter.show(title, msg); 
+}
+function takeDamageMap(amount, msg) { 
+    player.hp -= amount; document.body.classList.add('damage-shake'); setTimeout(()=>document.body.classList.remove('damage-shake'), 300); 
+    if(player.hp <= 0){ player.hp=player.maxHp; changeMap('sala_contencion', 5, 5); Typewriter.show("Psicóloga", "Te desmayaste por estrés. Descansa aquí."); } 
+    else Typewriter.show("Daño", msg + ` (-${amount} HP)`); updateUI(); 
+}
+function equipWeapon(name, dmg) {
+    inventory.push(name);
+    if(dmg > player.weapon.dmg) { player.weapon = {name, dmg}; Typewriter.show("Sistema", `¡Encontraste ${name}! (+${dmg} Atk). Equipado automáticamente.`); }
+    else { Typewriter.show("Sistema", `Encontraste ${name}, pero tu arma actual es mejor.`); }
+    document.getElementById('equipped-weapon').innerText = player.weapon.name; updateUI();
+}
+
+// ==========================================
+// SISTEMA DE BATALLA (TRANSICIÓN Y EFECTOS)
+// ==========================================
 const enemyDB = [
-    { name: "Prueba Sorpresa", sprite: "📄", hp: 30, maxHp: 30, atk: 6, exp: 30, coin: 2 },
-    { name: "Bravucón de Patio", sprite: "😤", hp: 50, maxHp: 50, atk: 12, exp: 50, coin: 3 },
-    { name: "Mochila Pesada", sprite: "🎒", hp: 45, maxHp: 45, atk: 8, exp: 35, coin: 1 },
-    { name: "Goma Mutante", sprite: "👾", hp: 60, maxHp: 60, atk: 15, exp: 70, coin: 4 }
+    { name: "Prueba Sorpresa", sprite: "📄", hp: 35, atk: 8, exp: 30, coin: 2 },
+    { name: "Bravucón de Patio", sprite: "😤", hp: 55, atk: 14, exp: 50, coin: 3 },
+    { name: "Goma Mutante", sprite: "👾", hp: 70, atk: 16, exp: 70, coin: 4 }
 ];
 let currentEnemy = null; let enemyCoords = null; let isPlayerTurn = false;
 
 function startBattle(tx, ty) {
     if(document.getElementById('dialog-box').style.display === 'block') closeDialog();
-    stopBtnPress(); // Detiene el auto-movimiento si chocaste
+    keys.up=false; keys.down=false; keys.left=false; keys.right=false; // Detener input
     
+    // Efecto de parpadeo Pokémon
+    let flash = document.getElementById('flash-overlay');
+    flash.style.opacity = 1;
+    let blink = 0;
+    let flashInt = setInterval(() => {
+        flash.style.opacity = flash.style.opacity == 1 ? 0 : 1;
+        blink++;
+        if(blink > 5) {
+            clearInterval(flashInt);
+            flash.style.opacity = 0;
+            initBattlePanel(tx, ty);
+        }
+    }, 150);
+}
+
+function initBattlePanel(tx, ty) {
     enemyCoords = {x: tx, y: ty};
     let eTemplate = enemyDB[Math.floor(Math.random() * enemyDB.length)];
-    let scale = 1 + (player.lvl * 0.1);
-    currentEnemy = { ...eTemplate, hp: Math.floor(eTemplate.hp * scale), maxHp: Math.floor(eTemplate.maxHp * scale), atk: Math.floor(eTemplate.atk * scale) };
+    let scale = 1 + (player.lvl * 0.15);
+    currentEnemy = { ...eTemplate, hp: Math.floor(eTemplate.hp * scale), maxHp: Math.floor(eTemplate.hp * scale), atk: Math.floor(eTemplate.atk * scale) };
     
     document.getElementById('enemy-sprite').innerText = currentEnemy.sprite;
     document.getElementById('b-enemy-name').innerText = currentEnemy.name;
     document.getElementById('b-enemy-lvl').innerText = `Lvl ${player.lvl}`;
     
-    document.getElementById('battle-panel').style.display = 'flex';
+    let bPanel = document.getElementById('battle-panel');
+    bPanel.style.display = 'flex';
+    
+    // Animación de entrada de paneles
+    setTimeout(() => {
+        document.getElementById('enemy-box').style.right = '10px';
+        document.getElementById('player-box').style.left = '10px';
+        document.getElementById('enemy-sprite').style.opacity = 1;
+    }, 50);
+
     updateBattleUI();
-    logBattle(`¡Un salvaje ${currentEnemy.name} te ha interceptado!`);
+    document.getElementById('battle-log').innerHTML = "";
+    logBattle(`¡Un salvaje ${currentEnemy.name} ha aparecido!`);
     isPlayerTurn = true;
 }
 
@@ -714,7 +872,7 @@ function updateBattleUI() {
 
 function logBattle(msg) {
     const log = document.getElementById('battle-log');
-    log.innerHTML += `<div>> ${msg}</div>`;
+    log.innerHTML += `<div style="margin-bottom:8px; border-bottom:1px solid #374151; padding-bottom:4px;">▶ ${msg}</div>`;
     log.scrollTop = log.scrollHeight;
 }
 
@@ -726,50 +884,37 @@ function battleAction(action) {
         let dmg = player.atk + player.weapon.dmg + Math.floor(Math.random() * 5);
         currentEnemy.hp -= dmg;
         logBattle(`Atacas con ${player.weapon.name}. ¡Causas ${dmg} de daño!`);
-        document.getElementById('enemy-sprite').style.transform = 'translateX(10px)'; setTimeout(()=>document.getElementById('enemy-sprite').style.transform='none', 200);
+        document.getElementById('enemy-sprite').style.transform = 'translateX(15px)'; setTimeout(()=>document.getElementById('enemy-sprite').style.transform='', 200);
     } 
     else if(action === 'habilidad') {
-        if(player.mp >= 15) {
-            player.mp -= 15;
-            let dmg = (player.atk + player.weapon.dmg) * 2;
-            currentEnemy.hp -= dmg;
-            logBattle(`¡Usas CONCENTRACIÓN MÁXIMA! Causas ${dmg} de daño crítico.`);
-        } else {
-            logBattle("No tienes suficiente MP. Pierdes el turno.");
-        }
+        if(player.mp >= 15) { player.mp -= 15; let dmg = (player.atk + player.weapon.dmg) * 2; currentEnemy.hp -= dmg; logBattle(`¡CONCENTRACIÓN! Daño crítico: ${dmg}.`); } 
+        else { logBattle("Sin MP. Pierdes el turno."); }
     }
     else if(action === 'objeto') {
-        if(coins >= 1) { coins--; player.hp = Math.min(player.maxHp, player.hp + 20); logBattle("Comes una sopaipilla de emergencia (+20 HP). -1🪙"); } 
-        else { logBattle("No tienes monedas para comprar. Pierdes el turno."); }
+        if(coins >= 1) { coins--; player.hp = Math.min(player.maxHp, player.hp + 20); logBattle("Comes una sopaipilla (+20 HP). -1🪙"); } 
+        else { logBattle("Sin monedas. Pierdes el turno."); }
     }
     else if(action === 'huir') {
-        if(Math.random() > 0.4) {
-            logBattle("¡Escapaste con éxito!"); setTimeout(endBattle, 1000); return;
-        } else { logBattle("¡No pudiste escapar!"); }
+        if(Math.random() > 0.3) { logBattle("¡Escapaste con éxito!"); setTimeout(endBattle, 1000); return; } 
+        else { logBattle("¡No pudiste escapar!"); }
     }
 
     updateBattleUI();
 
-    if(currentEnemy.hp <= 0) {
-        setTimeout(winBattle, 1000);
-    } else {
-        setTimeout(enemyTurn, 1000);
-    }
+    if(currentEnemy.hp <= 0) { setTimeout(winBattle, 1000); } else { setTimeout(enemyTurn, 1000); }
 }
 
 function enemyTurn() {
     let dmg = Math.max(1, currentEnemy.atk - Math.floor(player.lvl * 0.5));
     player.hp -= dmg;
-    logBattle(`El ${currentEnemy.name} te golpea. Pierdes ${dmg} HP.`);
-    document.body.classList.add('damage-shake'); setTimeout(() => document.body.classList.remove('damage-shake'), 400);
+    logBattle(`El ${currentEnemy.name} ataca. Pierdes ${dmg} HP.`);
+    document.body.classList.add('damage-shake'); setTimeout(() => document.body.classList.remove('damage-shake'), 300);
     updateBattleUI();
-    
-    if(player.hp <= 0) { setTimeout(loseBattle, 1000); } 
-    else { isPlayerTurn = true; logBattle("Es tu turno."); }
+    if(player.hp <= 0) { setTimeout(loseBattle, 1000); } else { isPlayerTurn = true; }
 }
 
 function winBattle() {
-    logBattle(`¡Venciste! Ganas ${currentEnemy.exp} EXP y ${currentEnemy.coin} 🪙.`);
+    logBattle(`¡Ganaste! Ganas ${currentEnemy.exp} EXP y ${currentEnemy.coin} 🪙.`);
     coins += currentEnemy.coin;
     gainExp(currentEnemy.exp);
     currentMap[enemyCoords.y][enemyCoords.x] = '.'; 
@@ -777,142 +922,103 @@ function winBattle() {
 }
 
 function loseBattle() {
-    logBattle("¡Te has desmayado por el cansancio!");
-    setTimeout(() => {
-        player.hp = player.maxHp;
-        endBattle();
-        changeMap('sala_contencion', 5, 5);
-        showDialog("Te han traído a la sala de contención después de colapsar en el pasillo.");
-    }, 2000);
+    logBattle("¡Te has desmayado!");
+    setTimeout(() => { player.hp = player.maxHp; endBattle(); changeMap('sala_contencion', 5, 5); Typewriter.show("Sistema", "Despiertas en la sala de contención."); }, 2000);
 }
 
 function endBattle() {
-    document.getElementById('battle-panel').style.display = 'none';
-    document.getElementById('battle-log').innerHTML = '';
-    drawMap();
+    document.getElementById('enemy-box').style.right = '-100%';
+    document.getElementById('player-box').style.left = '-100%';
+    document.getElementById('enemy-sprite').style.opacity = 0;
+    setTimeout(() => { document.getElementById('battle-panel').style.display = 'none'; }, 500);
 }
 
 function gainExp(amount) {
     player.exp += amount;
     if(player.exp >= player.maxExp) {
-        player.lvl++;
-        player.exp -= player.maxExp;
-        player.maxExp = Math.floor(player.maxExp * 1.5);
-        player.maxHp += 15; player.hp = player.maxHp;
-        player.maxMp += 10; player.mp = player.maxMp;
-        player.atk += 3;
-        logBattle(`🌟 ¡SUBISTE AL NIVEL ${player.lvl}! Recuperas HP/MP y ganas fuerza.`);
+        player.lvl++; player.exp -= player.maxExp; player.maxExp = Math.floor(player.maxExp * 1.5);
+        player.maxHp += 15; player.hp = player.maxHp; player.maxMp += 10; player.mp = player.maxMp; player.atk += 4;
+        logBattle(`🌟 ¡NIVEL ${player.lvl}! Stats aumentados.`);
     }
     updateUI();
 }
 
-function equipWeapon(name, dmg) {
-    inventory.push(name);
-    if(dmg > player.weapon.dmg) { player.weapon = {name, dmg}; showDialog(`¡Encontraste ${name}! Su poder es +${dmg}. Ha sido equipado automáticamente.`); }
-    else { showDialog(`Encontraste ${name}, pero tu arma actual es mejor.`); }
-    document.getElementById('equipped-weapon').innerText = player.weapon.name; updateUI();
-}
-
-// ---------------------------------------------------
-// UI GENERAL
-// ---------------------------------------------------
+// ==========================================
+// UI Y MÉTODOS AUXILIARES
+// ==========================================
 function updateUI() {
-    document.getElementById('hp-count').innerText = player.hp;
-    document.getElementById('mp-count').innerText = player.mp;
-    document.getElementById('lvl-count').innerText = player.lvl;
-    document.getElementById('exp-count').innerText = player.exp;
-    document.getElementById('maxexp-count').innerText = player.maxExp;
-    document.getElementById('coin-count').innerText = coins;
-    document.getElementById('equipped-weapon').innerText = player.weapon.name;
+    document.getElementById('hp-count').innerText = player.hp; document.getElementById('mp-count').innerText = player.mp;
+    document.getElementById('lvl-count').innerText = player.lvl; document.getElementById('exp-count').innerText = player.exp;
+    document.getElementById('maxexp-count').innerText = player.maxExp; document.getElementById('coin-count').innerText = coins;
 }
-
-const bookDetails = { "El Principito": "Resumen: Un piloto y un niño de otro planeta.\n\nRecomendación: Lo esencial es invisible a los ojos.", "Papelucho": "Resumen: Aventuras de un niño chileno.\n\nRecomendación: Para reír un buen rato." };
 
 function openInventory() {
     const list = document.getElementById('inv-items-list'); list.innerHTML = '';
-    if(inventory.length === 0) { list.innerHTML = '<li>Tu mochila está vacía.</li>'; } 
-    else {
-        inventory.forEach(item => { 
-            let readBtn = Object.keys(bookDetails).includes(item) ? `<button class="btn-ui" style="font-size:0.7rem; padding:2px 8px;" onclick="readBook('${item}')">📖 Leer</button>` : '';
-            list.innerHTML += `<li><span>🔹 ${item}</span> ${readBtn}</li>`; 
-        });
-    }
+    if(inventory.length === 0) { list.innerHTML = '<li style="text-align:center; color:#888;">Vacía</li>'; } 
+    else { inventory.forEach(item => { list.innerHTML += `<li style="padding:8px; border-bottom:1px solid #333;">🔹 ${item}</li>`; }); }
     document.getElementById('inventory-panel').style.display = 'block';
 }
-
-function readBook(bookName) { closeInventory(); showDialog(`📖 ${bookName}\n\n${bookDetails[bookName]}`); }
 function closeInventory() { document.getElementById('inventory-panel').style.display = 'none'; }
-function takeDamageMap(amount, msg) { player.hp -= amount; document.body.classList.add('damage-shake'); setTimeout(()=>document.body.classList.remove('damage-shake'), 400); if(player.hp <= 0){ player.hp=player.maxHp; changeMap('sala_contencion', 5, 5); showDialog(msg + "\n¡Te has desmayado!"); } else showDialog(msg + ` (-${amount} HP)`); updateUI(); }
+function exitRoom() { if(currentMapId === 'entrada') return; const dest = mapLinks[currentMapId]; if(dest) changeMap(dest, previousPos.x, previousPos.y); else changeMap('entrada', 5, 8); }
 
-function showDialog(text, choices = null) {
-    document.getElementById('dialog-text').innerText = text; const btnContainer = document.getElementById('dialog-buttons'); 
-    btnContainer.innerHTML = ''; btnContainer.style.display = 'flex'; document.getElementById('name-input-container').style.display = 'none';
-    if (choices) { choices.forEach(c => { const btn = document.createElement('button'); btn.className = 'dialog-btn choice'; btn.innerText = c.text; btn.onclick = c.action; btnContainer.appendChild(btn); }); } 
-    else { const btn = document.createElement('button'); btn.className = 'dialog-btn'; btn.innerText = 'Siguiente ▶'; btn.onclick = closeDialog; btnContainer.appendChild(btn); }
-    document.getElementById('dialog-box').style.display = 'block';
-}
-function closeDialog() { document.getElementById('dialog-box').style.display = 'none'; }
-function restoreStat(type, amount, msg) { if(type === 'hp') player.hp = Math.min(player.maxHp, player.hp + amount); else player.mp = Math.min(player.maxMp, player.mp + amount); updateUI(); showDialog(msg); }
-
-function submitName() { 
-    const input = document.getElementById('name-input').value.trim(); 
-    if(input.length > 0) { 
-        progress.playerName = input; 
-        document.getElementById('name-input-container').style.display = 'none'; 
-        progress.doorOpen = true; updateUI(); 
-        showDialog(`Inspector: Muy bien, ${progress.playerName}. Pase, pase.`); 
-        saveGame();
-    } 
-}
 function promptName() { 
-    document.getElementById('dialog-text').innerText = "Inspector: ¡Alto! Escriba su nombre:"; 
+    document.getElementById('dialog-text').innerText = "Guardia: ¡Alto! Registro de ingreso obligatorio. Escriba su nombre:"; 
     document.getElementById('name-input-container').style.display = 'block'; 
     document.getElementById('dialog-buttons').style.display = 'none'; 
     document.getElementById('dialog-box').style.display = 'block'; 
-    document.getElementById('name-input').focus();
+}
+function submitName() { 
+    const input = document.getElementById('name-input').value.trim(); 
+    if(input.length > 0) { progress.playerName = input; progress.doorOpen = true; saveGame(); Typewriter.show("Guardia", `Registrado: ${progress.playerName}. No corra en los pasillos.`); } 
 }
 
-function askQuestion(profName) { const bank = qBanks[profName] || qBanks['Felipe']; const q = bank[Math.floor(Math.random() * bank.length)]; let choices = q.opts.map((opt, idx) => { return { text: opt, action: () => { if(idx === q.ans) {coins++; updateUI(); showDialog(`¡Correcto! Ganas 1🪙`);} else takeDamageMap(15, `Incorrecto.`); }};}); showDialog(`Profe ${profName}: ${q.q}`, choices); }
-
-function interact(tile, tx, ty) {
-    if(tile === 'e') { startBattle(tx, ty); return; } 
-    if(tile === '!') { currentMap[ty][tx]='.'; equipWeapon('Plumón Permanente', 5); return; }
-    if(tile === '?') { currentMap[ty][tx]='.'; equipWeapon('Borrador Mágico', 10); return; }
-    if(tile === '*') { currentMap[ty][tx]='.'; equipWeapon('Martillo de Juguete', 20); return; }
-
-    if(tile === '$') { coins++; currentMap[ty][tx] = '.'; updateUI(); showDialog("¡Encontraste una moneda! 🪙"); }
-    else if(tile === 'I') { progress.doorOpen = true; showDialog(`Inspector: ¡Buenos días, ${progress.playerName}! Uniforme impecable.`); }
-    else if(tile === 'P') { showDialog("Profe Felipe: ¡Ciencia!", [{text:"Pregunta", action:()=>askQuestion('Felipe')}, {text:"Adiós", action:closeDialog}]); }
-    else if(tile === 'M') { showDialog("Profe Paulina: ¡Números!", [{text:"Pregunta", action:()=>askQuestion('Paulina')}, {text:"Adiós", action:closeDialog}]); }
-    else if(tile === 'j') { currentMap[ty][tx]='.'; inventory.push('Caja de Jugos'); progress.questKella=2; updateUI(); showDialog("¡Encontraste la Caja de Jugos!"); }
-    else if(tile === 'K' || tile === '=' || tile === 'V') {
-        if(progress.questKella === 0) { progress.questKella = 1; showDialog("Tía Kella: ¡Se perdió mi Caja de Jugos 🧃 en el Gimnasio! Tráemela y te doy la llave del Kinder."); } 
-        else if(progress.questKella === 2 && inventory.includes('Caja de Jugos')) { inventory = inventory.filter(i=>i!=='Caja de Jugos'); progress.questKella = 3; progress.kinderUnlocked = true; updateUI(); showDialog("Tía Kella: ¡Gracias! Aquí tienes la llave del Kinder (puertas arriba del patio)."); } 
-        else showDialog(`Tía Kella: Compra algo.`, [{ text: "Sopaipilla (+20 HP) [1🪙]", action: () => { if(coins>=1){coins--; restoreStat('hp',20,"😋");}else showDialog("Pobre."); }},{ text: "Salir", action: closeDialog }]);
+// ==========================================
+// GESTIÓN DE CONTROLES (MULTI-INPUT)
+// ==========================================
+window.addEventListener('keydown', (e) => {
+    if(document.getElementById('name-input-container').style.display === 'block') return;
+    if(e.key === 'Escape') { exitRoom(); return; }
+    if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','Enter','w','a','s','d'].includes(e.key)) e.preventDefault();
+    
+    if(!canMove() && (e.code === 'Space' || e.code === 'Enter') && document.getElementById('dialog-box').style.display === 'block') {
+        let btn = document.querySelector('.dialog-btn:not([onclick="submitName()"])'); if(btn) btn.click(); return;
     }
-    else if(tile === '8') { showDialog("Bibliotecaria: Lleva un libro.", [{ text: "El Principito", action: () => {inventory.push("El Principito"); showDialog("Recibido.");} }, { text: "Salir", action: closeDialog }]); }
-    else if(tile === 'Q') { document.getElementById('piano-panel').style.display = 'block'; }
-    else if(tile === 'z') { takeDamageMap(10, "Estudiante Exhausto: 🥱 ¡Déjame en paz!"); }
-    else if(tile === 'p') {
-        if(progress.questParvularia === 0) { progress.questParvularia = 1; saveGame(); showDialog(`Educadora: Resuelve el Memorice del Lab por los niños.`); } 
-        else if(progress.questParvularia === 2) { progress.questParvularia = 3; progress.inspectoriaUnlocked = true; updateUI(); saveGame(); showDialog("Educadora: ¡Gracias! Tienes acceso VIP a la Inspectoría."); } 
-        else { showDialog("Educadora: Los niños te adoran."); }
-    }
-    else if(tile === 'i') { showDialog("Inspector Jefe: Cuidadito con andar peleando."); }
-    else if(tile === 'W') { showDialog("¿Memorice?", [{ text: "Sí", action: initMemoryGame }, { text: "No", action: closeDialog }]); }
-    else { showDialog("Un objeto interesante del colegio."); }
+    
+    if(e.key === 'ArrowUp' || e.key === 'w') keys.up = true;
+    if(e.key === 'ArrowDown' || e.key === 's') keys.down = true;
+    if(e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+    if(e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+    if(e.code === 'Space' || e.code === 'Enter') checkAction();
+});
+
+window.addEventListener('keyup', (e) => {
+    if(e.key === 'ArrowUp' || e.key === 'w') keys.up = false;
+    if(e.key === 'ArrowDown' || e.key === 's') keys.down = false;
+    if(e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+    if(e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+});
+
+// Controles Virtuales (Botones)
+function bindBtn(id, keyProp) {
+    const btn = document.getElementById(id); if(!btn) return;
+    btn.addEventListener('contextmenu', e=>e.preventDefault());
+    const press = (e) => { e.preventDefault(); keys[keyProp] = true; btn.classList.add('pressed');};
+    const release = (e) => { e.preventDefault(); keys[keyProp] = false; btn.classList.remove('pressed');};
+    btn.addEventListener('touchstart', press, {passive:false}); btn.addEventListener('touchend', release); btn.addEventListener('touchcancel', release);
+    btn.addEventListener('mousedown', press); btn.addEventListener('mouseup', release); btn.addEventListener('mouseleave', release);
 }
+bindBtn('btn-up', 'up'); bindBtn('btn-down', 'down'); bindBtn('btn-left', 'left'); bindBtn('btn-right', 'right');
 
-// MEMORICE
-let flippedCards = []; let matchedPairs = 0;
-function initMemoryGame() { closeDialog(); document.getElementById('memory-panel').style.display = 'block'; const grid = document.getElementById('memory-grid'); grid.innerHTML = ''; flippedCards = []; matchedPairs = 0; const icons = ['🔬','🧬','🔭','🧪','🌡️','🧲','🔋','🦠']; let memCards = [...icons, ...icons].sort(() => Math.random() - 0.5); memCards.forEach((icon, i) => { const card = document.createElement('div'); card.className = 'mem-card'; card.dataset.id = i; card.dataset.icon = icon; card.innerText = '❓'; card.onclick = () => { if(flippedCards.length>=2 || card.classList.contains('flipped')) return; card.innerText = icon; card.classList.add('flipped'); flippedCards.push(card); if(flippedCards.length===2) setTimeout(()=>{ const [c1,c2]=flippedCards; if(c1.dataset.icon===c2.dataset.icon){c1.classList.add('matched');c2.classList.add('matched');matchedPairs++; if(matchedPairs===8){closeMemoryGame(); gainExp(50); coins+=3; if(progress.questParvularia===1)progress.questParvularia=2; showDialog("¡Ganaste!");}}else{c1.innerText='❓';c2.innerText='❓';c1.classList.remove('flipped');c2.classList.remove('flipped');} flippedCards=[]; },800); }; grid.appendChild(card); }); }
-function closeMemoryGame() { document.getElementById('memory-panel').style.display = 'none'; } function closePiano() { document.getElementById('piano-panel').style.display = 'none'; }
+const btnAction = document.getElementById('btn-action');
+btnAction.addEventListener('touchstart', (e)=>{e.preventDefault(); if(document.getElementById('dialog-box').style.display==='block'){let btn=document.querySelector('.dialog-btn:not([onclick="submitName()"])');if(btn)btn.click();}else{checkAction();}}, {passive:false});
+btnAction.addEventListener('mousedown', (e)=>{if(e.pointerType==='touch')return; if(document.getElementById('dialog-box').style.display==='block'){let btn=document.querySelector('.dialog-btn:not([onclick="submitName()"])');if(btn)btn.click();}else{checkAction();}});
+document.getElementById('btn-exit').addEventListener('click', exitRoom);
 
-function saveGame() { const data = { player, inventory, coins, progress, currentMapId, currentMap, previousMapId, previousPos }; localStorage.setItem('rpgEscolarSave_v10', JSON.stringify(data)); showDialog("💾 Guardado."); }
-function loadGame() { const saved = localStorage.getItem('rpgEscolarSave_v10'); if(saved) { const data = JSON.parse(saved); player = data.player; inventory = data.inventory; coins = data.coins; progress = data.progress; currentMapId = data.currentMapId; currentMap = data.currentMap; previousMapId = data.previousMapId || 'entrada'; previousPos = data.previousPos || {x:5,y:8}; drawMap(); updateUI(); showDialog(`📂 Cargado, ${progress.playerName}.`); } }
+function saveGame() { const data = { player, inventory, coins, progress, currentMapId, currentMap, previousMapId, previousPos }; localStorage.setItem('rpgEscolarSave_v11', JSON.stringify(data)); Typewriter.show("Sistema", "💾 Partida guardada con éxito."); }
+function loadGame() { const saved = localStorage.getItem('rpgEscolarSave_v11'); if(saved) { const data = JSON.parse(saved); player = data.player; inventory = data.inventory; coins = data.coins; progress = data.progress; currentMapId = data.currentMapId; currentMap = data.currentMap; previousMapId = data.previousMapId || 'entrada'; previousPos = data.previousPos || {x:5,y:8}; updateUI(); Typewriter.show("Sistema", `📂 Cargado, bienvenido ${progress.playerName}.`); } }
 
-drawMap(); updateUI();
-setTimeout(() => { if(!progress.playerName) promptName(); else showDialog(`🎒 ¡Día de Clases, ${progress.playerName}!`); }, 500);
+updateUI();
+setTimeout(() => { if(!progress.playerName) promptName(); else Typewriter.show("Sistema", `🎒 ¡Día de Clases, ${progress.playerName}!`); }, 500);
 </script>
 </body>
 </html>
