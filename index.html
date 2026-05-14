@@ -6,10 +6,11 @@
 <title>Aula de Ciencias | Profe Felipe</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <style>
 /* ═══════════════════════════════════════════════
-   TOKENS  — paleta mediterránea / Ikariam
+   TOKENS  — Paleta Mediterránea / Ikariam
 ═══════════════════════════════════════════════ */
 :root {
   --sea-deep:    #08182e;
@@ -18,192 +19,374 @@
   --gold:        #c9a84c;
   --gold-light:  #e8c870;
   --gold-dark:   #8b6914;
-  --marble:      #f5f0e8;
+  --marble:      #fcfaf7;
   --stone:       #ede5d0;
-  --ivory:       #faf7f2;
+  --ivory:       #ffffff;
   --bronze:      #8e6a35;
   --text:        #2a1f10;
-  --text-soft:   #6a5840;
+  --text-soft:   #504230;
   --laurel:      #4a7c59;
   --border-gold: rgba(201,168,76,.3);
 
-  --ff-title: 'Cinzel','Palatino Linotype',Palatino,serif;
-  --ff-body:  'Cormorant Garamond',Georgia,'Times New Roman',serif;
+  --ff-title: 'Cinzel', 'Palatino Linotype', Palatino, serif;
+  --ff-body:  'Cormorant Garamond', Georgia, 'Times New Roman', serif;
 }
 
-*{box-sizing:border-box;margin:0;padding:0;}
-html{scroll-behavior:smooth;}
+/* ═══════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 
-body{
-  min-height:100vh;
-  display:flex;flex-direction:column;
-  font-family:var(--ff-body);
-  color:var(--text);
-  background:linear-gradient(145deg,#08182e 0%,#0e2440 40%,#152e50 70%,#0a1e36 100%);
-  background-size:400% 400%;
-  animation:seaShift 16s ease infinite;
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--ff-body);
+  color: var(--text);
+  background: linear-gradient(145deg, #08182e 0%, #0e2440 40%, #152e50 70%, #0a1e36 100%);
+  background-size: 400% 400%;
+  animation: seaShift 16s ease infinite;
+  overflow-x: hidden; /* Previene scroll horizontal en móviles */
 }
 
-@keyframes seaShift{
-  0%  {background-position:0% 50%;}
-  50% {background-position:100% 50%;}
-  100%{background-position:0% 50%;}
+@keyframes seaShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-.frieze{
-  position:relative;z-index:100;
-  height:7px;flex-shrink:0;
-  background:repeating-linear-gradient(
-    90deg,
-    var(--gold-dark) 0,var(--gold-dark) 6px,
-    var(--gold)      6px,var(--gold)      18px,
-    #f0d87a           18px,#f0d87a          20px,
-    var(--gold)      20px,var(--gold)      32px,
-    var(--gold-dark) 32px,var(--gold-dark) 38px
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 3px,
+    rgba(255,255,255,.015) 3px, rgba(255,255,255,.015) 4px
   );
 }
 
-nav{
-  position:sticky;top:0;z-index:200;flex-shrink:0;
-  background:rgba(6,18,34,.94);
-  backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);
-  border-bottom:2px solid var(--gold-dark);
-  box-shadow:0 4px 30px rgba(0,0,0,.45);
+.frieze {
+  position: relative; z-index: 100;
+  height: 6px; flex-shrink: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--gold-dark) 0, var(--gold-dark) 6px,
+    var(--gold) 6px, var(--gold) 18px,
+    #f0d87a 18px, #f0d87a 20px,
+    var(--gold) 20px, var(--gold) 32px,
+    var(--gold-dark) 32px, var(--gold-dark) 38px
+  );
 }
 
-.nav-inner{
-  max-width:1100px;margin:0 auto;
-  padding:0 1.2rem;
-  height:62px;
-  display:flex;align-items:stretch;justify-content:space-between;
-  position:relative;
+/* ═══════════════════════════════════════════════
+   NAVEGACIÓN
+═══════════════════════════════════════════════ */
+nav {
+  position: sticky; top: 0; z-index: 200; flex-shrink: 0;
+  background: rgba(6, 18, 34, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 2px solid var(--gold-dark);
+  box-shadow: 0 4px 25px rgba(0,0,0,0.5);
 }
 
-.nav-brand{
-  display:flex;align-items:center;gap:9px;
-  font-family:var(--ff-title);
-  color:var(--gold-light);text-decoration:none;
-  font-size:1.05rem;letter-spacing:3px;
-  padding:0 .5rem;
-  border-bottom:2px solid transparent;
-  transition:color .2s,border-color .2s;
-  flex-shrink:0;
-}
-.nav-brand:hover{color:#fff;border-bottom-color:var(--gold);}
-
-.nav-menu{
-  display:flex;align-items:stretch;list-style:none;gap:0;
+.nav-inner {
+  max-width: 1200px; margin: 0 auto;
+  padding: 0 1.5rem;
+  height: 65px;
+  display: flex; align-items: stretch; justify-content: space-between;
 }
 
-.dropdown{position:relative;display:flex;align-items:stretch;}
-
-.drop-btn{
-  background:none;border:none;cursor:pointer;height:100%;
-  padding:0 1.1rem;
-  font-family:var(--ff-title);font-size:.8rem;letter-spacing:1.5px;
-  color:rgba(255,255,255,.9);
-  display:flex;align-items:center;gap:4px;
-  border-bottom:2px solid transparent;
-  transition:color .2s,border-color .2s;
+.nav-brand {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--ff-title);
+  color: var(--gold-light); text-decoration: none;
+  font-size: 1.1rem; letter-spacing: 2px; font-weight: 700;
+  transition: all 0.3s;
 }
-.drop-btn:hover,.drop-btn.active-menu{
-  color:var(--gold-light);border-bottom-color:var(--gold);
-}
+.nav-brand:hover { color: #fff; text-shadow: 0 0 10px rgba(232, 200, 112, 0.5); }
 
-.drop-content{
-  display:none;position:absolute;top:100%;left:0;
-  min-width:220px;
-  background:rgba(5,15,28,.97);
-  border:1px solid var(--gold-dark);border-top:2px solid var(--gold);
-  box-shadow:0 12px 40px rgba(0,0,0,.6);
-  z-index:300;
+/* Hamburguesa (Móvil) */
+.hamburger {
+  display: none; flex-direction: column; justify-content: center; gap: 6px;
+  background: none; border: none; cursor: pointer;
+  padding: 0 0.5rem; height: 100%; z-index: 300;
 }
-.dropdown:hover .drop-content{display:block;}
-
-.drop-content a{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:.72rem 1.2rem;
-  color:rgba(255,255,255,.88);text-decoration:none;font-size:.9rem;
-  border-bottom:1px solid rgba(201,168,76,.1);
-  transition:background .15s,color .15s;
+.hamburger span {
+  display: block; width: 28px; height: 3px;
+  background: var(--gold); border-radius: 3px;
+  transition: all 0.3s ease-in-out;
 }
-.drop-content a:hover{background:rgba(201,168,76,0.12);color:var(--gold-light);}
+.hamburger.open span:nth-child(1) { transform: translateY(9px) rotate(45deg); background: var(--gold-light); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); background: var(--gold-light); }
 
-.main-panel{
-  position:relative;z-index:10;
-  width:94%;max-width:1000px;
-  margin:2rem auto;
-  flex:1;
+.nav-menu {
+  display: flex; align-items: stretch; list-style: none; gap: 0;
 }
 
-.tablet{
-  background:var(--ivory);
-  border:1px solid rgba(201,168,76,.2);
-  border-radius:3px;
-  padding:2.8rem 3rem;
-  position:relative;overflow:hidden;
-  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+.dropdown { position: relative; display: flex; align-items: stretch; }
+
+.drop-btn {
+  background: none; border: none; cursor: pointer; height: 100%;
+  padding: 0 1.2rem;
+  font-family: var(--ff-title); font-size: 0.85rem; letter-spacing: 1.5px; font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  display: flex; align-items: center; gap: 6px;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s;
+}
+.drop-btn i { font-size: 0.7rem; color: var(--gold); transition: transform 0.3s; }
+.dropdown:hover .drop-btn i { transform: rotate(180deg); }
+
+.drop-btn:hover, .drop-btn.active-menu {
+  color: var(--gold-light); border-bottom-color: var(--gold); background: rgba(255,255,255,0.03);
 }
 
-h1{
-  font-family:var(--ff-title);
-  font-size:clamp(1.4rem,4vw,2rem);
-  letter-spacing:3px;
-  color:var(--bronze);
+.drop-content {
+  display: none; position: absolute; top: 100%; left: 0;
+  min-width: 220px;
+  background: rgba(5, 15, 28, 0.98);
+  border: 1px solid var(--gold-dark); border-top: 3px solid var(--gold);
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+  z-index: 300; overflow: hidden;
+}
+.dropdown:hover .drop-content { display: block; animation: dropDown 0.3s ease forwards; }
+
+@keyframes dropDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.drop-content a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px;
+  color: rgba(255,255,255,0.85); text-decoration: none; font-size: 0.95rem; font-weight: 600;
+  border-bottom: 1px solid rgba(201,168,76,0.1);
+  transition: all 0.2s;
+}
+.drop-content a:last-child { border-bottom: none; }
+.drop-content a:hover { background: rgba(201,168,76,0.15); color: var(--gold-light); padding-left: 25px; }
+
+.nav-lib {
+  background: none; cursor: pointer; height: 100%;
+  padding: 0 1.2rem;
+  font-family: var(--ff-title); font-size: 0.85rem; letter-spacing: 1.5px; font-weight: 600;
+  color: rgba(255,255,255,0.9); text-decoration: none;
+  display: flex; align-items: center; gap: 6px;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s;
+}
+.nav-lib:hover {
+  color: var(--gold-light); border-bottom-color: var(--gold); background: rgba(255,255,255,0.03);
+}
+
+/* ═══════════════════════════════════════════════
+   MAIN PANEL (Tableta de Piedra)
+═══════════════════════════════════════════════ */
+.main-panel {
+  position: relative; z-index: 10;
+  width: 96%; max-width: 1050px;
+  margin: 2.5rem auto; flex: 1;
+}
+
+.tablet {
+  background: var(--ivory);
+  border: 1px solid var(--border-gold);
+  border-radius: 16px;
+  padding: 3rem 4rem;
+  position: relative; overflow: hidden;
+  box-shadow: 0 25px 70px rgba(0,0,0,0.6), inset 0 0 50px rgba(201,168,76,0.05);
+}
+
+.tablet-header {
+  text-align: center;
+  padding-bottom: 1.5rem; margin-bottom: 2rem;
+  border-bottom: 2px solid rgba(201,168,76,0.2);
+}
+
+h1 {
+  font-family: var(--ff-title);
+  font-size: clamp(1.6rem, 5vw, 2.4rem);
+  letter-spacing: 4px;
+  color: var(--bronze);
   text-transform: uppercase;
+  margin-bottom: 0.5rem;
 }
 
-h1.shimmer{
-  background:linear-gradient(90deg,var(--gold-dark),var(--gold),var(--gold-light),var(--gold),var(--gold-dark));
-  background-size:300%;
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;
-  animation:shimmer 5s linear infinite;
-}
-@keyframes shimmer{0%{background-position:0%}100%{background-position:300%}}
-
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:18px;}
-
-.card{
-  background:var(--marble);
-  border:1px solid rgba(201,168,76,.18);
-  border-radius:2px;padding:1.4rem 1.25rem;
-  position:relative;
-  transition:transform .22s,box-shadow .22s;
-}
-.card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.1);}
-
-.btn-p{
-  display:inline-flex;align-items:center;justify-content:center;gap:6px;
-  background:linear-gradient(135deg,var(--gold-dark),var(--gold));
-  color:#fff;border:none;cursor:pointer;
-  padding:.7rem 1.6rem;
-  font-family:var(--ff-title);font-size:.82rem;letter-spacing:1px;
-  border-radius:2px;text-decoration:none;
+h1.shimmer {
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-light), var(--gold), var(--gold-dark));
+  background-size: 300%;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 6s linear infinite;
 }
 
-.btn-s{
-  display:inline-flex;align-items:center;justify-content:center;gap:6px;
-  background:transparent;
-  color:var(--bronze);border:1.5px solid rgba(201,168,76,.5);
-  padding:.6rem 1.2rem;
-  font-family:var(--ff-title);font-size:.78rem;letter-spacing:1px;
-  border-radius:2px;cursor:pointer;text-decoration:none;
+.page-sub { font-size: 0.95rem; color: var(--text-soft); letter-spacing: 2px; font-style: italic; }
+
+h2.sh {
+  font-family: var(--ff-title); font-size: 1rem; letter-spacing: 2px;
+  color: var(--bronze); font-weight: 700;
+  padding-bottom: 8px; margin: 2.5rem 0 1.5rem;
+  border-bottom: 1px solid rgba(201,168,76,0.3);
+  display: flex; align-items: center; gap: 10px;
+}
+h2.sh::before { content: '⬧'; color: var(--gold); font-size: 0.8rem; }
+
+/* ═══════════════════════════════════════════════
+   GRILLAS Y TARJETAS
+═══════════════════════════════════════════════ */
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+
+.card {
+  background: var(--marble);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 12px; padding: 1.8rem;
+  position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+  display: flex; flex-direction: column;
 }
 
-.embed-frame{width:100%;border:1px solid rgba(201,168,76,0.2);display:block;margin-top:1rem;min-height:750px;}
-
-footer{
-  background:rgba(4,10,20,.95);
-  border-top:2px solid var(--gold-dark);
-  padding:1.5rem 2rem;text-align:center;
-  font-family:var(--ff-title);font-size:.68rem;
-  letter-spacing:1px;color:rgba(255,255,255,.28);
+.card:hover { 
+  transform: translateY(-5px); 
+  box-shadow: 0 12px 30px rgba(0,0,0,0.08); 
+  border-color: rgba(201,168,76,0.5);
 }
 
-.fade-in{animation:fadeIn 0.4s ease-out;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:translateY(0);}}
+.card h3 {
+  font-family: var(--ff-title); font-size: 0.95rem; letter-spacing: 1px; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.card p { font-size: 1rem; color: var(--text-soft); line-height: 1.6; flex-grow: 1; }
+
+.card.c-sea { border-top: 4px solid #2d6a9f; } .card.c-sea h3 { color: #1a4e7a; }
+.card.c-gold { border-top: 4px solid var(--gold); } .card.c-gold h3 { color: var(--bronze); }
+.card.c-laurel { border-top: 4px solid var(--laurel); } .card.c-laurel h3 { color: #3d6b4a; }
+.card.c-fem { border-top: 4px solid #ff4d94; } .card.c-fem h3 { color: #801d5e; }
+
+/* ═══════════════════════════════════════════════
+   BOTONES
+═══════════════════════════════════════════════ */
+.btn-group { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+
+.btn-p {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: #fff; border: none; cursor: pointer;
+  padding: 0.8rem 1.5rem;
+  font-family: var(--ff-title); font-size: 0.8rem; letter-spacing: 1.5px; font-weight: 600;
+  border-radius: 6px; text-decoration: none;
+  transition: all 0.3s ease;
+  flex: 1; min-width: 120px;
+  box-shadow: 0 4px 15px rgba(201,168,76,0.3);
+}
+.btn-p:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(201,168,76,0.5); filter: brightness(1.1); }
+.btn-p:active { transform: translateY(0); }
+
+.btn-s {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: transparent;
+  color: var(--bronze); border: 2px solid var(--border-gold);
+  padding: 0.8rem 1.5rem;
+  font-family: var(--ff-title); font-size: 0.8rem; letter-spacing: 1.5px; font-weight: 600;
+  border-radius: 6px; cursor: pointer; text-decoration: none;
+  transition: all 0.3s ease;
+  width: 100%; margin-top: 10px;
+}
+.btn-s:hover { background: rgba(201,168,76,0.05); border-color: var(--gold); color: var(--gold-dark); }
+
+/* ═══════════════════════════════════════════════
+   IFRAMES Y UTILIDADES
+═══════════════════════════════════════════════ */
+/* El iframe ahora usa unidades dinámicas (vh) para adaptarse a cualquier celular */
+.embed-frame {
+  width: 100%; 
+  height: 75vh; /* Altura dinámica basada en la pantalla */
+  min-height: 550px; 
+  border: 1px solid rgba(201,168,76,0.3); 
+  border-radius: 12px;
+  display: block; 
+  margin-top: 1.5rem;
+  background: #fff;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+footer {
+  background: rgba(4, 10, 20, 0.98);
+  border-top: 2px solid var(--gold-dark);
+  padding: 1.5rem 2rem; text-align: center;
+  font-family: var(--ff-title); font-size: 0.75rem;
+  letter-spacing: 2px; color: rgba(255,255,255,0.4);
+  margin-top: auto;
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVO / MÓVIL (Magia para Celulares)
+═══════════════════════════════════════════════ */
+@media (max-width: 850px) {
+  .hamburger { display: flex; }
+  
+  .nav-inner { padding: 0 1rem; }
+  
+  .nav-menu {
+    position: absolute; top: 100%; left: 0; right: 0;
+    flex-direction: column; 
+    background: rgba(8, 24, 46, 0.98);
+    border-bottom: 3px solid var(--gold-dark);
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+  }
+  
+  .nav-menu.open { max-height: 80vh; overflow-y: auto; }
+  
+  .dropdown { flex-direction: column; }
+  
+  .drop-btn { 
+    width: 100%; padding: 18px 20px; 
+    justify-content: space-between; 
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.95rem;
+  }
+  
+  /* En móvil, los submenús se expanden suavemente usando focus o tap */
+  .drop-content { 
+    position: static; box-shadow: none; border: none; 
+    border-left: 3px solid var(--gold); border-radius: 0;
+    margin-left: 20px; background: rgba(0,0,0,0.2); 
+    display: none; width: auto;
+  }
+  
+  .dropdown:hover .drop-content, .dropdown:focus-within .drop-content { display: block; }
+  
+  .nav-lib { 
+    width: 100%; padding: 18px 20px; 
+    justify-content: flex-start;
+    border-bottom: 1px solid rgba(255,255,255,0.05); 
+    font-size: 0.95rem; 
+  }
+
+  .main-panel { width: 100%; margin: 1rem 0; }
+  
+  .tablet { 
+    padding: 1.5rem 1rem; 
+    border-radius: 0; /* Pantalla completa en móvil */
+    border-left: none; border-right: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+  
+  h1 { font-size: 1.5rem; letter-spacing: 2px; }
+  .grid { gap: 15px; grid-template-columns: 1fr; } /* 1 columna estricta en celular */
+  
+  .embed-frame { height: 80vh; border-radius: 6px; } /* Más altura en móvil */
+}
 </style>
 </head>
 <body>
@@ -212,37 +395,44 @@ footer{
 
 <nav>
   <div class="nav-inner">
-    <a href="#" class="nav-brand" onclick="go('home');return false;">🏛️ PROFE FELIPE</a>
-    <ul class="nav-menu">
-      <li class="dropdown">
-        <button class="drop-btn">BÁSICA ▾</button>
+    <a href="#" class="nav-brand" onclick="go('home');return false;">
+      <i class="fa-solid fa-building-columns"></i> PROFE FELIPE
+    </a>
+
+    <button class="hamburger" id="ham" onclick="toggleNav()">
+      <span></span><span></span><span></span>
+    </button>
+
+    <ul class="nav-menu" id="nav-menu">
+      <li class="dropdown" tabindex="0">
+        <button class="drop-btn">BÁSICA <i class="fa-solid fa-chevron-down"></i></button>
         <div class="drop-content">
-          <a href="#" onclick="go('6basico')">VI° Básico</a>
-          <a href="#" onclick="go('7basico')">VII° Básico</a>
-          <a href="#" onclick="go('8basico')">VIII° Básico</a>
+          <a href="#" onclick="go('6basico'); closeNav(); return false;"><i class="fa-solid fa-flask"></i> VI° Básico</a>
+          <a href="#" onclick="go('7basico'); closeNav(); return false;"><i class="fa-solid fa-microscope"></i> VII° Básico</a>
+          <a href="#" onclick="go('8basico'); closeNav(); return false;"><i class="fa-solid fa-atom"></i> VIII° Básico</a>
         </div>
       </li>
-      <li class="dropdown">
-        <button class="drop-btn">MEDIA ▾</button>
+      <li class="dropdown" tabindex="0">
+        <button class="drop-btn">MEDIA <i class="fa-solid fa-chevron-down"></i></button>
         <div class="drop-content">
-          <a href="#" onclick="go('1medio')">I° Medio</a>
-          <a href="#" onclick="go('2medio')">II° Medio</a>
-          <a href="#" onclick="go('3medio')">III° Medio</a>
-          <a href="#" onclick="go('4medio')">IV° Medio</a>
+          <a href="#" onclick="go('1medio'); closeNav(); return false;"><i class="fa-solid fa-dna"></i> I° Medio</a>
+          <a href="#" onclick="go('2medio'); closeNav(); return false;"><i class="fa-solid fa-bolt"></i> II° Medio</a>
+          <a href="#" onclick="go('3medio'); closeNav(); return false;"><i class="fa-solid fa-gears"></i> III° Medio</a>
+          <a href="#" onclick="go('4medio'); closeNav(); return false;"><i class="fa-solid fa-meteor"></i> IV° Medio</a>
         </div>
       </li>
-      <li class="dropdown">
-        <button class="drop-btn">⚽ DEPORTES ▾</button>
+      <li class="dropdown" tabindex="0">
+        <button class="drop-btn">⚽ DEPORTES <i class="fa-solid fa-chevron-down"></i></button>
         <div class="drop-content">
-          <a href="#" onclick="go('futbol_varones')">Liga Varones</a>
-          <a href="#" onclick="go('futbol_damas')">Liga Damas</a>
-          <a href="#" onclick="go('goleadores')">⚽ Goleadores</a>
-          <a href="#" onclick="go('calendario_futbol')">📅 Calendario</a>
-          <a href="#" onclick="go('bases_futbol')">📜 Bases</a>
+          <a href="#" onclick="go('futbol_varones'); closeNav(); return false;"><i class="fa-solid fa-mars"></i> Liga Varones</a>
+          <a href="#" onclick="go('futbol_damas'); closeNav(); return false;"><i class="fa-solid fa-venus"></i> Liga Damas</a>
+          <a href="#" onclick="go('goleadores'); closeNav(); return false;"><i class="fa-solid fa-shoe-prints"></i> Goleadores</a>
+          <a href="#" onclick="go('calendario_futbol'); closeNav(); return false;"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
+          <a href="#" onclick="go('bases_futbol'); closeNav(); return false;"><i class="fa-solid fa-scroll"></i> Bases</a>
         </div>
       </li>
-      <li><a href="#" onclick="go('juegos')" class="drop-btn">🎮 JUEGOS</a></li>
-      <li><a href="#" onclick="go('biblioteca')" class="drop-btn">📁 BIBLIOTECA</a></li>
+      <li><a href="#" onclick="go('juegos'); closeNav(); return false;" class="nav-lib"><i class="fa-solid fa-gamepad"></i> JUEGOS</a></li>
+      <li><a href="#" onclick="go('biblioteca'); closeNav(); return false;" class="nav-lib"><i class="fa-solid fa-book-open"></i> BIBLIOTECA</a></li>
     </ul>
   </div>
 </nav>
@@ -258,7 +448,16 @@ footer{
 </footer>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyFcG4150ORc85aIqbrAmtfBrZAol-iXB2I4RDEFMB87ESzTpE7vpoYIYpSPWL28Mas/exec';
+// Manejo del menú móvil
+function toggleNav() {
+  document.getElementById('ham').classList.toggle('open');
+  document.getElementById('nav-menu').classList.toggle('open');
+}
+
+function closeNav() {
+  document.getElementById('ham').classList.remove('open');
+  document.getElementById('nav-menu').classList.remove('open');
+}
 
 const ROUTES = {
   home: rHome,
@@ -275,7 +474,12 @@ const ROUTES = {
   'bases_futbol': rBasesFutbol,
   'calendario_futbol': rCalendarioFutbol,
   juegos: rJuegos,
-  biblioteca: rLib
+  biblioteca: rLib,
+  'game-snake': s => rGame(s, 'juego_snake.html', '🐍 Snake'),
+  'game-memoria': s => rGame(s, 'juego_memoria.html', '🃏 Memoria Clásico'),
+  'game-tres': s => rGame(s, 'juego_tictactoe.html', '❌ Tres en Raya'),
+  'game-toninas-mem': s => rGame(s, 'juego_memorice_toninas.html', '🐬 Memorice Toninas'),
+  'game-toninas-lab': s => rGame(s, 'juego_laberinto_toninas.html', '🌀 Laberinto Toninas')
 };
 
 function go(page){
@@ -284,7 +488,7 @@ function go(page){
   if(!fn) return;
   stage.innerHTML = '';
   fn(stage);
-  window.scrollTo(0,0);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function rHome(stage){
@@ -298,42 +502,90 @@ function rHome(stage){
       <h2 class="sh">NOVEDADES & DEPORTES</h2>
       <div class="grid">
         <div class="card c-gold">
-          <h3>⚽ CAMPEONATO 2026</h3>
-          <p>Ligas activas. Revisa goleadores, fechas y reglamento.</p>
-          <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
-            <button class="btn-p" onclick="go('goleadores')" style="flex:1">Goleadores</button>
-            <button class="btn-s" onclick="go('calendario_futbol')" style="flex:1">Calendario</button>
+          <h3><i class="fa-solid fa-trophy"></i> CAMPEONATO 2026</h3>
+          <p>Ligas activas. Revisa los máximos artilleros, fechas y reglamento oficial.</p>
+          <div class="btn-group">
+            <button class="btn-p" onclick="go('goleadores')"><i class="fa-solid fa-futbol"></i> Goleadores</button>
+            <button class="btn-p" onclick="go('calendario_futbol')" style="background: linear-gradient(135deg, #1b4d3e, #22c55e);"><i class="fa-solid fa-calendar"></i> Calendario</button>
           </div>
         </div>
         <div class="card c-laurel">
-          <h3>🎮 SALA DE JUEGOS</h3>
-          <p>Nuevos desafíos de las Toninas Marinas ya disponibles.</p>
-          <button class="btn-p" onclick="go('juegos')" style="width:100%; margin-top:10px;">IR A JUGAR</button>
+          <h3><i class="fa-solid fa-gamepad"></i> SALA DE JUEGOS</h3>
+          <p>Nuevos desafíos de las Toninas Marinas ya disponibles para ejercitar tu mente.</p>
+          <button class="btn-s" onclick="go('juegos')"><i class="fa-solid fa-play"></i> Ingresar a Jugar</button>
+        </div>
+      </div>
+      
+      <h2 class="sh" style="margin-top:2.5rem;">MÓDULOS DE ESTUDIO</h2>
+      <div class="grid">
+        <div class="card c-sea" style="cursor:pointer" onclick="go('4medio')">
+          <h3><i class="fa-solid fa-meteor"></i> IV° MEDIO · FÍSICA</h3>
+          <p>Explora el módulo interactivo: Fuerzas Centrales y Dinámica Estelar.</p>
+        </div>
+        <div class="card c-laurel" style="cursor:pointer" onclick="go('biblioteca')">
+          <h3><i class="fa-solid fa-book-open"></i> BIBLIOTECA VIRTUAL</h3>
+          <p>Acceso directo a guías, rúbricas y material complementario en Drive.</p>
         </div>
       </div>
     </div>`;
 }
 
-function rGoleadores(s){ s.innerHTML = '<h1>TABLA DE GOLEADORES</h1><iframe src="goleadores.html" class="embed-frame"></iframe>'; }
-function r3(s){ s.innerHTML = '<h1>III° Medio</h1><iframe src="bitacora_tech.html" class="embed-frame"></iframe>'; }
-function r4(s){ s.innerHTML = '<h1>IV° Medio</h1><iframe src="tesoros_espacio.html" class="embed-frame"></iframe>'; }
-function r6(s){ s.innerHTML = '<h1>VI° Básico</h1><iframe src="bitacora_6basico.html" class="embed-frame"></iframe>'; }
-function rLib(s){ s.innerHTML = '<h1>Biblioteca</h1><iframe src="https://drive.google.com/embeddedfolderview?id=1_8SD_30CH4lAwBrLSg4sw9yKZiC9kNNJ#list" class="embed-frame"></iframe>'; }
-function rFutbolVarones(s){ s.innerHTML = '<h1>LIGA VARONES</h1><iframe src="tablafutbol.html" class="embed-frame"></iframe>'; }
-function rFutbolDamas(s){ s.innerHTML = '<h1>LIGA DAMAS</h1><iframe src="tablafutbol_fem.html" class="embed-frame"></iframe>'; }
-function rBasesFutbol(s){ s.innerHTML = '<h1>BASES</h1><iframe src="bases_campeonato.html" class="embed-frame"></iframe>'; }
-function rCalendarioFutbol(s){ s.innerHTML = '<h1>CALENDARIO</h1><iframe src="calendario_futbol.html" class="embed-frame"></iframe>'; }
-
 function rJuegos(stage){
-  stage.innerHTML = `<h1>🎮 SALA DE JUEGOS</h1><p>Pronto más juegos aquí.</p>`;
+  stage.innerHTML = `
+    <div class="fade-in">
+      <div class="tablet-header">
+        <h1>🎮 SALA DE JUEGOS</h1>
+        <p class="page-sub">Desafíos lógicos y destreza</p>
+      </div>
+      <div class="grid">
+        <div class="card c-sea" style="cursor:pointer" onclick="go('game-toninas-mem')">
+          <h3>🐬 MEMORICE TONINAS</h3>
+          <p>Entrena tu memoria visual con los habitantes del océano.</p>
+        </div>
+        <div class="card c-fem" style="cursor:pointer" onclick="go('game-toninas-lab')">
+          <h3>🌀 LABERINTO TONINAS</h3>
+          <p>Ayuda a la tonina a escapar encontrando el camino.</p>
+        </div>
+        <div class="card c-gold" style="cursor:pointer" onclick="go('game-snake')">
+          <h3>🐍 SNAKE</h3>
+          <p>El clásico juego de la serpiente en código retro.</p>
+        </div>
+      </div>
+    </div>`;
+}
+
+function rGoleadores(s){ s.innerHTML = '<h1><i class="fa-solid fa-shoe-prints"></i> GOLEADORES</h1><iframe src="goleadores.html" class="embed-frame"></iframe>'; }
+function r3(s){ s.innerHTML = '<h1>III° Medio: Tecnología</h1><iframe src="bitacora_tech.html" class="embed-frame"></iframe>'; }
+function r4(s){ s.innerHTML = '<h1>IV° Medio: Física</h1><iframe src="tesoros_espacio.html" class="embed-frame"></iframe>'; }
+function r6(s){ s.innerHTML = '<h1>VI° Básico: Ciencias</h1><iframe src="bitacora_6basico.html" class="embed-frame"></iframe>'; }
+function rLib(s){ s.innerHTML = '<h1><i class="fa-solid fa-book-open"></i> Biblioteca</h1><iframe src="https://drive.google.com/embeddedfolderview?id=1_8SD_30CH4lAwBrLSg4sw9yKZiC9kNNJ#list" class="embed-frame"></iframe>'; }
+function rFutbolVarones(s){ s.innerHTML = '<h1><i class="fa-solid fa-mars"></i> LIGA VARONES</h1><iframe src="tablafutbol.html" class="embed-frame"></iframe>'; }
+function rFutbolDamas(s){ s.innerHTML = '<h1><i class="fa-solid fa-venus"></i> LIGA DAMAS</h1><iframe src="tablafutbol_fem.html" class="embed-frame"></iframe>'; }
+function rBasesFutbol(s){ s.innerHTML = '<h1><i class="fa-solid fa-scroll"></i> BASES OFICIALES</h1><iframe src="bases_campeonato.html" class="embed-frame"></iframe>'; }
+function rCalendarioFutbol(s){ s.innerHTML = '<h1><i class="fa-solid fa-calendar-days"></i> CALENDARIO</h1><iframe src="calendario_futbol.html" class="embed-frame"></iframe>'; }
+
+function rGame(s, file, name){
+  s.innerHTML = `
+    <div class="fade-in">
+      <h1>${name}</h1>
+      <button class="btn-s" onclick="go('juegos')" style="width: auto; margin-bottom:15px;"><i class="fa-solid fa-arrow-left"></i> Volver a Juegos</button>
+      <iframe src="${file}" class="embed-frame" style="background:white;"></iframe>
+    </div>`;
 }
 
 function rComing(s, name){
-  s.innerHTML = `<div style="text-align:center; padding:4rem 2rem;"><h2>🔭 ${name}</h2><p>Módulo en preparación.</p></div>`;
+  s.innerHTML = `
+    <div class="fade-in" style="text-align:center; padding:4rem 1rem;">
+      <i class="fa-solid fa-person-digging" style="font-size: 3rem; color: var(--gold); margin-bottom: 20px;"></i>
+      <h2>${name}</h2>
+      <p style="color:var(--text-soft); margin-top:1rem; font-size: 1.1rem;">Módulo en construcción. Pronto habrá novedades.</p>
+      <button class="btn-p" onclick="go('home')" style="margin-top:2rem; width: auto;"><i class="fa-solid fa-house"></i> Volver al Inicio</button>
+    </div>`;
 }
 
 document.getElementById('yr').textContent = new Date().getFullYear();
 go('home');
 </script>
+
 </body>
 </html>
