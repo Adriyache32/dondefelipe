@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RPG Escolar - Un Día de Clases</title>
+    <style>
+        :root {
+            --bg-dark: #111827;
+            --patio-green: #22c55e;
+            --cancha-blue: #1e40af;     
+            --sala-gray: #e5e7eb;      
+            --pasillo-gray: #4b5563;
+            --gimnasio-wood: #d97706;
+            --wood-brown: #78350f;     
+            --school-yellow: #f59e0b;  
+            --gold: #fcd34d;
+            --hp-color: #ef4444;
+            --mp-color: #3b82f6;
+            --exp-color: #a855f7;
+            --text-light: #f8fafc;
+        }
+
+        * { box-sizing: border-box; touch-action: manipulation; }
+
+        body {
+            margin: 0; padding: 0; background-color: var(--bg-dark); color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            height: 100vh; overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #ui-bar {
+            width: 100%; max-width: 500px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px;
+            padding: 8px 10px; background: rgba(0,0,0,0.9); font-weight: bold; font-size: 0.8rem;
+            border-bottom: 2px solid var(--school-yellow); z-index: 500;
+        }
+
+        .inv-item { display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.15); padding: 4px 6px; border-radius: 6px; }
+        .stat-hp { color: var(--hp-color); } .stat-mp { color: var(--mp-color); } .stat-exp { color: var(--exp-color); }
+        .btn-ui { background:var(--school-yellow); border:none; border-radius:4px; padding:4px 8px; font-weight:bold; cursor:pointer; color:black; font-size: 0.8rem;}
+        .btn-ui.dark { background:#4b5563; color:white; }
+
+        #game-container {
+            position: relative; width: 100%; max-width: 500px; flex-grow: 1;
+            display: flex; align-items: center; justify-content: center; padding: 10px;
+        }
+
+        canvas {
+            width: 100%; aspect-ratio: 1 / 1; max-width: 450px; max-height: 450px;
+            background-color: #000; border: 4px solid var(--wood-brown); border-radius: 8px;
+            image-rendering: pixelated; box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+        }
+
+        /* Diálogos y Menús */
+        .overlay-panel {
+            position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
+            width: 92%; max-width: 420px; background: rgba(17, 24, 39, 0.98);
+            border: 3px solid var(--school-yellow); border-radius: 12px; padding: 15px;
+            display: none; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+        }
+        .overlay-panel.center { top: 50%; bottom: auto; transform: translate(-50%, -50%); max-height: 80vh; overflow-y:auto; }
+
+        #dialog-text { margin: 0 0 12px 0; font-size: 0.95rem; line-height: 1.4; text-align: left; }
+        
+        .dialog-choices { display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto; padding-right: 5px; }
+        .dialog-btn {
+            background: var(--school-yellow); color: #000; border: none; padding: 10px;
+            font-weight: bold; font-size: 0.9rem; cursor: pointer; border-radius: 6px; width: 100%; margin-top:5px;
+        }
+        .dialog-btn:active { background: var(--wood-brown); color: white; }
+        .dialog-btn.choice { background: #374151; color: var(--school-yellow); border: 2px solid var(--school-yellow); text-transform: none; margin-top:0;}
+
+        /* Panel de Batalla */
+        #battle-panel {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, #9ca3af, #d1d5db);
+            display: none; flex-direction: column; z-index: 600;
+            border-radius: 8px; border: 4px solid #1f2937; overflow: hidden;
+        }
+        .battle-scene { flex-grow: 1; position: relative; padding: 10px; }
+        .combatant-box { background: rgba(255,255,255,0.9); border: 3px solid #374151; border-radius: 8px; padding: 10px; color: black; font-weight: bold; width: 60%; position: absolute; box-shadow: 2px 2px 0px rgba(0,0,0,0.3); }
+        #enemy-box { top: 20px; right: 10px; }
+        #player-box { bottom: 20px; left: 10px; }
+        .battle-sprite { font-size: 4rem; position: absolute; }
+        #enemy-sprite { top: 40px; left: 30px; animation: float 2s infinite ease-in-out; }
+        #player-sprite { bottom: 40px; right: 30px; }
+        
+        .hp-bar-bg { width: 100%; height: 10px; background: #ccc; border-radius: 5px; margin-top: 5px; overflow: hidden; border: 1px solid #666; }
+        .hp-bar-fill { height: 100%; background: #22c55e; transition: width 0.3s; }
+        
+        .battle-ui { background: #1f2937; color: white; border-top: 4px solid var(--school-yellow); display: flex; height: 35%; }
+        .battle-log { width: 50%; padding: 10px; font-size: 0.9rem; border-right: 2px solid #4b5563; overflow-y: auto; }
+        .battle-actions { width: 50%; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 10px; }
+        .b-btn { background: #fef08a; color: #78350f; border: 2px solid #b45309; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem;}
+        .b-btn:active { background: var(--school-yellow); }
+
+        @keyframes float { 0% { transform: translateY(0); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
+
+        /* Controles Móviles */
+        #controls-container {
+            width: 100%; max-width: 500px; padding: 5px 20px 20px 20px;
+            display: flex; justify-content: space-between; align-items: center; gap: 15px;
+            touch-action: none; /* Crucial para evitar zoom y scroll en móviles */
+            -webkit-touch-callout: none;
+        }
+
+        #d-pad { display: grid; grid-template-columns: repeat(3, 60px); grid-template-rows: repeat(2, 60px); gap: 8px; }
+        .d-btn { 
+            background: rgba(255,255,255,0.15); border: 2px solid var(--school-yellow); border-radius: 12px; 
+            color: white; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; 
+            user-select: none; -webkit-user-select: none; touch-action: none;
+        }
+        .d-btn:active { background: var(--school-yellow); color: black; }
+        #btn-up { grid-column: 2; grid-row: 1; } #btn-left { grid-column: 1; grid-row: 2; }
+        #btn-down { grid-column: 2; grid-row: 2; } #btn-right { grid-column: 3; grid-row: 2; }
+        
+        #btn-action, #btn-exit {
+            width: 70px; height: 70px; border-radius: 50%; border: 4px solid var(--school-yellow); font-weight: 900; font-size: 1rem;
+            display: flex; align-items: center; justify-content: center; user-select: none; text-align:center; -webkit-user-select: none; touch-action: none;
+        }
+        #btn-action { background: rgba(245, 158, 11, 0.2); color: var(--school-yellow); }
+        #btn-action:active { background: var(--school-yellow); color: black; transform: scale(0.95); }
+        #btn-exit { background: rgba(239, 68, 68, 0.2); border-color: var(--hp-color); color: var(--hp-color); display: none;}
+        #btn-exit:active { background: var(--hp-color); color: white; transform: scale(0.95); }
+        #damage-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(239, 68, 68, 0.4); z-index: 400; display: none; pointer-events: none; }
+        
+        /* Permitir seleccionar texto solo en el input */
+        #name-input { user-select: auto; -webkit-user-select: auto; }
+
+        @media (min-width: 768px) { #controls-container { display: none; } }
+    </style>
+</head>
+<body>
+
+    <div id="ui-bar">
+        <div class="inv-item">Nvl <span id="lvl-count" style="color:var(--gold);">1</span></div>
+        <div class="inv-item">❤️ <span id="hp-count" class="stat-hp">100</span></div>
+        <div class="inv-item">✨ <span id="mp-count" class="stat-mp">50</span></div>
+        <div class="inv-item">🌟 <span id="exp-count" class="stat-exp">0</span>/<span id="maxexp-count">100</span></div>
+        <div class="inv-item">🪙 <span id="coin-count" style="color:var(--gold);">0</span></div>
+        <div>
+            <button class="btn-ui" onclick="openInventory()">🎒</button>
+            <button onclick="saveGame()" class="btn-ui">💾</button>
+            <button onclick="loadGame()" class="btn-ui dark">📂</button>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <div id="damage-overlay"></div>
+        
+        <!-- PANEL DE BATALLA RPG -->
+        <div id="battle-panel">
+            <div class="battle-scene">
+                <div id="enemy-sprite" class="battle-sprite">😈</div>
+                <div id="enemy-box" class="combatant-box">
+                    <div style="display:flex; justify-content:space-between;">
+                        <span id="b-enemy-name">Enemigo</span> <span id="b-enemy-lvl">Lvl ?</span>
+                    </div>
+                    <div class="hp-bar-bg"><div id="b-enemy-hp-fill" class="hp-bar-fill"></div></div>
+                </div>
+
+                <div id="player-sprite" class="battle-sprite">🧑‍🎓</div>
+                <div id="player-box" class="combatant-box">
+                    <div style="display:flex; justify-content:space-between;">
+                        <span id="b-player-name">Tú</span> <span id="b-player-hp">100/100</span>
+                    </div>
+                    <div class="hp-bar-bg"><div id="b-player-hp-fill" class="hp-bar-fill" style="background:#3b82f6;"></div></div>
+                </div>
+            </div>
+            <div class="battle-ui">
+                <div class="battle-log" id="battle-log">¡Aparece un enemigo salvaje!</div>
+                <div class="battle-actions">
+                    <button class="b-btn" onclick="battleAction('ataque')">⚔️ Atacar</button>
+                    <button class="b-btn" onclick="battleAction('habilidad')">✨ Habilidad (15MP)</button>
+                    <button class="b-btn" onclick="battleAction('objeto')">😋 Comer (+20HP)</button>
+                    <button class="b-btn" onclick="battleAction('huir')">🏃 Huir</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="dialog-box" class="overlay-panel">
+            <p id="dialog-text"></p>
+            <div id="name-input-container" style="display:none;">
+                <input type="text" id="name-input" placeholder="Tu nombre" style="width:100%; padding:10px; margin-bottom:10px; background:rgba(0,0,0,0.5); color:white; border:2px solid var(--school-yellow); border-radius:6px; text-align:center;">
+                <button class="dialog-btn" onclick="submitName()">Presentarse</button>
+            </div>
+            <div id="dialog-buttons" class="dialog-choices"></div>
+        </div>
+
+        <div id="inventory-panel" class="overlay-panel center">
+            <h3 style="margin-top:0; color:var(--gold); text-align:center;">🎒 Tu Mochila</h3>
+            <p style="text-align:center; font-size:0.8rem; margin:0; color:#ccc;">Arma: <span id="equipped-weapon">Manos desnudas</span></p>
+            <ul id="inv-items-list"></ul>
+            <button class="dialog-btn" onclick="closeInventory()">Cerrar</button>
+        </div>
+        
+        <div id="memory-panel" class="overlay-panel center">
+            <h3 style="margin-top:0; color:var(--gold); text-align:center;">🔬 Memorice Científico</h3>
+            <p style="text-align:center; font-size:0.85rem;">Encuentra los pares.</p>
+            <div id="memory-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 15px 0;"></div>
+            <button class="dialog-btn" onclick="closeMemoryGame()">Cerrar</button>
+        </div>
+
+        <div id="piano-panel" class="overlay-panel center">
+            <h3 style="margin-top:0; color:var(--gold); text-align:center;">🎹 Sala de Música</h3>
+            <p style="text-align:center; font-size:0.85rem; color:#ccc;">Toca para componer.</p>
+            <div class="piano-keys" style="display: flex; justify-content: center; gap: 4px; margin: 20px 0; height: 120px;">
+                <div class="key" style="background: white; color: black; font-weight: bold; flex: 1; max-width: 45px; border-radius: 0 0 8px 8px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; cursor: pointer; border: 1px solid #ccc;" onclick="playNote(261.63)">Do</div>
+                <div class="key" style="background: white; color: black; font-weight: bold; flex: 1; max-width: 45px; border-radius: 0 0 8px 8px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; cursor: pointer; border: 1px solid #ccc;" onclick="playNote(293.66)">Re</div>
+                <div class="key" style="background: white; color: black; font-weight: bold; flex: 1; max-width: 45px; border-radius: 0 0 8px 8px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; cursor: pointer; border: 1px solid #ccc;" onclick="playNote(329.63)">Mi</div>
+                <div class="key" style="background: white; color: black; font-weight: bold; flex: 1; max-width: 45px; border-radius: 0 0 8px 8px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; cursor: pointer; border: 1px solid #ccc;" onclick="playNote(349.23)">Fa</div>
+                <div class="key" style="background: white; color: black; font-weight: bold; flex: 1; max-width: 45px; border-radius: 0 0 8px 8px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; cursor: pointer; border: 1px solid #ccc;" onclick="playNote(392.00)">Sol</div>
+                <div class="key" style="background: white; color: black; font-weight: bold; flex: 1; max-width: 45px; border-radius: 0 0 8px 8px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; cursor: pointer; border: 1px solid #ccc;" onclick="playNote(440.00)">La</div>
+                <div class="key" style="background: white; color: black; font-weight: bold; flex: 1; max-width: 45px; border-radius: 0 0 8px 8px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; cursor: pointer; border: 1px solid #ccc;" onclick="playNote(493.88)">Si</div>
+            </div>
+            <button class="dialog-btn" onclick="closePiano()">Cerrar Piano</button>
+        </div>
+    </div>
+
+    <div id="controls-container">
+        <div id="d-pad">
+            <div class="d-btn" id="btn-up">▲</div>
+            <div class="d-btn" id="btn-left">◀</div>
+            <div class="d-btn" id="btn-down">▼</div>
+            <div class="d-btn" id="btn-right">▶</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+            <div id="btn-action">A</div>
+            <div id="btn-exit">🚪<br>Salir</div>
+        </div>
+    </div>
+
+<script>
+const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
+const TILE_SIZE = 40; const ROWS = 10; const COLS = 10;
+
+// Configuración Piano
+let audioCtx;
+function initAudio() { if(!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } }
+function playNote(frequency) {
+    initAudio(); if(audioCtx.state === 'suspended') audioCtx.resume();
+    const oscillator = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
+    oscillator.type = 'sine'; oscillator.frequency.value = frequency;
+    oscillator.connect(gainNode); gainNode.connect(audioCtx.destination);
+    oscillator.start(); gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 1.5);
+    oscillator.stop(audioCtx.currentTime + 1.5);
+}
+
+// Estado del Jugador
+let player = { 
+    x: 5, y: 8, facing: 'up', sprite: '🧑‍🎓', 
+    hp: 100, maxHp: 100, mp: 50, maxMp: 50,
+    lvl: 1, exp: 0, maxExp: 100, atk: 10, weapon: { name: 'Manos desnudas', dmg: 0 }
+};
+let inventory = []; let coins = 3; 
+let previousMapId = 'entrada'; let previousPos = {x: 5, y: 8};
+
+let progress = { 
+    playerName: "", doorOpen: false, huertoPlanted: false, questKella: 0, 
+    kinderUnlocked: false, questParvularia: 0, inspectoriaUnlocked: false 
+};
+
+const qBanks = {
+    'Felipe': [{ q: "¿Fórmula química del agua?", opts: ["H2O", "CO2", "HO2"], ans: 0 }, { q: "Fuerza que nos atrae a la Tierra:", opts: ["Magnetismo", "Fricción", "Gravedad"], ans: 2 }],
+    'Paulina': [{ q: "Raíz cuadrada de 144:", opts: ["12", "14", "16"], ans: 0 }, { q: "Área de un rectángulo de 5x4:", opts: ["9", "20", "18"], ans: 1 }],
+    'Sandra': [{ q: "Año Primera Junta de Gobierno en Chile:", opts: ["1810", "1818", "1812"], ans: 0 }],
+    'Rosita': [{ q: "Sinónimo de Efímero:", opts: ["Eterno", "Pasajero", "Largo"], ans: 1 }]
+};
+
+const mapLinks = { 
+    'sala_felipe': 'pasillo', 'sala_paulina': 'pasillo', 'sala_sandra': 'pasillo',
+    'sala_rosita': 'pasillo', 'sala_musica': 'pasillo', 'sala_contencion': 'pasillo',
+    'sala_psicopedagogia': 'pasillo', 'biblioteca': 'pasillo', 'gimnasio': 'patio', 
+    'kinder': 'patio', 'inspectoria': 'entrada', 'patio': 'entrada', 'pasillo': 'entrada'
+};
+
+const maps = {
+    'entrada': [
+        ['#','#','#','#','D','D','#','#','#','#'],
+        ['#','.','.','I','.','.','.','.','.','#'],
+        ['#','.','T','.','.','.','T','.','.','#'],
+        ['#','.','.','.','z','.','.','.','.','#'],
+        ['D','.','$','.','.','.','.','$','.','#'], 
+        ['D','.','.','.','.','.','.','.','.','#'], 
+        ['#','.','T','.','.','.','T','.','.','#'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','.','.','.','.','🧑‍🎓','.','.','.','#'],
+        ['#','#','#','#','#','#','#','#','#','#']
+    ],
+    'inspectoria': [ 
+        ['#','#','#','#','#','#','#','#','#','#'],
+        ['#','.','.','.','_','.','.','.','.','#'],
+        ['#','.','S','S','.','S','S','.','.','#'],
+        ['#','.','i','.','.','.','v','.','.','#'],
+        ['#','.','.','.','.','.','.','.','.','E'], 
+        ['#','.','b','b','.','.','.','.','.','E'], 
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','#','#','#','#','#','#','#','#','#']
+    ],
+    'pasillo': [
+        ['#','#','#','E','E','#','E','E','#','#'], 
+        ['#','.','.','.','.','.','e','.','.','#'],
+        ['E','.','L','L','.','.','L','L','.','E'], 
+        ['E','.','L','L','.','z','L','L','.','E'], 
+        ['#','.','e','.','.','.','.','.','.','#'],
+        ['E','.','L','L','.','.','L','L','.','E'], 
+        ['E','.','L','L','.','.','L','L','.','E'],
+        ['#','.','.','.','.','e','.','.','.','#'],
+        ['E','.','L','L','.','.','L','L','.','E'],
+        ['#','#','#','#','E','E','#','#','#','#']
+    ],
+    'sala_felipe': [ 
+        ['#','#','#','#','#','#','#','#','#','#'],
+        ['#','.','.','.','P','y','.','W','.','#'],
+        ['#','.','.','.','_','.','.','.','.','#'],
+        ['#','.','N','N','.','N','N','.','.','#'],
+        ['#','.','N','C','.','N','B','.','.','E'], 
+        ['#','.','N','N','.','N','N','.','.','E'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','.','S','S','.','S','S','.','.','#'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','#','#','#','#','#','#','#','#','#']
+    ],
+    'sala_paulina': [ 
+        ['#','#','#','#','#','#','#','#','#','#'],
+        ['#','.','.','.','M','.','.','.','.','#'],
+        ['#','m','.','.','_','.','.','r','.','#'],
+        ['#','.','S','S','.','S','S','.','.','#'],
+        ['#','.','S','S','.','S','S','.','.','#'],
+        ['#','.','.','n','.','p','.','.','.','#'],
+        ['#','.','S','S','.','S','S','.','.','#'],
+        ['#','!','S','S','.','S','S','.','.','#'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','#','#','#','E','E','#','#','#','#']
+    ],
+    'sala_sandra': [ 
+        ['#','#','#','#','#','#','#','#','#','#'],
+        ['#','.','.','.','X','.','.','.','.','#'],
+        ['#','.','.','.','_','.','.','.','.','#'],
+        ['#','.','S','S','.','S','S','.','.','#'],
+        ['#','.','S','S','.','S','S','.','.','#'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','.','S','S','.','S','S','.','.','#'],
+        ['#','.','S','S','.','S','S','.','.','#'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','#','#','#','E','E','#','#','#','#']
+    ],
+    'sala_rosita': [ 
+        ['#','#','#','#','#','#','#','#','#','#'],
+        ['#','.','b','b','R','b','b','.','.','#'],
+        ['#','.','b','.','_','.','b','.','.','#'],
+        ['#','.','Y','.','.','.','Y','.','.','#'],
+        ['#','.','S','S','.','S','S','.','.','E'],
+        ['#','.','b','.','.','.','b','.','.','E'],
+        ['#','.','S','S','.','S','S','.','.','#'],
+        ['#','.','S','S','.','S','S','.','.','#'],
+        ['#','.','b','b','.','b','b','.','.','#'],
+        ['#','#','#','#','#','#','#','#','#','#']
+    ],
+    'biblioteca': [ 
+        ['#','#','#','#','#','#','#','#','#','#'],
+        ['#','.','b','b','b','b','b','.','.','#'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','.','Y','.','.','.','Y','.','.','#'],
+        ['E','.','.','.','8','.','.','.','.','#'],
+        ['E','.','.','.','=','.','.','.','.','#'],
+        ['#','.','b','b','.','b','b','.','?','#'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','#','#','#','#','#','#','#','#','#']
+    ],
+    'sala_musica': [ 
+        ['#','#','#','#','#','#','#','#','#','#'],
+        ['#','.','.','♪','U','♫','.','.','.','#'], 
+        ['#','.','.','.','_','.','.','.','.','#'],
+        ['#','.','Q','Q','.','G','G','.','.','#'], 
+        ['E','.','.','.','.','.','.','.','.','#'], 
+        ['E','.','d','d','.','d','d','.','.','#'], 
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','.','$','.','.','.','.','$','.','#'],
+        ['#','#','#','#','#','#','#','#','#','#']
+    ],
+    'sala_contencion': [
+        ['#','#','#','#','#','#','#','#','#','#'],
+        ['#','.','.','.','T','.','.','.','.','#'],
+        ['#','.','Y','.','.','.','.','Y','.','#'],
+        ['#','.','.','.','5','.','6','.','.','#'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','.','Y','.','.','.','.','Y','.','#'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['E','.','.','.','.','.','.','.','.','#'],
+        ['E','#','#','#','#','#','#','#','#','#']
+    ],
+    'sala_psicopedagogia': [
+        ['#','#','#','#','#','#','#','#','#','#'],
+        ['#','.','.','.','T','.','.','.','.','#'],
+        ['#','.','.','.','7','.','.','.','.','#'],
+        ['#','.','.','.','=','.','.','.','.','#'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','.','b','b','.','.','b','b','.','#'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','#','#','#','#','#','#','#','#','E'],
+        ['#','#','#','#','#','#','#','#','#','E']
+    ],
+    'patio': [
+        ['#','#','#','#','E','E','#','#','#','#'], 
+        ['#','K','K','K','.','.','e','z','.','#'], 
+        ['#','=','V','=','.','.','.','.','.','#'], 
+        ['E','.','.','.','.','.','.','.','e','E'], 
+        ['E','.','.','.','.','.','.','.','.','E'], 
+        ['#','.','H','H','.','.','A','.','.','#'], 
+        ['#','.','H','H','.','.','.','.','.','#'],
+        ['#','.','.','.','.','.','T','.','.','#'],
+        ['#','$','2','.','.','.','.','.','$','#'], 
+        ['#','#','#','#','#','#','#','#','#','#']
+    ],
+    'gimnasio': [ 
+        ['#','#','#','#','#','#','#','#','#','#'], 
+        ['#','.','.','j','.','.','.','.','.','#'], 
+        ['#','.','e','F','.','.','F','.','.','#'], 
+        ['E','.','.','.','.','.','.','.','.','#'], 
+        ['E','.','.','.','O','.','.','.','e','#'], 
+        ['#','.','.','.','J','.','Z','.','.','#'], 
+        ['#','.','.','.','w','w','.','.','.','#'], 
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','.','.','.','.','.','.','.','.','#'], 
+        ['#','#','#','#','#','#','#','#','#','#']
+    ],
+    'kinder': [ 
+        ['#','#','#','#','#','#','#','#','#','#'],
+        ['#','.','t','.','.','.','a','.','.','#'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','.','.','s','s','.','.','t','.','#'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','.','a','.','.','p','.','.','.','#'],
+        ['#','.','.','.','.','t','.','.','*','#'],
+        ['#','.','.','.','.','.','.','.','.','#'],
+        ['#','.','t','.','.','.','a','.','.','#'],
+        ['#','#','#','#','E','E','#','#','#','#']
+    ]
+};
+
+maps['entrada'][4][9] = 'E'; maps['entrada'][5][9] = 'E';
+let currentMapId = 'entrada'; let currentMap = JSON.parse(JSON.stringify(maps[currentMapId]));
+
+const renderTile = (char) => {
+    const sprites = {
+        'D': '🚪', 'E': '🚪', 'I': '👨‍✈️', 'P': '👨‍🏫', 'M': '👩‍🏫', 'X': '👩‍🏫', 'R': '👵', 'w': '🤸‍♀️', 'V': '👩‍🍳', 
+        '7': '👩🏼‍🏫', '5': '👩🏻‍⚕️', '6': '👩🏼‍⚕️', 'C': '👦', 'B': '🤢', 'F': '🏃‍♂️', 'A': '👧', '2': '👩‍🦰', 
+        '$': '🪙', '🌱': '🌱', '_': '🖥️', 'T': '🪴', 'H': '🟫', 'S': '🪑', 'N': '🔬', 'Q': '🎹', 'G': '🎸', 
+        'Y': '🛋️', 'b': '📚', 'L': '🗄️', 'W': '🖼️', 'd':'🥁', 'm':'📐', 'n':'🔢', 'r':'📏', 'p':'📊', 
+        'z': '🥱', 'y': '👩🏻‍🔬', '8': '🧑‍🏫', 'J': '👨🏽‍🏫', 'Z': '👨🏻‍🦲', 'j': '🧃', 't': '🧸', 's': '🛝', 'a': '🎨', 
+        'p': '👩🏼‍🍼', 'i': '👨🏻‍✈️', 'v': '👩🏻‍✈️', 'e': '😈', '!': '🖊️', '?': '🧽', '*': '🔨'
+    };
+    return sprites[char] || '';
+};
+
+function drawMap() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let isClassroom = ['sala_felipe', 'sala_paulina', 'sala_sandra', 'sala_rosita', 'sala_musica', 'sala_psicopedagogia', 'biblioteca'].includes(currentMapId);
+    for(let r=0; r<ROWS; r++) {
+        for(let c=0; c<COLS; c++) {
+            let px = c * TILE_SIZE; let py = r * TILE_SIZE;
+            if(currentMapId === 'patio') { ctx.fillStyle = ((r+c)%2===0) ? '#16a34a' : '#22c55e'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
+            else if (currentMapId === 'gimnasio') { ctx.fillStyle = ((r+c)%2===0) ? '#1e3a8a' : '#1e40af'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); } 
+            else if (currentMapId === 'pasillo') { ctx.fillStyle = ((r+c)%2===0) ? '#374151' : '#4b5563'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
+            else if (currentMapId === 'sala_contencion') { ctx.fillStyle = '#fbcfe8'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
+            else if (currentMapId === 'sala_musica') { ctx.fillStyle = ((r+c)%2===0) ? '#e0f2fe' : '#bae6fd'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
+            else if (currentMapId === 'biblioteca') { ctx.fillStyle = ((r+c)%2===0) ? '#fef3c7' : '#fde68a'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
+            else if (currentMapId === 'kinder') { ctx.fillStyle = ((r+c)%2===0) ? '#fef08a' : '#fde047'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
+            else if (currentMapId === 'inspectoria') { ctx.fillStyle = ((r+c)%2===0) ? '#e2e8f0' : '#cbd5e1'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
+            else if (isClassroom) { ctx.fillStyle = ((r+c)%2===0) ? '#e5e7eb' : '#d1d5db'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
+            else { ctx.fillStyle = '#9ca3af'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
+        }
+    }
+    if(currentMapId === 'gimnasio') { ctx.strokeStyle = 'white'; ctx.lineWidth = 3; ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40); ctx.beginPath(); ctx.moveTo(20, canvas.height/2); ctx.lineTo(canvas.width-20, canvas.height/2); ctx.stroke(); ctx.beginPath(); ctx.arc(canvas.width/2, canvas.height/2, 40, 0, Math.PI*2); ctx.stroke(); }
+    ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.font = '26px Arial';
+
+    for(let r=0; r<ROWS; r++) {
+        for(let c=0; c<COLS; c++) {
+            let tile = currentMap[r][c]; let px = c * TILE_SIZE; let py = r * TILE_SIZE;
+            if (tile === '#') { ctx.fillStyle = (currentMapId === 'patio' || currentMapId === 'kinder') ? '#064e3b' : '#78350f'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
+            else if (tile === 'L') { ctx.fillStyle = '#6b7280'; ctx.fillRect(px+2, py+2, TILE_SIZE-4, TILE_SIZE-4); }
+            else if (tile === 'H') { ctx.fillStyle = '#451a03'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
+            else if (tile === 'S' || tile === 'b') { ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(px+8, py+8, TILE_SIZE-6, TILE_SIZE-6); ctx.fillStyle = '#8b4513'; ctx.fillRect(px+2, py+2, TILE_SIZE-4, TILE_SIZE-4); }
+            else if (tile === 'N') { ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(px+8, py+8, TILE_SIZE-6, TILE_SIZE-6); ctx.fillStyle = '#cbd5e1'; ctx.fillRect(px+2, py+2, TILE_SIZE-4, TILE_SIZE-4); }
+            else if (tile === 'K') { ctx.fillStyle = (c % 2 === 0) ? '#ef4444' : '#ffffff'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
+            else if (tile === '=') { ctx.fillStyle = '#b45309'; ctx.fillRect(px, py + 10, TILE_SIZE, TILE_SIZE - 20); }
+            else if (tile === 'Y') { ctx.fillStyle = 'rgba(216, 180, 254, 0.5)'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); }
+
+            let emoji = renderTile(tile);
+            if(tile === 'W' && currentMapId === 'gimnasio') emoji = '🤸‍♀️'; 
+            if (emoji && emoji !== '🚪') ctx.fillText(emoji, px + TILE_SIZE/2, py + TILE_SIZE/2);
+            else if (emoji === '🚪') { ctx.fillStyle = '#451a03'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); } 
+            if (tile === 'B') { ctx.font = '12px Arial'; ctx.fillText('🪰', px + TILE_SIZE/2 + 10, py + TILE_SIZE/2 - 10); ctx.font = '26px Arial'; }
+        }
+    }
+    ctx.fillText(player.sprite, player.x * TILE_SIZE + TILE_SIZE/2, player.y * TILE_SIZE + TILE_SIZE/2);
+    document.getElementById('btn-exit').style.display = (currentMapId !== 'entrada') ? 'flex' : 'none';
+}
+
+function handleTeleport(nx, ny) {
+    previousMapId = currentMapId; previousPos = {x: player.x, y: player.y};
+    if (currentMapId === 'entrada') {
+        if (ny === 0) changeMap('pasillo', nx, 8); else if (nx === 9) changeMap('patio', 1, ny);
+        else if (nx === 0) { if(!progress.inspectoriaUnlocked) { showDialog("🔒 Inspectoría General. Acceso denegado."); return; } changeMap('inspectoria', 8, ny); }
+    }
+    else if (currentMapId === 'inspectoria' && nx === 9) changeMap('entrada', 1, ny);
+    else if (currentMapId === 'patio') {
+        if(nx === 0) changeMap('entrada', 8, player.y); else if(nx === 9) changeMap('gimnasio', 1, ny);
+        else if(ny === 0) { if(!progress.kinderUnlocked) { showDialog("🔒 La puerta del Kinder está bloqueada."); return; } changeMap('kinder', nx, 8); }
+    }
+    else if (currentMapId === 'kinder' && ny === 9) changeMap('patio', nx, 1);
+    else if (currentMapId === 'gimnasio' && nx === 0) changeMap('patio', 8, ny);
+    else if (currentMapId === 'pasillo') {
+        if (ny === 9) changeMap('entrada', nx, 1);
+        else if (ny === 0) { if(nx <= 4) changeMap('sala_paulina', nx, 8); else changeMap('sala_sandra', nx, 8); }
+        else if (nx === 0 && (ny === 2 || ny === 3)) changeMap('sala_contencion', 8, ny);
+        else if (nx === 9 && (ny === 2 || ny === 3)) changeMap('sala_psicopedagogia', 1, ny);
+        else if (nx === 0 && (ny === 5 || ny === 6)) changeMap('sala_felipe', 8, ny);
+        else if (nx === 9 && (ny === 5 || ny === 6)) changeMap('sala_musica', 1, ny);
+        else if (nx === 0 && (ny === 8 || ny === 9)) changeMap('sala_rosita', 8, ny);
+        else if (nx === 9 && (ny === 8 || ny === 9)) changeMap('biblioteca', 1, ny);
+    }
+    else if (['sala_paulina', 'sala_sandra'].includes(currentMapId) && ny === 9) changeMap('pasillo', nx, 1);
+    else if (['sala_felipe', 'sala_rosita', 'sala_contencion'].includes(currentMapId) && nx === 9) changeMap('pasillo', 1, player.y);
+    else if (['sala_musica', 'sala_psicopedagogia', 'biblioteca'].includes(currentMapId) && nx === 0) changeMap('pasillo', 8, player.y);
+}
+
+function exitRoom() { if(currentMapId === 'entrada') return; const dest = mapLinks[currentMapId]; if(dest) changeMap(dest, previousPos.x, previousPos.y); else changeMap('entrada', 5, 8); }
+
+function changeMap(mapId, px, py) {
+    currentMapId = mapId; currentMap = JSON.parse(JSON.stringify(maps[mapId])); 
+    if(mapId === 'patio' && progress.huertoPlanted) { currentMap[5][2]='🌱'; currentMap[5][3]='🌱'; currentMap[6][2]='🌱'; currentMap[6][3]='🌱'; }
+    if(mapId === 'gimnasio' && progress.questKella >= 2) currentMap[1][3] = '.'; 
+    if(mapId === 'sala_paulina' && inventory.includes('Plumón Permanente')) currentMap[7][1] = '.';
+    if(mapId === 'biblioteca' && inventory.includes('Borrador Mágico')) currentMap[6][8] = '.';
+    if(mapId === 'kinder' && inventory.includes('Martillo de Juguete')) currentMap[6][8] = '.';
+    player.x = px; player.y = py; drawMap();
+}
+
+// ---------------------------------------------------
+// SISTEMA DE NÚCLEO Y CONTROLES (REESCRITO TOTAL)
+// ---------------------------------------------------
+
+// Verificador maestro que previene cualquier movimiento o ataque si hay menús superpuestos.
+function canMove() {
+    if(document.getElementById('battle-panel').style.display === 'flex') return false;
+    const panels = document.querySelectorAll('.overlay-panel');
+    for(let i=0; i<panels.length; i++) {
+        if(panels[i].style.display === 'block') return false;
+    }
+    return true;
+}
+
+function movePlayer(dx, dy, dir) {
+    if(!canMove()) return;
+    player.facing = dir; let nx = player.x + dx; let ny = player.y + dy;
+
+    if(nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
+        let target = currentMap[ny][nx];
+        if(target === '.' || target === 'E' || target === 'D' || target === '🧑‍🎓') {
+            if(target === 'D' && currentMapId === 'entrada') {
+                if(!progress.doorOpen && (ny === 0 || ny === 1)) { showDialog("Inspector: ¡Ejem! Nadie entra sin registrarse y saludar primero."); return; }
+                else { handleTeleport(nx, ny); return; }
+            }
+            if(target === 'E' || target === 'D') { handleTeleport(nx, ny); return; }
+            player.x = nx; player.y = ny;
+        } else interact(target, nx, ny);
+    }
+    drawMap();
+}
+
+// Bucle Continuo de Botones Virtuales
+let moveTimer = null;
+function handleBtnPress(dx, dy, dir) {
+    if (!canMove()) return;
+    movePlayer(dx, dy, dir); // Primer paso inmediato
+    if(moveTimer) clearInterval(moveTimer);
+    moveTimer = setInterval(() => {
+        if(!canMove()) { stopBtnPress(); return; }
+        movePlayer(dx, dy, dir);
+    }, 180);
+}
+
+function stopBtnPress() {
+    if(moveTimer) { clearInterval(moveTimer); moveTimer = null; }
+}
+
+// Asignación de Controles Robustos e Híbridos (Touch + Mouse)
+function setupButton(btnId, actionStart, actionStop) {
+    const btn = document.getElementById(btnId);
+    if(!btn) return;
+    
+    // Evita zoom al hacer doble tap y menús contextuales molestos
+    btn.addEventListener('contextmenu', e => e.preventDefault());
+
+    // Móvil (Touch Events)
+    btn.addEventListener('touchstart', (e) => { e.preventDefault(); actionStart(); }, { passive: false });
+    btn.addEventListener('touchend', (e) => { e.preventDefault(); actionStop(); }, { passive: false });
+    btn.addEventListener('touchcancel', (e) => { e.preventDefault(); actionStop(); }, { passive: false });
+
+    // PC (Mouse Events)
+    btn.addEventListener('mousedown', (e) => { 
+        if (e.pointerType === 'touch') return; 
+        actionStart(); 
+    });
+    btn.addEventListener('mouseup', actionStop);
+    btn.addEventListener('mouseleave', actionStop);
+}
+
+setupButton('btn-up', () => handleBtnPress(0, -1, 'up'), stopBtnPress);
+setupButton('btn-down', () => handleBtnPress(0, 1, 'down'), stopBtnPress);
+setupButton('btn-left', () => handleBtnPress(-1, 0, 'left'), stopBtnPress);
+setupButton('btn-right', () => handleBtnPress(1, 0, 'right'), stopBtnPress);
+
+// Botón A y Salir
+const btnAction = document.getElementById('btn-action');
+const triggerAction = (e) => { 
+    if(e && e.cancelable) e.preventDefault(); 
+    if(document.getElementById('dialog-box').style.display==='block') { 
+        let btn = document.querySelector('.dialog-btn:not([onclick="submitName()"])'); 
+        if(btn) btn.click(); 
+    } else { checkAction(); } 
+};
+setupButton('btn-action', triggerAction, () => {});
+setupButton('btn-exit', (e) => { if(e && e.cancelable) e.preventDefault(); exitRoom(); }, () => {});
+
+function checkAction() { 
+    if(!canMove()) return; 
+    let tx = player.x, ty = player.y; 
+    if(player.facing === 'up') ty--; if(player.facing === 'down') ty++; 
+    if(player.facing === 'left') tx--; if(player.facing === 'right') tx++; 
+    if(tx>=0 && tx<COLS && ty>=0 && ty<ROWS) interact(currentMap[ty][tx], tx, ty); 
+}
+
+// Teclado Físico
+window.addEventListener('keydown', (e) => {
+    // 1. Si el input de nombre está activo, no intervenimos para dejar escribir normal
+    if(document.getElementById('name-input-container').style.display === 'block') return;
+    
+    // Cerrar salas con Escape
+    if(e.key === 'Escape') { exitRoom(); return; }
+
+    // 2. Manejo de diálogos y menús con barra espaciadora
+    if(!canMove()) {
+        if((e.code === 'Space' || e.code === 'Enter') && document.getElementById('dialog-box').style.display === 'block') {
+            e.preventDefault();
+            let btn = document.querySelector('.dialog-btn:not([onclick="submitName()"])'); 
+            if(btn) btn.click();
+        }
+        return; // Si no se puede mover, salir del teclado
+    }
+
+    // 3. Bloquear el scroll de navegador para flechas y espacio
+    if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','Enter','w','a','s','d'].includes(e.key) || ['Space','Enter'].includes(e.code)) { 
+        e.preventDefault(); 
+    }
+    
+    if(e.key === 'ArrowUp' || e.key === 'w') movePlayer(0, -1, 'up'); 
+    else if(e.key === 'ArrowDown' || e.key === 's') movePlayer(0, 1, 'down'); 
+    else if(e.key === 'ArrowLeft' || e.key === 'a') movePlayer(-1, 0, 'left'); 
+    else if(e.key === 'ArrowRight' || e.key === 'd') movePlayer(1, 0, 'right');
+    else if(e.code === 'Space' || e.code === 'Enter') checkAction(); 
+});
+
+
+// ---------------------------------------------------
+// MOTOR DE BATALLA 
+// ---------------------------------------------------
+const enemyDB = [
+    { name: "Prueba Sorpresa", sprite: "📄", hp: 30, maxHp: 30, atk: 6, exp: 30, coin: 2 },
+    { name: "Bravucón de Patio", sprite: "😤", hp: 50, maxHp: 50, atk: 12, exp: 50, coin: 3 },
+    { name: "Mochila Pesada", sprite: "🎒", hp: 45, maxHp: 45, atk: 8, exp: 35, coin: 1 },
+    { name: "Goma Mutante", sprite: "👾", hp: 60, maxHp: 60, atk: 15, exp: 70, coin: 4 }
+];
+let currentEnemy = null; let enemyCoords = null; let isPlayerTurn = false;
+
+function startBattle(tx, ty) {
+    if(document.getElementById('dialog-box').style.display === 'block') closeDialog();
+    stopBtnPress(); // Detiene el auto-movimiento si chocaste
+    
+    enemyCoords = {x: tx, y: ty};
+    let eTemplate = enemyDB[Math.floor(Math.random() * enemyDB.length)];
+    let scale = 1 + (player.lvl * 0.1);
+    currentEnemy = { ...eTemplate, hp: Math.floor(eTemplate.hp * scale), maxHp: Math.floor(eTemplate.maxHp * scale), atk: Math.floor(eTemplate.atk * scale) };
+    
+    document.getElementById('enemy-sprite').innerText = currentEnemy.sprite;
+    document.getElementById('b-enemy-name').innerText = currentEnemy.name;
+    document.getElementById('b-enemy-lvl').innerText = `Lvl ${player.lvl}`;
+    
+    document.getElementById('battle-panel').style.display = 'flex';
+    updateBattleUI();
+    logBattle(`¡Un salvaje ${currentEnemy.name} te ha interceptado!`);
+    isPlayerTurn = true;
+}
+
+function updateBattleUI() {
+    document.getElementById('b-player-name').innerText = progress.playerName || "Tú";
+    document.getElementById('b-player-hp').innerText = `${player.hp}/${player.maxHp}`;
+    document.getElementById('b-player-hp-fill').style.width = `${Math.max(0, (player.hp / player.maxHp) * 100)}%`;
+    document.getElementById('b-enemy-hp-fill').style.width = `${Math.max(0, (currentEnemy.hp / currentEnemy.maxHp) * 100)}%`;
+    updateUI();
+}
+
+function logBattle(msg) {
+    const log = document.getElementById('battle-log');
+    log.innerHTML += `<div>> ${msg}</div>`;
+    log.scrollTop = log.scrollHeight;
+}
+
+function battleAction(action) {
+    if(!isPlayerTurn) return;
+    isPlayerTurn = false;
+
+    if(action === 'ataque') {
+        let dmg = player.atk + player.weapon.dmg + Math.floor(Math.random() * 5);
+        currentEnemy.hp -= dmg;
+        logBattle(`Atacas con ${player.weapon.name}. ¡Causas ${dmg} de daño!`);
+        document.getElementById('enemy-sprite').style.transform = 'translateX(10px)'; setTimeout(()=>document.getElementById('enemy-sprite').style.transform='none', 200);
+    } 
+    else if(action === 'habilidad') {
+        if(player.mp >= 15) {
+            player.mp -= 15;
+            let dmg = (player.atk + player.weapon.dmg) * 2;
+            currentEnemy.hp -= dmg;
+            logBattle(`¡Usas CONCENTRACIÓN MÁXIMA! Causas ${dmg} de daño crítico.`);
+        } else {
+            logBattle("No tienes suficiente MP. Pierdes el turno.");
+        }
+    }
+    else if(action === 'objeto') {
+        if(coins >= 1) { coins--; player.hp = Math.min(player.maxHp, player.hp + 20); logBattle("Comes una sopaipilla de emergencia (+20 HP). -1🪙"); } 
+        else { logBattle("No tienes monedas para comprar. Pierdes el turno."); }
+    }
+    else if(action === 'huir') {
+        if(Math.random() > 0.4) {
+            logBattle("¡Escapaste con éxito!"); setTimeout(endBattle, 1000); return;
+        } else { logBattle("¡No pudiste escapar!"); }
+    }
+
+    updateBattleUI();
+
+    if(currentEnemy.hp <= 0) {
+        setTimeout(winBattle, 1000);
+    } else {
+        setTimeout(enemyTurn, 1000);
+    }
+}
+
+function enemyTurn() {
+    let dmg = Math.max(1, currentEnemy.atk - Math.floor(player.lvl * 0.5));
+    player.hp -= dmg;
+    logBattle(`El ${currentEnemy.name} te golpea. Pierdes ${dmg} HP.`);
+    document.body.classList.add('damage-shake'); setTimeout(() => document.body.classList.remove('damage-shake'), 400);
+    updateBattleUI();
+    
+    if(player.hp <= 0) { setTimeout(loseBattle, 1000); } 
+    else { isPlayerTurn = true; logBattle("Es tu turno."); }
+}
+
+function winBattle() {
+    logBattle(`¡Venciste! Ganas ${currentEnemy.exp} EXP y ${currentEnemy.coin} 🪙.`);
+    coins += currentEnemy.coin;
+    gainExp(currentEnemy.exp);
+    currentMap[enemyCoords.y][enemyCoords.x] = '.'; 
+    setTimeout(endBattle, 2000);
+}
+
+function loseBattle() {
+    logBattle("¡Te has desmayado por el cansancio!");
+    setTimeout(() => {
+        player.hp = player.maxHp;
+        endBattle();
+        changeMap('sala_contencion', 5, 5);
+        showDialog("Te han traído a la sala de contención después de colapsar en el pasillo.");
+    }, 2000);
+}
+
+function endBattle() {
+    document.getElementById('battle-panel').style.display = 'none';
+    document.getElementById('battle-log').innerHTML = '';
+    drawMap();
+}
+
+function gainExp(amount) {
+    player.exp += amount;
+    if(player.exp >= player.maxExp) {
+        player.lvl++;
+        player.exp -= player.maxExp;
+        player.maxExp = Math.floor(player.maxExp * 1.5);
+        player.maxHp += 15; player.hp = player.maxHp;
+        player.maxMp += 10; player.mp = player.maxMp;
+        player.atk += 3;
+        logBattle(`🌟 ¡SUBISTE AL NIVEL ${player.lvl}! Recuperas HP/MP y ganas fuerza.`);
+    }
+    updateUI();
+}
+
+function equipWeapon(name, dmg) {
+    inventory.push(name);
+    if(dmg > player.weapon.dmg) { player.weapon = {name, dmg}; showDialog(`¡Encontraste ${name}! Su poder es +${dmg}. Ha sido equipado automáticamente.`); }
+    else { showDialog(`Encontraste ${name}, pero tu arma actual es mejor.`); }
+    document.getElementById('equipped-weapon').innerText = player.weapon.name; updateUI();
+}
+
+// ---------------------------------------------------
+// UI GENERAL
+// ---------------------------------------------------
+function updateUI() {
+    document.getElementById('hp-count').innerText = player.hp;
+    document.getElementById('mp-count').innerText = player.mp;
+    document.getElementById('lvl-count').innerText = player.lvl;
+    document.getElementById('exp-count').innerText = player.exp;
+    document.getElementById('maxexp-count').innerText = player.maxExp;
+    document.getElementById('coin-count').innerText = coins;
+    document.getElementById('equipped-weapon').innerText = player.weapon.name;
+}
+
+const bookDetails = { "El Principito": "Resumen: Un piloto y un niño de otro planeta.\n\nRecomendación: Lo esencial es invisible a los ojos.", "Papelucho": "Resumen: Aventuras de un niño chileno.\n\nRecomendación: Para reír un buen rato." };
+
+function openInventory() {
+    const list = document.getElementById('inv-items-list'); list.innerHTML = '';
+    if(inventory.length === 0) { list.innerHTML = '<li>Tu mochila está vacía.</li>'; } 
+    else {
+        inventory.forEach(item => { 
+            let readBtn = Object.keys(bookDetails).includes(item) ? `<button class="btn-ui" style="font-size:0.7rem; padding:2px 8px;" onclick="readBook('${item}')">📖 Leer</button>` : '';
+            list.innerHTML += `<li><span>🔹 ${item}</span> ${readBtn}</li>`; 
+        });
+    }
+    document.getElementById('inventory-panel').style.display = 'block';
+}
+
+function readBook(bookName) { closeInventory(); showDialog(`📖 ${bookName}\n\n${bookDetails[bookName]}`); }
+function closeInventory() { document.getElementById('inventory-panel').style.display = 'none'; }
+function takeDamageMap(amount, msg) { player.hp -= amount; document.body.classList.add('damage-shake'); setTimeout(()=>document.body.classList.remove('damage-shake'), 400); if(player.hp <= 0){ player.hp=player.maxHp; changeMap('sala_contencion', 5, 5); showDialog(msg + "\n¡Te has desmayado!"); } else showDialog(msg + ` (-${amount} HP)`); updateUI(); }
+
+function showDialog(text, choices = null) {
+    document.getElementById('dialog-text').innerText = text; const btnContainer = document.getElementById('dialog-buttons'); 
+    btnContainer.innerHTML = ''; btnContainer.style.display = 'flex'; document.getElementById('name-input-container').style.display = 'none';
+    if (choices) { choices.forEach(c => { const btn = document.createElement('button'); btn.className = 'dialog-btn choice'; btn.innerText = c.text; btn.onclick = c.action; btnContainer.appendChild(btn); }); } 
+    else { const btn = document.createElement('button'); btn.className = 'dialog-btn'; btn.innerText = 'Siguiente ▶'; btn.onclick = closeDialog; btnContainer.appendChild(btn); }
+    document.getElementById('dialog-box').style.display = 'block';
+}
+function closeDialog() { document.getElementById('dialog-box').style.display = 'none'; }
+function restoreStat(type, amount, msg) { if(type === 'hp') player.hp = Math.min(player.maxHp, player.hp + amount); else player.mp = Math.min(player.maxMp, player.mp + amount); updateUI(); showDialog(msg); }
+
+function submitName() { 
+    const input = document.getElementById('name-input').value.trim(); 
+    if(input.length > 0) { 
+        progress.playerName = input; 
+        document.getElementById('name-input-container').style.display = 'none'; 
+        progress.doorOpen = true; updateUI(); 
+        showDialog(`Inspector: Muy bien, ${progress.playerName}. Pase, pase.`); 
+        saveGame();
+    } 
+}
+function promptName() { 
+    document.getElementById('dialog-text').innerText = "Inspector: ¡Alto! Escriba su nombre:"; 
+    document.getElementById('name-input-container').style.display = 'block'; 
+    document.getElementById('dialog-buttons').style.display = 'none'; 
+    document.getElementById('dialog-box').style.display = 'block'; 
+    document.getElementById('name-input').focus();
+}
+
+function askQuestion(profName) { const bank = qBanks[profName] || qBanks['Felipe']; const q = bank[Math.floor(Math.random() * bank.length)]; let choices = q.opts.map((opt, idx) => { return { text: opt, action: () => { if(idx === q.ans) {coins++; updateUI(); showDialog(`¡Correcto! Ganas 1🪙`);} else takeDamageMap(15, `Incorrecto.`); }};}); showDialog(`Profe ${profName}: ${q.q}`, choices); }
+
+function interact(tile, tx, ty) {
+    if(tile === 'e') { startBattle(tx, ty); return; } 
+    if(tile === '!') { currentMap[ty][tx]='.'; equipWeapon('Plumón Permanente', 5); return; }
+    if(tile === '?') { currentMap[ty][tx]='.'; equipWeapon('Borrador Mágico', 10); return; }
+    if(tile === '*') { currentMap[ty][tx]='.'; equipWeapon('Martillo de Juguete', 20); return; }
+
+    if(tile === '$') { coins++; currentMap[ty][tx] = '.'; updateUI(); showDialog("¡Encontraste una moneda! 🪙"); }
+    else if(tile === 'I') { progress.doorOpen = true; showDialog(`Inspector: ¡Buenos días, ${progress.playerName}! Uniforme impecable.`); }
+    else if(tile === 'P') { showDialog("Profe Felipe: ¡Ciencia!", [{text:"Pregunta", action:()=>askQuestion('Felipe')}, {text:"Adiós", action:closeDialog}]); }
+    else if(tile === 'M') { showDialog("Profe Paulina: ¡Números!", [{text:"Pregunta", action:()=>askQuestion('Paulina')}, {text:"Adiós", action:closeDialog}]); }
+    else if(tile === 'j') { currentMap[ty][tx]='.'; inventory.push('Caja de Jugos'); progress.questKella=2; updateUI(); showDialog("¡Encontraste la Caja de Jugos!"); }
+    else if(tile === 'K' || tile === '=' || tile === 'V') {
+        if(progress.questKella === 0) { progress.questKella = 1; showDialog("Tía Kella: ¡Se perdió mi Caja de Jugos 🧃 en el Gimnasio! Tráemela y te doy la llave del Kinder."); } 
+        else if(progress.questKella === 2 && inventory.includes('Caja de Jugos')) { inventory = inventory.filter(i=>i!=='Caja de Jugos'); progress.questKella = 3; progress.kinderUnlocked = true; updateUI(); showDialog("Tía Kella: ¡Gracias! Aquí tienes la llave del Kinder (puertas arriba del patio)."); } 
+        else showDialog(`Tía Kella: Compra algo.`, [{ text: "Sopaipilla (+20 HP) [1🪙]", action: () => { if(coins>=1){coins--; restoreStat('hp',20,"😋");}else showDialog("Pobre."); }},{ text: "Salir", action: closeDialog }]);
+    }
+    else if(tile === '8') { showDialog("Bibliotecaria: Lleva un libro.", [{ text: "El Principito", action: () => {inventory.push("El Principito"); showDialog("Recibido.");} }, { text: "Salir", action: closeDialog }]); }
+    else if(tile === 'Q') { document.getElementById('piano-panel').style.display = 'block'; }
+    else if(tile === 'z') { takeDamageMap(10, "Estudiante Exhausto: 🥱 ¡Déjame en paz!"); }
+    else if(tile === 'p') {
+        if(progress.questParvularia === 0) { progress.questParvularia = 1; saveGame(); showDialog(`Educadora: Resuelve el Memorice del Lab por los niños.`); } 
+        else if(progress.questParvularia === 2) { progress.questParvularia = 3; progress.inspectoriaUnlocked = true; updateUI(); saveGame(); showDialog("Educadora: ¡Gracias! Tienes acceso VIP a la Inspectoría."); } 
+        else { showDialog("Educadora: Los niños te adoran."); }
+    }
+    else if(tile === 'i') { showDialog("Inspector Jefe: Cuidadito con andar peleando."); }
+    else if(tile === 'W') { showDialog("¿Memorice?", [{ text: "Sí", action: initMemoryGame }, { text: "No", action: closeDialog }]); }
+    else { showDialog("Un objeto interesante del colegio."); }
+}
+
+// MEMORICE
+let flippedCards = []; let matchedPairs = 0;
+function initMemoryGame() { closeDialog(); document.getElementById('memory-panel').style.display = 'block'; const grid = document.getElementById('memory-grid'); grid.innerHTML = ''; flippedCards = []; matchedPairs = 0; const icons = ['🔬','🧬','🔭','🧪','🌡️','🧲','🔋','🦠']; let memCards = [...icons, ...icons].sort(() => Math.random() - 0.5); memCards.forEach((icon, i) => { const card = document.createElement('div'); card.className = 'mem-card'; card.dataset.id = i; card.dataset.icon = icon; card.innerText = '❓'; card.onclick = () => { if(flippedCards.length>=2 || card.classList.contains('flipped')) return; card.innerText = icon; card.classList.add('flipped'); flippedCards.push(card); if(flippedCards.length===2) setTimeout(()=>{ const [c1,c2]=flippedCards; if(c1.dataset.icon===c2.dataset.icon){c1.classList.add('matched');c2.classList.add('matched');matchedPairs++; if(matchedPairs===8){closeMemoryGame(); gainExp(50); coins+=3; if(progress.questParvularia===1)progress.questParvularia=2; showDialog("¡Ganaste!");}}else{c1.innerText='❓';c2.innerText='❓';c1.classList.remove('flipped');c2.classList.remove('flipped');} flippedCards=[]; },800); }; grid.appendChild(card); }); }
+function closeMemoryGame() { document.getElementById('memory-panel').style.display = 'none'; } function closePiano() { document.getElementById('piano-panel').style.display = 'none'; }
+
+function saveGame() { const data = { player, inventory, coins, progress, currentMapId, currentMap, previousMapId, previousPos }; localStorage.setItem('rpgEscolarSave_v10', JSON.stringify(data)); showDialog("💾 Guardado."); }
+function loadGame() { const saved = localStorage.getItem('rpgEscolarSave_v10'); if(saved) { const data = JSON.parse(saved); player = data.player; inventory = data.inventory; coins = data.coins; progress = data.progress; currentMapId = data.currentMapId; currentMap = data.currentMap; previousMapId = data.previousMapId || 'entrada'; previousPos = data.previousPos || {x:5,y:8}; drawMap(); updateUI(); showDialog(`📂 Cargado, ${progress.playerName}.`); } }
+
+drawMap(); updateUI();
+setTimeout(() => { if(!progress.playerName) promptName(); else showDialog(`🎒 ¡Día de Clases, ${progress.playerName}!`); }, 500);
+</script>
+</body>
+</html>
