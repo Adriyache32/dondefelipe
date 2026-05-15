@@ -430,6 +430,7 @@ footer {
         </div>
       </li>
       <li><a href="#" onclick="go('biblioteca'); closeNav(); return false;" class="nav-lib"><i class="fa-solid fa-book-open"></i> BIBLIOTECA</a></li>
+      <li><a href="#" onclick="go('reglamento'); closeNav(); return false;" class="nav-lib" style="color:var(--gold-light);"><i class="fa-solid fa-scale-balanced"></i> REGLAMENTO</a></li>
     </ul>
   </div>
 </nav>
@@ -477,7 +478,8 @@ const ROUTES = {
   'game-memoria': s => rGame(s, 'juego_memoria.html', '🃏 Memoria Clásico'),
   'game-tres': s => rGame(s, 'juego_tictactoe.html', '❌ Tres en Raya'),
   'game-toninas-mem': s => rGame(s, 'juego_memorice_toninas.html', '🐬 Memorice Toninas'),
-  'game-toninas-lab': s => rGame(s, 'juego_laberinto_toninas.html', '🌀 Laberinto Toninas')
+  'game-toninas-lab': s => rGame(s, 'juego_laberinto_toninas.html', '🌀 Laberinto Toninas'),
+  'reglamento': rReglamento
 };
 
 function go(page){
@@ -524,6 +526,11 @@ function rHome(stage){
           <h3><i class="fa-solid fa-book-open"></i> BIBLIOTECA VIRTUAL</h3>
           <p>Acceso directo a guías, rúbricas y material complementario en Drive.</p>
         </div>
+        <div class="card" style="cursor:pointer; background: linear-gradient(135deg, #1a2e4a, #243d5c); border: 1px solid rgba(201,168,76,.4);" onclick="go('reglamento')">
+          <h3><i class="fa-solid fa-scale-balanced" style="color:var(--gold);"></i> REGLAMENTO INTERNO</h3>
+          <p>Consulta el Reglamento 2026 con IA. Pregunta sobre normas, protocolos, evaluación y más.</p>
+          <button class="btn-p" style="margin-top:0.75rem; width:auto;"><i class="fa-solid fa-robot"></i> Consultar con IA</button>
+        </div>
       </div>
     </div>`;
 }
@@ -566,6 +573,17 @@ function rFutbolVarones(s){ s.innerHTML = '<h1><i class="fa-solid fa-mars"></i> 
 function rFutbolDamas(s){ s.innerHTML = '<h1><i class="fa-solid fa-venus"></i> LIGA DAMAS</h1><iframe src="tablafutbol_fem.html" class="embed-frame"></iframe>'; }
 function rBasesFutbol(s){ s.innerHTML = '<h1><i class="fa-solid fa-scroll"></i> BASES OFICIALES</h1><iframe src="bases_campeonato.html" class="embed-frame"></iframe>'; }
 function rCalendarioFutbol(s){ s.innerHTML = '<h1><i class="fa-solid fa-calendar-days"></i> CALENDARIO</h1><iframe src="calendario_futbol.html" class="embed-frame"></iframe>'; }
+
+function rReglamento(s){
+  s.innerHTML = `
+    <div class="fade-in">
+      <div class="tablet-header">
+        <h1><i class="fa-solid fa-scale-balanced"></i> REGLAMENTO INTERNO 2026</h1>
+        <p class="page-sub">Consulta el reglamento con inteligencia artificial</p>
+      </div>
+      <iframe src="indexreglamento.html" class="embed-frame" style="min-height:680px; border-radius:12px;"></iframe>
+    </div>`;
+}
 
 function rGame(s, file, name){
   s.innerHTML = `
