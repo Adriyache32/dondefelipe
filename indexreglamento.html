@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reglamento Interno 2026 — Colegio San Agustín</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue-700: #1a3a6b; --blue-600: #1e4d9b; --blue-500: #2563c4;
+      --blue-400: #4a80d9; --blue-300: #93b8f0; --blue-100: #ddeaf9;
+      --blue-50: #f0f6ff; --white: #ffffff;
+      --gray-50: #f7f9fc; --gray-300: #c4cdd9; --gray-500: #6b7a90;
+      --blue-900: #0a1628; --radius: 14px; --radius-sm: 8px;
+    }
+    body { font-family: "Segoe UI", system-ui, sans-serif; background: var(--blue-50); color: var(--blue-900); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 0 1rem 3rem; }
+    header { width: 100%; background: var(--blue-700); padding: 1.5rem 2rem; display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .header-icon { width: 52px; height: 52px; background: var(--white); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .header-icon svg { width: 28px; height: 28px; stroke: var(--blue-600); }
+    header h1 { font-size: 1.15rem; font-weight: 600; color: var(--white); line-height: 1.3; }
+    header p { font-size: 0.78rem; color: var(--blue-300); margin-top: 2px; }
+    .container { width: 100%; max-width: 720px; display: flex; flex-direction: column; gap: 1rem; }
+
+    /* Status bar */
+    .status-bar { border-radius: var(--radius); padding: 0.85rem 1.25rem; display: flex; align-items: center; gap: 10px; font-size: 0.875rem; font-weight: 500; transition: all 0.3s; }
+    .status-bar.loading { background: #fff8e1; border: 1px solid #ffe082; color: #7b5e00; }
+    .status-bar.ready   { background: var(--blue-100); border: 1px solid var(--blue-300); color: #1a3a6b; }
+    .status-bar.manual  { background: #fff3e0; border: 1px solid #ffcc80; color: #6d3b00; }
+    .status-bar svg { width: 20px; height: 20px; stroke: currentColor; flex-shrink: 0; }
+    .tag { font-size: 0.72rem; background: var(--blue-600); color: white; padding: 3px 10px; border-radius: 20px; margin-left: auto; white-space: nowrap; }
+    .spinner { width: 18px; height: 18px; border: 2.5px solid #ffe082; border-top-color: #7b5e00; border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Upload fallback */
+    #upload-zone { display: none; border: 2px dashed var(--blue-300); border-radius: var(--radius); background: var(--white); padding: 2rem 1.5rem; text-align: center; cursor: pointer; transition: all 0.2s; }
+    #upload-zone:hover { background: var(--blue-50); border-color: var(--blue-500); }
+    #upload-zone svg { width: 40px; height: 40px; stroke: var(--blue-400); margin-bottom: 0.75rem; }
+    #upload-zone p { font-size: 0.9rem; font-weight: 600; color: var(--blue-700); margin-bottom: 4px; }
+    #upload-zone small { font-size: 0.78rem; color: var(--gray-500); }
+
+    /* Chat */
+    #chat-section { display: flex; flex-direction: column; }
+    #chat-area { background: var(--gray-50); border: 1px solid var(--blue-100); border-bottom: none; border-radius: var(--radius) var(--radius) 0 0; padding: 1.25rem; min-height: 320px; max-height: 460px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
+    .msg { max-width: 88%; padding: 10px 15px; border-radius: 12px; font-size: 0.9rem; line-height: 1.65; white-space: pre-wrap; word-break: break-word; }
+    .msg.user  { background: var(--blue-600); color: white; align-self: flex-end; border-radius: 12px 12px 3px 12px; }
+    .msg.bot   { background: white; color: var(--blue-900); align-self: flex-start; border: 1px solid var(--blue-100); border-radius: 12px 12px 12px 3px; }
+    .msg.error { background: #fff0f0; color: #c0392b; align-self: flex-start; border: 1px solid #f5c6c6; font-size: 0.85rem; }
+    .typing-dots span { display: inline-block; width: 5px; height: 5px; background: var(--blue-400); border-radius: 50%; margin: 0 2px; animation: bounce 1.2s infinite; }
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
+    #input-bar { background: white; border: 1px solid var(--blue-100); border-radius: 0 0 var(--radius) var(--radius); padding: 0.85rem; display: flex; gap: 8px; align-items: flex-end; }
+    #user-input { flex: 1; resize: none; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); padding: 9px 13px; font-family: inherit; font-size: 0.9rem; background: var(--gray-50); color: var(--blue-900); outline: none; min-height: 42px; max-height: 120px; overflow-y: auto; line-height: 1.5; transition: border-color 0.15s; }
+    #user-input:focus { border-color: var(--blue-500); background: white; }
+    #user-input::placeholder { color: var(--gray-300); }
+    #send-btn { font-family: inherit; font-size: 0.875rem; font-weight: 600; padding: 10px 20px; background: var(--blue-600); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer; transition: background 0.15s; }
+    #send-btn:hover { background: var(--blue-700); }
+    #send-btn:disabled { background: var(--gray-300); cursor: not-allowed; }
+    #suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 0.25rem; }
+    .sug-btn { font-family: inherit; font-size: 0.78rem; padding: 6px 12px; border: 1px solid var(--blue-300); border-radius: 20px; background: white; color: var(--blue-600); cursor: pointer; transition: all 0.15s; }
+    .sug-btn:hover { background: var(--blue-600); color: white; border-color: var(--blue-600); }
+    footer { margin-top: 2rem; font-size: 0.72rem; color: var(--gray-500); text-align: center; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>
+    </svg>
+  </div>
+  <div>
+    <h1>Reglamento Interno 2026 — Colegio San Agustín</h1>
+    <p>Villa Alemana · Consulta el reglamento con inteligencia artificial</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <div id="status-bar" class="status-bar loading">
+    <div class="spinner"></div>
+    <span id="status-text">Cargando reglamento...</span>
+  </div>
+
+  <!-- Zona de carga manual (fallback para uso local) -->
+  <div id="upload-zone" onclick="document.getElementById('file-input').click()">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="12" y1="18" x2="12" y2="12"/>
+      <polyline points="9 15 12 12 15 15"/>
+    </svg>
+    <p>Haz clic para cargar el PDF del reglamento</p>
+    <small>REGLAMENTO_INTERNO_2026.pdf</small>
+    <input type="file" id="file-input" accept=".pdf" style="display:none">
+  </div>
+
+  <div id="chat-section">
+    <div id="chat-area"></div>
+    <div id="input-bar">
+      <textarea id="user-input" placeholder="Cargando documento..." rows="1" disabled></textarea>
+      <button id="send-btn" onclick="sendMessage()" disabled>Enviar →</button>
+    </div>
+  </div>
+
+  <div id="suggestions">
+    <button class="sug-btn" onclick="ask('¿Cuáles son las faltas leves y sus consecuencias?')">Faltas leves</button>
+    <button class="sug-btn" onclick="ask('¿Qué sanciones contempla el reglamento?')">Sanciones</button>
+    <button class="sug-btn" onclick="ask('¿Cuáles son los derechos de los estudiantes?')">Derechos</button>
+    <button class="sug-btn" onclick="ask('¿Cómo se regulan las inasistencias?')">Inasistencias</button>
+    <button class="sug-btn" onclick="ask('¿Qué dice sobre el uso del celular?')">Celular</button>
+    <button class="sug-btn" onclick="ask('¿Cuáles son los deberes de los apoderados?')">Apoderados</button>
+    <button class="sug-btn" onclick="ask('¿Cómo funciona el reglamento de evaluación?')">Evaluación</button>
+    <button class="sug-btn" onclick="ask('¿Cuál es el uniforme oficial del colegio?')">Uniforme</button>
+  </div>
+
+</div>
+
+<footer>Powered by Gemini 2.0 Flash · Colegio San Agustín, Villa Alemana</footer>
+
+<script>
+  // =============================================
+  //  PEGA AQUÍ TU API KEY DE GEMINI (AIza...)
+  const API_KEY = 'PEGA_TU_KEY_AQUI';
+  // =============================================
+
+  const PDF_FILENAME = 'REGLAMENTO_INTERNO_2026.pdf';
+
+  let pdfBase64  = null;
+  let history    = [];
+  let firstTurn  = true;
+
+  const chatArea   = document.getElementById('chat-area');
+  const userInput  = document.getElementById('user-input');
+  const sendBtn    = document.getElementById('send-btn');
+  const statusBar  = document.getElementById('status-bar');
+  const statusText = document.getElementById('status-text');
+  const uploadZone = document.getElementById('upload-zone');
+  const fileInput  = document.getElementById('file-input');
+
+  // ── Intento automático (funciona en GitHub Pages) ──
+  async function loadPDFAuto() {
+    try {
+      const res = await fetch(PDF_FILENAME);
+      if (!res.ok) throw new Error('not found');
+      const blob = await res.blob();
+      readBlob(blob);
+    } catch {
+      // Fallo silencioso → mostrar zona de carga manual
+      showManualUpload();
+    }
+  }
+
+  // ── Carga manual (para pruebas locales) ──
+  function showManualUpload() {
+    statusBar.className = 'status-bar manual';
+    statusBar.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span>Modo local: carga el PDF manualmente para probar</span>`;
+    uploadZone.style.display = 'block';
+  }
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) readBlob(fileInput.files[0]);
+  });
+
+  // ── Convierte blob/file a base64 ──
+  function readBlob(blob) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      pdfBase64 = reader.result.split(',')[1];
+      uploadZone.style.display = 'none';
+      statusBar.className = 'status-bar ready';
+      statusBar.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <polyline points="9 12 12 15 16 10"/>
+        </svg>
+        <span>REGLAMENTO_INTERNO_2026.pdf · Actualizado Marzo 2026</span>
+        <span class="tag">Listo</span>`;
+      userInput.disabled = false;
+      userInput.placeholder = 'Escribe tu pregunta sobre el reglamento...';
+      sendBtn.disabled = false;
+      addMsg('bot', '¡Hola! Soy el asistente del Reglamento Interno 2026 del Colegio San Agustín. Puedo responder preguntas sobre convivencia, evaluación, uniformes, protocolos y derechos. ¿En qué te ayudo?');
+      userInput.focus();
+    };
+    reader.readAsDataURL(blob);
+  }
+
+  window.onload = loadPDFAuto;
+
+  userInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+  userInput.addEventListener('input', () => {
+    userInput.style.height = 'auto';
+    userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
+  });
+
+  function ask(t) { userInput.value = t; sendMessage(); }
+
+  function addMsg(type, text) {
+    const d = document.createElement('div');
+    d.className = 'msg ' + type;
+    if (type === 'thinking') {
+      d.innerHTML = '<span class="typing-dots"><span></span><span></span><span></span></span>';
+    } else { d.textContent = text; }
+    chatArea.appendChild(d);
+    chatArea.scrollTop = chatArea.scrollHeight;
+    return d;
+  }
+
+  async function sendMessage() {
+    const q = userInput.value.trim();
+    if (!q || !pdfBase64) return;
+    addMsg('user', q);
+    userInput.value = '';
+    userInput.style.height = 'auto';
+    sendBtn.disabled = true;
+    userInput.disabled = true;
+    const thinking = addMsg('thinking', '');
+
+    const userParts = firstTurn
+      ? [{ inline_data: { mime_type: 'application/pdf', data: pdfBase64 } }, { text: q }]
+      : [{ text: q }];
+    if (firstTurn) firstTurn = false;
+    history.push({ role: 'user', parts: userParts });
+
+    try {
+      const res = await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + API_KEY,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: 'Eres un asistente especializado en el Reglamento Interno 2026 del Colegio San Agustín de Villa Alemana. Responde siempre en español, claro y preciso, citando artículos o secciones cuando sea posible. Si algo no está en el reglamento, indícalo con respeto.' }] },
+            contents: history
+          })
+        }
+      );
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sin respuesta.';
+      thinking.remove();
+      addMsg('bot', reply);
+      history.push({ role: 'model', parts: [{ text: reply }] });
+    } catch (err) {
+      thinking.remove();
+      addMsg('error', 'Error: ' + err.message);
+      history.pop();
+    }
+    sendBtn.disabled = false;
+    userInput.disabled = false;
+    userInput.focus();
+  }
+</script>
+</body>
+</html>
