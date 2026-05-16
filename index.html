@@ -423,7 +423,7 @@ footer {
       <li class="dropdown" tabindex="0">
         <button class="drop-btn" onclick="go('juegos'); closeNav(); return false;">🎮 JUEGOS <i class="fa-solid fa-chevron-down"></i></button>
         <div class="drop-content">
-            <a href="#" onclick="go('game-rpg'); closeNav(); return false;"><i class="fa-solid fa-school"></i> RPG Escolar</a>
+            <a href="#" onclick="go('game-rpg-v4'); closeNav(); return false;"><i class="fa-solid fa-gamepad"></i> San Agustín RPG V1 <span style="font-size:0.7rem; background:var(--gold); color:#fff; padding:1px 5px; border-radius:3px; margin-left:4px;">ALFA</span></a>
             <a href="#" onclick="go('game-toninas-mem'); closeNav(); return false;"><i class="fa-solid fa-fish-fins"></i> Memorice Toninas</a>
             <a href="#" onclick="go('game-toninas-lab'); closeNav(); return false;"><i class="fa-solid fa-water"></i> Laberinto Toninas</a>
             <a href="#" onclick="go('game-snake'); closeNav(); return false;"><i class="fa-solid fa-staff-snake"></i> Snake Clásico</a>
@@ -479,6 +479,7 @@ const ROUTES = {
   'game-tres': s => rGame(s, 'juego_tictactoe.html', '❌ Tres en Raya'),
   'game-toninas-mem': s => rGame(s, 'juego_memorice_toninas.html', '🐬 Memorice Toninas'),
   'game-toninas-lab': s => rGame(s, 'juego_laberinto_toninas.html', '🌀 Laberinto Toninas'),
+  'game-rpg-v4': rGameRPGv4,
   'reglamento': rReglamento
 };
 
@@ -510,9 +511,9 @@ function rHome(stage){
           </div>
         </div>
         <div class="card c-laurel">
-          <h3><i class="fa-solid fa-school"></i> NUEVO RPG ESCOLAR</h3>
+          <h3><i class="fa-solid fa-gamepad"></i> SAN AGUSTÍN RPG V1 <span style="background:var(--gold); color:#fff; font-family:var(--ff-title); font-size:0.6rem; padding:2px 7px; border-radius:3px; margin-left:4px;">ALFA v1</span></h3>
           <p>Vive un día de clases, habla con el Profe Felipe, mejora el patio y responde la prueba de ciencias en el nuevo RPG interactivo.</p>
-          <button class="btn-s" onclick="go('game-rpg')"><i class="fa-solid fa-play"></i> Jugar Aventura</button>
+          <button class="btn-s" onclick="go('game-rpg-v4')"><i class="fa-solid fa-play"></i> Jugar San Agustín RPG V1</button>
         </div>
       </div>
       
@@ -543,9 +544,11 @@ function rJuegos(stage){
         <p class="page-sub">Desafíos lógicos y aventuras</p>
       </div>
       <div class="grid">
-        <div class="card c-laurel" style="cursor:pointer" onclick="go('game-rpg')">
-          <h3>🎒 RPG ESCOLAR</h3>
-          <p>Aventura de rol. Vive un día de clases, construye huertos y rinde pruebas de ciencias.</p>
+        <div class="card c-gold" style="cursor:pointer; position:relative;" onclick="go('game-rpg-v4')">
+          <span style="position:absolute; top:12px; right:12px; background:var(--gold); color:#fff; font-family:var(--ff-title); font-size:0.65rem; letter-spacing:1px; padding:3px 8px; border-radius:4px;">ALFA v1</span>
+          <h3>🎮 SAN AGUSTÍN RPG V1</h3>
+          <p>La versión más completa del RPG. Nuevas mecánicas, escenarios ampliados y modo aventura mejorado.</p>
+          <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-play"></i> Jugar Ahora</button>
         </div>
         <div class="card c-sea" style="cursor:pointer" onclick="go('game-toninas-mem')">
           <h3>🐬 MEMORICE TONINAS</h3>
@@ -582,6 +585,47 @@ function rReglamento(s){
         <p class="page-sub">Consulta el reglamento con inteligencia artificial</p>
       </div>
       <iframe src="indexreglamento.html" class="embed-frame" style="min-height:680px; border-radius:12px;"></iframe>
+    </div>`;
+}
+
+function rGameRPGv4(s){
+  const isMobile = window.innerWidth <= 850;
+  const frameHeight = isMobile ? 'calc(100vh - 80px)' : '85vh';
+  const minH = isMobile ? '500px' : '600px';
+  s.innerHTML = `
+    <div class="fade-in">
+      <div class="tablet-header" style="padding-bottom:1rem; margin-bottom:1rem;">
+        <h1 style="display:flex; align-items:center; justify-content:center; gap:10px;">
+          🎮 RPG ESCOLAR
+          <span style="background:linear-gradient(135deg,var(--gold-dark),var(--gold)); color:#fff; font-family:var(--ff-title); font-size:0.65rem; letter-spacing:2px; padding:4px 10px; border-radius:4px; vertical-align:middle;">ALFA v1</span>
+        </h1>
+        <p class="page-sub">Versión alpha · Nuevas mecánicas en desarrollo</p>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
+        <button class="btn-s" onclick="go('juegos')" style="width:auto; margin-top:0;"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+        <button class="btn-p" onclick="document.getElementById('rpg-v4-frame').requestFullscreen ? document.getElementById('rpg-v4-frame').requestFullscreen() : null" style="width:auto; flex:0; min-width:auto; padding:0.8rem 1.2rem;" title="Pantalla completa">
+          <i class="fa-solid fa-expand"></i>${isMobile ? '' : ' Pantalla completa'}
+        </button>
+        <span style="font-size:0.82rem; color:var(--text-soft); font-style:italic; margin-left:4px;">
+          <i class="fa-solid fa-circle-info" style="color:var(--gold);"></i> Versión en desarrollo — pueden existir errores
+        </span>
+      </div>
+      <iframe 
+        id="rpg-v4-frame"
+        src="profe-rpg-v4.html" 
+        style="
+          width:100%; 
+          height:${frameHeight}; 
+          min-height:${minH}; 
+          border:2px solid rgba(201,168,76,0.4); 
+          border-radius:${isMobile ? '8px' : '12px'}; 
+          display:block; 
+          background:#111; 
+          box-shadow:0 15px 40px rgba(0,0,0,0.25);
+        "
+        allowfullscreen
+        allow="fullscreen"
+      ></iframe>
     </div>`;
 }
 
