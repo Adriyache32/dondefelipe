@@ -10,24 +10,28 @@
 
 <style>
 /* ═══════════════════════════════════════════════
-   TOKENS  — Paleta Mediterránea / Ikariam
+   TOKENS — Paleta Mediterránea Moderna
 ═══════════════════════════════════════════════ */
 :root {
-  --sea-deep:    #08182e;
-  --sea-mid:     #112843;
-  --sea-light:   #1a4068;
+  --sea-deep:    #060f1e;
+  --sea-mid:     #0c1f38;
+  --sea-light:   #163356;
   --gold:        #c9a84c;
   --gold-light:  #e8c870;
+  --gold-bright: #f5d980;
   --gold-dark:   #8b6914;
-  --marble:      #fcfaf7;
+  --gold-glow:   rgba(201,168,76,0.18);
+  --marble:      #fdfbf7;
   --stone:       #ede5d0;
-  --ivory:       #ffffff;
-  --bronze:      #8e6a35;
+  --ivory:       #faf8f4;
+  --bronze:      #7a5820;
+  --bronze-rich: #5c3f0e;
   --text:        #2a1f10;
-  --text-soft:   #504230;
-  --laurel:      #4a7c59;
-  --border-gold: rgba(201,168,76,.3);
-
+  --text-soft:   #604e35;
+  --laurel:      #3d6e4a;
+  --border-gold: rgba(201,168,76,.25);
+  --border-gold-strong: rgba(201,168,76,.55);
+  --card-shadow: 0 4px 24px rgba(0,0,0,0.06);
   --ff-title: 'Cinzel', 'Palatino Linotype', Palatino, serif;
   --ff-body:  'Cormorant Garamond', Georgia, 'Times New Roman', serif;
 }
@@ -40,41 +44,55 @@ html { scroll-behavior: smooth; }
 
 body {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  display: flex; flex-direction: column;
   font-family: var(--ff-body);
   color: var(--text);
-  background: linear-gradient(145deg, #08182e 0%, #0e2440 40%, #152e50 70%, #0a1e36 100%);
-  background-size: 400% 400%;
-  animation: seaShift 16s ease infinite;
-  overflow-x: hidden; /* Previene scroll horizontal en móviles */
+  background: var(--sea-deep);
+  overflow-x: hidden;
 }
 
-@keyframes seaShift {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+/* Fondo multicapa atmosférico */
+body::after {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 0%,   rgba(26,64,104,.55) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 85% 100%,  rgba(12,31,56,.7)  0%, transparent 55%),
+    radial-gradient(ellipse 100% 40% at 50% 50%,  rgba(6,15,30,.4)   0%, transparent 70%);
+  animation: auroraShift 22s ease-in-out infinite alternate;
+}
+@keyframes auroraShift {
+  0%   { opacity: .85; filter: hue-rotate(0deg); }
+  50%  { opacity: 1;   filter: hue-rotate(8deg); }
+  100% { opacity: .9;  filter: hue-rotate(-5deg); }
 }
 
+/* Grilla hexagonal sutil */
 body::before {
   content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background: repeating-linear-gradient(
-    0deg, transparent, transparent 3px,
-    rgba(255,255,255,.015) 3px, rgba(255,255,255,.015) 4px
-  );
+  background-image:
+    linear-gradient(rgba(201,168,76,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,168,76,.04) 1px, transparent 1px);
+  background-size: 52px 52px;
 }
 
+/* ═══════════════════════════════════════════════
+   FRISO ORNAMENTAL SUPERIOR
+═══════════════════════════════════════════════ */
 .frieze {
   position: relative; z-index: 100;
-  height: 6px; flex-shrink: 0;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--gold-dark) 0, var(--gold-dark) 6px,
-    var(--gold) 6px, var(--gold) 18px,
-    #f0d87a 18px, #f0d87a 20px,
-    var(--gold) 20px, var(--gold) 32px,
-    var(--gold-dark) 32px, var(--gold-dark) 38px
+  height: 5px; flex-shrink: 0;
+  background: linear-gradient(90deg,
+    var(--sea-deep) 0%,
+    var(--gold-dark) 8%,
+    var(--gold) 20%,
+    var(--gold-bright) 35%,
+    var(--gold) 50%,
+    var(--gold-bright) 65%,
+    var(--gold) 80%,
+    var(--gold-dark) 92%,
+    var(--sea-deep) 100%
   );
+  box-shadow: 0 0 18px rgba(201,168,76,.45), 0 2px 8px rgba(0,0,0,.6);
 }
 
 /* ═══════════════════════════════════════════════
@@ -82,17 +100,16 @@ body::before {
 ═══════════════════════════════════════════════ */
 nav {
   position: sticky; top: 0; z-index: 200; flex-shrink: 0;
-  background: rgba(6, 18, 34, 0.96);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 2px solid var(--gold-dark);
-  box-shadow: 0 4px 25px rgba(0,0,0,0.5);
+  background: rgba(6, 14, 26, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(201,168,76,.2);
+  box-shadow: 0 1px 0 rgba(201,168,76,.08), 0 8px 40px rgba(0,0,0,.55);
 }
 
 .nav-inner {
   max-width: 1200px; margin: 0 auto;
-  padding: 0 1.5rem;
-  height: 65px;
+  padding: 0 1.5rem; height: 62px;
   display: flex; align-items: stretch; justify-content: space-between;
 }
 
@@ -100,173 +117,256 @@ nav {
   display: flex; align-items: center; gap: 10px;
   font-family: var(--ff-title);
   color: var(--gold-light); text-decoration: none;
-  font-size: 1.1rem; letter-spacing: 2px; font-weight: 700;
-  transition: all 0.3s;
+  font-size: 1.05rem; letter-spacing: 3px; font-weight: 700;
+  transition: all 0.35s;
 }
-.nav-brand:hover { color: #fff; text-shadow: 0 0 10px rgba(232, 200, 112, 0.5); }
+.nav-brand i { color: var(--gold); filter: drop-shadow(0 0 6px rgba(201,168,76,.5)); }
+.nav-brand:hover { color: #fff; text-shadow: 0 0 16px rgba(232,200,112,.6); }
 
-/* Hamburguesa (Móvil) */
+/* Hamburguesa */
 .hamburger {
-  display: none; flex-direction: column; justify-content: center; gap: 6px;
+  display: none; flex-direction: column; justify-content: center; gap: 5px;
   background: none; border: none; cursor: pointer;
   padding: 0 0.5rem; height: 100%; z-index: 300;
 }
 .hamburger span {
-  display: block; width: 28px; height: 3px;
-  background: var(--gold); border-radius: 3px;
+  display: block; width: 26px; height: 2px;
+  background: var(--gold); border-radius: 2px;
   transition: all 0.3s ease-in-out;
 }
-.hamburger.open span:nth-child(1) { transform: translateY(9px) rotate(45deg); background: var(--gold-light); }
-.hamburger.open span:nth-child(2) { opacity: 0; }
-.hamburger.open span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); background: var(--gold-light); }
+.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-.nav-menu {
-  display: flex; align-items: stretch; list-style: none; gap: 0;
-}
-
+.nav-menu { display: flex; align-items: stretch; list-style: none; }
 .dropdown { position: relative; display: flex; align-items: stretch; }
 
 .drop-btn {
   background: none; border: none; cursor: pointer; height: 100%;
-  padding: 0 1.2rem;
-  font-family: var(--ff-title); font-size: 0.85rem; letter-spacing: 1.5px; font-weight: 600;
-  color: rgba(255,255,255,0.9);
+  padding: 0 1.1rem;
+  font-family: var(--ff-title); font-size: 0.78rem; letter-spacing: 1.8px; font-weight: 600;
+  color: rgba(255,255,255,.82);
   display: flex; align-items: center; gap: 6px;
-  border-bottom: 3px solid transparent;
-  transition: all 0.3s;
+  border-bottom: 2px solid transparent;
+  transition: all 0.25s;
+  position: relative;
 }
-.drop-btn i { font-size: 0.7rem; color: var(--gold); transition: transform 0.3s; }
-.dropdown:hover .drop-btn i { transform: rotate(180deg); }
-
+.drop-btn i.fa-chevron-down { font-size: 0.62rem; color: var(--gold); opacity: .7; transition: transform 0.3s; }
+.dropdown:hover .drop-btn i.fa-chevron-down { transform: rotate(180deg); }
 .drop-btn:hover, .drop-btn.active-menu {
-  color: var(--gold-light); border-bottom-color: var(--gold); background: rgba(255,255,255,0.03);
+  color: var(--gold-light);
+  border-bottom-color: var(--gold);
+  background: rgba(201,168,76,.04);
 }
 
 .drop-content {
-  display: none; position: absolute; top: 100%; left: 0;
-  min-width: 220px;
-  background: rgba(5, 15, 28, 0.98);
-  border: 1px solid var(--gold-dark); border-top: 3px solid var(--gold);
-  border-radius: 0 0 8px 8px;
-  box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+  display: none; position: absolute; top: calc(100% + 1px); left: 0;
+  min-width: 230px;
+  background: rgba(7,16,30,.97);
+  border: 1px solid rgba(201,168,76,.2);
+  border-top: 2px solid var(--gold);
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.7), inset 0 0 30px rgba(201,168,76,.02);
   z-index: 300; overflow: hidden;
 }
-.dropdown:hover .drop-content { display: block; animation: dropDown 0.3s ease forwards; }
+.dropdown:hover .drop-content { display: block; animation: dropDown 0.25s cubic-bezier(0.16,1,0.3,1) forwards; }
 
 @keyframes dropDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .drop-content a {
   display: flex; align-items: center; gap: 10px;
-  padding: 12px 20px;
-  color: rgba(255,255,255,0.85); text-decoration: none; font-size: 0.95rem; font-weight: 600;
-  border-bottom: 1px solid rgba(201,168,76,0.1);
+  padding: 11px 18px;
+  color: rgba(255,255,255,.78); text-decoration: none;
+  font-family: var(--ff-title); font-size: 0.78rem; letter-spacing: 1px; font-weight: 600;
+  border-bottom: 1px solid rgba(201,168,76,.07);
   transition: all 0.2s;
 }
+.drop-content a i { color: var(--gold); opacity: .65; font-size: 0.8rem; width: 14px; }
 .drop-content a:last-child { border-bottom: none; }
-.drop-content a:hover { background: rgba(201,168,76,0.15); color: var(--gold-light); padding-left: 25px; }
+.drop-content a:hover {
+  background: linear-gradient(90deg, rgba(201,168,76,.12), transparent);
+  color: var(--gold-bright); padding-left: 24px;
+}
 
 .nav-lib {
   background: none; cursor: pointer; height: 100%;
-  padding: 0 1.2rem;
-  font-family: var(--ff-title); font-size: 0.85rem; letter-spacing: 1.5px; font-weight: 600;
-  color: rgba(255,255,255,0.9); text-decoration: none;
+  padding: 0 1.1rem;
+  font-family: var(--ff-title); font-size: 0.78rem; letter-spacing: 1.8px; font-weight: 600;
+  color: rgba(255,255,255,.82); text-decoration: none;
   display: flex; align-items: center; gap: 6px;
-  border-bottom: 3px solid transparent;
-  transition: all 0.3s;
+  border-bottom: 2px solid transparent;
+  transition: all 0.25s;
 }
-.nav-lib:hover {
-  color: var(--gold-light); border-bottom-color: var(--gold); background: rgba(255,255,255,0.03);
-}
+.nav-lib:hover { color: var(--gold-light); border-bottom-color: var(--gold); background: rgba(201,168,76,.04); }
 
 /* ═══════════════════════════════════════════════
-   MAIN PANEL (Tableta de Piedra)
+   PANEL PRINCIPAL
 ═══════════════════════════════════════════════ */
 .main-panel {
   position: relative; z-index: 10;
-  width: 96%; max-width: 1050px;
+  width: 96%; max-width: 1060px;
   margin: 2.5rem auto; flex: 1;
 }
 
+/* Ornamentos de esquina */
 .tablet {
   background: var(--ivory);
   border: 1px solid var(--border-gold);
-  border-radius: 16px;
+  border-radius: 18px;
   padding: 3rem 4rem;
   position: relative; overflow: hidden;
-  box-shadow: 0 25px 70px rgba(0,0,0,0.6), inset 0 0 50px rgba(201,168,76,0.05);
+  box-shadow:
+    0 0 0 1px rgba(201,168,76,.06),
+    0 30px 80px rgba(0,0,0,.65),
+    inset 0 1px 0 rgba(255,255,255,.9),
+    inset 0 0 60px rgba(201,168,76,.04);
+}
+
+/* Marca de agua ornamental centrada */
+.tablet::before {
+  content: '✦';
+  position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+  font-size: 1rem; color: rgba(201,168,76,.15); pointer-events: none; letter-spacing: 20px;
+}
+
+/* Franja inferior decorativa */
+.tablet::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,.25) 30%, rgba(201,168,76,.35) 50%, rgba(201,168,76,.25) 70%, transparent);
 }
 
 .tablet-header {
   text-align: center;
-  padding-bottom: 1.5rem; margin-bottom: 2rem;
-  border-bottom: 2px solid rgba(201,168,76,0.2);
+  padding-bottom: 1.8rem; margin-bottom: 2.2rem;
+  position: relative;
+}
+.tablet-header::after {
+  content: '';
+  position: absolute; bottom: 0; left: 10%; right: 10%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,.4) 30%, rgba(201,168,76,.5) 50%, rgba(201,168,76,.4) 70%, transparent);
 }
 
 h1 {
   font-family: var(--ff-title);
-  font-size: clamp(1.6rem, 5vw, 2.4rem);
-  letter-spacing: 4px;
+  font-size: clamp(1.5rem, 4.5vw, 2.3rem);
+  letter-spacing: 5px;
   color: var(--bronze);
   text-transform: uppercase;
   margin-bottom: 0.5rem;
+  text-shadow: 0 1px 2px rgba(0,0,0,.06);
 }
 
 h1.shimmer {
-  background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-light), var(--gold), var(--gold-dark));
+  background: linear-gradient(90deg,
+    var(--gold-dark) 0%, var(--gold) 25%, var(--gold-bright) 50%, var(--gold) 75%, var(--gold-dark) 100%);
   background-size: 300%;
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: shimmer 6s linear infinite;
+  animation: shimmer 7s linear infinite;
 }
 
-.page-sub { font-size: 0.95rem; color: var(--text-soft); letter-spacing: 2px; font-style: italic; }
+@keyframes shimmer {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+.page-sub { font-size: 0.88rem; color: var(--text-soft); letter-spacing: 3px; font-style: italic; margin-top: 4px; }
 
 h2.sh {
-  font-family: var(--ff-title); font-size: 1rem; letter-spacing: 2px;
-  color: var(--bronze); font-weight: 700;
-  padding-bottom: 8px; margin: 2.5rem 0 1.5rem;
-  border-bottom: 1px solid rgba(201,168,76,0.3);
+  font-family: var(--ff-title); font-size: 0.82rem; letter-spacing: 3px;
+  color: var(--bronze-rich); font-weight: 700;
+  padding: 10px 0 10px 14px;
+  margin: 2.8rem 0 1.6rem;
+  border-left: 3px solid var(--gold);
+  background: linear-gradient(90deg, rgba(201,168,76,.06), transparent 70%);
   display: flex; align-items: center; gap: 10px;
+  border-radius: 0 6px 6px 0;
 }
-h2.sh::before { content: '⬧'; color: var(--gold); font-size: 0.8rem; }
+h2.sh::before { content: '⬧'; color: var(--gold); font-size: 0.75rem; opacity: .8; }
 
 /* ═══════════════════════════════════════════════
    GRILLAS Y TARJETAS
 ═══════════════════════════════════════════════ */
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
 
 .card {
   background: var(--marble);
-  border: 1px solid rgba(201,168,76,0.2);
-  border-radius: 12px; padding: 1.8rem;
-  position: relative;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+  border: 1px solid rgba(201,168,76,.18);
+  border-radius: 14px; padding: 1.8rem;
+  position: relative; overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease, border-color 0.3s;
+  box-shadow: var(--card-shadow);
   display: flex; flex-direction: column;
 }
 
-.card:hover { 
-  transform: translateY(-5px); 
-  box-shadow: 0 12px 30px rgba(0,0,0,0.08); 
-  border-color: rgba(201,168,76,0.5);
+/* Reflejo superior en cada card */
+.card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.8) 50%, transparent);
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 45px rgba(0,0,0,.1), 0 0 0 1px var(--border-gold-strong);
 }
 
 .card h3 {
-  font-family: var(--ff-title); font-size: 0.95rem; letter-spacing: 1px; margin-bottom: 12px;
+  font-family: var(--ff-title); font-size: 0.88rem; letter-spacing: 1.2px; margin-bottom: 12px;
   display: flex; align-items: center; gap: 8px;
 }
-.card p { font-size: 1rem; color: var(--text-soft); line-height: 1.6; flex-grow: 1; }
+.card p { font-size: 1rem; color: var(--text-soft); line-height: 1.65; flex-grow: 1; }
 
-.card.c-sea { border-top: 4px solid #2d6a9f; } .card.c-sea h3 { color: #1a4e7a; }
-.card.c-gold { border-top: 4px solid var(--gold); } .card.c-gold h3 { color: var(--bronze); }
-.card.c-laurel { border-top: 4px solid var(--laurel); } .card.c-laurel h3 { color: #3d6b4a; }
-.card.c-fem { border-top: 4px solid #ff4d94; } .card.c-fem h3 { color: #801d5e; }
+.card.c-sea {
+  border-top: 3px solid #2d6a9f;
+  background: linear-gradient(160deg, #fdfcfa 0%, #f5f8fc 100%);
+}
+.card.c-sea::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 60px;
+  background: linear-gradient(180deg, rgba(45,106,159,.05), transparent);
+  pointer-events: none;
+}
+.card.c-sea h3 { color: #1a4e7a; }
+
+.card.c-gold {
+  border-top: 3px solid var(--gold);
+  background: linear-gradient(160deg, #fdfcf8 0%, #faf6ec 100%);
+}
+.card.c-gold::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 60px;
+  background: linear-gradient(180deg, rgba(201,168,76,.07), transparent);
+  pointer-events: none;
+}
+.card.c-gold h3 { color: var(--bronze); }
+
+.card.c-laurel {
+  border-top: 3px solid var(--laurel);
+  background: linear-gradient(160deg, #fdfcf9 0%, #f3f8f4 100%);
+}
+.card.c-laurel::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 60px;
+  background: linear-gradient(180deg, rgba(61,110,74,.06), transparent);
+  pointer-events: none;
+}
+.card.c-laurel h3 { color: #3d5e2a; }
+
+.card.c-fem {
+  border-top: 3px solid #e0458a;
+  background: linear-gradient(160deg, #fdfcfc 0%, #fdf3f8 100%);
+}
+.card.c-fem::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 60px;
+  background: linear-gradient(180deg, rgba(224,69,138,.06), transparent);
+  pointer-events: none;
+}
+.card.c-fem h3 { color: #7a1a54; }
 
 /* ═══════════════════════════════════════════════
-   BOTONES
+   BOTONES  (sin cambios de comportamiento)
 ═══════════════════════════════════════════════ */
 .btn-group { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
 
@@ -300,30 +400,36 @@ h2.sh::before { content: '⬧'; color: var(--gold); font-size: 0.8rem; }
    IFRAMES Y UTILIDADES
 ═══════════════════════════════════════════════ */
 .embed-frame {
-  width: 100%; 
-  height: 75vh;
-  min-height: 550px; 
-  border: 1px solid rgba(201,168,76,0.3); 
-  border-radius: 12px;
-  display: block; 
-  margin-top: 1.5rem;
-  background: #fff;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  width: 100%;
+  height: 75vh; min-height: 550px;
+  border: 1px solid rgba(201,168,76,.25);
+  border-radius: 12px; display: block;
+  margin-top: 1.5rem; background: #fff;
+  box-shadow: 0 12px 40px rgba(0,0,0,.08), 0 0 0 1px rgba(201,168,76,.08);
 }
 
-.fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+.fade-in { animation: fadeIn 0.45s cubic-bezier(0.16,1,0.3,1); }
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(15px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ═══════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════ */
 footer {
-  background: rgba(4, 10, 20, 0.98);
-  border-top: 2px solid var(--gold-dark);
-  padding: 1.5rem 2rem; text-align: center;
-  font-family: var(--ff-title); font-size: 0.75rem;
-  letter-spacing: 2px; color: rgba(255,255,255,0.4);
+  position: relative; z-index: 10;
+  background: rgba(4,9,18,.98);
+  border-top: 1px solid rgba(201,168,76,.15);
+  padding: 1.4rem 2rem; text-align: center;
+  font-family: var(--ff-title); font-size: 0.72rem;
+  letter-spacing: 3px; color: rgba(255,255,255,.3);
   margin-top: auto;
+}
+footer::before {
+  content: '';
+  display: block; width: 120px; height: 1px; margin: 0 auto 12px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,.3), transparent);
 }
 
 /* ═══════════════════════════════════════════════
@@ -332,49 +438,43 @@ footer {
 @media (max-width: 850px) {
   .hamburger { display: flex; }
   .nav-inner { padding: 0 1rem; }
-  
+
   .nav-menu {
     position: absolute; top: 100%; left: 0; right: 0;
-    flex-direction: column; 
-    background: rgba(8, 24, 46, 0.98);
-    border-bottom: 3px solid var(--gold-dark);
+    flex-direction: column;
+    background: rgba(6,12,24,.98);
+    border-bottom: 2px solid rgba(201,168,76,.2);
     max-height: 0; overflow: hidden;
-    transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    transition: max-height 0.4s cubic-bezier(0.16,1,0.3,1);
+    box-shadow: 0 20px 50px rgba(0,0,0,.7);
   }
-  
   .nav-menu.open { max-height: 80vh; overflow-y: auto; }
   .dropdown { flex-direction: column; }
-  
-  .drop-btn { 
-    width: 100%; padding: 18px 20px; justify-content: space-between; 
-    border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.95rem;
+  .drop-btn {
+    width: 100%; padding: 17px 20px; justify-content: space-between;
+    border-bottom: 1px solid rgba(255,255,255,.05); font-size: 0.88rem;
   }
-  
-  .drop-content { 
-    position: static; box-shadow: none; border: none; 
-    border-left: 3px solid var(--gold); border-radius: 0;
-    margin-left: 20px; background: rgba(0,0,0,0.2); 
+  .drop-content {
+    position: static; box-shadow: none; border: none;
+    border-left: 2px solid rgba(201,168,76,.3); border-radius: 0;
+    margin-left: 22px; background: rgba(0,0,0,.15);
     display: none; width: auto;
   }
-  
-  .dropdown:hover .drop-content, .dropdown:focus-within .drop-content { display: block; }
-  
-  .nav-lib { 
-    width: 100%; padding: 18px 20px; justify-content: flex-start;
-    border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.95rem; 
+  .dropdown:hover .drop-content,
+  .dropdown:focus-within .drop-content { display: block; }
+  .nav-lib {
+    width: 100%; padding: 17px 20px; justify-content: flex-start;
+    border-bottom: 1px solid rgba(255,255,255,.05); font-size: 0.88rem;
   }
-
   .main-panel { width: 100%; margin: 1rem 0; }
-  
-  .tablet { 
-    padding: 1.5rem 1rem; border-radius: 0; border-left: none; border-right: none;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  .tablet {
+    padding: 1.5rem 1rem; border-radius: 0;
+    border-left: none; border-right: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,.3);
   }
-  
-  h1 { font-size: 1.5rem; letter-spacing: 2px; }
-  .grid { gap: 15px; grid-template-columns: 1fr; }
-  .embed-frame { height: 80vh; border-radius: 6px; }
+  h1 { font-size: 1.4rem; letter-spacing: 2px; }
+  .grid { gap: 14px; grid-template-columns: 1fr; }
+  .embed-frame { height: 80vh; border-radius: 8px; }
 }
 </style>
 </head>
@@ -416,6 +516,7 @@ footer {
           <a href="#" onclick="go('futbol_varones'); closeNav(); return false;"><i class="fa-solid fa-mars"></i> Liga Varones</a>
           <a href="#" onclick="go('futbol_damas'); closeNav(); return false;"><i class="fa-solid fa-venus"></i> Liga Damas</a>
           <a href="#" onclick="go('goleadores'); closeNav(); return false;"><i class="fa-solid fa-shoe-prints"></i> Goleadores</a>
+          <a href="#" onclick="go('goleadoras'); closeNav(); return false;"><i class="fa-solid fa-shoe-prints" style="color:#ff4d94;"></i> Goleadoras</a>
           <a href="#" onclick="go('calendario_futbol'); closeNav(); return false;"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
           <a href="#" onclick="go('bases_futbol'); closeNav(); return false;"><i class="fa-solid fa-scroll"></i> Bases</a>
         </div>
@@ -469,6 +570,7 @@ const ROUTES = {
   'futbol_varones': rFutbolVarones,
   'futbol_damas': rFutbolDamas,
   'goleadores': rGoleadores,
+  'goleadoras': rGoleadoras,
   'bases_futbol': rBasesFutbol,
   'calendario_futbol': rCalendarioFutbol,
   juegos: rJuegos,
@@ -521,27 +623,27 @@ function rHome(stage){
       <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
 
         <div class="card c-sea" style="gap:0;">
-          <h3><i class="fa-solid fa-rocket" style="color:#2d6a9f;"></i> ARTEMIS II ROMPE RÉCORD</h3>
-          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">Abril 2026 · NASA</p>
-          <p>La nave Orión/Integrity superó los 406.771 km de la Tierra, más lejos que cualquier nave tripulada en la historia. Durante el trayecto, los astronautas vivieron un eclipse solar total de 53 minutos desde el lado oculto de la Luna, observando Venus, Marte, Saturno y Mercurio sin el brillo solar.</p>
+          <h3><i class="fa-solid fa-telescope" style="color:#2d6a9f;"></i> TELESCOPIO ROMAN: LANZAMIENTO SEPTIEMBRE</h3>
+          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">18 Mayo 2026 · NASA / Scientific American</p>
+          <p>La NASA adelantó el lanzamiento del telescopio espacial <strong>Nancy Grace Roman</strong> a septiembre de 2026, ocho meses antes de lo previsto. Con un campo de visión <strong>100 veces mayor que el Hubble</strong>, escaneará cientos de millones de galaxias para estudiar materia oscura, energía oscura y exoplanetas. "Lo que Hubble tardaría 2.000 años en procesar, Roman lo hace en un año", dijo el director de la NASA.</p>
         </div>
 
         <div class="card c-laurel" style="gap:0;">
-          <h3><i class="fa-solid fa-mars" style="color:#3d6b4a;"></i> ROCA "ATACAMA" EN MARTE</h3>
-          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">Mayo 2026 · Curiosity / NASA</p>
-          <p>El rover Curiosity quedó temporalmente bloqueado al perforar una roca en Marte que se desprendió y atascó la broca. Tras varias maniobras, la roca se liberó y los científicos la llamaron <strong>"Atacama"</strong>, en homenaje al desierto chileno usado como análogo marciano.</p>
+          <h3><i class="fa-solid fa-snowflake" style="color:#3d6b4a;"></i> GLACIAR HEKTORIA: RÉCORD DE DESHIELO</h3>
+          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">Mayo 2026 · Nature Geoscience / NASA</p>
+          <p>Un estudio internacional confirmó que el glaciar antártico Hektoria retrocedió <strong>25 km en solo 15 meses</strong>, incluyendo 8 km en dos meses a un ritmo de 800 metros diarios, diez veces más rápido que cualquier registro previo. La Península Antártica, cercana a Chile, perdió entre 1996 y 2026 una superficie de hielo equivalente a diez ciudades del tamaño de Madrid.</p>
         </div>
 
         <div class="card c-gold" style="gap:0;">
-          <h3><i class="fa-solid fa-star" style="color:var(--bronze);"></i> ETA ACUÁRIDAS: COMETA HALLEY</h3>
-          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">5–6 Mayo 2026 · NASA</p>
-          <p>La lluvia de meteoros eta Acuáridas alcanzó su peak a principios de mayo. Son fragmentos del <strong>Cometa Halley</strong> que se incendian en la atmósfera a 64 km/s. El Halley pasó por última vez en 1986 y no volverá hasta 2061. El 18 de mayo, Venus y la Luna se alinearon en el cielo occidental.</p>
+          <h3><i class="fa-solid fa-disease" style="color:var(--bronze);"></i> CÓDIGO DE AZÚCAR PARA DETECTAR CÁNCER</h3>
+          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">18 Mayo 2026 · Max Planck Institute / ScienceDaily</p>
+          <p>Investigadores del Instituto Max Planck descubrieron un <strong>"código de azúcar"</strong> oculto en la superficie de las células humanas que podría transformar la detección temprana de enfermedades. Usando una técnica llamada <em>Glycan Atlasing</em>, mapearon los patrones de moléculas de azúcar (glicanos) que cambian cuando una célula se vuelve cancerosa, antes de que aparezcan síntomas.</p>
         </div>
 
         <div class="card c-fem" style="gap:0;">
-          <h3><i class="fa-solid fa-dna" style="color:#801d5e;"></i> CRISPR SALVA A BEBÉ KJ</h3>
-          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">Mayo 2026 · Penn Medicine</p>
-          <p>Por primera vez, una terapia génica de edición CRISPR <strong>diseñada a medida para un solo paciente</strong> salvó la vida del bebé KJ, quien nació con una enfermedad metabólica mortal. El equipo del Hospital Infantil de Filadelfia logró que sus células produjeran la enzima faltante.</p>
+          <h3><i class="fa-solid fa-dna" style="color:#801d5e;"></i> PROTEÍNA QUE FRENA EL ENVEJECIMIENTO</h3>
+          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">19 Mayo 2026 · ScienceDaily</p>
+          <p>Científicos identificaron una proteína que actúa como freno de la <strong>inflamación crónica asociada al envejecimiento</strong>. Ratones mayores con niveles elevados de esta proteína resultaron más fuertes, más activos y con huesos más sanos que los no tratados. El hallazgo abre una nueva vía para comprender por qué los tejidos se deterioran con la edad.</p>
         </div>
 
       </div>
@@ -596,6 +698,7 @@ function rJuegos(stage){
 }
 
 function rGoleadores(s){ s.innerHTML = '<h1><i class="fa-solid fa-shoe-prints"></i> GOLEADORES</h1><iframe src="goleadores.html" class="embed-frame"></iframe>'; }
+function rGoleadoras(s){ s.innerHTML = '<h1><i class="fa-solid fa-shoe-prints" style="color:#ff4d94;"></i> GOLEADORAS</h1><iframe src="goleadoras.html" class="embed-frame"></iframe>'; }
 function r3(s){ s.innerHTML = '<h1>III° Medio: Tecnología</h1><iframe src="bitacora_tech.html" class="embed-frame"></iframe>'; }
 function r4(s){ s.innerHTML = '<h1>IV° Medio: Física</h1><iframe src="tesoros_espacio.html" class="embed-frame"></iframe>'; }
 function r6(s){ s.innerHTML = '<h1>VI° Básico: Ciencias</h1><iframe src="bitacora_6basico.html" class="embed-frame"></iframe>'; }

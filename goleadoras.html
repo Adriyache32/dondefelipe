@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#1a0a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Goleadoras Copa San Agustín</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --deep: #1a0a2e;
+            --rose: #c94c8a;
+            --rose-light: #e870b8;
+
+            /* Fluid type scale: se adapta entre celular y escritorio */
+            --fs-icon:   clamp(2.2rem, 8vw,  3rem);
+            --fs-h2:     clamp(1rem,   4vw,  1.4rem);
+            --fs-badge:  clamp(0.65rem, 2.5vw, 0.75rem);
+            --fs-rank:   clamp(1rem,   3.5vw, 1.2rem);
+            --fs-name:   clamp(0.95rem, 3.5vw, 1.1rem);
+            --fs-goals:  clamp(1.5rem,  6vw,  1.8rem);
+            --fs-label:  clamp(0.55rem, 2vw,  0.6rem);
+            --fs-footer: clamp(0.7rem,  2.5vw, 0.8rem);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background:
+                linear-gradient(rgba(26, 10, 46, 0.92), rgba(26, 10, 46, 0.92)),
+                url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1080&auto=format&fit=crop');
+            background-size: cover;
+            background-attachment: scroll; /* evita bug de iOS Safari con fixed */
+            color: white;
+            margin: 0;
+            min-height: 100dvh;
+            padding: clamp(12px, 4vw, 24px);
+            padding-bottom: calc(clamp(12px, 4vw, 24px) + env(safe-area-inset-bottom));
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 560px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--rose);
+            border-radius: clamp(10px, 3vw, 15px);
+            padding: clamp(18px, 5vw, 30px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: clamp(18px, 5vw, 30px);
+        }
+
+        header i {
+            font-size: var(--fs-icon);
+            color: var(--rose);
+            display: block;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 0 10px rgba(201, 76, 138, 0.5));
+        }
+
+        h2 {
+            text-transform: uppercase;
+            letter-spacing: clamp(1px, 1vw, 3px);
+            margin: 8px 0;
+            font-family: 'Cinzel', serif;
+            font-size: var(--fs-h2);
+            color: var(--rose-light);
+            line-height: 1.2;
+        }
+
+        .badge-damas {
+            display: inline-block;
+            background: rgba(201, 76, 138, 0.2);
+            border: 1px solid var(--rose);
+            color: var(--rose-light);
+            font-size: var(--fs-badge);
+            letter-spacing: clamp(1px, 0.5vw, 2px);
+            text-transform: uppercase;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-top: 6px;
+        }
+
+        header p {
+            margin: 8px 0 0;
+            font-size: var(--fs-badge);
+            color: #bbb;
+        }
+
+        .scorers-list {
+            display: flex;
+            flex-direction: column;
+            gap: clamp(10px, 3vw, 15px);
+        }
+
+        .scorer-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: clamp(8px, 2vw, 10px);
+            padding: clamp(12px, 3.5vw, 16px) clamp(14px, 4vw, 20px);
+            min-height: 52px; /* target táctil mínimo */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-left: 4px solid transparent;
+            transition: background 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Feedback en dispositivos táctiles */
+        @media (hover: none) {
+            .scorer-card:active { background: rgba(255, 255, 255, 0.18); }
+        }
+
+        /* Hover solo en dispositivos con puntero */
+        @media (hover: hover) {
+            .scorer-card:hover {
+                transform: scale(1.02);
+                background: rgba(255, 255, 255, 0.15);
+            }
+        }
+
+        .scorer-card:nth-child(1) { border-left-color: var(--rose); background: rgba(201,76,138,0.15); }
+        .scorer-card:nth-child(2) { border-left-color: #c0c0c0; }
+        .scorer-card:nth-child(3) { border-left-color: #cd7f32; }
+
+        .info {
+            display: flex;
+            align-items: center;
+            gap: clamp(10px, 3vw, 15px);
+            flex: 1;
+            min-width: 0;
+        }
+
+        .rank {
+            font-weight: 800;
+            font-size: var(--fs-rank);
+            color: var(--rose);
+            width: clamp(24px, 6vw, 32px);
+            flex-shrink: 0;
+        }
+
+        .name {
+            font-size: var(--fs-name);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .goals-count {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+
+        .goals-num {
+            font-size: var(--fs-goals);
+            font-weight: 900;
+            line-height: 1;
+            color: var(--rose-light);
+        }
+
+        .goals-label {
+            font-size: var(--fs-label);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #aaa;
+            margin-top: 2px;
+        }
+
+        .footer-note {
+            margin-top: clamp(18px, 5vw, 30px);
+            text-align: center;
+            font-size: var(--fs-footer);
+            color: #888;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <i class="fa-solid fa-futbol"></i>
+        <h2>Máximas Goleadoras</h2>
+        <span class="badge-damas">⚢ Rama Damas</span>
+        <p>Temporada 2026</p>
+    </header>
+
+    <div class="scorers-list">
+        <div class="scorer-card">
+            <div class="info">
+                <div class="rank">1°</div>
+                <div class="name">Amanda Carrasco</div>
+            </div>
+            <div class="goals-count">
+                <div class="goals-num">2</div>
+                <div class="goals-label">Goles</div>
+            </div>
+        </div>
+
+        <div class="scorer-card">
+            <div class="info">
+                <div class="rank">2°</div>
+                <div class="name">Emilia Aparicio</div>
+            </div>
+            <div class="goals-count">
+                <div class="goals-num">1</div>
+                <div class="goals-label">Gol</div>
+            </div>
+        </div>
+
+        <div class="scorer-card">
+            <div class="info">
+                <div class="rank">3°</div>
+                <div class="name">Fernanda Molina</div>
+            </div>
+            <div class="goals-count">
+                <div class="goals-num">1</div>
+                <div class="goals-label">Gol</div>
+            </div>
+        </div>
+    </div>
+
+    <p class="footer-note">⚽ Datos actualizados según actas de arbitraje oficiales.</p>
+</div>
+
+</body>
+</html>
