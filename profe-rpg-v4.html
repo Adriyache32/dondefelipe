@@ -110,6 +110,7 @@ canvas{width:100%;aspect-ratio:1/1;max-width:450px;max-height:450px;background:#
 .bb{padding:7px 5px;border-radius:7px;border:2px solid transparent;font-family:'VT323',monospace;font-size:clamp(.82rem,2.8vw,.97rem);font-weight:bold;cursor:pointer;transition:transform .12s,filter .12s;display:flex;align-items:center;justify-content:center;gap:3px}
 .bb:active{transform:scale(.93);filter:brightness(.85)}.bb:disabled{opacity:.42;cursor:not-allowed;transform:none}
 .ba{background:linear-gradient(180deg,#ef4444,#b91c1c);color:#fff;border-color:#fca5a5}.bs{background:linear-gradient(180deg,#8b5cf6,#6d28d9);color:#fff;border-color:#c4b5fd}.bi{background:linear-gradient(180deg,#f59e0b,#d97706);color:#000;border-color:#fde68a}.br{background:linear-gradient(180deg,#4b5563,#374151);color:#d1d5db;border-color:#6b7280}
+.bp{background:linear-gradient(180deg,#c084fc,#9333ea);color:#fff;border-color:#e879f9}
 .dmg-pop{position:absolute;font-family:'Press Start 2P',monospace;font-size:clamp(.7rem,2.5vw,.95rem);font-weight:bold;pointer-events:none;z-index:250;animation:pop .9s ease forwards}
 @keyframes pop{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-40px) scale(1.3);opacity:0}}
 #ctrl{width:100%;max-width:500px;padding:4px 18px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
@@ -128,7 +129,7 @@ canvas{width:100%;aspect-ratio:1/1;max-width:450px;max-height:450px;background:#
   <div class="sc"><div class="sw"><span class="sl">XP</span><span class="sv" id="xp-v">0/80</span></div><div class="bw"><div class="bf" id="xp-bar" style="width:0%"></div></div></div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0"><div id="lv-badge">LV 1</div><div class="coins">🪙<span id="coin-n">0</span></div></div>
   <div id="blue-display">🔵<span id="blue-n">0</span>/10</div>
-  <div id="map-label">PASILLO</div>
+  <button id="btn-back" class="btn-ui" style="display:none;background:linear-gradient(180deg,#374151,#1f2937);color:#9ca3af;border-color:#4b5563;font-size:.7rem;padding:3px 7px" onclick="goBack()">← Salir</button><div id="map-label">PASILLO</div>
   <button class="btn-ui" onclick="openInv()">🎒</button>
 </div>
 
@@ -143,7 +144,7 @@ canvas{width:100%;aspect-ratio:1/1;max-width:450px;max-height:450px;background:#
       <div id="b-ez"><div id="b-ec"><div id="b-en">—</div><div id="b-ht">HP:--/--</div><div class="bhw"><div class="bhf" id="b-ehp" style="width:100%;background:linear-gradient(90deg,#4ade80,#22c55e)"></div></div></div><div id="b-es">😤</div></div>
       <div id="b-pz"><div id="b-ps">🧑‍🏫</div><div id="b-pc"><div id="b-pn">PROFE FELIPE</div><div class="bsr"><span class="bsl">HP</span><div class="bsw"><div class="bsf" id="b-hf"></div></div><span class="bsn" id="b-hn">100</span></div><div class="bsr"><span class="bsl">MP</span><div class="bsw"><div class="bsf" id="b-mf"></div></div><span class="bsn" id="b-mn">50</span></div><div id="b-st"></div></div></div>
     </div>
-    <div id="b-ma"><div id="b-msg"></div><div id="b-act"><button class="bb ba" onclick="doMove(0)">⚡ EXPLICAR</button><button class="bb bs" onclick="doMove(1)">💡 MOTIVAR</button><button class="bb bi" id="btn-cof" onclick="doMove(2)">☕ CAFÉ</button><button class="bb br" id="btn-run" onclick="doMove(3)">🚪 HUIR</button></div></div>
+    <div id="b-ma"><div id="b-msg"></div><div id="b-act"><button class="bb ba" onclick="doMove(0)">⚡ EXPLICAR</button><button class="bb bs" onclick="doMove(1)">💡 MOTIVAR</button><button class="bb bi" id="btn-cof" onclick="doMove(2)">☕ CAFÉ</button><button class="bb br" id="btn-run" onclick="doMove(3)">🚪 HUIR</button><button class="bb bp" id="btn-psy" onclick="doMove(4)" style="display:none;grid-column:1/3">💜 ATAQUE PSICOLÓGICO</button></div></div>
   </div>
 
   <!-- DIÁLOGO -->
@@ -211,7 +212,7 @@ const EL={
   battle:_('battle'),bEs:_('b-es'),bEn:_('b-en'),bHt:_('b-ht'),bEhp:_('b-ehp'),
   bPs:_('b-ps'),bHf:_('b-hf'),bMf:_('b-mf'),bHn:_('b-hn'),bMn:_('b-mn'),
   bSt:_('b-st'),bMsg:_('b-msg'),bAct:_('b-act'),bArena:_('b-arena'),
-  btnCof:_('btn-cof'),btnRun:_('btn-run'),
+  btnCof:_('btn-cof'),btnRun:_('btn-run'),btnPsy:_('btn-psy'),btnBack:_('btn-back'),
   dlgBox:_('dlg-box'),dt:_('dt'),dbBtns:_('db-btns'),
   invPanel:_('inv-panel'),invList:_('inv-list'),
   shopPanel:_('shop-panel'),kellaMsg:_('kella-msg'),shopCoins:_('shop-coins'),shopFb:_('shop-fb'),shopItems:_('shop-items'),
@@ -231,7 +232,10 @@ let progress={
   claudita:0,blueCoins:0,
   canchaVisited:false,biblioVisited:false,
   codeOk:false,chestOpened:false,
-  jeanette:{attempts:0,locked:false}   // intentos al teclado
+  jeanette:{attempts:0,locked:false},
+  salaContVisited:false,
+  paulaMission:{given:false,completed:false,rewarded:false},
+  psyAttackUnlocked:false
 };
 
 // ═══ MAPAS ═══
@@ -246,7 +250,7 @@ const MAPS={
     ['#','.','.','.','.','.','.','.','.','.','.','.','.','7','.','N','.','.','.',  '#'],
     ['E','f','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','f','E'],
     ['E','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','E'],
-    ['#','#','#','#','E','E','#','#','#','#','E','E','#','#','#','#','#','#','#','#']
+    ['#','#','#','#','E','E','#','Z','Z','#','E','E','#','#','#','#','#','#','#','#']
   ],
   cancha:[
     ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'],
@@ -279,10 +283,23 @@ const MAPS={
     ['#','s','.','c','c','.','.','.','.','.','.','.','.','.',  'c','c','.','s','.',  '#'],
     ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#']
   ]
+,
+  sala_cont:[
+    ['#','#','E','E','#','#','E','E','#','#'],
+    ['#','a','a','a','a','a','a','a','a','#'],
+    ['#','a','h','a','a','a','a','h','a','#'],
+    ['#','a','X','a','a','a','P','a','a','#'],
+    ['#','a','a','a','a','a','a','a','a','#'],
+    ['#','a','a','a','a','a','a','a','a','#'],
+    ['#','a','a','a','a','a','a','a','a','#'],
+    ['#','a','h','a','a','a','a','h','a','#'],
+    ['#','a','a','a','a','a','a','a','a','#'],
+    ['#','#','#','#','#','#','#','#','#','#']
+  ]
 };
-const WALKABLE=new Set(['.','E','g','e','N','b','v']);
+const WALKABLE=new Set(['.','E','g','e','N','b','v','a','Z']);
 const updateCamera=()=>{ const m=MAPS[currentMap],mW=m[0].length,mH=m.length; camera.x=Math.max(0,Math.min(player.x-4,mW-10)); camera.y=Math.max(0,Math.min(player.y-4,mH-10)); };
-const transitionTo=(id,tx,ty)=>{ currentMap=id; player.x=tx; player.y=ty; player.steps=0; updateCamera(); };
+const transitionTo=(id,tx,ty)=>{ if(currentMap==='sala_cont')stopSalaContMusic(); currentMap=id; player.x=tx; player.y=ty; player.steps=0; updateCamera(); };
 
 // ═══ FRASES ═══
 const PH={
@@ -293,6 +310,8 @@ const PH={
   gonzalo:["La cancha también es aula.\nAquí aprendemos perseverancia y trabajo en equipo. 🏃","¿Sabías que el ejercicio aumenta la neuroplasticidad?\n¡Mueve a tus alumnos para que aprendan mejor!","Un buen profe, como un deportista,\nno se rinde tras el primer error. ¡Tú puedes!","La cancha y el aula comparten la misma raíz:\nel deseo de mejorar. 💪"],
   juan:["La colaboración entre profesores es el\nmejor ejemplo que damos a nuestros alumnos.","Nadie enseña solo. Compartir es crecer. 🤝","La sala de profesores no es solo para el café.\nEs para construir comunidad docente. ✨","¡Equipo docente!\nJuntos somos más que la suma de nuestras asignaturas."],
   shrine:["Nadie sabe lo que puede un aula...\nhasta que el docente deja de temer\ny empieza a confiar.\n\n— Inspirado en Spinoza","En la sociedad del rendimiento,\nla verdadera revolución es enseñar\na contemplar, a detenerse, a pensar.\n\n— Inspirado en Byung-Chul Han","El conocimiento más poderoso no se mide en pruebas.\nVive en el momento donde un alumno\nse descubre a sí mismo capaz."],
+  constanza:["La contención emocional no es debilidad.\nEs la fuerza que nos permite seguir. 💙","Cada profe necesita un espacio seguro.\nEste es el tuyo. 💜","El autocuidado no es egoísmo.\nEs la base de todo lo que das a tus alumnos.","Cuando sientas el peso del aula,\nrecuerda que no lo cargas solo. 🌸","Tus emociones son válidas.\nSentirte cansado es humano, profe. ✨"],
+  paula:["La risa sana el alma.\nY la conexión emocional, la cura. 💜","Cada alumno que ríe contigo\nes un alumno que confía en ti.","Un profe que sonríe crea\nun aula donde se aprende mejor.","El humor sano en el aula\nbaja el estrés y sube el aprendizaje. 💙"],
   jeanette:["¿Por qué el libro de matemáticas estaba triste?\n\nPorque tenía demasiados problemas. 😄","¿Qué le dijo un libro a otro libro?\n\n¡Oye, para de leerme! 📖","¿Por qué el diccionario está siempre ocupado?\n\nPorque tiene muchas palabras que atender. 😊","¿Cuál es el animal que más lee?\n\nEl elefante... siempre tiene la trompa en un libro. 🐘","¿Qué hace una abeja en la biblioteca?\n\nBusca la miel-enciclopedia, claro. 🐝","¿Por qué los libros no pelean?\n\nPorque solucionan todo con palabras. 📝","¿Cuál es el libro más peligroso?\n\n¡El libro-mbres! 👻","¿Qué le dijo el marcapáginas al libro?\n\n¡Aquí te espero siempre! 🔖","¿Por qué los escritores van al gimnasio?\n\nPara tener buena forma... literaria. 💪","¿Cómo se llama el libro más raro?\n\nLibro Raro. 😅"]
 };
 const pidx={};
@@ -311,7 +330,10 @@ const ENEMIES=[
   {id:'prueba',name:'Prueba Sorpresa',emoji:'📝',maxHp:55,atk:20,def:8,xp:45,coins:15,glow:'rgba(124,58,237,.7)',intro:'¡Una PRUEBA SORPRESA apareció!\n¡Pánico en el aula!',attacks:[{name:'Estrés',power:20,effect:'stressed',chance:.65,msg:'causó estrés. ¡Daño crítico!'},{name:'Hoja en Blanco',power:12,effect:null,chance:0,msg:'dejó la mente en blanco.'}],weak:'Motivar',resist:'Explicar'},
   {id:'resfrio',name:'Resfriado',emoji:'🤒',maxHp:35,atk:9,def:3,xp:22,coins:7,glow:'rgba(8,145,178,.7)',intro:'¡Un Resfriado entró! ¡Achú!',attacks:[{name:'Estornudo',power:9,effect:'poisoned',chance:.5,msg:'estornudó. ¡Intoxicado!'},{name:'Fiebre',power:11,effect:null,chance:0,msg:'subió la temperatura.'}],weak:'Café',resist:'Motivar'},
   {id:'celular',name:'Celular en Clase',emoji:'📱',maxHp:38,atk:11,def:5,xp:30,coins:12,glow:'rgba(14,165,233,.7)',intro:'¡Un Celular apareció!\n¡Scrollea TikTok sin parar!',attacks:[{name:'Notificación',power:8,effect:'confused',chance:.55,msg:'bombardeó notificaciones. ¡Confundido!'},{name:'Reels',power:11,effect:null,chance:0,msg:'reprodujo un video que no para.'}],weak:'Explicar',resist:null},
-  {id:'inspector_b',name:'Inspector',emoji:'👔',maxHp:65,atk:18,def:10,xp:60,coins:22,glow:'rgba(15,23,42,.95)',intro:'¡Un INSPECTOR apareció!\n¡La clase debe ser perfecta!',attacks:[{name:'Observación',power:18,effect:'stressed',chance:.7,mpDrain:0,msg:'anotó observaciones. ¡Estrés máximo!'},{name:'Revisión',power:14,effect:null,chance:0,mpDrain:12,msg:'pidió la planificación. ¡-MP!'}],weak:'Motivar',resist:'Huir',noFlee:true}
+  {id:'inspector_b',name:'Inspector',emoji:'👔',maxHp:65,atk:18,def:10,xp:60,coins:22,glow:'rgba(15,23,42,.95)',intro:'¡Un INSPECTOR apareció!\n¡La clase debe ser perfecta!',attacks:[{name:'Observación',power:18,effect:'stressed',chance:.7,mpDrain:0,msg:'anotó observaciones. ¡Estrés máximo!'},{name:'Revisión',power:14,effect:null,chance:0,mpDrain:12,msg:'pidió la planificación. ¡-MP!'}],weak:'Motivar',resist:'Huir',noFlee:true},
+  {id:'paulina',name:'Profa Paulina',emoji:'📐',maxHp:52,atk:16,def:9,xp:40,coins:14,glow:'rgba(234,179,8,.75)',intro:'\u00a1La Profa Paulina apareci\u00f3!\n"\u00a1Demuestren el teorema de Pit\u00e1goras!"',attacks:[{name:'Ecuaci\u00f3n Dif\u00edcil',power:16,effect:'stressed',chance:.5,msg:'plante\u00f3 una ecuaci\u00f3n imposible. \u00a1Estr\u00e9s!'},{name:'Prueba de \u00c1lgebra',power:20,effect:null,chance:0,msg:'lanz\u00f3 \u00e1lgebra sin aviso.'}],weak:'Caf\u00e9',resist:'Explicar'},
+  {id:'dahian',name:'Profe Dahian',emoji:'\U0001f3c3',maxHp:48,atk:19,def:5,xp:38,coins:13,glow:'rgba(34,197,94,.75)',intro:'\u00a1El Profe Dahian apareci\u00f3!\n"\u00a1Veinte vueltas al patio!"',attacks:[{name:'Trote Forzado',power:15,effect:null,chance:0,msg:'hizo trotar al profe sin parar.'},{name:'Tabla de Flexiones',power:12,effect:'confused',chance:.6,msg:'mand\u00f3 flexiones. \u00a1Confundido!'}],weak:'Motivar',resist:'Huir'},
+  {id:'alex',name:'Profe Alex',emoji:'\U0001f3b5',maxHp:44,atk:14,def:7,xp:35,coins:12,glow:'rgba(168,85,247,.75)',intro:'\u00a1El Profe Alex apareci\u00f3!\n"\u00a1Sigan el ritmo!"',attacks:[{name:'Nota Desafinada',power:11,effect:'confused',chance:.65,msg:'toc\u00f3 nota desafinada. \u00a1Confundido!'},{name:'Volumen al M\u00e1ximo',power:18,effect:'stressed',chance:.4,msg:'subi\u00f3 el volumen al m\u00e1ximo. \u00a1Estr\u00e9s!'}],weak:'Explicar',resist:'Caf\u00e9'}
 ];
 
 // ═══ TIENDA ═══
@@ -354,6 +376,7 @@ function drawPasilloTile(t,sx,sy,mR,mC){
     case '#': ctx.fillStyle='#2e2545'; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle='rgba(255,255,255,.04)'; ctx.lineWidth=1; ctx.strokeRect(sx+1,sy+1,TS-2,TS-2); if(mR===0&&CUADRO_C.has(mC)){const ci=[...CUADRO_C].indexOf(mC),pal=CUADRO_PAL[ci]; ctx.fillStyle='#78350f'; ctx.fillRect(sx+4,sy+8,TS-8,TS-13); ctx.fillStyle=pal[0]; ctx.fillRect(sx+6,sy+10,TS-12,TS-17); ctx.fillStyle=pal[1]; ctx.beginPath(); ctx.arc(sx+TS/2,sy+17,4,0,Math.PI*2); ctx.fill();} ctx.strokeStyle='rgba(0,0,0,.2)'; ctx.lineWidth=.8; ctx.beginPath(); ctx.moveTo(sx,sy+TS*.6); ctx.lineTo(sx+TS,sy+TS*.6); ctx.stroke(); break;
     case 'E': ctx.fillStyle='#d97706'; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle='#fcd34d'; ctx.lineWidth=2; ctx.strokeRect(sx+4,sy+4,TS-8,TS-8); ctx.fillStyle=`rgba(253,230,138,${.7+.3*Math.sin(tick*.1)})`; ctx.beginPath(); ctx.arc(sx+TS-11,sy+TS/2,3,0,Math.PI*2); ctx.fill(); break;
     case 'N': const lk=!hasItem('vela'); ctx.fillStyle=lk?'#110820':'#1a0c03'; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle=lk?'rgba(139,92,246,.6)':'rgba(245,158,11,.8)'; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6); ctx.globalAlpha=.5+.5*Math.sin(tick*.07); ctx.font='14px serif'; ctx.textBaseline='middle'; ctx.textAlign='center'; ctx.fillText(lk?'🔮':'🕯',sx+TS/2,sy+TS/2); ctx.globalAlpha=1; ctx.textAlign='left'; break;
+    case 'Z':{ const gz=.5+.5*Math.sin(tick*.08); const gr=ctx.createLinearGradient(sx,sy,sx,sy+TS); gr.addColorStop(0,'#6d28d9'); gr.addColorStop(.5,'#7c3aed'); gr.addColorStop(1,'#5b21b6'); ctx.fillStyle=gr; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle=`rgba(192,132,252,${.6+.3*gz})`; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6); ctx.globalAlpha=gz; ctx.font='14px serif'; ctx.textBaseline='middle'; ctx.textAlign='center'; ctx.fillText('💜',sx+TS/2,sy+TS/2); ctx.globalAlpha=1; ctx.textAlign='left'; ctx.fillStyle='#c084fc'; ctx.font='bold 5px sans-serif'; ctx.textBaseline='top'; ctx.textAlign='center'; ctx.fillText('CONT.',sx+TS/2,sy+3); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break;}
     case 'f': ctx.fillStyle='#d1fae5'; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle='rgba(0,0,0,.06)'; ctx.lineWidth=.5; ctx.strokeRect(sx,sy,TS,TS); ctx.font='20px serif'; ctx.textBaseline='middle'; ctx.textAlign='center'; ctx.fillText(mC<10?'🌸':'🪴',sx+TS/2,sy+TS/2+2); ctx.textAlign='left'; break;
     default: ctx.fillStyle=(mR+mC)%2===0?'#e8dfc8':'#ddd5bb'; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle='rgba(0,0,0,.05)'; ctx.lineWidth=.5; ctx.strokeRect(sx,sy,TS,TS);
   }
@@ -433,9 +456,100 @@ function drawBibliotecaTile(t,sx,sy,mR,mC){
 }
 function drawBibliotecaOverlays(){ const map=MAPS.biblioteca; for(let r=0;r<10;r++) for(let c=0;c<10;c++){ const mR=r+camera.y,mC=c+camera.x; if(map[mR]?.[mC]==='Q') drawNPC(c*TS,r*TS,'👩‍💼','#7c3aed','TÍA JN'); } }
 
+
+// ═══ MÚSICA 8-BIT RELAJANTE (Sala de Contención) ═══
+let audioCtx=null,musicLoop=null,musicActive=false;
+function getAC(){
+  try{ if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); return audioCtx; }catch(e){return null;}
+}
+const SC_NOTES=[[392,1],[440,.5],[523.25,.5],[440,1],[392,2],[329.63,1],[261.63,.5],[329.63,.5],[392,1.5],[0,.5],[329.63,1],[392,.5],[440,.5],[523.25,1],[440,2],[0,1],[523.25,.5],[659.25,.5],[523.25,1],[440,1],[392,2],[0,1]];
+const BASS_LOOP=[[130.81,4],[98,2],[130.81,2],[87.31,4]];
+const BPS=66/60;
+function scNote(freq,t0,dur,vol=.065){
+  if(!freq||!audioCtx) return;
+  try{
+    const osc=audioCtx.createOscillator(),filt=audioCtx.createBiquadFilter(),gain=audioCtx.createGain();
+    osc.connect(filt); filt.connect(gain); gain.connect(audioCtx.destination);
+    osc.type='triangle'; filt.type='lowpass'; filt.frequency.value=1100;
+    osc.frequency.setValueAtTime(freq,t0);
+    gain.gain.setValueAtTime(0,t0); gain.gain.linearRampToValueAtTime(vol,t0+.06);
+    gain.gain.setValueAtTime(vol,t0+dur-.1); gain.gain.linearRampToValueAtTime(0,t0+dur);
+    osc.start(t0); osc.stop(t0+dur+.02);
+  }catch(e){}
+}
+function scBass(freq,t0,dur){
+  if(!freq||!audioCtx) return;
+  try{
+    const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.type='square'; osc.frequency.setValueAtTime(freq*.5,t0);
+    gain.gain.setValueAtTime(.022,t0); gain.gain.exponentialRampToValueAtTime(.001,t0+dur*.8);
+    osc.start(t0); osc.stop(t0+dur);
+  }catch(e){}
+}
+function scheduleSC(){
+  if(!musicActive) return;
+  if(!getAC()) return;
+  let t=audioCtx.currentTime+.12, total=0;
+  SC_NOTES.forEach(([f,b])=>{ const d=b/BPS; scNote(f,t,d*.88); t+=d; total+=d; });
+  let tb=audioCtx.currentTime+.12;
+  BASS_LOOP.forEach(([f,b])=>{ const d=b/BPS; scBass(f,tb,d); tb+=d; });
+  musicLoop=setTimeout(scheduleSC,(total-.25)*1000);
+}
+function startSalaContMusic(){ if(musicActive) return; musicActive=true; try{scheduleSC();}catch(e){musicActive=false;} }
+function stopSalaContMusic(){ musicActive=false; if(musicLoop){clearTimeout(musicLoop);musicLoop=null;} }
+
+// ═══ SALA DE CONTENCIÓN — DIBUJO ═══
+const SC_POSTERS={1:'💙 Aquí\nestás bien',4:'💜 No estás\nsolo',5:'🌸 Respira\nprofundo',8:'✨ Eres\nvalioso'};
+const SC_BOT={2:'Todo va\nbien 💙',5:'💜',7:'¡Tú\npuedes!'};
+function drawSalaContTile(t,sx,sy,row,col){
+  switch(t){
+    case '#':{
+      ctx.fillStyle='#1e1040'; ctx.fillRect(sx,sy,TS,TS);
+      ctx.strokeStyle='rgba(192,132,252,.18)'; ctx.lineWidth=1; ctx.strokeRect(sx+1,sy+1,TS-2,TS-2);
+      const pm=SC_POSTERS[col]; if(row===0&&pm){ctx.fillStyle='rgba(236,72,153,.55)'; ctx.fillRect(sx+4,sy+5,TS-8,TS-11); ctx.fillStyle='white'; ctx.font='bold 5px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; pm.split('\n').forEach((l,i)=>ctx.fillText(l,sx+TS/2,sy+9+i*9)); ctx.textAlign='left';}
+      const bm=SC_BOT[col]; if(row===9&&bm){ctx.fillStyle='rgba(167,139,250,.45)'; ctx.fillRect(sx+4,sy+5,TS-8,TS-11); ctx.fillStyle='white'; ctx.font='bold 5px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; bm.split('\n').forEach((l,i)=>ctx.fillText(l,sx+TS/2,sy+9+i*9)); ctx.textAlign='left';}
+      break;}
+    case 'E':{const ge=.5+.5*Math.sin(tick*.09); ctx.fillStyle=`rgba(167,139,250,${.3+.1*ge})`; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle=`rgba(192,132,252,${.7+.2*ge})`; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6); ctx.globalAlpha=.7+.3*ge; ctx.font='13px serif'; ctx.textBaseline='middle'; ctx.textAlign='center'; ctx.fillText('↩',sx+TS/2,sy+TS/2); ctx.globalAlpha=1; ctx.textAlign='left'; break;}
+    case 'a':{
+      ctx.fillStyle='#3b1754'; ctx.fillRect(sx,sy,TS,TS);
+      ctx.fillStyle='rgba(192,132,252,.11)';
+      for(let i=0;i<3;i++) for(let j=0;j<3;j++) if((i+j)%2===0) ctx.fillRect(sx+2+i*13,sy+2+j*13,11,11);
+      ctx.strokeStyle='rgba(192,132,252,.13)'; ctx.lineWidth=.5; ctx.strokeRect(sx,sy,TS,TS); break;}
+    case 'h':{
+      ctx.fillStyle='#3b1754'; ctx.fillRect(sx,sy,TS,TS);
+      ctx.fillStyle='rgba(192,132,252,.1)';
+      for(let i=0;i<3;i++) for(let j=0;j<3;j++) if((i+j)%2===0) ctx.fillRect(sx+2+i*13,sy+2+j*13,11,11);
+      const pb=.8+.2*Math.sin(tick*.06+col*.4);
+      ctx.fillStyle=`rgba(236,72,153,${.7*pb})`; ctx.fillRect(sx+5,sy+8,TS-10,TS-16);
+      ctx.fillStyle=`rgba(249,168,212,${.65*pb})`; ctx.fillRect(sx+8,sy+11,TS-16,TS-22);
+      ctx.fillStyle='rgba(255,255,255,.18)'; ctx.fillRect(sx+9,sy+13,TS-20,5); break;}
+    case 'X': case 'P':{
+      ctx.fillStyle='#3b1754'; ctx.fillRect(sx,sy,TS,TS);
+      ctx.fillStyle='rgba(192,132,252,.11)';
+      for(let i=0;i<3;i++) for(let j=0;j<3;j++) if((i+j)%2===0) ctx.fillRect(sx+2+i*13,sy+2+j*13,11,11);
+      break;}
+    default: ctx.fillStyle='#3b1754'; ctx.fillRect(sx,sy,TS,TS);
+  }
+}
+function drawSalaContOverlays(){
+  const map=MAPS.sala_cont;
+  if(!map) return;
+  for(let r=0;r<10;r++) for(let c=0;c<10;c++){
+    const t=map[r]?.[c]; if(!t) continue;
+    const sx=c*TS,sy=r*TS;
+    if(t==='X') drawNPC(sx,sy,'👩‍⚕️','#c084fc','CONST.');
+    if(t==='P'){
+      const ready=progress.paulaMission?.completed&&!progress.paulaMission?.rewarded;
+      drawNPC(sx,sy,'🧘‍♀️','#f472b6','PAULA');
+      if(ready){ctx.fillStyle=`rgba(74,222,128,${.5+.5*Math.sin(tick*.12)})`; ctx.font='bold 8px sans-serif'; ctx.textBaseline='middle'; ctx.fillText('!',sx+TS-9,sy+7);}
+    }
+  }
+  if(Math.floor(tick/90)%40===0) addFloat('💜',(Math.floor(Math.random()*8)+1)*TS+TS/2,(Math.floor(Math.random()*8)+1)*TS+TS/2,'rgba(192,132,252,.9)');
+}
 // ─ Draw Map ─
 const ARROW_OFF={up:[TS/2-4,-2,'▲'],down:[TS/2-4,TS+9,'▼'],left:[-10,TS/2+4,'◀'],right:[TS+2,TS/2+4,'▶']};
-const ML={pasillo:'PASILLO',cancha:'🏀 CANCHA',sala_vela:'🕯 SALA SECRETA',biblioteca:'📚 BIBLIOTECA'};
+const ML={pasillo:'PASILLO',cancha:'🏀 CANCHA',sala_vela:'🕯 SALA SECRETA',biblioteca:'📚 BIBLIOTECA',sala_cont:'💜 SALA DE CONTENCIÓN'};
 function drawMap(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   const map=MAPS[currentMap];
@@ -444,10 +558,12 @@ function drawMap(){
     if(currentMap==='cancha') drawCanchaTile(t,sx,sy,mR,mC);
     else if(currentMap==='sala_vela') drawSVTile(t,sx,sy);
     else if(currentMap==='biblioteca') drawBibliotecaTile(t,sx,sy,mR,mC);
+    else if(currentMap==='sala_cont') drawSalaContTile(t,sx,sy,r,c);
     else drawPasilloTile(t,sx,sy,mR,mC);
   }
   if(currentMap==='cancha'){ drawCourtMarkings(); drawCanchaOverlays(); }
   if(currentMap==='biblioteca') drawBibliotecaOverlays();
+  if(currentMap==='sala_cont') drawSalaContOverlays();
   if(currentMap==='pasillo'&&progress.claudita>=1){
     BCPOS.forEach((cp,i)=>{ if(bCC[i]||cp.x<camera.x||cp.x>=camera.x+10||cp.y<camera.y||cp.y>=camera.y+10) return; const sx=(cp.x-camera.x)*TS+TS/2,sy=(cp.y-camera.y)*TS+TS/2,p=.55+.45*Math.sin(tick*.1+i*.7); ctx.save(); ctx.shadowColor='#60a5fa'; ctx.shadowBlur=10*p; ctx.fillStyle=`rgba(96,165,250,${.7+.3*p})`; ctx.beginPath(); ctx.arc(sx,sy,3.5+.8*p,0,Math.PI*2); ctx.fill(); ctx.restore(); });
   }
@@ -461,6 +577,7 @@ function drawMap(){
   const curT=MAPS[currentMap][player.y]?.[player.x];
   EL.zoneTag.style.display=(curT==='v'||curT==='g')?'block':'none';
   EL.mapLabel.textContent=ML[currentMap]||'';
+  if(EL.btnBack) EL.btnBack.style.display=currentMap==='pasillo'?'none':'block';
   floats=floats.filter(f=>f.life>0);
   floats.forEach(f=>{ ctx.save(); ctx.globalAlpha=f.a; ctx.fillStyle=f.c; ctx.font='bold 11px Arial'; ctx.textBaseline='middle'; ctx.fillText(f.t,f.x,f.y); ctx.restore(); f.y+=f.vy; f.a-=1/75; f.life--; });
 }
@@ -563,7 +680,7 @@ function syncBP(){
   else EL.bSt.style.display='none';
 }
 function typeMsg(text,cb=null){ if(twT) clearTimeout(twT); EL.bMsg.textContent=''; let i=0; const s=()=>{ if(i<text.length){EL.bMsg.textContent=text.slice(0,++i); twT=setTimeout(s,18);} else if(cb) twT=setTimeout(cb,250); }; s(); }
-function showBact(){ if(!battle) return; battle.busy=false; EL.bAct.classList.add('on'); EL.btnCof.textContent=`☕ CAFÉ (${stats.coffees})`; EL.btnRun.disabled=!!battle.enemy.noFlee; }
+function showBact(){ if(!battle) return; battle.busy=false; EL.bAct.classList.add('on'); EL.btnCof.textContent=`☕ CAFÉ (${stats.coffees})`; EL.btnRun.disabled=!!battle.enemy.noFlee; if(EL.btnPsy)EL.btnPsy.style.display=progress.psyAttackUnlocked?'flex':'none'; }
 function hideBact(){ EL.bAct.classList.remove('on'); }
 function doMove(idx){
   if(!battle||battle.busy) return; battle.busy=true; hideBact();
@@ -574,6 +691,7 @@ function doMove(idx){
   else if(idx===1){ if(stats.mp<12){typeMsg('¡No tienes suficiente MP!',showBact);return;} stats.mp=Math.max(0,stats.mp-12); dmg=Math.max(1,stats.atk+10+rng(0,12)-e.def); if(e.weak==='Motivar') dmg=Math.floor(dmg*1.5); if(e.resist==='Motivar') dmg=Math.floor(dmg*.6); e.hp=Math.max(0,e.hp-dmg); msg=`💡 ¡Profe motiva!\n${e.weak==='Motivar'?'¡Súper efectivo! ':''}¡${e.name} recibe ${dmg}!`; hitAnim('b-es'); dmgPop(dmg,true); }
   else if(idx===2){ if(stats.coffees<=0){typeMsg('☕ ¡No queda café!\nVisita el Kiosco de Kella.',showBact);return;} stats.coffees--; const heal=20+rng(0,12); stats.hp=Math.min(stats.maxHp,stats.hp+heal); const cured=stats.status==='poisoned'; if(cured){stats.status=null;stats.statusTurns=0;} msg=`☕ ¡Profe bebió su café!\n+${heal} HP.${cured?'\n¡Y curó el resfriado!':''}`; dmgPop(heal,false,'#4ade80'); syncBP(); syncUI(); typeMsg(msg,()=>enemyTurn()); return; }
   else if(idx===3){ if(e.noFlee){typeMsg('¡No puedes huir del Inspector!',showBact);return;} if(Math.random()<(stats.status==='stressed'?.25:.65)) typeMsg('¡Profe se escabulló!\n¡Huiste!',()=>closeBattle()); else typeMsg('¡No pudiste escapar!',()=>enemyTurn()); return; }
+  else if(idx===4){ if(!progress.psyAttackUnlocked||stats.mp<15){typeMsg(progress.psyAttackUnlocked?'¡No tienes suficiente MP! (15 MP)':'Ataque no disponible aún.',showBact);return;} stats.mp=Math.max(0,stats.mp-15);const r2=(a,b)=>Math.floor(Math.random()*(b-a+1))+a; dmg=Math.max(1,stats.atk+15+r2(0,15)-Math.floor(e.def*.5)); e.hp=Math.max(0,e.hp-dmg); stats.hp=Math.min(stats.maxHp,stats.hp+8); msg=`💜 ¡Ataque Psicológico!\n¡${e.name} recibe ${dmg} de impacto emocional!\nEl profe recupera 8 HP.`; hitAnim('b-es'); dmgPop(dmg,true); }
   syncBE(); syncBP(); syncUI();
   if(e.hp<=0){typeMsg(msg+`\n\n¡${e.name} fue vencido! ¡Bien hecho!`,()=>battleWin()); return;}
   typeMsg(msg,()=>enemyTurn());
@@ -607,7 +725,7 @@ function battleWin(){
   EL.bAct.innerHTML=`<button class="bb bi" style="grid-column:1/3" onclick="closeBattle()">¡Continuar!</button>`; EL.bAct.classList.add('on'); battle=null;
 }
 function battleLose(){ stats.hp=25; stats.status=null; syncBP(); syncUI(); EL.bMsg.textContent='😔 ¡El profe cayó agotado!\n\nPero la vocación no se rinde.\n¡Ve al Kiosco de Kella a recuperarte!'; hideBact(); EL.bAct.innerHTML=`<button class="bb br" style="grid-column:1/3" onclick="closeBattle()">Recuperarse...</button>`; EL.bAct.classList.add('on'); battle=null; }
-function closeBattle(){ EL.battle.classList.remove('on'); EL.bAct.innerHTML=`<button class="bb ba" onclick="doMove(0)">⚡ EXPLICAR</button><button class="bb bs" onclick="doMove(1)">💡 MOTIVAR</button><button class="bb bi" id="btn-cof" onclick="doMove(2)">☕ CAFÉ</button><button class="bb br" id="btn-run" onclick="doMove(3)">🚪 HUIR</button>`; EL.btnCof=_('btn-cof'); EL.btnRun=_('btn-run'); player.steps=0; battle=null; STATE='exploring'; }
+function closeBattle(){ EL.battle.classList.remove('on'); EL.bAct.innerHTML=`<button class="bb ba" onclick="doMove(0)">⚡ EXPLICAR</button><button class="bb bs" onclick="doMove(1)">💡 MOTIVAR</button><button class="bb bi" id="btn-cof" onclick="doMove(2)">☕ CAFÉ</button><button class="bb br" id="btn-run" onclick="doMove(3)">🚪 HUIR</button>`; EL.btnCof=_('btn-cof'); EL.btnRun=_('btn-run'); EL.btnPsy=_('btn-psy'); player.steps=0; battle=null; STATE='exploring'; }
 function hitAnim(id){ const el=_(id); el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); setTimeout(()=>el.classList.remove('hit'),500); }
 function dmgPop(val,isEnemy,color=null){ const pop=document.createElement('div'); pop.className='dmg-pop'; pop.textContent=(isEnemy?'-':'+')+val; const c=color||(isEnemy?'#f87171':'#60a5fa'); pop.style.cssText=`color:${c};text-shadow:0 0 8px ${c};left:${isEnemy?62+Math.random()*28:15+Math.random()*22}%;top:${isEnemy?20+Math.random()*18:42+Math.random()*12}%`; EL.bArena.appendChild(pop); setTimeout(()=>pop.remove(),950); }
 
@@ -620,6 +738,14 @@ function closeShop(){ EL.shopPanel.style.display='none'; STATE='exploring'; }
 // ═══ DIÁLOGO ═══
 function showDialog(text,choices=[]){ STATE='dialog'; EL.dt.textContent=text; EL.dbBtns.innerHTML=''; const close=()=>{ EL.dlgBox.style.display='none'; STATE='exploring'; }; (choices.length?choices:[{text:'Continuar',action:null}]).forEach(c=>{ const b=document.createElement('button'); b.className='dlg-btn'; b.textContent=c.text; b.onclick=()=>{ close(); c.action?.(); }; EL.dbBtns.appendChild(b); }); EL.dlgBox.style.display='block'; }
 
+// ═══ VOLVER A PASILLO ═══
+function goBack(){
+  if(STATE!=='exploring') return;
+  const exits={cancha:[9,2],biblioteca:[18,5],sala_vela:[14,5],sala_cont:[8,8]};
+  const pt=exits[currentMap]; if(!pt) return;
+  if(currentMap==='sala_cont') stopSalaContMusic();
+  transitionTo('pasillo',pt[0],pt[1]);
+}
 // ═══ TABLA DE INTERACCIONES O(1) ═══
 const NPC_ACT={
   I:()=>showDialog(np('inspector')),
@@ -661,12 +787,38 @@ const NPC_ACT={
       ? "¡Hola, profe! Soy la Tía Jeanette,\nla guardiana de esta biblioteca. 📚\n\n¿Qué necesitas hoy?"
       : `Bienvenido de vuelta, profe. 📚\n\n⚠️ Tienes 1 intento restante\npara el código.\n¿Qué necesitas?`,
       [
-        {text:'😄 Cuéntame un chiste',action:()=>showDialog("¡Claro que sí! Escucha bien:\n\n"+np('jeanette'))},
+        {text:'😄 Cuéntame un chiste',action:()=>{
+          const joke=np('jeanette'); let msg="¡Claro que sí! Escucha bien:\n\n"+joke;
+          if(progress.paulaMission.given&&!progress.paulaMission.completed){
+            progress.paulaMission.completed=true;
+            msg+="\n\n─────────────\n💜 ¡Misión completada!\nVuelve a la Sala de Contención\ncon Paula para tu recompensa.";
+          }
+          showDialog(msg);
+        }},
         {text:`🔑 Ingresar código ${att>0?'(⚠️ 1 intento)':''}`,action:()=>openKeypad()}
       ]
     );
   },
-  E:()=>{ if(currentMap==='sala_vela') transitionTo('pasillo',14,5); if(currentMap==='biblioteca') transitionTo('pasillo',18,5); }
+  X:()=>showDialog("Hola, soy Constanza, psicóloga. 👩‍⚕️\n\n"+np('constanza')),
+  P:()=>{
+    if(!progress.paulaMission) progress.paulaMission={given:false,completed:false,rewarded:false};
+    const pm=progress.paulaMission;
+    if(!pm.given){
+      showDialog("¡Hola! Soy Paula. 🧘‍♀️\nEsta sala es tu refugio seguro.\n\nTengo una misión especial para ti:\n\nVe a la Biblioteca y pídele a la\nTía Jeanette un chiste blanco.\n¡La risa conecta y sana!\n\nVuelve cuando lo tengas.",[
+        {text:'¡Acepto la misión! 🎯',action:()=>{pm.given=true;showDialog("¡Perfecto! 💜\nLa Tía Jeanette está en la Biblioteca.\n\nElige la opción '😄 Cuéntame un chiste'\ny luego regresa aquí con nosotras.");}},
+        {text:'Ahora no puedo.',action:()=>{}}
+      ]);
+    } else if(!pm.completed){
+      showDialog("¿Ya visitaste a Jeanette? 📚\n\nRecuerda: pídele un chiste blanco.\nLa risa conecta a las personas\ny es medicina para el alma. 💜\n\n"+np('paula'));
+    } else if(!pm.rewarded){
+      pm.rewarded=true; progress.psyAttackUnlocked=true;
+      if(EL.btnPsy) EL.btnPsy.style.display='flex';
+      showDialog("¡Lo lograste! 🎉\nEl chiste llegó hasta aquí.\n\nEsa conexión emocional es poderosa.\nAquí está tu recompensa:\n\n💜 ATAQUE PSICOLÓGICO desbloqueado\n\n15 MP → daño alto, ignora mitad\nde la defensa + recuperas 8 HP.\n\n¡Úsalo con sabiduría!");
+    } else {
+      showDialog("¡Excelente trabajo, profe! 💜\n\nRecuerda usar el Ataque Psicológico.\n¡La conexión emocional es la mejor arma!\n\n"+np('paula'));
+    }
+  },
+  E:()=>{ if(currentMap==='sala_vela') transitionTo('pasillo',14,5); if(currentMap==='biblioteca') transitionTo('pasillo',18,5); if(currentMap==='sala_cont'){stopSalaContMusic();transitionTo('pasillo',8,8);} }
 };
 
 const DIRS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
@@ -682,6 +834,15 @@ function checkMapExit(){
     if(player.y===0&&MAPS.pasillo[0][player.x]==='E'){ if(!progress.canchaVisited){progress.canchaVisited=true; transitionTo('cancha',9,8); setTimeout(()=>showDialog('¡Bienvenido a la Cancha! 🏀\n\nHay un cofre misterioso en el centro.\nKella vende pociones a la derecha.\n¡Cuidado con el pasto verde!'),300);} else transitionTo('cancha',9,8); return true; }
     if(player.x===19&&MAPS.pasillo[player.y][19]==='E'){ if(!progress.biblioVisited){progress.biblioVisited=true; transitionTo('biblioteca',1,5); setTimeout(()=>showDialog('¡Bienvenido a la Biblioteca! 📚\n\nLa Tía Jeanette está al centro.\nTiene chistes y acepta códigos.\nSalida: puerta dorada a la izquierda.'),300);} else transitionTo('biblioteca',1,5); return true; }
     if(player.x===15&&player.y===6){ if(!hasItem('vela')){player.x=14; showDialog('Está muy oscuro.\nNecesitas la 🕯 Vela de Sabiduría.\n\nHabla con la Tía Claudita.');} else {transitionTo('sala_vela',4,7); setTimeout(()=>showDialog('Entras a la Sala Secreta...\nLa vela ilumina las paredes.'),300);} return true; }
+  }
+  if(currentMap==='pasillo'&&(MAPS.pasillo[player.y]?.[player.x]==='Z')){
+    const first=!progress.salaContVisited; if(first) progress.salaContVisited=true;
+    transitionTo('sala_cont',4,7); startSalaContMusic();
+    if(first) setTimeout(()=>showDialog('💜 SALA DE CONTENCIÓN\n\nEntraste a un espacio de calma y apoyo.\nConstanza y Paula te reciben.\n\n🎵 Escucha la música... respira.'),350);
+    return true;
+  }
+  if(currentMap==='sala_cont'&&player.y===0&&(MAPS.sala_cont[0][player.x]==='E')){
+    stopSalaContMusic(); transitionTo('pasillo',8,8); return true;
   }
   if(currentMap==='cancha'&&MAPS.cancha[player.y]?.[player.x]==='E'){ transitionTo('pasillo',9,2); return true; }
   if(currentMap==='sala_vela'&&player.y===8){ transitionTo('pasillo',14,5); return true; }
