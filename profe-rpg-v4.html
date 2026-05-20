@@ -110,7 +110,23 @@ canvas{width:100%;aspect-ratio:1/1;max-width:450px;max-height:450px;background:#
 .bb{padding:7px 5px;border-radius:7px;border:2px solid transparent;font-family:'VT323',monospace;font-size:clamp(.82rem,2.8vw,.97rem);font-weight:bold;cursor:pointer;transition:transform .12s,filter .12s;display:flex;align-items:center;justify-content:center;gap:3px}
 .bb:active{transform:scale(.93);filter:brightness(.85)}.bb:disabled{opacity:.42;cursor:not-allowed;transform:none}
 .ba{background:linear-gradient(180deg,#ef4444,#b91c1c);color:#fff;border-color:#fca5a5}.bs{background:linear-gradient(180deg,#8b5cf6,#6d28d9);color:#fff;border-color:#c4b5fd}.bi{background:linear-gradient(180deg,#f59e0b,#d97706);color:#000;border-color:#fde68a}.br{background:linear-gradient(180deg,#4b5563,#374151);color:#d1d5db;border-color:#6b7280}
+
+/* Arena backgrounds per enemy type */
+#b-arena.t-aula{background:linear-gradient(160deg,#061a06,#0d3a1a 45%,#061a10)}
+#b-arena.t-admin{background:linear-gradient(160deg,#060812,#0d1040 45%,#060820)}
+#b-arena.t-docente{background:linear-gradient(160deg,#1a0a06,#3a1810 45%,#1a0800)}
+#b-arena.t-calle{background:linear-gradient(160deg,#1a1006,#2a2010 45%,#120c00)}
+#b-arena.t-plaza{background:linear-gradient(160deg,#0a160a,#142814 45%,#0a1a0a)}
+/* Enemy glow bg */
+#b-enemy-bg{position:absolute;width:110px;height:110px;border-radius:50%;top:6%;right:4%;pointer-events:none;animation:ebgp 2s ease-in-out infinite}
+@keyframes ebgp{0%,100%{transform:scale(1);opacity:.35}50%{transform:scale(1.18);opacity:.6}}
+/* Type badge in enemy card */
+#b-etype{font-family:'Press Start 2P',monospace;font-size:.38rem;color:#9ca3af;margin-bottom:3px;letter-spacing:.3px}
 .bp{background:linear-gradient(180deg,#c084fc,#9333ea);color:#fff;border-color:#e879f9}
+.bt{background:linear-gradient(180deg,#0891b2,#0e7490);color:#fff;border-color:#22d3ee}
+.bpr{display:flex;justify-content:space-between;align-items:center;background:#1f2937;border:1px solid #374151;padding:5px 8px;border-radius:6px}
+.bpr-info{flex:1;margin-right:6px}.bpr-name{font-size:.88rem;color:#f1f5f9}.bpr-ab{font-size:.6rem;color:#6b7280}
+.bpr-btn{background:linear-gradient(180deg,#7c3aed,#5b21b6);color:#fff;border:1px solid #a78bfa;padding:3px 8px;border-radius:4px;font-family:'VT323',monospace;font-size:.82rem;cursor:pointer;white-space:nowrap}.bpr-btn:disabled{background:#374151;color:#6b7280;border-color:#374151;cursor:not-allowed}.bpr-btn:active{transform:scale(.93)}
 .dmg-pop{position:absolute;font-family:'Press Start 2P',monospace;font-size:clamp(.7rem,2.5vw,.95rem);font-weight:bold;pointer-events:none;z-index:250;animation:pop .9s ease forwards}
 @keyframes pop{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-40px) scale(1.3);opacity:0}}
 #ctrl{width:100%;max-width:500px;padding:4px 18px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
@@ -141,10 +157,12 @@ canvas{width:100%;aspect-ratio:1/1;max-width:450px;max-height:450px;background:#
   <!-- BATALLA -->
   <div id="battle">
     <div id="b-arena"><div id="b-stars"></div><div id="b-gnd"></div>
-      <div id="b-ez"><div id="b-ec"><div id="b-en">—</div><div id="b-ht">HP:--/--</div><div class="bhw"><div class="bhf" id="b-ehp" style="width:100%;background:linear-gradient(90deg,#4ade80,#22c55e)"></div></div></div><div id="b-es">😤</div></div>
+      <div id="b-ez"><div id="b-enemy-bg"></div><div id="b-ec"><div id="b-etype"></div><div id="b-en">—</div><div id="b-ht">HP:--/--</div><div class="bhw"><div class="bhf" id="b-ehp" style="width:100%;background:linear-gradient(90deg,#4ade80,#22c55e)"></div></div></div><div id="b-es">😤</div></div>
       <div id="b-pz"><div id="b-ps">🧑‍🏫</div><div id="b-pc"><div id="b-pn">PROFE FELIPE</div><div class="bsr"><span class="bsl">HP</span><div class="bsw"><div class="bsf" id="b-hf"></div></div><span class="bsn" id="b-hn">100</span></div><div class="bsr"><span class="bsl">MP</span><div class="bsw"><div class="bsf" id="b-mf"></div></div><span class="bsn" id="b-mn">50</span></div><div id="b-st"></div></div></div>
     </div>
-    <div id="b-ma"><div id="b-msg"></div><div id="b-act"><button class="bb ba" onclick="doMove(0)">⚡ EXPLICAR</button><button class="bb bs" onclick="doMove(1)">💡 MOTIVAR</button><button class="bb bi" id="btn-cof" onclick="doMove(2)">☕ CAFÉ</button><button class="bb br" id="btn-run" onclick="doMove(3)">🚪 HUIR</button><button class="bb bp" id="btn-psy" onclick="doMove(4)" style="display:none;grid-column:1/3">💜 ATAQUE PSICOLÓGICO</button></div></div>
+    <div id="b-ma"><div id="b-msg"></div><div id="b-act"><button class="bb ba" onclick="doMove(0)">⚡ EXPLICAR</button><button class="bb bs" onclick="doMove(1)">💡 MOTIVAR</button><button class="bb bi" id="btn-cof" onclick="doMove(2)">☕ CAFÉ</button><button class="bb br" id="btn-run" onclick="doMove(3)">🚪 HUIR</button><button class="bb bp" id="btn-psy" onclick="doMove(4)" style="display:none;grid-column:1/3">💜 ATAQUE PSICOLÓGICO</button>
+        <button class="bb bt" id="btn-team" onclick="openBParty()" style="display:none;grid-column:1/3">👥 LLAMAR EQUIPO</button></div>
+      <div id="b-party-panel" style="display:none;padding:4px 0"><div style="font-family:'Press Start 2P',monospace;font-size:.44rem;color:#a78bfa;text-align:center;margin-bottom:6px">👥 LLAMAR EQUIPO</div><div id="b-party-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:4px"></div><button class="bb br" style="width:100%" onclick="hideBParty()">← Cancelar</button></div></div>
   </div>
 
   <!-- DIÁLOGO -->
@@ -211,8 +229,8 @@ const EL={
   encFlash:_('enc-flash'),zoneTag:_('zone-tag'),
   battle:_('battle'),bEs:_('b-es'),bEn:_('b-en'),bHt:_('b-ht'),bEhp:_('b-ehp'),
   bPs:_('b-ps'),bHf:_('b-hf'),bMf:_('b-mf'),bHn:_('b-hn'),bMn:_('b-mn'),
-  bSt:_('b-st'),bMsg:_('b-msg'),bAct:_('b-act'),bArena:_('b-arena'),
-  btnCof:_('btn-cof'),btnRun:_('btn-run'),btnPsy:_('btn-psy'),btnBack:_('btn-back'),
+  bEtype:_('b-etype'),bEnemyBg:_('b-enemy-bg'),bSt:_('b-st'),bMsg:_('b-msg'),bAct:_('b-act'),bArena:_('b-arena'),
+  btnCof:_('btn-cof'),btnRun:_('btn-run'),btnPsy:_('btn-psy'),btnBack:_('btn-back'),btnTeam:_('btn-team'),
   dlgBox:_('dlg-box'),dt:_('dt'),dbBtns:_('db-btns'),
   invPanel:_('inv-panel'),invList:_('inv-list'),
   shopPanel:_('shop-panel'),kellaMsg:_('kella-msg'),shopCoins:_('shop-coins'),shopFb:_('shop-fb'),shopItems:_('shop-items'),
@@ -233,7 +251,7 @@ let progress={
   canchaVisited:false,biblioVisited:false,
   codeOk:false,chestOpened:false,
   jeanette:{attempts:0,locked:false},
-  salaContVisited:false,
+  salaContVisited:false, plazaVisited:false,
   paulaMission:{given:false,completed:false,rewarded:false},
   psyAttackUnlocked:false
 };
@@ -256,7 +274,7 @@ const MAPS={
     ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'],
     ['#','v','v','v','v','v','v','v','v','v','v','v','v','v','v','v','v','v','v','#'],
     ['#','v','v','v','v','b','b','b','b','b','b','b','b','b','b','v','v','K','v','#'],
-    ['#','v','G','v','v','b','b','b','b','b','b','b','b','b','b','v','v','v','v','#'],
+    ['#','v','G','v','v','b','b','b','b','b','b','b','b','b','b','v','D','v','v','#'],
     ['#','v','v','v','v','b','b','b','b','b','b','b','b','b','b','v','v','v','v','#'],
     ['#','v','v','v','v','b','b','b','b','b','C','b','b','b','b','v','v','v','v','#'],
     ['#','v','v','v','v','b','b','b','b','b','b','b','b','b','b','v','v','U','v','#'],
@@ -295,6 +313,23 @@ const MAPS={
     ['#','a','h','a','a','a','a','h','a','#'],
     ['#','a','a','a','a','a','a','a','a','#'],
     ['#','#','#','#','#','#','#','#','#','#']
+  ],
+  plaza:[
+    ['#','#','T','T','T','T','T','T','T','T','T','T','T','T','T','T','T','T','T','T','T','T','T','T','T','T','T','T','#','#'],
+    ['E','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','#'],
+    ['E','.','g','g','.','T','.','g','g','.','.','.','.','.','.','.','.','.','.','.','.','g','g','.','T','.','.','.','.','#'],
+    ['#','.','g','g','.','s','.','.','.','.','T','.','.','.','.','.','.','.','.','T','.','.','.','.','s','.','g','g','.','#'],
+    ['#','T','.','.','.','.','.','.','s','.','.','.','.','.','.','F','F','.','.','.','.','.','.','s','.','.','.','.','T','#'],
+    ['#','.','.','.','.','.','.','.','.','.','.','.','.','.','.','F','F','.','.','.','.','.','.','.','.','.','.','.','.','#'],
+    ['#','.','g','g','.','T','.','g','g','.','.','.','.','.','.','.','.','.','.','.','.','g','g','.','T','.','g','g','.','#'],
+    ['#','.','g','g','.','.','.','.','.','.','.','.','s','.','.','.','.','.','.','s','.','.','.','.','.','.','g','g','.','#'],
+    ['#','T','.','.','.','.','k','k','.','.','.','.','.','.','A','A','A','.','.','.','.','.','.','k','k','.','.','.','.','T'],
+    ['#','.','.','.','.','.','.','.','.','.','.','.','.','.','.','A','.','.','.','.','.','.','.','.','.','.','.','.','.','.'],
+    ['#','.','g','g','.','T','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','T','.','g','g','.','.','.','.'],
+    ['#','.','g','g','.','.','g','g','.','.','.','.','.','.','.','.','.','.','.','.','.','.','g','g','.','.','g','g','.','.'],
+    ['#','T','.','.','.','.','.','.','.','.','T','.','.','.','.','.','.','.','.','.','.','T','.','.','.','.','.','.','T','#'],
+    ['#','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','#'],
+    ['#','#','#','#','#','#','#','#','E','E','#','#','#','E','E','#','#','#','E','E','#','#','#','#','#','#','#','#','#','#']
   ]
 };
 const WALKABLE=new Set(['.','E','g','e','N','b','v','a','Z']);
@@ -332,8 +367,19 @@ const ENEMIES=[
   {id:'celular',name:'Celular en Clase',emoji:'📱',maxHp:38,atk:11,def:5,xp:30,coins:12,glow:'rgba(14,165,233,.7)',intro:'¡Un Celular apareció!\n¡Scrollea TikTok sin parar!',attacks:[{name:'Notificación',power:8,effect:'confused',chance:.55,msg:'bombardeó notificaciones. ¡Confundido!'},{name:'Reels',power:11,effect:null,chance:0,msg:'reprodujo un video que no para.'}],weak:'Explicar',resist:null},
   {id:'inspector_b',name:'Inspector',emoji:'👔',maxHp:65,atk:18,def:10,xp:60,coins:22,glow:'rgba(15,23,42,.95)',intro:'¡Un INSPECTOR apareció!\n¡La clase debe ser perfecta!',attacks:[{name:'Observación',power:18,effect:'stressed',chance:.7,mpDrain:0,msg:'anotó observaciones. ¡Estrés máximo!'},{name:'Revisión',power:14,effect:null,chance:0,mpDrain:12,msg:'pidió la planificación. ¡-MP!'}],weak:'Motivar',resist:'Huir',noFlee:true},
   {id:'paulina',name:'Profa Paulina',emoji:'📐',maxHp:52,atk:16,def:9,xp:40,coins:14,glow:'rgba(234,179,8,.75)',intro:'\u00a1La Profa Paulina apareci\u00f3!\n"\u00a1Demuestren el teorema de Pit\u00e1goras!"',attacks:[{name:'Ecuaci\u00f3n Dif\u00edcil',power:16,effect:'stressed',chance:.5,msg:'plante\u00f3 una ecuaci\u00f3n imposible. \u00a1Estr\u00e9s!'},{name:'Prueba de \u00c1lgebra',power:20,effect:null,chance:0,msg:'lanz\u00f3 \u00e1lgebra sin aviso.'}],weak:'Caf\u00e9',resist:'Explicar'},
-  {id:'dahian',name:'Profe Dahian',emoji:'\U0001f3c3',maxHp:48,atk:19,def:5,xp:38,coins:13,glow:'rgba(34,197,94,.75)',intro:'\u00a1El Profe Dahian apareci\u00f3!\n"\u00a1Veinte vueltas al patio!"',attacks:[{name:'Trote Forzado',power:15,effect:null,chance:0,msg:'hizo trotar al profe sin parar.'},{name:'Tabla de Flexiones',power:12,effect:'confused',chance:.6,msg:'mand\u00f3 flexiones. \u00a1Confundido!'}],weak:'Motivar',resist:'Huir'},
+  {id:'dahian',name:'Profe Dahian',emoji:'🏃‍♀️',maxHp:48,atk:19,def:5,xp:38,coins:13,glow:'rgba(34,197,94,.75)',intro:'\u00a1El Profe Dahian apareci\u00f3!\n"\u00a1Veinte vueltas al patio!"',attacks:[{name:'Trote con Gatos',power:15,effect:null,chance:0,msg:'entrenó con sus gatos. ¡Sin descanso!'},{name:'¡Los Gatos Atacan!',power:12,effect:'confused',chance:.65,msg:'Sus gatos confundieron al profe. ¡Confundidoes. \u00a1Confundido!'}],weak:'Motivar',resist:'Huir'},
   {id:'alex',name:'Profe Alex',emoji:'\U0001f3b5',maxHp:44,atk:14,def:7,xp:35,coins:12,glow:'rgba(168,85,247,.75)',intro:'\u00a1El Profe Alex apareci\u00f3!\n"\u00a1Sigan el ritmo!"',attacks:[{name:'Nota Desafinada',power:11,effect:'confused',chance:.65,msg:'toc\u00f3 nota desafinada. \u00a1Confundido!'},{name:'Volumen al M\u00e1ximo',power:18,effect:'stressed',chance:.4,msg:'subi\u00f3 el volumen al m\u00e1ximo. \u00a1Estr\u00e9s!'}],weak:'Explicar',resist:'Caf\u00e9'}
+];
+const PLAZA_ENEMIES=[
+  {id:'delinc',name:'Delincuente',emoji:'😈',maxHp:35,atk:12,def:4,xp:20,coins:8,glow:'rgba(220,38,38,.75)',intro:'¡Un Delincuente apareció!\n"¡La billetera o la vida!"',attacks:[{name:'Robo Rápido',power:10,effect:null,chance:0,stealCoins:5,msg:'intentó robar. ¡-5 monedas!'},{name:'Navajeo',power:15,effect:'poisoned',chance:.4,msg:'sacó la navaja. ¡Envenenado!'}],weak:'Motivar',resist:'Café'},
+  {id:'ambulante',name:'Ambulante',emoji:'🥤',maxHp:30,atk:10,def:3,xp:18,coins:6,glow:'rgba(245,158,11,.75)',intro:'¡Un Ambulante apareció!\n"¿Helados, bebidas, choclos?"',attacks:[{name:'Bebida Dudosa',power:8,effect:'confused',chance:.7,msg:'vendió bebida dudosa. ¡Confundido!'},{name:'Choclo Volador',power:12,effect:null,chance:0,msg:'lanzó un choclo sin aviso.'}],weak:'Explicar',resist:'Motivar'},
+  {id:'pollito',name:'Pollito de KFC',emoji:'🍗',maxHp:28,atk:9,def:2,xp:15,coins:5,glow:'rgba(234,179,8,.75)',intro:'¡Un Pollito de KFC apareció!\n"¡Finger lickin bad!"',attacks:[{name:'Aceite Caliente',power:9,effect:'poisoned',chance:.5,msg:'salpicó aceite caliente. ¡Envenenado!'},{name:'Empanizado',power:12,effect:null,chance:0,msg:'atacó con crujiente empanado.'}],weak:'Café',resist:'Explicar'}
+];
+let party=[];
+const PARTY_MEMBERS=[
+  {id:'renata',name:'Renata Oros',emoji:'🌟',maxHp:60,hp:60,atk:18,def:8,ability:'Consejo Dorado',abDesc:'25 daño + sana 30 HP',glow:'rgba(253,212,66,.85)',found:false,inTeam:false,usedThisBattle:false},
+  {id:'isi',name:'Isi Fernan',emoji:'💙',maxHp:70,hp:70,atk:22,def:12,ability:'Bloqueo Técnico',abDesc:'30 daño + debilita al enemigo',glow:'rgba(96,165,250,.85)',found:false,inTeam:false,usedThisBattle:false},
+  {id:'este',name:'Este Dev',emoji:'💻',maxHp:50,hp:50,atk:20,def:6,ability:'Debug Total',abDesc:'28 daño + cura estado',glow:'rgba(167,139,250,.85)',found:false,inTeam:false,usedThisBattle:false}
 ];
 
 // ═══ TIENDA ═══
@@ -356,10 +402,28 @@ const hpColor=p=>p>.6?'linear-gradient(90deg,#4ade80,#22c55e)':p>.3?'linear-grad
 const hasItem=id=>inventory.some(i=>i.id===id);
 
 function drawNPC(sx,sy,emoji,color,label){
-  const p=.4+.3*Math.sin(tick*.07);
-  ctx.fillStyle=color+Math.floor(p*50+10).toString(16).padStart(2,'0'); ctx.fillRect(sx+2,sy+2,TS-4,TS-4);
-  ctx.font='19px serif'; ctx.textBaseline='alphabetic'; ctx.fillText(emoji,sx+7,sy+TS-6);
-  ctx.fillStyle=color; ctx.font='bold 5.5px sans-serif'; ctx.textBaseline='middle'; ctx.fillText(label,sx+2,sy+7);
+  const p=.5+.38*Math.sin(tick*.07);
+  // Dark base
+  ctx.fillStyle='rgba(0,0,0,.48)'; ctx.fillRect(sx+1,sy+12,TS-2,TS-13);
+  // Colored fill
+  ctx.fillStyle=color+'55'; ctx.fillRect(sx+1,sy+12,TS-2,TS-13);
+  // Bright border
+  ctx.strokeStyle=color; ctx.lineWidth=2.2; ctx.strokeRect(sx+1,sy+1,TS-2,TS-2);
+  ctx.strokeStyle=color+'66'; ctx.lineWidth=1; ctx.strokeRect(sx+4,sy+14,TS-8,TS-17);
+  // Floor shadow
+  ctx.fillStyle='rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(sx+TS/2,sy+TS-4,11,3.5,0,0,Math.PI*2); ctx.fill();
+  // Emoji (larger)
+  ctx.font='24px serif'; ctx.textBaseline='alphabetic'; ctx.textAlign='left';
+  ctx.fillText(emoji,sx+4,sy+TS-3);
+  // Name banner
+  ctx.fillStyle=color; ctx.fillRect(sx+1,sy+1,TS-2,11);
+  ctx.fillStyle='rgba(0,0,0,.3)'; ctx.fillRect(sx+1,sy+1,TS-2,11);
+  ctx.fillStyle='#fff'; ctx.font='bold 5.8px sans-serif';
+  ctx.textBaseline='middle'; ctx.textAlign='center';
+  ctx.fillText(label,sx+TS/2,sy+7); ctx.textAlign='left';
+  // Chat bubble pulse
+  ctx.globalAlpha=.45+.5*p; ctx.font='9px serif'; ctx.textBaseline='top'; ctx.textAlign='right';
+  ctx.fillText('💬',sx+TS-1,sy+1); ctx.globalAlpha=1; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
 }
 function drawVerde(sx,sy,mR,mC){
   const b=.85+.15*Math.sin(tick*.04+mR+mC*.6);
@@ -404,6 +468,72 @@ function drawCanchaTile(t,sx,sy,mR,mC){
     default: drawVerde(sx,sy,mR,mC);
   }
 }
+
+function drawDahian(sx,sy){
+  const p=.5+.4*Math.sin(tick*.07);
+  const bob=Math.abs(Math.sin(tick*.08))*2;
+  // Background
+  ctx.fillStyle='rgba(0,0,0,.45)'; ctx.fillRect(sx+1,sy+12,TS-2,TS-13);
+  ctx.fillStyle='rgba(21,128,61,.4)'; ctx.fillRect(sx+1,sy+12,TS-2,TS-13);
+  ctx.strokeStyle='#4ade80'; ctx.lineWidth=2.2; ctx.strokeRect(sx+1,sy+1,TS-2,TS-2);
+  // Name banner
+  ctx.fillStyle='#16a34a'; ctx.fillRect(sx+1,sy+1,TS-2,11);
+  ctx.fillStyle='#fff'; ctx.font='bold 5.8px sans-serif';
+  ctx.textBaseline='middle'; ctx.textAlign='center';
+  ctx.fillText('DAHIAN',sx+TS/2,sy+7); ctx.textAlign='left';
+  // Floor shadow
+  ctx.fillStyle='rgba(0,0,0,.28)'; ctx.beginPath();
+  ctx.ellipse(sx+TS/2,sy+TS-4,12,3.5,0,0,Math.PI*2); ctx.fill();
+  // ── Dibujo de Dahian: mujer con pelo liso ──
+  const cx=sx+TS/2-2, cy=sy+16-bob;
+  // Cuerpo (ropa gym - leggings morados + top)
+  ctx.fillStyle='#7c3aed'; ctx.fillRect(cx-4,cy+8,8,10); // leggings
+  ctx.fillStyle='#a78bfa'; ctx.fillRect(cx-3,cy+10,6,6); // top deportivo
+  // Piernas
+  ctx.fillStyle='#6d28d9'; ctx.fillRect(cx-4,cy+16,3,7); ctx.fillRect(cx+1,cy+16,3,7);
+  // Zapatillas
+  ctx.fillStyle='#e2e8f0'; ctx.fillRect(cx-5,cy+21,4,3); ctx.fillRect(cx+1,cy+21,4,3);
+  // Brazos (corriendo)
+  ctx.fillStyle='#a78bfa'; ctx.fillRect(cx-7,cy+9,3,5); ctx.fillRect(cx+4,cy+11,3,5);
+  // Cabeza
+  ctx.fillStyle='#fcd34d'; ctx.beginPath(); ctx.arc(cx,cy+5,5,0,Math.PI*2); ctx.fill();
+  // Pelo liso (café oscuro)
+  ctx.fillStyle='#3d1f0d'; ctx.fillRect(cx-5,cy,10,5); // parte superior
+  ctx.fillRect(cx-5,cy,2,9); ctx.fillRect(cx+3,cy,2,9); // mechones costados
+  // Cara: ojos
+  ctx.fillStyle='#1a1a1a'; ctx.fillRect(cx-2,cy+4,1,1); ctx.fillRect(cx+1,cy+4,1,1);
+  // Sonrisa
+  ctx.strokeStyle='#1a1a1a'; ctx.lineWidth=.8; ctx.beginPath();
+  ctx.arc(cx,cy+6,2,0.1,Math.PI-.1); ctx.stroke();
+  // ── Gato 1 (izquierda) ──
+  const c1x=sx+3,c1y=sy+TS-12+Math.sin(tick*.06)*1.5;
+  ctx.fillStyle='#f97316'; // gato naranja
+  ctx.fillRect(c1x,c1y+3,6,5); // cuerpo
+  ctx.fillRect(c1x+1,c1y,4,4); // cabeza
+  ctx.fillRect(c1x-1,c1y+6,1,3); ctx.fillRect(c1x+6,c1y+6,1,3); // patas
+  ctx.fillRect(c1x+6,c1y+2,1,4); // colita
+  // orejas gato 1
+  ctx.fillStyle='#ea580c'; ctx.fillRect(c1x+1,c1y-1,1,2); ctx.fillRect(c1x+3,c1y-1,1,2);
+  // ojos gato 1
+  ctx.fillStyle='#16a34a'; ctx.fillRect(c1x+2,c1y+1,1,1); ctx.fillRect(c1x+4,c1y+1,1,1);
+  // ── Gato 2 (derecha) ──
+  const c2x=sx+TS-9,c2y=sy+TS-12+Math.sin(tick*.06+1.5)*1.5;
+  ctx.fillStyle='#9ca3af'; // gato gris
+  ctx.fillRect(c2x,c2y+3,6,5); // cuerpo
+  ctx.fillRect(c2x+1,c2y,4,4); // cabeza
+  ctx.fillRect(c2x-1,c2y+6,1,3); ctx.fillRect(c2x+6,c2y+6,1,3); // patas
+  ctx.fillRect(c2x-1,c2y+2,1,4); // colita
+  // orejas gato 2
+  ctx.fillStyle='#6b7280'; ctx.fillRect(c2x+1,c2y-1,1,2); ctx.fillRect(c2x+3,c2y-1,1,2);
+  // ojos gato 2
+  ctx.fillStyle='#f59e0b'; ctx.fillRect(c2x+2,c2y+1,1,1); ctx.fillRect(c2x+4,c2y+1,1,1);
+  // Chat bubble
+  ctx.globalAlpha=.4+.5*p; ctx.font='9px serif';
+  ctx.textBaseline='top'; ctx.textAlign='right';
+  ctx.fillText('💬',sx+TS-1,sy+1); ctx.globalAlpha=1;
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+}
+
 function drawCanchaOverlays(){
   const map=MAPS.cancha;
   for(let r=0;r<10;r++) for(let c=0;c<10;c++){
@@ -411,6 +541,7 @@ function drawCanchaOverlays(){
     if(t==='K'){ const kb=Math.abs(Math.sin(tick*.08))*2; ctx.font='17px serif'; ctx.textBaseline='alphabetic'; ctx.fillText('👩',sx+8,sy+TS-3-kb); ctx.fillStyle='#92400e'; ctx.font='bold 6px sans-serif'; ctx.textBaseline='middle'; ctx.textAlign='center'; ctx.fillText('KELLA',sx+TS/2,sy+8); ctx.textAlign='left'; ctx.fillStyle=`rgba(253,212,66,${.5+.5*Math.sin(tick*.1)})`; ctx.font='9px serif'; ctx.textBaseline='top'; ctx.fillText('★',sx+TS-13,sy+2); ctx.textBaseline='alphabetic'; }
     if(t==='G') drawNPC(sx,sy,'👨‍🏫','#16a34a','GONZA');
     if(t==='U') drawNPC(sx,sy,'👨','#0284c7','JUAN');
+    if(t==='D') drawDahian(sx,sy);
   }
 }
 function drawCourtMarkings(){
@@ -547,9 +678,196 @@ function drawSalaContOverlays(){
   }
   if(Math.floor(tick/90)%40===0) addFloat('💜',(Math.floor(Math.random()*8)+1)*TS+TS/2,(Math.floor(Math.random()*8)+1)*TS+TS/2,'rgba(192,132,252,.9)');
 }
+
+// ═══ PLAZA BELÉN — DIBUJO (Pokémon Emerald style) ═══
+function drawPlazaTile(t,sx,sy,mR,mC){
+  switch(t){
+    case '#':{
+      ctx.fillStyle='#1b5e20'; ctx.fillRect(sx,sy,TS,TS);
+      ctx.fillStyle='#2e7d32'; ctx.fillRect(sx+2,sy+2,TS-4,TS-4);
+      ctx.strokeStyle='#4caf50'; ctx.lineWidth=.8; ctx.strokeRect(sx,sy,TS,TS);
+      if(mR===0){ctx.font='10px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(['🌸','🌺','🌼'][mC%3],sx+TS/2,sy+TS/2); ctx.textAlign='left';}
+      break;}
+    case 'E':{const ge=.5+.5*Math.sin(tick*.09); ctx.fillStyle=`rgba(100,221,23,${.3+.15*ge})`; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle=`rgba(174,234,0,${.7+.2*ge})`; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6); ctx.globalAlpha=.7+.3*ge; ctx.font='14px serif'; ctx.textBaseline='middle'; ctx.textAlign='center'; ctx.fillText('🚪',sx+TS/2,sy+TS/2); ctx.globalAlpha=1; ctx.textAlign='left'; break;}
+    case '.':{ctx.fillStyle=(mR+mC)%2===0?'#c8e6c9':'#a5d6a7'; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle='rgba(0,100,0,.07)'; ctx.lineWidth=.5; ctx.strokeRect(sx,sy,TS,TS); break;}
+    case 'T':{
+      ctx.fillStyle='#388e3c'; ctx.fillRect(sx,sy,TS,TS);
+      ctx.fillStyle='rgba(0,0,0,.18)'; ctx.beginPath(); ctx.ellipse(sx+TS/2,sy+TS-4,12,4,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#5d4037'; ctx.fillRect(sx+TS/2-5,sy+TS/2+2,10,TS/2-5);
+      const bob=Math.sin(tick*.04+mC*.4)*1.5;
+      ctx.fillStyle='#1b5e20'; ctx.beginPath(); ctx.arc(sx+TS/2,sy+TS/2-2+bob,15,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#2e7d32'; ctx.beginPath(); ctx.arc(sx+TS/2-6,sy+TS/2-8+bob,11,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#43a047'; ctx.beginPath(); ctx.arc(sx+TS/2+6,sy+TS/2-6+bob,10,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#66bb6a'; ctx.beginPath(); ctx.arc(sx+TS/2-3,sy+TS/2-14+bob,6,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='#1b5e20'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.arc(sx+TS/2,sy+TS/2-2+bob,15,0,Math.PI*2); ctx.stroke();
+      break;}
+    case 'g':{
+      ctx.fillStyle='#558b2f'; ctx.fillRect(sx,sy,TS,TS);
+      const wOff=Math.sin(tick*.05+mC*.6)*2.5;
+      ctx.lineWidth=2;
+      ctx.strokeStyle='#33691e';
+      for(let i=0;i<3;i++){const gx=sx+4+i*6,gh=12+i*2; ctx.beginPath(); ctx.moveTo(gx,sy+TS); ctx.quadraticCurveTo(gx+wOff,sy+TS-gh*.6,gx+wOff*.7,sy+TS-gh); ctx.stroke();}
+      ctx.strokeStyle='#7cb342';
+      for(let i=0;i<3;i++){const gx=sx+22+i*5,gh=10+i*3; ctx.beginPath(); ctx.moveTo(gx,sy+TS); ctx.quadraticCurveTo(gx-wOff*.8,sy+TS-gh*.5,gx-wOff*.5,sy+TS-gh); ctx.stroke();}
+      ctx.fillStyle='rgba(51,105,30,.28)'; ctx.fillRect(sx,sy,TS,TS/3);
+      break;}
+    case 'F':{
+      const wp=Math.sin(tick*.1+mC*.5+mR*.7)*.15;
+      ctx.fillStyle='#607d8b'; ctx.fillRect(sx,sy,TS,TS);
+      ctx.fillStyle=`rgba(33,150,243,${.7+wp})`; ctx.fillRect(sx+3,sy+3,TS-6,TS-6);
+      const rr=(tick*2.5)%20;
+      ctx.strokeStyle=`rgba(255,255,255,${.35+wp*.5})`; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.arc(sx+TS/2,sy+TS/2,(rr*.5)%15,0,Math.PI*2); ctx.stroke();
+      if(tick%8<4){ctx.fillStyle='rgba(255,255,255,.65)'; ctx.beginPath(); ctx.arc(sx+8,sy+8,2,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(sx+TS-8,sy+TS-8,2,0,Math.PI*2); ctx.fill();}
+      if(mC===15&&mR===4){ctx.fillStyle='rgba(173,216,230,.8)'; for(let fi=0;fi<3;fi++){ctx.fillStyle=`rgba(135,206,235,${.5+.3*Math.sin(tick*.15+fi)})`;ctx.fillRect(sx+TS/2-2+fi,sy+1+fi*3,3,8);}}
+      ctx.strokeStyle='#546e7a'; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6);
+      break;}
+    case 's':{ // arbusto
+      ctx.fillStyle='#388e3c'; ctx.fillRect(sx,sy,TS,TS);
+      const sb=.82+.15*Math.sin(tick*.07+mC*.5);
+      ctx.fillStyle=`rgba(27,94,32,${.88*sb})`; ctx.beginPath(); ctx.arc(sx+TS/2,sy+TS/2+3,13,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle=`rgba(46,125,50,${.75*sb})`; ctx.beginPath(); ctx.arc(sx+TS/2-5,sy+TS/2,10,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle=`rgba(67,160,71,${.65*sb})`; ctx.beginPath(); ctx.arc(sx+TS/2+4,sy+TS/2-3,9,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='rgba(232,245,233,.3)'; ctx.beginPath(); ctx.arc(sx+TS/2-2,sy+TS/2-5,4,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='#1b5e20'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(sx+TS/2,sy+TS/2+3,13,0,Math.PI*2); ctx.stroke();
+      break;}
+    case 'k':{ // puesto feria artesanal
+      ctx.fillStyle='#d7ccc8'; ctx.fillRect(sx,sy,TS,TS);
+      const aw=[['#ef4444','#fcd34d'],['#3b82f6','#bfdbfe'],['#a855f7','#f3e8ff'],['#16a34a','#bbf7d0']];
+      const [c1,c2]=aw[Math.floor(mC/3)%4];
+      // Toldo con rayas
+      ctx.fillStyle=c1; ctx.fillRect(sx,sy+2,TS,TS/2-4);
+      ctx.fillStyle=c2;
+      for(let i=0;i<4;i++) ctx.fillRect(sx+i*10,sy+2,5,TS/2-4);
+      // Mostrador
+      ctx.fillStyle='#8d6e63'; ctx.fillRect(sx+2,sy+TS/2,TS-4,TS/2-4);
+      ctx.fillStyle='#a1887f'; ctx.fillRect(sx+2,sy+TS/2,TS-4,4);
+      // Items en venta
+      ctx.fillStyle='#fcd34d'; ctx.beginPath(); ctx.arc(sx+8,sy+TS-7,3,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#f87171'; ctx.beginPath(); ctx.arc(sx+TS/2,sy+TS-7,3,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#34d399'; ctx.beginPath(); ctx.arc(sx+TS-8,sy+TS-7,3,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='rgba(0,0,0,.75)'; ctx.font='bold 5.5px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('FERIA',sx+TS/2,sy+TS/2-3); ctx.textAlign='left';
+      break;}
+    case 'A':{ // escenario artístico
+      ctx.fillStyle='#795548'; ctx.fillRect(sx,sy,TS,TS);
+      ctx.fillStyle='#a1887f'; ctx.fillRect(sx+2,sy+6,TS-4,TS-10);
+      ctx.fillStyle='#bcaaa4'; ctx.fillRect(sx+2,sy+6,TS-4,4); // borde frontal
+      ctx.fillStyle='#6d4c41'; ctx.fillRect(sx+2,sy+TS-5,TS-4,5); // borde trasero
+      // Luces del escenario animadas
+      const lp=.55+.45*Math.sin(tick*.14);
+      ctx.fillStyle=`rgba(253,224,68,${lp})`; ctx.beginPath(); ctx.arc(sx+8,sy+8,3.5,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle=`rgba(252,165,165,${lp+.1})`; ctx.beginPath(); ctx.arc(sx+TS/2,sy+8,3.5,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle=`rgba(147,197,253,${lp})`; ctx.beginPath(); ctx.arc(sx+TS-8,sy+8,3.5,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='rgba(0,0,0,.7)'; ctx.font='bold 5px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('STAGE',sx+TS/2,sy+TS/2+4); ctx.textAlign='left';
+      break;}
+    default: ctx.fillStyle='#388e3c'; ctx.fillRect(sx,sy,TS,TS);
+  }
+}
+function drawPlazaOverlays(){
+  // Occasional grass shimmer for tall grass tiles
+  if(tick%4===0){
+    const map=MAPS.plaza; if(!map) return;
+    for(let r=0;r<10;r++) for(let c=0;c<10;c++){
+      if(MAPS.plaza[r+camera.y]?.[c+camera.x]==='g'&&Math.random()<.02){
+        ctx.fillStyle='rgba(255,255,255,.15)'; ctx.fillRect(c*TS,r*TS,TS,TS);
+      }
+    }
+  }
+}
+
+// ═══ PLAZA BELÉN — ENCUENTROS Y RECLUTAMIENTO ═══
+function triggerPlazaEvent(){
+  if(STATE!=='exploring') return; STATE='transition';
+  const unfound=PARTY_MEMBERS.filter(m=>!m.found);
+  const doRecruit=unfound.length>0&&Math.random()<.10;
+  EL.encFlash.classList.remove('flashing'); void EL.encFlash.offsetWidth; EL.encFlash.classList.add('flashing');
+  EL.encFlash.addEventListener('animationend',()=>{
+    EL.encFlash.classList.remove('flashing');
+    if(doRecruit){
+      const member=unfound[Math.floor(Math.random()*unfound.length)];
+      STATE='dialog';
+      showDialog(`${member.emoji} ¡${member.name} apareció!\n\nQuiere unirse a tu equipo.\n\n⚡ Habilidad: ${member.ability}\n→ ${member.abDesc}\n\n¿Aceptas?`,[
+        {text:`¡Sí, súmate! 🎉`,action:()=>recruitMember(member)},
+        {text:'Ahora no',action:()=>{}}
+      ]);
+    } else {
+      const tmpl=PLAZA_ENEMIES[Math.floor(Math.random()*PLAZA_ENEMIES.length)];
+      battle={enemy:{...tmpl,hp:tmpl.maxHp},busy:false,atkDebuff:0};
+      openBattle();
+    }
+  },{once:true});
+}
+
+function recruitMember(member){
+  if(party.length>=3){showDialog(`¡Equipo lleno! (3/3)\n${member.name} no pudo unirse.`);return;}
+  member.found=true; member.inTeam=true; party.push(member);
+  showDialog(`¡${member.name} se unió al equipo! 🎉\n\n${member.emoji} → ${member.ability}\n${member.abDesc}\n\nEn batalla usa 👥 LLAMAR EQUIPO\npara llamarlo a luchar contigo.`);
+}
+
+function openBParty(){
+  if(!battle||battle.busy) return; battle.busy=true; hideBact();
+  const list=_('b-party-list'); list.innerHTML='';
+  PARTY_MEMBERS.filter(m=>m.inTeam).forEach(m=>{
+    const used=m.usedThisBattle;
+    const row=document.createElement('div'); row.className='bpr';
+    row.innerHTML=`<div class="bpr-info"><div class="bpr-name">${m.emoji} ${m.name}${used?' 💤':''}</div><div class="bpr-ab">⚡ ${m.ability}: ${m.abDesc}</div></div><button class="bpr-btn" ${used?'disabled':''} onclick="usePartyMember('${m.id}')">Llamar</button>`;
+    list.appendChild(row);
+  });
+  _('b-party-panel').style.display='block';
+}
+function hideBParty(){ _('b-party-panel').style.display='none'; battle.busy=false; showBact(); }
+
+function usePartyMember(mid){
+  const m=PARTY_MEMBERS.find(p=>p.id===mid); if(!m||m.usedThisBattle) return;
+  m.usedThisBattle=true; _('b-party-panel').style.display='none';
+  const e=battle.enemy; const rng2=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+  let dmg=0,extra='';
+  if(mid==='renata'){ dmg=25+rng2(0,8); const h=30; stats.hp=Math.min(stats.maxHp,stats.hp+h); extra=`\n💛 +${h} HP para el equipo!`; }
+  else if(mid==='isi'){ dmg=30+rng2(0,10); battle.atkDebuff=(battle.atkDebuff||0)+5; extra=`\n💙 ¡ATK enemigo -5 por este turno!`; }
+  else if(mid==='este'){ dmg=28+rng2(0,8); if(stats.status){const st=stats.status; stats.status=null; stats.statusTurns=0; extra=`\n💻 ¡${st} curado!`;}else extra=`\n💻 ¡Sistema optimizado!`; }
+  e.hp=Math.max(0,e.hp-dmg); hitAnim('b-es'); dmgPop(dmg,true,'#a78bfa'); syncBE(); syncBP(); syncUI();
+  const msg=`${m.emoji} ¡${m.name} usa ${m.ability}!\n¡${e.name} recibe ${dmg}!${extra}`;
+  if(e.hp<=0){typeMsg(msg+`\n\n¡${e.name} fue vencido!`,()=>battleWin());return;}
+  typeMsg(msg,()=>enemyTurn());
+}
+
+function drawDoorLabels(){
+  const map=MAPS[currentMap]; if(!map) return;
+  ctx.save();
+  for(let r=0;r<10;r++) for(let c=0;c<10;c++){
+    const mR=r+camera.y,mC=c+camera.x,t=map[mR]?.[mC];
+    if(t!=='E'&&t!=='Z'&&t!=='N') continue;
+    const sx=c*TS,sy=r*TS;
+    let dest='',color='#ffd700';
+    if(t==='Z'){dest='CONT';color='#c084fc';}
+    else if(t==='N'){dest='SECRETA';color='#f59e0b';}
+    else if(currentMap==='pasillo'){
+      if(mR===0){dest='CANCHA';color='#4ade80';}
+      else if(mC===0){dest='PLAZA';color='#86efac';}
+      else if(mC===19){dest='BIBLIO';color='#60a5fa';}
+    } else {
+      const ic={cancha:'PASILLO',biblioteca:'PASILLO',sala_vela:'PASILLO',sala_cont:'PASILLO',plaza:'PASILLO'};
+      dest=ic[currentMap]||'SALIDA'; color='#fcd34d';
+    }
+    if(!dest) continue;
+    // ── Grande, centrada y visible ──
+    ctx.font='bold 8.5px Arial';
+    const tw=ctx.measureText(dest).width;
+    const bx=sx+(TS-tw-10)/2, by=sy+(TS-16)/2+1;
+    ctx.fillStyle='rgba(0,0,0,.88)'; ctx.fillRect(bx-1,by,tw+12,14);
+    ctx.strokeStyle=color; ctx.lineWidth=1.8; ctx.strokeRect(bx-1,by,tw+12,14);
+    ctx.fillStyle=color; ctx.textBaseline='middle'; ctx.textAlign='center';
+    ctx.fillText(dest,sx+TS/2,by+7);
+    ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  }
+  ctx.restore();
+}
+
 // ─ Draw Map ─
 const ARROW_OFF={up:[TS/2-4,-2,'▲'],down:[TS/2-4,TS+9,'▼'],left:[-10,TS/2+4,'◀'],right:[TS+2,TS/2+4,'▶']};
-const ML={pasillo:'PASILLO',cancha:'🏀 CANCHA',sala_vela:'🕯 SALA SECRETA',biblioteca:'📚 BIBLIOTECA',sala_cont:'💜 SALA DE CONTENCIÓN'};
+const ML={pasillo:'PASILLO',cancha:'🏀 CANCHA',sala_vela:'🕯 SALA SECRETA',biblioteca:'📚 BIBLIOTECA',sala_cont:'💜 SALA DE CONTENCIÓN',plaza:'🌳 PLAZA BELÉN'};
 function drawMap(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   const map=MAPS[currentMap];
@@ -559,11 +877,13 @@ function drawMap(){
     else if(currentMap==='sala_vela') drawSVTile(t,sx,sy);
     else if(currentMap==='biblioteca') drawBibliotecaTile(t,sx,sy,mR,mC);
     else if(currentMap==='sala_cont') drawSalaContTile(t,sx,sy,r,c);
+    else if(currentMap==='plaza'){try{drawPlazaTile(t,sx,sy,mR,mC);}catch(e){ctx.fillStyle='#388e3c';ctx.fillRect(c*TS,r*TS,TS,TS);}}
     else drawPasilloTile(t,sx,sy,mR,mC);
   }
   if(currentMap==='cancha'){ drawCourtMarkings(); drawCanchaOverlays(); }
   if(currentMap==='biblioteca') drawBibliotecaOverlays();
   if(currentMap==='sala_cont') drawSalaContOverlays();
+  if(currentMap==='plaza') drawPlazaOverlays();
   if(currentMap==='pasillo'&&progress.claudita>=1){
     BCPOS.forEach((cp,i)=>{ if(bCC[i]||cp.x<camera.x||cp.x>=camera.x+10||cp.y<camera.y||cp.y>=camera.y+10) return; const sx=(cp.x-camera.x)*TS+TS/2,sy=(cp.y-camera.y)*TS+TS/2,p=.55+.45*Math.sin(tick*.1+i*.7); ctx.save(); ctx.shadowColor='#60a5fa'; ctx.shadowBlur=10*p; ctx.fillStyle=`rgba(96,165,250,${.7+.3*p})`; ctx.beginPath(); ctx.arc(sx,sy,3.5+.8*p,0,Math.PI*2); ctx.fill(); ctx.restore(); });
   }
@@ -577,6 +897,7 @@ function drawMap(){
   const curT=MAPS[currentMap][player.y]?.[player.x];
   EL.zoneTag.style.display=(curT==='v'||curT==='g')?'block':'none';
   EL.mapLabel.textContent=ML[currentMap]||'';
+  drawDoorLabels();
   if(EL.btnBack) EL.btnBack.style.display=currentMap==='pasillo'?'none':'block';
   floats=floats.filter(f=>f.life>0);
   floats.forEach(f=>{ ctx.save(); ctx.globalAlpha=f.a; ctx.fillStyle=f.c; ctx.font='bold 11px Arial'; ctx.textBaseline='middle'; ctx.fillText(f.t,f.x,f.y); ctx.restore(); f.y+=f.vy; f.a-=1/75; f.life--; });
@@ -663,14 +984,19 @@ function showSevenPanel(){ STATE='seven'; EL.sevenPanel.classList.add('on'); }
 function closeSevenPanel(){ EL.sevenPanel.classList.remove('on'); STATE='exploring'; }
 
 // ═══ BATALLA ═══
-function triggerEncounter(){
+function triggerEncounterFromPool(pool){
   if(STATE!=='exploring') return; STATE='transition';
-  const tmpl=ENEMIES[Math.floor(Math.random()*ENEMIES.length)];
-  battle={enemy:{...tmpl,hp:tmpl.maxHp},busy:false};
+  const tmpl=pool[Math.floor(Math.random()*pool.length)];
+  battle={enemy:{...tmpl,hp:tmpl.maxHp},busy:false,atkDebuff:0};
   EL.encFlash.classList.remove('flashing'); void EL.encFlash.offsetWidth; EL.encFlash.classList.add('flashing');
   EL.encFlash.addEventListener('animationend',()=>{ EL.encFlash.classList.remove('flashing'); openBattle(); },{once:true});
 }
-function openBattle(){ STATE='battle'; EL.battle.classList.add('on'); const e=battle.enemy; EL.bEs.textContent=e.emoji; EL.bEs.style.filter=`drop-shadow(0 0 20px ${e.glow})`; syncBE(); syncBP(); hideBact(); typeMsg(e.intro,()=>typeMsg('¿Qué hará Profe Felipe?',showBact)); }
+const ETYPES_MAP={cansado:'📚 Alumno',desmot:'📚 Alumno',prueba:'📚 Aula',resfrio:'🏥 Salud',celular:'📱 Distrac.',inspector_b:'👔 Admin',paulina:'📐 Docente',dahian:'🏃 Docente',alex:'🎵 Docente',delinc:'🌳 Calle',ambulante:'🌳 Calle',pollito:'🌳 Plaza'}; const ARENA_MAP={cansado:'t-aula',desmot:'t-aula',prueba:'t-aula',resfrio:'t-aula',celular:'t-aula',inspector_b:'t-admin',paulina:'t-docente',dahian:'t-docente',alex:'t-docente',delinc:'t-calle',ambulante:'t-calle',pollito:'t-plaza'};
+function openBattle(){ STATE='battle'; EL.battle.classList.add('on'); PARTY_MEMBERS.forEach(m=>m.usedThisBattle=false); battle.atkDebuff=battle.atkDebuff||0;
+  const e=battle.enemy;
+  EL.bArena.className=''; EL.bArena.classList.add(ARENA_MAP[e.id]||'t-aula');
+  if(EL.bEnemyBg) EL.bEnemyBg.style.background=`radial-gradient(circle,`+e.glow.replace(/[0-9.]+\)$/,'.45)')+` 0%,transparent 70%)`;
+  if(EL.bEtype) EL.bEtype.textContent=ETYPES_MAP[e.id]||'❓ Desconocido'; EL.bEs.textContent=e.emoji; EL.bEs.style.filter=`drop-shadow(0 0 20px ${e.glow})`; syncBE(); syncBP(); hideBact(); typeMsg(e.intro,()=>typeMsg('¿Qué hará Profe Felipe?',showBact)); }
 function syncBE(){ const e=battle.enemy,p=e.hp/e.maxHp; EL.bEn.textContent=e.name.toUpperCase(); EL.bHt.textContent=`HP: ${e.hp}/${e.maxHp}`; EL.bEhp.style.cssText=`width:${(p*100).toFixed(1)}%;background:${hpColor(p)}`; }
 function syncBP(){
   const hp=stats.hp/stats.maxHp,mp=stats.mp/stats.maxMp;
@@ -680,7 +1006,7 @@ function syncBP(){
   else EL.bSt.style.display='none';
 }
 function typeMsg(text,cb=null){ if(twT) clearTimeout(twT); EL.bMsg.textContent=''; let i=0; const s=()=>{ if(i<text.length){EL.bMsg.textContent=text.slice(0,++i); twT=setTimeout(s,18);} else if(cb) twT=setTimeout(cb,250); }; s(); }
-function showBact(){ if(!battle) return; battle.busy=false; EL.bAct.classList.add('on'); EL.btnCof.textContent=`☕ CAFÉ (${stats.coffees})`; EL.btnRun.disabled=!!battle.enemy.noFlee; if(EL.btnPsy)EL.btnPsy.style.display=progress.psyAttackUnlocked?'flex':'none'; }
+function showBact(){ if(!battle) return; battle.busy=false; EL.bAct.classList.add('on'); EL.btnCof.textContent=`☕ CAFÉ (${stats.coffees})`; EL.btnRun.disabled=!!battle.enemy.noFlee; if(EL.btnPsy)EL.btnPsy.style.display=progress.psyAttackUnlocked?'flex':'none'; if(EL.btnTeam)EL.btnTeam.style.display=party.length>0?'flex':'none'; }
 function hideBact(){ EL.bAct.classList.remove('on'); }
 function doMove(idx){
   if(!battle||battle.busy) return; battle.busy=true; hideBact();
@@ -700,9 +1026,9 @@ function enemyTurn(){
   if(!battle) return; const e=battle.enemy,rng=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
   if(stats.status==='poisoned'){stats.hp=Math.max(1,stats.hp-5); if(--stats.statusTurns<=0) stats.status=null;}
   const atk=e.attacks[Math.floor(Math.random()*e.attacks.length)];
-  let dmg=Math.max(1,e.atk+rng(0,6)-stats.def); if(stats.status==='stressed') dmg=Math.floor(dmg*1.35);
+  let dmg=Math.max(1,e.atk+rng(0,6)-stats.def-(battle.atkDebuff||0)); if(stats.status==='stressed') dmg=Math.floor(dmg*1.35);
   stats.hp=Math.max(0,stats.hp-dmg); if(atk.mpDrain) stats.mp=Math.max(0,stats.mp-atk.mpDrain);
-  if(atk.effect&&Math.random()<(atk.chance||0)){stats.status=atk.effect;stats.statusTurns=3;}
+  if(atk.effect&&Math.random()<(atk.chance||0)){stats.status=atk.effect;stats.statusTurns=3;} if(atk.stealCoins){const stolen=Math.min(coins,atk.stealCoins);coins=Math.max(0,coins-stolen);syncUI();}
   hitAnim('b-ps'); dmgPop(dmg,false); syncBP(); syncUI();
   let msg=`${e.name} usó ${atk.name}!\n${atk.msg}\n¡El profe recibe ${dmg}!`; if(atk.mpDrain) msg+=`\n¡Y pierde ${atk.mpDrain} MP!`;
   if(stats.hp<=0){typeMsg(msg+'\n\n💔 ¡El profe cayó agotado!',()=>battleLose()); return;}
@@ -725,7 +1051,7 @@ function battleWin(){
   EL.bAct.innerHTML=`<button class="bb bi" style="grid-column:1/3" onclick="closeBattle()">¡Continuar!</button>`; EL.bAct.classList.add('on'); battle=null;
 }
 function battleLose(){ stats.hp=25; stats.status=null; syncBP(); syncUI(); EL.bMsg.textContent='😔 ¡El profe cayó agotado!\n\nPero la vocación no se rinde.\n¡Ve al Kiosco de Kella a recuperarte!'; hideBact(); EL.bAct.innerHTML=`<button class="bb br" style="grid-column:1/3" onclick="closeBattle()">Recuperarse...</button>`; EL.bAct.classList.add('on'); battle=null; }
-function closeBattle(){ EL.battle.classList.remove('on'); EL.bAct.innerHTML=`<button class="bb ba" onclick="doMove(0)">⚡ EXPLICAR</button><button class="bb bs" onclick="doMove(1)">💡 MOTIVAR</button><button class="bb bi" id="btn-cof" onclick="doMove(2)">☕ CAFÉ</button><button class="bb br" id="btn-run" onclick="doMove(3)">🚪 HUIR</button>`; EL.btnCof=_('btn-cof'); EL.btnRun=_('btn-run'); EL.btnPsy=_('btn-psy'); player.steps=0; battle=null; STATE='exploring'; }
+function closeBattle(){ EL.battle.classList.remove('on'); EL.bAct.innerHTML=`<button class="bb ba" onclick="doMove(0)">⚡ EXPLICAR</button><button class="bb bs" onclick="doMove(1)">💡 MOTIVAR</button><button class="bb bi" id="btn-cof" onclick="doMove(2)">☕ CAFÉ</button><button class="bb br" id="btn-run" onclick="doMove(3)">🚪 HUIR</button>`; EL.btnCof=_('btn-cof'); EL.btnRun=_('btn-run'); EL.btnPsy=_('btn-psy'); EL.btnTeam=_('btn-team'); player.steps=0; battle=null; STATE='exploring'; }
 function hitAnim(id){ const el=_(id); el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); setTimeout(()=>el.classList.remove('hit'),500); }
 function dmgPop(val,isEnemy,color=null){ const pop=document.createElement('div'); pop.className='dmg-pop'; pop.textContent=(isEnemy?'-':'+')+val; const c=color||(isEnemy?'#f87171':'#60a5fa'); pop.style.cssText=`color:${c};text-shadow:0 0 8px ${c};left:${isEnemy?62+Math.random()*28:15+Math.random()*22}%;top:${isEnemy?20+Math.random()*18:42+Math.random()*12}%`; EL.bArena.appendChild(pop); setTimeout(()=>pop.remove(),950); }
 
@@ -746,6 +1072,31 @@ function goBack(){
   if(currentMap==='sala_cont') stopSalaContMusic();
   transitionTo('pasillo',pt[0],pt[1]);
 }
+
+const LIBROS_CLASICOS=[
+  {id:'principito',name:'El Principito',author:'Antoine de Saint-Exupéry (1943)',emoji:'🌹',
+   summary:'Un aviador cae en el desierto y encuentra a un niño venido de un pequeño asteroide. El Principito le habla de su rosa, de los volcanes que cuida y de los planetas que visitó antes de llegar a la Tierra.\n\nCada habitante representa un defecto humano: el rey que ordena lo que ya ocurrirá, el vanidoso que quiere ser admirado, el hombre de negocios que cuenta estrellas sin disfrutarlas.\n\n"Lo esencial es invisible a los ojos." Una fábula filosófica sobre la amistad, el amor y cómo los adultos olvidan lo importante.'},
+  {id:'quijote',name:'Don Quijote de la Mancha',author:'Miguel de Cervantes (1605)',emoji:'⚔️',
+   summary:'Alonso Quijano, enloquecido de leer novelas de caballería, decide convertirse en el caballero Don Quijote de la Mancha. Con su fiel escudero Sancho Panza, sale a corregir injusticias y vivir aventuras.\n\nAtaca molinos de viento creyendo que son gigantes. Libera presos pensando que son víctimas. El mundo real choca constantemente con su mundo imaginado.\n\nLa primera novela moderna. Reflexión sobre la locura, la realidad y el idealismo frente al pragmatismo.'},
+  {id:'cien_anos',name:'Cien Años de Soledad',author:'Gabriel García Márquez (1967)',emoji:'🦋',
+   summary:'La saga de la familia Buendía a lo largo de siete generaciones en Macondo, un pueblo fundado en medio de la selva colombiana. Lo mágico y lo real coexisten con naturalidad: llueven flores amarillas, una mujer asciende al cielo mientras tiende ropa.\n\nJosé Arcadio Buendía funda el pueblo buscando una salida al mar. Sus descendientes repiten patrones de amor, guerra y soledad generación tras generación.\n\nObra cumbre del realismo mágico latinoamericano. Premio Nobel de Literatura 1982.'},
+  {id:'metamorfosis',name:'La Metamorfosis',author:'Franz Kafka (1915)',emoji:'🪲',
+   summary:'Gregor Samsa despierta una mañana transformado en un enorme insecto. Lo que más le preocupa no es su nueva forma, sino llegar tarde al trabajo.\n\nSu familia, inicialmente horrorizada, se va acostumbrando a mantenerlo escondido. Gregor escucha a su hermana tocar el violín y siente que aún comprende la belleza.\n\nAlegoría sobre la alienación, la familia y cómo la sociedad trata a quienes no son "productivos". Una de las obras más influyentes del siglo XX.'},
+  {id:'fahrenheit',name:'Fahrenheit 451',author:'Ray Bradbury (1953)',emoji:'🔥',
+   summary:'En un futuro distópico, los bomberos no apagan incendios: los inician. Su misión es quemar todos los libros, prohibidos porque generan ideas perturbadoras.\n\nGuy Montag es un bombero que comienza a leer en secreto tras conocer a Clarisse, una joven que le pregunta si es feliz. La pregunta lo cambia todo.\n\nCrítica a la censura, la televisión como distracción masiva y la pérdida del pensamiento crítico. Más vigente que nunca.'},
+  {id:'orgullo',name:'Orgullo y Prejuicio',author:'Jane Austen (1813)',emoji:'💌',
+   summary:'Elizabeth Bennet es la segunda de cinco hermanas en la Inglaterra del siglo XIX. Su madre tiene una obsesión: casarlas bien. Cuando el rico Mr. Darcy llega al vecindario, el choque de caracteres es inevitable.\n\nElizabeth lo encuentra arrogante. Darcy la considera por debajo de su clase. Pero bajo el orgullo de uno y el prejuicio de la otra, se esconde una atracción más profunda.\n\nComentario mordaz sobre el matrimonio, las clases sociales y la necesidad de superar los propios sesgos.'},
+  {id:'crimen',name:'Crimen y Castigo',author:'Fyodor Dostoievski (1866)',emoji:'🪓',
+   summary:'Raskolnikov, un estudiante ruso en la miseria, desarrolla la teoría de que los hombres extraordinarios tienen derecho a transgredir la ley si es por un bien mayor. Para probarse a sí mismo, mata a una prestamista usurera.\n\nPero el crimen no lo libera: lo aplasta. Lo persigue una culpa que ni siquiera reconoce como tal, mientras el detective Porfiry juega un duelo psicológico con él.\n\nEstudio profundo de la conciencia culpable, la redención y los peligros del nihilismo intelectual.'},
+  {id:'aleph',name:'El Aleph',author:'Jorge Luis Borges (1945)',emoji:'✨',
+   summary:'En el sótano de una casa en Buenos Aires, existe un punto del espacio que contiene todos los demás puntos: el Aleph. Quien lo mira puede ver simultáneamente todo el universo desde todos los ángulos.\n\nEl narrador descubre este objeto cuando visita a Carlos Argentino Daneri, un mediocre poeta que usa el Aleph para escribir un poema que describe literalmente cada rincón de la Tierra.\n\nObra maestra del cuento fantástico. Reflexión sobre el tiempo, la memoria, el infinito y los límites del lenguaje.'}
+];
+function readBook(bid){
+  const book=LIBROS_CLASICOS.find(b=>b.id===bid)||inventory.find(i=>i.id===bid);
+  if(!book) return;
+  const txt=book.summary||(book.content?`"${book.content}"`:book.desc||'Sin resumen disponible.');
+  showDialog(`${book.emoji||'📖'} ${book.name}\n${book.author||''}\n\n${txt}`);
+}
 // ═══ TABLA DE INTERACCIONES O(1) ═══
 const NPC_ACT={
   I:()=>showDialog(np('inspector')),
@@ -754,7 +1105,14 @@ const NPC_ACT={
     {text:'Ferrocarril ✓',action:()=>{ coins+=10; syncUI(); showDialog("¡Excelente vibración alveolar!\n¡Toma 🪙10 monedas como recompensa!"); }}
   ]),
   '5':()=>{ if(!progress.quests.psico) showDialog("Hola, soy Valeria, la psicóloga. 👱‍♀️\nNo puedes enseñar desde una mente agotada.\n¿Aceptas buscar tu Centro Emocional?",[{text:'Sí, lo necesito.',action:()=>{ progress.quests.psico=1; progress.unlocked.psicoped=true; inventory.push({id:'centro',name:'Centro Emocional',type:'quest'}); showDialog("Has encontrado tu centro. ✨\nAhora la Tía Claudita puede ayudarte."); }}]); else showDialog(np('psico_r')); },
-  '6':()=>showDialog("Hola, soy Sofía, la psicóloga. 👩\n\n"+np('psico_m')),
+  '6':()=>{
+    const msg="Hola, soy Sofía, la psicóloga. 👩\n\n"+np('psico_m');
+    if(!progress.plazaVisited){
+      showDialog(msg+"\n\n─────────────────\n🌳 ¿Sabías que el aire fresco\nreduce el cortisol y el estrés?\n\nVisita la Plaza Belén:\n→ Puertas del LADO IZQUIERDO\n  del pasillo.\n\n¡Allí podrían unirse aliados\na tu equipo de trabajo!");
+    } else {
+      showDialog(msg);
+    }
+  },
   '7':()=>{
     const c=progress.claudita,bc=progress.blueCoins;
     if(c===0) showDialog("¡Hola! Soy la Tía Claudita. 👩‍💼\n\nHay monedas azules dispersas por el pasillo.\nSon cristales de conocimiento caídos.\n¿Recolectas 10 para mí?",[{text:'¡Acepto!',action:()=>{ progress.claudita=1; syncUI(); showDialog("¡Genial! 🔵 Las monedas aparecerán\nen el suelo del pasillo mientras caminas."); }},{text:'Luego vuelvo.',action:()=>{}}]);
@@ -763,6 +1121,9 @@ const NPC_ACT={
     else showDialog(`La Sala Secreta te espera. 🕯\n\n${np('claudita')}`);
   },
   K:openShop,
+  k:()=>showDialog('🎨 Feria Artesanal de la Plaza Belén\n\n¡Artesanos locales exhiben sus obras!\nCerámica, tejidos, pinturas, joyería...\n\nLa creatividad también\nes un acto pedagógico. 🎨'),
+  A:()=>showDialog('🎪 Escenario de la Plaza Belén\n\nAquí se presentan artistas locales\ncada fin de semana.\n\n¡La cultura viva del barrio!\n🎵 🎭 🎤'),
+  D:()=>showDialog("¡Hola! Soy la Profe Dahian. 🏃‍♀️\n\nEsta es Mochi y esta es Pichi. 🐱🐱\nSiempre me acompañan al entrenamiento.\n\n"+np('gonzalo')),
   G:()=>showDialog("Soy el Profe Gonzalo. 👨‍🏫\n\n"+np('gonzalo')),
   U:()=>showDialog("Soy el Profe Juan. 👨\n\n"+np('juan')),
   C:()=>{
@@ -799,6 +1160,20 @@ const NPC_ACT={
       ]
     );
   },
+  s:()=>{
+    if(currentMap!=='biblioteca') return;
+    const available=LIBROS_CLASICOS.filter(b=>!inventory.some(i=>i.id===b.id));
+    if(!available.length){showDialog('📚 Ya tienes todos los libros disponibles.\n\n¡Vuelve a la sala a leerlos!');return;}
+    const choices=available.slice(0,4).map(b=>({
+      text:`${b.emoji} ${b.name}`,
+      action:()=>{
+        inventory.push({id:b.id,name:b.name,type:'book',author:b.author,summary:b.summary,emoji:b.emoji});
+        showDialog(`📖 Prestaste:\n${b.emoji} ${b.name}\n${b.author}\n\nRevísalo en tu 🎒 Mochila.`);
+      }
+    }));
+    choices.push({text:'No, gracias.',action:()=>{}});
+    showDialog('📚 ESTANTERÍA DE CLÁSICOS\n\nLa Tía Jeanette te puede prestar\nuno de estos libros.\n¿Cuál te interesa?',choices);
+  },
   X:()=>showDialog("Hola, soy Constanza, psicóloga. 👩‍⚕️\n\n"+np('constanza')),
   P:()=>{
     if(!progress.paulaMission) progress.paulaMission={given:false,completed:false,rewarded:false};
@@ -818,7 +1193,7 @@ const NPC_ACT={
       showDialog("¡Excelente trabajo, profe! 💜\n\nRecuerda usar el Ataque Psicológico.\n¡La conexión emocional es la mejor arma!\n\n"+np('paula'));
     }
   },
-  E:()=>{ if(currentMap==='sala_vela') transitionTo('pasillo',14,5); if(currentMap==='biblioteca') transitionTo('pasillo',18,5); if(currentMap==='sala_cont'){stopSalaContMusic();transitionTo('pasillo',8,8);} }
+  E:()=>{ if(currentMap==='sala_vela') transitionTo('pasillo',14,5); if(currentMap==='biblioteca') transitionTo('pasillo',18,5); if(currentMap==='sala_cont'){stopSalaContMusic();transitionTo('pasillo',8,8);} if(currentMap==='plaza')transitionTo('pasillo',1,4); }
 };
 
 const DIRS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
@@ -834,6 +1209,18 @@ function checkMapExit(){
     if(player.y===0&&MAPS.pasillo[0][player.x]==='E'){ if(!progress.canchaVisited){progress.canchaVisited=true; transitionTo('cancha',9,8); setTimeout(()=>showDialog('¡Bienvenido a la Cancha! 🏀\n\nHay un cofre misterioso en el centro.\nKella vende pociones a la derecha.\n¡Cuidado con el pasto verde!'),300);} else transitionTo('cancha',9,8); return true; }
     if(player.x===19&&MAPS.pasillo[player.y][19]==='E'){ if(!progress.biblioVisited){progress.biblioVisited=true; transitionTo('biblioteca',1,5); setTimeout(()=>showDialog('¡Bienvenido a la Biblioteca! 📚\n\nLa Tía Jeanette está al centro.\nTiene chistes y acepta códigos.\nSalida: puerta dorada a la izquierda.'),300);} else transitionTo('biblioteca',1,5); return true; }
     if(player.x===15&&player.y===6){ if(!hasItem('vela')){player.x=14; showDialog('Está muy oscuro.\nNecesitas la 🕯 Vela de Sabiduría.\n\nHabla con la Tía Claudita.');} else {transitionTo('sala_vela',4,7); setTimeout(()=>showDialog('Entras a la Sala Secreta...\nLa vela ilumina las paredes.'),300);} return true; }
+    // Plaza Belén ← puertas izquierdas (x=0)
+    if(player.x===0&&MAPS.pasillo[player.y]?.[0]==='E'){
+      const first=!progress.plazaVisited; if(first)progress.plazaVisited=true;
+      transitionTo('plaza',2,1);
+      if(first) setTimeout(()=>showDialog('🌳 PLAZA BELÉN\n\nBienvenido al espacio verde del colegio.\nCamina por el PASTO ALTO para encontrar\nenemigos y posibles compañeros de equipo!\n\n👥 Renata, Isi y Este Dev te esperan.'),400);
+      return true;
+    }
+  }
+  // Plaza → Pasillo
+  if(currentMap==='plaza'){
+    if(player.y===14&&MAPS.plaza[14]?.[player.x]==='E'){transitionTo('pasillo',1,4);return true;}
+    if(player.x===0&&MAPS.plaza[player.y]?.[0]==='E'){transitionTo('pasillo',1,4);return true;}
   }
   if(currentMap==='pasillo'&&(MAPS.pasillo[player.y]?.[player.x]==='Z')){
     const first=!progress.salaContVisited; if(first) progress.salaContVisited=true;
@@ -864,13 +1251,46 @@ function move(dx,dy,dir){
   player.x=nx; player.y=ny; player.steps++;
   updateCamera(); if(checkMapExit()) return; checkBlueCoin();
   if(player.steps>=3){
-    if(t==='v'&&Math.random()<1/10){ triggerEncounter(); return; }
-    if(currentMap==='pasillo'&&t==='.'&&Math.random()<1/18){ triggerEncounter(); return; }
+    if(currentMap==='plaza'&&t==='g'&&Math.random()<1/8){ triggerPlazaEvent(); return; }
+    if(t==='v'&&Math.random()<1/10){ triggerEncounter(); return; }  // includes teachers
+    if(currentMap==='pasillo'&&t==='.'&&Math.random()<1/18){ triggerEncounterFromPool(ENEMIES.filter(e=>!['paulina','dahian','alex','delinc','ambulante','pollito'].includes(e.id))); return; }
   }
 }
 
 // ═══ INVENTARIO ═══
-function openInv(){ if(STATE==='battle'||STATE==='shop'||STATE==='seven'||STATE==='keypad') return; STATE='inventory'; EL.invList.innerHTML=''; const li=h=>{ const e=document.createElement('li'); e.className='inv-row'; e.innerHTML=h; EL.invList.appendChild(e); }; li(`<span>☕ Café</span><span style="color:var(--gold)">${stats.coffees} restantes</span>`); if(!inventory.length) li('<span style="color:#6b7280;width:100%;text-align:center">Mochila vacía...</span>'); else inventory.forEach(item=>{ const extra=item.type==='book'?`<button class="btn-read" onclick="closeInv();showDialog('[${item.name}]\\n\\n&quot;${item.content}&quot;')">📖 Leer</button>`:item.desc?`<span style="font-size:.68rem;color:#9ca3af">${item.desc}</span>`:''; li(`<span>${item.name}</span>${extra}`); }); EL.invPanel.style.display='block'; }
+function openInv(){
+  if(STATE==='battle'||STATE==='shop'||STATE==='seven'||STATE==='keypad') return;
+  STATE='inventory';
+  const ul=EL.invList; ul.innerHTML='';
+  const sec=(title,icon)=>{const h=document.createElement('li'); h.style.cssText="color:#6b7280;font-family:'Press Start 2P',monospace;font-size:.4rem;padding:6px 0 3px;border-bottom:1px solid #374151;margin-bottom:4px;list-style:none"; h.textContent=icon+' '+title; ul.appendChild(h);};
+  const row=(html)=>{const e=document.createElement('li'); e.className='inv-row'; e.innerHTML=html; ul.appendChild(e);};
+  // Consumibles
+  sec('CONSUMIBLES','🧪');
+  row('<span>☕ Café</span><span style="color:var(--gold);font-size:.9rem">'+stats.coffees+' usos</span>');
+  // Items de misión/clave
+  const quest=inventory.filter(i=>i.type==='item'||i.type==='quest');
+  if(quest.length){ sec('ÍTEMS CLAVE','🗝️'); quest.forEach(item=>row('<span>'+item.name+'</span><span style="font-size:.65rem;color:#9ca3af">'+(item.desc||'')+'</span>')); }
+  // Equipo
+  const team=(typeof PARTY_MEMBERS!=='undefined'?PARTY_MEMBERS:[]).filter(m=>m.inTeam);
+  if(team.length){
+    sec('EQUIPO','👥');
+    team.forEach(m=>row('<span>'+m.emoji+' '+m.name+'</span><div style="text-align:right"><div style="font-size:.65rem;color:#a78bfa">⚡ '+m.ability+'</div><div style="font-size:.6rem;color:#6b7280">'+m.abDesc+'</div></div>'));
+  }
+  // Libros prestados
+  const books=inventory.filter(i=>i.type==='book');
+  if(books.length){
+    sec('LIBROS PRESTADOS','📚');
+books.forEach((item,bi)=>{
+    const li=document.createElement('li'); li.className='inv-row';
+    li.innerHTML='<span>'+(item.emoji||'📖')+' '+item.name+'</span>';
+    const btn=document.createElement('button'); btn.className='btn-read'; btn.textContent='📖 Leer';
+    btn.onclick=()=>{closeInv();readBook(item.id);};
+    li.appendChild(btn); ul.appendChild(li);
+  });
+  }
+  if(!inventory.length&&!team.length) row('<span style="color:#6b7280;width:100%;text-align:center">Mochila vacía...</span>');
+  EL.invPanel.style.display='block';
+}
 function closeInv(){ EL.invPanel.style.display='none'; if(STATE==='inventory') STATE='exploring'; }
 
 // ═══ CONTROLES ═══
