@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Completos Chilenos - Ajustada</title>
+    <title>Calculadora de Completos - Compra Precisa</title>
     <style>
         :root {
             --italian-green: #2E7D32;
@@ -28,7 +28,7 @@
             border-radius: 16px;
             box-shadow: var(--shadow);
             padding: 25px;
-            max-width: 600px;
+            max-width: 650px;
             width: 100%;
             border-top: 8px solid var(--italian-green);
         }
@@ -46,12 +46,6 @@
             font-size: 28px;
             text-transform: uppercase;
             letter-spacing: 1px;
-        }
-
-        .header p {
-            margin: 5px 0 0 0;
-            font-style: italic;
-            color: #546E7A;
         }
 
         .section-title {
@@ -82,12 +76,6 @@
             border-radius: 8px;
             box-sizing: border-box;
             font-size: 15px;
-            transition: border-color 0.2s;
-        }
-
-        input[type="number"]:focus {
-            outline: none;
-            border-color: var(--italian-green);
         }
 
         .grid-2 {
@@ -151,21 +139,31 @@
             color: white;
             text-align: left;
             padding: 12px;
-            font-size: 15px;
+            font-size: 14px;
         }
 
-        th:last-child, td:last-child {
+        th:nth-child(2), th:last-child {
             text-align: right;
         }
 
         td {
             padding: 12px;
             border-bottom: 1px solid #CFD8DC;
-            font-size: 15px;
+            font-size: 14px;
+        }
+
+        td:nth-child(2), td:last-child {
+            text-align: right;
         }
 
         .ing-name {
             font-weight: 600;
+        }
+
+        .qty-real {
+            color: #546E7A;
+            font-family: monospace;
+            font-size: 14px;
         }
 
         .qty-badge {
@@ -174,6 +172,7 @@
             padding: 4px 10px;
             border-radius: 6px;
             font-weight: bold;
+            display: inline-block;
         }
 
         .footnote {
@@ -191,7 +190,7 @@
 <div class="container">
     <div class="header">
         <h1>Lista de Compras de Completos</h1>
-        <p>Ajuste fino de porciones y merma optimizada</p>
+        <p>Merma al 5% • Valores reales en Kg y aproximación comercial</p>
     </div>
 
     <!-- Tipo de Completo -->
@@ -224,12 +223,13 @@
     </div>
 
     <!-- Tabla de resultados -->
-    <div class="section-title">Ingredientes sugeridos para comprar</div>
+    <div class="section-title">Planificación de Compra</div>
     <table>
         <thead>
             <tr>
                 <th>Ingrediente</th>
-                <th>Cantidad Total Ajustada</th>
+                <th>Valor Real Neto</th>
+                <th>Sugerencia para el Almacén</th>
             </tr>
         </thead>
         <tbody id="tablaResultados">
@@ -238,21 +238,37 @@
     </table>
 
     <div class="footnote">
-        * <strong>Nota de Merma Optimizada:</strong> Se redujo el margen de error. La palta ahora considera solo un 15% extra (cuesco pequeño/mediano) y los ingredientes secos/embutidos un 2% por seguridad en el manejo.
+        * <strong>Criterio de Aproximación:</strong> El pan y las vienesas se aproximan al entero superior por seguridad. Los ingredientes por peso (Kg) se redondean a los 250g, 500g o kilo más cercano para ajustarse al pesaje de la balanza o los formatos tradicionales de envases cerrados.
     </div>
 </div>
 
 <script>
-    // Configuración optimizada con mermas más bajas para uso doméstico controlado
+    // Configuración base con merma estricta del 5% para ingredientes por peso y 2% para unidades fijas
     const ingredientesBase = {
-        pan:      { nombre: "Pan de mesa (unidades)", porUnidad: 1,   esPeso: false, merma: 1.02 },
-        vienesa:  { nombre: "Vienesa (unidades)",     porUnidad: 1,   esPeso: false, merma: 1.02 },
-        tomate:   { nombre: "Tomate (entero para picar)", porUnidad: 65,  esPeso: true,  merma: 1.05 },
-        palta:    { nombre: "Palta Hass (entera con cuesco)", porUnidad: 55,  esPeso: true,  merma: 1.15 },
-        mayo:     { nombre: "Mayonesa",               porUnidad: 30,  esPeso: true,  merma: 1.02 },
-        chucrut:  { nombre: "Chucrut",                porUnidad: 25,  esPeso: true,  merma: 1.02 },
-        americana:{ nombre: "Salsa Americana",         porUnidad: 20,  esPeso: true,  merma: 1.02 }
+        pan:      { nombre: "Pan de mesa",             porUnidad: 1,   esPeso: false, merma: 1.02 },
+        vienesa:  { nombre: "Vienesa",                 porUnidad: 1,   esPeso: false, merma: 1.02 },
+        tomate:   { nombre: "Tomate",                  porUnidad: 65,  esPeso: true,  merma: 1.05 },
+        palta:    { nombre: "Palta Hass",              porUnidad: 55,  esPeso: true,  merma: 1.05 },
+        mayo:     { nombre: "Mayonesa",                porUnidad: 30,  esPeso: true,  merma: 1.05 },
+        chucrut:  { nombre: "Chucrut",                 porUnidad: 25,  esPeso: true,  merma: 1.05 },
+        americana:{ nombre: "Salsa Americana",         porUnidad: 20,  esPeso: true,  merma: 1.05 }
     };
+
+    // Función auxiliar para redondear al cuarto de kilo más cercano (0.25, 0.50, 0.75, 1.0)
+    function aproximarComercial(kg) {
+        if (kg <= 0.25) return "1 envase chico (250g)";
+        if (kg <= 0.50) return "0.50 kg (Medio kilo)";
+        if (kg <= 0.75) return "0.75 kg";
+        
+        // Para más de 1kg, aproximar al formato de feria más cómodo (múltiplos de 250g o enteros)
+        let entero = Math.floor(kg);
+        let residuo = kg - entero;
+        if (residuo === 0) return `${entero} kg`;
+        if (residuo <= 0.25) return `${entero}.25 kg`;
+        if (residuo <= 0.50) return `${entero}.50 kg`;
+        if (residuo <= 0.75) return `${entero}.75 kg`;
+        return `${entero + 1} kg`;
+    }
 
     function calcular() {
         const personas = parseFloat(document.getElementById('personas').value) || 0;
@@ -274,23 +290,25 @@
         listaMostrar.forEach(key => {
             const ing = ingredientesBase[key];
             let cantidadFinal = totalCompletos * ing.porUnidad * ing.merma;
-            let textoCantidad = "";
+            
+            let textoReal = "";
+            let textoAproximado = "";
 
             if (ing.esPeso) {
                 let kg = cantidadFinal / 1000;
-                if (kg < 1) {
-                    textoCantidad = `${Math.ceil(cantidadFinal)} gramos`;
-                } else {
-                    textoCantidad = `${kg.toFixed(2)} kg`;
-                }
+                textoReal = `${kg.toFixed(3)} kg`;
+                textoAproximado = aproximarComercial(kg);
             } else {
-                textoCantidad = `${Math.ceil(cantidadFinal)} unidades`;
+                let unidades = Math.ceil(cantidadFinal);
+                textoReal = `${cantidadFinal.toFixed(1)} un`;
+                textoAproximado = `${unidades} unidades`;
             }
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="ing-name">${ing.nombre}</td>
-                <td><span class="qty-badge">${textoCantidad}</span></td>
+                <td class="qty-real">${textoReal}</td>
+                <td><span class="qty-badge">${textoAproximado}</span></td>
             `;
             tbody.appendChild(tr);
         });
