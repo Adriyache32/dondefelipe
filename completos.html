@@ -53,7 +53,7 @@
             color: var(--italian-green);
             border-left: 4px solid var(--italian-green);
             padding-left: 8px;
-            margin-top: 20px;
+            margin-top: 25px;
             margin-bottom: 15px;
             font-weight: bold;
         }
@@ -175,6 +175,30 @@
             display: inline-block;
         }
 
+        /* Sección de Secretos */
+        .secrets-container {
+            background-color: var(--italian-white);
+            border: 1px solid #FFE082;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .secrets-list {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 13.5px;
+            line-height: 1.6;
+        }
+
+        .secrets-list li {
+            margin-bottom: 10px;
+        }
+
+        .secrets-list strong {
+            color: var(--italian-red);
+        }
+
         .footnote {
             font-size: 11px;
             color: #78909C;
@@ -190,7 +214,7 @@
 <div class="container">
     <div class="header">
         <h1>Lista de Compras de Completos</h1>
-        <p>Merma al 5% • Valores reales en Kg y aproximación comercial</p>
+        <p>Pan y vienesas exactos • Peso con 5% de merma</p>
     </div>
 
     <!-- Tipo de Completo -->
@@ -237,16 +261,28 @@
         </tbody>
     </table>
 
+    <!-- Bloque de Secretos de la receta -->
+    <div class="section-title">Secretos de la Receta (Fuente de Soda)</div>
+    <div class="secrets-container">
+        <ul class="secrets-list">
+            <li><strong>El vapor es el secreto del pan:</strong> Nunca uses tostador ni microondas. Calienta los panes abiertos boca abajo al vapor sobre la olla de las vienesas por un par de minutos para que queden increíblemente blandos pero firmes.</li>
+            <li><strong>El templado de la vienesa:</strong> No dejes que hiervan a borbotones porque se revientan. Caliéntalas en agua a fuego mínimo (sub-ebullición) para mantenerlas tensas y jugosas.</li>
+            <li><strong>El estrujado del tomate:</strong> Deja escurrir el tomate picado en un colador unos 15 minutos antes de armar. Sazónalo con sal y un toque de aceite justo antes de servir para que no suelte más agua en el pan.</li>
+            <li><strong>Palta con identidad:</strong> Muele la palta con tenedor dejando pequeños tropezones para dar textura. Solo lleva sal. Unas gotas de limón evitarán que se oxide rápido.</li>
+            <li><strong>Ingeniería del armado:</strong> El tomate va pegado a la vienesa caliente; luego la palta actúa como capa aislante y la mayonesa sella todo arriba de punta a punta.</li>
+        </ul>
+    </div>
+
     <div class="footnote">
-        * <strong>Criterio de Aproximación:</strong> El pan y las vienesas se aproximan al entero superior por seguridad. Los ingredientes por peso (Kg) se redondean a los 250g, 500g o kilo más cercano para ajustarse al pesaje de la balanza o los formatos tradicionales de envases cerrados.
+        * <strong>Nota de cálculo:</strong> El pan de mesa y las vienesas se calculan de forma exacta (sin merma). Los ingredientes por peso (Kg) incluyen una merma estricta del 5% y se aproximan comercialmente a múltiplos de 250 gramos para facilitar la compra en la balanza.
     </div>
 </div>
 
 <script>
-    // Configuración base con merma estricta del 5% para ingredientes por peso y 2% para unidades fijas
+    // Ajuste: merma 1.00 para pan y vienesas (exactos), 1.05 para lo demás por peso
     const ingredientesBase = {
-        pan:      { nombre: "Pan de mesa",             porUnidad: 1,   esPeso: false, merma: 1.02 },
-        vienesa:  { nombre: "Vienesa",                 porUnidad: 1,   esPeso: false, merma: 1.02 },
+        pan:      { nombre: "Pan de mesa",             porUnidad: 1,   esPeso: false, merma: 1.00 },
+        vienesa:  { nombre: "Vienesa",                 porUnidad: 1,   esPeso: false, merma: 1.00 },
         tomate:   { nombre: "Tomate",                  porUnidad: 65,  esPeso: true,  merma: 1.05 },
         palta:    { nombre: "Palta Hass",              porUnidad: 55,  esPeso: true,  merma: 1.05 },
         mayo:     { nombre: "Mayonesa",                porUnidad: 30,  esPeso: true,  merma: 1.05 },
@@ -254,13 +290,11 @@
         americana:{ nombre: "Salsa Americana",         porUnidad: 20,  esPeso: true,  merma: 1.05 }
     };
 
-    // Función auxiliar para redondear al cuarto de kilo más cercano (0.25, 0.50, 0.75, 1.0)
     function aproximarComercial(kg) {
         if (kg <= 0.25) return "1 envase chico (250g)";
         if (kg <= 0.50) return "0.50 kg (Medio kilo)";
         if (kg <= 0.75) return "0.75 kg";
         
-        // Para más de 1kg, aproximar al formato de feria más cómodo (múltiplos de 250g o enteros)
         let entero = Math.floor(kg);
         let residuo = kg - entero;
         if (residuo === 0) return `${entero} kg`;
@@ -300,7 +334,7 @@
                 textoAproximado = aproximarComercial(kg);
             } else {
                 let unidades = Math.ceil(cantidadFinal);
-                textoReal = `${cantidadFinal.toFixed(1)} un`;
+                textoReal = `${unidades} un`;
                 textoAproximado = `${unidades} unidades`;
             }
 
