@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Completos Chilenos - Logística</title>
+    <title>Calculadora de Completos Chilenos - Ajustada</title>
     <style>
         :root {
             --italian-green: #2E7D32;
@@ -191,9 +191,10 @@
 <div class="container">
     <div class="header">
         <h1>Lista de Compras de Completos</h1>
-        <p>Cantidades exactas ajustadas por merma real de preparación</p>
+        <p>Ajuste fino de porciones y merma optimizada</p>
     </div>
 
+    <!-- Tipo de Completo -->
     <label>Selecciona el estilo:</label>
     <div class="radio-tile-group">
         <label style="flex:1;">
@@ -206,6 +207,7 @@
         </label>
     </div>
 
+    <!-- Parámetros de personas -->
     <div class="grid-2">
         <div class="form-group">
             <label for="personas">Número de Personas:</label>
@@ -221,33 +223,35 @@
         Total de completos a preparar: <span id="totalCompletos">20</span> unidades
     </div>
 
+    <!-- Tabla de resultados -->
     <div class="section-title">Ingredientes sugeridos para comprar</div>
     <table>
         <thead>
             <tr>
                 <th>Ingrediente</th>
-                <th>Cantidad Total Necesaria</th>
+                <th>Cantidad Total Ajustada</th>
             </tr>
         </thead>
         <tbody id="tablaResultados">
-            </tbody>
+            <!-- Se genera dinámicamente con JS -->
+        </tbody>
     </table>
 
     <div class="footnote">
-        * <strong>Nota de Merma Logística:</strong> El peso indicado para la <strong>Palta</strong> ya contempla el 30% extra que se pierde en el cuesco y la cáscara. El <strong>Tomate</strong> incluye un 15% adicional por el jugo que drena al picarlo. Compra los kilos netos indicados en la tabla para no quedarte corto en la mesa.
+        * <strong>Nota de Merma Optimizada:</strong> Se redujo el margen de error. La palta ahora considera solo un 15% extra (cuesco pequeño/mediano) y los ingredientes secos/embutidos un 2% por seguridad en el manejo.
     </div>
 </div>
 
 <script>
-    // Configuración base de ingredientes (gramos/unidades netos por un completo y su factor de merma)
+    // Configuración optimizada con mermas más bajas para uso doméstico controlado
     const ingredientesBase = {
-        pan:      { nombre: "Pan de mesa (unidades)", porUnidad: 1,   esPeso: false, merma: 1.05 },
+        pan:      { nombre: "Pan de mesa (unidades)", porUnidad: 1,   esPeso: false, merma: 1.02 },
         vienesa:  { nombre: "Vienesa (unidades)",     porUnidad: 1,   esPeso: false, merma: 1.02 },
-        tomate:   { nombre: "Tomate (entero para picar)", porUnidad: 65,  esPeso: true,  merma: 1.15 },
-        palta:    { nombre: "Palta Hass (entera con cuesco)", porUnidad: 55,  esPeso: true,  merma: 1.30 },
-        mayo:     { nombre: "Mayonesa",               porUnidad: 30,  esPeso: true,  merma: 1.05 },
-        chucrut:  { nombre: "Chucrut",                porUnidad: 25,  esPeso: true,  merma: 1.05 },
-        americana:{ nombre: "Salsa Americana",         porUnidad: 20,  esPeso: true,  merma: 1.05 }
+        tomate:   { nombre: "Tomate (entero para picar)", porUnidad: 65,  esPeso: true,  merma: 1.05 },
+        palta:    { nombre: "Palta Hass (entera con cuesco)", porUnidad: 55,  esPeso: true,  merma: 1.15 },
+        mayo:     { nombre: "Mayonesa",               porUnidad: 30,  esPeso: true,  merma: 1.02 },
+        chucrut:  { nombre: "Chucrut",                porUnidad: 25,  esPeso: true,  merma: 1.02 },
+        americana:{ nombre: "Salsa Americana",         porUnidad: 20,  esPeso: true,  merma: 1.02 }
     };
 
     function calcular() {
@@ -259,7 +263,6 @@
 
         const tipo = document.querySelector('input[name="tipoCompleto"]:checked').value;
         
-        // Determinar qué ingredientes se muestran según la selección
         let listaMostrar = ["pan", "vienesa", "tomate", "palta", "mayo"];
         if (tipo === "completo") {
             listaMostrar.push("chucrut", "americana");
@@ -275,7 +278,6 @@
 
             if (ing.esPeso) {
                 let kg = cantidadFinal / 1000;
-                // Si es menos de 1kg, mostrar gramos para mayor precisión, sino mostrar KG
                 if (kg < 1) {
                     textoCantidad = `${Math.ceil(cantidadFinal)} gramos`;
                 } else {
@@ -294,7 +296,6 @@
         });
     }
 
-    // Inicializar al cargar la página
     window.onload = calcular;
 </script>
 
