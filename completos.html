@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Completos Chilenos - Logística</title>
+    <style>
+        :root {
+            --italian-green: #2E7D32;
+            --italian-red: #C62828;
+            --italian-white: #FFF8E1;
+            --dark-text: #263238;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f7;
+            color: var(--dark-text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            padding: 25px;
+            max-width: 600px;
+            width: 100%;
+            border-top: 8px solid var(--italian-green);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 3px double var(--italian-red);
+            padding-bottom: 15px;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: var(--italian-red);
+            font-size: 28px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            margin: 5px 0 0 0;
+            font-style: italic;
+            color: #546E7A;
+        }
+
+        .section-title {
+            font-size: 18px;
+            color: var(--italian-green);
+            border-left: 4px solid var(--italian-green);
+            padding-left: 8px;
+            margin-top: 20px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #CFD8DC;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 15px;
+            transition: border-color 0.2s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--italian-green);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .radio-tile-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .radio-tile {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            border: 2px solid #CFD8DC;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            background-color: white;
+        }
+
+        input[type="radio"] {
+            display: none;
+        }
+
+        input[type="radio"]:checked + .radio-tile {
+            background-color: var(--italian-white);
+            border-color: var(--italian-red);
+            color: var(--italian-red);
+        }
+
+        .summary-box {
+            background-color: #ECEFF1;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            border: 1px solid #CFD8DC;
+        }
+
+        .summary-box span {
+            color: var(--italian-red);
+            font-size: 22px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th {
+            background-color: var(--italian-green);
+            color: white;
+            text-align: left;
+            padding: 12px;
+            font-size: 15px;
+        }
+
+        th:last-child, td:last-child {
+            text-align: right;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #CFD8DC;
+            font-size: 15px;
+        }
+
+        .ing-name {
+            font-weight: 600;
+        }
+
+        .qty-badge {
+            background-color: #E8F5E9;
+            color: var(--italian-green);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+
+        .footnote {
+            font-size: 11px;
+            color: #78909C;
+            margin-top: 20px;
+            line-height: 1.4;
+            border-top: 1px dashed #CFD8DC;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Lista de Compras de Completos</h1>
+        <p>Cantidades exactas ajustadas por merma real de preparación</p>
+    </div>
+
+    <label>Selecciona el estilo:</label>
+    <div class="radio-tile-group">
+        <label style="flex:1;">
+            <input type="radio" name="tipoCompleto" value="italiano" checked onchange="calcular()">
+            <div class="radio-tile">Italiano</div>
+        </label>
+        <label style="flex:1;">
+            <input type="radio" name="tipoCompleto" value="completo" onchange="calcular()">
+            <div class="radio-tile">Dinámico (Con Chucrut)</div>
+        </label>
+    </div>
+
+    <div class="grid-2">
+        <div class="form-group">
+            <label for="personas">Número de Personas:</label>
+            <input type="number" id="personas" value="10" min="1" max="500" oninput="calcular()">
+        </div>
+        <div class="form-group">
+            <label for="ratio">Completos por Persona:</label>
+            <input type="number" id="ratio" value="2" min="1" max="10" step="0.5" oninput="calcular()">
+        </div>
+    </div>
+
+    <div class="summary-box">
+        Total de completos a preparar: <span id="totalCompletos">20</span> unidades
+    </div>
+
+    <div class="section-title">Ingredientes sugeridos para comprar</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Ingrediente</th>
+                <th>Cantidad Total Necesaria</th>
+            </tr>
+        </thead>
+        <tbody id="tablaResultados">
+            </tbody>
+    </table>
+
+    <div class="footnote">
+        * <strong>Nota de Merma Logística:</strong> El peso indicado para la <strong>Palta</strong> ya contempla el 30% extra que se pierde en el cuesco y la cáscara. El <strong>Tomate</strong> incluye un 15% adicional por el jugo que drena al picarlo. Compra los kilos netos indicados en la tabla para no quedarte corto en la mesa.
+    </div>
+</div>
+
+<script>
+    // Configuración base de ingredientes (gramos/unidades netos por un completo y su factor de merma)
+    const ingredientesBase = {
+        pan:      { nombre: "Pan de mesa (unidades)", porUnidad: 1,   esPeso: false, merma: 1.05 },
+        vienesa:  { nombre: "Vienesa (unidades)",     porUnidad: 1,   esPeso: false, merma: 1.02 },
+        tomate:   { nombre: "Tomate (entero para picar)", porUnidad: 65,  esPeso: true,  merma: 1.15 },
+        palta:    { nombre: "Palta Hass (entera con cuesco)", porUnidad: 55,  esPeso: true,  merma: 1.30 },
+        mayo:     { nombre: "Mayonesa",               porUnidad: 30,  esPeso: true,  merma: 1.05 },
+        chucrut:  { nombre: "Chucrut",                porUnidad: 25,  esPeso: true,  merma: 1.05 },
+        americana:{ nombre: "Salsa Americana",         porUnidad: 20,  esPeso: true,  merma: 1.05 }
+    };
+
+    function calcular() {
+        const personas = parseFloat(document.getElementById('personas').value) || 0;
+        const ratio = parseFloat(document.getElementById('ratio').value) || 0;
+        const totalCompletos = Math.ceil(personas * ratio);
+        
+        document.getElementById('totalCompletos').innerText = totalCompletos;
+
+        const tipo = document.querySelector('input[name="tipoCompleto"]:checked').value;
+        
+        // Determinar qué ingredientes se muestran según la selección
+        let listaMostrar = ["pan", "vienesa", "tomate", "palta", "mayo"];
+        if (tipo === "completo") {
+            listaMostrar.push("chucrut", "americana");
+        }
+
+        const tbody = document.getElementById('tablaResultados');
+        tbody.innerHTML = "";
+
+        listaMostrar.forEach(key => {
+            const ing = ingredientesBase[key];
+            let cantidadFinal = totalCompletos * ing.porUnidad * ing.merma;
+            let textoCantidad = "";
+
+            if (ing.esPeso) {
+                let kg = cantidadFinal / 1000;
+                // Si es menos de 1kg, mostrar gramos para mayor precisión, sino mostrar KG
+                if (kg < 1) {
+                    textoCantidad = `${Math.ceil(cantidadFinal)} gramos`;
+                } else {
+                    textoCantidad = `${kg.toFixed(2)} kg`;
+                }
+            } else {
+                textoCantidad = `${Math.ceil(cantidadFinal)} unidades`;
+            }
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="ing-name">${ing.nombre}</td>
+                <td><span class="qty-badge">${textoCantidad}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Inicializar al cargar la página
+    window.onload = calcular;
+</script>
+
+</body>
+</html>
