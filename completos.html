@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Completos - Compra Precisa</title>
+    <title>Calculadora de Completos</title>
     <style>
         :root {
             --italian-green: #2E7D32;
@@ -25,7 +25,7 @@
 
         .container {
             background-color: white;
-            border-radius: 16px;
+            border-radius: 12px;
             box-shadow: var(--shadow);
             padding: 25px;
             max-width: 650px;
@@ -43,7 +43,7 @@
         .header h1 {
             margin: 0;
             color: var(--italian-red);
-            font-size: 28px;
+            font-size: 26px;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
@@ -73,7 +73,7 @@
             width: 100%;
             padding: 10px;
             border: 2px solid #CFD8DC;
-            border-radius: 8px;
+            border-radius: 6px;
             box-sizing: border-box;
             font-size: 15px;
         }
@@ -95,7 +95,7 @@
             text-align: center;
             padding: 12px;
             border: 2px solid #CFD8DC;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
             transition: all 0.2s;
@@ -115,7 +115,7 @@
         .summary-box {
             background-color: #ECEFF1;
             padding: 15px;
-            border-radius: 8px;
+            border-radius: 6px;
             text-align: center;
             font-size: 18px;
             font-weight: bold;
@@ -132,6 +132,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
+            margin-bottom: 25px;
         }
 
         th {
@@ -170,18 +171,26 @@
             background-color: #E8F5E9;
             color: var(--italian-green);
             padding: 4px 10px;
-            border-radius: 6px;
+            border-radius: 4px;
             font-weight: bold;
             display: inline-block;
         }
 
-        /* Sección de Secretos */
+        /* Diseño del bloque de secretos reubicado */
         .secrets-container {
-            background-color: var(--italian-white);
-            border: 1px solid #FFE082;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 20px;
+            background-color: #FFF3E0;
+            border-left: 5px solid #FF9800;
+            border-radius: 0 6px 6px 0;
+            padding: 15px 20px;
+            margin-top: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .secrets-container h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: #E65100;
+            font-size: 16px;
         }
 
         .secrets-list {
@@ -189,23 +198,15 @@
             padding-left: 20px;
             font-size: 13.5px;
             line-height: 1.6;
+            color: #3E2723;
         }
 
         .secrets-list li {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .secrets-list strong {
             color: var(--italian-red);
-        }
-
-        .footnote {
-            font-size: 11px;
-            color: #78909C;
-            margin-top: 20px;
-            line-height: 1.4;
-            border-top: 1px dashed #CFD8DC;
-            padding-top: 15px;
         }
     </style>
 </head>
@@ -213,12 +214,11 @@
 
 <div class="container">
     <div class="header">
-        <h1>Lista de Compras de Completos</h1>
-        <p>Pan y vienesas exactos • Peso con 5% de merma</p>
+        <h1>Cantidades Exactas</h1>
     </div>
 
-    <!-- Tipo de Completo -->
-    <label>Selecciona el estilo:</label>
+    <!-- Controles -->
+    <label>Variante a preparar:</label>
     <div class="radio-tile-group">
         <label style="flex:1;">
             <input type="radio" name="tipoCompleto" value="italiano" checked onchange="calcular()">
@@ -226,61 +226,53 @@
         </label>
         <label style="flex:1;">
             <input type="radio" name="tipoCompleto" value="completo" onchange="calcular()">
-            <div class="radio-tile">Dinámico (Con Chucrut)</div>
+            <div class="radio-tile">Dinámico</div>
         </label>
     </div>
 
-    <!-- Parámetros de personas -->
     <div class="grid-2">
         <div class="form-group">
-            <label for="personas">Número de Personas:</label>
+            <label for="personas">Personas en total:</label>
             <input type="number" id="personas" value="10" min="1" max="500" oninput="calcular()">
         </div>
         <div class="form-group">
-            <label for="ratio">Completos por Persona:</label>
+            <label for="ratio">Completos por individuo:</label>
             <input type="number" id="ratio" value="2" min="1" max="10" step="0.5" oninput="calcular()">
         </div>
     </div>
 
     <div class="summary-box">
-        Total de completos a preparar: <span id="totalCompletos">20</span> unidades
+        Producción objetivo: <span id="totalCompletos">20</span> unidades
     </div>
 
-    <!-- Tabla de resultados -->
-    <div class="section-title">Planificación de Compra</div>
+    <!-- Tabla -->
     <table>
         <thead>
             <tr>
                 <th>Ingrediente</th>
-                <th>Valor Real Neto</th>
-                <th>Sugerencia para el Almacén</th>
+                <th>Requisito Técnico</th>
+                <th>Formato de Compra</th>
             </tr>
         </thead>
-        <tbody id="tablaResultados">
-            <!-- Se genera dinámicamente con JS -->
-        </tbody>
+        <tbody id="tablaResultados"></tbody>
     </table>
 
-    <!-- Bloque de Secretos de la receta -->
-    <div class="section-title">Secretos de la Receta (Fuente de Soda)</div>
+    <!-- Bloque de Secretos de la receta, anclado bajo la tabla -->
     <div class="secrets-container">
+        <h3>Técnica de Fuente de Soda (Secretos del Armado)</h3>
         <ul class="secrets-list">
-            <li><strong>El vapor es el secreto del pan:</strong> Nunca uses tostador ni microondas. Calienta los panes abiertos boca abajo al vapor sobre la olla de las vienesas por un par de minutos para que queden increíblemente blandos pero firmes.</li>
-            <li><strong>El templado de la vienesa:</strong> No dejes que hiervan a borbotones porque se revientan. Caliéntalas en agua a fuego mínimo (sub-ebullición) para mantenerlas tensas y jugosas.</li>
-            <li><strong>El estrujado del tomate:</strong> Deja escurrir el tomate picado en un colador unos 15 minutos antes de armar. Sazónalo con sal y un toque de aceite justo antes de servir para que no suelte más agua en el pan.</li>
-            <li><strong>Palta con identidad:</strong> Muele la palta con tenedor dejando pequeños tropezones para dar textura. Solo lleva sal. Unas gotas de limón evitarán que se oxide rápido.</li>
-            <li><strong>Ingeniería del armado:</strong> El tomate va pegado a la vienesa caliente; luego la palta actúa como capa aislante y la mayonesa sella todo arriba de punta a punta.</li>
+            <li><strong>Manejo Térmico del Pan:</strong> Prohibido el tostador. El pan se calienta al vapor sobre la misma olla de las salchichas. Queda estructuralmente firme pero suave al tacto.</li>
+            <li><strong>Tensión de la Vienesa:</strong> Si el agua hierve fuerte, el embutido colapsa y se revienta. Debe mantenerse a punto de ebullición (fuego mínimo) para conservar los jugos.</li>
+            <li><strong>Deshidratación del Tomate:</strong> Pícalo fino (concassé) y déjalo en un colador por 15 minutos. Alíñalo al último segundo. Si lo alineas antes, su jugo destruirá la base del pan.</li>
+            <li><strong>Textura de la Palta:</strong> Muele con tenedor, no la proceses hasta hacerla agua. Necesita trozos pequeños para mantener volumen. Cero aceite, solo sal y limón para evitar la oxidación.</li>
+            <li><strong>Orden Estructural:</strong> Tomate en contacto con la salchicha (el calor potencia el sabor), palta como barrera impermeabilizante y mayonesa como sello superior de borde a borde.</li>
         </ul>
-    </div>
-
-    <div class="footnote">
-        * <strong>Nota de cálculo:</strong> El pan de mesa y las vienesas se calculan de forma exacta (sin merma). Los ingredientes por peso (Kg) incluyen una merma estricta del 5% y se aproximan comercialmente a múltiplos de 250 gramos para facilitar la compra en la balanza.
     </div>
 </div>
 
 <script>
-    // Ajuste: merma 1.00 para pan y vienesas (exactos), 1.05 para lo demás por peso
-    const ingredientesBase = {
+    // Configuración estricta: 1.00 para enteros, 1.05 para pesos
+    const ingredientes = {
         pan:      { nombre: "Pan de mesa",             porUnidad: 1,   esPeso: false, merma: 1.00 },
         vienesa:  { nombre: "Vienesa",                 porUnidad: 1,   esPeso: false, merma: 1.00 },
         tomate:   { nombre: "Tomate",                  porUnidad: 65,  esPeso: true,  merma: 1.05 },
@@ -290,14 +282,14 @@
         americana:{ nombre: "Salsa Americana",         porUnidad: 20,  esPeso: true,  merma: 1.05 }
     };
 
-    function aproximarComercial(kg) {
-        if (kg <= 0.25) return "1 envase chico (250g)";
-        if (kg <= 0.50) return "0.50 kg (Medio kilo)";
-        if (kg <= 0.75) return "0.75 kg";
+    function redondearComercial(kg) {
+        if (kg <= 0.25) return "250g (1/4 kg)";
+        if (kg <= 0.50) return "500g (1/2 kg)";
+        if (kg <= 0.75) return "750g (3/4 kg)";
         
         let entero = Math.floor(kg);
         let residuo = kg - entero;
-        if (residuo === 0) return `${entero} kg`;
+        if (residuo === 0) return `${entero} kg exactos`;
         if (residuo <= 0.25) return `${entero}.25 kg`;
         if (residuo <= 0.50) return `${entero}.50 kg`;
         if (residuo <= 0.75) return `${entero}.75 kg`;
@@ -305,44 +297,43 @@
     }
 
     function calcular() {
-        const personas = parseFloat(document.getElementById('personas').value) || 0;
-        const ratio = parseFloat(document.getElementById('ratio').value) || 0;
-        const totalCompletos = Math.ceil(personas * ratio);
+        const p = parseFloat(document.getElementById('personas').value) || 0;
+        const r = parseFloat(document.getElementById('ratio').value) || 0;
+        const objetivo = Math.ceil(p * r);
         
-        document.getElementById('totalCompletos').innerText = totalCompletos;
+        document.getElementById('totalCompletos').innerText = objetivo;
 
         const tipo = document.querySelector('input[name="tipoCompleto"]:checked').value;
-        
-        let listaMostrar = ["pan", "vienesa", "tomate", "palta", "mayo"];
-        if (tipo === "completo") {
-            listaMostrar.push("chucrut", "americana");
-        }
+        const lista = ["pan", "vienesa", "tomate", "palta", "mayo"];
+        if (tipo === "completo") lista.push("chucrut", "americana");
 
         const tbody = document.getElementById('tablaResultados');
         tbody.innerHTML = "";
 
-        listaMostrar.forEach(key => {
-            const ing = ingredientesBase[key];
-            let cantidadFinal = totalCompletos * ing.porUnidad * ing.merma;
+        lista.forEach(id => {
+            const ing = ingredientes[id];
+            const mathBruto = objetivo * ing.porUnidad * ing.merma;
             
-            let textoReal = "";
-            let textoAproximado = "";
+            let valReal = "";
+            let valAprox = "";
 
             if (ing.esPeso) {
-                let kg = cantidadFinal / 1000;
-                textoReal = `${kg.toFixed(3)} kg`;
-                textoAproximado = aproximarComercial(kg);
+                // Cálculo de pesaje con tolerancia de merma
+                let kg = mathBruto / 1000;
+                valReal = `${kg.toFixed(3)} kg`;
+                valAprox = redondearComercial(kg);
             } else {
-                let unidades = Math.ceil(cantidadFinal);
-                textoReal = `${unidades} un`;
-                textoAproximado = `${unidades} unidades`;
+                // Lógica cruda para enteros irreductibles (cero merma)
+                let enteroExacto = Math.round(mathBruto);
+                valReal = `${enteroExacto} un`;
+                valAprox = `${enteroExacto} unidades`;
             }
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="ing-name">${ing.nombre}</td>
-                <td class="qty-real">${textoReal}</td>
-                <td><span class="qty-badge">${textoAproximado}</span></td>
+                <td class="qty-real">${valReal}</td>
+                <td><span class="qty-badge">${valAprox}</span></td>
             `;
             tbody.appendChild(tr);
         });
