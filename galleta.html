@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sabiduría del Mundo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:    #c9a84c;
+      --gold-lt: #f0d080;
+      --cream:   #fdf6e3;
+      --ink:     #1a0f00;
+      --shadow:  rgba(0,0,0,.55);
+    }
+
+    body {
+      min-height: 100vh;
+      background: #0d0800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cormorant Garamond', serif;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── starfield ── */
+    .stars {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    }
+    .star {
+      position: absolute;
+      background: #fff;
+      border-radius: 50%;
+      animation: twinkle var(--dur, 3s) ease-in-out infinite var(--del, 0s);
+    }
+    @keyframes twinkle {
+      0%,100% { opacity: .15; transform: scale(1); }
+      50%      { opacity: .9;  transform: scale(1.4); }
+    }
+
+    /* ── smoke wisps ── */
+    .smoke-wrap {
+      position: fixed; inset: 0; pointer-events: none; z-index: 1;
+    }
+    .wsp {
+      position: absolute;
+      bottom: -80px;
+      width: 160px; height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center, rgba(201,168,76,.07) 0%, transparent 70%);
+      animation: rise var(--rd, 8s) ease-in-out infinite var(--rdel, 0s);
+    }
+    @keyframes rise {
+      0%   { transform: translateY(0) scaleX(1)  rotate(0deg);   opacity: 0; }
+      20%  { opacity: 1; }
+      80%  { opacity: .4; }
+      100% { transform: translateY(-110vh) scaleX(1.6) rotate(20deg); opacity: 0; }
+    }
+
+    /* ── card ── */
+    .card {
+      position: relative; z-index: 10;
+      width: min(480px, 94vw);
+      padding: 48px 40px 52px;
+      border: 1px solid rgba(201,168,76,.35);
+      background: linear-gradient(160deg, #1a0f00 0%, #0d0800 60%, #160c00 100%);
+      border-radius: 4px;
+      box-shadow:
+        0 0 0 1px rgba(201,168,76,.08),
+        0 0 60px rgba(201,168,76,.12),
+        0 30px 80px rgba(0,0,0,.8);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 36px;
+    }
+
+    /* corner ornaments */
+    .card::before, .card::after {
+      content: '✦';
+      position: absolute;
+      font-size: 11px;
+      color: var(--gold);
+      opacity: .45;
+    }
+    .card::before { top: 14px; left: 18px; }
+    .card::after  { bottom: 14px; right: 18px; }
+
+    /* ── title ── */
+    .title-wrap { text-align: center; }
+    .title-wrap h1 {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(1rem, 4vw, 1.35rem);
+      letter-spacing: .12em;
+      color: var(--gold);
+      text-shadow: 0 0 20px rgba(201,168,76,.5);
+      line-height: 1.4;
+    }
+    .divider {
+      margin: 12px auto 0;
+      width: 80px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    /* ── cookie illustration ── */
+    .cookie-stage {
+      position: relative;
+      width: 160px; height: 160px;
+      cursor: pointer;
+      perspective: 600px;
+    }
+    .cookie-stage:hover .cookie-svg { filter: drop-shadow(0 0 22px rgba(240,208,128,.55)); }
+    .cookie-svg {
+      width: 160px; height: 160px;
+      transition: filter .3s;
+      transform-style: preserve-3d;
+    }
+
+    /* crack animation */
+    .crack-line {
+      opacity: 0;
+      transform-origin: center;
+      transition: opacity .3s;
+    }
+    .opened .crack-line { opacity: 1; }
+
+    /* float idle */
+    .cookie-stage:not(.cracking):not(.opened) .cookie-svg {
+      animation: float 4s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%,100% { transform: translateY(0) rotate(-2deg); }
+      50%      { transform: translateY(-10px) rotate(2deg); }
+    }
+
+    /* crack shake */
+    .cracking .cookie-svg {
+      animation: shake .55s ease-in-out forwards;
+    }
+    @keyframes shake {
+      0%   { transform: rotate(0); }
+      20%  { transform: rotate(-8deg) scale(1.05); }
+      40%  { transform: rotate(8deg)  scale(1.08); }
+      60%  { transform: rotate(-5deg) scale(1.06); }
+      80%  { transform: rotate(4deg)  scale(1.04); }
+      100% { transform: rotate(0)     scale(1); }
+    }
+
+    /* open split */
+    .half-top, .half-bot {
+      transform-origin: center;
+      transition: transform .6s cubic-bezier(.34,1.56,.64,1);
+    }
+    .opened .half-top { transform: translateY(-14px) rotate(-12deg); }
+    .opened .half-bot { transform: translateY(14px)  rotate(12deg); }
+
+    /* glow pulse when open */
+    .opened .cookie-svg {
+      animation: glow-pulse 2.5s ease-in-out infinite !important;
+    }
+    @keyframes glow-pulse {
+      0%,100% { filter: drop-shadow(0 0 12px rgba(240,208,128,.4)); }
+      50%      { filter: drop-shadow(0 0 30px rgba(240,208,128,.8)); }
+    }
+
+    /* ── message scroll ── */
+    .scroll-wrap {
+      width: 100%;
+      min-height: 88px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .paper {
+      position: relative;
+      background: var(--cream);
+      border-radius: 2px;
+      padding: 20px 24px;
+      width: 100%;
+      box-shadow: 0 2px 16px rgba(0,0,0,.45), inset 0 0 30px rgba(201,168,76,.06);
+      border-top: 1px solid rgba(201,168,76,.3);
+      border-bottom: 1px solid rgba(201,168,76,.3);
+      opacity: 0;
+      transform: scaleY(.3) translateY(10px);
+      transition: opacity .5s ease, transform .5s cubic-bezier(.34,1.56,.64,1);
+    }
+    .paper.visible {
+      opacity: 1;
+      transform: scaleY(1) translateY(0);
+    }
+    .paper-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: clamp(1rem, 3.2vw, 1.18rem);
+      color: var(--ink);
+      line-height: 1.65;
+      text-align: center;
+      letter-spacing: .02em;
+    }
+    .paper-symbol {
+      font-size: 1.5rem;
+      text-align: center;
+      margin-bottom: 10px;
+      opacity: .75;
+      color: var(--ink);
+    }
+    .paper-meta {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      border-top: 1px solid rgba(26,15,0,.15);
+      padding-top: 10px;
+    }
+    .paper-source {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: .82rem;
+      color: rgba(26,15,0,.65);
+      letter-spacing: .02em;
+      text-align: center;
+    }
+    .paper-tradition {
+      display: inline-block;
+      font-family: 'Cormorant Garamond', serif;
+      font-style: normal;
+      font-size: .68rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #fff;
+      background: var(--ink);
+      padding: 2px 10px;
+      border-radius: 20px;
+      opacity: .7;
+      margin-top: 4px;
+    }
+    .paper-num {
+      position: absolute;
+      bottom: 6px; right: 10px;
+      font-size: .62rem;
+      color: rgba(26,15,0,.35);
+      font-style: normal;
+      letter-spacing: .06em;
+    }
+    .placeholder {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      color: rgba(201,168,76,.35);
+      font-size: 1rem;
+      letter-spacing: .08em;
+      text-align: center;
+    }
+
+    /* ── button ── */
+    .btn-wrap { width: 100%; }
+    .btn {
+      width: 100%;
+      padding: 15px 0;
+      background: transparent;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-family: 'Cinzel Decorative', serif;
+      font-size: .7rem;
+      letter-spacing: .22em;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: color .3s, border-color .3s;
+      border-radius: 2px;
+    }
+    .btn::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(201,168,76,.15), transparent);
+      transform: translateX(-100%);
+      transition: transform .5s ease;
+    }
+    .btn:hover::before { transform: translateX(100%); }
+    .btn:hover {
+      color: var(--gold-lt);
+      border-color: var(--gold-lt);
+      box-shadow: 0 0 20px rgba(201,168,76,.2);
+    }
+    .btn:active { transform: scale(.98); }
+    .btn:disabled { opacity: .4; cursor: default; }
+
+    /* ── particles ── */
+    .particle {
+      position: fixed;
+      pointer-events: none;
+      border-radius: 50%;
+      z-index: 20;
+      animation: burst var(--dur,1s) ease-out forwards;
+    }
+    @keyframes burst {
+      0%   { opacity: 1; transform: translate(0,0) scale(1); }
+      100% { opacity: 0; transform: translate(var(--tx),var(--ty)) scale(0); }
+    }
+
+    /* ── counter ── */
+    .counter {
+      font-size: .68rem;
+      letter-spacing: .1em;
+      color: rgba(201,168,76,.4);
+      text-align: center;
+      margin-top: -24px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- starfield -->
+<div class="stars" id="stars"></div>
+
+<!-- smoke -->
+<div class="smoke-wrap" id="smoke"></div>
+
+<!-- card -->
+<div class="card">
+  <div class="title-wrap">
+    <h1>Sabiduría<br>del Mundo</h1>
+    <div class="divider"></div>
+  </div>
+
+  <!-- cookie -->
+  <div class="cookie-stage" id="stage" title="Haz clic para abrir tu fortuna">
+    <svg class="cookie-svg" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="cookieGrad" cx="40%" cy="35%">
+          <stop offset="0%"   stop-color="#e8c87a"/>
+          <stop offset="55%"  stop-color="#c9913a"/>
+          <stop offset="100%" stop-color="#8b5a1a"/>
+        </radialGradient>
+        <radialGradient id="shimmer" cx="35%" cy="30%">
+          <stop offset="0%"  stop-color="#fff" stop-opacity=".22"/>
+          <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="2.5"/>
+        </filter>
+      </defs>
+
+      <!-- shadow -->
+      <ellipse cx="80" cy="148" rx="48" ry="8" fill="#000" opacity=".35" filter="url(#soft)"/>
+
+      <!-- top half -->
+      <g class="half-top">
+        <path d="M28 80 C20 60 22 38 40 26 C54 16 70 14 80 14 C90 14 106 16 120 26 C138 38 140 60 132 80 Z"
+              fill="url(#cookieGrad)" stroke="#a06820" stroke-width="1"/>
+        <path d="M28 80 C20 60 22 38 40 26 C54 16 70 14 80 14 C90 14 106 16 120 26 C138 38 140 60 132 80 Z"
+              fill="url(#shimmer)"/>
+        <!-- dots decoration -->
+        <circle cx="58" cy="42" r="3.5" fill="#a06820" opacity=".6"/>
+        <circle cx="80" cy="34" r="2.5" fill="#a06820" opacity=".5"/>
+        <circle cx="102" cy="42" r="3"  fill="#a06820" opacity=".6"/>
+        <circle cx="70"  cy="58" r="2"  fill="#a06820" opacity=".4"/>
+        <circle cx="92"  cy="55" r="2.5" fill="#a06820" opacity=".45"/>
+      </g>
+
+      <!-- bottom half -->
+      <g class="half-bot">
+        <path d="M28 80 C20 100 22 122 40 134 C54 144 70 146 80 146 C90 146 106 144 120 134 C138 122 140 100 132 80 Z"
+              fill="url(#cookieGrad)" stroke="#a06820" stroke-width="1"/>
+        <path d="M28 80 C20 100 22 122 40 134 C54 144 70 146 80 146 C90 146 106 144 120 134 C138 122 140 100 132 80 Z"
+              fill="url(#shimmer)"/>
+        <circle cx="58"  cy="118" r="3.5" fill="#a06820" opacity=".6"/>
+        <circle cx="80"  cy="126" r="2.5" fill="#a06820" opacity=".5"/>
+        <circle cx="102" cy="118" r="3"   fill="#a06820" opacity=".6"/>
+        <circle cx="70"  cy="104" r="2"   fill="#a06820" opacity=".4"/>
+        <circle cx="92"  cy="106" r="2.5" fill="#a06820" opacity=".45"/>
+      </g>
+
+      <!-- crack line (visible when opened) -->
+      <line class="crack-line" x1="28" y1="80" x2="132" y2="80"
+            stroke="#7a4410" stroke-width="2" stroke-dasharray="4 3" opacity=".8"/>
+    </svg>
+  </div>
+
+  <!-- message -->
+  <div class="scroll-wrap" id="scrollWrap">
+    <p class="placeholder" id="placeholder">~ toca el sello para revelar ~</p>
+    <div class="paper" id="paper">
+      <p class="paper-symbol" id="paperSymbol"></p>
+      <p class="paper-text" id="paperText"></p>
+      <div class="paper-meta">
+        <span class="paper-source" id="paperSource"></span>
+        <span class="paper-tradition" id="paperTradition"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- button -->
+  <div class="btn-wrap">
+    <button class="btn" id="btn" onclick="openFortune()">✦ &nbsp; Revelar una Reflexión &nbsp; ✦</button>
+  </div>
+
+  <p class="counter" id="counter"></p>
+</div>
+
+<script>
+const fortunes = [
+  {
+    text: "Tres cosas no pueden ocultarse por mucho tiempo: el sol, la luna y la verdad.",
+    source: "Buda Gautama",
+    tradition: "Budismo",
+    symbol: "☸"
+  },
+  {
+    text: "No hagas a los demás lo que no quieres que te hagan a ti. Esa es toda la enseñanza; el resto es solo comentario.",
+    source: "Hillel el Anciano",
+    tradition: "Judaísmo",
+    symbol: "✡"
+  },
+  {
+    text: "El que se conoce a sí mismo conoce a su Señor.",
+    source: "Hadith atribuido al Profeta Muhammad",
+    tradition: "Islam",
+    symbol: "☽"
+  },
+  {
+    text: "Actúa de tal manera que tu acción pueda convertirse en ley universal.",
+    source: "Immanuel Kant",
+    tradition: "Filosofía Occidental",
+    symbol: "⚖"
+  },
+  {
+    text: "El Tao que puede nombrarse no es el Tao eterno. El nombre que puede pronunciarse no es el nombre eterno.",
+    source: "Lao Tse — Tao Te Ching",
+    tradition: "Taoísmo",
+    symbol: "☯"
+  },
+  {
+    text: "El Atman que mora en el corazón es más pequeño que un grano de arroz, y sin embargo más grande que todos los cielos.",
+    source: "Chandogya Upanishad",
+    tradition: "Hinduismo",
+    symbol: "🕉"
+  },
+  {
+    text: "No es la muerte lo que un hombre debería temer, sino el nunca haber empezado a vivir.",
+    source: "Marco Aurelio — Meditaciones",
+    tradition: "Estoicismo",
+    symbol: "🏛"
+  },
+  {
+    text: "Cuando amas, no digas 'Dios está en mi corazón', sino 'yo estoy en el corazón de Dios'.",
+    source: "Khalil Gibran — El Profeta",
+    tradition: "Misticismo",
+    symbol: "✦"
+  },
+  {
+    text: "Aprende como si fueras a vivir para siempre; vive como si fueras a morir mañana.",
+    source: "Mahatma Gandhi",
+    tradition: "Filosofía Jainista / Hindu",
+    symbol: "🪷"
+  },
+  {
+    text: "En el principio era el Verbo, y el Verbo estaba con Dios, y el Verbo era Dios.",
+    source: "Evangelio de Juan 1:1",
+    tradition: "Cristianismo",
+    symbol: "✝"
+  },
+  {
+    text: "El noble busca las causas en sí mismo; el hombre inferior las busca en los demás.",
+    source: "Confucio — Analectas",
+    tradition: "Confucianismo",
+    symbol: "⛩"
+  },
+  {
+    text: "¿Qué es el hombre para que te acuerdes de él? Lo has hecho poco menor que los ángeles y lo has coronado de gloria.",
+    source: "Salmo 8 — Tanaj / Biblia",
+    tradition: "Judaísmo / Cristianismo",
+    symbol: "✡"
+  },
+  {
+    text: "No existe ningún camino hacia la paz. La paz es el camino.",
+    source: "A. J. Muste",
+    tradition: "Cuaquerismo / Pacifismo",
+    symbol: "☮"
+  },
+  {
+    text: "La llama del amor arde más allá del razonamiento. Déjate quemar.",
+    source: "Rumi — Masnavi",
+    tradition: "Sufismo",
+    symbol: "☽"
+  },
+  {
+    text: "Shikata ga nai: lo que no puede evitarse debe ser aceptado con serenidad.",
+    source: "Proverbio Japonés",
+    tradition: "Zen / Shintoísmo",
+    symbol: "⛩"
+  },
+  {
+    text: "El universo es transformación; la vida es opinión.",
+    source: "Marco Aurelio — Meditaciones IV",
+    tradition: "Estoicismo",
+    symbol: "🏛"
+  },
+  {
+    text: "Asha — la verdad y el orden justo — es el fundamento sobre el que el cosmos existe.",
+    source: "Avesta — Gathas de Zaratustra",
+    tradition: "Zoroastrismo",
+    symbol: "🔥"
+  },
+  {
+    text: "El corazón tiene razones que la razón no comprende.",
+    source: "Blaise Pascal — Pensamientos",
+    tradition: "Filosofía Cristiana",
+    symbol: "✝"
+  },
+  {
+    text: "No soy ateniense ni griego, sino ciudadano del mundo.",
+    source: "Sócrates",
+    tradition: "Filosofía Griega",
+    symbol: "🏛"
+  },
+  {
+    text: "Quien experimenta la unidad de la vida ve su propio Ser en todos los seres y todos los seres en su propio Ser.",
+    source: "Bhagavad Gita VI.29",
+    tradition: "Hinduismo",
+    symbol: "🕉"
+  },
+  {
+    text: "La mejor jihad es la del hombre que lucha contra sí mismo.",
+    source: "Hadith — Abu Dawud",
+    tradition: "Islam",
+    symbol: "☽"
+  },
+  {
+    text: "Cuando meditas, te conviertes en lo que contemplas.",
+    source: "Upanishads",
+    tradition: "Hinduismo",
+    symbol: "🕉"
+  },
+  {
+    text: "No temas la impermanencia de todas las cosas. En el fluir reside la belleza.",
+    source: "Dogen Zenji",
+    tradition: "Budismo Zen",
+    symbol: "☸"
+  },
+  {
+    text: "El silencio es el lenguaje de Dios; todo lo demás es una traducción pobre.",
+    source: "Rumi",
+    tradition: "Sufismo",
+    symbol: "☽"
+  },
+  {
+    text: "Conocerse a uno mismo es el principio de toda sabiduría.",
+    source: "Aristóteles",
+    tradition: "Filosofía Griega",
+    symbol: "🏛"
+  },
+  {
+    text: "Tzedakah no es caridad: es justicia. Dar al necesitado no es un acto de bondad, sino de deber sagrado.",
+    source: "Talmud — Baba Bathra",
+    tradition: "Judaísmo",
+    symbol: "✡"
+  },
+  {
+    text: "Abandona el apego a los frutos de tus acciones y actúa solo porque así debe ser.",
+    source: "Bhagavad Gita II.47",
+    tradition: "Hinduismo",
+    symbol: "🕉"
+  },
+  {
+    text: "La tierra no nos pertenece; nosotros pertenecemos a la tierra.",
+    source: "Jefe Seattle — Carta al Presidente Pierce",
+    tradition: "Espiritualidad Indígena",
+    symbol: "🌿"
+  },
+  {
+    text: "Wu wei: al no hacer nada en contra de la naturaleza, nada queda sin hacerse.",
+    source: "Lao Tse — Tao Te Ching XLVIII",
+    tradition: "Taoísmo",
+    symbol: "☯"
+  },
+  {
+    text: "Amar y ser amado es sentir el sol desde ambos lados.",
+    source: "David Viscott",
+    tradition: "Filosofía Humanista",
+    symbol: "⚖"
+  },
+];
+
+let count = 0;
+let usedIndices = [];
+let isAnimating = false;
+
+function getNextIndex() {
+  if (usedIndices.length === fortunes.length) usedIndices = [];
+  let idx;
+  do { idx = Math.floor(Math.random() * fortunes.length); }
+  while (usedIndices.includes(idx));
+  usedIndices.push(idx);
+  return idx;
+}
+
+function spawnParticles(x, y) {
+  const colors = ['#c9a84c','#f0d080','#e8c87a','#fff8e1','#ffe082'];
+  for (let i = 0; i < 28; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = 3 + Math.random() * 5;
+    const angle = Math.random() * Math.PI * 2;
+    const dist  = 60 + Math.random() * 120;
+    p.style.cssText = `
+      width:${size}px; height:${size}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      left:${x}px; top:${y}px;
+      --tx:${Math.cos(angle)*dist}px;
+      --ty:${Math.sin(angle)*dist}px;
+      --dur:${.6 + Math.random()*.8}s;
+      box-shadow: 0 0 4px ${colors[0]};
+    `;
+    document.body.appendChild(p);
+    p.addEventListener('animationend', () => p.remove());
+  }
+}
+
+function openFortune() {
+  if (isAnimating) return;
+  isAnimating = true;
+
+  const stage   = document.getElementById('stage');
+  const paper   = document.getElementById('paper');
+  const paperText = document.getElementById('paperText');
+  const paperNum  = document.getElementById('paperNum');
+  const placeholder = document.getElementById('placeholder');
+  const btn     = document.getElementById('btn');
+  const counter = document.getElementById('counter');
+  btn.disabled  = true;
+
+  // reset paper
+  paper.classList.remove('visible');
+  stage.classList.remove('opened');
+
+  // crack shake
+  stage.classList.add('cracking');
+
+  setTimeout(() => {
+    stage.classList.remove('cracking');
+    stage.classList.add('opened');
+
+    // particles at cookie center
+    const rect = stage.getBoundingClientRect();
+    spawnParticles(rect.left + rect.width/2, rect.top + rect.height/2);
+
+    // pick fortune
+    count++;
+    const idx = getNextIndex();
+    const f   = fortunes[idx];
+    paperText.textContent      = f.text;
+    document.getElementById('paperSymbol').textContent    = f.symbol;
+    document.getElementById('paperSource').textContent    = '— ' + f.source;
+    document.getElementById('paperTradition').textContent = f.tradition;
+    counter.textContent = `Reflexión ${count} · ${f.tradition}`;
+
+    // hide placeholder, show paper
+    placeholder.style.display = 'none';
+    setTimeout(() => {
+      paper.classList.add('visible');
+      btn.disabled  = false;
+      isAnimating   = false;
+      btn.textContent = '✦   Otra Reflexión   ✦';
+    }, 300);
+  }, 620);
+}
+
+// ── generate stars ──────────────────────────────────────
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 120; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  const sz = .5 + Math.random() * 2;
+  s.style.cssText = `
+    width:${sz}px; height:${sz}px;
+    top:${Math.random()*100}%;
+    left:${Math.random()*100}%;
+    --dur:${2 + Math.random()*4}s;
+    --del:${-Math.random()*4}s;
+  `;
+  starsEl.appendChild(s);
+}
+
+// ── generate smoke wisps ────────────────────────────────
+const smokeEl = document.getElementById('smoke');
+for (let i = 0; i < 5; i++) {
+  const w = document.createElement('div');
+  w.className = 'wsp';
+  w.style.cssText = `
+    left:${10 + i*18}%;
+    --rd:${7 + Math.random()*6}s;
+    --rdel:${-Math.random()*8}s;
+  `;
+  smokeEl.appendChild(w);
+}
+</script>
+</body>
+</html>
