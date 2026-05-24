@@ -4,143 +4,147 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sabiduría del Mundo</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* ── Paleta alineada con el index ── */
     :root {
-      --gold:    #c9a84c;
-      --gold-lt: #f0d080;
-      --cream:   #fdf6e3;
-      --ink:     #1a0f00;
-      --shadow:  rgba(0,0,0,.55);
+      --gold:       #c9a84c;
+      --gold-lt:    #e8c870;
+      --gold-bright:#f5d980;
+      --gold-dark:  #8b6914;
+      --gold-glow:  rgba(201,168,76,.18);
+      --ivory:      #fdfbf7;
+      --marble:     #faf8f4;
+      --stone:      #ede5d0;
+      --ink:        #2a1f10;
+      --ink-soft:   #604e35;
+      --bronze:     #7a5820;
+      --bronze-rich:#5c3f0e;
+      --border-g:   rgba(201,168,76,.28);
+      --ff-title:   'Cinzel', 'Palatino Linotype', Palatino, serif;
+      --ff-body:    'Cormorant Garamond', Georgia, 'Times New Roman', serif;
     }
 
     body {
-      min-height: 100vh;
-      background: #0d0800;
+      background: var(--ivory);
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
-      font-family: 'Cormorant Garamond', serif;
-      overflow: hidden;
+      font-family: var(--ff-body);
+      color: var(--ink);
+      padding: 18px 12px 20px;
+      min-height: 100vh;
+      overflow-x: hidden;
       position: relative;
     }
 
-    /* ── starfield ── */
-    .stars {
+    /* Fondo parchment sutil */
+    body::before {
+      content: '';
       position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 70% 50% at 20% 0%,  rgba(201,168,76,.06) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 85% 100%, rgba(122,88,32,.05)  0%, transparent 50%);
     }
+
+    /* Partículas doradas sutiles tipo polvo */
+    .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
     .star {
       position: absolute;
-      background: #fff;
+      background: var(--gold);
       border-radius: 50%;
-      animation: twinkle var(--dur, 3s) ease-in-out infinite var(--del, 0s);
+      animation: twinkle var(--dur, 4s) ease-in-out infinite var(--del, 0s);
     }
     @keyframes twinkle {
-      0%,100% { opacity: .15; transform: scale(1); }
-      50%      { opacity: .9;  transform: scale(1.4); }
+      0%,100% { opacity: .04; transform: scale(1); }
+      50%      { opacity: .22; transform: scale(1.5); }
     }
 
-    /* ── smoke wisps ── */
-    .smoke-wrap {
-      position: fixed; inset: 0; pointer-events: none; z-index: 1;
-    }
-    .wsp {
-      position: absolute;
-      bottom: -80px;
-      width: 160px; height: 320px;
-      border-radius: 50%;
-      background: radial-gradient(ellipse at center, rgba(201,168,76,.07) 0%, transparent 70%);
-      animation: rise var(--rd, 8s) ease-in-out infinite var(--rdel, 0s);
-    }
-    @keyframes rise {
-      0%   { transform: translateY(0) scaleX(1)  rotate(0deg);   opacity: 0; }
-      20%  { opacity: 1; }
-      80%  { opacity: .4; }
-      100% { transform: translateY(-110vh) scaleX(1.6) rotate(20deg); opacity: 0; }
-    }
-
-    /* ── card ── */
+    /* ── Tarjeta principal ── */
     .card {
       position: relative; z-index: 10;
-      width: min(480px, 94vw);
-      padding: 48px 40px 52px;
-      border: 1px solid rgba(201,168,76,.35);
-      background: linear-gradient(160deg, #1a0f00 0%, #0d0800 60%, #160c00 100%);
-      border-radius: 4px;
+      width: min(460px, 100%);
+      padding: 28px 28px 24px;
+      background: var(--marble);
+      border: 1px solid var(--border-g);
+      border-top: 3px solid var(--gold);
+      border-radius: 14px;
       box-shadow:
-        0 0 0 1px rgba(201,168,76,.08),
-        0 0 60px rgba(201,168,76,.12),
-        0 30px 80px rgba(0,0,0,.8);
+        0 0 0 1px rgba(201,168,76,.06),
+        0 12px 40px rgba(0,0,0,.07),
+        inset 0 1px 0 rgba(255,255,255,.9),
+        inset 0 0 40px rgba(201,168,76,.03);
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 36px;
+      gap: 20px;
     }
 
-    /* corner ornaments */
+    /* Ornamentos de esquina */
     .card::before, .card::after {
-      content: '✦';
+      content: '⬧';
       position: absolute;
-      font-size: 11px;
+      font-size: 10px;
       color: var(--gold);
-      opacity: .45;
+      opacity: .4;
     }
-    .card::before { top: 14px; left: 18px; }
-    .card::after  { bottom: 14px; right: 18px; }
+    .card::before { top: 12px; left: 16px; }
+    .card::after  { bottom: 12px; right: 16px; }
 
-    /* ── title ── */
-    .title-wrap { text-align: center; }
+    /* ── Título ── */
+    .title-wrap { text-align: center; padding-bottom: 4px; }
     .title-wrap h1 {
-      font-family: 'Cinzel Decorative', serif;
-      font-size: clamp(1rem, 4vw, 1.35rem);
-      letter-spacing: .12em;
-      color: var(--gold);
-      text-shadow: 0 0 20px rgba(201,168,76,.5);
+      font-family: var(--ff-title);
+      font-size: clamp(.95rem, 3.5vw, 1.2rem);
+      letter-spacing: .14em;
+      font-weight: 700;
+      background: linear-gradient(90deg,
+        var(--gold-dark) 0%, var(--gold) 30%, var(--gold-bright) 55%, var(--gold) 75%, var(--gold-dark) 100%);
+      background-size: 280%;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 7s linear infinite;
       line-height: 1.4;
     }
+    @keyframes shimmer {
+      0%   { background-position: 0% 50%; }
+      100% { background-position: 280% 50%; }
+    }
     .divider {
-      margin: 12px auto 0;
-      width: 80px; height: 1px;
+      margin: 10px auto 0;
+      width: 70px; height: 1px;
       background: linear-gradient(90deg, transparent, var(--gold), transparent);
     }
 
-    /* ── cookie illustration ── */
+    /* ── Cookie ── */
     .cookie-stage {
       position: relative;
-      width: 160px; height: 160px;
+      width: 130px; height: 130px;
       cursor: pointer;
       perspective: 600px;
     }
-    .cookie-stage:hover .cookie-svg { filter: drop-shadow(0 0 22px rgba(240,208,128,.55)); }
+    .cookie-stage:hover .cookie-svg {
+      filter: drop-shadow(0 0 18px rgba(201,168,76,.55));
+    }
     .cookie-svg {
-      width: 160px; height: 160px;
+      width: 130px; height: 130px;
       transition: filter .3s;
       transform-style: preserve-3d;
     }
-
-    /* crack animation */
-    .crack-line {
-      opacity: 0;
-      transform-origin: center;
-      transition: opacity .3s;
-    }
+    .crack-line { opacity: 0; transform-origin: center; transition: opacity .3s; }
     .opened .crack-line { opacity: 1; }
 
-    /* float idle */
     .cookie-stage:not(.cracking):not(.opened) .cookie-svg {
       animation: float 4s ease-in-out infinite;
     }
     @keyframes float {
       0%,100% { transform: translateY(0) rotate(-2deg); }
-      50%      { transform: translateY(-10px) rotate(2deg); }
+      50%      { transform: translateY(-8px) rotate(2deg); }
     }
 
-    /* crack shake */
-    .cracking .cookie-svg {
-      animation: shake .55s ease-in-out forwards;
-    }
+    .cracking .cookie-svg { animation: shake .55s ease-in-out forwards; }
     @keyframes shake {
       0%   { transform: rotate(0); }
       20%  { transform: rotate(-8deg) scale(1.05); }
@@ -150,146 +154,138 @@
       100% { transform: rotate(0)     scale(1); }
     }
 
-    /* open split */
     .half-top, .half-bot {
       transform-origin: center;
       transition: transform .6s cubic-bezier(.34,1.56,.64,1);
     }
-    .opened .half-top { transform: translateY(-14px) rotate(-12deg); }
-    .opened .half-bot { transform: translateY(14px)  rotate(12deg); }
+    .opened .half-top { transform: translateY(-12px) rotate(-12deg); }
+    .opened .half-bot { transform: translateY(12px)  rotate(12deg); }
 
-    /* glow pulse when open */
     .opened .cookie-svg {
       animation: glow-pulse 2.5s ease-in-out infinite !important;
     }
     @keyframes glow-pulse {
-      0%,100% { filter: drop-shadow(0 0 12px rgba(240,208,128,.4)); }
-      50%      { filter: drop-shadow(0 0 30px rgba(240,208,128,.8)); }
+      0%,100% { filter: drop-shadow(0 0 10px rgba(201,168,76,.35)); }
+      50%      { filter: drop-shadow(0 0 26px rgba(201,168,76,.7)); }
     }
 
-    /* ── message scroll ── */
+    /* ── Pergamino de sabiduría ── */
     .scroll-wrap {
-      width: 100%;
-      min-height: 88px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 100%; min-height: 76px;
+      display: flex; align-items: center; justify-content: center;
     }
     .paper {
       position: relative;
-      background: var(--cream);
-      border-radius: 2px;
-      padding: 20px 24px;
+      background: var(--stone);
+      border-radius: 8px;
+      padding: 16px 18px 14px;
       width: 100%;
-      box-shadow: 0 2px 16px rgba(0,0,0,.45), inset 0 0 30px rgba(201,168,76,.06);
-      border-top: 1px solid rgba(201,168,76,.3);
-      border-bottom: 1px solid rgba(201,168,76,.3);
+      border: 1px solid rgba(201,168,76,.3);
+      border-top: 2px solid rgba(201,168,76,.45);
+      box-shadow: 0 2px 12px rgba(0,0,0,.06), inset 0 0 20px rgba(201,168,76,.04);
       opacity: 0;
-      transform: scaleY(.3) translateY(10px);
+      transform: scaleY(.35) translateY(8px);
       transition: opacity .5s ease, transform .5s cubic-bezier(.34,1.56,.64,1);
     }
-    .paper.visible {
-      opacity: 1;
-      transform: scaleY(1) translateY(0);
+    .paper::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.8) 50%, transparent);
     }
+    .paper.visible { opacity: 1; transform: scaleY(1) translateY(0); }
+
     .paper-text {
-      font-family: 'Cormorant Garamond', serif;
+      font-family: var(--ff-body);
       font-style: italic;
-      font-size: clamp(1rem, 3.2vw, 1.18rem);
+      font-size: clamp(.92rem, 2.8vw, 1.05rem);
       color: var(--ink);
-      line-height: 1.65;
+      line-height: 1.6;
       text-align: center;
-      letter-spacing: .02em;
+      letter-spacing: .01em;
     }
     .paper-symbol {
-      font-size: 1.5rem;
+      font-size: 1.3rem;
       text-align: center;
-      margin-bottom: 10px;
-      opacity: .75;
-      color: var(--ink);
+      margin-bottom: 8px;
+      opacity: .7;
+      color: var(--bronze);
     }
     .paper-meta {
-      margin-top: 14px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      border-top: 1px solid rgba(26,15,0,.15);
-      padding-top: 10px;
+      margin-top: 10px;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      border-top: 1px solid rgba(42,31,16,.12);
+      padding-top: 8px;
     }
     .paper-source {
-      font-family: 'Cormorant Garamond', serif;
+      font-family: var(--ff-body);
       font-style: italic;
-      font-size: .82rem;
-      color: rgba(26,15,0,.65);
+      font-size: .78rem;
+      color: var(--ink-soft);
       letter-spacing: .02em;
       text-align: center;
     }
     .paper-tradition {
       display: inline-block;
-      font-family: 'Cormorant Garamond', serif;
+      font-family: var(--ff-title);
       font-style: normal;
-      font-size: .68rem;
-      letter-spacing: .14em;
+      font-size: .58rem;
+      letter-spacing: .16em;
       text-transform: uppercase;
-      color: #fff;
-      background: var(--ink);
+      color: var(--ivory);
+      background: var(--bronze-rich);
       padding: 2px 10px;
       border-radius: 20px;
-      opacity: .7;
-      margin-top: 4px;
+      opacity: .85;
+      margin-top: 2px;
     }
     .paper-num {
       position: absolute;
-      bottom: 6px; right: 10px;
-      font-size: .62rem;
-      color: rgba(26,15,0,.35);
-      font-style: normal;
+      bottom: 5px; right: 8px;
+      font-size: .58rem;
+      color: rgba(42,31,16,.3);
       letter-spacing: .06em;
     }
     .placeholder {
-      font-family: 'Cormorant Garamond', serif;
+      font-family: var(--ff-body);
       font-style: italic;
-      color: rgba(201,168,76,.35);
-      font-size: 1rem;
+      color: rgba(201,168,76,.5);
+      font-size: .95rem;
       letter-spacing: .08em;
       text-align: center;
     }
 
-    /* ── button ── */
+    /* ── Botón ── */
     .btn-wrap { width: 100%; }
     .btn {
       width: 100%;
-      padding: 15px 0;
-      background: transparent;
-      border: 1px solid var(--gold);
-      color: var(--gold);
-      font-family: 'Cinzel Decorative', serif;
-      font-size: .7rem;
-      letter-spacing: .22em;
+      padding: 13px 0;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      border: none;
+      color: #fff;
+      font-family: var(--ff-title);
+      font-size: .68rem;
+      letter-spacing: .2em;
       cursor: pointer;
       position: relative;
       overflow: hidden;
-      transition: color .3s, border-color .3s;
-      border-radius: 2px;
+      transition: filter .25s, transform .2s;
+      border-radius: 6px;
+      box-shadow: 0 4px 14px rgba(201,168,76,.28);
+      font-weight: 600;
     }
     .btn::before {
       content: '';
       position: absolute; inset: 0;
-      background: linear-gradient(90deg, transparent, rgba(201,168,76,.15), transparent);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
       transform: translateX(-100%);
       transition: transform .5s ease;
     }
     .btn:hover::before { transform: translateX(100%); }
-    .btn:hover {
-      color: var(--gold-lt);
-      border-color: var(--gold-lt);
-      box-shadow: 0 0 20px rgba(201,168,76,.2);
-    }
+    .btn:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201,168,76,.4); }
     .btn:active { transform: scale(.98); }
-    .btn:disabled { opacity: .4; cursor: default; }
+    .btn:disabled { opacity: .45; cursor: default; transform: none; }
 
-    /* ── particles ── */
+    /* ── Partículas ── */
     .particle {
       position: fixed;
       pointer-events: none;
@@ -302,23 +298,21 @@
       100% { opacity: 0; transform: translate(var(--tx),var(--ty)) scale(0); }
     }
 
-    /* ── counter ── */
+    /* ── Contador ── */
     .counter {
-      font-size: .68rem;
+      font-family: var(--ff-title);
+      font-size: .6rem;
       letter-spacing: .1em;
-      color: rgba(201,168,76,.4);
+      color: rgba(201,168,76,.55);
       text-align: center;
-      margin-top: -24px;
+      margin-top: -12px;
     }
   </style>
 </head>
 <body>
 
-<!-- starfield -->
+<!-- partículas doradas -->
 <div class="stars" id="stars"></div>
-
-<!-- smoke -->
-<div class="smoke-wrap" id="smoke"></div>
 
 <!-- card -->
 <div class="card">
@@ -670,33 +664,20 @@ function openFortune() {
   }, 620);
 }
 
-// ── generate stars ──────────────────────────────────────
+// ── generate golden dust particles ─────────────────────
 const starsEl = document.getElementById('stars');
-for (let i = 0; i < 120; i++) {
+for (let i = 0; i < 60; i++) {
   const s = document.createElement('div');
   s.className = 'star';
-  const sz = .5 + Math.random() * 2;
+  const sz = .8 + Math.random() * 2.5;
   s.style.cssText = `
     width:${sz}px; height:${sz}px;
     top:${Math.random()*100}%;
     left:${Math.random()*100}%;
-    --dur:${2 + Math.random()*4}s;
-    --del:${-Math.random()*4}s;
+    --dur:${3 + Math.random()*5}s;
+    --del:${-Math.random()*5}s;
   `;
   starsEl.appendChild(s);
-}
-
-// ── generate smoke wisps ────────────────────────────────
-const smokeEl = document.getElementById('smoke');
-for (let i = 0; i < 5; i++) {
-  const w = document.createElement('div');
-  w.className = 'wsp';
-  w.style.cssText = `
-    left:${10 + i*18}%;
-    --rd:${7 + Math.random()*6}s;
-    --rdel:${-Math.random()*8}s;
-  `;
-  smokeEl.appendChild(w);
 }
 </script>
 </body>
