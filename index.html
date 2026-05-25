@@ -975,7 +975,38 @@ function rJuegos(stage){
 
 function rGoleadores(s){ s.innerHTML = '<h1><i class="fa-solid fa-shoe-prints"></i> GOLEADORES</h1><iframe src="goleadores.html" class="embed-frame"></iframe>'; }
 function rGoleadoras(s){ s.innerHTML = '<h1><i class="fa-solid fa-shoe-prints" style="color:#ff4d94;"></i> GOLEADORAS</h1><iframe src="goleadoras.html" class="embed-frame"></iframe>'; }
-function r3(s){ s.innerHTML = '<h1>III° Medio: Tecnología</h1><iframe src="bitacora_tech.html" class="embed-frame"></iframe>'; }
+function r3(s){
+  // Crear por DOM (no innerHTML) para que scripts del iframe se ejecuten correctamente
+  s.innerHTML = '';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'fade-in';
+
+  const hdr = document.createElement('div');
+  hdr.className = 'tablet-header';
+  hdr.innerHTML = `
+    <h1><i class="fa-solid fa-gears" style="color:var(--laurel);"></i> III° MEDIO · TECNOLOGÍA</h1>
+    <p class="page-sub">Bitácora de actividades · 2026</p>`;
+
+  const loader = document.createElement('p');
+  loader.id = 'bita-loader';
+  loader.style.cssText = 'text-align:center;color:var(--text-soft);font-style:italic;padding:1rem;';
+  loader.textContent = 'Cargando bitácora…';
+
+  const fr = document.createElement('iframe');
+  fr.src = 'bitacora_tech.html';
+  fr.className = 'embed-frame';
+  fr.style.cssText = 'min-height:600px;';
+  fr.setAttribute('allowfullscreen','');
+  fr.setAttribute('loading','eager');
+  fr.onload  = () => { loader.style.display = 'none'; };
+  fr.onerror = () => { loader.innerHTML = '⚠️ No se pudo cargar la bitácora. Verifica que <code>bitacora_tech.html</code> esté en el servidor.'; };
+
+  wrap.appendChild(hdr);
+  wrap.appendChild(loader);
+  wrap.appendChild(fr);
+  s.appendChild(wrap);
+}
 function r4(s){ s.innerHTML = '<h1>IV° Medio: Física</h1><iframe src="tesoros_espacio.html" class="embed-frame"></iframe>'; }
 function r6(s){ s.innerHTML = '<h1>VI° Básico: Ciencias</h1><iframe src="bitacora_6basico.html" class="embed-frame"></iframe>'; }
 function r7(s){ s.innerHTML = '<h1><i class="fa-solid fa-map"></i> VII° Básico: Tesoro</h1><iframe src="tesoro_7basico.html" class="embed-frame"></iframe>'; }
