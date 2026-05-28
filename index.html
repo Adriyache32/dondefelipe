@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aula de Ciencias | Profe Felipe</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <style>
@@ -31,9 +32,22 @@
   --laurel:      #3d6e4a;
   --border-gold: rgba(201,168,76,.25);
   --border-gold-strong: rgba(201,168,76,.55);
-  --card-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  /* Sombras modernas en capas (elevación material) */
+  --card-shadow:  0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(20,16,8,.05);
+  --shadow-hover: 0 8px 24px rgba(20,16,8,.1), 0 16px 48px rgba(20,16,8,.08);
+  --shadow-float: 0 20px 60px rgba(0,0,0,.45), 0 8px 24px rgba(0,0,0,.3);
+  /* Radios modernos */
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 28px;
+  /* Curvas de animación */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Tipografía */
   --ff-title: 'Cinzel', 'Palatino Linotype', Palatino, serif;
-  --ff-body:  'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --ff-body:  'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ff-serif: 'Cormorant Garamond', Georgia, serif;
 }
 
 /* ═══════════════════════════════════════════════
@@ -49,6 +63,8 @@ body {
   color: var(--text);
   background: var(--sea-deep);
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Fondo multicapa atmosférico */
@@ -117,7 +133,7 @@ nav {
   display: flex; align-items: center; gap: 10px;
   font-family: var(--ff-title);
   color: var(--gold-light); text-decoration: none;
-  font-size: 1.05rem; letter-spacing: 3px; font-weight: 700;
+  font-size: 1.05rem; letter-spacing: 2px; font-weight: 700;
   transition: all 0.35s;
 }
 .nav-brand i { color: var(--gold); filter: drop-shadow(0 0 6px rgba(201,168,76,.5)); }
@@ -144,8 +160,8 @@ nav {
 .drop-btn {
   background: none; border: none; cursor: pointer; height: 100%;
   padding: 0 1.1rem;
-  font-family: var(--ff-title); font-size: 0.78rem; letter-spacing: 1.8px; font-weight: 600;
-  color: rgba(255,255,255,.82);
+  font-family: var(--ff-body); font-size: 0.8rem; letter-spacing: 1px; font-weight: 500;
+  color: rgba(255,255,255,.85);
   display: flex; align-items: center; gap: 6px;
   border-bottom: 2px solid transparent;
   transition: all 0.25s;
@@ -178,9 +194,9 @@ nav {
 
 .drop-content a {
   display: flex; align-items: center; gap: 10px;
-  padding: 11px 18px;
-  color: rgba(255,255,255,.78); text-decoration: none;
-  font-family: var(--ff-title); font-size: 0.78rem; letter-spacing: 1px; font-weight: 600;
+  padding: 12px 18px;
+  color: rgba(255,255,255,.8); text-decoration: none;
+  font-family: var(--ff-body); font-size: 0.82rem; letter-spacing: 0.4px; font-weight: 500;
   border-bottom: 1px solid rgba(201,168,76,.07);
   transition: all 0.2s;
 }
@@ -194,8 +210,8 @@ nav {
 .nav-lib {
   background: none; cursor: pointer; height: 100%;
   padding: 0 1.1rem;
-  font-family: var(--ff-title); font-size: 0.78rem; letter-spacing: 1.8px; font-weight: 600;
-  color: rgba(255,255,255,.82); text-decoration: none;
+  font-family: var(--ff-body); font-size: 0.8rem; letter-spacing: 1px; font-weight: 500;
+  color: rgba(255,255,255,.85); text-decoration: none;
   display: flex; align-items: center; gap: 6px;
   border-bottom: 2px solid transparent;
   transition: all 0.25s;
@@ -211,18 +227,19 @@ nav {
   margin: 2.5rem auto; flex: 1;
 }
 
-/* Ornamentos de esquina */
+/* Panel principal — vidrio claro moderno */
 .tablet {
-  background: var(--ivory);
+  background: rgba(253, 251, 247, 0.96);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border-gold);
-  border-radius: 18px;
+  border-radius: var(--r-xl);
   padding: 3rem 4rem;
   position: relative; overflow: hidden;
   box-shadow:
     0 0 0 1px rgba(201,168,76,.06),
-    0 30px 80px rgba(0,0,0,.65),
-    inset 0 1px 0 rgba(255,255,255,.9),
-    inset 0 0 60px rgba(201,168,76,.04);
+    var(--shadow-float),
+    inset 0 1px 0 rgba(255,255,255,.9);
 }
 
 /* Marca de agua ornamental centrada */
@@ -274,52 +291,71 @@ h1.shimmer {
   100% { background-position: 300% 50%; }
 }
 
-.page-sub { font-size: 0.88rem; color: var(--text-soft); letter-spacing: 3px; font-style: italic; margin-top: 4px; }
+.page-sub { font-family: var(--ff-body); font-size: 0.8rem; color: var(--text-soft); letter-spacing: 2px; font-weight: 400; margin-top: 6px; text-transform: uppercase; }
 
 h2.sh {
-  font-family: var(--ff-title); font-size: 0.82rem; letter-spacing: 3px;
+  font-family: var(--ff-title); font-size: 0.8rem; letter-spacing: 2px;
   color: var(--bronze-rich); font-weight: 700;
-  padding: 10px 0 10px 14px;
+  padding: 11px 0 11px 16px;
   margin: 2.8rem 0 1.6rem;
   border-left: 3px solid var(--gold);
-  background: linear-gradient(90deg, rgba(201,168,76,.06), transparent 70%);
+  background: linear-gradient(90deg, rgba(201,168,76,.07), transparent 70%);
   display: flex; align-items: center; gap: 10px;
-  border-radius: 0 6px 6px 0;
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
 }
 h2.sh::before { content: '⬧'; color: var(--gold); font-size: 0.75rem; opacity: .8; }
 
 /* ═══════════════════════════════════════════════
-   GRILLAS Y TARJETAS
+   GRILLAS Y TARJETAS — Modernas
 ═══════════════════════════════════════════════ */
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
 
 .card {
   background: var(--marble);
-  border: 1px solid rgba(201,168,76,.18);
-  border-radius: 14px; padding: 1.8rem;
+  border: 1px solid rgba(201,168,76,.16);
+  border-radius: var(--r-md); padding: 1.7rem;
   position: relative; overflow: hidden;
-  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease, border-color 0.3s;
+  transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out), border-color 0.3s;
   box-shadow: var(--card-shadow);
   display: flex; flex-direction: column;
+  /* Animación de entrada */
+  animation: cardIn 0.6s var(--ease-out) both;
+}
+
+/* Stagger: cada tarjeta entra con leve retraso */
+.grid .card:nth-child(1) { animation-delay: 0.02s; }
+.grid .card:nth-child(2) { animation-delay: 0.08s; }
+.grid .card:nth-child(3) { animation-delay: 0.14s; }
+.grid .card:nth-child(4) { animation-delay: 0.20s; }
+.grid .card:nth-child(5) { animation-delay: 0.26s; }
+.grid .card:nth-child(6) { animation-delay: 0.32s; }
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(18px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* Reflejo superior en cada card */
 .card::before {
   content: '';
   position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.8) 50%, transparent);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.85) 50%, transparent);
+  z-index: 2;
 }
 
 .card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 45px rgba(0,0,0,.1), 0 0 0 1px var(--border-gold-strong);
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-hover), 0 0 0 1px var(--border-gold-strong);
 }
 
 .card h3 {
-  font-family: var(--ff-title); font-size: 0.88rem; letter-spacing: 1.2px; margin-bottom: 12px;
-  display: flex; align-items: center; gap: 8px;
+  font-family: var(--ff-title); font-size: 0.86rem; letter-spacing: 0.5px; margin-bottom: 12px;
+  line-height: 1.45;
+  display: flex; align-items: flex-start; gap: 8px;
 }
-.card p { font-size: 1rem; color: var(--text-soft); line-height: 1.65; flex-grow: 1; }
+.card h3 i { margin-top: 2px; flex-shrink: 0; }
+.card p { font-size: 0.95rem; color: var(--text-soft); line-height: 1.6; flex-grow: 1; font-weight: 400; }
+.card p strong { color: var(--text); font-weight: 600; }
 
 .card.c-sea {
   border-top: 3px solid #2d6a9f;
@@ -366,35 +402,42 @@ h2.sh::before { content: '⬧'; color: var(--gold); font-size: 0.75rem; opacity:
 .card.c-fem h3 { color: #7a1a54; }
 
 /* ═══════════════════════════════════════════════
-   BOTONES  (sin cambios de comportamiento)
+   BOTONES — Modernos
 ═══════════════════════════════════════════════ */
-.btn-group { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+.btn-group { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
 
 .btn-p {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   background: linear-gradient(135deg, var(--gold-dark), var(--gold));
   color: #fff; border: none; cursor: pointer;
-  padding: 0.8rem 1.5rem;
-  font-family: var(--ff-title); font-size: 0.8rem; letter-spacing: 1.5px; font-weight: 600;
-  border-radius: 6px; text-decoration: none;
-  transition: all 0.3s ease;
+  padding: 0.85rem 1.5rem;
+  font-family: var(--ff-body); font-size: 0.82rem; letter-spacing: 0.4px; font-weight: 600;
+  border-radius: var(--r-sm); text-decoration: none;
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s ease, filter 0.3s;
   flex: 1; min-width: 120px;
-  box-shadow: 0 4px 15px rgba(201,168,76,0.3);
+  box-shadow: 0 2px 8px rgba(201,168,76,0.25);
+  position: relative; overflow: hidden;
 }
-.btn-p:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(201,168,76,0.5); filter: brightness(1.1); }
+.btn-p::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
+  transform: translateX(-120%); transition: transform 0.6s var(--ease-out);
+}
+.btn-p:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(201,168,76,0.4); filter: brightness(1.06); }
+.btn-p:hover::after { transform: translateX(120%); }
 .btn-p:active { transform: translateY(0); }
 
 .btn-s {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   background: transparent;
-  color: var(--bronze); border: 2px solid var(--border-gold);
-  padding: 0.8rem 1.5rem;
-  font-family: var(--ff-title); font-size: 0.8rem; letter-spacing: 1.5px; font-weight: 600;
-  border-radius: 6px; cursor: pointer; text-decoration: none;
-  transition: all 0.3s ease;
-  width: 100%; margin-top: 10px;
+  color: var(--bronze); border: 1.5px solid var(--border-gold);
+  padding: 0.85rem 1.5rem;
+  font-family: var(--ff-body); font-size: 0.82rem; letter-spacing: 0.4px; font-weight: 600;
+  border-radius: var(--r-sm); cursor: pointer; text-decoration: none;
+  transition: all 0.3s var(--ease-out);
+  width: 100%; margin-top: 12px;
 }
-.btn-s:hover { background: rgba(201,168,76,0.05); border-color: var(--gold); color: var(--gold-dark); }
+.btn-s:hover { background: rgba(201,168,76,0.07); border-color: var(--gold); color: var(--gold-dark); transform: translateY(-1px); }
 
 /* ═══════════════════════════════════════════════
    PÓSTER RPG CLICKEABLE
@@ -473,7 +516,7 @@ h2.sh::before { content: '⬧'; color: var(--gold); font-size: 0.75rem; opacity:
   width: 100%;
   height: 75vh; min-height: 550px;
   border: 1px solid rgba(201,168,76,.25);
-  border-radius: 12px; display: block;
+  border-radius: var(--r-md); display: block;
   margin-top: 1.5rem; background: #fff;
   box-shadow: 0 12px 40px rgba(0,0,0,.08), 0 0 0 1px rgba(201,168,76,.08);
 }
@@ -492,8 +535,8 @@ footer {
   background: rgba(4,9,18,.98);
   border-top: 1px solid rgba(201,168,76,.15);
   padding: 1.4rem 2rem; text-align: center;
-  font-family: var(--ff-title); font-size: 0.72rem;
-  letter-spacing: 3px; color: rgba(255,255,255,.3);
+  font-family: var(--ff-body); font-size: 0.72rem;
+  letter-spacing: 1.5px; color: rgba(255,255,255,.35); font-weight: 400;
   margin-top: auto;
 }
 footer::before {
@@ -641,6 +684,33 @@ footer::before {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* ═══════════════════════════════════════════════
+   REFINAMIENTOS MODERNOS
+═══════════════════════════════════════════════ */
+/* Scrollbar moderna */
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: var(--sea-deep); }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(var(--gold-dark), var(--bronze));
+  border-radius: 10px; border: 2px solid var(--sea-deep);
+}
+::-webkit-scrollbar-thumb:hover { background: linear-gradient(var(--gold), var(--gold-dark)); }
+* { scrollbar-width: thin; scrollbar-color: var(--bronze) var(--sea-deep); }
+
+/* Selección de texto */
+::selection { background: rgba(201,168,76,.3); color: var(--bronze-rich); }
+
+/* Foco accesible moderno */
+a:focus-visible, button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* iOS smooth scroll + overscroll */
+html { -webkit-text-size-adjust: 100%; }
+body { overscroll-behavior-y: none; }
 </style>
 </head>
 <body>
@@ -815,7 +885,7 @@ function rHome(stage){
         <div style="width:100%; max-width:680px; border-radius:14px; overflow:hidden; border:1px solid rgba(201,168,76,.28); border-top:3px solid var(--laurel); box-shadow:0 12px 36px rgba(0,0,0,.1), 0 0 0 1px rgba(201,168,76,.06);">
           <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden;">
             <iframe
-              src="https://www.youtube.com/embed/-kdH58xULsY"
+              src="https://www.youtube.com/embed/Xlc01gi1yoA"
               style="position:absolute; top:0; left:0; width:100%; height:100%; border:none;"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowfullscreen
@@ -832,25 +902,25 @@ function rHome(stage){
 
         <div class="card c-sea" style="gap:0;">
           <h3><i class="fa-solid fa-sun" style="color:#2d6a9f;"></i> TORMENTA SOLAR X9: LA MÁS INTENSA EN 20 AÑOS</h3>
-          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">27 Mayo 2026 · NASA / NOAA</p>
+          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">27 Mayo 2026 · NASA / NOAA</p>
           <p>Una erupción solar clase <strong>X9.4</strong> golpeó la Tierra el 26 de mayo, generando auroras visibles hasta latitudes de 30°N. En Chile se observaron desde la Araucanía. La tormenta afectó temporalmente GPS y comunicaciones de alta frecuencia en toda América del Sur.</p>
         </div>
 
         <div class="card c-laurel" style="gap:0;">
           <h3><i class="fa-solid fa-virus-slash" style="color:#3d6b4a;"></i> CURA FUNCIONAL PARA VIH EN TERCER PACIENTE</h3>
-          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">26 Mayo 2026 · UCL / NEJM</p>
+          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">26 Mayo 2026 · UCL / NEJM</p>
           <p>Médicos del University College London anunciaron la <strong>remisión completa del VIH</strong> en un tercer paciente tras trasplante de células madre CCR5-delta32. Cuatro años sin medicación antirretroviral y sin carga viral detectable, consolidando esta como la terapia más prometedora.</p>
         </div>
 
         <div class="card c-gold" style="gap:0;">
           <h3><i class="fa-solid fa-earth-americas" style="color:var(--bronze);"></i> SISMO 7,2 EN ATACAMA: ALERTA TEMPRANA FUNCIONA</h3>
-          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">25 Mayo 2026 · CSN / Emol</p>
+          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">25 Mayo 2026 · CSN / Emol</p>
           <p>Un sismo de magnitud <strong>7,2 Mw</strong> sacudió Atacama a 80 km al norte de Copiapó, sin víctimas. El sistema SHOA evacuó zonas costeras en menos de 3 minutos. El CSN destacó el desempeño de la red sísmica nacional instalada recientemente en la V Región.</p>
         </div>
 
         <div class="card c-fem" style="gap:0;">
           <h3><i class="fa-solid fa-microscope" style="color:#801d5e;"></i> HONGO ANTÁRTICO CHILENO DEGRADA PLÁSTICO EN 30 DÍAS</h3>
-          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">24 Mayo 2026 · U. de Chile / Scientific Reports</p>
+          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">24 Mayo 2026 · U. de Chile / Scientific Reports</p>
           <p>Investigadores de la U. de Chile aislaron <em>Antarctomyces psychrotrophicus</em>, un hongo antártico que degrada microplásticos de poliestireno en <strong>30 días a temperatura ambiente</strong>. Fue catalogado como el descubrimiento más relevante de la ciencia chilena en 2026.</p>
         </div>
 
@@ -862,25 +932,25 @@ function rHome(stage){
 
         <div class="card c-sea" style="gap:0; border-top-color:#1a6ecc;">
           <h3><i class="fa-solid fa-robot" style="color:#1a6ecc;"></i> GOOGLE I/O: GEMINI 3 CON RAZONAMIENTO AUTÓNOMO</h3>
-          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">27 Mayo 2026 · Google I/O / The Verge</p>
+          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">27 Mayo 2026 · Google I/O / The Verge</p>
           <p>Google presentó <strong>Gemini 3 Ultra</strong> en su conferencia I/O con capacidad para ejecutar tareas autónomas de múltiples pasos. Su modo educativo incluye tutor personalizado que se adapta al nivel de cada estudiante en tiempo real, disponible en español desde junio.</p>
         </div>
 
         <div class="card c-gold" style="gap:0; border-top-color:#c47a1b;">
           <h3><i class="fa-solid fa-car" style="color:#c47a1b;"></i> TESLA CYBERCAB EN CHILE: PRECIO CLP 18 MILLONES</h3>
-          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">26 Mayo 2026 · Tesla Chile / Revista Motor</p>
+          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">26 Mayo 2026 · Tesla Chile / Revista Motor</p>
           <p>Tesla confirmó el <strong>Cybercab a $18 millones CLP</strong> en Chile. El vehículo eléctrico de conducción autónoma nivel 4 estará disponible en concesionarios de Santiago y Valparaíso desde julio. Incluye cargador gratuito instalado en el hogar.</p>
         </div>
 
         <div class="card c-laurel" style="gap:0; border-top-color:#2e7d52;">
           <h3><i class="fa-solid fa-wifi" style="color:#2e7d52;"></i> CHILE LANZA RED 6G PILOTO EN SANTIAGO Y VALPARAÍSO</h3>
-          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">25 Mayo 2026 · SUBTEL / BioBioChile</p>
+          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">25 Mayo 2026 · SUBTEL / BioBioChile</p>
           <p>SUBTEL activó la primera red piloto <strong>6G de Chile</strong> en Providencia, Las Condes y Viña del Mar, con velocidades de hasta 100 Gbps. Chile es el primer país latinoamericano en operar esta tecnología fuera de laboratorio.</p>
         </div>
 
         <div class="card c-fem" style="gap:0; border-top-color:#801d5e;">
           <h3><i class="fa-solid fa-gamepad" style="color:#801d5e;"></i> NINTENDO SWITCH 3: 2 MILLONES VENDIDAS EN 24 HORAS</h3>
-          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">24 Mayo 2026 · Nintendo / IGN</p>
+          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">24 Mayo 2026 · Nintendo / IGN</p>
           <p>Nintendo Switch 3 batió récord con <strong>2 millones de unidades en 24 horas</strong>. Pantalla OLED 4K, 16 GB RAM, chip de 4 nm y modo de realidad aumentada nativo. En Chile agotó stock en menos de 3 horas en todas las tiendas.</p>
         </div>
 
@@ -892,19 +962,19 @@ function rHome(stage){
 
         <div class="card c-gold" style="gap:0;">
           <h3><i class="fa-solid fa-graduation-cap" style="color:var(--bronze);"></i> MINEDUC: EVALUACIONES 100% DIGITALES DESDE 2027</h3>
-          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">26 Mayo 2026 · MINEDUC / La Tercera</p>
+          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">26 Mayo 2026 · MINEDUC / La Tercera</p>
           <p>El Ministerio de Educación anunció que desde marzo de 2027 todas las evaluaciones nacionales serán <strong>100% digitales</strong>. Los colegios municipales recibirán tablets en noviembre de 2026 junto a una nueva plataforma con retroalimentación inmediata.</p>
         </div>
 
         <div class="card c-sea" style="gap:0;">
           <h3><i class="fa-solid fa-person-chalkboard" style="color:#2d6a9f;"></i> SEMANA DE LA CIENCIA: VALPARAÍSO LIDERA EL PAÍS</h3>
-          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">25 Mayo 2026 · CONICYT / El Mercurio</p>
+          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">25 Mayo 2026 · CONICYT / El Mercurio</p>
           <p>La Semana Nacional de la Ciencia 2026 alcanzó <strong>1,4 millones de estudiantes</strong>. La Región de Valparaíso lideró con 214 actividades en 89 colegios. Villa Alemana organizó una feria itinerante que visitó 6 establecimientos, incluyendo el Colegio San Agustín.</p>
         </div>
 
         <div class="card c-laurel" style="gap:0;">
           <h3><i class="fa-solid fa-book" style="color:#3d6b4a;"></i> NUEVA MALLA DE CIENCIAS: IA Y CAMBIO CLIMÁTICO COMO EJES</h3>
-          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">24 Mayo 2026 · MINEDUC / Educar Chile</p>
+          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">24 Mayo 2026 · MINEDUC / Educar Chile</p>
           <p>La nueva malla de Ciencias para 7° básico a IV° medio integra <strong>IA, pensamiento computacional y cambio climático</strong> como ejes transversales. Los materiales llegan a los colegios en julio; los profesores ya completaron su capacitación en línea.</p>
         </div>
 
@@ -916,25 +986,25 @@ function rHome(stage){
 
         <div class="card c-sea" style="gap:0;">
           <h3><i class="fa-solid fa-city" style="color:#2d6a9f;"></i> VILLA ALEMANA APRUEBA NUEVO CENTRO CÍVICO</h3>
-          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">27 Mayo 2026 · Municipalidad VA / El Líder</p>
+          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">27 Mayo 2026 · Municipalidad VA / El Líder</p>
           <p>El Concejo Municipal aprobó por unanimidad el Plan Regulador con el <strong>nuevo Centro Cívico en la ex Estación</strong>: biblioteca pública, sala de eventos, plaza tecnológica y espacio para emprendimiento juvenil. Obras comienzan en enero de 2027.</p>
         </div>
 
         <div class="card c-laurel" style="gap:0;">
           <h3><i class="fa-solid fa-leaf" style="color:#3d6b4a;"></i> QUEBRADA PUANGUE: NUEVA ÁREA PROTEGIDA EN VILLA ALEMANA</h3>
-          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">26 Mayo 2026 · CONAF / Radio Líder</p>
+          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">26 Mayo 2026 · CONAF / Radio Líder</p>
           <p>CONAF declaró la <strong>Quebrada Puangue como Área de Preservación Ecológica</strong>, protegiendo 340 hectáreas de bosque nativo con 12 especies en riesgo. Incluye senderos de educación ambiental con visitas gratuitas para colegios de la zona.</p>
         </div>
 
         <div class="card c-gold" style="gap:0;">
           <h3><i class="fa-solid fa-train" style="color:var(--bronze);"></i> METROTRÉN: VIÑA-VILLA ALEMANA EN 12 MINUTOS DESDE AGOSTO</h3>
-          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">25 Mayo 2026 · EFE / Radio Valparaíso</p>
+          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">25 Mayo 2026 · EFE / Radio Valparaíso</p>
           <p>EFE confirmó que el <strong>MetroTrén Valparaíso</strong> reducirá el viaje Viña del Mar—Villa Alemana a 12 minutos desde agosto, con frecuencia de un tren cada 6 minutos en hora punta. Pasaje integrado con Metro a $850 en hora valle.</p>
         </div>
 
         <div class="card c-fem" style="gap:0;">
           <h3><i class="fa-solid fa-solar-panel" style="color:#801d5e;"></i> LITIO CHILENO: ACUERDO CON JAPÓN POR USD 4.200 MILLONES</h3>
-          <p style="font-size:0.82rem; color:var(--gold-dark); margin-bottom:8px; font-style:italic;">24 Mayo 2026 · CORFO / Cancillería</p>
+          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">24 Mayo 2026 · CORFO / Cancillería</p>
           <p>Chile firmó con Japón el mayor acuerdo en litio de su historia: <strong>USD 4.200 millones</strong> para procesar carbonato de litio en el Salar de Atacama con tecnología DLE, reduciendo el consumo de agua un 90% respecto al método convencional.</p>
         </div>
 
@@ -1107,7 +1177,7 @@ function rHerramientas(s){
       </div>
 
       <div id="frame-copletos">
-        <iframe src="completo.html" class="embed-frame"
+        <iframe src="completos.html" class="embed-frame"
           style="min-height:720px; border-radius:12px; border-top:3px solid var(--laurel);"
           loading="eager"></iframe>
       </div>
