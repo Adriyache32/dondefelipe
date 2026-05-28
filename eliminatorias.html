@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bracket Builder 🏓</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.09);
+    --accent: #ff3c00;
+    --accent2: #ffb300;
+    --blue: #00b4ff;
+    --green: #00ffa3;
+    --text: #fff;
+    --muted: rgba(255,255,255,0.35);
+    --font-display: 'Bebas Neue', Impact, sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  body { background: var(--bg); color: var(--text); font-family: var(--font-display); min-height: 100vh; }
+
+  .glow-bg {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse at 15% 40%, rgba(255,60,0,0.06) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 20%, rgba(0,180,255,0.05) 0%, transparent 55%);
+  }
+
+  #app { position: relative; z-index: 1; }
+
+  /* ── WIZARD ── */
+  .wizard {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 32px 16px; gap: 32px;
+  }
+
+  .wizard-header { text-align: center; }
+  .wizard-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 6px; color: var(--accent); margin-bottom: 6px; }
+  .wizard-title { font-size: clamp(36px, 8vw, 72px); letter-spacing: 5px; line-height: 1; text-shadow: 0 0 40px rgba(255,60,0,0.3); }
+  .wizard-sub { font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 3px; margin-top: 8px; }
+
+  .step { display: none; flex-direction: column; align-items: center; gap: 20px; width: 100%; max-width: 560px; }
+  .step.active { display: flex; animation: fadeUp 0.3s ease; }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+  .step-title { font-family: var(--font-mono); font-size: 11px; letter-spacing: 5px; color: var(--muted); text-align: center; }
+
+  /* Options grid */
+  .options { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .opt-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--font-display); font-size: clamp(20px,5vw,32px);
+    letter-spacing: 3px; padding: 18px 32px; cursor: pointer;
+    border-radius: 4px; transition: all 0.2s; min-width: 120px; text-align: center;
+  }
+  .opt-btn:hover, .opt-btn.selected { background: rgba(255,60,0,0.12); border-color: var(--accent); color: #fff; box-shadow: 0 0 20px rgba(255,60,0,0.15); }
+  .opt-btn.mode-dobles:hover, .opt-btn.mode-dobles.selected { background: rgba(0,180,255,0.1); border-color: var(--blue); box-shadow: 0 0 20px rgba(0,180,255,0.15); }
+  .opt-btn .opt-icon { font-size: 28px; display: block; margin-bottom: 4px; }
+  .opt-btn .opt-sub { font-family: var(--font-mono); font-size: 9px; color: var(--muted); letter-spacing: 3px; display: block; margin-top: 4px; }
+
+  /* Name inputs */
+  .names-grid { display: grid; gap: 10px; width: 100%; }
+  .names-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .names-grid.cols-1 { grid-template-columns: 1fr; }
+
+  .name-row { display: flex; align-items: center; gap: 10px; }
+  .name-idx { font-family: var(--font-mono); font-size: 10px; color: var(--muted); min-width: 20px; text-align: right; }
+
+  .pair-group {
+    border: 1px solid rgba(0,180,255,0.15); border-radius: 6px;
+    padding: 12px; background: rgba(0,180,255,0.03);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .pair-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 4px; color: var(--blue); margin-bottom: 2px; }
+
+  input[type=text] {
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    color: #fff; font-family: var(--font-mono); font-size: 13px;
+    padding: 10px 14px; border-radius: 4px; width: 100%;
+    transition: border-color 0.2s; outline: none; letter-spacing: 1px;
+  }
+  input[type=text]:focus { border-color: var(--accent); background: rgba(255,60,0,0.05); }
+  input[type=text].pair-input:focus { border-color: var(--blue); background: rgba(0,180,255,0.05); }
+  input[type=text]::placeholder { color: rgba(255,255,255,0.2); }
+
+  /* Buttons */
+  .btn {
+    font-family: var(--font-display); letter-spacing: 4px; font-size: 14px;
+    padding: 12px 36px; border-radius: 4px; cursor: pointer; transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { background: #ff5500; box-shadow: 0 0 20px rgba(255,60,0,0.4); }
+  .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--muted); border-color: rgba(255,255,255,0.1); }
+  .btn-ghost:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+
+  .btn-row { display: flex; gap: 12px; align-items: center; }
+
+  /* Progress dots */
+  .progress { display: flex; gap: 8px; justify-content: center; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.15); transition: all 0.3s; }
+  .dot.active { background: var(--accent); box-shadow: 0 0 8px var(--accent); width: 20px; border-radius: 3px; }
+  .dot.done { background: rgba(255,60,0,0.5); }
+
+  /* ── BRACKET VIEW ── */
+  #bracket-view { display: none; padding: 32px 12px; flex-direction: column; align-items: center; gap: 28px; min-height: 100vh; }
+  #bracket-view.active { display: flex; }
+
+  .bracket-header { text-align: center; }
+  .bracket-meta { font-family: var(--font-mono); font-size: 10px; letter-spacing: 6px; color: var(--accent); margin-bottom: 6px; }
+  .bracket-title { font-size: clamp(28px,6vw,56px); letter-spacing: 5px; text-shadow: 0 0 30px rgba(255,60,0,0.3); }
+
+  .champion-banner {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 4px; padding: 10px 36px; text-align: center;
+    box-shadow: 0 0 40px rgba(255,60,0,0.4);
+    animation: glow 1.5s ease-in-out infinite alternate;
+    display: none;
+  }
+  .champion-banner.show { display: block; }
+  .champion-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 6px; color: rgba(0,0,0,0.55); }
+  .champion-name { font-size: clamp(22px,5vw,40px); color: #000; letter-spacing: 4px; }
+
+  @keyframes glow { from { box-shadow: 0 0 20px rgba(255,60,0,0.3); } to { box-shadow: 0 0 50px rgba(255,179,0,0.6); } }
+
+  /* Bracket scroll container */
+  .bracket-scroll { width: 100%; max-width: 1100px; overflow-x: auto; padding-bottom: 12px; }
+  .bracket-rounds { display: flex; align-items: center; gap: clamp(6px,2vw,20px); min-width: max-content; padding: 8px 4px; }
+
+  .round-col { display: flex; flex-direction: column; align-items: center; gap: 12px; width: clamp(130px,20vw,200px); }
+  .round-header { text-align: center; }
+  .round-name { font-size: clamp(16px,3vw,26px); letter-spacing: 3px; line-height: 1; }
+  .round-sub { font-family: var(--font-mono); font-size: 8px; letter-spacing: 4px; color: var(--muted); }
+  .round-matches { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+
+  /* Match card */
+  .match-card {
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 5px;
+    overflow: hidden; background: rgba(255,255,255,0.03);
+    transition: opacity 0.3s;
+  }
+  .match-card.locked { opacity: 0.38; }
+  .match-card.is-final { border-color: rgba(255,179,0,0.2); background: rgba(255,179,0,0.03); }
+  .match-card.is-final .player-slot:hover { background: rgba(255,179,0,0.08); }
+
+  .vs-divider { display: flex; align-items: center; gap: 8px; padding: 3px 12px; }
+  .vs-divider::before, .vs-divider::after { content:''; flex:1; height:1px; background: rgba(255,255,255,0.06); }
+  .vs-text { font-family: var(--font-mono); font-size: 8px; color: rgba(255,255,255,0.18); letter-spacing: 3px; }
+
+  .player-slot {
+    padding: 9px 12px; display: flex; align-items: center; gap: 8px;
+    min-height: 38px; position: relative; transition: background 0.15s;
+    cursor: default;
+  }
+  .player-slot.clickable { cursor: pointer; }
+  .player-slot.clickable:hover { background: rgba(255,255,255,0.05); }
+  .player-slot.winner { background: linear-gradient(to right, rgba(255,60,0,0.15), transparent); }
+  .player-slot.winner::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .player-slot.is-final.winner { background: linear-gradient(to right, rgba(255,179,0,0.15), transparent); }
+  .player-slot.is-final.winner::before { background: var(--accent2); box-shadow: 0 0 8px var(--accent2); }
+  .player-slot.loser .slot-name { color: rgba(255,255,255,0.18); text-decoration: line-through; }
+  .slot-name { font-size: clamp(11px,2vw,15px); letter-spacing: 2px; color: rgba(255,255,255,0.75); flex: 1; transition: color 0.15s; }
+  .slot-name.empty { color: rgba(255,255,255,0.18); font-family: var(--font-mono); font-size: 10px; }
+  .slot-name.winner-text { color: #fff; }
+  .slot-check { color: var(--accent); font-size: 11px; }
+  .slot-check.final { color: var(--accent2); }
+
+  /* Dobles slot */
+  .pair-slot { flex-direction: column; align-items: flex-start; min-height: 52px; }
+  .pair-names { display: flex; align-items: center; gap: 6px; }
+  .pair-amp { font-family: var(--font-mono); font-size: 9px; color: var(--blue); }
+  .pair-tag { font-family: var(--font-mono); font-size: 7px; letter-spacing: 3px; color: rgba(255,255,255,0.2); margin-top: 2px; }
+  .match-card.dobles .player-slot.winner::before { background: var(--blue); box-shadow: 0 0 8px var(--blue); }
+  .match-card.dobles .player-slot.winner { background: linear-gradient(to right, rgba(0,180,255,0.12), transparent); }
+
+  /* Arrow connector */
+  .connector { width: clamp(10px,1.5vw,18px); height: 2px; background: rgba(255,60,0,0.25); border-radius: 1px; flex-shrink: 0; }
+
+  /* Footer buttons */
+  .bracket-footer { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+</style>
+</head>
+<body>
+<div class="glow-bg"></div>
+<div id="app">
+
+  <!-- WIZARD -->
+  <div class="wizard" id="wizard">
+    <div class="wizard-header">
+      <div class="wizard-label">🏓 GENERADOR DE BRACKETS</div>
+      <div class="wizard-title">BRACKET<br>BUILDER</div>
+      <div class="wizard-sub">PING PONG · ELIMINACIÓN DIRECTA</div>
+    </div>
+
+    <div class="progress" id="progress">
+      <div class="dot active" id="dot-0"></div>
+      <div class="dot" id="dot-1"></div>
+      <div class="dot" id="dot-2"></div>
+    </div>
+
+    <!-- Step 1: Cantidad -->
+    <div class="step active" id="step-1">
+      <div class="step-title">PASO 1 · ¿CUÁNTOS JUGADORES?</div>
+      <div class="options">
+        <button class="opt-btn" onclick="selectCount(4)">
+          <span class="opt-icon">4️⃣</span> 4
+          <span class="opt-sub">2 RONDAS</span>
+        </button>
+        <button class="opt-btn" onclick="selectCount(8)">
+          <span class="opt-icon">8️⃣</span> 8
+          <span class="opt-sub">3 RONDAS</span>
+        </button>
+        <button class="opt-btn" onclick="selectCount(16)">
+          <span class="opt-icon">🔢</span> 16
+          <span class="opt-sub">4 RONDAS</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: Modo -->
+    <div class="step" id="step-2">
+      <div class="step-title">PASO 2 · ¿SENCILLO O DOBLES?</div>
+      <div class="options">
+        <button class="opt-btn" onclick="selectMode('single')">
+          <span class="opt-icon">🧍</span> SENCILLO
+          <span class="opt-sub">1 VS 1</span>
+        </button>
+        <button class="opt-btn mode-dobles" onclick="selectMode('doubles')">
+          <span class="opt-icon">👥</span> DOBLES
+          <span class="opt-sub">PAREJA VS PAREJA</span>
+        </button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="goStep(1)">← VOLVER</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Nombres -->
+    <div class="step" id="step-3">
+      <div class="step-title" id="step3-title">PASO 3 · INGRESA LOS NOMBRES</div>
+      <div id="names-container" style="width:100%;"></div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="goStep(2)">← VOLVER</button>
+        <button class="btn btn-primary" id="btn-generate" onclick="generate()">GENERAR →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BRACKET VIEW -->
+  <div id="bracket-view">
+    <div class="bracket-header">
+      <div class="bracket-meta" id="bk-meta"></div>
+      <div class="bracket-title">ELIMINATORIAS</div>
+    </div>
+    <div class="champion-banner" id="champion-banner">
+      <div class="champion-label" id="champ-label">🏆 CAMPEÓN</div>
+      <div class="champion-name" id="champ-name"></div>
+    </div>
+    <div class="bracket-scroll">
+      <div class="bracket-rounds" id="bracket-rounds"></div>
+    </div>
+    <div class="bracket-footer">
+      <button class="btn btn-ghost" onclick="backToWizard()">← NUEVA ELIMINATORIA</button>
+      <button class="btn btn-primary" onclick="resetBracket()">↺ REINICIAR</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── STATE ──
+let state = { count: null, mode: null };
+let bracket = { rounds: [], winners: {}, champion: null };
+
+// ── WIZARD ──
+function selectCount(n) {
+  state.count = n;
+  document.querySelectorAll('#step-1 .opt-btn').forEach(b => b.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  setTimeout(() => goStep(2), 220);
+}
+
+function selectMode(m) {
+  state.mode = m;
+  document.querySelectorAll('#step-2 .opt-btn').forEach(b => b.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  setTimeout(() => { buildNameInputs(); goStep(3); }, 220);
+}
+
+function goStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step-' + n).classList.add('active');
+  ['dot-0','dot-1','dot-2'].forEach((id,i) => {
+    const d = document.getElementById(id);
+    d.classList.remove('active','done');
+    if (i === n-1) d.classList.add('active');
+    else if (i < n-1) d.classList.add('done');
+  });
+}
+
+function buildNameInputs() {
+  const c = document.getElementById('names-container');
+  const isDoubles = state.mode === 'doubles';
+  const total = state.count;
+  document.getElementById('step3-title').textContent =
+    `PASO 3 · INGRESA ${isDoubles ? 'LAS PAREJAS ('+total/2+')' : 'LOS '+total+' JUGADORES'}`;
+
+  if (!isDoubles) {
+    // Simple list
+    let html = '<div class="names-grid cols-2">';
+    for (let i = 0; i < total; i++) {
+      html += `<div class="name-row">
+        <span class="name-idx">${i+1}</span>
+        <input type="text" id="p${i}" placeholder="Jugador ${i+1}" oninput="checkReady()" />
+      </div>`;
+    }
+    html += '</div>';
+    c.innerHTML = html;
+  } else {
+    // Pairs
+    const pairs = total / 2;
+    let html = '<div class="names-grid cols-1">';
+    for (let p = 0; p < pairs; p++) {
+      const a = p*2, b = p*2+1;
+      html += `<div class="pair-group">
+        <div class="pair-label">PAREJA ${p+1}</div>
+        <div class="name-row">
+          <span class="name-idx">A</span>
+          <input type="text" class="pair-input" id="p${a}" placeholder="Jugador ${a+1}" oninput="checkReady()" />
+        </div>
+        <div class="name-row">
+          <span class="name-idx">B</span>
+          <input type="text" class="pair-input" id="p${b}" placeholder="Jugador ${b+1}" oninput="checkReady()" />
+        </div>
+      </div>`;
+    }
+    html += '</div>';
+    c.innerHTML = html;
+  }
+  checkReady();
+}
+
+function checkReady() {
+  const total = state.count;
+  let ok = true;
+  for (let i = 0; i < total; i++) {
+    const el = document.getElementById('p' + i);
+    if (!el || !el.value.trim()) { ok = false; break; }
+  }
+  document.getElementById('btn-generate').disabled = !ok;
+}
+
+// ── GENERATE ──
+function generate() {
+  const total = state.count;
+  const players = [];
+  for (let i = 0; i < total; i++) {
+    players.push(document.getElementById('p'+i).value.trim());
+  }
+
+  if (state.mode === 'singles') buildSingleBracket(players);
+  else buildDoublesBracket(players);
+
+  document.getElementById('wizard').style.display = 'none';
+  const bv = document.getElementById('bracket-view');
+  bv.classList.add('active');
+
+  const modeLabel = state.mode === 'doubles' ? 'DOBLES' : 'SENCILLO';
+  document.getElementById('bk-meta').textContent = `🏓 PING PONG · ${modeLabel} · ${total} JUGADORES`;
+}
+
+// ── SINGLES BRACKET ──
+function buildSingleBracket(players) {
+  bracket.rounds = [];
+  bracket.winners = {};
+  bracket.champion = null;
+
+  // Build rounds structure
+  let current = players;
+  while (current.length > 1) {
+    const matches = [];
+    for (let i = 0; i < current.length; i += 2) {
+      matches.push({ id: `r${bracket.rounds.length}m${i/2}`, p1: current[i], p2: current[i+1], winner: null, type: 'single' });
+    }
+    bracket.rounds.push(matches);
+    current = current.map(() => null).slice(0, current.length / 2);
+  }
+
+  renderBracket();
+}
+
+// ── DOUBLES BRACKET ──
+function buildDoublesBracket(players) {
+  bracket.rounds = [];
+  bracket.winners = {};
+  bracket.champion = null;
+
+  // Build teams
+  const teams = [];
+  for (let i = 0; i < players.length; i += 2) {
+    teams.push({ p1: players[i], p2: players[i+1] });
+  }
+
+  let current = teams;
+  while (current.length > 1) {
+    const matches = [];
+    for (let i = 0; i < current.length; i += 2) {
+      matches.push({ id: `r${bracket.rounds.length}m${i/2}`, t1: current[i], t2: current[i+1], winner: null, type: 'doubles' });
+    }
+    bracket.rounds.push(matches);
+    current = current.map(() => null).slice(0, current.length / 2);
+  }
+
+  renderBracket();
+}
+
+// ── RENDER ──
+const ROUND_NAMES = [
+  ['OCTAVOS','DE FINAL'],
+  ['CUARTOS','DE FINAL'],
+  ['SEMI','FINAL'],
+  ['GRAN','FINAL']
+];
+
+function getRoundName(roundIdx, totalRounds) {
+  const revIdx = totalRounds - 1 - roundIdx;
+  if (revIdx === 0) return ['GRAN','FINAL'];
+  if (revIdx === 1) return ['SEMI','FINAL'];
+  if (revIdx === 2) return ['CUARTOS','DE FINAL'];
+  return ['OCTAVOS','DE FINAL'];
+}
+
+function renderBracket() {
+  const container = document.getElementById('bracket-rounds');
+  container.innerHTML = '';
+  const totalRounds = bracket.rounds.length;
+
+  bracket.rounds.forEach((matches, rIdx) => {
+    // Connector
+    if (rIdx > 0) {
+      const conn = document.createElement('div');
+      conn.className = 'connector';
+      container.appendChild(conn);
+    }
+
+    // Round column
+    const col = document.createElement('div');
+    col.className = 'round-col';
+
+    const [rName, rSub] = getRoundName(rIdx, totalRounds);
+    const isFinalRound = rIdx === totalRounds - 1;
+
+    col.innerHTML = `<div class="round-header">
+      <div class="round-name">${rName}</div>
+      <div class="round-sub">${rSub}</div>
+    </div>
+    <div class="round-matches" id="col-${rIdx}"></div>`;
+    container.appendChild(col);
+
+    const matchesContainer = col.querySelector(`#col-${rIdx}`);
+
+    matches.forEach((match, mIdx) => {
+      const card = document.createElement('div');
+      card.className = 'match-card' + (isFinalRound ? ' is-final' : '') + (match.type === 'doubles' ? ' dobles' : '');
+      card.id = 'match-' + match.id;
+
+      // Check if locked (previous round not resolved)
+      const locked = match.type === 'singles'
+        ? (!match.p1 || !match.p2)
+        : (!match.t1 || !match.t2);
+
+      if (locked) card.classList.add('locked');
+
+      if (match.type === 'doubles') {
+        card.innerHTML = buildDoubleMatchHTML(match, isFinalRound);
+      } else {
+        card.innerHTML = buildSingleMatchHTML(match, isFinalRound);
+      }
+
+      matchesContainer.appendChild(card);
+    });
+  });
+
+  updateChampion();
+}
+
+function buildSingleMatchHTML(match, isFinal) {
+  const w = match.winner;
+  const p1win = w === match.p1 && w !== null;
+  const p2win = w === match.p2 && w !== null;
+  const p1lose = w !== null && w !== match.p1;
+  const p2lose = w !== null && w !== match.p2;
+  const clickable = match.p1 && match.p2;
+  const fc = isFinal ? ' is-final' : '';
+  const ac = isFinal ? ' final' : '';
+
+  return `
+    <div class="player-slot${fc}${p1win?' winner':''}${p1lose?' loser':''}${clickable?' clickable':''}" onclick="${clickable?`pickWinner('${match.id}','${escape(match.p1)}')`:''}" >
+      <span class="slot-name${p1win?' winner-text':''}${!match.p1?' empty':''}">${match.p1 ? esc(match.p1).toUpperCase() : '— TBD —'}</span>
+      ${p1win ? `<span class="slot-check${ac}">✓</span>` : ''}
+    </div>
+    <div class="vs-divider"><span class="vs-text">VS</span></div>
+    <div class="player-slot${fc}${p2win?' winner':''}${p2lose?' loser':''}${clickable?' clickable':''}" onclick="${clickable?`pickWinner('${match.id}','${escape(match.p2)}')`:''}" >
+      <span class="slot-name${p2win?' winner-text':''}${!match.p2?' empty':''}">${match.p2 ? esc(match.p2).toUpperCase() : '— TBD —'}</span>
+      ${p2win ? `<span class="slot-check${ac}">✓</span>` : ''}
+    </div>`;
+}
+
+function buildDoubleMatchHTML(match, isFinal) {
+  const w = match.winner; // winner is index: 1 or 2
+  const t1win = w === 1; const t2win = w === 2;
+  const t1lose = w === 2; const t2lose = w === 1;
+  const clickable = match.t1 && match.t2;
+
+  const teamHTML = (team, side, isWin, isLose) => {
+    if (!team) return `<div class="player-slot pair-slot clickable">
+      <span class="slot-name empty">— POR DEFINIR —</span>
+    </div>`;
+    return `<div class="player-slot pair-slot${isWin?' winner':''}${isLose?' loser':''}${clickable?' clickable':''}"
+      onclick="${clickable ? `pickDoublesWinner('${match.id}',${side})` : ''}">
+      <div class="pair-names">
+        <span class="slot-name${isWin?' winner-text':''}">${esc(team.p1).toUpperCase()}</span>
+        <span class="pair-amp">&</span>
+        <span class="slot-name${isWin?' winner-text':''}">${esc(team.p2).toUpperCase()}</span>
+        ${isWin ? `<span class="slot-check">✓</span>` : ''}
+      </div>
+      <div class="pair-tag">PAREJA</div>
+    </div>`;
+  };
+
+  return teamHTML(match.t1, 1, t1win, t1lose) +
+    `<div class="vs-divider"><span class="vs-text">VS</span></div>` +
+    teamHTML(match.t2, 2, t2win, t2lose);
+}
+
+function esc(str) {
+  return str.replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escape(str) { return str.replace(/'/g, "\\'"); }
+
+// ── PICK WINNER ──
+function pickWinner(matchId, playerName) {
+  let rIdx = -1, mIdx = -1;
+  bracket.rounds.forEach((r, ri) => r.forEach((m, mi) => { if(m.id===matchId){rIdx=ri;mIdx=mi;} }));
+  if (rIdx < 0) return;
+
+  const match = bracket.rounds[rIdx][mIdx];
+  if (match.winner === playerName) return; // toggle off? no, just ignore
+  match.winner = playerName;
+
+  // Propagate to next round
+  propagate(rIdx, mIdx, playerName, null);
+  renderBracket();
+}
+
+function pickDoublesWinner(matchId, side) {
+  let rIdx = -1, mIdx = -1;
+  bracket.rounds.forEach((r, ri) => r.forEach((m, mi) => { if(m.id===matchId){rIdx=ri;mIdx=mi;} }));
+  if (rIdx < 0) return;
+
+  const match = bracket.rounds[rIdx][mIdx];
+  if (match.winner === side) return;
+  match.winner = side;
+
+  const winTeam = side === 1 ? match.t1 : match.t2;
+  propagate(rIdx, mIdx, null, winTeam);
+  renderBracket();
+}
+
+function propagate(rIdx, mIdx, playerName, team) {
+  const nextRIdx = rIdx + 1;
+  if (nextRIdx >= bracket.rounds.length) {
+    // Final winner
+    if (playerName) bracket.champion = { type: 'single', name: playerName };
+    else bracket.champion = { type: 'doubles', team };
+    return;
+  }
+
+  const nextMIdx = Math.floor(mIdx / 2);
+  const slot = mIdx % 2 === 0 ? 1 : 2; // 1=p1/t1, 2=p2/t2
+  const nextMatch = bracket.rounds[nextRIdx][nextMIdx];
+
+  // Clear downstream if changing winner
+  clearDownstream(nextRIdx, nextMIdx);
+
+  if (playerName) {
+    if (slot === 1) nextMatch.p1 = playerName;
+    else nextMatch.p2 = playerName;
+  } else {
+    if (slot === 1) nextMatch.t1 = team;
+    else nextMatch.t2 = team;
+  }
+}
+
+function clearDownstream(rIdx, mIdx) {
+  if (rIdx >= bracket.rounds.length) return;
+  const match = bracket.rounds[rIdx][mIdx];
+  const prevWinner = match.winner;
+  match.winner = null;
+  bracket.champion = null;
+
+  if (prevWinner !== null) {
+    clearDownstream(rIdx + 1, Math.floor(mIdx / 2));
+  }
+}
+
+function updateChampion() {
+  const banner = document.getElementById('champion-banner');
+  const nameEl = document.getElementById('champ-name');
+  const labelEl = document.getElementById('champ-label');
+
+  if (bracket.champion) {
+    banner.classList.add('show');
+    if (bracket.champion.type === 'single') {
+      labelEl.textContent = '🏆 CAMPEÓN';
+      nameEl.textContent = bracket.champion.name.toUpperCase();
+    } else {
+      labelEl.textContent = '🏆 CAMPEONES';
+      nameEl.textContent = bracket.champion.team.p1.toUpperCase() + ' & ' + bracket.champion.team.p2.toUpperCase();
+    }
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+function resetBracket() {
+  bracket.champion = null;
+  bracket.rounds.forEach(r => r.forEach((m, mi) => {
+    m.winner = null;
+    if (m.type === 'singles') {
+      // Restore only round 0 originals; clear the rest
+      if (/* rIdx */bracket.rounds.indexOf(r) > 0) { m.p1 = null; m.p2 = null; }
+    } else {
+      if (bracket.rounds.indexOf(r) > 0) { m.t1 = null; m.t2 = null; }
+    }
+  }));
+  // Re-generate from scratch keeping original players
+  const inputs = [];
+  for (let i = 0; i < state.count; i++) inputs.push(document.getElementById('p'+i)?.value?.trim());
+  if (state.mode === 'doubles') {
+    const teams = [];
+    for (let i = 0; i < inputs.length; i+=2) teams.push({p1:inputs[i],p2:inputs[i+1]});
+    buildDoublesBracket(inputs);
+  } else {
+    buildSingleBracket(inputs);
+  }
+}
+
+function backToWizard() {
+  document.getElementById('bracket-view').classList.remove('active');
+  document.getElementById('wizard').style.display = '';
+  // Reset selections
+  document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
+  state = { count: null, mode: null };
+  goStep(1);
+}
+</script>
+</body>
+</html>
