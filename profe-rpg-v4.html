@@ -602,6 +602,11 @@ const transitionTo=(id,tx,ty)=>{
   setTimeout(()=>Music.play(id),200);
   // COVID entry message (first visit)
   currentMap=id; player.x=tx; player.y=ty; player.steps=0; updateCamera();
+  // Pre-render static tiles to offscreen canvas on map change
+  if(MAPS[id]&&typeof window!=='undefined'&&typeof drawMap==='function'){
+    const fn=drawMap._fnMap?.[id];
+    if(fn&&!TileCache.get(id)) setTimeout(()=>TileCache.prerender(id,MAPS[id],fn),50);
+  }
   setTimeout(()=>{ const msg=COVID_ENTRY_MSGS[currentMap]; if(msg&&STATE==='exploring'){const txt=msg();if(txt)setTimeout(()=>showDialog(txt),100);} },500);
 };
 
@@ -3200,43 +3205,26 @@ function drawJardinEdenTile(t,sx,sy,mR,mC){
       ctx.shadowBlur=0; ctx.font='bold 3px sans-serif'; ctx.fillStyle='#fbbf24';
       ctx.textBaseline='top'; ctx.fillText('TROFEOS',sx+TS/2,sy+2);
       ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break;}
-    case 'C':{ // Profesora Carol — amorosa, pelo largo castaño
+    case 'C':{ // Profesora Carol — jardín
       const cp=.5+.5*Math.sin(tick*.06+mC);
       ctx.fillStyle='#14532d'; ctx.fillRect(sx,sy,TS,TS);
-      // Cuerpo — vestido rosado cálido
       ctx.fillStyle='#db2777'; ctx.fillRect(sx+TS*.22,sy+TS*.42,TS*.56,TS*.42);
-      // Falda amplia
       ctx.fillStyle='#ec4899'; ctx.fillRect(sx+TS*.18,sy+TS*.6,TS*.64,TS*.32);
-      // Brazo izq (sosteniendo libro)
-      ctx.fillStyle='#db2777'; ctx.fillRect(sx+TS*.1,sy+TS*.44,TS*.14,TS*.28);
-      ctx.fillStyle='#fef3c7'; ctx.fillRect(sx+TS*.06,sy+TS*.55,TS*.12,TS*.15);
-      // Zapatos
-      ctx.fillStyle='#9d174d'; ctx.fillRect(sx+TS*.26,sy+TS*.88,TS*.18,TS*.1);
-      ctx.fillRect(sx+TS*.56,sy+TS*.88,TS*.18,TS*.1);
-      // Cabeza — piel clara sonrojada
       ctx.fillStyle='#f9a8d4'; ctx.beginPath();
       ctx.arc(sx+TS*.5,sy+TS*.24,TS*.17,0,Math.PI*2); ctx.fill();
-      // Pelo largo castaño — olas laterales
       ctx.fillStyle='#92400e';
       ctx.beginPath(); ctx.arc(sx+TS*.5,sy+TS*.18,TS*.19,Math.PI,0); ctx.fill();
-      ctx.fillRect(sx+TS*.31,sy+TS*.17,TS*.1,TS*.46);
-      ctx.fillRect(sx+TS*.59,sy+TS*.17,TS*.1,TS*.46);
-      // Ojos grandes y expresivos
+      ctx.fillRect(sx+TS*.31,sy+TS*.17,TS*.1,TS*.44);
+      ctx.fillRect(sx+TS*.59,sy+TS*.17,TS*.1,TS*.44);
       ctx.fillStyle='#fff';
       ctx.fillRect(sx+TS*.39,sy+TS*.21,TS*.09,TS*.08);
       ctx.fillRect(sx+TS*.52,sy+TS*.21,TS*.09,TS*.08);
       ctx.fillStyle='#7c3aed';
       ctx.fillRect(sx+TS*.42,sy+TS*.22,TS*.05,TS*.06);
       ctx.fillRect(sx+TS*.55,sy+TS*.22,TS*.05,TS*.06);
-      // Sonrisa amplia
-      ctx.strokeStyle='#9d174d'; ctx.lineWidth=1;
-      ctx.beginPath(); ctx.arc(sx+TS*.5,sy+TS*.31,TS*.06,.1,Math.PI-.1); ctx.stroke();
-      // Corazón flotante
-      ctx.shadowColor='rgba(236,72,153,.6)'; ctx.shadowBlur=4+3*cp;
+      ctx.shadowColor=`rgba(236,72,153,${.5+.4*cp})`; ctx.shadowBlur=5+4*cp;
       ctx.font='5px serif'; ctx.textAlign='center'; ctx.textBaseline='top';
-      ctx.fillStyle='#fce7f3'; ctx.fillText('💕',sx+TS*.75,sy+TS*.05);
-      ctx.shadowBlur=0;
-      // Nombre
+      ctx.fillText('💕',sx+TS*.78,sy+2); ctx.shadowBlur=0;
       ctx.font='bold 3px sans-serif'; ctx.fillStyle='#fce7f3';
       ctx.textBaseline='top'; ctx.fillText('CAROL',sx+TS/2,sy+1);
       ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break;}
@@ -3281,115 +3269,248 @@ function drawSegundoPisoTile(t,sx,sy,mR,mC){
 
 // ─── drawSala5toTile (Atacama) ────────────────────────────────
 function drawSala5toTile(t,sx,sy,mR,mC){
-  const p=.5+.5*Math.sin(tick*.04+mC*.3);
+  // 5° Básico — Región Atacama (desierto, cactus, arena)
+  const p=.5+.5*Math.sin(tick*.04+mC*.3+mR*.2);
+  const isDeskRow=[3,5,7].includes(mR), isDeskCol=[3,6,9,12,15,18].includes(mC);
   switch(t){
-    case '#':{ ctx.fillStyle='#92400e';ctx.fillRect(sx,sy,TS,TS);ctx.fillStyle='#b45309';ctx.fillRect(sx,sy,TS,2);break;}
+    case '#':{
+      ctx.fillStyle='#7c2d12'; ctx.fillRect(sx,sy,TS,TS);
+      // PIZARRÓN (row 0, cols 3..18)
+      if(mR===0&&mC>=3&&mC<=18){
+        ctx.fillStyle='#14532d'; ctx.fillRect(sx+1,sy+3,TS-2,TS-5);
+        ctx.strokeStyle='#c2410c'; ctx.lineWidth=1;
+        ctx.strokeRect(sx+1,sy+3,TS-2,TS-5);
+        ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.lineWidth=.8;
+        if(mC===8){ctx.beginPath();ctx.moveTo(sx+3,sy+TS*.55);ctx.lineTo(sx+TS-3,sy+TS*.55);ctx.stroke();}
+        if(mC===14){ctx.font='5px serif';ctx.fillStyle='rgba(255,255,255,.6)';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🌵',sx+TS/2,sy+TS/2);ctx.textAlign='left';ctx.textBaseline='alphabetic';}
+        break;
+      }
+      // VENTANAS (rows 2,4,6 en cols 0 y 21)
+      if((mC===0||mC===21)&&[2,4,6].includes(mR)){
+        ctx.fillStyle='#bae6fd'; ctx.fillRect(sx+2,sy+2,TS-4,TS-4);
+        ctx.strokeStyle='#fff'; ctx.lineWidth=1;
+        ctx.strokeRect(sx+2,sy+2,TS-4,TS-4);
+        ctx.beginPath();
+        ctx.moveTo(sx+TS/2,sy+2);ctx.lineTo(sx+TS/2,sy+TS-2);
+        ctx.moveTo(sx+2,sy+TS*.5);ctx.lineTo(sx+TS-2,sy+TS*.5);
+        ctx.stroke();
+        ctx.fillStyle='rgba(255,255,255,.2)'; ctx.fillRect(sx+3,sy+3,TS*.35,TS*.35);
+        break;
+      }
+      ctx.fillStyle='#c2410c'; ctx.fillRect(sx,sy,TS,2); break;}
     case '.':{
-      // Arena/piso tipo desierto
-      ctx.fillStyle='#fef3c7';ctx.fillRect(sx,sy,TS,TS);
-      ctx.fillStyle='rgba(180,140,60,.15)';ctx.fillRect(sx,sy,TS/2,TS/2);
-      ctx.fillRect(sx+TS/2,sy+TS/2,TS/2,TS/2); break;}
-    case 'g':{
-      // Cactus del desierto
-      ctx.fillStyle='#d97706';ctx.fillRect(sx,sy,TS,TS);
-      ctx.fillStyle='#16a34a';ctx.fillRect(sx+TS*.4,sy+TS*.15,TS*.2,TS*.7);
-      ctx.fillRect(sx+TS*.2,sy+TS*.35,TS*.25,TS*.15);
-      ctx.fillRect(sx+TS*.55,sy+TS*.45,TS*.25,TS*.15);
-      ctx.fillStyle='#fbbf24';ctx.font='5px serif';ctx.textAlign='center';
-      ctx.textBaseline='middle';ctx.fillText('🌵',sx+TS/2,sy+TS*.5);
-      ctx.textAlign='left';ctx.textBaseline='alphabetic';break;}
-    case 'E':{drawExit(sx,sy,'#d97706','SALIR');break;}
+      // Piso tipo arena (damero)
+      ctx.fillStyle='#fef3c7'; ctx.fillRect(sx,sy,TS,TS);
+      ctx.fillStyle='rgba(234,179,8,.12)'; ctx.fillRect(sx+(mC%2?TS*.5:0),sy+(mR%2?TS*.5:0),TS*.5,TS*.5);
+      // MESAS DE ALUMNOS
+      if(isDeskRow&&isDeskCol){
+        ctx.fillStyle='#b45309'; ctx.fillRect(sx+2,sy+TS*.38,TS-4,TS*.07);
+        ctx.fillStyle='#92400e'; ctx.fillRect(sx+2,sy+TS*.45,TS-4,TS*.3);
+        ctx.fillStyle='#78350f';
+        ctx.fillRect(sx+3,sy+TS*.76,3,TS*.22);
+        ctx.fillRect(sx+TS-6,sy+TS*.76,3,TS*.22);
+        if((mC+mR)%3===0){ctx.fillStyle='#f97316';ctx.fillRect(sx+TS*.25,sy+TS*.3,TS*.42,TS*.1);ctx.strokeStyle='rgba(0,0,0,.3)';ctx.lineWidth=.5;ctx.strokeRect(sx+TS*.25,sy+TS*.3,TS*.42,TS*.1);}
+      }
+      // MESA DEL PROFESOR
+      if(mR===4&&[5,6,7].includes(mC)){
+        ctx.fillStyle='rgba(249,115,22,.15)'; ctx.fillRect(sx,sy+TS*.28,TS,TS*.44);
+        ctx.fillStyle='#f97316'; ctx.fillRect(sx,sy+TS*.28,TS,TS*.06);
+      }
+      break;}
+    case 'g':{ctx.fillStyle='#d97706';ctx.fillRect(sx,sy,TS,TS);ctx.font='8px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🌵',sx+TS/2,sy+TS/2);ctx.textAlign='left';ctx.textBaseline='alphabetic';break;}
+    case 'E':{drawExit(sx,sy,'#f97316','SALIR');break;}
     case '!':{
-      // Profesor Jorge — piel media, pelo oscuro corto
+      ctx.fillStyle='#fef3c7';ctx.fillRect(sx,sy,TS,TS);
       drawProfesorBase(sx,sy,'#c4956a','#2d1b00','#1e40af');
-      ctx.font='bold 3px sans-serif';ctx.fillStyle='#fef9c3';
-      ctx.textBaseline='top';ctx.textAlign='center';ctx.fillText('JORGE',sx+TS/2,sy+1);
-      ctx.textAlign='left';ctx.textBaseline='alphabetic';break;}
+      ctx.font='bold 3px sans-serif';ctx.fillStyle='#78350f';ctx.textBaseline='top';ctx.textAlign='center';ctx.fillText('JORGE',sx+TS/2,sy+1);ctx.textAlign='left';ctx.textBaseline='alphabetic';break;}
+    case '*':{
+      ctx.fillStyle='#fef3c7';ctx.fillRect(sx,sy,TS,TS);
+      ctx.shadowColor='rgba(251,191,36,.9)';ctx.shadowBlur=8+6*p;
+      ctx.font='10px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('⭕',sx+TS/2,sy+TS*.52);ctx.shadowBlur=0;
+      ctx.font='bold 3px sans-serif';ctx.fillStyle='#f97316';ctx.textBaseline='top';ctx.fillText('(6/10)',sx+TS/2,sy+2);ctx.textAlign='left';ctx.textBaseline='alphabetic';break;}
     default:ctx.fillStyle='#fef3c7';ctx.fillRect(sx,sy,TS,TS);
   }
 }
 
 // ─── drawSala6toTile (Región Metropolitana) ───────────────────
 function drawSala6toTile(t,sx,sy,mR,mC){
-  const p=.5+.5*Math.sin(tick*.04+mC*.3);
+  // 6° Básico — Región Metropolitana (urbano, metro, Santiago)
+  const p=.5+.5*Math.sin(tick*.04+mC*.3+mR*.2);
+  const isDeskRow=[3,5,7].includes(mR), isDeskCol=[3,6,9,12,15,18].includes(mC);
   switch(t){
-    case '#':{ ctx.fillStyle='#1e3a5f';ctx.fillRect(sx,sy,TS,TS);ctx.fillStyle='#2563eb';ctx.fillRect(sx,sy,TS,2);break;}
+    case '#':{
+      ctx.fillStyle='#1e3a5f'; ctx.fillRect(sx,sy,TS,TS);
+      if(mR===0&&mC>=3&&mC<=18){
+        ctx.fillStyle='#166534'; ctx.fillRect(sx+1,sy+3,TS-2,TS-5);
+        ctx.strokeStyle='#3b82f6'; ctx.lineWidth=1;
+        ctx.strokeRect(sx+1,sy+3,TS-2,TS-5);
+        ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.lineWidth=.8;
+        if(mC===8){ctx.beginPath();ctx.moveTo(sx+3,sy+TS*.45);ctx.lineTo(sx+TS-3,sy+TS*.45);ctx.moveTo(sx+3,sy+TS*.65);ctx.lineTo(sx+TS-3,sy+TS*.65);ctx.stroke();}
+        if(mC===14){ctx.font='5px serif';ctx.fillStyle='rgba(255,255,255,.6)';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('⭐',sx+TS/2,sy+TS/2);ctx.textAlign='left';ctx.textBaseline='alphabetic';}
+        break;
+      }
+      if((mC===0||mC===21)&&[2,4,6].includes(mR)){
+        ctx.fillStyle='#bae6fd'; ctx.fillRect(sx+2,sy+2,TS-4,TS-4);
+        ctx.strokeStyle='#fff'; ctx.lineWidth=1;
+        ctx.strokeRect(sx+2,sy+2,TS-4,TS-4);
+        ctx.beginPath();
+        ctx.moveTo(sx+TS/2,sy+2);ctx.lineTo(sx+TS/2,sy+TS-2);
+        ctx.moveTo(sx+2,sy+TS*.5);ctx.lineTo(sx+TS-2,sy+TS*.5);
+        ctx.stroke();
+        ctx.fillStyle='rgba(255,255,255,.25)'; ctx.fillRect(sx+3,sy+3,TS*.35,TS*.35);
+        break;
+      }
+      ctx.fillStyle='#3b82f6'; ctx.fillRect(sx,sy,TS,2); break;}
     case '.':{
-      ctx.fillStyle='#e0e7ff';ctx.fillRect(sx,sy,TS,TS);
-      ctx.strokeStyle='#c7d2fe';ctx.lineWidth=.5;ctx.strokeRect(sx+.5,sy+.5,TS-1,TS-1);break;}
-    case 'g':{
-      // Metro de Santiago
-      ctx.fillStyle='#1e40af';ctx.fillRect(sx,sy,TS,TS);
-      ctx.fillStyle='#ef4444';ctx.fillRect(sx+2,sy+TS*.5,TS-4,TS*.35);
-      ctx.fillStyle='#fbbf24';ctx.font='6px serif';ctx.textAlign='center';
-      ctx.textBaseline='middle';ctx.fillText('🚇',sx+TS/2,sy+TS*.5);
-      ctx.textAlign='left';ctx.textBaseline='alphabetic';break;}
+      ctx.fillStyle='#e0e7ff'; ctx.fillRect(sx,sy,TS,TS);
+      ctx.fillStyle='rgba(99,102,241,.1)'; ctx.fillRect(sx+(mC%2?TS*.5:0),sy+(mR%2?TS*.5:0),TS*.5,TS*.5);
+      if(isDeskRow&&isDeskCol){
+        ctx.fillStyle='#2563eb'; ctx.fillRect(sx+2,sy+TS*.38,TS-4,TS*.07);
+        ctx.fillStyle='#1e3a5f'; ctx.fillRect(sx+2,sy+TS*.45,TS-4,TS*.3);
+        ctx.fillStyle='#1e3a5f';
+        ctx.fillRect(sx+3,sy+TS*.76,3,TS*.22);
+        ctx.fillRect(sx+TS-6,sy+TS*.76,3,TS*.22);
+        if((mC+mR)%3===0){ctx.fillStyle='#6366f1';ctx.fillRect(sx+TS*.25,sy+TS*.3,TS*.42,TS*.1);ctx.strokeStyle='rgba(0,0,0,.3)';ctx.lineWidth=.5;ctx.strokeRect(sx+TS*.25,sy+TS*.3,TS*.42,TS*.1);}
+      }
+      if(mR===4&&[5,6,7].includes(mC)){
+        ctx.fillStyle='rgba(37,99,235,.15)'; ctx.fillRect(sx,sy+TS*.28,TS,TS*.44);
+        ctx.fillStyle='#2563eb'; ctx.fillRect(sx,sy+TS*.28,TS,TS*.06);
+      }
+      break;}
+    case 'g':{ctx.fillStyle='#1e40af';ctx.fillRect(sx,sy,TS,TS);ctx.font='7px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🚇',sx+TS/2,sy+TS/2);ctx.textAlign='left';ctx.textBaseline='alphabetic';break;}
     case 'E':{drawExit(sx,sy,'#2563eb','SALIR');break;}
     case '~':{
-      // Profe Felipe — es el protagonista (especial, con estrella)
+      ctx.fillStyle='#e0e7ff';ctx.fillRect(sx,sy,TS,TS);
       drawProfesorBase(sx,sy,'#c4956a','#3b1f00','#1e3a5f');
-      ctx.shadowColor='rgba(251,191,36,.7)';ctx.shadowBlur=5+3*p;
-      ctx.font='6px serif';ctx.textAlign='center';ctx.textBaseline='top';
-      ctx.fillText('⭐',sx+TS/2-1,sy+TS*.12); ctx.shadowBlur=0;
-      ctx.font='bold 3px sans-serif';ctx.fillStyle='#fde68a';
-      ctx.textBaseline='top';ctx.fillText('FELIPE',sx+TS/2,sy+1);
-      ctx.textAlign='left';ctx.textBaseline='alphabetic';break;}
+      const ep=.5+.5*Math.sin(tick*.1);
+      ctx.shadowColor='rgba(251,191,36,.7)';ctx.shadowBlur=5+3*ep;
+      ctx.font='6px serif';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('⭐',sx+TS*.8,sy+2);ctx.shadowBlur=0;
+      ctx.font='bold 3px sans-serif';ctx.fillStyle='#fde68a';ctx.textBaseline='top';ctx.fillText('FELIPE',sx+TS/2,sy+1);ctx.textAlign='left';ctx.textBaseline='alphabetic';break;}
+    case '*':{
+      ctx.fillStyle='#e0e7ff';ctx.fillRect(sx,sy,TS,TS);
+      ctx.shadowColor='rgba(251,191,36,.9)';ctx.shadowBlur=8+6*p;
+      ctx.font='10px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('💊',sx+TS/2,sy+TS*.52);ctx.shadowBlur=0;
+      ctx.font='bold 3px sans-serif';ctx.fillStyle='#2563eb';ctx.textBaseline='top';ctx.fillText('(1/10)',sx+TS/2,sy+2);ctx.textAlign='left';ctx.textBaseline='alphabetic';break;}
     default:ctx.fillStyle='#e0e7ff';ctx.fillRect(sx,sy,TS,TS);
   }
 }
 
 // ─── drawSala7moTile (Región del Maule) ──────────────────────
 function drawSala7moTile(t,sx,sy,mR,mC){
-  const p=.5+.5*Math.sin(tick*.04+mC*.3);
+  // 7° Básico — Región del Maule (viñedos, campo)
+  const p=.5+.5*Math.sin(tick*.04+mC*.3+mR*.2);
+  const isDeskRow=[3,5,7].includes(mR), isDeskCol=[3,6,9,12,15,18].includes(mC);
   switch(t){
-    case '#':{ ctx.fillStyle='#14532d';ctx.fillRect(sx,sy,TS,TS);ctx.fillStyle='#15803d';ctx.fillRect(sx,sy,TS,2);break;}
+    case '#':{
+      ctx.fillStyle='#14532d'; ctx.fillRect(sx,sy,TS,TS);
+      if(mR===0&&mC>=3&&mC<=18){
+        ctx.fillStyle='#166534'; ctx.fillRect(sx+1,sy+3,TS-2,TS-5);
+        ctx.strokeStyle='#16a34a'; ctx.lineWidth=1;
+        ctx.strokeRect(sx+1,sy+3,TS-2,TS-5);
+        ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.lineWidth=.8;
+        if(mC===8){ctx.beginPath();ctx.moveTo(sx+3,sy+TS*.5);ctx.lineTo(sx+TS-3,sy+TS*.5);ctx.stroke();}
+        if(mC===14){ctx.font='5px serif';ctx.fillStyle='rgba(255,255,255,.6)';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🍇',sx+TS/2,sy+TS/2);ctx.textAlign='left';ctx.textBaseline='alphabetic';}
+        break;
+      }
+      if((mC===0||mC===21)&&[2,4,6].includes(mR)){
+        ctx.fillStyle='#bae6fd'; ctx.fillRect(sx+2,sy+2,TS-4,TS-4);
+        ctx.strokeStyle='#fff'; ctx.lineWidth=1;
+        ctx.strokeRect(sx+2,sy+2,TS-4,TS-4);
+        ctx.beginPath();
+        ctx.moveTo(sx+TS/2,sy+2);ctx.lineTo(sx+TS/2,sy+TS-2);
+        ctx.moveTo(sx+2,sy+TS*.5);ctx.lineTo(sx+TS-2,sy+TS*.5);
+        ctx.stroke();
+        ctx.fillStyle='rgba(255,255,255,.2)'; ctx.fillRect(sx+3,sy+3,TS*.35,TS*.35);
+        break;
+      }
+      ctx.fillStyle='#16a34a'; ctx.fillRect(sx,sy,TS,2); break;}
     case '.':{
-      ctx.fillStyle='#f0fdf4';ctx.fillRect(sx,sy,TS,TS);
-      ctx.fillStyle='rgba(21,128,61,.1)';
-      for(let i=0;i<4;i++) ctx.fillRect(sx+i*8,sy,2,TS);break;}
-    case 'g':{
-      // Viñedos del Maule
-      ctx.fillStyle='#166534';ctx.fillRect(sx,sy,TS,TS);
-      ctx.fillStyle='#7c3aed';ctx.font='6px serif';ctx.textAlign='center';
-      ctx.textBaseline='middle';ctx.fillText('🍇',sx+TS/2,sy+TS*.5);
-      ctx.textAlign='left';ctx.textBaseline='alphabetic';break;}
-    case 'E':{drawExit(sx,sy,'#15803d','SALIR');break;}
+      ctx.fillStyle='#f0fdf4'; ctx.fillRect(sx,sy,TS,TS);
+      ctx.fillStyle='rgba(21,128,61,.08)'; ctx.fillRect(sx+(mC%2?TS*.5:0),sy+(mR%2?TS*.5:0),TS*.5,TS*.5);
+      if(isDeskRow&&isDeskCol){
+        ctx.fillStyle='#92400e'; ctx.fillRect(sx+2,sy+TS*.38,TS-4,TS*.07);
+        ctx.fillStyle='#78350f'; ctx.fillRect(sx+2,sy+TS*.45,TS-4,TS*.3);
+        ctx.fillStyle='#713f12';
+        ctx.fillRect(sx+3,sy+TS*.76,3,TS*.22);
+        ctx.fillRect(sx+TS-6,sy+TS*.76,3,TS*.22);
+        if((mC+mR)%3===0){ctx.fillStyle='#16a34a';ctx.fillRect(sx+TS*.25,sy+TS*.3,TS*.42,TS*.1);ctx.strokeStyle='rgba(0,0,0,.3)';ctx.lineWidth=.5;ctx.strokeRect(sx+TS*.25,sy+TS*.3,TS*.42,TS*.1);}
+      }
+      if(mR===4&&[5,6,7].includes(mC)){
+        ctx.fillStyle='rgba(22,163,74,.12)'; ctx.fillRect(sx,sy+TS*.28,TS,TS*.44);
+        ctx.fillStyle='#16a34a'; ctx.fillRect(sx,sy+TS*.28,TS,TS*.06);
+      }
+      break;}
+    case 'g':{ctx.fillStyle='#166534';ctx.fillRect(sx,sy,TS,TS);ctx.font='8px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🍇',sx+TS/2,sy+TS/2);ctx.textAlign='left';ctx.textBaseline='alphabetic';break;}
+    case 'E':{drawExit(sx,sy,'#16a34a','SALIR');break;}
     case '?':{
-      // Profesor José — pequeño y moreno
+      ctx.fillStyle='#f0fdf4';ctx.fillRect(sx,sy,TS,TS);
       drawProfesorBase(sx,sy,'#7c4a1e','#1a0a00','#065f46');
-      // Más pequeño (overwrite con escala menor)
-      ctx.font='bold 3px sans-serif';ctx.fillStyle='#bbf7d0';
-      ctx.textBaseline='top';ctx.textAlign='center';ctx.fillText('JOSÉ',sx+TS/2,sy+1);
-      ctx.textAlign='left';ctx.textBaseline='alphabetic';break;}
+      ctx.font='bold 3px sans-serif';ctx.fillStyle='#bbf7d0';ctx.textBaseline='top';ctx.textAlign='center';ctx.fillText('JOSÉ',sx+TS/2,sy+1);ctx.textAlign='left';ctx.textBaseline='alphabetic';break;}
+    case '*':{
+      ctx.fillStyle='#f0fdf4';ctx.fillRect(sx,sy,TS,TS);
+      ctx.shadowColor='rgba(251,191,36,.9)';ctx.shadowBlur=8+6*p;
+      ctx.font='10px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🔴',sx+TS/2,sy+TS*.52);ctx.shadowBlur=0;
+      ctx.font='bold 3px sans-serif';ctx.fillStyle='#16a34a';ctx.textBaseline='top';ctx.fillText('(4/10)',sx+TS/2,sy+2);ctx.textAlign='left';ctx.textBaseline='alphabetic';break;}
     default:ctx.fillStyle='#f0fdf4';ctx.fillRect(sx,sy,TS,TS);
   }
 }
 
 // ─── drawSala8voTile (Región Araucanía) ──────────────────────
 function drawSala8voTile(t,sx,sy,mR,mC){
-  const p=.5+.5*Math.sin(tick*.04+mC*.3);
+  // 8° Básico — Región de La Araucanía (mapuche, bosque)
+  const p=.5+.5*Math.sin(tick*.04+mC*.3+mR*.2);
+  const isDeskRow=[3,5,7].includes(mR), isDeskCol=[3,6,9,12,15,18].includes(mC);
   switch(t){
-    case '#':{ ctx.fillStyle='#312e81';ctx.fillRect(sx,sy,TS,TS);ctx.fillStyle='#4338ca';ctx.fillRect(sx,sy,TS,2);break;}
+    case '#':{
+      ctx.fillStyle='#312e81'; ctx.fillRect(sx,sy,TS,TS);
+      if(mR===0&&mC>=3&&mC<=18){
+        ctx.fillStyle='#1c5b2d'; ctx.fillRect(sx+1,sy+3,TS-2,TS-5);
+        ctx.strokeStyle='#6366f1'; ctx.lineWidth=1;
+        ctx.strokeRect(sx+1,sy+3,TS-2,TS-5);
+        ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.lineWidth=.8;
+        if(mC===8){ctx.beginPath();ctx.moveTo(sx+3,sy+TS*.5);ctx.lineTo(sx+TS-3,sy+TS*.5);ctx.stroke();}
+        if(mC===14){ctx.font='5px serif';ctx.fillStyle='rgba(255,255,255,.6)';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🌲',sx+TS/2,sy+TS/2);ctx.textAlign='left';ctx.textBaseline='alphabetic';}
+        break;
+      }
+      if((mC===0||mC===21)&&[2,4,6].includes(mR)){
+        ctx.fillStyle='#bae6fd'; ctx.fillRect(sx+2,sy+2,TS-4,TS-4);
+        ctx.strokeStyle='#fff'; ctx.lineWidth=1;
+        ctx.strokeRect(sx+2,sy+2,TS-4,TS-4);
+        ctx.beginPath();
+        ctx.moveTo(sx+TS/2,sy+2);ctx.lineTo(sx+TS/2,sy+TS-2);
+        ctx.moveTo(sx+2,sy+TS*.5);ctx.lineTo(sx+TS-2,sy+TS*.5);
+        ctx.stroke();
+        ctx.fillStyle='rgba(255,255,255,.25)'; ctx.fillRect(sx+3,sy+3,TS*.35,TS*.35);
+        break;
+      }
+      ctx.fillStyle='#4338ca'; ctx.fillRect(sx,sy,TS,2); break;}
     case '.':{
-      ctx.fillStyle='#eef2ff';ctx.fillRect(sx,sy,TS,TS);
-      // lluvia mapuche pattern
-      ctx.fillStyle='rgba(99,102,241,.12)';
-      if((mC+mR)%3===0) ctx.fillRect(sx+TS*.3,sy,2,TS); break;}
-    case 'g':{
-      // Árbol araucaria
-      ctx.fillStyle='#1e1b4b';ctx.fillRect(sx,sy,TS,TS);
-      ctx.fillStyle='#166534';
-      ctx.beginPath();ctx.moveTo(sx+TS*.5,sy+2);ctx.lineTo(sx+TS*.8,sy+TS*.6);ctx.lineTo(sx+TS*.2,sy+TS*.6);ctx.closePath();ctx.fill();
-      ctx.beginPath();ctx.moveTo(sx+TS*.5,sy+6);ctx.lineTo(sx+TS*.85,sy+TS*.8);ctx.lineTo(sx+TS*.15,sy+TS*.8);ctx.closePath();ctx.fill();
-      ctx.fillStyle='#92400e';ctx.fillRect(sx+TS*.45,sy+TS*.8,TS*.1,TS*.2);break;}
-    case 'E':{drawExit(sx,sy,'#4338ca','SALIR');break;}
+      ctx.fillStyle='#eef2ff'; ctx.fillRect(sx,sy,TS,TS);
+      if((mC+mR)%3===0){ctx.fillStyle='rgba(99,102,241,.1)';ctx.fillRect(sx+TS*.3,sy,2,TS);}
+      if(isDeskRow&&isDeskCol){
+        ctx.fillStyle='#4338ca'; ctx.fillRect(sx+2,sy+TS*.38,TS-4,TS*.07);
+        ctx.fillStyle='#312e81'; ctx.fillRect(sx+2,sy+TS*.45,TS-4,TS*.3);
+        ctx.fillStyle='#1e1b4b';
+        ctx.fillRect(sx+3,sy+TS*.76,3,TS*.22);
+        ctx.fillRect(sx+TS-6,sy+TS*.76,3,TS*.22);
+        if((mC+mR)%3===0){ctx.fillStyle='#7c3aed';ctx.fillRect(sx+TS*.25,sy+TS*.3,TS*.42,TS*.1);ctx.strokeStyle='rgba(0,0,0,.3)';ctx.lineWidth=.5;ctx.strokeRect(sx+TS*.25,sy+TS*.3,TS*.42,TS*.1);}
+      }
+      if(mR===4&&[5,6,7].includes(mC)){
+        ctx.fillStyle='rgba(124,58,237,.12)'; ctx.fillRect(sx,sy+TS*.28,TS,TS*.44);
+        ctx.fillStyle='#7c3aed'; ctx.fillRect(sx,sy+TS*.28,TS,TS*.06);
+      }
+      break;}
+    case 'g':{ctx.fillStyle='#1e1b4b';ctx.fillRect(sx,sy,TS,TS);ctx.fillStyle='#166534';ctx.beginPath();ctx.moveTo(sx+TS*.5,sy+2);ctx.lineTo(sx+TS*.8,sy+TS*.6);ctx.lineTo(sx+TS*.2,sy+TS*.6);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(sx+TS*.5,sy+6);ctx.lineTo(sx+TS*.85,sy+TS*.8);ctx.lineTo(sx+TS*.15,sy+TS*.8);ctx.closePath();ctx.fill();ctx.fillStyle='#92400e';ctx.fillRect(sx+TS*.45,sy+TS*.8,TS*.1,TS*.2);break;}
+    case 'E':{drawExit(sx,sy,'#7c3aed','SALIR');break;}
     case 'L':{
-      if(currentMap!=='sala_8vo'){ ctx.fillStyle='#1c1917';ctx.fillRect(sx,sy,TS,TS); break; }
-      // Profesora Camila — mujer
+      ctx.fillStyle='#eef2ff';ctx.fillRect(sx,sy,TS,TS);
       drawProfesoraBase(sx,sy,'#c4956a','#2d1400','#312e81');
-      ctx.font='bold 3px sans-serif';ctx.fillStyle='#c7d2fe';
-      ctx.textBaseline='top';ctx.textAlign='center';ctx.fillText('CAMILA',sx+TS/2,sy+1);
-      ctx.textAlign='left';ctx.textBaseline='alphabetic';break;}
+      ctx.font='bold 3px sans-serif';ctx.fillStyle='#c7d2fe';ctx.textBaseline='top';ctx.textAlign='center';ctx.fillText('CAMILA',sx+TS/2,sy+1);ctx.textAlign='left';ctx.textBaseline='alphabetic';break;}
+    case '*':{
+      ctx.fillStyle='#eef2ff';ctx.fillRect(sx,sy,TS,TS);
+      ctx.shadowColor='rgba(251,191,36,.9)';ctx.shadowBlur=8+6*p;
+      ctx.font='10px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('📏',sx+TS/2,sy+TS*.52);ctx.shadowBlur=0;
+      ctx.font='bold 3px sans-serif';ctx.fillStyle='#7c3aed';ctx.textBaseline='top';ctx.fillText('(8/10)',sx+TS/2,sy+2);ctx.textAlign='left';ctx.textBaseline='alphabetic';break;}
     default:ctx.fillStyle='#eef2ff';ctx.fillRect(sx,sy,TS,TS);
   }
 }
@@ -4096,12 +4217,13 @@ const NPC_ACT={
       const carIntro=!progress.carolMet;
       if(carIntro){
         progress.carolMet=true;
-        showDialog('👩‍🏫 PROFESORA CAROL\n\n"¡Hola! Soy la Profe Carol,\nconsejera del colegio.\n\n¿Eres de 7° Básico?"',[
+        showDialog('👩‍🏫 ¡HOLA! Soy la\nPROFESORA CAROL 💕\n\nSoy la consejera del colegio.\n¡Me alegra que estés aquí!\n\n¿Eres estudiante de\n7° Básico?',[
           {text:'✅ Sí, 7° Básico',action:()=>{
             progress.carolGrade='7mo';
             progress.antiQuestStarted=true;
             if(!progress.castMatUnlocked) progress.castMatUnlocked=true;
-            setTimeout(()=>showDialog('👩‍🏫 Carol:\n\n"¡Misión especial de 7°!\n\nEncuentra los 10 métodos\nanticonceptivos escondidos\nen el colegio.\n\nBusca el brillo dorado ✨\n\nAdemás, tienes el poder\n⚡ CASTIGO MATEMÁTICO!"'),200);
+            syncUI();
+            setTimeout(()=>showDialog('👩‍🏫 CAROL — MISIÓN ACTIVA 🎓\n\n¡Tu misión: Encuentra los\n10 métodos anticonceptivos\nescondidos en el colegio!\n\n✨ Busca el BRILLO DORADO\n\n📍 Ubicaciones:\n• Salas 5°,6°,7°,8° Básico\n• Biblioteca y Secretaría\n• Pasillo y Biología\n• Plaza y Jardín (¡aquí!)\n\n⚡ Nuevo poder desbloqueado:\nCAST. MATEMÁTICO (15 MP)'),200);
           }},
           {text:'❌ Otro curso',action:()=>{
             progress.carolGrade='otro';
@@ -4605,7 +4727,7 @@ function move(dx,dy,dir){
   const t=map[ny][nx]; if(!WALKABLE.has(t)&&!(inBoat&&(t==='w'||t==='D'||t==='0'))) return;
   if(inBoat&&t!=='w') inBoat=false;
   player.x=nx; player.y=ny; player.steps++; if((stats.hunger||100)>0) stats.hunger=Math.max(0,(stats.hunger||100)-0.08);
-  updateCamera(); if(checkMapExit()) return; checkBlueCoin(); checkCandySpot();
+  updateCamera(); if(checkMapExit()) return; checkBlueCoin(); checkCandySpot(); checkAntiPickup();
   if(tick%90===0) checkCOVIDProximityAlert();
   if(currentMap==='reserva'){const rm=progress.rangerMissions;
     if(rm.silva===1&&player.x>280&&rm.silva<2){rm.silva=2;showDialog('📍 ¡Valle Central explorado!\n\n✅ Muestra obtenida.\nRegresa con Guardabosques Silva.');}
@@ -4699,7 +4821,23 @@ function openInv(){
     li.innerHTML='<span>'+equipment.armor.emoji+' '+equipment.armor.name+'</span><span style="color:#4ade80;font-size:.75rem">'+equipment.armor.desc+'</span>';
     ul.appendChild(li);
   }
-  if(!foods.length&&!seeds.length&&!quest.length&&!equipment?.armor)
+  const antiItems=inventory.filter(i=>i.type==='anti');
+  if(antiItems.length){
+    sec('ANTICONCEPTIVOS ('+antiItems.length+'/10)','🎓');
+    antiItems.forEach(item=>{
+      const li=document.createElement('li'); li.className='inv-row';
+      li.style.cssText='flex-direction:column;align-items:flex-start;gap:3px;padding:4px 0';
+      const row=document.createElement('div');
+      row.style.cssText='display:flex;justify-content:space-between;width:100%;align-items:center';
+      row.innerHTML='<span style="font-size:.65rem">'+(item.emoji||'💊')+' '+item.name+'</span>'
+        +'<span style="font-size:.38rem;color:#6b7280">'+item.num+'/10</span>';
+      const btn=document.createElement('button'); btn.className='btn-read';
+      btn.textContent='Ver info'; btn.style.cssText='font-size:.38rem;padding:2px 6px';
+      btn.onclick=()=>{closeInv();if(typeof item.use==='function')item.use();};
+      li.appendChild(row); li.appendChild(btn); ul.appendChild(li);
+    });
+  }
+  if(!foods.length&&!seeds.length&&!quest.length&&!equipment?.armor&&!antiItems.length)
     ul.innerHTML+='<li style="color:#6b7280;width:100%;text-align:center;list-style:none;padding:12px">Mochila vacía...</li>';
   EL.invPanel.style.display='block';
 }
@@ -6645,6 +6783,27 @@ function checkAntiPickup(){
 }
 
 function drawAntiItem(sx,sy,item){
+  const p=.5+.5*Math.sin(tick*.12+(item.x+item.y)*.4);
+  const bounce=Math.sin(tick*.1+(item.x+item.y)*.5)*3;
+  // Glow base
+  ctx.shadowColor='rgba(251,191,36,1)'; ctx.shadowBlur=14+8*p;
+  ctx.fillStyle=`rgba(254,243,199,${.2+.1*p})`; ctx.fillRect(sx+2,sy+2,TS-4,TS-4);
+  // Emoji del ítem (rebotando)
+  ctx.font='13px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(item.emoji,sx+TS/2,sy+TS*.5+bounce);
+  ctx.shadowBlur=0;
+  // Número N/10 (pulsante)
+  ctx.font=`bold ${3+Math.round(p)}px sans-serif`;
+  ctx.fillStyle=`rgba(251,191,36,${.7+.3*p})`;
+  ctx.textBaseline='top'; ctx.fillText('('+item.num+'/10)',sx+TS/2,sy+2);
+  // Destellos en las esquinas
+  if(Math.floor(tick/8)%4===0){
+    ctx.fillStyle='rgba(255,255,255,.9)';
+    ctx.fillRect(sx+1,sy+1,2,2); ctx.fillRect(sx+TS-3,sy+TS-3,2,2);
+  }
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+}
+function _drawAntiItem_old(sx,sy,item){
   const p=.5+.5*Math.sin(tick*.1+(item.x+item.y)*.3);
   ctx.fillStyle='#0f172a'; ctx.fillRect(sx,sy,TS,TS);
   ctx.shadowColor='rgba(251,191,36,.8)'; ctx.shadowBlur=8+6*p;
@@ -6672,6 +6831,42 @@ function showAntiQuest(){
   const list=ANTI_ITEMS.map(it=>(found[it.id]?'✅':'⭕')+' '+it.emoji+' '+it.name).join('\n');
   showDialog('🎓 ACTIVIDAD ANTICONCEPTIVOS\n\n'+list+'\n\n'+Object.keys(found).length+'/10 encontrados');
 }
+
+// ════════════════════════════════════════════════════════════
+// TILECACHE — OffscreenCanvas por mapa (motor inspirado en AoE2)
+// Los tiles estáticos se pre-renderizan UNA VEZ por mapa.
+// drawMap() solo llama ctx.drawImage() para la capa estática.
+// ════════════════════════════════════════════════════════════
+const TileCache = (()=>{
+  const store=new Map();
+  const ANIMATED=new Set(['E','S','8','Z','V','N','^','>','*','@','%','C','r','$','!','~','?','L','M','F','W','z']);
+  const isStatic=t=>!ANIMATED.has(t);
+
+  return {
+    prerender(mapname, mapData, drawFn){
+      if(!mapData||!mapData.length) return;
+      const R=mapData.length, C=mapData[0].length;
+      let oc;
+      try { oc=new OffscreenCanvas(C*TS, R*TS); } 
+      catch(e){ return; } // fallback: navegadores sin OffscreenCanvas
+      const octx=oc.getContext('2d');
+      for(let r=0;r<R;r++) for(let c=0;c<C;c++){
+        const t=mapData[r][c];
+        if(isStatic(t)) drawFn(t,c*TS,r*TS,r,c,octx);
+      }
+      store.set(mapname, oc);
+    },
+    get(mapname){ return store.get(mapname)||null; },
+    invalidate(mapname){ store.delete(mapname); },
+    blit(ctx, mapname, camera){
+      const oc=store.get(mapname);
+      if(!oc) return false;
+      ctx.drawImage(oc, -camera.x*TS, -camera.y*TS);
+      return true;
+    },
+    isStatic
+  };
+})();
 
 // ═══ MODO ADMINISTRATIVO — CÓDIGO SECRETO ═══
 // Secuencia: ↑ ↓ ↑ ↑ ↓ ↓ A
