@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:#1a1a2e;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',Arial,sans-serif;}
+
+.calc{
+  background:#16213e;
+  border-radius:20px;
+  padding:24px;
+  box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.05);
+  width:320px;
+}
+
+/* Display */
+.display{
+  background:#0a0f1e;
+  border-radius:12px;
+  padding:16px 20px;
+  margin-bottom:20px;
+  min-height:90px;
+  display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-end;
+  border:1px solid rgba(255,255,255,.06);
+}
+.display .expr{
+  font-size:.85rem;color:rgba(255,255,255,.35);
+  min-height:20px;word-break:break-all;text-align:right;
+}
+.display .num{
+  font-size:2.6rem;font-weight:300;color:#fff;
+  word-break:break-all;text-align:right;line-height:1.1;
+  margin-top:4px;
+}
+
+/* Grid */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+
+/* Buttons */
+button{
+  border:none;cursor:pointer;border-radius:12px;
+  font-size:1.3rem;font-weight:500;
+  height:68px;
+  transition:transform .08s,filter .08s,box-shadow .08s;
+  outline:none;
+  -webkit-tap-highlight-color:transparent;
+}
+button:active{transform:scale(.93);filter:brightness(.85);}
+
+/* Types */
+.btn-num{background:#1f2f5a;color:#e8e8ff;box-shadow:0 4px 0 #111a36;}
+.btn-num:hover{background:#253770;}
+
+.btn-op{background:#2d5a8e;color:#90c8ff;box-shadow:0 4px 0 #1a3a5e;}
+.btn-op:hover{background:#366aa8;}
+
+.btn-eq{background:linear-gradient(135deg,#4a90d9,#2563ae);color:#fff;box-shadow:0 4px 0 #1a3a70;font-size:1.6rem;}
+.btn-eq:hover{filter:brightness(1.1);}
+
+.btn-clear{background:#3d1a1a;color:#ff7070;box-shadow:0 4px 0 #200e0e;}
+.btn-clear:hover{background:#4a2020;}
+
+.btn-del{background:#2a2040;color:#c0a8ff;box-shadow:0 4px 0 #150d20;}
+.btn-del:hover{background:#342860;}
+
+.btn-zero{grid-column:span 2;}
+
+/* Percent / sign */
+.btn-fn{background:#1a2a4a;color:#80b8ff;box-shadow:0 4px 0 #0d1520;}
+.btn-fn:hover{background:#223360;}
+</style>
+</head>
+<body>
+<div class="calc">
+  <div class="display">
+    <div class="expr" id="expr"></div>
+    <div class="num" id="num">0</div>
+  </div>
+  <div class="grid">
+    <button class="btn-clear" onclick="clear_()">C</button>
+    <button class="btn-fn"    onclick="sign()">+/−</button>
+    <button class="btn-fn"    onclick="percent()">%</button>
+    <button class="btn-op"    onclick="op('÷')">÷</button>
+
+    <button class="btn-num" onclick="digit('7')">7</button>
+    <button class="btn-num" onclick="digit('8')">8</button>
+    <button class="btn-num" onclick="digit('9')">9</button>
+    <button class="btn-op"  onclick="op('×')">×</button>
+
+    <button class="btn-num" onclick="digit('4')">4</button>
+    <button class="btn-num" onclick="digit('5')">5</button>
+    <button class="btn-num" onclick="digit('6')">6</button>
+    <button class="btn-op"  onclick="op('−')">−</button>
+
+    <button class="btn-num" onclick="digit('1')">1</button>
+    <button class="btn-num" onclick="digit('2')">2</button>
+    <button class="btn-num" onclick="digit('3')">3</button>
+    <button class="btn-op"  onclick="op('+')">+</button>
+
+    <button class="btn-num btn-zero" onclick="digit('0')">0</button>
+    <button class="btn-num" onclick="dot()">.</button>
+    <button class="btn-eq"  onclick="eq()">=</button>
+  </div>
+</div>
+<script>
+let cur = '0', prev = '', operator = '', fresh = false;
+
+const $num  = document.getElementById('num');
+const $expr = document.getElementById('expr');
+
+function render(){ $num.textContent = cur; }
+
+function digit(d){
+  if(fresh){ cur='0'; fresh=false; }
+  cur = cur==='0' ? d : (cur.length < 14 ? cur+d : cur);
+  render();
+}
+
+function dot(){
+  if(fresh){ cur='0'; fresh=false; }
+  if(!cur.includes('.')) cur += '.';
+  render();
+}
+
+function op(o){
+  if(operator && !fresh) eq(true);
+  prev = cur; operator = o; fresh = true;
+  $expr.textContent = fmt(prev) + ' ' + o;
+}
+
+function eq(chain=false){
+  if(!operator) return;
+  const a = parseFloat(prev), b = parseFloat(cur);
+  let r;
+  switch(operator){
+    case '+': r=a+b; break;
+    case '−': r=a-b; break;
+    case '×': r=a*b; break;
+    case '÷': r=b===0?'Error':a/b; break;
+  }
+  if(!chain) $expr.textContent = fmt(prev)+' '+operator+' '+fmt(cur)+' =';
+  cur = r==='Error' ? 'Error' : fmt(r);
+  if(!chain){ operator=''; prev=''; }
+  fresh = true;
+  render();
+}
+
+function clear_(){
+  cur='0'; prev=''; operator=''; fresh=false;
+  $expr.textContent=''; render();
+}
+
+function sign(){
+  if(cur==='0'||cur==='Error') return;
+  cur = cur.startsWith('-') ? cur.slice(1) : '-'+cur;
+  render();
+}
+
+function percent(){
+  const n = parseFloat(cur);
+  if(isNaN(n)) return;
+  cur = fmt(operator ? parseFloat(prev)*n/100 : n/100);
+  render();
+}
+
+function fmt(n){
+  if(n==='Error') return 'Error';
+  const s = parseFloat(n);
+  if(isNaN(s)) return '0';
+  const r = parseFloat(s.toPrecision(12));
+  return String(r);
+}
+</script>
+</body>
+</html>
