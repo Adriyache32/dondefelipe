@@ -10,29 +10,53 @@
             font-family: 'Segoe UI', Arial, sans-serif;
             background: linear-gradient(rgba(20, 0, 30, 0.85), rgba(20, 0, 30, 0.85)), 
                         url('https://images.unsplash.com/photo-1560272564-c83b66b1ad12?auto=format&fit=crop&q=80&w=1000') center/cover;
-            color: white; margin: 0; padding: 20px; display: flex; justify-content: center;
+            color: white; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh;
         }
         .container {
             width: 100%; max-width: 800px; background: rgba(30, 5, 40, 0.9);
-            border-radius: 12px; padding: 25px; border: 2px solid var(--fem-accent); box-shadow: 0 0 30px rgba(255, 77, 148, 0.3);
+            border-radius: 12px; padding: 15px; border: 2px solid var(--fem-accent); box-shadow: 0 0 30px rgba(255, 77, 148, 0.3);
+            box-sizing: border-box;
         }
-        h2 { text-align: center; color: var(--fem-accent); text-transform: uppercase; margin-bottom: 25px; text-shadow: 0 0 10px rgba(255,77,148,0.5); }
-        table { width: 100%; border-collapse: collapse; }
-        th { font-size: 0.75rem; color: #d896ff; padding: 12px; border-bottom: 1px solid #5a189a; }
-        td { padding: 15px 10px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .team-name { text-align: left; font-weight: bold; }
-        .pos { color: var(--gold); font-weight: 800; }
+        h2 { text-align: center; color: var(--fem-accent); text-transform: uppercase; margin-bottom: 20px; text-shadow: 0 0 10px rgba(255,77,148,0.5); font-size: 1.4rem; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th { font-size: 0.65rem; color: #d896ff; padding: 8px 4px; border-bottom: 1px solid #5a189a; }
+        td { padding: 10px 4px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; }
+        .team-name { text-align: left; font-weight: bold; width: 30%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .pos { color: var(--gold); font-weight: 800; width: 25px; }
         .pts-box { background: rgba(255, 77, 148, 0.2); color: var(--fem-accent); font-weight: 900; border-radius: 4px; }
         .dg { color: #ffb7ff; }
+        
+        /* Botón de descarga */
+        .btn-container {
+            margin-top: 15px; text-align: center; width: 100%; max-width: 800px;
+        }
+        .download-btn {
+            background-color: var(--fem-accent); color: white; border: none; padding: 10px 20px;
+            font-size: 0.9rem; font-weight: bold; border-radius: 20px; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(255, 77, 148, 0.4); transition: all 0.2s ease;
+        }
+        .download-btn:hover {
+            background-color: #e0357d; transform: translateY(-2px);
+        }
+        .download-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Ajustes específicos para pantallas muy pequeñas */
+        @media (max-width: 400px) {
+            td, th { font-size: 0.75rem; }
+            .container { padding: 10px; }
+        }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
-<div class="container">
+<div class="container" id="tabla-resultados">
     <h2>👑 Liga Damas San Agustín</h2>
     <table>
         <thead>
             <tr>
-                <th>#</th>
+                <th style="width:20px">#</th>
                 <th style="text-align:left">Equipo</th>
                 <th>PJ</th>
                 <th>GF</th>
@@ -45,15 +69,38 @@
             </tr>
         </thead>
         <tbody>
-            <tr><td class="pos">1</td><td class="team-name">Octavo Básico</td><td>1</td><td>3</td><td>1</td><td class="dg">+2</td><td>1</td><td>0</td><td>0</td><td class="pts-box">3</td></tr>
-            <tr><td class="pos">2</td><td class="team-name">Segundo Medio</td><td>1</td><td>2</td><td>2</td><td class="dg">0</td><td>0</td><td>1</td><td>0</td><td class="pts-box">1</td></tr>
-            <tr><td class="pos">3</td><td class="team-name">Tercero Medio</td><td>1</td><td>2</td><td>2</td><td class="dg">0</td><td>0</td><td>1</td><td>0</td><td class="pts-box">1</td></tr>
-            <tr><td class="pos">4</td><td class="team-name">Cuarto Medio</td><td>0</td><td>0</td><td>0</td><td class="dg">0</td><td>0</td><td>0</td><td>0</td><td class="pts-box">0</td></tr>
-            <tr><td class="pos">5</td><td class="team-name">Séptimo Básico</td><td>0</td><td>0</td><td>0</td><td class="dg">0</td><td>0</td><td>0</td><td>0</td><td class="pts-box">0</td></tr>
-            <tr><td class="pos">6</td><td class="team-name">Sexto Básico</td><td>0</td><td>0</td><td>0</td><td class="dg">0</td><td>0</td><td>0</td><td>0</td><td class="pts-box">0</td></tr>
-            <tr><td class="pos">7</td><td class="team-name">Primero Medio</td><td>1</td><td>1</td><td>3</td><td class="dg">-2</td><td>0</td><td>0</td><td>1</td><td class="pts-box">0</td></tr>
+            <tr><td class="pos">1</td><td class="team-name">8° Básico</td><td>1</td><td>3</td><td>1</td><td class="dg">+2</td><td>1</td><td>0</td><td>0</td><td class="pts-box">3</td></tr>
+            <tr><td class="pos">2</td><td class="team-name">2° Medio</td><td>1</td><td>2</td><td>2</td><td class="dg">0</td><td>0</td><td>1</td><td>0</td><td class="pts-box">1</td></tr>
+            <tr><td class="pos">3</td><td class="team-name">3° Medio</td><td>1</td><td>2</td><td>2</td><td class="dg">0</td><td>0</td><td>1</td><td>0</td><td class="pts-box">1</td></tr>
+            <tr><td class="pos">4</td><td class="team-name">4° Medio</td><td>0</td><td>0</td><td>0</td><td class="dg">0</td><td>0</td><td>0</td><td>0</td><td class="pts-box">0</td></tr>
+            <tr><td class="pos">5</td><td class="team-name">7° Básico</td><td>0</td><td>0</td><td>0</td><td class="dg">0</td><td>0</td><td>0</td><td>0</td><td class="pts-box">0</td></tr>
+            <tr><td class="pos">6</td><td class="team-name">6° Básico</td><td>0</td><td>0</td><td>0</td><td class="dg">0</td><td>0</td><td>0</td><td>0</td><td class="pts-box">0</td></tr>
+            <tr><td class="pos">7</td><td class="team-name">1° Medio</td><td>1</td><td>1</td><td>3</td><td class="dg">-2</td><td>0</td><td>0</td><td>1</td><td class="pts-box">0</td></tr>
         </tbody>
     </table>
 </div>
+
+<div class="btn-container">
+    <button class="download-btn" onclick="descargarTabla()">📸 Descargar Tabla</button>
+</div>
+
+<script>
+function descargarTabla() {
+    const elemento = document.getElementById('tabla-resultados');
+    
+    // Configuración para asegurar que se capturen bien los fondos y la calidad
+    html2canvas(elemento, {
+        useCORS: true,
+        backgroundColor: '#1e0528', // Forzamos el color de fondo para que no salga transparente
+        scale: 2 // Aumenta la resolución para que no se vea pixeleado en el celular
+    }).then(canvas => {
+        // Crear un enlace de descarga temporal e imitar un click para bajar el archivo
+        const link = document.createElement('a');
+        link.download = 'tabla_liga_damas.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    });
+}
+</script>
 </body>
 </html>
