@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendario Copa San Agustín 2026</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --pitch: #1b4d3e;
@@ -241,6 +242,90 @@
             border: 2px solid var(--gold);
             background: rgba(251, 191, 36, 0.05);
         }
+
+        /* ── Botón descarga ── */
+        .download-bar {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 18px;
+        }
+
+        .btn-download {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 22px;
+            background: rgba(255,255,255,0.08);
+            border: 1.5px solid rgba(255,255,255,0.25);
+            border-radius: 30px;
+            color: #fff;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-download:hover {
+            background: rgba(251,191,36,0.18);
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .btn-download i { font-size: 0.9rem; }
+
+        .btn-download.loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* ── Optimizaciones móvil ── */
+        body {
+            padding: 12px;
+            background-attachment: scroll; /* evita bug fixed en iOS */
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 10px 8px; }
+
+            .header h2 { font-size: 1.15rem; letter-spacing: 1px; }
+            .header p  { font-size: 0.8rem; }
+            .header i  { font-size: 1.6rem; }
+
+            .category-selector { gap: 8px; }
+            .cat-btn {
+                padding: 10px 16px;
+                font-size: 0.8rem;
+                gap: 6px;
+            }
+
+            /* 1 columna en móvil */
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .match-card {
+                padding: 14px 12px;
+                border-radius: 10px;
+            }
+
+            .match-card:hover { transform: none; } /* evita saltos táctiles */
+
+            .team { font-size: 0.82rem; }
+            .vs-circle { width: 44px; height: 30px; border-radius: 6px; font-size: 0.72rem; }
+            .match-card.played .vs-circle { width: 52px; }
+
+            .date-badge { font-size: 0.65rem; padding: 3px 12px; }
+            .venue { font-size: 0.67rem; }
+
+            .phase-title { font-size: 0.78rem; padding: 8px 14px; }
+
+            .play-fair { font-size: 0.75rem; margin-top: 30px; }
+
+            .btn-download { font-size: 0.8rem; padding: 10px 18px; }
+        }
     </style>
 </head>
 <body>
@@ -261,6 +346,12 @@
         </button>
     </div>
 
+    <div class="download-bar">
+        <button class="btn-download" id="btn-ss" onclick="captureScreenshot()">
+            <i class="fa-solid fa-camera"></i> Guardar como imagen
+        </button>
+    </div>
+
     <!-- MASCULINO -->
     <div id="male-view" class="section-view male active">
         <div class="phase-title">Fase Clasificatoria Masculina</div>
@@ -276,7 +367,15 @@
                 <div class="venue"><i class="fa-solid fa-check-circle"></i> Resultado Final</div>
             </div>
 
-            <div class="match-card"><div class="date-badge">26 MAY</div><div class="vs-container"><div class="team">2do Medio</div><div class="vs-circle">VS</div><div class="team">3ro Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <div class="match-card played">
+                <div class="date-badge">26 DE MAYO</div>
+                <div class="vs-container">
+                    <div class="team">3ro Medio</div>
+                    <div class="vs-circle">5 - 1</div>
+                    <div class="team">2do Medio</div>
+                </div>
+                <div class="venue"><i class="fa-solid fa-check-circle"></i> Resultado Final</div>
+            </div>
             <div class="match-card"><div class="date-badge">09 JUN</div><div class="vs-container"><div class="team">3ro Medio</div><div class="vs-circle">VS</div><div class="team">4to Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
             <div class="match-card"><div class="date-badge">07 JUL</div><div class="vs-container"><div class="team">8vo Básico</div><div class="vs-circle">VS</div><div class="team">2do Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
             <div class="match-card"><div class="date-badge">21 JUL</div><div class="vs-container"><div class="team">3ro Medio</div><div class="vs-circle">VS</div><div class="team">1ro Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
@@ -306,7 +405,15 @@
                 </div>
                 <div class="venue"><i class="fa-solid fa-check-circle"></i> Resultado Final</div>
             </div>
-            <div class="match-card"><div class="date-badge">02 JUN</div><div class="vs-container"><div class="team">2do Medio</div><div class="vs-circle">VS</div><div class="team">3ro Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
+            <div class="match-card played">
+                <div class="date-badge">02 DE JUNIO</div>
+                <div class="vs-container">
+                    <div class="team">3ro Medio</div>
+                    <div class="vs-circle">2 - 2</div>
+                    <div class="team">2do Medio</div>
+                </div>
+                <div class="venue"><i class="fa-solid fa-check-circle"></i> Resultado Final</div>
+            </div>
             <div class="match-card"><div class="date-badge">16 JUN</div><div class="vs-container"><div class="team">3ro Medio</div><div class="vs-circle">VS</div><div class="team">4to Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
             <div class="match-card"><div class="date-badge">14 JUL</div><div class="vs-container"><div class="team">8vo Básico</div><div class="vs-circle">VS</div><div class="team">2do Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
             <div class="match-card"><div class="date-badge">28 JUL</div><div class="vs-container"><div class="team">3ro Medio</div><div class="vs-circle">VS</div><div class="team">1ro Medio</div></div><div class="venue"><i class="fa-solid fa-clock"></i> 12:55 HRS</div></div>
@@ -334,6 +441,36 @@
         btn.classList.add('active');
         document.querySelectorAll('.section-view').forEach(s => s.classList.remove('active'));
         document.getElementById(cat + '-view').classList.add('active');
+    }
+
+    async function captureScreenshot() {
+        const btn = document.getElementById('btn-ss');
+        btn.classList.add('loading');
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando…';
+
+        // Nombre dinámico según categoría activa
+        const activeView = document.querySelector('.section-view.active');
+        const catLabel = activeView && activeView.id === 'female-view' ? 'damas' : 'varones';
+        const filename = `copa-san-agustin-${catLabel}.png`;
+
+        try {
+            const canvas = await html2canvas(document.querySelector('.container'), {
+                backgroundColor: '#0f172a',
+                scale: 2,
+                useCORS: true,
+                logging: false
+            });
+
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        } catch (e) {
+            alert('No se pudo generar la imagen. Intenta desde un navegador.');
+        }
+
+        btn.classList.remove('loading');
+        btn.innerHTML = '<i class="fa-solid fa-camera"></i> Guardar como imagen';
     }
 </script>
 
