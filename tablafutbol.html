@@ -2,183 +2,316 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Tabla de Posiciones 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;800;900&family=Barlow:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
-            --pitch-green: #1b4d3e;
-            --grass: #2d5a27;
             --gold: #ffd700;
+            --gold-dim: rgba(255,215,0,0.15);
+            --green: #4ade80;
+            --red: #f87171;
+            --bg: #0a0a0a;
+            --card: rgba(10,10,10,0.92);
+            --border: rgba(255,215,0,0.35);
         }
 
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), 
-                        url('https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&q=80&w=1000') center/cover;
+            font-family: 'Barlow', sans-serif;
+            background:
+                linear-gradient(rgba(0,0,0,0.72), rgba(0,0,0,0.82)),
+                url('https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&q=80&w=1000') center/cover fixed;
             color: white;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
             min-height: 100vh;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .container {
             width: 100%;
-            max-width: 800px;
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 12px;
-            padding: 25px;
-            border: 2px solid var(--gold);
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            max-width: 680px;
+            background: var(--card);
+            border-radius: 14px;
+            padding: 20px 14px 24px;
+            border: 1.5px solid var(--border);
+            box-shadow: 0 0 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,215,0,0.05);
         }
 
         h2 {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 900;
+            font-size: clamp(1.1rem, 5vw, 1.5rem);
             text-align: center;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             color: var(--gold);
-            margin-bottom: 25px;
             text-transform: uppercase;
+            margin-bottom: 18px;
         }
 
+        /* ── TABLE ── */
         table {
             width: 100%;
             border-collapse: collapse;
+            font-family: 'Barlow Condensed', sans-serif;
         }
 
-        th {
-            font-size: 0.8rem;
-            color: #888;
-            padding: 10px;
-            border-bottom: 1px solid #333;
+        thead th {
+            font-size: clamp(0.6rem, 2.5vw, 0.72rem);
+            color: #666;
+            padding: 6px 4px 8px;
+            border-bottom: 1px solid #2a2a2a;
             text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
         }
+        thead th.th-team { text-align: left; padding-left: 6px; }
+
+        tbody tr {
+            transition: background 0.15s;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        tbody tr:hover { background: rgba(255,255,255,0.04); }
+
+        /* Top row highlight */
+        tbody tr:first-child { background: rgba(255,215,0,0.05); }
 
         td {
-            padding: 15px 10px;
+            padding: 10px 4px;
             text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: clamp(0.82rem, 3.5vw, 1rem);
         }
 
-        .team-name {
-            text-align: left;
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-
-        .pos { color: var(--gold); font-weight: 800; width: 30px; }
-
-        .pts-box {
-            background: rgba(255, 215, 0, 0.2);
+        /* Position number */
+        .pos {
             color: var(--gold);
             font-weight: 900;
-            border-radius: 4px;
+            font-size: clamp(0.9rem, 3.5vw, 1.05rem);
+            width: 22px;
+            min-width: 22px;
+        }
+        /* Medal icons for top 3 */
+        .pos-1::before { content: "🥇"; font-size: 0.9rem; }
+        .pos-2::before { content: "🥈"; font-size: 0.9rem; }
+        .pos-3::before { content: "🥉"; font-size: 0.9rem; }
+
+        /* Team name */
+        .team-name {
+            text-align: left;
+            font-weight: 700;
+            font-size: clamp(0.88rem, 3.8vw, 1.08rem);
+            padding-left: 6px;
+            white-space: nowrap;
         }
 
-        tr:hover { background: rgba(255,255,255,0.05); }
+        /* Points box */
+        .pts-box {
+            background: var(--gold-dim);
+            color: var(--gold);
+            font-weight: 900;
+            border-radius: 5px;
+            font-size: clamp(0.9rem, 3.5vw, 1.05rem);
+            min-width: 30px;
+        }
 
-        .dg { color: #4ade80; }
+        /* Goal diff */
+        .dg-pos { color: var(--green); font-weight: 700; }
+        .dg-neg { color: var(--red);   font-weight: 700; }
+        .dg-neu { color: #888; }
+
+        /* Win badge */
+        .pg-val { color: var(--green); font-weight: 700; }
+
+        /* ── DOWNLOAD BUTTON ── */
+        .btn-wrap {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        #downloadBtn {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 800;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #0a0a0a;
+            background: var(--gold);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 28px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 18px rgba(255,215,0,0.25);
+        }
+        #downloadBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(255,215,0,0.4);
+        }
+        #downloadBtn:active { transform: translateY(0); }
+        #downloadBtn svg { width: 16px; height: 16px; }
+
+        /* ── RESPONSIVE TWEAKS ── */
+        @media (max-width: 400px) {
+            .container { padding: 14px 8px 18px; }
+            td, thead th { padding-left: 2px; padding-right: 2px; }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container" id="captureZone">
     <h2>🏆 Posiciones San Agustín 2026</h2>
     <table>
         <thead>
             <tr>
                 <th>#</th>
-                <th style="text-align:left">Equipo</th>
+                <th class="th-team">Equipo</th>
                 <th>PJ</th>
                 <th>GF</th>
                 <th>GC</th>
                 <th>DG</th>
                 <th>PG</th>
                 <th>PE</th>
-                <th class="pts-box">PTS</th>
+                <th>PTS</th>
             </tr>
         </thead>
         <tbody>
+            <!-- 1 -->
             <tr>
-                <td class="pos">1</td>
-                <td class="team-name">Primero Medio</td>
+                <td class="pos"><span class="pos-1"></span></td>
+                <td class="team-name">3ro Medio</td>
+                <td>1</td>
+                <td>5</td>
+                <td>1</td>
+                <td class="dg-pos">+4</td>
+                <td class="pg-val">1</td>
+                <td>0</td>
+                <td class="pts-box">3</td>
+            </tr>
+            <!-- 2 -->
+            <tr>
+                <td class="pos"><span class="pos-2"></span></td>
+                <td class="team-name">1ro Medio</td>
                 <td>1</td>
                 <td>4</td>
                 <td>4</td>
-                <td class="dg">0</td>
+                <td class="dg-neu">0</td>
                 <td>0</td>
                 <td>1</td>
                 <td class="pts-box">1</td>
             </tr>
+            <!-- 3 -->
             <tr>
-                <td class="pos">2</td>
-                <td class="team-name">Octavo Básico</td>
+                <td class="pos"><span class="pos-3"></span></td>
+                <td class="team-name">8vo Básico</td>
                 <td>1</td>
                 <td>4</td>
                 <td>4</td>
-                <td class="dg">0</td>
+                <td class="dg-neu">0</td>
                 <td>0</td>
                 <td>1</td>
                 <td class="pts-box">1</td>
             </tr>
+            <!-- 4 -->
             <tr>
-                <td class="pos">3</td>
-                <td class="team-name">Segundo Medio</td>
+                <td class="pos" style="color:#888">4</td>
+                <td class="team-name">2do Medio</td>
+                <td>1</td>
+                <td>1</td>
+                <td>5</td>
+                <td class="dg-neg">-4</td>
                 <td>0</td>
                 <td>0</td>
-                <td>0</td>
-                <td class="dg">0</td>
-                <td>0</td>
-                <td>0</td>
-                <td class="pts-bold">0</td>
+                <td class="pts-box" style="background:rgba(255,255,255,0.04);color:#888">0</td>
             </tr>
+            <!-- 5 -->
             <tr>
-                <td class="pos">4</td>
-                <td class="team-cell">Tercero Medio</td>
+                <td class="pos" style="color:#888">5</td>
+                <td class="team-name">4to Medio</td>
                 <td>0</td>
                 <td>0</td>
                 <td>0</td>
-                <td class="dg-cell">0</td>
+                <td class="dg-neu">—</td>
                 <td>0</td>
                 <td>0</td>
-                <td class="pts-bold">0</td>
+                <td class="pts-box" style="background:rgba(255,255,255,0.04);color:#888">0</td>
             </tr>
+            <!-- 6 -->
             <tr>
-                <td class="pos">5</td>
-                <td class="team-cell">Cuarto Medio</td>
+                <td class="pos" style="color:#888">6</td>
+                <td class="team-name">7mo Básico</td>
                 <td>0</td>
                 <td>0</td>
                 <td>0</td>
-                <td class="dg-cell">0</td>
+                <td class="dg-neu">—</td>
                 <td>0</td>
                 <td>0</td>
-                <td class="pts-bold">0</td>
+                <td class="pts-box" style="background:rgba(255,255,255,0.04);color:#888">0</td>
             </tr>
+            <!-- 7 -->
             <tr>
-                <td class="pos">6</td>
-                <td class="team-cell">Séptimo Básico</td>
+                <td class="pos" style="color:#888">7</td>
+                <td class="team-name">6to Básico</td>
                 <td>0</td>
                 <td>0</td>
                 <td>0</td>
-                <td class="dg-cell">0</td>
+                <td class="dg-neu">—</td>
                 <td>0</td>
                 <td>0</td>
-                <td class="pts-bold">0</td>
-            </tr>
-            <tr>
-                <td class="pos">7</td>
-                <td class="team-cell">Sexto Básico</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td class="dg-cell">0</td>
-                <td>0</td>
-                <td>0</td>
-                <td class="pts-bold">0</td>
+                <td class="pts-box" style="background:rgba(255,255,255,0.04);color:#888">0</td>
             </tr>
         </tbody>
     </table>
 </div>
+
+<div class="btn-wrap">
+    <button id="downloadBtn">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Descargar imagen
+    </button>
+</div>
+
+<script>
+document.getElementById('downloadBtn').addEventListener('click', function() {
+    const btn = this;
+    btn.textContent = 'Generando…';
+    btn.disabled = true;
+
+    const zone = document.getElementById('captureZone');
+
+    html2canvas(zone, {
+        backgroundColor: '#0a0a0a',
+        scale: 2,
+        useCORS: true,
+        logging: false
+    }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'tabla-posiciones-san-agustin-2026.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg> Descargar imagen`;
+        btn.disabled = false;
+    });
+});
+</script>
 
 </body>
 </html>
