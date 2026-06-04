@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CESFAM Villa Alemana — Turno de Urgencias</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:   #1a2744;
+  --teal:   #0f6e56;
+  --coral:  #993c1d;
+  --amber:  #854f0b;
+  --blue:   #185fa5;
+  --gold:   #c8960c;
+  --gold-l: #fff3c4;
+  --page:   #f0ede6;
+  --white:  #ffffff;
+  --muted:  #8a8a8a;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  min-height: 100vh;
+  background: var(--navy);
+  font-family: 'Space Grotesk', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 0 60px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ── Background grid ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(15,110,86,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15,110,86,0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+/* ── Header ── */
+header {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 18px 40px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-cross {
+  width: 36px; height: 36px;
+  background: var(--teal);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; color: white; flex-shrink: 0;
+}
+
+.header-text { line-height: 1.2; }
+.header-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700; font-size: 14px;
+  color: rgba(255,255,255,0.9);
+  letter-spacing: 0.04em;
+}
+.header-sub {
+  font-size: 11px; color: rgba(255,255,255,0.4);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+.header-badge {
+  margin-left: auto;
+  background: rgba(15,110,86,0.2);
+  border: 1px solid rgba(15,110,86,0.4);
+  color: #4ecca3;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 4px 12px; border-radius: 20px;
+  text-transform: uppercase;
+}
+
+/* ── Main card ── */
+.main {
+  width: 100%;
+  max-width: 560px;
+  margin-top: 48px;
+  padding: 0 20px;
+}
+
+.card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 40px 36px 36px;
+  backdrop-filter: blur(10px);
+}
+
+.card-eyebrow {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--teal); margin-bottom: 10px;
+}
+
+.card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 30px; font-weight: 700;
+  color: white; line-height: 1.15;
+  margin-bottom: 8px;
+}
+
+.card-desc {
+  font-size: 13px; color: rgba(255,255,255,0.5);
+  line-height: 1.55; margin-bottom: 32px;
+}
+
+/* ── Form ── */
+.form-group { margin-bottom: 22px; }
+
+label {
+  display: block;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 8px;
+}
+
+.input-wrap { position: relative; }
+
+input, select {
+  width: 100%;
+  background: rgba(255,255,255,0.07);
+  border: 1.5px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 13px 16px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  color: white;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  appearance: none;
+}
+
+input::placeholder { color: rgba(255,255,255,0.25); }
+
+input:focus, select:focus {
+  border-color: var(--teal);
+  background: rgba(15,110,86,0.08);
+}
+
+select option { background: #1a2744; color: white; }
+
+.select-arrow {
+  position: absolute; right: 14px;
+  top: 50%; transform: translateY(-50%);
+  color: rgba(255,255,255,0.4);
+  pointer-events: none; font-size: 12px;
+}
+
+/* ── Submit button ── */
+.btn {
+  width: 100%;
+  background: var(--teal);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 16px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px; font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  margin-top: 8px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+
+.btn:hover { background: #0d5e49; }
+.btn:active { transform: scale(0.98); }
+
+/* ── Result overlay ── */
+#result {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(10,16,32,0.92);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+#result.show { display: flex; }
+
+/* ── Success voucher ── */
+.voucher {
+  background: white;
+  border-radius: 20px;
+  width: 100%; max-width: 480px;
+  overflow: hidden;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+  animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.85) translateY(20px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.voucher-header {
+  background: var(--navy);
+  padding: 20px 28px 16px;
+  display: flex; align-items: center; gap: 12px;
+}
+
+.voucher-logo {
+  width: 36px; height: 36px;
+  background: var(--teal);
+  border-radius: 8px;
+  display: flex; align-items: center;
+  justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+
+.voucher-header-text { line-height: 1.2; }
+.voucher-org {
+  font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+}
+.voucher-doc-title {
+  font-size: 13px; font-weight: 700;
+  color: white;
+}
+
+.voucher-body { padding: 28px 28px 20px; text-align: center; }
+
+.voucher-stamp {
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #c8960c, #f0c040);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+  box-shadow: 0 8px 24px rgba(200,150,12,0.4);
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from { box-shadow: 0 8px 24px rgba(200,150,12,0.4); }
+  to   { box-shadow: 0 8px 40px rgba(200,150,12,0.7); }
+}
+
+.voucher-stamp-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 42px; font-weight: 900;
+  color: white; line-height: 1;
+}
+
+.voucher-congrats {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700;
+  color: var(--navy); margin-bottom: 8px;
+}
+
+.voucher-subtitle {
+  font-size: 12px; color: var(--muted);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.voucher-info {
+  background: #f8f6f0;
+  border-radius: 12px;
+  padding: 14px 18px;
+  text-align: left;
+  margin-bottom: 16px;
+}
+
+.voucher-row {
+  display: flex; justify-content: space-between;
+  align-items: baseline; margin-bottom: 6px;
+}
+.voucher-row:last-child { margin-bottom: 0; }
+
+.voucher-key {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted);
+}
+
+.voucher-val {
+  font-size: 13px; font-weight: 600;
+  color: var(--navy); text-align: right;
+  max-width: 260px;
+}
+
+.voucher-dx-box {
+  background: var(--navy);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.voucher-dx-label {
+  font-size: 9px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--teal);
+  margin-bottom: 4px; font-weight: 600;
+}
+
+.voucher-dx-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px; font-weight: 700; color: white;
+}
+
+.voucher-footer {
+  border-top: 1px solid #eee;
+  padding: 14px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.voucher-footer-text {
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.06em;
+}
+
+.voucher-seal {
+  font-size: 10px; font-weight: 700;
+  color: var(--teal); letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ── Confetti ── */
+.confetti-wrap {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 99;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 8px; height: 8px;
+  top: -10px;
+  animation: fall linear infinite;
+  border-radius: 2px;
+}
+
+@keyframes fall {
+  to { transform: translateY(110vh) rotate(720deg); }
+}
+
+/* ── Failure card ── */
+.fail-card {
+  background: var(--navy);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  width: 100%; max-width: 420px;
+  padding: 40px 36px;
+  text-align: center;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+  animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.fail-emoji {
+  font-size: 64px; margin-bottom: 20px;
+  display: block;
+  animation: shake 0.5s ease 0.3s;
+}
+
+@keyframes shake {
+  0%,100% { transform: rotate(0); }
+  20% { transform: rotate(-8deg); }
+  40% { transform: rotate(8deg); }
+  60% { transform: rotate(-5deg); }
+  80% { transform: rotate(5deg); }
+}
+
+.fail-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700;
+  color: white; margin-bottom: 10px;
+}
+
+.fail-sub {
+  font-size: 13px; color: rgba(255,255,255,0.5);
+  line-height: 1.55; margin-bottom: 24px;
+}
+
+.fail-box {
+  background: rgba(153,60,29,0.15);
+  border: 1px solid rgba(153,60,29,0.4);
+  border-radius: 12px;
+  padding: 16px 20px;
+  text-align: left; margin-bottom: 24px;
+}
+
+.fail-box-title {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: #e06040; margin-bottom: 8px;
+}
+
+.fail-box-text {
+  font-size: 13px; color: rgba(255,255,255,0.75);
+  line-height: 1.5;
+}
+
+.btn-retry {
+  width: 100%;
+  background: rgba(255,255,255,0.08);
+  border: 1.5px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  padding: 14px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px; font-weight: 600;
+  color: white; cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-retry:hover { background: rgba(255,255,255,0.13); }
+
+/* ── Close button ── */
+.close-btn {
+  position: absolute; top: -16px; right: -16px;
+  width: 36px; height: 36px;
+  background: white; color: var(--navy);
+  border: none; border-radius: 50%;
+  font-size: 18px; font-weight: 700;
+  cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.fail-close-btn {
+  position: absolute; top: 16px; right: 16px;
+  background: rgba(255,255,255,0.08);
+  border: none; color: rgba(255,255,255,0.5);
+  width: 32px; height: 32px; border-radius: 50%;
+  font-size: 16px; cursor: pointer;
+}
+
+.voucher-wrap { position: relative; }
+.fail-wrap { position: relative; }
+
+/* ── Mono badge ── */
+.ficha-num-display {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 600;
+  background: rgba(15,110,86,0.15);
+  border: 1px solid rgba(15,110,86,0.3);
+  color: #4ecca3; padding: 3px 10px;
+  border-radius: 6px; margin-bottom: 16px;
+  letter-spacing: 0.08em;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-cross">✚</div>
+  <div class="header-text">
+    <div class="header-title">CESFAM Villa Alemana — Urgencias Invierno</div>
+    <div class="header-sub">Ciencias Naturales · 8° Básico · Turno de Urgencias</div>
+  </div>
+  <div class="header-badge">Sistema en línea</div>
+</header>
+
+<div class="main">
+  <div class="card">
+    <div class="card-eyebrow">Registro de diagnóstico médico</div>
+    <h1 class="card-title">¿Cuál es tu<br>diagnóstico?</h1>
+    <p class="card-desc">Ingresa el número de tu ficha, el nombre del médico líder del grupo y el diagnóstico que identificaron. Si es correcto, recibirán su nota.</p>
+
+    <div class="form-group">
+      <label>Número de ficha</label>
+      <div class="input-wrap">
+        <select id="fichaSelect">
+          <option value="">— Selecciona tu ficha —</option>
+          <option value="1">Ficha N° 01 — Paciente: Lucía Fuentes</option>
+          <option value="2">Ficha N° 02 — Paciente: Pedro Alarcón</option>
+          <option value="3">Ficha N° 03 — Paciente: Bastián Morales</option>
+          <option value="4">Ficha N° 04 — Paciente: Valentina Ríos</option>
+          <option value="5">Ficha N° 05 — Paciente: Carmen Venegas</option>
+          <option value="6">Ficha N° 06 — Paciente: Tomás Cáceres</option>
+        </select>
+        <span class="select-arrow">▾</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Médico/a líder del grupo</label>
+      <input type="text" id="doctorName" placeholder="Nombre del médico/a responsable" autocomplete="off">
+    </div>
+
+    <div class="form-group">
+      <label>Diagnóstico del grupo</label>
+      <input type="text" id="diagnosis" placeholder="Escribe el diagnóstico aquí..." autocomplete="off">
+    </div>
+
+    <button class="btn" onclick="validate()">
+      <span>Registrar diagnóstico</span>
+      <span>→</span>
+    </button>
+  </div>
+</div>
+
+<!-- Confetti -->
+<div class="confetti-wrap" id="confetti"></div>
+
+<!-- Result overlay -->
+<div id="result">
+
+  <!-- SUCCESS -->
+  <div class="voucher-wrap" id="successWrap" style="display:none">
+    <button class="close-btn" onclick="closeResult()">×</button>
+    <div class="voucher">
+      <div class="voucher-header">
+        <div class="voucher-logo">✚</div>
+        <div class="voucher-header-text">
+          <div class="voucher-org">CESFAM Villa Alemana · Urgencias</div>
+          <div class="voucher-doc-title">Comprobante de Diagnóstico Correcto</div>
+        </div>
+      </div>
+
+      <div class="voucher-body">
+        <div class="voucher-stamp">
+          <span class="voucher-stamp-num">7,0</span>
+        </div>
+
+        <div class="voucher-congrats">¡Diagnóstico correcto!</div>
+        <div class="voucher-subtitle">El equipo médico ha identificado el caso</div>
+
+        <div class="voucher-dx-box">
+          <div class="voucher-dx-label">Diagnóstico confirmado</div>
+          <div class="voucher-dx-value" id="voucherDx">—</div>
+        </div>
+
+        <div class="voucher-info">
+          <div class="voucher-row">
+            <span class="voucher-key">Médico/a líder</span>
+            <span class="voucher-val" id="voucherDoctor">—</span>
+          </div>
+          <div class="voucher-row">
+            <span class="voucher-key">Paciente</span>
+            <span class="voucher-val" id="voucherPatient">—</span>
+          </div>
+          <div class="voucher-row">
+            <span class="voucher-key">Nota asignada</span>
+            <span class="voucher-val" style="color:var(--teal);font-size:15px;font-weight:700">7,0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="voucher-footer">
+        <span class="voucher-footer-text">CN · 8° Básico · Turno de Urgencias</span>
+        <span class="voucher-seal">✓ Validado</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAILURE -->
+  <div class="fail-wrap" id="failWrap" style="display:none; position:relative">
+    <button class="fail-close-btn" onclick="closeResult()">×</button>
+    <div class="fail-card">
+      <span class="fail-emoji">😔</span>
+      <div class="fail-title">Diagnóstico incorrecto</div>
+      <p class="fail-sub">El diagnóstico ingresado no coincide con el caso clínico.<br>Vuelvan a revisar la ficha y la tabla de diagnósticos.</p>
+
+      <div class="fail-box">
+        <div class="fail-box-title">📋 Instrucción del profesor</div>
+        <div class="fail-box-text">Aplica pauta de evaluación según rúbrica.<br>Considera: síntomas identificados, cadena de sistemas y calidad de la explicación al paciente.</div>
+      </div>
+
+      <button class="btn-retry" onclick="closeResult()">← Volver a intentarlo</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Answer key ────────────────────────────────────────────────────────────
+const ANSWERS = {
+  "1": {
+    keywords: ["respiratoria","gripe","influenza","viral","infeccion"],
+    official: "Infección respiratoria aguda (gripe)",
+    patient: "Lucía Fuentes, 13 años"
+  },
+  "2": {
+    keywords: ["hipertensiva","hipertension","presion alta","vasoconstriccion","crisis hipertensiva","hipertens"],
+    official: "Crisis hipertensiva por frío",
+    patient: "Pedro Alarcón, 68 años"
+  },
+  "3": {
+    keywords: ["bronquitis"],
+    official: "Bronquitis aguda post-ejercicio",
+    patient: "Bastián Morales, 15 años"
+  },
+  "4": {
+    keywords: ["anemia","ferropenica","ferropénica","hierro"],
+    official: "Gripe + Anemia ferropénica",
+    patient: "Valentina Ríos, 12 años"
+  },
+  "5": {
+    keywords: ["deshidratacion","deshidratación","deshidrat"],
+    official: "Deshidratación severa por fiebre",
+    patient: "Carmen Venegas, 45 años"
+  },
+  "6": {
+    keywords: ["asmatica","asmática","asma","crisis asmatica","broncoespasmo"],
+    official: "Crisis asmática + déficit nutricional",
+    patient: "Tomás Cáceres, 8 años"
+  }
+};
+
+function normalize(str) {
+  return str.toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+function validate() {
+  const ficha   = document.getElementById("fichaSelect").value;
+  const doctor  = document.getElementById("doctorName").value.trim();
+  const diagRaw = document.getElementById("diagnosis").value.trim();
+
+  if (!ficha)   { alert("Por favor selecciona el número de tu ficha."); return; }
+  if (!doctor)  { alert("Por favor ingresa el nombre del médico líder."); return; }
+  if (!diagRaw) { alert("Por favor ingresa tu diagnóstico."); return; }
+
+  const answer  = ANSWERS[ficha];
+  const diagNorm = normalize(diagRaw);
+  const correct = answer.keywords.some(kw => diagNorm.includes(normalize(kw)));
+
+  const overlay = document.getElementById("result");
+  overlay.classList.add("show");
+
+  if (correct) {
+    document.getElementById("voucherDx").textContent     = answer.official;
+    document.getElementById("voucherDoctor").textContent = doctor;
+    document.getElementById("voucherPatient").textContent= answer.patient;
+    document.getElementById("successWrap").style.display = "block";
+    document.getElementById("failWrap").style.display    = "none";
+    launchConfetti();
+  } else {
+    document.getElementById("successWrap").style.display = "none";
+    document.getElementById("failWrap").style.display    = "block";
+    clearConfetti();
+  }
+}
+
+function closeResult() {
+  document.getElementById("result").classList.remove("show");
+  document.getElementById("successWrap").style.display = "none";
+  document.getElementById("failWrap").style.display    = "none";
+  clearConfetti();
+}
+
+// ── Confetti ──────────────────────────────────────────────────────────────
+const COLORS = ["#c8960c","#0f6e56","#185fa5","#fff","#f0c040","#4ecca3","#ffeaa0"];
+
+function launchConfetti() {
+  const wrap = document.getElementById("confetti");
+  wrap.innerHTML = "";
+  for (let i = 0; i < 80; i++) {
+    const p = document.createElement("div");
+    p.className = "confetti-piece";
+    p.style.cssText = `
+      left: ${Math.random()*100}%;
+      background: ${COLORS[Math.floor(Math.random()*COLORS.length)]};
+      width: ${5+Math.random()*7}px;
+      height: ${5+Math.random()*7}px;
+      border-radius: ${Math.random() > 0.5 ? "50%" : "2px"};
+      animation-duration: ${1.5+Math.random()*2}s;
+      animation-delay: ${Math.random()*0.8}s;
+      opacity: ${0.7+Math.random()*0.3};
+    `;
+    wrap.appendChild(p);
+  }
+}
+
+function clearConfetti() {
+  document.getElementById("confetti").innerHTML = "";
+}
+</script>
+</body>
+</html>
