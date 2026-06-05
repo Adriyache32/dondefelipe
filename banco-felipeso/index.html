@@ -510,26 +510,29 @@
 
 <script>
 // ─── Configuración ───────────────────────────────────────────
-// IDs de hojas (gid) — ajusta según tu Google Sheet real
-// Hoja 1: Cuentas Corrientes, Hoja 2: Movimientos, Hoja 3: Billetes, Hoja 4: Inventario
 const SHEET_IDS = {
-  cuentas:      0,    // gid de "Cuentas Corrientes"
-  movimientos:  1,    // gid de "Movimientos"
-  billetes:     2,    // gid de "Emisión de Billetes"
-  inventario:   3,    // gid de "Inventario"
+  cuentas:      2069311796,
+  movimientos:  576521274,
+  billetes:     1762995761,
+  inventario:   1604599035,
 };
 
-let BASE_URL = localStorage.getItem('felipeso_sheet_url') || '';
+const DEFAULT_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR-s_o4FbzEG69moK_bPywXTSYNsQEWVHTw2gYJEC_5hoJIWHjI9XVH1p05VMAp50_x5TaF9htPx6ql/pub';
+let BASE_URL = localStorage.getItem('felipeso_sheet_url') || DEFAULT_URL;
 let intervalo = null;
 
 // ─── Utilidades ──────────────────────────────────────────────
 function csvUrl(gid) {
+  // Funciona tanto con links /pub como con links /d/ID normales
+  if (BASE_URL.includes('/pub')) {
+    return `${BASE_URL.split('?')[0]}?output=csv&gid=${gid}&t=${Date.now()}`;
+  }
   const base = BASE_URL.split('?')[0].split('/edit')[0];
-  return `${base}/export?format=csv&gid=${gid}`;
+  return `${base}/export?format=csv&gid=${gid}&t=${Date.now()}`;
 }
 
 async function fetchCSV(url) {
-  const r = await fetch(url + '&t=' + Date.now());
+  const r = await fetch(url);
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   const text = await r.text();
   return parseCSV(text);
@@ -746,12 +749,10 @@ function iniciar() {
 
 // ─── Auto-start si ya hay URL guardada ────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  if (BASE_URL) {
-    document.getElementById('sheetUrl').value = BASE_URL;
-    document.getElementById('configBox').style.display = 'none';
-    document.getElementById('estadoBar').style.display = 'block';
-    iniciar();
-  }
+  document.getElementById('sheetUrl').value = BASE_URL;
+  document.getElementById('configBox').style.display = 'none';
+  document.getElementById('estadoBar').style.display = 'block';
+  iniciar();
 });
 </script>
 </body>
