@@ -112,10 +112,97 @@ body::before {
 }
 
 /* ═══════════════════════════════════════════════
+   TICKER FELIPESOS — Bolsa de Comercio
+═══════════════════════════════════════════════ */
+.ticker-bar {
+  position: sticky; top: 0; z-index: 150; flex-shrink: 0;
+  background: rgba(4, 10, 20, 0.97);
+  border-bottom: 1px solid rgba(201,168,76,.18);
+  height: 32px; overflow: hidden;
+  display: flex; align-items: center;
+}
+
+.ticker-label {
+  flex-shrink: 0;
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+  color: #0a0600;
+  font-family: var(--ff-title);
+  font-size: 0.6rem; letter-spacing: 2px; font-weight: 700;
+  padding: 0 14px;
+  height: 100%; display: flex; align-items: center; gap: 6px;
+  white-space: nowrap;
+  box-shadow: 4px 0 16px rgba(201,168,76,.25);
+  z-index: 2;
+}
+.ticker-label i { font-size: 0.65rem; }
+
+.ticker-track {
+  flex: 1; overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent 0%, black 4%, black 96%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 4%, black 96%, transparent 100%);
+}
+
+.ticker-scroll {
+  display: flex; gap: 0;
+  animation: tickerMove 28s linear infinite;
+  width: max-content;
+  will-change: transform;
+}
+.ticker-scroll:hover { animation-play-state: paused; }
+
+@keyframes tickerMove {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-item {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 0 28px;
+  font-family: var(--ff-body); font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.3px; color: rgba(255,255,255,.88);
+  white-space: nowrap;
+  border-right: 1px solid rgba(201,168,76,.1);
+  transition: background 0.2s;
+  cursor: default;
+  user-select: none;
+}
+.ticker-item:hover { background: rgba(201,168,76,.06); }
+
+.ticker-item .t-name {
+  color: rgba(255,255,255,.55);
+  font-size: 0.65rem; letter-spacing: 1.5px; text-transform: uppercase;
+  font-weight: 400;
+}
+
+.ticker-item .t-price {
+  color: var(--gold-bright);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+}
+
+.ticker-item .t-icon {
+  font-size: 0.8rem;
+  opacity: .75;
+}
+
+.ticker-sep {
+  display: inline-flex; align-items: center;
+  padding: 0 6px;
+  color: rgba(201,168,76,.25);
+  font-size: 0.7rem;
+}
+
+/* Sticky junto a la nav */
+.ticker-bar + nav {
+  top: 0;
+}
+
+/* ═══════════════════════════════════════════════
    NAVEGACIÓN
 ═══════════════════════════════════════════════ */
 nav {
-  position: sticky; top: 0; z-index: 200; flex-shrink: 0;
+  position: sticky; top: 32px; z-index: 200; flex-shrink: 0;
   background: rgba(6, 14, 26, 0.92);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -643,6 +730,10 @@ footer::before {
 /* ── Móvil pequeño (≤ 480px) ── */
 @media (max-width: 480px) {
   .frieze { height: 4px; }
+  .ticker-bar { height: 26px; }
+  .ticker-label { font-size: 0.5rem; letter-spacing: 1px; padding: 0 10px; }
+  .ticker-item { font-size: 0.65rem; padding: 0 18px; }
+  .ticker-item .t-price { font-size: 0.68rem; }
   .nav-inner { height: 54px; }
   .nav-brand { font-size: 0.88rem; letter-spacing: 2px; }
   .tablet { padding: 1.2rem 0.85rem; }
@@ -672,6 +763,7 @@ footer::before {
   nav { padding-top: env(safe-area-inset-top); }
   @media (max-width: 480px) {
     .nav-inner { height: calc(54px + env(safe-area-inset-top)); }
+    nav { top: 26px; }
   }
 }
 
@@ -715,6 +807,38 @@ body { overscroll-behavior-y: none; }
 </head>
 <body>
 
+<!-- ══ TICKER FELIPESOS ══ -->
+<div class="ticker-bar" title="Pasa el cursor para pausar">
+  <div class="ticker-label">
+    <i class="fa-solid fa-coins"></i> FELIPESOS
+  </div>
+  <div class="ticker-track">
+    <div class="ticker-scroll" id="tickerScroll">
+      <!-- Items duplicados para loop continuo -->
+      <span class="ticker-item"><span class="t-icon">🪙</span><span class="t-name">PUNTOS</span><span class="t-price">$10.000</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item"><span class="t-icon">🗑️</span><span class="t-name">ELIM. FORMATIVA</span><span class="t-price">$100.000</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item"><span class="t-icon">😄</span><span class="t-name">MINUTO FELIZ</span><span class="t-price">$25.000</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item"><span class="t-icon">🎯</span><span class="t-name">50/50</span><span class="t-price">$50.000</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item"><span class="t-icon">🎫</span><span class="t-name">CUPÓN AL AZAR</span><span class="t-price">$20.000</span></span>
+      <span class="ticker-sep">◆</span>
+      <!-- Duplicado para loop -->
+      <span class="ticker-item"><span class="t-icon">🪙</span><span class="t-name">PUNTOS</span><span class="t-price">$10.000</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item"><span class="t-icon">🗑️</span><span class="t-name">ELIM. FORMATIVA</span><span class="t-price">$100.000</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item"><span class="t-icon">😄</span><span class="t-name">MINUTO FELIZ</span><span class="t-price">$25.000</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item"><span class="t-icon">🎯</span><span class="t-name">50/50</span><span class="t-price">$50.000</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item"><span class="t-icon">🎫</span><span class="t-name">CUPÓN AL AZAR</span><span class="t-price">$20.000</span></span>
+      <span class="ticker-sep">◆</span>
+    </div>
+  </div>
+</div>
 
 <nav>
   <div class="nav-inner">
