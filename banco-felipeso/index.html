@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Banco Felipeso · Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ─── Variables ─────────────────────────────────────────── */
+  :root {
+    --ink:       #0d1b2a;
+    --paper:     #f5f0e8;
+    --gold:      #c9a84c;
+    --gold-lt:   #f0e6c8;
+    --blue:      #1b3a6b;
+    --blue-md:   #2e6db4;
+    --blue-lt:   #dce8f7;
+    --green:     #1e6e1e;
+    --red:       #b22222;
+    --muted:     #7a7a6e;
+    --border:    #d4c9a8;
+    --card-bg:   #fffdf6;
+    --shadow:    0 2px 20px rgba(13,27,42,0.10);
+    --shadow-lg: 0 8px 40px rgba(13,27,42,0.16);
+  }
+
+  /* ─── Reset & base ──────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; scroll-behavior: smooth; }
+  body {
+    background: var(--paper);
+    background-image:
+      radial-gradient(ellipse at 10% 10%, rgba(201,168,76,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse at 90% 90%, rgba(27,58,107,0.06) 0%, transparent 60%);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ─── Header ────────────────────────────────────────────── */
+  header {
+    background: var(--blue);
+    background-image: linear-gradient(135deg, #0d1b2a 0%, #1b3a6b 50%, #2e6db4 100%);
+    padding: 1.5rem 1.25rem 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent, transparent 18px,
+      rgba(255,255,255,0.025) 18px, rgba(255,255,255,0.025) 19px
+    );
+  }
+  .header-inner { position: relative; z-index: 1; }
+  .banco-label {
+    font-family: 'DM Mono', monospace;
+    font-size: .65rem;
+    letter-spacing: .18em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: .3rem;
+  }
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.7rem, 6vw, 2.4rem);
+    font-weight: 900;
+    color: #fff;
+    line-height: 1;
+    letter-spacing: -.02em;
+  }
+  h1 span { color: var(--gold); }
+  .header-sub {
+    font-size: .78rem;
+    color: rgba(255,255,255,0.55);
+    margin-top: .35rem;
+    font-weight: 300;
+  }
+  .live-badge {
+    display: inline-flex; align-items: center; gap: .35rem;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 999px;
+    padding: .25rem .7rem;
+    font-size: .68rem;
+    color: #fff;
+    margin-top: .75rem;
+    font-family: 'DM Mono', monospace;
+  }
+  .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #4caf50;
+    animation: pulse-dot 1.8s ease-in-out infinite;
+  }
+  .dot.offline { background: #ff5252; animation: none; }
+  @keyframes pulse-dot {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: .4; transform: scale(.7); }
+  }
+
+  /* ─── Main layout ───────────────────────────────────────── */
+  main { padding: 1.25rem; max-width: 480px; margin: 0 auto; }
+
+  /* ─── Section titles ────────────────────────────────────── */
+  .section-title {
+    font-family: 'DM Mono', monospace;
+    font-size: .6rem;
+    letter-spacing: .2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin: 1.5rem 0 .7rem;
+    padding-left: .1rem;
+    border-left: 2px solid var(--gold);
+    padding-left: .5rem;
+  }
+
+  /* ─── KPI cards ─────────────────────────────────────────── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .7rem;
+  }
+  .kpi-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: .9rem 1rem;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .kpi-card:active { transform: scale(.97); }
+  .kpi-card.wide { grid-column: 1 / -1; }
+  .kpi-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--blue), var(--gold));
+    border-radius: 10px 10px 0 0;
+  }
+  .kpi-label {
+    font-size: .68rem;
+    color: var(--muted);
+    font-weight: 400;
+    margin-bottom: .3rem;
+    line-height: 1.3;
+  }
+  .kpi-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--blue);
+    line-height: 1;
+  }
+  .kpi-value.green { color: var(--green); }
+  .kpi-value.gold  { color: var(--gold); }
+  .kpi-unit {
+    font-family: 'DM Mono', monospace;
+    font-size: .65rem;
+    color: var(--muted);
+    margin-top: .25rem;
+  }
+  .kpi-loading { color: var(--border); font-size: 1.4rem; }
+
+  /* ─── Movimientos recientes ─────────────────────────────── */
+  .mov-list { display: flex; flex-direction: column; gap: .5rem; }
+  .mov-item {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .75rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow);
+    animation: fadeSlide .35s ease both;
+  }
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .mov-left { flex: 1; min-width: 0; }
+  .mov-nombre {
+    font-size: .83rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mov-concepto {
+    font-size: .7rem;
+    color: var(--muted);
+    margin-top: .1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mov-fecha {
+    font-family: 'DM Mono', monospace;
+    font-size: .62rem;
+    color: var(--muted);
+  }
+  .mov-monto {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-left: .75rem;
+    white-space: nowrap;
+  }
+  .mov-monto.pos { color: var(--green); }
+  .mov-monto.neg { color: var(--red); }
+  .tipo-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: .58rem;
+    padding: .15rem .5rem;
+    border-radius: 999px;
+    font-weight: 500;
+    margin-top: .2rem;
+    display: inline-block;
+  }
+  .tipo-badge.credito { background: #e8f5e9; color: var(--green); }
+  .tipo-badge.debito  { background: #fdecea; color: var(--red); }
+  .tipo-badge.multa   { background: #fff3e0; color: #e65100; }
+  .tipo-badge.premio  { background: #fef9e7; color: #c9a84c; }
+
+  /* ─── Ranking de cuentas ────────────────────────────────── */
+  .ranking-list { display: flex; flex-direction: column; gap: .45rem; }
+  .rank-item {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .6rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    box-shadow: var(--shadow);
+  }
+  .rank-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--border);
+    min-width: 1.5rem;
+    text-align: center;
+  }
+  .rank-num.top1 { color: #c9a84c; }
+  .rank-num.top2 { color: #9e9e9e; }
+  .rank-num.top3 { color: #a0522d; }
+  .rank-info { flex: 1; min-width: 0; }
+  .rank-nombre {
+    font-size: .82rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .rank-curso {
+    font-size: .67rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+  .rank-saldo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--blue);
+    white-space: nowrap;
+  }
+  .rank-bar-wrap {
+    height: 3px;
+    background: var(--blue-lt);
+    border-radius: 2px;
+    margin-top: .3rem;
+    overflow: hidden;
+  }
+  .rank-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue), var(--gold));
+    border-radius: 2px;
+    transition: width .6s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ─── Inventario billetes ───────────────────────────────── */
+  .billetes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .55rem;
+  }
+  .billete-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .7rem .6rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .billete-card::before {
+    content: '₣';
+    position: absolute;
+    top: -8px; right: 2px;
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    color: rgba(201,168,76,0.1);
+    font-weight: 900;
+  }
+  .billete-denom {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--blue);
+  }
+  .billete-unit { font-size: .6rem; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .billete-count {
+    font-size: .72rem;
+    color: var(--muted);
+    margin-top: .3rem;
+  }
+  .billete-count strong { color: var(--green); }
+
+  /* ─── Footer ────────────────────────────────────────────── */
+  footer {
+    text-align: center;
+    padding: 1.5rem 1rem 2rem;
+    font-size: .67rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    line-height: 1.8;
+  }
+
+  /* ─── Estado / loading ──────────────────────────────────── */
+  .estado-bar {
+    background: var(--blue-lt);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .6rem 1rem;
+    font-size: .72rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    text-align: center;
+    margin-bottom: .5rem;
+  }
+  .error-msg {
+    background: #fdecea;
+    border: 1px solid #ffcdd2;
+    border-radius: 8px;
+    padding: 1rem;
+    color: var(--red);
+    font-size: .78rem;
+    line-height: 1.6;
+  }
+  .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid var(--border);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    vertical-align: middle;
+    margin-right: .4rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── Config panel ──────────────────────────────────────── */
+  .config-box {
+    background: var(--card-bg);
+    border: 1px dashed var(--gold);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  .config-box label {
+    display: block;
+    font-size: .7rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: .4rem;
+    letter-spacing: .05em;
+  }
+  .config-box input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .5rem .7rem;
+    font-family: 'DM Mono', monospace;
+    font-size: .72rem;
+    color: var(--ink);
+    background: var(--paper);
+    outline: none;
+    margin-bottom: .5rem;
+  }
+  .config-box input:focus { border-color: var(--blue); }
+  .btn-conectar {
+    width: 100%;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: .6rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-conectar:hover { background: var(--blue-md); }
+  .config-hint {
+    font-size: .65rem;
+    color: var(--muted);
+    margin-top: .5rem;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="banco-label">Sistema Bancario Escolar</div>
+    <h1>Banco <span>Felipeso</span></h1>
+    <div class="header-sub">Colegio San Agustín · Villa Alemana</div>
+    <div class="live-badge">
+      <span class="dot" id="liveDot"></span>
+      <span id="liveText">Conectando…</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Panel de configuración (se oculta al conectar) -->
+  <div class="config-box" id="configBox">
+    <label>URL CSV de Google Sheets</label>
+    <input type="text" id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv&gid=…"
+           value="">
+    <button class="btn-conectar" onclick="conectar()">Conectar al banco</button>
+    <div class="config-hint">
+      💡 Pega aquí el link de tu Google Sheet publicado como CSV.<br>
+      Ver instrucciones debajo para obtenerlo.
+    </div>
+  </div>
+
+  <div id="estadoBar" class="estado-bar" style="display:none">
+    <span class="spinner"></span>Cargando datos…
+  </div>
+  <div id="errorMsg" style="display:none"></div>
+
+  <!-- KPIs -->
+  <div class="section-title">Resumen del banco</div>
+  <div class="kpi-grid">
+    <div class="kpi-card wide">
+      <div class="kpi-label">Total Felipesos en circulación</div>
+      <div class="kpi-value gold" id="kpi-circulacion">—</div>
+      <div class="kpi-unit">Felipesos (₣)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Cuentas activas</div>
+      <div class="kpi-value" id="kpi-cuentas">—</div>
+      <div class="kpi-unit">estudiantes</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Transacciones registradas</div>
+      <div class="kpi-value" id="kpi-transacciones">—</div>
+      <div class="kpi-unit">movimientos</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Billetes emitidos</div>
+      <div class="kpi-value" id="kpi-billetes">—</div>
+      <div class="kpi-unit">en circulación</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Saldo promedio</div>
+      <div class="kpi-value green" id="kpi-promedio">—</div>
+      <div class="kpi-unit">₣ por estudiante</div>
+    </div>
+  </div>
+
+  <!-- Ranking -->
+  <div class="section-title">🏆 Ranking de saldos</div>
+  <div class="ranking-list" id="rankingList">
+    <div class="estado-bar">Sin datos aún</div>
+  </div>
+
+  <!-- Movimientos recientes -->
+  <div class="section-title">💸 Últimos movimientos</div>
+  <div class="mov-list" id="movList">
+    <div class="estado-bar">Sin datos aún</div>
+  </div>
+
+  <!-- Inventario billetes -->
+  <div class="section-title">🖨️ Billetes por denominación</div>
+  <div class="billetes-grid" id="billetesGrid">
+    <div class="estado-bar" style="grid-column:1/-1">Sin datos aún</div>
+  </div>
+
+</main>
+
+<footer>
+  Última actualización: <span id="ultimaActualizacion">—</span><br>
+  Se actualiza cada 30 segundos · Banco Felipeso © 2025
+</footer>
+
+<script>
+// ─── Configuración ───────────────────────────────────────────
+// IDs de hojas (gid) — ajusta según tu Google Sheet real
+// Hoja 1: Cuentas Corrientes, Hoja 2: Movimientos, Hoja 3: Billetes, Hoja 4: Inventario
+const SHEET_IDS = {
+  cuentas:      0,    // gid de "Cuentas Corrientes"
+  movimientos:  1,    // gid de "Movimientos"
+  billetes:     2,    // gid de "Emisión de Billetes"
+  inventario:   3,    // gid de "Inventario"
+};
+
+let BASE_URL = localStorage.getItem('felipeso_sheet_url') || '';
+let intervalo = null;
+
+// ─── Utilidades ──────────────────────────────────────────────
+function csvUrl(gid) {
+  const base = BASE_URL.split('?')[0].split('/edit')[0];
+  return `${base}/export?format=csv&gid=${gid}`;
+}
+
+async function fetchCSV(url) {
+  const r = await fetch(url + '&t=' + Date.now());
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const text = await r.text();
+  return parseCSV(text);
+}
+
+function parseCSV(text) {
+  const rows = [];
+  const lines = text.split(/\r?\n/);
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const cols = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      if (line[i] === '"') { inQ = !inQ; }
+      else if (line[i] === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+      else cur += line[i];
+    }
+    cols.push(cur.trim());
+    rows.push(cols);
+  }
+  return rows;
+}
+
+function num(str) {
+  if (!str) return 0;
+  return parseFloat(String(str).replace(/[₣\s,]/g,'')) || 0;
+}
+
+function fmt(n) {
+  return new Intl.NumberFormat('es-CL').format(Math.round(n));
+}
+
+function tipoClass(tipo) {
+  if (!tipo) return '';
+  const t = tipo.toLowerCase();
+  if (t.includes('créd') || t.includes('cred')) return 'credito';
+  if (t.includes('déb')  || t.includes('deb'))  return 'debito';
+  if (t.includes('mult')) return 'multa';
+  if (t.includes('prem')) return 'premio';
+  return 'credito';
+}
+
+// ─── Render KPIs ─────────────────────────────────────────────
+function renderKPIs(cuentas, movs, billetes, inventario) {
+  // Cuentas activas y saldo total
+  const activas = cuentas.filter(r => r[7] === 'Activa');
+  const saldoTotal = activas.reduce((s, r) => s + num(r[6]), 0);
+  const promedio   = activas.length > 0 ? saldoTotal / activas.length : 0;
+
+  // Billetes en circulación
+  const billetesCirc = billetes.filter(r => r[3] === 'En circulación').length;
+
+  // Total ₣ circulando (desde inventario si existe, si no calculamos)
+  let circulacion = 0;
+  if (inventario.length > 1) {
+    // última fila no vacía con fórmula de total
+    for (const r of inventario) {
+      if (r[0] && r[0].toString().toLowerCase().includes('total')) {
+        circulacion = num(r[5]); break;
+      }
+    }
+  }
+  if (!circulacion) circulacion = saldoTotal;
+
+  setKPI('kpi-circulacion', fmt(circulacion) + ' ₣');
+  setKPI('kpi-cuentas', activas.length);
+  setKPI('kpi-transacciones', movs.length);
+  setKPI('kpi-billetes', billetesCirc);
+  setKPI('kpi-promedio', fmt(promedio) + ' ₣');
+}
+
+function setKPI(id, val) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (el.textContent !== String(val)) {
+    el.style.transform = 'scale(1.08)';
+    el.style.transition = 'transform .2s';
+    el.textContent = val;
+    setTimeout(() => { el.style.transform = ''; }, 250);
+  }
+}
+
+// ─── Render Ranking ───────────────────────────────────────────
+function renderRanking(cuentas) {
+  const list = document.getElementById('rankingList');
+  const activas = cuentas
+    .filter(r => r[7] === 'Activa' && r[2])
+    .map(r => ({ apellido: r[2], nombre: r[3], curso: r[4], saldo: num(r[6]) }))
+    .sort((a, b) => b.saldo - a.saldo)
+    .slice(0, 8);
+
+  if (!activas.length) { list.innerHTML = '<div class="estado-bar">Sin datos</div>'; return; }
+  const max = activas[0].saldo || 1;
+
+  list.innerHTML = activas.map((e, i) => {
+    const pct = Math.round((e.saldo / max) * 100);
+    const numClass = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+    return `
+    <div class="rank-item">
+      <div class="rank-num ${numClass}">${i+1}</div>
+      <div class="rank-info">
+        <div class="rank-nombre">${e.apellido} ${e.nombre}</div>
+        <div class="rank-curso">${e.curso || '—'}</div>
+        <div class="rank-bar-wrap"><div class="rank-bar" style="width:${pct}%"></div></div>
+      </div>
+      <div class="rank-saldo">${fmt(e.saldo)} ₣</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Render Movimientos ───────────────────────────────────────
+function renderMovimientos(movs) {
+  const list = document.getElementById('movList');
+  const recientes = [...movs].reverse().slice(0, 10);
+
+  if (!recientes.length) { list.innerHTML = '<div class="estado-bar">Sin movimientos</div>'; return; }
+
+  list.innerHTML = recientes.map(r => {
+    const monto = num(r[7]);
+    const pos   = monto >= 0;
+    const tipo  = r[5] || '';
+    return `
+    <div class="mov-item">
+      <div class="mov-left">
+        <div class="mov-nombre">${r[4] || '—'}</div>
+        <div class="mov-concepto">${r[6] || ''}</div>
+        <span class="tipo-badge ${tipoClass(tipo)}">${tipo}</span>
+      </div>
+      <div style="text-align:right">
+        <div class="mov-monto ${pos?'pos':'neg'}">${pos?'+':''}${fmt(monto)} ₣</div>
+        <div class="mov-fecha">${r[1] || ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Render Inventario billetes ───────────────────────────────
+function renderBilletes(inventario) {
+  const grid = document.getElementById('billetesGrid');
+  const filas = inventario.filter(r => r[0] && !isNaN(num(r[0])) && num(r[0]) > 0);
+
+  if (!filas.length) { grid.innerHTML = '<div class="estado-bar" style="grid-column:1/-1">Sin datos</div>'; return; }
+
+  grid.innerHTML = filas.map(r => {
+    const denom = num(r[0]);
+    const circu = num(r[3]);
+    const total = num(r[2]);
+    return `
+    <div class="billete-card">
+      <div class="billete-denom">${fmt(denom)}</div>
+      <div class="billete-unit">Felipeso${denom !== 1 ? 's' : ''}</div>
+      <div class="billete-count">Circulando: <strong>${circu}</strong><br>Emitidos: ${total}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Fetch & render completo ──────────────────────────────────
+async function actualizar() {
+  const dot  = document.getElementById('liveDot');
+  const text = document.getElementById('liveText');
+
+  try {
+    const [cuentas, movs, billetes, inventario] = await Promise.all([
+      fetchCSV(csvUrl(SHEET_IDS.cuentas)),
+      fetchCSV(csvUrl(SHEET_IDS.movimientos)),
+      fetchCSV(csvUrl(SHEET_IDS.billetes)),
+      fetchCSV(csvUrl(SHEET_IDS.inventario)),
+    ]);
+
+    // Saltar fila de encabezado (fila 0 = título, fila 1 = headers)
+    const dataCuentas    = cuentas.slice(2).filter(r => r[0]);
+    const dataMov        = movs.slice(2).filter(r => r[0]);
+    const dataBilletes   = billetes.slice(2).filter(r => r[0]);
+    const dataInventario = inventario.slice(2).filter(r => r[0]);
+
+    renderKPIs(dataCuentas, dataMov, dataBilletes, dataInventario);
+    renderRanking(dataCuentas);
+    renderMovimientos(dataMov);
+    renderBilletes(dataInventario);
+
+    dot.classList.remove('offline');
+    const hora = new Date().toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    text.textContent = 'En vivo · ' + hora;
+    document.getElementById('ultimaActualizacion').textContent = hora;
+    document.getElementById('estadoBar').style.display = 'none';
+    document.getElementById('errorMsg').style.display = 'none';
+  } catch(e) {
+    dot.classList.add('offline');
+    text.textContent = 'Error de conexión';
+    const err = document.getElementById('errorMsg');
+    err.style.display = 'block';
+    err.className = 'error-msg';
+    err.innerHTML = `⚠️ No se pudo cargar el banco.<br><small>${e.message}</small><br><br>
+      Verifica que el Sheet esté publicado en la web y que el URL sea correcto.`;
+  }
+}
+
+// ─── Conectar ─────────────────────────────────────────────────
+function conectar() {
+  const url = document.getElementById('sheetUrl').value.trim();
+  if (!url) return alert('Ingresa el URL del Google Sheet.');
+  BASE_URL = url;
+  localStorage.setItem('felipeso_sheet_url', url);
+  document.getElementById('configBox').style.display = 'none';
+  document.getElementById('estadoBar').style.display = 'block';
+  iniciar();
+}
+
+function iniciar() {
+  if (intervalo) clearInterval(intervalo);
+  actualizar();
+  intervalo = setInterval(actualizar, 30000);
+}
+
+// ─── Auto-start si ya hay URL guardada ────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  if (BASE_URL) {
+    document.getElementById('sheetUrl').value = BASE_URL;
+    document.getElementById('configBox').style.display = 'none';
+    document.getElementById('estadoBar').style.display = 'block';
+    iniciar();
+  }
+});
+</script>
+</body>
+</html>
