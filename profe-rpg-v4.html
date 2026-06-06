@@ -195,6 +195,8 @@ canvas{width:100%;aspect-ratio:1/1;max-width:450px;max-height:450px;background:#
       <div id="b-pz"><div id="b-ps">🧑‍🏫</div><div id="b-pc"><div id="b-pn">PROFE FELIPE</div><div class="bsr"><span class="bsl">HP</span><div class="bsw"><div class="bsf" id="b-hf"></div></div><span class="bsn" id="b-hn">100</span></div><div class="bsr"><span class="bsl">MP</span><div class="bsw"><div class="bsf" id="b-mf"></div></div><span class="bsn" id="b-mn">50</span></div><div id="b-st"></div></div></div>
     </div>
     <div id="b-ma"><div id="b-msg"></div><div id="b-act"><button class="bb ba" onclick="doMove(0)">⚡ EXPLICAR</button><button class="bb bm" id="btn-mat" onclick="doMove(4)" style="display:none;background:linear-gradient(135deg,#312e81,#4338ca)">🔢 C.MAT</button><button class="bb bs" onclick="doMove(1)">💡 MOTIVAR</button><button class="bb bi" id="btn-cof" onclick="doMove(2)">☕ CAFÉ</button><button class="bb bd" id="btn-def" onclick="doMove(5)" style="background:linear-gradient(135deg,#475569,#64748b)">🛡️ DEFENDER</button><button class="bb br" id="btn-run" onclick="doMove(3)">🚪 HUIR</button><button class="bb bp" id="btn-psy" onclick="doMove(4)" style="display:none;grid-column:1/3">💜 ATAQUE PSICOLÓGICO</button>
+        <button class="bb" id="btn-pan" onclick="doMove(6)" style="display:none;grid-column:1/3;background:linear-gradient(135deg,#92400e,#b45309)">🐾 PODER ANIMAL</button>
+        <button class="bb" id="btn-pcon" onclick="doMove(7)" style="display:none;grid-column:1/3;background:linear-gradient(135deg,#166534,#15803d)">🌍 PODER DE CONSERVACIÓN</button>
         <button class="bb bt" id="btn-team" onclick="openBParty()" style="display:none;grid-column:1/3">👥 LLAMAR EQUIPO</button></div>
       <div id="b-party-panel" style="display:none;padding:4px 0"><div style="font-family:'Press Start 2P',monospace;font-size:.44rem;color:#a78bfa;text-align:center;margin-bottom:6px">👥 LLAMAR EQUIPO</div><div id="b-party-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:4px"></div><button class="bb br" style="width:100%" onclick="hideBParty()">← Cancelar</button></div></div>
   </div>
@@ -303,6 +305,10 @@ let progress={
   centroVisited:false,
   bioVisited:false,
   reservaVisited:false,
+  buinzooVisited:false,
+  buinzooBosses:{},
+  powerAnimal:false,
+  powerConservacion:false,
   hasBoat:false,
   lakeChestreward:false,
   garden:{},
@@ -338,17 +344,17 @@ let progress={
 const MAPS={
 jardin_eden:[
     ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'],
-    ['#','T','f','T','f','g','d','d','g','g','g','p','p','g','g','g','g','d','d','f','T','f'],
-    ['#','f','.','.','o','g','.','.','b','.','.','p','p','.','.','b','.','.','g','o','.','.'],
-    ['#','f','.','T','.','.','d','.','.','A','.','p','p','.','d','.','.','T','.','.','d','.'],
-    ['#','f','.','g','.','.','r','.','*','.','.','p','p','.','.','.','.','.','g','.','o','.'],
+    ['#','T','f','Y','r','d','b','g','g','p','p','p','p','g','g','b','d','r','Y','f','T','f'],
+    ['#','f','Y','.','.','.','.','.','A','.','p','p','.','.','K','.','.','.','.','Y','o','.'],
+    ['#','f','.','.','o','.','d','.','.','.','p','p','.','.','.','.','d','.','o','.','.','.'],
     ['p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p'],
-    ['#','f','.','.','.','b','.','.','.','g','.','.','C','.','.','.','.','.','b','.','.','o'],
+    ['#','b','.','.','.','.','.','.','.','.','p','p','.','.','.','.','.','.','.','.','b','.'],
+    ['#','.','.','.','r','.','.','p','p','Q','Q','p','p','.','.','r','.','.','.','C','.','o'],
+    ['#','b','.','.','.','.','.','p','p','Q','Q','p','p','.','.','.','.','.','.','.','b','.'],
     ['p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p'],
-    ['#','f','.','o','.','.','.','.','.','d','.','p','p','.','d','.','g','.','r','.','.','f'],
-    ['#','f','.','T','.','.','g','.','.','K','.','p','p','.','g','.','.','T','.','.','d','.'],
-    ['#','f','.','.','b','.','d','d','.','.','.','.','p','p','.','.','.','d','d','.','b','.'],
-    ['#','T','f','T','f','g','d','d','g','g','g','g','p','p','g','g','g','d','d','f','T','f'],
+    ['#','f','Y','.','.','.','g','.','.','.','p','p','.','.','g','.','.','.','.','Y','d','.'],
+    ['#','f','.','.','b','.','d','.','.','.','p','p','.','.','.','d','.','b','.','.','.','.'],
+    ['#','T','f','Y','r','d','b','g','g','p','p','p','p','g','g','b','d','r','Y','f','T','f'],
     ['#','#','#','#','#','#','#','#','E','E','E','E','#','#','#','#','H','H','#','#','#','#']
   ],
 segundo_piso:[
@@ -482,10 +488,32 @@ sala_8vo:[
     ['#','.','g','g','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','g','g','.','.','.','#','.','#'],
     ['#','T','.','.','.','.','.','.','g','g','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','g','g','.','.','.','.','.','.','.','#','.','#'],
     ['#','.','g','g','.','.','g','g','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','g','g','.','.','g','g','.','.','.','.','.','#','.','#'],
-    ['#','.','.','.','.','T','.','.','F','F','.','.','.','.','.','.','.','.','.','s','.','.','.','.','.','T','.','.','.','.','.','.','.','.','.','.','.','#','.','#'],
+    ['#','.','.','.','.','T','.','Z','F','F','.','.','.','.','.','.','.','.','.','s','.','.','.','.','.','T','.','.','.','.','.','.','.','.','.','.','.','#','.','#'],
     ['#','T','.','.','.','.','.','.','.','.','T','.','.','.','.','.','.','.','.','.','.','.','.','.','T','.','.','.','.','.','.','.','T','.','.','.','.','#','.','#'],
     ['#','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','#'],
     ['#','#','#','#','#','#','#','#','E','E','#','#','#','E','E','#','#','#','#','#','E','E','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#']
+  ],
+  buinzoo:[
+    ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'],
+    ['#','I','.','t','.','#','f','f','f','#','c','c','#','j','j','j','#','.','m','.','S','#'],
+    ['#','.','.','.','.','#','f','W','f','#','c','c','#','.','.','.','#','.','.','.','.','#'],
+    ['#','.','t','.','.','#','f','f','f','#','c','c','#','.','j','.','#','m','.','m','.','#'],
+    ['#','.','.','.','.','#','#','.','#','#','c','c','#','#','.','#','#','.','.','.','.','#'],
+    ['#','#','#','.','#','#','.','.','.','#','c','c','#','.','.','.','#','#','.','#','#','#'],
+    ['#','.','.','.','.','.','.','c','c','c','c','c','c','c','c','.','.','.','.','.','.','#'],
+    ['#','.','p','.','.','.','c','c','c','c','c','c','c','c','c','c','.','.','.','e','.','#'],
+    ['#','.','.','.','#','.','c','c','b','c','c','c','c','b','c','c','.','#','.','.','.','#'],
+    ['#','#','.','#','#','.','c','c','c','c','I','c','c','c','c','c','.','#','#','.','#','#'],
+    ['#','p','.','p','#','.','.','c','c','c','c','c','c','c','c','.','.','#','e','.','e','#'],
+    ['#','.','.','.','#','#','#','.','c','c','c','c','c','c','.','#','#','#','.','.','.','#'],
+    ['#','.','p','.','.','.','.','.','c','c','c','c','c','c','.','.','.','.','.','e','.','#'],
+    ['#','#','#','.','#','#','.','.','c','c','B','B','c','c','.','.','#','#','.','#','#','#'],
+    ['#','.','.','.','.','#','.','.','c','c','B','B','c','c','.','.','#','.','.','.','.','#'],
+    ['#','.','r','.','.','#','l','.','c','c','c','c','c','c','.','o','#','.','k','.','.','#'],
+    ['#','.','.','.','.','#','.','l','#','#','c','c','#','#','o','.','#','.','.','.','.','#'],
+    ['#','.','.','r','.','#','#','#','#','#','c','c','#','#','#','#','#','.','k','.','.','#'],
+    ['#','#','#','#','#','#','#','#','#','c','c','c','c','#','#','#','#','#','#','#','#','#'],
+    ['#','#','#','#','#','#','#','#','#','c','E','E','c','#','#','#','#','#','#','#','#','#']
   ],
   estacion_villa:[
     ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'],
@@ -675,7 +703,9 @@ sala_8vo:[
     ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#']
   ]
 };
-const WALKABLE=new Set(['.','E','g','e','N','b','v','a','Z','V','p','H','S','B','8','9','^','>','*','d','r','D','q','n']);
+const WALKABLE=new Set(['.','E','g','e','N','b','v','a','Z','V','p','H','S','B','8','9','^','>','*','d','r','D','q','n','c']);
+// Tiles SÓLIDOS específicos del BuinZoo (animales/recintos/bancas), pese a ser walkable en otros mapas
+const BUINZOO_SOLID=new Set(['t','p','r','l','e','m','f','o','j','k','b','W','I','S','B']);
 const updateCamera=()=>{ const m=MAPS[currentMap],mW=m[0].length,mH=m.length; camera.x=Math.max(0,Math.min(player.x-4,mW-10)); camera.y=Math.max(0,Math.min(player.y-4,mH-10)); };
 let _suppressOrigin=false;
 const transitionTo=(id,tx,ty)=>{
@@ -1754,6 +1784,22 @@ function drawPlazaTile(t,sx,sy,mR,mC){
       ctx.fillStyle='rgba(147,197,253,.9)'; ctx.font='bold 5px sans-serif'; ctx.textBaseline='top'; ctx.textAlign='center';
       ctx.fillText('CENTRO',sx+TS/2,sy+3); ctx.textAlign='left'; ctx.textBaseline='alphabetic';
       break;}
+    case 'Z':{ // Portón al BUINZOO
+      const gz=.5+.5*Math.sin(tick*.1);
+      ctx.fillStyle='#14532d'; ctx.fillRect(sx,sy,TS,TS);
+      // arco de entrada de madera
+      ctx.fillStyle='#7c4a1e'; ctx.fillRect(sx+TS*.12,sy+TS*.18,TS*.12,TS*.74);
+      ctx.fillRect(sx+TS*.76,sy+TS*.18,TS*.12,TS*.74);
+      ctx.fillStyle='#8a5a2b'; ctx.fillRect(sx+TS*.08,sy+TS*.1,TS*.84,TS*.14);
+      ctx.fillStyle='#5a3a1a'; ctx.fillRect(sx+TS*.08,sy+TS*.1,TS*.84,TS*.04);
+      // letrero
+      ctx.globalAlpha=.85+.15*gz; ctx.font='12px serif'; ctx.textBaseline='middle'; ctx.textAlign='center';
+      ctx.fillText('🦁',sx+TS/2,sy+TS*.56); ctx.globalAlpha=1;
+      ctx.shadowColor=`rgba(251,191,36,${.4+.4*gz})`; ctx.shadowBlur=4;
+      ctx.fillStyle='#fde68a'; ctx.font='bold 4px sans-serif'; ctx.textBaseline='top';
+      ctx.fillText('BUINZOO',sx+TS/2,sy+TS*.12); ctx.shadowBlur=0;
+      ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+      break;}
     case 'R':{ // JEFE - Prof. Alex
       ctx.fillStyle='#0d0010'; ctx.fillRect(sx,sy,TS,TS);
       const rp=.45+.55*Math.sin(tick*.12);
@@ -1998,7 +2044,7 @@ function drawDoorLabels(){
     if(t!=='E'&&t!=='Z'&&t!=='N'&&t!=='H'&&t!=='S'&&t!=='8'&&t!=='9') continue;
     const sx=c*TS,sy=r*TS;
     let dest='',color='#ffd700';
-    if(t==='Z'){dest='CONT';color='#c084fc';}
+    if(t==='Z'){dest=currentMap==='plaza'?'ZOO':'CONT';color=currentMap==='plaza'?'#fbbf24':'#c084fc';}
     else if(t==='N'){dest='SECRETA';color='#f59e0b';}
     else if(currentMap==='pasillo'){
       if(mR===0){dest='CANCHA';color='#4ade80';}
@@ -3273,6 +3319,121 @@ function drawReservaOverlays(){
 // ─ Draw Map ─
 const ARROW_OFF={up:[TS/2-4,-2,'▲'],down:[TS/2-4,TS+9,'▼'],left:[-10,TS/2+4,'◀'],right:[TS+2,TS/2+4,'▶']};
 const ML={pasillo:'PASILLO',cancha:'🏀 CANCHA',sala_vela:'🕯 SALA SECRETA',biblioteca:'📚 BIBLIOTECA',sala_cont:'💜 SALA DE CONTENCIÓN',plaza:'🌳 PLAZA BELÉN',estacion_villa:'🚂 EST. VILLA ALEMANA',salon_trofeos:'🏆 SALÓN DE TROFEOS',secretaria:'🏢 SECRETARÍA',centro_villa:'🏘️ CENTRO VILLA ALEMANA',biologia:'🔬 BIOLOGÍA DE ECOSISTEMAS',reserva:'🌿 RESERVA ECOLÓGICA DE VILLA ALEMANA'};
+function drawBuinZooTile(t,sx,sy,mR,mC){
+  const TSk=TS;
+  // helper: animal en su recinto (fondo arena + reja + emoji + cartel)
+  function pen(emoji,label,bg1,bg2,glow){
+    // suelo del recinto (tierra)
+    const grad=ctx.createLinearGradient(sx,sy,sx,sy+TSk);
+    grad.addColorStop(0,bg1); grad.addColorStop(1,bg2);
+    ctx.fillStyle=grad; ctx.fillRect(sx,sy,TSk,TSk);
+    // matas
+    ctx.fillStyle='rgba(60,110,40,.5)';
+    ctx.beginPath(); ctx.arc(sx+5,sy+TSk-5,3,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx+TSk-6,sy+6,2.5,0,Math.PI*2); ctx.fill();
+    // animal (bob)
+    const bob=Math.sin(tick*.06+mC*.5+mR)*1.5;
+    const gl=.4+.3*Math.sin(tick*.1+mC);
+    ctx.save();
+    ctx.shadowColor=glow||'rgba(0,0,0,.4)'; ctx.shadowBlur=4+3*gl;
+    ctx.font='15px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(emoji,sx+TSk/2,sy+TSk*.5+bob);
+    ctx.restore();
+    // reja del recinto (barrotes verticales)
+    ctx.strokeStyle='rgba(70,70,80,.55)'; ctx.lineWidth=1;
+    for(let i=1;i<5;i++){ ctx.beginPath(); ctx.moveTo(sx+i*(TSk/5),sy+2); ctx.lineTo(sx+i*(TSk/5),sy+TSk-2); ctx.stroke(); }
+    ctx.strokeStyle='rgba(90,90,100,.7)'; ctx.lineWidth=1.5;
+    ctx.strokeRect(sx+1,sy+1,TSk-2,TSk-2);
+    // cartel
+    if(label){ ctx.fillStyle='rgba(20,40,20,.75)'; ctx.fillRect(sx+TSk*.1,sy+TSk-7,TSk*.8,6);
+      ctx.fillStyle='#bbf7d0'; ctx.font='bold 3.4px sans-serif'; ctx.textBaseline='middle';
+      ctx.fillText(label,sx+TSk/2,sy+TSk-4); }
+    ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  }
+  switch(t){
+    case '#':{ // muro/seto perimetral del zoo
+      ctx.fillStyle='#14532d'; ctx.fillRect(sx,sy,TSk,TSk);
+      ctx.fillStyle='#166534'; ctx.fillRect(sx+1,sy+1,TSk-2,TSk-2);
+      ctx.fillStyle='rgba(74,160,70,.5)';
+      const h=Math.sin(mC*7+mR*13);
+      ctx.beginPath(); ctx.arc(sx+TSk*.3,sy+TSk*.35,4,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx+TSk*.68,sy+TSk*.6,4.5,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='rgba(20,60,30,.6)'; ctx.fillRect(sx,sy+TSk-3,TSk,3);
+      break; }
+    case '.':{ // sendero lateral (adoquín claro)
+      ctx.fillStyle=(mR+mC)%2?'#d9c7a3':'#cdb88f'; ctx.fillRect(sx,sy,TSk,TSk);
+      ctx.strokeStyle='rgba(120,90,50,.18)'; ctx.lineWidth=.5; ctx.strokeRect(sx,sy,TSk,TSk);
+      break; }
+    case 'c':{ // PASILLO CENTRAL grande (empedrado ancho)
+      ctx.fillStyle=(mR+mC)%2?'#e8d9b5':'#dcc99c';
+      ctx.fillRect(sx,sy,TSk,TSk);
+      // banda central decorativa
+      ctx.fillStyle='rgba(180,140,70,.18)'; ctx.fillRect(sx,sy+TSk*.4,TSk,TSk*.2);
+      ctx.strokeStyle='rgba(150,110,50,.15)'; ctx.lineWidth=.5; ctx.strokeRect(sx+1,sy+1,TSk-2,TSk-2);
+      break; }
+    case 'E':{ const ge=.5+.5*Math.sin(tick*.09); ctx.fillStyle=`rgba(100,221,23,${.3+.15*ge})`; ctx.fillRect(sx,sy,TSk,TSk); ctx.strokeStyle=`rgba(174,234,0,${.7+.2*ge})`; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TSk-6,TSk-6); ctx.globalAlpha=.7+.3*ge; ctx.font='13px serif'; ctx.textBaseline='middle'; ctx.textAlign='center'; ctx.fillText('🚪',sx+TSk/2,sy+TSk/2); ctx.globalAlpha=1; ctx.fillStyle='#bbf7d0'; ctx.font='bold 3.4px sans-serif'; ctx.textBaseline='top'; ctx.fillText('SALIDA',sx+TSk/2,sy+2); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break; }
+    case 'W':{ // estanque
+      const wf=.5+.5*Math.sin(tick*.08+mC*.4);
+      ctx.fillStyle='#1e3a5f'; ctx.fillRect(sx,sy,TSk,TSk);
+      ctx.fillStyle=`rgba(34,150,210,${.8})`; ctx.fillRect(sx+2,sy+2,TSk-4,TSk-4);
+      ctx.strokeStyle=`rgba(186,230,253,${.4+.3*wf})`; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.arc(sx+TSk/2,sy+TSk/2,TSk*.22,0,Math.PI*2); ctx.stroke();
+      break; }
+    case 'b':{ // banca
+      ctx.fillStyle=(mR+mC)%2?'#e8d9b5':'#dcc99c'; ctx.fillRect(sx,sy,TSk,TSk);
+      ctx.fillStyle='#8a5a2b'; ctx.fillRect(sx+TSk*.18,sy+TSk*.5,TSk*.64,TSk*.18);
+      ctx.fillStyle='#6b4423'; ctx.fillRect(sx+TSk*.18,sy+TSk*.36,TSk*.64,TSk*.08);
+      ctx.fillStyle='#5a3a1a'; ctx.fillRect(sx+TSk*.22,sy+TSk*.68,TSk*.06,TSk*.18);
+      ctx.fillRect(sx+TSk*.72,sy+TSk*.68,TSk*.06,TSk*.18);
+      break; }
+    case 'T':{ ctx.fillStyle='#cdb88f'; ctx.fillRect(sx,sy,TSk,TSk); if(typeof drawPineMed==='function') drawPineMed(sx,sy); break; }
+    case 'I':{ // cartel informativo / GUÍA del zoo
+      const ip=.5+.5*Math.sin(tick*.1);
+      ctx.fillStyle=(mR+mC)%2?'#e8d9b5':'#dcc99c'; ctx.fillRect(sx,sy,TSk,TSk);
+      ctx.fillStyle='#5a3a1a'; ctx.fillRect(sx+TSk*.46,sy+TSk*.5,TSk*.08,TSk*.4);
+      ctx.fillStyle='#15803d'; ctx.fillRect(sx+TSk*.2,sy+TSk*.12,TSk*.6,TSk*.4);
+      ctx.fillStyle='#166534'; ctx.fillRect(sx+TSk*.22,sy+TSk*.14,TSk*.56,TSk*.36);
+      ctx.shadowColor=`rgba(134,239,172,${.4+.4*ip})`; ctx.shadowBlur=4;
+      ctx.font='8px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🗺️',sx+TSk/2,sy+TSk*.3); ctx.shadowBlur=0;
+      ctx.fillStyle='#fde68a'; ctx.font='bold 3px sans-serif'; ctx.textBaseline='top';
+      ctx.fillText('GUÍA',sx+TSk/2,sy+TSk*.55); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break; }
+    case 'S':{ // TIENDA SAFARI
+      const sp=.5+.5*Math.sin(tick*.1);
+      ctx.fillStyle='#7c2d12'; ctx.fillRect(sx,sy,TSk,TSk);
+      // toldo a rayas safari
+      ctx.fillStyle='#d97706'; ctx.fillRect(sx,sy+2,TSk,TSk*.35);
+      ctx.fillStyle='#92400e'; for(let i=0;i<4;i++) ctx.fillRect(sx+i*(TSk/4),sy+2,TSk/8,TSk*.35);
+      ctx.fillStyle='#a16207'; ctx.fillRect(sx+2,sy+TSk*.4,TSk-4,TSk*.55);
+      ctx.shadowColor=`rgba(251,191,36,${.4+.4*sp})`; ctx.shadowBlur=5;
+      ctx.font='9px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🛖',sx+TSk/2,sy+TSk*.62); ctx.shadowBlur=0;
+      ctx.fillStyle='#fde68a'; ctx.font='bold 3px sans-serif'; ctx.textBaseline='top';
+      ctx.fillText('SAFARI',sx+TSk/2,sy+TSk-5); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break; }
+    case 'B':{ // ARENA DE JEFE animal
+      ctx.fillStyle='#1a1208'; ctx.fillRect(sx,sy,TSk,TSk);
+      const rp=.45+.55*Math.sin(tick*.12);
+      ctx.fillStyle=`rgba(180,90,20,${rp*.4})`; ctx.fillRect(sx+2,sy+2,TSk-4,TSk-4);
+      ctx.strokeStyle=`rgba(251,146,60,${rp})`; ctx.lineWidth=2.2; ctx.strokeRect(sx+2,sy+2,TSk-4,TSk-4);
+      ctx.globalAlpha=rp; ctx.font='15px serif'; ctx.textBaseline='middle'; ctx.textAlign='center';
+      ctx.fillText('🦏',sx+TSk/2,sy+TSk/2); ctx.globalAlpha=1;
+      ctx.fillStyle=`rgba(254,215,170,${rp})`; ctx.font='bold 4px sans-serif'; ctx.textBaseline='top';
+      ctx.fillText('★JEFE★',sx+TSk/2,sy+2); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break; }
+    // ── ANIMALES (recintos) ──
+    case 't': pen('🐗','TAPIR','#8a7050','#6b5436','rgba(120,90,60,.6)'); break;
+    case 'p': pen('🦫','CAPIBARA','#9a8050','#7a6438','rgba(180,130,70,.6)'); break;
+    case 'r': pen('🦏','RINOCERONTE','#9a9aa2','#76767e','rgba(150,150,160,.6)'); break;
+    case 'e': pen('🐘','ELEFANTE','#9a9aa2','#76767e','rgba(160,160,170,.6)'); break;
+    case 'l': pen('🦭','LEÓN MARINO','#6a7a8a','#4a5a6a','rgba(120,140,160,.6)'); break;
+    case 'm': pen('🐒','MONOS','#7a6038','#5a4424','rgba(120,90,60,.6)'); break;
+    case 'f': pen('🦩','FLAMENCOS','#d98aa8','#b56880','rgba(244,114,182,.6)'); break;
+    case 'o': pen('🐻','OSO','#6a4a30','#4a3020','rgba(90,60,40,.6)'); break;
+    case 'j': pen('🦒','JIRAFA','#caa050','#a88038','rgba(220,180,90,.6)'); break;
+    case 'k': pen('🐊','COCODRILO','#4a7a40','#356030','rgba(70,120,60,.6)'); break;
+    case 's': pen('🐍','SERPIENTES','#7a9a40','#5a7a30','rgba(120,150,60,.6)'); break;
+    default:{ ctx.fillStyle='#cdb88f'; ctx.fillRect(sx,sy,TSk,TSk); }
+  }
+}
 function drawJardinEdenTile(t,sx,sy,mR,mC){
   const p=.5+.5*Math.sin(tick*.05+mC*.3);
   switch(t){
@@ -3316,6 +3477,9 @@ function drawJardinEdenTile(t,sx,sy,mR,mC){
       ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break;}
     case '%':{ drawGrassMed(sx,sy,mC,mR); ctx.fillStyle='#6b4423'; ctx.fillRect(sx+TS*.2,sy+TS*.25,TS*.6,TS*.4); ctx.fillStyle='#8a5a2b'; ctx.fillRect(sx+TS*.22,sy+TS*.27,TS*.56,TS*.1); ctx.fillStyle='#5a3a1a'; ctx.fillRect(sx+TS*.45,sy+TS*.6,TS*.1,TS*.3); ctx.font='7px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('📜',sx+TS/2,sy+TS*.45); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break; }
     case '*':{ drawGrassMed(sx,sy,mC,mR); break; }
+    case 'Q':{ drawFountainMed(sx,sy,mC,mR); break; }
+    case 'Y':{ drawHedgeMed(sx,sy,mC,mR); break; }
+    case 'G':{ drawGrassMed(sx,sy,mC,mR); drawHedgeMed(sx,sy,mC,mR); break; }
     default: drawGrassMed(sx,sy,mC,mR);
   }
 }
@@ -3866,7 +4030,7 @@ function drawMap(){
     else if(currentMap==='biologia') drawBiologiaTile(t,sx,sy,mR,mC);
     else if(currentMap==='biologia') drawBiologiaTile(t,sx,sy,mR,mC);
     else if(currentMap==='reserva') drawReservaTile(t,sx,sy,mR,mC);
-    else if(currentMap==='reserva') drawReservaTile(t,sx,sy,mR,mC);
+    else if(currentMap==='buinzoo') drawBuinZooTile(t,sx,sy,mR,mC);
     else if(currentMap==='sector_norte') drawSectorNorteTile(t,sx,sy,mR,mC);
     else if(currentMap==='estacion_villa') drawEstacionTile(t,sx,sy,mR,mC);
     else if(currentMap==='casa_1'||currentMap==='casa_2'||currentMap==='casa_3') drawCasaIntTile(t,sx,sy,mR,mC);
@@ -4032,7 +4196,7 @@ function triggerEncounterFromPool(pool){
   EL.encFlash.classList.remove('flashing'); void EL.encFlash.offsetWidth; EL.encFlash.classList.add('flashing');
   EL.encFlash.addEventListener('animationend',()=>{ EL.encFlash.classList.remove('flashing'); openBattle(); },{once:true});
 }
-const ETYPES_MAP={cansado:'📚 Alumno',desmot:'📚 Alumno',prueba:'📚 Aula',resfrio:'🏥 Salud',celular:'📱 Distrac.',inspector_b:'👔 Admin',paulina:'📐 Docente',dahian:'🏃 Docente',alex:'🎵 Docente',delinc:'🌳 Calle',ambulante:'🌳 Calle',pollito:'🌳 Plaza'}; const ARENA_MAP={cansado:'t-aula',desmot:'t-aula',prueba:'t-aula',resfrio:'t-aula',celular:'t-aula',inspector_b:'t-admin',paulina:'t-docente',dahian:'t-docente',alex:'t-docente',delinc:'t-calle',ambulante:'t-calle',pollito:'t-plaza'};
+const ETYPES_MAP={cansado:'📚 Alumno',desmot:'📚 Alumno',prueba:'📚 Aula',resfrio:'🏥 Salud',celular:'📱 Distrac.',inspector_b:'👔 Admin',paulina:'📐 Docente',dahian:'🏃 Docente',alex:'🎵 Docente',delinc:'🌳 Calle',ambulante:'🌳 Calle',pollito:'🌳 Plaza',capibara:'🦁 Zoo',tapir:'🦁 Zoo',flamenco:'🦁 Zoo',mono:'🦁 Zoo',leon_marino:'🦁 Zoo',cocodrilo:'🦁 Zoo',oso:'🦁 Zoo',serpiente:'🦁 Zoo',rinoceronte:'🦏 JEFE',elefante:'🐘 JEFE'}; const ARENA_MAP={cansado:'t-aula',desmot:'t-aula',prueba:'t-aula',resfrio:'t-aula',celular:'t-aula',inspector_b:'t-admin',paulina:'t-docente',dahian:'t-docente',alex:'t-docente',delinc:'t-calle',ambulante:'t-calle',pollito:'t-plaza',capibara:'t-calle',tapir:'t-calle',flamenco:'t-calle',mono:'t-calle',leon_marino:'t-calle',cocodrilo:'t-calle',oso:'t-calle',serpiente:'t-calle',rinoceronte:'t-calle',elefante:'t-calle'};
 function openBattle(){
   Music.battleIn();
   const _ab=_('btn-ascuas');if(_ab)_ab.style.display=inventory.some(i=>i.id==='ascuas_magicas')?'inline-block':'none'; STATE='battle'; EL.battle.classList.add('on'); PARTY_MEMBERS.forEach(m=>m.usedThisBattle=false); battle.atkDebuff=battle.atkDebuff||0;
@@ -4050,7 +4214,7 @@ function syncBP(){
   else EL.bSt.style.display='none';
 }
 function typeMsg(text,cb=null){ text=(text==null?'':String(text)); if(twT) clearTimeout(twT); EL.bMsg.textContent=''; let i=0; const s=()=>{ if(i<text.length){EL.bMsg.textContent=text.slice(0,++i); twT=setTimeout(s,18);} else if(cb) twT=setTimeout(()=>{try{cb();}catch(e){console.warn('typeMsg cb',e);}},250); }; s(); }
-function showBact(){ if(!battle||STATE!=='battle') return; battle.busy=false; EL.bAct.classList.add('on'); EL.btnCof.textContent=`☕ CAFÉ (${stats.coffees})`; EL.btnRun.disabled=!!battle.enemy.noFlee; if(EL.btnPsy)EL.btnPsy.style.display=progress.psyAttackUnlocked?'flex':'none'; if(EL.btnTeam)EL.btnTeam.style.display=party.length>0?'flex':'none'; }
+function showBact(){ if(!battle||STATE!=='battle') return; battle.busy=false; EL.bAct.classList.add('on'); EL.btnCof.textContent=`☕ CAFÉ (${stats.coffees})`; EL.btnRun.disabled=!!battle.enemy.noFlee; if(EL.btnPsy)EL.btnPsy.style.display=progress.psyAttackUnlocked?'flex':'none'; if(EL.btnTeam)EL.btnTeam.style.display=party.length>0?'flex':'none'; const _pan=_('btn-pan'); if(_pan)_pan.style.display=progress.powerAnimal?'flex':'none'; const _pcon=_('btn-pcon'); if(_pcon)_pcon.style.display=progress.powerConservacion?'flex':'none'; }
 function hideBact(){ EL.bAct.classList.remove('on'); }
 function doMove(idx){
   if(!battle||battle.busy||STATE!=='battle') return;
@@ -4082,6 +4246,30 @@ function doMove(idx){
     typeMsg('🛡️ ¡Profe se cubre!\n\nReduce el próximo golpe a la mitad.\n💙 +'+mpGain+' MP recuperado.',()=>enemyTurn()); return;
   }
   else if(idx===4){ if(!progress.psyAttackUnlocked||stats.mp<15){typeMsg(progress.psyAttackUnlocked?'¡No tienes suficiente MP! (15 MP)':'Ataque no disponible aún.',showBact);return;} stats.mp=Math.max(0,stats.mp-15);const r2=(a,b)=>Math.floor(Math.random()*(b-a+1))+a; dmg=Math.max(1,stats.atk+15+r2(0,15)-Math.floor(e.def*.5)); e.hp=Math.max(0,e.hp-dmg); stats.hp=Math.min(stats.maxHp,stats.hp+8); msg=`💜 ¡Ataque Psicológico!\n¡${e.name} recibe ${dmg} de impacto emocional!\nEl profe recupera 8 HP.`; hitAnim('b-es'); dmgPop(dmg,true); }
+  else if(idx===6){ // PODER ANIMAL
+    if(!progress.powerAnimal){ typeMsg('Poder no disponible aún.',showBact); return; }
+    if(stats.mp<18){ typeMsg('¡No tienes suficiente MP! (18 MP)',showBact); return; }
+    stats.mp=Math.max(0,stats.mp-18);
+    const r3=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+    dmg=Math.max(1,stats.atk+22+r3(0,16)-Math.floor(e.def*.4));
+    if(e.weak==='PoderAnimal') dmg=Math.floor(dmg*1.6);
+    e.hp=Math.max(0,e.hp-dmg);
+    msg=`🐾 ¡PODER ANIMAL!\n${e.weak==='PoderAnimal'?'¡Súper efectivo! ':''}La fuerza de la fauna golpea.\n¡${e.name} recibe ${dmg}!`;
+    hitAnim('b-es'); dmgPop(dmg,true);
+  }
+  else if(idx===7){ // PODER DE CONSERVACIÓN
+    if(!progress.powerConservacion){ typeMsg('Poder no disponible aún.',showBact); return; }
+    if(stats.mp<20){ typeMsg('¡No tienes suficiente MP! (20 MP)',showBact); return; }
+    stats.mp=Math.max(0,stats.mp-20);
+    const r4=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+    dmg=Math.max(1,stats.atk+14+r4(0,12)-Math.floor(e.def*.5));
+    if(e.weak==='PoderConservacion') dmg=Math.floor(dmg*1.6);
+    e.hp=Math.max(0,e.hp-dmg);
+    const heal=24+r4(0,14); stats.hp=Math.min(stats.maxHp,stats.hp+heal);
+    if(stats.status){stats.status=null;stats.statusTurns=0;}
+    msg=`🌍 ¡PODER DE CONSERVACIÓN!\n${e.weak==='PoderConservacion'?'¡Súper efectivo! ':''}La naturaleza te protege.\n¡${e.name} recibe ${dmg}! +${heal} HP`;
+    hitAnim('b-es'); dmgPop(dmg,true); dmgPop(heal,false,'#4ade80');
+  }
   syncBE(); syncBP(); syncUI();
   if(e.hp<=0){typeMsg(msg+`\n\n¡${e.name} fue vencido! ¡Bien hecho!`,()=>battleWin()); return;}
   typeMsg(msg,()=>enemyTurn());
@@ -4152,6 +4340,25 @@ function battleWin(){ Music.battleOut();
     msg+='\n\n🛡️ ¡ARMADURA DE BRONCE obtenida! (+8 DEF)\n🚉 ¡El camino a la ESTACIÓN está libre!';
     setTimeout(()=>showDialog('🎸 ¡VENCISTE al PROFESOR ALEX!\n\n🛡️ Armadura de Bronce equipada\n🚉 Acceso a la Estación desbloqueado\n\n"El rock nunca muere... pero tú\neres más fuerte, profe."'),600);
   }
+  // ── Jefes del BuinZoo: armadura continental + poder nuevo ──
+  if(battle?.enemy?.isBoss&&battle.enemy.reward&&(battle.enemy.id==='rinoceronte'||battle.enemy.id==='elefante')){
+    const bk=battle.enemy.id;
+    if(!progress.buinzooBosses[bk]){
+      progress.buinzooBosses[bk]=true;
+      equipZooArmor(battle.enemy.reward);
+      const ar=ZOO_ARMORS[battle.enemy.reward];
+      msg+='\n\n'+ar.emoji+' ¡'+ar.name+' equipada! ('+ar.desc.split('—')[0].trim()+')';
+      if(bk==='rinoceronte'&&!progress.powerAnimal){
+        progress.powerAnimal=true;
+        msg+='\n\n🐾 ¡Aprendiste PODER ANIMAL!';
+        setTimeout(()=>showDialog('🦏 ¡VENCISTE AL RINOCERONTE!\n\n'+ar.emoji+' '+ar.name+' equipada\n('+ar.desc+')\n\n🐾 NUEVO PODER: PODER ANIMAL\nInvoca la fuerza de la fauna en combate.\nÚsalo desde el botón 🐾 en batalla.\n\n"Lo calmaste con respeto, no con miedo."'),600);
+      } else if(bk==='elefante'&&!progress.powerConservacion){
+        progress.powerConservacion=true;
+        msg+='\n\n🌍 ¡Aprendiste PODER DE CONSERVACIÓN!';
+        setTimeout(()=>showDialog('🐘 ¡VENCISTE AL ELEFANTE!\n\n'+ar.emoji+' '+ar.name+' equipada\n('+ar.desc+')\n\n🌍 NUEVO PODER: PODER DE CONSERVACIÓN\nSana y protege con la energía de la\nnaturaleza. Úsalo con el botón 🌍.\n\n"Proteger la vida es la mayor victoria."'),600);
+      }
+    }
+  }
   syncBP(); syncUI(); EL.bMsg.textContent=msg; hideBact();
   EL.bAct.innerHTML=`<button class="bb bi" style="grid-column:1/3" onclick="closeBattle()">¡Continuar!</button>`; EL.bAct.classList.add('on'); battle=null;
 }
@@ -4170,7 +4377,7 @@ function battleLose(){
 }
 function closeBattle(){
   if(twT){ clearTimeout(twT); twT=null; }
-  EL.battle.classList.remove('on'); EL.bAct.innerHTML=`<button class="bb ba" onclick="doMove(0)">⚡ EXPLICAR</button><button class="bb bm" id="btn-mat" onclick="doMove(4)" style="display:none;background:linear-gradient(135deg,#312e81,#4338ca)">🔢 C.MAT</button><button class="bb bs" onclick="doMove(1)">💡 MOTIVAR</button><button class="bb bi" id="btn-cof" onclick="doMove(2)">☕ CAFÉ</button><button class="bb bd" id="btn-def" onclick="doMove(5)" style="background:linear-gradient(135deg,#475569,#64748b)">🛡️ DEFENDER</button><button class="bb br" id="btn-run" onclick="doMove(3)">🚪 HUIR</button>`; EL.btnCof=_('btn-cof'); EL.btnRun=_('btn-run'); EL.btnPsy=_('btn-psy'); EL.btnTeam=_('btn-team'); player.steps=0; battle=null; STATE='exploring'; syncUI(); }
+  EL.battle.classList.remove('on'); EL.bAct.innerHTML=`<button class="bb ba" onclick="doMove(0)">⚡ EXPLICAR</button><button class="bb bm" id="btn-mat" onclick="doMove(4)" style="display:none;background:linear-gradient(135deg,#312e81,#4338ca)">🔢 C.MAT</button><button class="bb bs" onclick="doMove(1)">💡 MOTIVAR</button><button class="bb bi" id="btn-cof" onclick="doMove(2)">☕ CAFÉ</button><button class="bb bd" id="btn-def" onclick="doMove(5)" style="background:linear-gradient(135deg,#475569,#64748b)">🛡️ DEFENDER</button><button class="bb br" id="btn-run" onclick="doMove(3)">🚪 HUIR</button><button class="bb bp" id="btn-psy" onclick="doMove(4)" style="display:none;grid-column:1/3">💜 ATAQUE PSICOLÓGICO</button><button class="bb bt" id="btn-team" onclick="openBParty()" style="display:none;grid-column:1/3">👥 LLAMAR EQUIPO</button><button class="bb" id="btn-pan" onclick="doMove(6)" style="display:none;grid-column:1/3;background:linear-gradient(135deg,#92400e,#b45309)">🐾 PODER ANIMAL</button><button class="bb" id="btn-pcon" onclick="doMove(7)" style="display:none;grid-column:1/3;background:linear-gradient(135deg,#166534,#15803d)">🌍 PODER DE CONSERVACIÓN</button>`; EL.btnCof=_('btn-cof'); EL.btnRun=_('btn-run'); EL.btnPsy=_('btn-psy'); EL.btnTeam=_('btn-team'); player.steps=0; battle=null; STATE='exploring'; syncUI(); }
 function hitAnim(id){ const el=_(id); el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); setTimeout(()=>el.classList.remove('hit'),500); }
 function dmgPop(val,isEnemy,color=null){ const pop=document.createElement('div'); pop.className='dmg-pop'; pop.textContent=(isEnemy?'-':'+')+val; const c=color||(isEnemy?'#f87171':'#60a5fa'); pop.style.cssText=`color:${c};text-shadow:0 0 8px ${c};left:${isEnemy?62+Math.random()*28:15+Math.random()*22}%;top:${isEnemy?20+Math.random()*18:42+Math.random()*12}%`; EL.bArena.appendChild(pop); setTimeout(()=>pop.remove(),950); }
 
@@ -4299,6 +4506,168 @@ const CENTRO_ENEMIES=[
   {id:'vendedor_c',name:'Vendedor de Completos',emoji:'🌭',maxHp:45,atk:9,def:2,xp:18,coins:8,glow:'rgba(251,191,36,.9)'},
 ];
 
+// ═══ BUINZOO — Animales (encuentros educativos de conservación) ═══
+const BUINZOO_ENEMIES=[
+  {id:'capibara',name:'Capibara',emoji:'🦫',maxHp:50,atk:11,def:4,xp:18,coins:5,glow:'rgba(180,130,70,.9)',
+   intro:'¡Un Capibara curioso se acerca!\nEl roedor más grande del mundo.',
+   attacks:[{name:'Mordisco',msg:'dio un mordisco tranquilo.',power:14},{name:'Chapuzón',msg:'salpicó agua.',power:18},{name:'Empujón',msg:'empujó con su cuerpo.',power:22}]},
+  {id:'tapir',name:'Tapir',emoji:'🐗',maxHp:70,atk:14,def:6,xp:24,coins:7,glow:'rgba(90,70,50,.9)',
+   intro:'¡Un Tapir aparece en el sendero!\nDispersor clave de semillas.',
+   attacks:[{name:'Embestida',msg:'embistió con fuerza.',power:24},{name:'Trompa Veloz',msg:'usó su trompa prensil.',power:18},{name:'Carga',msg:'cargó a gran velocidad.',power:28}]},
+  {id:'flamenco',name:'Flamenco',emoji:'🦩',maxHp:38,atk:12,def:2,xp:15,coins:4,glow:'rgba(244,114,182,.9)',
+   intro:'¡Un Flamenco rosado extiende sus alas!',
+   attacks:[{name:'Picotazo',msg:'lanzó un picotazo.',power:16},{name:'Aleteo',msg:'aleteó con fuerza.',power:20,effect:'confused',chance:.3}]},
+  {id:'mono',name:'Mono Araña',emoji:'🐒',maxHp:45,atk:13,def:3,xp:17,coins:6,glow:'rgba(120,90,60,.9)',
+   intro:'¡Un Mono Araña salta entre las ramas!',
+   attacks:[{name:'Salto Ágil',msg:'saltó y golpeó.',power:18},{name:'Tirón de Cola',msg:'usó su cola prensil.',power:15},{name:'Lluvia de Frutas',msg:'lanzó frutas.',power:22}]},
+  {id:'leon_marino',name:'León Marino',emoji:'🦭',maxHp:60,atk:13,def:5,xp:21,coins:6,glow:'rgba(100,120,140,.9)',
+   intro:'¡Un León Marino ladra desafiante!',
+   attacks:[{name:'Coletazo',msg:'dio un coletazo.',power:20},{name:'Embiste Marino',msg:'embistió.',power:24}]},
+  {id:'cocodrilo',name:'Cocodrilo',emoji:'🐊',maxHp:85,atk:18,def:8,xp:30,coins:9,glow:'rgba(60,110,60,.9)',
+   intro:'¡Un Cocodrilo abre sus fauces!\n¡Cuidado, es un depredador!',
+   attacks:[{name:'Mordida Brutal',msg:'mordió con fuerza brutal.',power:30},{name:'Giro Mortal',msg:'hizo el giro de la muerte.',power:26},{name:'Coletazo',msg:'azotó con la cola.',power:22}]},
+  {id:'oso',name:'Oso de Anteojos',emoji:'🐻',maxHp:90,atk:19,def:9,xp:32,coins:10,glow:'rgba(80,60,40,.9)',
+   intro:'¡Un Oso de Anteojos se alza!\nÚnico oso de Sudamérica.',
+   attacks:[{name:'Zarpazo',msg:'lanzó un zarpazo.',power:28},{name:'Abrazo de Oso',msg:'usó abrazo aplastante.',power:32},{name:'Rugido',msg:'rugió con furia.',power:18,effect:'stressed',chance:.4}]},
+  {id:'serpiente',name:'Boa',emoji:'🐍',maxHp:48,atk:15,def:4,xp:19,coins:5,glow:'rgba(120,150,60,.9)',
+   intro:'¡Una Boa se desliza hacia ti!',
+   attacks:[{name:'Constricción',msg:'apretó con fuerza.',power:22},{name:'Mordida',msg:'mordió rápido.',power:18,effect:'poisoned',chance:.4}]},
+];
+
+// Jefes animales del BuinZoo (cada uno entrega una recompensa de armadura)
+const BUINZOO_BOSSES={
+  rinoceronte:{id:'rinoceronte',name:'RINOCERONTE 🦏',emoji:'🦏',maxHp:220,hp:220,atk:30,def:16,xp:160,coins:55,glow:'rgba(150,150,160,.98)',
+    intro:'🦏 ¡EL RINOCERONTE BLANCO CARGA!\n"Protejo mi territorio."\n\n⚠️ JEFE — Especie en peligro',
+    attacks:[
+      {name:'Carga del Cuerno',power:38,msg:'cargó con su cuerno. ¡Demoledor!'},
+      {name:'Pisotón',power:30,effect:'stressed',chance:.6,msg:'pisoteó el suelo. ¡Temblor!'},
+      {name:'Embestida Final',power:44,msg:'¡EMBESTIDA TOTAL!'}
+    ],weak:'PoderAnimal',resist:'Huir',noFlee:true,isBoss:true,reward:'armadura_africa'},
+  elefante:{id:'elefante',name:'ELEFANTE 🐘',emoji:'🐘',maxHp:260,hp:260,atk:32,def:18,xp:190,coins:65,glow:'rgba(160,160,170,.98)',
+    intro:'🐘 ¡EL ELEFANTE BARRITA CON FUERZA!\n"El gigante gentil también se defiende."\n\n⚠️ JEFE — Memoria de la sabana',
+    attacks:[
+      {name:'Trompazo',power:40,msg:'golpeó con la trompa. ¡Enorme daño!'},
+      {name:'Barrito Ensordecedor',power:28,effect:'confused',chance:.7,msg:'barritó. ¡Te aturdió!'},
+      {name:'Pisada Colosal',power:48,msg:'¡PISADA COLOSAL!'}
+    ],weak:'PoderConservacion',resist:'Huir',noFlee:true,isBoss:true,reward:'armadura_asia'},
+};
+
+// ═══ ARMADURAS CONTINENTALES del BuinZoo ═══
+const ZOO_ARMORS={
+  armadura_africa:{id:'armadura_africa',name:'Armadura de África',emoji:'🦁',def:18,
+    desc:'+18 DEF — pieles y escamas de la sabana'},
+  armadura_asia:{id:'armadura_asia',name:'Armadura de Asia',emoji:'🐯',def:22,
+    desc:'+22 DEF — laca y placas de la jungla'},
+  armadura_america:{id:'armadura_america',name:'Armadura de América',emoji:'🦅',def:14,
+    desc:'+14 DEF — plumas andinas y cuero'},
+  armadura_oceania:{id:'armadura_oceania',name:'Armadura de Oceanía',emoji:'🦘',def:16,
+    desc:'+16 DEF — fibras del Pacífico'},
+};
+function equipZooArmor(id){
+  const a=ZOO_ARMORS[id]; if(!a) return;
+  equipment.armor={id:a.id,name:a.name,emoji:a.emoji,def:a.def,desc:a.desc};
+  // guardar también en inventario como referencia
+  if(!inventory.some(i=>i.id===a.id)) inventory.push({id:a.id,name:a.name,emoji:a.emoji,type:'equip',desc:a.desc});
+  syncUI();
+}
+
+// ═══ TIENDA SAFARI (BuinZoo) ═══
+const SAFARI_ITEMS=[
+  {id:'armadura_america',name:'Armadura de América',emoji:'🦅',cost:120,type:'zooarmor',desc:'+14 DEF — plumas andinas'},
+  {id:'armadura_oceania',name:'Armadura de Oceanía',emoji:'🦘',cost:160,type:'zooarmor',desc:'+16 DEF — fibras del Pacífico'},
+  {id:'safari_hp',name:'Ración Safari',emoji:'🍖',effect:'hp',amount:90,cost:14,desc:'+90 HP'},
+  {id:'safari_mp',name:'Agua Mineral',emoji:'💧',effect:'mp',amount:45,cost:12,desc:'+45 MP'},
+  {id:'safari_full',name:'Botiquín del Guardafauna',emoji:'🧰',effect:'full',cost:50,desc:'HP y MP al máximo'},
+  {id:'safari_cafe',name:'Café de Sabana',emoji:'☕',effect:'coffee',cost:9,desc:'+1 uso de café'},
+];
+function openSafariShop(){
+  STATE='shop';
+  EL.kellaMsg.textContent='🛖 ¡Bienvenido a la Tienda Safari!\nEquípate para proteger la fauna.';
+  EL.shopFb.textContent=''; renderSafariShop(); EL.shopPanel.style.display='block';
+}
+function renderSafariShop(){
+  EL.shopCoins.textContent=coins; EL.shopItems.innerHTML='';
+  SAFARI_ITEMS.forEach(item=>{
+    const owned=item.type==='zooarmor'&&inventory.some(i=>i.id===item.id);
+    const cb=coins>=item.cost&&!owned;
+    const row=document.createElement('div'); row.className='shop-row';
+    row.innerHTML=`<div class="shop-lft"><span class="shop-emoji">${item.emoji}</span><div><div class="shop-name">${item.name}</div><div class="shop-desc">${item.desc}</div></div></div><div class="shop-rgt"><span class="shop-cost">🪙${item.cost}</span><button class="shop-btn" onclick="buySafari('${item.id}')" ${cb?'':'disabled'}>${owned?'EQUIPADA':(cb?'COMPRAR':'SIN FONDOS')}</button></div>`;
+    EL.shopItems.appendChild(row);
+  });
+}
+function buySafari(id){
+  const item=SAFARI_ITEMS.find(i=>i.id===id);
+  if(!item||coins<item.cost) return;
+  coins-=item.cost;
+  if(item.type==='zooarmor'){
+    equipZooArmor(item.id);
+    EL.shopFb.textContent='✅ '+item.name+' equipada (+'+ZOO_ARMORS[item.id].def+' DEF)';
+    renderSafariShop(); return;
+  }
+  const S=stats;
+  switch(item.effect){
+    case 'hp':S.hp=Math.min(S.maxHp,S.hp+item.amount);break;
+    case 'mp':S.mp=Math.min(S.maxMp,S.mp+item.amount);break;
+    case 'full':S.hp=S.maxHp;S.mp=S.maxMp;break;
+    case 'coffee':S.coffees++;break;
+  }
+  syncUI(); renderSafariShop(); EL.shopFb.textContent='✅ '+item.name;
+}
+
+// ═══ Datos de animales (educativo) ═══
+const ZOO_FACTS={
+  t:'🐗 TAPIR\n\nMamífero con trompa corta y prensil.\nDispersa semillas por el bosque.\n⚠️ Vulnerable por la caza y deforestación.',
+  p:'🦫 CAPIBARA\n\nEl roedor más grande del mundo.\nVive en grupos cerca del agua.\nMuy sociable y herbívoro.',
+  m:'🐒 MONO ARAÑA\n\nUsa su cola como una quinta mano.\nClave para esparcir semillas.\n⚠️ En peligro por pérdida de selva.',
+  f:'🦩 FLAMENCO\n\nSu color rosado viene de su dieta\n(camarones y algas).\nFiltra el agua con su pico curvo.',
+  l:'🦭 LEÓN MARINO\n\nMamífero marino muy ágil.\nVive en colonias en la costa de Chile.',
+  o:'🐻 OSO DE ANTEOJOS\n\nÚnico oso de Sudamérica.\nVive en los Andes.\n⚠️ En peligro de extinción.',
+  j:'🦒 JIRAFA\n\nEl animal terrestre más alto.\nSu cuello tiene 7 vértebras, como tú.\nRamonea hojas de acacia.',
+  k:'🐊 COCODRILO\n\nDepredador antiquísimo.\nControla las poblaciones de presas.\nImportante para el equilibrio del río.',
+  s:'🐍 BOA / SERPIENTES\n\nControlan plagas de roedores.\nNo todas son venenosas.\nMerecen respeto, no miedo.',
+  e:'🐘 ELEFANTE\n\nGran ingeniero del ecosistema.\nDispersa semillas y abre caminos.\n⚠️ Amenazado por el marfil.',
+  r:'🦏 RINOCERONTE\n\nHerbívoro de piel gruesa.\n⚠️ En grave peligro por la caza furtiva\nde su cuerno. ¡Hay que protegerlo!',
+};
+
+// ═══ Interacción dentro del BuinZoo ═══
+function buinzooInteract(zt){
+  if(zt==='I'){
+    showDialog('🗺️ GUÍA DEL BUINZOO\n\n"¡Hola, Profe Felipe!\n\nObserva a los animales tocándolos\nde frente para aprender sobre ellos.\n\nDerrota a los JEFES 🦏🐘 para ganar\nlas Armaduras Continentales.\n\nVisita la 🛖 Tienda Safari para más\nequipo. ¡Y recuerda: conservar es\nproteger nuestro futuro!"');
+    return true;
+  }
+  if(zt==='S'){ openSafariShop(); return true; }
+  if(zt==='B'){ startZooBoss(); return true; }
+  if(ZOO_FACTS[zt]){ showDialog(ZOO_FACTS[zt]+'\n\n💡 Pelea con animales sueltos en\nel pasillo para entrenar.'); return true; }
+  return false;
+}
+
+// ═══ Lanzar combate de jefe del zoo ═══
+function startZooBoss(){
+  // Elegir jefe pendiente: primero rinoceronte, luego elefante
+  let key=null;
+  if(!progress.buinzooBosses.rinoceronte) key='rinoceronte';
+  else if(!progress.buinzooBosses.elefante) key='elefante';
+  if(!key){
+    showDialog('🏆 ARENA DE JEFES\n\n¡Ya venciste a todos los jefes\ndel BuinZoo!\n\n🦁 Armadura de África ✔\n🐯 Armadura de Asia ✔\n\n¡Eres un campeón de la conservación!');
+    return;
+  }
+  const boss=BUINZOO_BOSSES[key];
+  showDialog((key==='rinoceronte'
+      ? '🦏 ARENA DEL RINOCERONTE\n\nUn rinoceronte herido y asustado\nbloquea el camino.\n\n¿Lo enfrentas para calmarlo?'
+      : '🐘 ARENA DEL ELEFANTE\n\nUn elefante enorme se ha agitado.\n\n¿Lo enfrentas para protegerlo?'),
+    [
+      {text:'⚔️ ¡Enfrentar!',action:()=>{ _startBossBattle(boss); }},
+      {text:'Aún no',action:()=>{}}
+    ]);
+}
+function _startBossBattle(tmpl){
+  if(STATE==='battle') return; STATE='transition';
+  battle={enemy:normalizeEnemy(tmpl),busy:false,atkDebuff:0};
+  EL.encFlash.classList.remove('flashing'); void EL.encFlash.offsetWidth; EL.encFlash.classList.add('flashing');
+  EL.encFlash.addEventListener('animationend',()=>{ EL.encFlash.classList.remove('flashing'); openBattle(); },{once:true});
+}
+
+
 const PLAZA_BOSS={id:'alex_boss',name:'PROFESOR ALEX 🎸',emoji:'🎸',maxHp:200,hp:200,atk:30,def:15,xp:150,coins:50,glow:'rgba(168,85,247,.98)',
   intro:'🎸 ¡EL PROFESOR ALEX APARECIÓ!\n"¡Nadie puede sobrevivir mis acordes!"\n\n⚠️ JEFE DE LA PLAZA BELÉN',
   attacks:[
@@ -4372,7 +4741,7 @@ function goBack(){
   const exits={cancha:[9,2],biblioteca:[18,5],sala_vela:[14,5],sala_cont:[8,8],biologia:[38,1],secretaria:[38,4],segundo_piso:[7,3]};
   if(exits[currentMap]){ const pt=exits[currentMap]; _suppressOrigin=true; transitionTo('pasillo',pt[0],pt[1]); _suppressOrigin=false; return; }
   // Salidas entre mapas exteriores
-  const ext={sala_5to:['segundo_piso',3,4],sala_6to:['segundo_piso',3,4],sala_7mo:['segundo_piso',3,4],sala_8vo:['segundo_piso',3,4],sector_norte:['plaza',20,2],estacion_villa:['sector_norte',24,13],centro_villa:['plaza',38,5],villa:['pasillo',20,5],reserva:['plaza',2,2],salon_trofeos:['plaza',2,2],plaza:['pasillo',2,8]};
+  const ext={sala_5to:['segundo_piso',3,4],sala_6to:['segundo_piso',3,4],sala_7mo:['segundo_piso',3,4],sala_8vo:['segundo_piso',3,4],sector_norte:['plaza',20,2],estacion_villa:['sector_norte',24,13],centro_villa:['plaza',38,5],villa:['pasillo',20,5],reserva:['plaza',2,2],salon_trofeos:['plaza',2,2],buinzoo:['plaza',7,10],plaza:['pasillo',2,8]};
   if(ext[currentMap]){ const e=ext[currentMap]; _suppressOrigin=true; transitionTo(e[0],e[1],e[2]); _suppressOrigin=false; return; }
   // Último recurso: usar el origen guardado
   const o=progress._origin;
@@ -4829,6 +5198,8 @@ const DIRS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
 function interact(){
   if(STATE!=='exploring') return;
   const [dx,dy]=DIRS[player.facing],tx=player.x+dx,ty=player.y+dy;
+  // ── BuinZoo: interacciones propias (no usar NPC_ACT global) ──
+  if(currentMap==='buinzoo'){ const zt=MAPS.buinzoo[ty]?.[tx]; if(zt&&buinzooInteract(zt)) return; }
   NPC_ACT[MAPS[currentMap][ty]?.[tx]]?.();
 }
 
@@ -4858,6 +5229,16 @@ function checkMapExit(){
   }
   if(currentMap==='sector_norte'&&MAPS.sector_norte[player.y]?.[player.x]==='B'){
     transitionTo('plaza',36,5); return true;
+  }
+  // ── BUINZOO: entrada desde Plaza (Z) y salida (E) ──
+  if(currentMap==='plaza'&&MAPS.plaza[player.y]?.[player.x]==='Z'){
+    const first=!progress.buinzooVisited; if(first)progress.buinzooVisited=true;
+    transitionTo('buinzoo',10,18);
+    if(first)setTimeout(()=>showDialog('🦁 BUINZOO\n\n¡Bienvenido al zoológico de Villa Alemana!\n\nRecorre el PASILLO CENTRAL y observa\nlos animales a ambos lados.\n\n⚠️ Algunos animales escapan: pelea con\ncuidado. Aprende sobre CONSERVACIÓN.\n\n🛖 Tienda Safari (arriba a la derecha)\n🦏 Jefes en el centro.'),450);
+    return true;
+  }
+  if(currentMap==='buinzoo'&&MAPS.buinzoo[player.y]?.[player.x]==='E'){
+    transitionTo('plaza',7,10); return true;
   }
   if(currentMap==='sector_norte'&&MAPS.sector_norte[player.y]?.[player.x]==='N'){
     if(!progress.alexBossDefeated){
@@ -5031,6 +5412,8 @@ function move(dx,dy,dir){
   if(_lab && 'btkWmsiQR'.includes(t)) return;
   // Paredes de casas sólidas en Sector Norte (H es walkable por biblioteca)
   if(currentMap==='sector_norte' && 'HiYyO'.includes(t)) return;
+  // BuinZoo: animales, recintos, bancas, tienda y jefe son sólidos (se interactúa al frente)
+  if(currentMap==='buinzoo' && BUINZOO_SOLID.has(t)) return;
   if(!WALKABLE.has(t)&&!(inBoat&&(t==='w'||t==='D'||t==='0'))) return;
   if(inBoat&&t!=='w') inBoat=false;
   player.x=nx; player.y=ny; player.steps++; if((stats.hunger||100)>0) stats.hunger=Math.max(0,(stats.hunger||100)-0.08);
@@ -5048,6 +5431,7 @@ function move(dx,dy,dir){
     else if(currentMap==='plaza'&&t==='g'&&Math.random()<1/8){ triggerPlazaEvent(); return; }
     else if(currentMap==='reserva'&&t==='g'&&Math.random()<(isNight()?1/3:1/6)){ triggerEncounterFromPool(RESERVA_ENEMIES); return; }
     else if(currentMap==='centro_villa'&&t==='g'&&Math.random()<(isNight()?1/4:1/7)){ triggerEncounterFromPool(CENTRO_ENEMIES); return; }
+    else if(currentMap==='buinzoo'&&(t==='.'||t==='c')&&Math.random()<1/7){ triggerEncounterFromPool(BUINZOO_ENEMIES); return; }
     // Pasillo: encounters only in plant zone ('g' tiles)
     if(currentMap==='pasillo'&&t==='g'&&Math.random()<(isNight()?1/4:1/9)){ triggerEncounterFromPool(ENEMIES); return; }
     // Cancha: encounters on grass only
@@ -7074,6 +7458,7 @@ const COVID_ENTRY_MSGS = {
   plaza:     ()=> !progress._covidMsgPlaza   && (progress._covidMsgPlaza=true,   '🌤️ PLAZA AL AIRE LIBRE\n\nEntorno exterior — riesgo reducido.\n\n☀️ La luz solar UV-B inactiva\nel virus en ~6 minutos.\n\n🌿 Disfruta el aire libre.\nAun así, mantén distancia.'),
   reserva:   ()=> !progress._covidMsgReserva && (progress._covidMsgReserva=true, '🌿 RESERVA ECOLÓGICA\n\nZona de menor riesgo COVID-19.\n\nEl aire libre, el sol y la brisa\nreducen drásticamente la\nconcentración viral.\n\nCuida el ecosistema:\nLa deforestación y el tráfico\nde fauna aumentan el riesgo\nde nuevas zoonosis (origen COVID).'),
   centro_villa:()=>!progress._covidMsgCentro &&(progress._covidMsgCentro=true,  '🏙️ CENTRO DE VILLA ALEMANA\n\n🏥 FARMACIA disponible aquí.\n\n¡Vacúnate antes de un brote!\n\nSin vacuna: mortalidad 30%\nCon vacuna: mortalidad ~2%\n\nBusca el letrero 🟢+ en el mapa.'),
+  buinzoo:()=>!progress._covidMsgZoo &&(progress._covidMsgZoo=true,  '🦠 ZOONOSIS Y CONSERVACIÓN\n\nMuchas pandemias (incluido el COVID-19)\nse originan en el contacto humano con\nfauna silvestre: son ZOONOSIS.\n\n🌍 Conservar los hábitats y respetar a\nlos animales reduce el riesgo de nuevas\nenfermedades.\n\n¡Cuidar la biodiversidad nos protege!'),
 };
 
 // ─── Alerta al acercarse a un foco (una vez por brote) ──────
@@ -7200,49 +7585,104 @@ function drawHeroSprite(g, px, py, S, bob){
   g.fillStyle='rgba(0,0,0,.22)';
   g.beginPath(); g.ellipse(px+S*.5,py+S-S*.06,S*.32,S*.1,0,0,Math.PI*2); g.fill();
   py -= bob;
-  // ── Capa/túnica de mago-científico (azul medieval) ──
-  g.fillStyle='#1e3a5f'; g.fillRect(px+S*.18,py+S*.4,S*.64,S*.5);
-  g.fillStyle='#2a4d7a'; g.fillRect(px+S*.18,py+S*.4,S*.1,S*.5);  // pliegue izq
-  g.fillStyle='#16314f'; g.fillRect(px+S*.72,py+S*.4,S*.1,S*.5);  // sombra der
-  // Bata blanca de laboratorio (encima de la túnica)
-  g.fillStyle='#f4f6fa'; g.fillRect(px+S*.26,py+S*.42,S*.48,S*.46);
-  g.fillStyle='#dde3ec'; g.fillRect(px+S*.26,py+S*.42,S*.07,S*.46);
-  g.fillStyle='#dde3ec'; g.fillRect(px+S*.67,py+S*.42,S*.07,S*.46);
-  // Cinturón de cuero
-  g.fillStyle='#5a3a1a'; g.fillRect(px+S*.26,py+S*.66,S*.48,S*.07);
-  g.fillStyle='#c9a227'; g.fillRect(px+S*.46,py+S*.665,S*.08,S*.06); // hebilla dorada
-  // Bolsillo + lápiz/pluma
-  g.fillStyle='#dde3ec'; g.fillRect(px+S*.56,py+S*.5,S*.14,S*.1);
-  g.fillStyle='#b91c1c'; g.fillRect(px+S*.62,py+S*.45,S*.035,S*.1);
-  // Corbata verde
-  g.fillStyle='#16a34a'; g.fillRect(px+S*.47,py+S*.42,S*.06,S*.2);
-  // Piernas + botas medievales
-  g.fillStyle='#3a2a1a'; g.fillRect(px+S*.32,py+S*.78,S*.16,S*.18);
-  g.fillRect(px+S*.52,py+S*.78,S*.16,S*.18);
-  g.fillStyle='#2a1a0a'; g.fillRect(px+S*.3,py+S*.9,S*.2,S*.08);
-  g.fillRect(px+S*.5,py+S*.9,S*.2,S*.08);
-  // ── Cabeza ──
-  g.fillStyle='#c89860'; g.beginPath(); g.arc(px+S*.5,py+S*.26,S*.16,0,Math.PI*2); g.fill();
-  g.fillStyle='#b8884f'; g.beginPath(); g.arc(px+S*.5,py+S*.3,S*.15,.1,Math.PI-.1); g.fill(); // mentón sombra
-  // Pelo castaño
-  g.fillStyle='#4a2e0a';
-  g.beginPath(); g.arc(px+S*.5,py+S*.2,S*.16,Math.PI,0); g.fill();
-  g.fillRect(px+S*.34,py+S*.16,S*.32,S*.08);
-  // Barba corta
-  g.fillStyle='#3a2408';
-  g.fillRect(px+S*.36,py+S*.32,S*.28,S*.05);
-  g.fillRect(px+S*.34,py+S*.28,S*.05,S*.08);
-  g.fillRect(px+S*.61,py+S*.28,S*.05,S*.08);
-  g.fillRect(px+S*.38,py+S*.36,S*.24,S*.035);
-  // Ojos
-  g.fillStyle='#fff'; g.fillRect(px+S*.39,py+S*.23,S*.09,S*.07); g.fillRect(px+S*.52,py+S*.23,S*.09,S*.07);
-  g.fillStyle='#1a1a2e'; g.fillRect(px+S*.42,py+S*.24,S*.04,S*.05); g.fillRect(px+S*.55,py+S*.24,S*.04,S*.05);
-  // Lentes (montura oscura + brillo)
-  g.strokeStyle='#1a1a1a'; g.lineWidth=Math.max(1,S*.025);
-  g.strokeRect(px+S*.38,py+S*.22,S*.11,S*.09);
-  g.strokeRect(px+S*.51,py+S*.22,S*.11,S*.09);
-  g.beginPath(); g.moveTo(px+S*.49,py+S*.26); g.lineTo(px+S*.51,py+S*.26); g.stroke();
-  g.fillStyle='rgba(255,255,255,.5)'; g.fillRect(px+S*.4,py+S*.23,S*.03,S*.02); g.fillRect(px+S*.53,py+S*.23,S*.03,S*.02);
+  // ════ ROPA DE PROFESOR ════
+  // Pantalón formal (gris) + zapatos
+  g.fillStyle='#3a3f4a'; g.fillRect(px+S*.33,py+S*.74,S*.15,S*.2);
+  g.fillRect(px+S*.52,py+S*.74,S*.15,S*.2);
+  g.fillStyle='#2c3038'; g.fillRect(px+S*.5,py+S*.74,S*.02,S*.2); // entrepierna
+  g.fillStyle='#1a1a1f'; g.fillRect(px+S*.31,py+S*.92,S*.18,S*.06); // zapatos
+  g.fillRect(px+S*.51,py+S*.92,S*.18,S*.06);
+  g.fillStyle='#33333a'; g.fillRect(px+S*.31,py+S*.92,S*.18,S*.018);
+  g.fillRect(px+S*.51,py+S*.92,S*.18,S*.018);
+  // Camisa celeste (torso)
+  g.fillStyle='#cfe3f2'; g.fillRect(px+S*.28,py+S*.42,S*.44,S*.36);
+  // Chaleco/sweater de profesor (granate sobre la camisa)
+  g.fillStyle='#7b3245'; g.fillRect(px+S*.3,py+S*.46,S*.4,S*.3);
+  g.fillStyle='#6a2a3a'; g.fillRect(px+S*.3,py+S*.46,S*.08,S*.3); // sombra izq
+  g.fillStyle='#8c3a50'; g.fillRect(px+S*.62,py+S*.46,S*.08,S*.3); // luz der
+  // Escote en V del chaleco que muestra la camisa
+  g.fillStyle='#cfe3f2';
+  g.beginPath(); g.moveTo(px+S*.42,py+S*.46); g.lineTo(px+S*.5,py+S*.6); g.lineTo(px+S*.58,py+S*.46); g.closePath(); g.fill();
+  // Corbata
+  g.fillStyle='#1e3a5f'; g.fillRect(px+S*.475,py+S*.46,S*.05,S*.04);
+  g.beginPath(); g.moveTo(px+S*.475,py+S*.5); g.lineTo(px+S*.5,py+S*.62); g.lineTo(px+S*.525,py+S*.5); g.closePath(); g.fill();
+  g.fillStyle='#16a34a'; g.fillRect(px+S*.475,py+S*.54,S*.05,S*.012); // raya corbata
+  // Cuello de camisa
+  g.fillStyle='#eef6fc';
+  g.beginPath(); g.moveTo(px+S*.44,py+S*.44); g.lineTo(px+S*.5,py+S*.5); g.lineTo(px+S*.46,py+S*.44); g.closePath(); g.fill();
+  g.beginPath(); g.moveTo(px+S*.56,py+S*.44); g.lineTo(px+S*.5,py+S*.5); g.lineTo(px+S*.54,py+S*.44); g.closePath(); g.fill();
+  // ── BATA BLANCA de laboratorio (abierta, a los lados) ──
+  g.fillStyle='#f4f6fa'; g.fillRect(px+S*.2,py+S*.44,S*.12,S*.46);  // solapa izq
+  g.fillRect(px+S*.68,py+S*.44,S*.12,S*.46);                        // solapa der
+  g.fillStyle='#dde3ec'; g.fillRect(px+S*.2,py+S*.44,S*.04,S*.46);
+  g.fillStyle='#e6ebf2'; g.fillRect(px+S*.76,py+S*.44,S*.04,S*.46);
+  // Bolsillo de la bata con lápices
+  g.fillStyle='#e8edf4'; g.fillRect(px+S*.69,py+S*.6,S*.1,S*.09);
+  g.fillStyle='#b91c1c'; g.fillRect(px+S*.71,py+S*.55,S*.02,S*.07);
+  g.fillStyle='#1e3a5f'; g.fillRect(px+S*.74,py+S*.55,S*.02,S*.07);
+  // Brazos con mangas de bata
+  g.fillStyle='#f4f6fa'; g.fillRect(px+S*.18,py+S*.46,S*.1,S*.24);
+  g.fillRect(px+S*.72,py+S*.46,S*.1,S*.24);
+  g.fillStyle='#d2a374'; g.fillRect(px+S*.2,py+S*.68,S*.07,S*.06); // manos
+  g.fillRect(px+S*.73,py+S*.68,S*.07,S*.06);
+  // ════ CABEZA REDONDA (Profe Felipe) ════
+  // Cuello
+  g.fillStyle='#c89860'; g.fillRect(px+S*.43,py+S*.36,S*.14,S*.08);
+  g.fillStyle='#b8884f'; g.fillRect(px+S*.43,py+S*.36,S*.14,S*.03);
+  // Cara perfectamente redonda
+  g.fillStyle='#d2a374'; g.beginPath(); g.arc(px+S*.5,py+S*.25,S*.175,0,Math.PI*2); g.fill();
+  // Sombreado lateral para volumen
+  g.fillStyle='rgba(160,110,60,.35)'; g.beginPath(); g.arc(px+S*.5,py+S*.27,S*.175,.15,Math.PI-.15); g.fill();
+  // Orejas
+  g.fillStyle='#c89860';
+  g.beginPath(); g.arc(px+S*.325,py+S*.25,S*.032,0,Math.PI*2); g.fill();
+  g.beginPath(); g.arc(px+S*.675,py+S*.25,S*.032,0,Math.PI*2); g.fill();
+  // Pelo MUY corto (rapado), solo coronilla y laterales
+  g.fillStyle='#2e2008';
+  g.beginPath(); g.arc(px+S*.5,py+S*.205,S*.178,Math.PI*1.04,Math.PI*1.96); g.fill();
+  g.fillStyle='#3a2a10';
+  g.beginPath(); g.arc(px+S*.5,py+S*.2,S*.178,Math.PI*1.1,Math.PI*1.9); g.fill();
+  // textura de pelo rapado (puntitos)
+  g.fillStyle='rgba(46,32,8,.55)';
+  for(let i=0;i<5;i++){ g.fillRect(px+S*(.36+i*.07),py+S*.13,S*.014,S*.014); }
+  // Entradas (frente despejada por pelo corto)
+  g.fillStyle='#d2a374';
+  g.beginPath(); g.arc(px+S*.39,py+S*.16,S*.03,0,Math.PI*2); g.fill();
+  g.beginPath(); g.arc(px+S*.61,py+S*.16,S*.03,0,Math.PI*2); g.fill();
+  // ── BARBA corta y prolija (contorno mandíbula) ──
+  g.fillStyle='#2e2008';
+  g.beginPath(); g.arc(px+S*.5,py+S*.27,S*.172,.18,Math.PI-.18); g.fill();
+  // recorte interior para mejillas (deja la barba como borde)
+  g.fillStyle='#d2a374';
+  g.beginPath(); g.arc(px+S*.5,py+S*.25,S*.135,.32,Math.PI-.32); g.fill();
+  // Bigote sobre el labio
+  g.fillStyle='#2e2008'; g.fillRect(px+S*.41,py+S*.3,S*.18,S*.028);
+  // Mosca/perilla bajo el labio
+  g.fillRect(px+S*.47,py+S*.345,S*.06,S*.03);
+  // Cejas
+  g.fillStyle='#2e2008';
+  g.fillRect(px+S*.38,py+S*.205,S*.09,S*.018);
+  g.fillRect(px+S*.53,py+S*.205,S*.09,S*.018);
+  // ── OJOS ──
+  g.fillStyle='#fff'; g.beginPath(); g.arc(px+S*.425,py+S*.245,S*.038,0,Math.PI*2); g.fill();
+  g.beginPath(); g.arc(px+S*.575,py+S*.245,S*.038,0,Math.PI*2); g.fill();
+  g.fillStyle='#3a2a18'; g.beginPath(); g.arc(px+S*.432,py+S*.247,S*.02,0,Math.PI*2); g.fill();
+  g.beginPath(); g.arc(px+S*.582,py+S*.247,S*.02,0,Math.PI*2); g.fill();
+  // Nariz
+  g.fillStyle='rgba(160,110,60,.5)'; g.fillRect(px+S*.487,py+S*.255,S*.026,S*.04);
+  // ── LENTES REDONDOS de profesor ──
+  g.strokeStyle='#16161a'; g.lineWidth=Math.max(1.2,S*.03);
+  g.beginPath(); g.arc(px+S*.425,py+S*.245,S*.058,0,Math.PI*2); g.stroke();
+  g.beginPath(); g.arc(px+S*.575,py+S*.245,S*.058,0,Math.PI*2); g.stroke();
+  // Puente
+  g.beginPath(); g.moveTo(px+S*.483,py+S*.243); g.lineTo(px+S*.517,py+S*.243); g.stroke();
+  // Patillas de los lentes hacia las orejas
+  g.beginPath(); g.moveTo(px+S*.367,py+S*.243); g.lineTo(px+S*.33,py+S*.25); g.stroke();
+  g.beginPath(); g.moveTo(px+S*.633,py+S*.243); g.lineTo(px+S*.67,py+S*.25); g.stroke();
+  // Brillo en los cristales
+  g.fillStyle='rgba(255,255,255,.45)';
+  g.beginPath(); g.arc(px+S*.41,py+S*.232,S*.018,0,Math.PI*2); g.fill();
+  g.beginPath(); g.arc(px+S*.56,py+S*.232,S*.018,0,Math.PI*2); g.fill();
   g.lineWidth=1;
 }
 
@@ -7349,19 +7789,85 @@ function drawRockMed(sx,sy){
   ctx.fillRect(sx+TS*.4,sy+TS*.62,TS*.3,2);
 }
 
-// FLORES en grupo (type: 'white'|'red'|'blue')
+// FLORES en grupo (type: 'white'|'red'|'blue') — pétalos redondos + tallo
 function drawFlowerMed(sx,sy,type,mC,mR){
   drawGrassMed(sx,sy,mC,mR);
-  const cols={white:['#fff','#fde047'],red:['#ef4444','#fbbf24'],blue:['#60a5fa','#fde047']};
-  const[pet,ctr]=cols[type]||cols.white;
-  const spots=[[.3,.4],[.6,.55],[.45,.7]];
-  for(const[fx,fy] of spots){
-    const cx=sx+TS*fx, cy=sy+TS*fy;
-    ctx.fillStyle=pet;
-    ctx.fillRect(cx-2,cy-1,2,2); ctx.fillRect(cx+1,cy-1,2,2);
-    ctx.fillRect(cx-2,cy+1,2,2); ctx.fillRect(cx+1,cy+1,2,2);
-    ctx.fillStyle=ctr; ctx.fillRect(cx-.5,cy-.5,1.5,1.5);
+  const cols={
+    white:['#ffffff','#fde047','#e0e0e0'],
+    red:['#f43f5e','#fde047','#be123c'],
+    blue:['#60a5fa','#fde047','#2563eb']
+  };
+  const[pet,ctr,petD]=cols[type]||cols.white;
+  const spots=[[.3,.42,1],[.62,.55,1.15],[.46,.72,.9]];
+  const sway=Math.sin(tick*.05+mC*.7)*1.1;
+  for(const[fx,fy,sc] of spots){
+    const cx=sx+TS*fx+sway*.4, cy=sy+TS*fy;
+    // tallo
+    ctx.strokeStyle='#2f7d2f'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(cx,cy+5*sc); ctx.quadraticCurveTo(cx-sway,cy+2*sc,cx,cy); ctx.stroke();
+    // hojita
+    ctx.fillStyle='#3d9140'; ctx.beginPath();
+    ctx.ellipse(cx+2*sc,cy+3*sc,2.2*sc,1.1*sc,.6,0,Math.PI*2); ctx.fill();
+    // 5 pétalos redondos
+    const R=2.5*sc;
+    for(let k=0;k<5;k++){
+      const a=k*(Math.PI*2/5)-Math.PI/2;
+      ctx.fillStyle=k%2?pet:petD;
+      ctx.beginPath();
+      ctx.arc(cx+Math.cos(a)*R, cy+Math.sin(a)*R, 1.9*sc, 0, Math.PI*2);
+      ctx.fill();
+    }
+    // centro
+    ctx.fillStyle=ctr; ctx.beginPath(); ctx.arc(cx,cy,1.5*sc,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.5)'; ctx.beginPath(); ctx.arc(cx-.6*sc,cy-.6*sc,.6*sc,0,Math.PI*2); ctx.fill();
   }
+}
+// SETO TOPIARIO ornamental (esfera podada sobre macetero)
+function drawHedgeMed(sx,sy,mC,mR){
+  drawGrassMed(sx,sy,mC,mR);
+  const sw=.85+.12*Math.sin(tick*.06+mC*.5);
+  // macetero de terracota
+  ctx.fillStyle='#b06a3a'; ctx.fillRect(sx+TS*.32,sy+TS*.66,TS*.36,TS*.26);
+  ctx.fillStyle='#c47d4a'; ctx.fillRect(sx+TS*.3,sy+TS*.62,TS*.4,TS*.08);
+  ctx.fillStyle='#8a4d28'; ctx.fillRect(sx+TS*.32,sy+TS*.86,TS*.36,TS*.06);
+  // esfera de seto
+  ctx.fillStyle=`rgba(20,83,45,${sw})`; ctx.beginPath(); ctx.arc(sx+TS*.5,sy+TS*.4,TS*.26,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=`rgba(34,120,52,${sw})`; ctx.beginPath(); ctx.arc(sx+TS*.45,sy+TS*.35,TS*.2,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=`rgba(74,160,70,${sw*.9})`; ctx.beginPath(); ctx.arc(sx+TS*.42,sy+TS*.3,TS*.1,0,Math.PI*2); ctx.fill();
+  // florcitas en el seto
+  ctx.fillStyle='#fbbf24';
+  ctx.beginPath(); ctx.arc(sx+TS*.58,sy+TS*.42,1.4,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#f9a8d4';
+  ctx.beginPath(); ctx.arc(sx+TS*.4,sy+TS*.48,1.3,0,Math.PI*2); ctx.fill();
+}
+// FUENTE central animada (agua que brota)
+function drawFountainMed(sx,sy,mC,mR){
+  drawStoneMed(sx,sy,mC,mR);
+  const t2=tick*.12;
+  // base circular de piedra
+  ctx.fillStyle='#8a8a82'; ctx.beginPath(); ctx.arc(sx+TS/2,sy+TS/2,TS*.42,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#6b6b63'; ctx.beginPath(); ctx.arc(sx+TS/2,sy+TS/2,TS*.42,0,Math.PI*2); ctx.lineWidth=2; ctx.stroke?.();
+  ctx.strokeStyle='#5a5a52'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(sx+TS/2,sy+TS/2,TS*.42,0,Math.PI*2); ctx.stroke();
+  // agua del estanque
+  const wf=.5+.5*Math.sin(t2);
+  ctx.fillStyle=`rgba(56,170,230,${.8})`; ctx.beginPath(); ctx.arc(sx+TS/2,sy+TS/2,TS*.34,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle=`rgba(186,230,253,${.4+.4*wf})`; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.arc(sx+TS/2,sy+TS/2,TS*.22,0,Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(sx+TS/2,sy+TS/2,TS*.12,0,Math.PI*2); ctx.stroke();
+  // pilar central
+  ctx.fillStyle='#9a9a92'; ctx.fillRect(sx+TS*.46,sy+TS*.3,TS*.08,TS*.28);
+  ctx.fillStyle='#b0b0a8'; ctx.beginPath(); ctx.arc(sx+TS/2,sy+TS*.3,TS*.1,0,Math.PI*2); ctx.fill();
+  // chorros de agua
+  ctx.strokeStyle=`rgba(186,230,253,${.6+.3*wf})`; ctx.lineWidth=1.4;
+  for(let k=-1;k<=1;k++){
+    ctx.beginPath();
+    ctx.moveTo(sx+TS/2,sy+TS*.28);
+    ctx.quadraticCurveTo(sx+TS/2+k*8,sy+TS*.18,sx+TS/2+k*11,sy+TS*.4);
+    ctx.stroke();
+  }
+  // gotas brillantes
+  ctx.fillStyle=`rgba(224,242,254,${.5+.5*Math.sin(t2*1.7)})`;
+  ctx.beginPath(); ctx.arc(sx+TS/2,sy+TS*.16,1.5,0,Math.PI*2); ctx.fill();
 }
 
 // AGUA animada — azul con olas + brillo
