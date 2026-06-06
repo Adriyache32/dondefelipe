@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warehouse Felipeso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0f0f1a;
+  --surface:  #1a1a2e;
+  --surface2: #16213e;
+  --border:   #2a2a45;
+  --red:      #e94560;
+  --gold:     #f5a623;
+  --green:    #2ecc71;
+  --blue:     #4a9eff;
+  --muted:    #6b7280;
+  --text:     #e8e8f0;
+  --text-dim: #9999bb;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+
+body {
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(233,69,96,0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(74,158,255,0.08) 0%, transparent 50%);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+header {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 1.25rem 1.25rem 1rem;
+  position: relative;
+  overflow: hidden;
+}
+header::after {
+  content: 'WAREHOUSE';
+  position: absolute;
+  right: -10px; top: 50%; transform: translateY(-50%);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 5rem;
+  color: rgba(233,69,96,0.06);
+  pointer-events: none;
+  line-height: 1;
+}
+.h-label {
+  font-family: 'DM Mono', monospace;
+  font-size: .6rem;
+  letter-spacing: .2em;
+  color: var(--red);
+  text-transform: uppercase;
+  margin-bottom: .3rem;
+}
+h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2rem, 8vw, 3rem);
+  line-height: 1;
+  letter-spacing: .04em;
+  color: var(--text);
+}
+h1 em { color: var(--gold); font-style: normal; }
+.h-sub { font-size: .75rem; color: var(--muted); margin-top: .3rem; font-weight: 300; }
+.live-pill {
+  display: inline-flex; align-items: center; gap: .35rem;
+  background: rgba(46,204,113,0.12);
+  border: 1px solid rgba(46,204,113,0.25);
+  border-radius: 999px;
+  padding: .2rem .65rem;
+  font-family: 'DM Mono', monospace;
+  font-size: .62rem;
+  color: var(--green);
+  margin-top: .6rem;
+}
+.dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation: blink 1.8s ease-in-out infinite; }
+.dot.off { background:var(--red); animation:none; }
+@keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.6)} }
+
+/* ── Nav tabs ── */
+.tabs {
+  display: flex;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex: none;
+  padding: .75rem 1.1rem;
+  font-size: .78rem;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+  white-space: nowrap;
+}
+.tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+.tab:hover:not(.active) { color: var(--text-dim); }
+
+/* ── Main ── */
+main { padding: 1rem; max-width: 480px; margin: 0 auto; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── Section label ── */
+.s-label {
+  font-family: 'DM Mono', monospace;
+  font-size: .58rem;
+  letter-spacing: .18em;
+  color: var(--muted);
+  text-transform: uppercase;
+  padding-left: .5rem;
+  border-left: 2px solid var(--red);
+  margin: 1.25rem 0 .65rem;
+}
+
+/* ── Stat cards ── */
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: .85rem 1rem;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, var(--red), var(--gold));
+}
+.stat-card.wide { grid-column: 1 / -1; }
+.stat-label { font-size: .65rem; color: var(--muted); margin-bottom: .25rem; }
+.stat-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--gold);
+  letter-spacing: .03em;
+}
+.stat-val.green { color: var(--green); }
+.stat-val.blue  { color: var(--blue); }
+.stat-unit { font-family: 'DM Mono', monospace; font-size: .6rem; color: var(--muted); margin-top: .15rem; }
+
+/* ── Producto cards ── */
+.filters {
+  display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .75rem;
+}
+.filter-btn {
+  padding: .3rem .75rem;
+  border-radius: 999px;
+  font-size: .7rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .15s;
+}
+.filter-btn.active { background: var(--red); border-color: var(--red); color: #fff; }
+
+.prod-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; }
+.prod-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform .15s;
+  animation: fadeUp .3s ease both;
+}
+.prod-card:active { transform: scale(.97); }
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+.prod-card.agotado { opacity: .5; }
+.prod-emoji {
+  background: var(--surface2);
+  font-size: 2.2rem;
+  text-align: center;
+  padding: .85rem 0 .65rem;
+  display: block;
+  border-bottom: 1px solid var(--border);
+}
+.prod-body { padding: .6rem .7rem .75rem; }
+.prod-cat {
+  font-family: 'DM Mono', monospace;
+  font-size: .55rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  margin-bottom: .2rem;
+}
+.cat-lamina    { color: var(--blue); }
+.cat-cupon     { color: var(--green); }
+.cat-privilegio { color: var(--gold); }
+.cat-objeto    { color: #c084fc; }
+.prod-nombre {
+  font-size: .78rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: .4rem;
+  color: var(--text);
+}
+.prod-precio {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.35rem;
+  color: var(--red);
+  letter-spacing: .03em;
+}
+.prod-stock {
+  font-family: 'DM Mono', monospace;
+  font-size: .6rem;
+  margin-top: .2rem;
+}
+.prod-stock.ok { color: var(--green); }
+.prod-stock.low { color: var(--gold); }
+.prod-stock.out { color: var(--red); }
+.badge-agotado {
+  background: rgba(233,69,96,.15);
+  color: var(--red);
+  font-family: 'DM Mono', monospace;
+  font-size: .58rem;
+  padding: .15rem .5rem;
+  border-radius: 4px;
+  margin-top: .3rem;
+  display: inline-block;
+}
+
+/* ── Modal producto ── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,.75);
+  backdrop-filter: blur(4px);
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px 16px 0 0;
+  width: 100%; max-width: 480px;
+  padding: 1.5rem;
+  animation: slideUp .25s ease;
+}
+@keyframes slideUp { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+.modal-emoji { font-size: 3rem; text-align: center; margin-bottom: .75rem; }
+.modal-cat { font-family:'DM Mono',monospace; font-size:.6rem; letter-spacing:.15em; text-align:center; margin-bottom:.3rem; }
+.modal-nombre { font-family:'Bebas Neue',sans-serif; font-size:1.6rem; text-align:center; margin-bottom:.5rem; letter-spacing:.03em; }
+.modal-desc { font-size:.82rem; color:var(--text-dim); text-align:center; line-height:1.6; margin-bottom:1rem; }
+.modal-precio { font-family:'Bebas Neue',sans-serif; font-size:2.5rem; color:var(--red); text-align:center; line-height:1; }
+.modal-pts-label { font-size:.65rem; color:var(--muted); text-align:center; font-family:'DM Mono',monospace; }
+.modal-notes { font-size:.7rem; color:var(--muted); text-align:center; margin-top:.5rem; font-style:italic; }
+.btn-close {
+  width: 100%; margin-top: 1.25rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .65rem;
+  color: var(--muted);
+  font-size: .82rem;
+  cursor: pointer;
+}
+
+/* ── Ranking ── */
+.rank-list { display:flex; flex-direction:column; gap:.45rem; }
+.rank-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .65rem .9rem;
+  display: flex; align-items: center; gap: .65rem;
+  animation: fadeUp .3s ease both;
+}
+.rank-pos {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  min-width: 1.4rem;
+  text-align: center;
+  color: var(--border);
+}
+.rank-pos.p1 { color: var(--gold); }
+.rank-pos.p2 { color: #9e9e9e; }
+.rank-pos.p3 { color: #a0522d; }
+.rank-info { flex:1; min-width:0; }
+.rank-nombre { font-size:.82rem; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rank-curso  { font-family:'DM Mono',monospace; font-size:.62rem; color:var(--muted); }
+.rank-saldo  { font-family:'Bebas Neue',sans-serif; font-size:1.2rem; color:var(--gold); white-space:nowrap; }
+.rank-bar-w  { height:2px; background:var(--border); border-radius:2px; margin-top:.2rem; }
+.rank-bar    { height:100%; background:linear-gradient(90deg,var(--red),var(--gold)); border-radius:2px; transition:width .6s; }
+
+/* ── Compras recientes ── */
+.comp-list { display:flex; flex-direction:column; gap:.45rem; }
+.comp-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .65rem .9rem;
+  display: flex; justify-content: space-between; align-items: center;
+  animation: fadeUp .3s ease both;
+}
+.comp-left { flex:1; min-width:0; }
+.comp-nombre { font-size:.82rem; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.comp-prod   { font-size:.7rem; color:var(--muted); margin-top:.1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.comp-fecha  { font-family:'DM Mono',monospace; font-size:.6rem; color:var(--muted); }
+.comp-right  { text-align:right; margin-left:.75rem; }
+.comp-pts    { font-family:'Bebas Neue',sans-serif; font-size:1.15rem; color:var(--red); }
+.comp-estado {
+  font-family:'DM Mono',monospace; font-size:.58rem;
+  padding:.12rem .45rem; border-radius:4px; margin-top:.15rem; display:inline-block;
+}
+.estado-ok   { background:rgba(46,204,113,.12); color:var(--green); }
+.estado-pend { background:rgba(245,166,35,.12);  color:var(--gold); }
+
+/* ── Config ── */
+.config-box {
+  background: var(--surface);
+  border: 1px dashed var(--gold);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.config-box label { display:block; font-family:'DM Mono',monospace; font-size:.68rem; color:var(--muted); margin-bottom:.35rem; }
+.config-box input {
+  width:100%; background:var(--bg); border:1px solid var(--border);
+  border-radius:6px; padding:.5rem .7rem;
+  font-family:'DM Mono',monospace; font-size:.72rem; color:var(--text); outline:none; margin-bottom:.5rem;
+}
+.config-box input:focus { border-color:var(--red); }
+.btn-conectar {
+  width:100%; background:var(--red); color:#fff; border:none;
+  border-radius:6px; padding:.6rem; font-family:'DM Sans',sans-serif;
+  font-size:.82rem; font-weight:600; cursor:pointer; letter-spacing:.03em;
+}
+.config-hint { font-size:.63rem; color:var(--muted); margin-top:.5rem; line-height:1.5; }
+.estado-bar {
+  background:var(--surface); border:1px solid var(--border); border-radius:8px;
+  padding:.6rem 1rem; font-size:.72rem; color:var(--muted);
+  font-family:'DM Mono',monospace; text-align:center; margin-bottom:.5rem;
+}
+.spinner {
+  display:inline-block; width:10px; height:10px;
+  border:2px solid var(--border); border-top-color:var(--red);
+  border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; margin-right:.4rem;
+}
+@keyframes spin { to{transform:rotate(360deg)} }
+
+footer {
+  text-align:center; padding:1.5rem 1rem 2.5rem;
+  font-family:'DM Mono',monospace; font-size:.62rem; color:var(--muted); line-height:1.8;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-label">Sistema Económico Escolar</div>
+  <h1>Ware<em>house</em></h1>
+  <div class="h-sub">Banco Felipeso · Colegio San Agustín</div>
+  <div class="live-pill">
+    <span class="dot" id="liveDot"></span>
+    <span id="liveText">Conectando…</span>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('catalogo', this)">🛒 Catálogo</div>
+  <div class="tab" onclick="switchTab('ranking',  this)">🏆 Ranking</div>
+  <div class="tab" onclick="switchTab('compras',  this)">🛍️ Compras</div>
+  <div class="tab" onclick="switchTab('resumen',  this)">📊 Resumen</div>
+</div>
+
+<main>
+  <div id="configBox" class="config-box">
+    <label>URL CSV de Google Sheets (Warehouse)</label>
+    <input type="text" id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/.../pub">
+    <button class="btn-conectar" onclick="conectar()">Conectar Warehouse</button>
+    <div class="config-hint">💡 Publica tu Google Sheet como CSV y pega el link aquí.</div>
+  </div>
+  <div id="estadoBar" class="estado-bar" style="display:none"><span class="spinner"></span>Cargando…</div>
+
+  <!-- CATÁLOGO -->
+  <div class="panel active" id="panel-catalogo">
+    <div class="s-label">Filtrar por categoría</div>
+    <div class="filters">
+      <button class="filter-btn active" onclick="filtrar('todos',this)">Todos</button>
+      <button class="filter-btn" onclick="filtrar('Lámina',this)">🦠 Láminas</button>
+      <button class="filter-btn" onclick="filtrar('Cupón',this)">📋 Cupones</button>
+      <button class="filter-btn" onclick="filtrar('Privilegio',this)">⭐ Privilegios</button>
+      <button class="filter-btn" onclick="filtrar('Objeto Físico',this)">🎁 Objetos</button>
+    </div>
+    <div class="prod-grid" id="prodGrid"><div class="estado-bar" style="grid-column:1/-1">Sin datos</div></div>
+  </div>
+
+  <!-- RANKING -->
+  <div class="panel" id="panel-ranking">
+    <div class="s-label">Top estudiantes por puntos</div>
+    <div class="rank-list" id="rankList"><div class="estado-bar">Sin datos</div></div>
+  </div>
+
+  <!-- COMPRAS -->
+  <div class="panel" id="panel-compras">
+    <div class="s-label">Últimas compras registradas</div>
+    <div class="comp-list" id="compList"><div class="estado-bar">Sin datos</div></div>
+  </div>
+
+  <!-- RESUMEN -->
+  <div class="panel" id="panel-resumen">
+    <div class="s-label">Estadísticas del Warehouse</div>
+    <div class="stat-grid">
+      <div class="stat-card wide">
+        <div class="stat-label">Total puntos en circulación</div>
+        <div class="stat-val green" id="s-puntos">—</div>
+        <div class="stat-unit">puntos disponibles en el sistema</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Productos disponibles</div>
+        <div class="stat-val" id="s-prods">—</div>
+        <div class="stat-unit">en catálogo</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Compras realizadas</div>
+        <div class="stat-val blue" id="s-compras">—</div>
+        <div class="stat-unit">transacciones</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Puntos canjeados</div>
+        <div class="stat-val" id="s-canjeado">—</div>
+        <div class="stat-unit">pts gastados en total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pendientes entrega</div>
+        <div class="stat-val" id="s-pendientes">—</div>
+        <div class="stat-unit">compras por entregar</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Modal detalle producto -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-emoji"  id="m-emoji"></div>
+    <div class="modal-cat"    id="m-cat"></div>
+    <div class="modal-nombre" id="m-nombre"></div>
+    <div class="modal-desc"   id="m-desc"></div>
+    <div class="modal-precio" id="m-precio"></div>
+    <div class="modal-pts-label">puntos</div>
+    <div class="modal-notes"  id="m-notes"></div>
+    <button class="btn-close" onclick="closeModal()">Cerrar</button>
+  </div>
+</div>
+
+<footer>
+  Actualizado: <span id="horaUpdate">—</span><br>
+  Warehouse Felipeso © 2025 · Se refresca cada 30 segundos
+</footer>
+
+<script>
+// ─── GIDs (ajusta si cambian) ────────────────────────────────
+const GIDS = {
+  catalogo:  669665373,    // 🛒 Catálogo
+  puntos:    1743884860,   // ✏️ Historial Puntos
+  compras:   416336918,    // 👁 Saldos Puntos
+  historial: 1440552711,   // 📊 Dashboard
+};
+
+const DEFAULT_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR-s_o4FbzEG69moK_bPywXTSYNsQEWVHTw2gYJEC_5hoJIWHjI9XVH1p05VMAp50_x5TaF9htPx6ql/pub';
+let BASE_URL = localStorage.getItem('warehouse_url') || DEFAULT_URL;
+let intervalo = null;
+let todosProductos = [];
+let filtroActivo = 'todos';
+
+// ─── CSV helpers ─────────────────────────────────────────────
+function csvUrl(gid) {
+  if (!BASE_URL) return '';
+  if (BASE_URL.includes('/pub')) return `${BASE_URL.split('?')[0]}?output=csv&gid=${gid}&t=${Date.now()}`;
+  return `${BASE_URL.split('?')[0].split('/edit')[0]}/export?format=csv&gid=${gid}&t=${Date.now()}`;
+}
+
+async function fetchCSV(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return parseCSV(await r.text());
+}
+
+function parseCSV(text) {
+  return text.split(/\r?\n/).filter(l => l.trim()).map(line => {
+    const cols = []; let cur = '', inQ = false;
+    for (const ch of line) {
+      if (ch === '"') { inQ = !inQ; }
+      else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    cols.push(cur.trim()); return cols;
+  });
+}
+
+function num(s) { return parseFloat(String(s||0).replace(/[^\d.-]/g,'')) || 0; }
+function fmt(n) { return new Intl.NumberFormat('es-CL').format(Math.round(n)); }
+
+// ─── Tabs ─────────────────────────────────────────────────────
+function switchTab(id, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-' + id).classList.add('active');
+}
+
+// ─── Filtros catálogo ─────────────────────────────────────────
+function filtrar(cat, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filtroActivo = cat;
+  renderCatalogo(todosProductos);
+}
+
+// ─── Catálogo ─────────────────────────────────────────────────
+function catClass(cat) {
+  const m = {
+    'Lámina':       'cat-lamina',
+    'Cupón':        'cat-cupon',
+    'Privilegio':   'cat-privilegio',
+    'Objeto Físico':'cat-objeto',
+  };
+  return m[cat] || 'cat-objeto';
+}
+
+function renderCatalogo(rows) {
+  const grid = document.getElementById('prodGrid');
+  let data = rows.filter(r => r[0] && r[0].startsWith('PROD'));
+  if (filtroActivo !== 'todos') data = data.filter(r => r[1] === filtroActivo);
+  if (!data.length) { grid.innerHTML = '<div class="estado-bar" style="grid-column:1/-1">Sin productos en esta categoría</div>'; return; }
+
+  grid.innerHTML = data.map((r, i) => {
+    const [id, cat, nombre, desc, precio, stock, , estado, emoji, notas] = r;
+    const agotado = estado !== 'Disponible';
+    const stockN  = num(stock);
+    const stockClass = stockN === 0 ? 'out' : stockN <= 3 ? 'low' : 'ok';
+    const stockTxt   = stockN === 0 ? 'Sin stock' : stockN <= 3 ? `¡Solo ${stockN}!` : `${stockN} disponibles`;
+    return `
+    <div class="prod-card ${agotado?'agotado':''}" onclick="openModal(${i})" style="animation-delay:${i*0.04}s">
+      <span class="prod-emoji">${emoji||'📦'}</span>
+      <div class="prod-body">
+        <div class="prod-cat ${catClass(cat)}">${cat}</div>
+        <div class="prod-nombre">${nombre}</div>
+        <div class="prod-precio">${fmt(num(precio))} pts</div>
+        ${agotado
+          ? '<div class="badge-agotado">AGOTADO</div>'
+          : `<div class="prod-stock ${stockClass}">${stockTxt}</div>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+
+  // guardar para modal
+  window._prodData = data;
+}
+
+function openModal(idx) {
+  if (!window._prodData) return;
+  const r = window._prodData[idx];
+  if (!r) return;
+  const [id, cat, nombre, desc, precio, stock, , estado, emoji, notas] = r;
+  document.getElementById('m-emoji').textContent   = emoji || '📦';
+  document.getElementById('m-cat').textContent     = cat;
+  document.getElementById('m-cat').className       = 'modal-cat ' + catClass(cat);
+  document.getElementById('m-nombre').textContent  = nombre;
+  document.getElementById('m-desc').textContent    = desc || '';
+  document.getElementById('m-precio').textContent  = fmt(num(precio));
+  document.getElementById('m-notes').textContent   = notas ? `📌 ${notas}` : '';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modalOverlay')) {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+}
+
+// ─── Ranking ──────────────────────────────────────────────────
+function renderRanking(rows) {
+  const list = document.getElementById('rankList');
+  const data = rows.filter(r => r[0] && r[0].startsWith('CC') && num(r[6]) > 0)
+    .map(r => ({ nombre: `${r[1]} ${r[2]}`, curso: r[3], pts: num(r[6]) }))
+    .sort((a,b) => b.pts - a.pts).slice(0, 10);
+  if (!data.length) { list.innerHTML = '<div class="estado-bar">Sin datos</div>'; return; }
+  const max = data[0].pts || 1;
+  list.innerHTML = data.map((e, i) => {
+    const pct = Math.round(e.pts / max * 100);
+    const pc = i===0?'p1':i===1?'p2':i===2?'p3':'';
+    return `
+    <div class="rank-item" style="animation-delay:${i*0.05}s">
+      <div class="rank-pos ${pc}">${i+1}</div>
+      <div class="rank-info">
+        <div class="rank-nombre">${e.nombre}</div>
+        <div class="rank-curso">${e.curso||'—'}</div>
+        <div class="rank-bar-w"><div class="rank-bar" style="width:${pct}%"></div></div>
+      </div>
+      <div class="rank-saldo">${fmt(e.pts)} pts</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Compras ──────────────────────────────────────────────────
+function renderCompras(rows) {
+  const list = document.getElementById('compList');
+  const data = [...rows.filter(r => r[0] && r[0].startsWith('COMP'))].reverse().slice(0,15);
+  if (!data.length) { list.innerHTML = '<div class="estado-bar">Sin compras aún</div>'; return; }
+  list.innerHTML = data.map((r,i) => {
+    const [id, fecha, cta, nombre, curso, prodId, prod, precio, estado] = r;
+    const eClass = estado === 'Entregado' ? 'estado-ok' : 'estado-pend';
+    return `
+    <div class="comp-item" style="animation-delay:${i*0.04}s">
+      <div class="comp-left">
+        <div class="comp-nombre">${nombre||'—'}</div>
+        <div class="comp-prod">${prod||''}</div>
+      </div>
+      <div class="comp-right">
+        <div class="comp-pts">-${fmt(num(precio))} pts</div>
+        <div class="comp-fecha">${fecha||''}</div>
+        <span class="comp-estado ${eClass}">${estado||''}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Resumen ──────────────────────────────────────────────────
+function renderResumen(puntos, compras) {
+  const totalPts  = puntos.filter(r => r[0]&&r[0].startsWith('CC')).reduce((s,r)=>s+num(r[6]),0);
+  const totalComp = compras.filter(r => r[0]&&r[0].startsWith('COMP')).length;
+  const totalCanj = compras.filter(r => r[0]&&r[0].startsWith('COMP')).reduce((s,r)=>s+num(r[7]),0);
+  const pendientes= compras.filter(r => r[0]&&r[0].startsWith('COMP') && r[8]==='Pendiente').length;
+  const dispProd  = todosProductos.filter(r => r[0]&&r[0].startsWith('PROD') && r[7]==='Disponible').length;
+  anim('s-puntos',    fmt(totalPts)  + ' pts');
+  anim('s-prods',     dispProd);
+  anim('s-compras',   totalComp);
+  anim('s-canjeado',  fmt(totalCanj) + ' pts');
+  anim('s-pendientes',pendientes);
+}
+
+function anim(id, val) {
+  const el = document.getElementById(id);
+  if (!el || el.textContent === String(val)) return;
+  el.style.transform = 'scale(1.1)';
+  el.textContent = val;
+  setTimeout(() => el.style.transform = '', 200);
+}
+
+// ─── Actualizar todo ──────────────────────────────────────────
+async function actualizar() {
+  const dot = document.getElementById('liveDot');
+  const txt = document.getElementById('liveText');
+  try {
+    const [cat, pts, comp] = await Promise.all([
+      fetchCSV(csvUrl(GIDS.catalogo)),
+      fetchCSV(csvUrl(GIDS.puntos)),
+      fetchCSV(csvUrl(GIDS.compras)),
+    ]);
+    todosProductos = cat.slice(2).filter(r => r[0]);
+    const dataPts  = pts.slice(2).filter(r => r[0]);
+    const dataComp = comp.slice(1).filter(r => r[0]);
+
+    renderCatalogo(todosProductos);
+    renderRanking(dataPts);
+    renderCompras(dataComp);
+    renderResumen(dataPts, dataComp);
+
+    dot.classList.remove('off');
+    const hora = new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    txt.textContent = 'En vivo · ' + hora;
+    document.getElementById('horaUpdate').textContent = hora;
+    document.getElementById('estadoBar').style.display = 'none';
+  } catch(e) {
+    dot.classList.add('off');
+    txt.textContent = 'Error de conexión';
+    console.error(e);
+  }
+}
+
+function conectar() {
+  const url = document.getElementById('sheetUrl').value.trim();
+  if (!url) return alert('Ingresa el URL del Google Sheet del Warehouse.');
+  BASE_URL = url;
+  localStorage.setItem('warehouse_url', url);
+  document.getElementById('configBox').style.display = 'none';
+  document.getElementById('estadoBar').style.display = 'block';
+  if (intervalo) clearInterval(intervalo);
+  actualizar();
+  intervalo = setInterval(actualizar, 30000);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('sheetUrl').value = BASE_URL;
+  document.getElementById('configBox').style.display = 'none';
+  document.getElementById('estadoBar').style.display = 'block';
+  actualizar();
+  intervalo = setInterval(actualizar, 30000);
+});
+</script>
+</body>
+</html>
