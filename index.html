@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aula de Ciencias | Profe Felipe</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>El Rincón de Felipe | Profe Felipe</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -25,13 +25,15 @@
   --marble:      #fdfbf7;
   --stone:       #ede5d0;
   --ivory:       #faf8f4;
-  --bronze:      #7a5820;
+  --bronze:      #6b4a12;
   --bronze-rich: #5c3f0e;
   --text:        #2a1f10;
-  --text-soft:   #604e35;
+  --text-soft:   #4a3820;
   --laurel:      #3d6e4a;
   --border-gold: rgba(201,168,76,.25);
   --border-gold-strong: rgba(201,168,76,.55);
+  /* Altura de la franja superior (ticker) — controla también el offset del nav */
+  --ticker-h: 32px;
   /* Sombras modernas en capas (elevación material) */
   --card-shadow:  0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(20,16,8,.05);
   --shadow-hover: 0 8px 24px rgba(20,16,8,.1), 0 16px 48px rgba(20,16,8,.08);
@@ -118,7 +120,7 @@ body::before {
   position: sticky; top: 0; z-index: 150; flex-shrink: 0;
   background: rgba(4, 10, 20, 0.97);
   border-bottom: 1px solid rgba(201,168,76,.18);
-  height: 32px; overflow: hidden;
+  height: var(--ticker-h); overflow: hidden;
   display: flex; align-items: center;
 }
 
@@ -202,7 +204,7 @@ body::before {
    NAVEGACIÓN
 ═══════════════════════════════════════════════ */
 nav {
-  position: sticky; top: 32px; z-index: 200; flex-shrink: 0;
+  position: sticky; top: var(--ticker-h); z-index: 200; flex-shrink: 0;
   background: rgba(6, 14, 26, 0.92);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -711,6 +713,11 @@ footer::before {
 
 /* ── Móvil estándar (≤ 680px) ── */
 @media (max-width: 680px) {
+  :root { --ticker-h: 40px; }
+  .ticker-label { font-size: 0.62rem; padding: 0 14px; }
+  .ticker-item { font-size: 0.8rem; padding: 0 22px; }
+  .ticker-item .t-name { font-size: 0.62rem; }
+  .ticker-item .t-price { font-size: 0.84rem; }
   .tablet { padding: 1.4rem 1rem; border-radius: 0; border-left: none; border-right: none; box-shadow: 0 8px 24px rgba(0,0,0,.28); }
   h1 { font-size: clamp(1.1rem, 6vw, 1.35rem); letter-spacing: 1.5px; }
   h2.sh { font-size: 0.75rem; letter-spacing: 2px; padding: 8px 0 8px 12px; margin: 2rem 0 1.2rem; }
@@ -730,10 +737,11 @@ footer::before {
 /* ── Móvil pequeño (≤ 480px) ── */
 @media (max-width: 480px) {
   .frieze { height: 4px; }
-  .ticker-bar { height: 26px; }
-  .ticker-label { font-size: 0.5rem; letter-spacing: 1px; padding: 0 10px; }
-  .ticker-item { font-size: 0.65rem; padding: 0 18px; }
-  .ticker-item .t-price { font-size: 0.68rem; }
+  :root { --ticker-h: 42px; }
+  .ticker-label { font-size: 0.6rem; letter-spacing: 1px; padding: 0 12px; }
+  .ticker-item { font-size: 0.78rem; padding: 0 18px; }
+  .ticker-item .t-name { font-size: 0.6rem; }
+  .ticker-item .t-price { font-size: 0.82rem; }
   .nav-inner { height: 54px; }
   .nav-brand { font-size: 0.88rem; letter-spacing: 2px; }
   .tablet { padding: 1.2rem 0.85rem; }
@@ -763,7 +771,7 @@ footer::before {
   nav { padding-top: env(safe-area-inset-top); }
   @media (max-width: 480px) {
     .nav-inner { height: calc(54px + env(safe-area-inset-top)); }
-    nav { top: 26px; }
+    nav { top: var(--ticker-h); }
   }
 }
 
@@ -803,9 +811,180 @@ a:focus-visible, button:focus-visible {
 /* iOS smooth scroll + overscroll */
 html { -webkit-text-size-adjust: 100%; }
 body { overscroll-behavior-y: none; }
+
+/* ═══════════════════════════════════════════════
+   JARDÍN SUBMARINO · Guiño a The Beatles
+   (submarino amarillo · pulpo · burbujas · notas)
+═══════════════════════════════════════════════ */
+.ocean-deco {
+  position: fixed; inset: 0; z-index: 1;
+  pointer-events: none; overflow: hidden;
+}
+.ocean-deco svg { position: absolute; will-change: transform; }
+
+/* Submarino amarillo principal */
+.deco-sub {
+  width: 130px; opacity: .5; top: 15%; left: -150px;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,.45));
+  animation: subCruise 40s linear infinite;
+}
+@keyframes subCruise {
+  0%   { transform: translateX(0) translateY(0) rotate(-2deg); }
+  50%  { transform: translateX(52vw) translateY(-22px) rotate(2deg); }
+  100% { transform: translateX(118vw) translateY(0) rotate(-2deg); }
+}
+
+/* Segundo submarino, más pequeño y en sentido inverso */
+.deco-sub-2 {
+  width: 92px; opacity: .34; top: 66%; left: auto; right: -140px;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,.45));
+  animation: subCruiseRev 56s linear infinite;
+}
+@keyframes subCruiseRev {
+  0%   { transform: translateX(0) rotate(2deg) scaleX(-1); }
+  50%  { transform: translateX(-54vw) translateY(24px) rotate(-2deg) scaleX(-1); }
+  100% { transform: translateX(-118vw) rotate(2deg) scaleX(-1); }
+}
+
+/* Pulpos del jardín submarino */
+.deco-octo {
+  width: 100px; opacity: .42; bottom: 5%; left: 2.5%;
+  filter: drop-shadow(0 8px 18px rgba(0,0,0,.5));
+  animation: octoBob 7s ease-in-out infinite;
+}
+.deco-octo-2 {
+  width: 74px; opacity: .3; top: 28%; left: auto; right: 3.5%; bottom: auto;
+  animation: octoBob 9.5s ease-in-out infinite reverse;
+}
+@keyframes octoBob {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50%      { transform: translateY(-18px) rotate(3deg); }
+}
+.octo-arm { transform-box: fill-box; transform-origin: top center; animation: armWave 3.4s ease-in-out infinite; }
+.octo-arm:nth-child(odd) { animation-delay: -1.3s; }
+@keyframes armWave { 0%,100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+
+/* Burbujas que ascienden */
+.bubble {
+  position: absolute; bottom: -50px; border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, rgba(255,255,255,.55), rgba(168,216,232,.12));
+  border: 1px solid rgba(255,255,255,.2);
+  animation-name: bubbleRise; animation-timing-function: linear; animation-iteration-count: infinite;
+}
+@keyframes bubbleRise {
+  0%   { transform: translateY(0) translateX(0) scale(.7); opacity: 0; }
+  12%  { opacity: .7; }
+  88%  { opacity: .5; }
+  100% { transform: translateY(-108vh) translateX(34px) scale(1); opacity: 0; }
+}
+
+/* Notas musicales psicodélicas */
+.note {
+  position: absolute; color: var(--gold-light); font-size: 1.5rem; opacity: 0;
+  text-shadow: 0 0 12px rgba(201,168,76,.6);
+  animation-name: noteFloat; animation-timing-function: ease-in; animation-iteration-count: infinite;
+}
+@keyframes noteFloat {
+  0%   { transform: translateY(0) rotate(0); opacity: 0; }
+  18%  { opacity: .55; }
+  100% { transform: translateY(-62vh) rotate(28deg); opacity: 0; }
+}
+
+/* Ajuste responsivo: aligerar la escena en pantallas pequeñas */
+@media (max-width: 850px) {
+  .deco-sub-2, .deco-octo-2, .note { display: none; }
+  .deco-sub  { width: 84px; opacity: .3; }
+  .deco-octo { width: 70px; opacity: .3; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ocean-deco { display: none; }
+}
 </style>
 </head>
 <body>
+
+<!-- ══ JARDÍN SUBMARINO · Guiño a The Beatles ══ -->
+<div class="ocean-deco" aria-hidden="true">
+  <!-- Submarino amarillo -->
+  <svg class="deco-sub" viewBox="0 0 130 64" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20 38 L4 24 L4 52 Z" fill="#d4a93b"/>
+    <ellipse cx="66" cy="40" rx="48" ry="18" fill="#f2c94c"/>
+    <ellipse cx="66" cy="37" rx="48" ry="12" fill="#f7d873"/>
+    <rect x="52" y="14" width="26" height="16" rx="6" fill="#e3b73f"/>
+    <rect x="62" y="6" width="5" height="12" rx="2.5" fill="#c9a84c"/>
+    <circle cx="64.5" cy="6" r="3.5" fill="#c9a84c"/>
+    <circle cx="46" cy="40" r="7" fill="#0c1f38" stroke="#fff" stroke-width="2.5"/>
+    <circle cx="66" cy="40" r="7" fill="#0c1f38" stroke="#fff" stroke-width="2.5"/>
+    <circle cx="86" cy="40" r="7" fill="#0c1f38" stroke="#fff" stroke-width="2.5"/>
+    <circle cx="114" cy="40" r="6" fill="#e3b73f"/>
+    <ellipse cx="56" cy="30" rx="20" ry="4" fill="#fff" opacity=".35"/>
+  </svg>
+
+  <svg class="deco-sub deco-sub-2" viewBox="0 0 130 64" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20 38 L4 24 L4 52 Z" fill="#d4a93b"/>
+    <ellipse cx="66" cy="40" rx="48" ry="18" fill="#f2c94c"/>
+    <ellipse cx="66" cy="37" rx="48" ry="12" fill="#f7d873"/>
+    <rect x="52" y="14" width="26" height="16" rx="6" fill="#e3b73f"/>
+    <rect x="62" y="6" width="5" height="12" rx="2.5" fill="#c9a84c"/>
+    <circle cx="64.5" cy="6" r="3.5" fill="#c9a84c"/>
+    <circle cx="46" cy="40" r="7" fill="#0c1f38" stroke="#fff" stroke-width="2.5"/>
+    <circle cx="66" cy="40" r="7" fill="#0c1f38" stroke="#fff" stroke-width="2.5"/>
+    <circle cx="86" cy="40" r="7" fill="#0c1f38" stroke="#fff" stroke-width="2.5"/>
+    <circle cx="114" cy="40" r="6" fill="#e3b73f"/>
+    <ellipse cx="56" cy="30" rx="20" ry="4" fill="#fff" opacity=".35"/>
+  </svg>
+
+  <!-- Pulpo (Octopus's Garden) -->
+  <svg class="deco-octo" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+    <g fill="#c95f86">
+      <path class="octo-arm" d="M30 72 q-15 16 -11 38 q2 8 8 6 q-2 -18 7 -34 z"/>
+      <path class="octo-arm" d="M42 78 q-9 20 -5 40 q2 6 7 4 q-3 -22 2 -42 z"/>
+      <path class="octo-arm" d="M58 78 q9 20 5 40 q-2 6 -7 4 q3 -22 -2 -42 z"/>
+      <path class="octo-arm" d="M70 72 q15 16 11 38 q-2 8 -8 6 q2 -18 -7 -34 z"/>
+      <path class="octo-arm" d="M50 80 q1 22 0 40 q0 6 -5 5 q-2 -24 0 -44 z"/>
+    </g>
+    <ellipse cx="50" cy="48" rx="30" ry="34" fill="#d56e94"/>
+    <ellipse cx="50" cy="42" rx="30" ry="28" fill="#e07ea3"/>
+    <circle cx="34" cy="54" r="5" fill="#f29bbb" opacity=".7"/>
+    <circle cx="66" cy="54" r="5" fill="#f29bbb" opacity=".7"/>
+    <circle cx="40" cy="42" r="8" fill="#fff"/>
+    <circle cx="60" cy="42" r="8" fill="#fff"/>
+    <circle cx="41" cy="44" r="4" fill="#241018"/>
+    <circle cx="61" cy="44" r="4" fill="#241018"/>
+    <circle cx="43" cy="42" r="1.5" fill="#fff"/>
+    <circle cx="63" cy="42" r="1.5" fill="#fff"/>
+    <path d="M44 58 q6 6 12 0" stroke="#a83e63" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  </svg>
+
+  <svg class="deco-octo deco-octo-2" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+    <g fill="#5a8fb0">
+      <path class="octo-arm" d="M30 72 q-15 16 -11 38 q2 8 8 6 q-2 -18 7 -34 z"/>
+      <path class="octo-arm" d="M42 78 q-9 20 -5 40 q2 6 7 4 q-3 -22 2 -42 z"/>
+      <path class="octo-arm" d="M58 78 q9 20 5 40 q-2 6 -7 4 q3 -22 -2 -42 z"/>
+      <path class="octo-arm" d="M70 72 q15 16 11 38 q-2 8 -8 6 q2 -18 -7 -34 z"/>
+    </g>
+    <ellipse cx="50" cy="48" rx="30" ry="34" fill="#6fa3c4"/>
+    <ellipse cx="50" cy="42" rx="30" ry="28" fill="#86b8d6"/>
+    <circle cx="40" cy="42" r="8" fill="#fff"/>
+    <circle cx="60" cy="42" r="8" fill="#fff"/>
+    <circle cx="41" cy="44" r="4" fill="#16303f"/>
+    <circle cx="61" cy="44" r="4" fill="#16303f"/>
+    <path d="M44 58 q6 6 12 0" stroke="#2d5a72" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  </svg>
+
+  <!-- Burbujas -->
+  <span class="bubble" style="left:7%;  width:14px; height:14px; animation-duration:15s; animation-delay:0s;"></span>
+  <span class="bubble" style="left:18%; width:9px;  height:9px;  animation-duration:11s; animation-delay:3s;"></span>
+  <span class="bubble" style="left:84%; width:16px; height:16px; animation-duration:17s; animation-delay:1.5s;"></span>
+  <span class="bubble" style="left:92%; width:10px; height:10px; animation-duration:13s; animation-delay:5s;"></span>
+  <span class="bubble" style="left:5%;  width:8px;  height:8px;  animation-duration:12s; animation-delay:7s;"></span>
+  <span class="bubble" style="left:78%; width:12px; height:12px; animation-duration:16s; animation-delay:9s;"></span>
+
+  <!-- Notas musicales -->
+  <span class="note" style="left:11%; bottom:22%; animation-duration:10s; animation-delay:1s;">♪</span>
+  <span class="note" style="left:88%; bottom:30%; animation-duration:12s; animation-delay:6s;">♫</span>
+  <span class="note" style="left:82%; bottom:14%; animation-duration:11s; animation-delay:3.5s;">♩</span>
+</div>
 
 <!-- ══ TICKER FELIPESOS ══ -->
 <div class="ticker-bar" title="Pasa el cursor para pausar">
@@ -843,7 +1022,7 @@ body { overscroll-behavior-y: none; }
 <nav>
   <div class="nav-inner">
     <a href="#" class="nav-brand" onclick="go('home');return false;">
-      <i class="fa-solid fa-building-columns"></i> PROFE FELIPE
+      <i class="fa-solid fa-water"></i> EL RINCÓN DE FELIPE
     </a>
 
     <button class="hamburger" id="ham" onclick="toggleNav()">
@@ -880,6 +1059,7 @@ body { overscroll-behavior-y: none; }
         </div>
       </li>
       <li><a href="banco-felipeso/index.html" class="nav-lib" style="color:#a8d8e8; border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='#a8d8e8'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-piggy-bank"></i> BANCO</a></li>
+      <li><a href="warehouse/index.html" class="nav-lib" style="color:#f5d873; border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='#f5d873'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-warehouse"></i> WAREHOUSE</a></li>
       <li><a href="#" onclick="go('biblioteca'); closeNav(); return false;" class="nav-lib"><i class="fa-solid fa-book-open"></i> BIBLIOTECA</a></li>
       <li><a href="#" onclick="go('reglamento'); closeNav(); return false;" class="nav-lib" style="color:var(--gold-light);"><i class="fa-solid fa-scale-balanced"></i> REGLAMENTO</a></li>
       <li><a href="#" onclick="go('herramientas'); closeNav(); return false;" class="nav-lib" style="color:#a8d8a8; border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='#a8d8a8'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-wrench"></i> HERRAMIENTAS</a></li>
@@ -894,7 +1074,7 @@ body { overscroll-behavior-y: none; }
 </div>
 
 <footer>
-  AULA DE CIENCIAS © <span id="yr"></span> · PROF. FELIPE JIMÉNEZ
+  EL RINCÓN DE FELIPE © <span id="yr"></span> · PROF. FELIPE JIMÉNEZ
 </footer>
 
 <script>
@@ -951,8 +1131,8 @@ function rHome(stage){
   stage.innerHTML = `
     <div class="fade-in">
       <div class="tablet-header">
-        <h1 class="shimmer">AULA DE CIENCIAS</h1>
-        <p class="page-sub">Exploración, Ciencia y Deporte · 2026</p>
+        <h1 class="shimmer">EL RINCÓN DE FELIPE</h1>
+        <p class="page-sub">🐙 Ciencia, Deporte y Jardín Submarino · 2026</p>
       </div>
 
       <h2 class="sh">⚽ DEPORTES & NOVEDADES</h2>
@@ -985,6 +1165,24 @@ function rHome(stage){
         </div>
       </div>
 
+      <!-- 🌎 FÚTBOL · CAMINO AL MUNDIAL 2026 -->
+      <h2 class="sh" style="margin-top:2rem;">🌎 FÚTBOL MUNDIAL · JUNIO 2026</h2>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+
+        <div class="card c-gold" style="gap:0;">
+          <h3><i class="fa-solid fa-earth-americas" style="color:var(--bronze);"></i> EL MUNDIAL ARRANCA EL 11 DE JUNIO</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">11 Junio 2026 · FIFA / El Mostrador</p>
+          <p>La Copa del Mundo se disputa por primera vez en <strong>tres países</strong> (Estados Unidos, México y Canadá) y abre con México vs. Sudáfrica. En Chile, <strong>Chilevisión</strong> transmitirá una selección de partidos gratis en TV abierta.</p>
+        </div>
+
+        <div class="card c-sea" style="gap:0;">
+          <h3><i class="fa-solid fa-futbol" style="color:#c8102e;"></i> LA ROJA SE MIDE ANTE PORTUGAL Y CR7</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">6 Junio 2026 · ANFP / Redgol</p>
+          <p>Aunque Chile quedó fuera del Mundial, <strong>La Roja</strong> juega un amistoso de fuste ante <strong>Portugal</strong> —candidato al título y liderado por Cristiano Ronaldo— en el Estadio Nacional do Jamor, en Oeiras. Buena vitrina para los jóvenes valores.</p>
+        </div>
+
+      </div>
+
       <!-- 🥠 GALLETA DE LA FORTUNA -->
       <div style="display:flex; justify-content:center; margin: 0.5rem 0 2rem;">
         <div style="width:100%; max-width:460px; border-radius:14px; overflow:hidden; border:1px solid rgba(201,168,76,.28); border-top:3px solid var(--gold); box-shadow: 0 8px 28px rgba(0,0,0,.06), 0 0 0 1px rgba(201,168,76,.06); background:var(--marble);">
@@ -1003,26 +1201,38 @@ function rHome(stage){
 
         <div class="card c-sea" style="gap:0;">
           <h3><i class="fa-solid fa-star" style="color:#2d6a9f;"></i> NASA DETECTA "CORONA" CÓSMICA EN CÚMULO ESTELAR ANTIGUO</h3>
-          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">Junio 2026 · NASA / Calendario de Ciencia</p>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">Junio 2026 · NASA / Calendario de Ciencia</p>
           <p>Misiones de la NASA detectaron una <strong>"corona" cósmica en el cúmulo NGC 602</strong>, en la Pequeña Nube de Magallanes a 200.000 años luz. Sus estrellas imitan condiciones del universo primitivo, revelando cómo se formaron las primeras galaxias.</p>
         </div>
 
         <div class="card c-laurel" style="gap:0;">
           <h3><i class="fa-solid fa-fish" style="color:#3d6b4a;"></i> NUEVO PEPINO DE MAR CON "INMORTALIDAD TISULAR"</h3>
-          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">Mayo 2026 · CNN Ciencia</p>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">Mayo 2026 · CNN Ciencia</p>
           <p>Científicos descubrieron accidentalmente un <strong>pepino de mar con regeneración tisular casi ilimitada</strong>. El animal puede reconstituir órganos completos tras lesiones severas, abriendo nuevas líneas de investigación en medicina regenerativa.</p>
         </div>
 
         <div class="card c-gold" style="gap:0;">
           <h3><i class="fa-solid fa-layer-group" style="color:var(--bronze);"></i> NUEVO LÍMITE DE PLACAS TECTÓNICAS EN FORMACIÓN</h3>
-          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">Mayo 2026 · CNN / Universidad de Oxford</p>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">Mayo 2026 · CNN / Universidad de Oxford</p>
           <p>Científicos de Oxford hallaron <strong>indicios de un nuevo límite de placas tectónicas</strong> formándose actualmente. El descubrimiento, detectado mediante sismología y datos satelitales, podría reescribir los modelos de geodinámica del planeta.</p>
         </div>
 
         <div class="card c-fem" style="gap:0;">
           <h3><i class="fa-solid fa-dna" style="color:#801d5e;"></i> CRISPR SALVA A BEBÉ CON ENFERMEDAD MORTAL PERSONALIZADA</h3>
-          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">Mayo 2026 · National Geographic / Penn Medicine</p>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">Mayo 2026 · National Geographic / Penn Medicine</p>
           <p>En un hito médico, el Hospital Infantil de Filadelfia desarrolló en tiempo récord una <strong>terapia génica CRISPR personalizada</strong> para KJ, bebé con deficiencia letal de CPS1. Por primera vez se editó el genoma de un paciente con una secuencia diseñada solo para él.</p>
+        </div>
+
+        <div class="card c-gold" style="gap:0;">
+          <h3><i class="fa-solid fa-scroll" style="color:var(--bronze);"></i> MOMIAS CON "LENGUAS DE ORO" EN EGIPTO</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">Junio 2026 · Muy Interesante / Misión Oxirrinco</p>
+          <p>Arqueólogos descubrieron en <strong>Oxirrinco</strong> (Egipto) momias con pequeñas <strong>láminas de oro en la boca</strong>, a modo de lengua. El hallazgo abre una ventana a las prácticas funerarias y la vida religiosa del antiguo Egipto.</p>
+        </div>
+
+        <div class="card c-sea" style="gap:0;">
+          <h3><i class="fa-solid fa-car-battery" style="color:#2d6a9f;"></i> LLEGAN LAS BATERÍAS DE HIERRO-AIRE</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">2026 · CAS Insights</p>
+          <p>Nuevas baterías basadas en <strong>metales abundantes como el hierro</strong> empiezan a comercializarse en 2026, superando a las de litio en costo y disponibilidad. Clave para almacenar energía renovable durante días.</p>
         </div>
 
       </div>
@@ -1033,26 +1243,44 @@ function rHome(stage){
 
         <div class="card c-sea" style="gap:0; border-top-color:#1a6ecc;">
           <h3><i class="fa-solid fa-gamepad" style="color:#1a6ecc;"></i> STATE OF PLAY: GOD OF WAR LAUFEY Y UNTIL DAWN 2</h3>
-          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">3 Junio 2026 · PlayStation Blog</p>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">3 Junio 2026 · PlayStation Blog</p>
           <p>El State of Play de PlayStation reveló <strong>God of War Laufey</strong> —protagonizado por la esposa de Kratos— y confirmó <strong>Until Dawn 2</strong> para PS5 en 2027. También se mostró Kemuri, aventura sobrenatural del estudio Unseen (Ikumi Nakamura).</p>
         </div>
 
         <div class="card c-gold" style="gap:0; border-top-color:#c47a1b;">
           <h3><i class="fa-solid fa-sword" style="color:#c47a1b;"></i> GOTHIC REMAKE Y STAR FOX LLEGAN EN JUNIO</h3>
-          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">5 y 19 Junio 2026 · 3DJuegos / Nintendo</p>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">5 y 19 Junio 2026 · 3DJuegos / Nintendo</p>
           <p><strong>Gothic Remake</strong> (5 jun) renueva el clásico RPG de mundo abierto en PC y consolas. Nintendo responde con el nuevo <strong>Star Fox</strong> exclusivo para Switch 2, coincidiendo con el primer aniversario de la consola. Mes cargado para los fans de los RPG.</p>
         </div>
 
         <div class="card c-laurel" style="gap:0; border-top-color:#2e7d52;">
           <h3><i class="fa-solid fa-shield-halved" style="color:#2e7d52;"></i> SUMMER GAME FEST 2026: LA SEMANA MÁS GRANDE DEL AÑO</h3>
-          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">Primera semana de Junio 2026 · Clavecd / IGN</p>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">Primera semana de Junio 2026 · Clavecd / IGN</p>
           <p>Seis conferencias en una semana: <strong>Xbox Games Showcase, Summer Game Fest, PlayStation State of Play, Day of the Devs, Future Games Show y PC Gaming Show</strong>. Los fanáticos esperan el Direct de Nintendo para el aniversario de Switch 2.</p>
         </div>
 
         <div class="card c-fem" style="gap:0; border-top-color:#801d5e;">
           <h3><i class="fa-solid fa-meteor" style="color:#801d5e;"></i> FINAL FANTASY VII REBIRTH LLEGA A SWITCH 2</h3>
-          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">Junio 2026 · Nintendo / Atomix</p>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">Junio 2026 · Nintendo / Atomix</p>
           <p><strong>Final Fantasy VII Rebirth</strong>, la segunda parte del remake de Square Enix, llega a Nintendo Switch 2 este mes. Cloud y compañía salen de Midgar en una aventura de mundo abierto enorme. También llega <strong>Dune: Awakening</strong> a PS5 el 22 de septiembre.</p>
+        </div>
+
+        <div class="card c-sea" style="gap:0; border-top-color:#1a6ecc;">
+          <h3><i class="fa-solid fa-tv" style="color:#1a6ecc;"></i> SUMMER GAME FEST 2026: HOY, LA EDICIÓN MÁS GRANDE</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">5 Junio 2026 · 3DJuegos / SGF</p>
+          <p>El gran escaparate del videojuego (el "no-E3"), conducido por <strong>Geoff Keighley</strong> desde el Dolby Theatre de Los Ángeles, vuelve hoy con su edición más ambiciosa: tráilers, estrenos mundiales y sorpresas para el cierre de 2026.</p>
+        </div>
+
+        <div class="card c-laurel" style="gap:0; border-top-color:#2e7d52;">
+          <h3><i class="fa-solid fa-ghost" style="color:#2e7d52;"></i> VUELVE RESIDENT EVIL CODE: VERONICA</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">5 Junio 2026 · LevelUp / SGF</p>
+          <p>Capcom anunció el <strong>remake de Resident Evil Code: Veronica</strong>, clásico de terror que cumple un cuarto de siglo. Protagonizado por Claire y Chris Redfield, llegará en 2027 reimaginado para una nueva generación.</p>
+        </div>
+
+        <div class="card c-gold" style="gap:0; border-top-color:#c47a1b;">
+          <h3><i class="fa-solid fa-mug-hot" style="color:#c47a1b;"></i> NUEVO CUPHEAD Y EL FINAL DE FF VII</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">5 Junio 2026 · GamerFocus / SGF</p>
+          <p>Studio MDHR reveló <strong>Mighty Cuphead Adventure</strong>, un spin-off de estilo 8-bit, y confirmó una nueva entrega principal. Square Enix cerró el evento con <strong>Final Fantasy VII Revelation</strong>, la tercera y última parte del remake (primavera 2027).</p>
         </div>
 
       </div>
@@ -1063,26 +1291,32 @@ function rHome(stage){
 
         <div class="card c-sea" style="gap:0;">
           <h3><i class="fa-solid fa-satellite" style="color:#2d6a9f;"></i> CIELO DE JUNIO: VENUS, JÚPITER Y LLUVIA DE METEOROS</h3>
-          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">Junio 2026 · NASA / Prensa Libre</p>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">Junio 2026 · NASA / Prensa Libre</p>
           <p>Entre el 8 y 9 de junio, <strong>Júpiter y Venus se verán muy cerca</strong> en el cielo nocturno. El 11 de junio, Marte, la Luna y Saturno formarán una línea diagonal al amanecer. El 10 de junio pico de las <strong>Ariétidas</strong>, la lluvia de meteoros diurna más activa.</p>
         </div>
 
         <div class="card c-laurel" style="gap:0;">
           <h3><i class="fa-solid fa-temperature-arrow-up" style="color:#3d6b4a;"></i> MODELOS CLIMÁTICOS 2026: PREDICCIONES REGIONALES MÁS EXACTAS</h3>
-          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">2026 · National Geographic / OKDiario</p>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">2026 · National Geographic / OKDiario</p>
           <p>Gracias a mayor potencia computacional y datos satelitales precisos, los modelos climáticos de 2026 permiten <strong>predicciones regionales exactas</strong> sobre sequías y tormentas extremas, convirtiendo la ciencia climática en una herramienta de planificación local real.</p>
         </div>
 
         <div class="card c-gold" style="gap:0;">
           <h3><i class="fa-solid fa-rocket" style="color:var(--bronze);"></i> ARTEMIS II: ASTRONAUTAS CIRCUNNAVEGARÁN LA LUNA</h3>
-          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">2026 · NASA / N+</p>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">2026 · NASA / N+</p>
           <p>La NASA envía astronautas a bordo de la nave Orion en la <strong>misión Artemis II</strong>: el primer vuelo tripulado alrededor de la Luna desde el Apolo 17. Los astronautas no pisarán la superficie, pero completarán una órbita completa antes de volver a la Tierra.</p>
         </div>
 
         <div class="card c-fem" style="gap:0;">
           <h3><i class="fa-solid fa-spider" style="color:#801d5e;"></i> MÁS DE 1.100 NUEVAS ESPECIES OCEÁNICAS DESCUBIERTAS</h3>
-          <p style="font-size:0.7rem; color:var(--gold-dark); margin-bottom:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; opacity:0.85;">Mayo 2026 · CNN Ciencia</p>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">Mayo 2026 · CNN Ciencia</p>
           <p>Una expedición de aguas profundas catalogó <strong>más de 1.100 especies marinas nunca vistas</strong>, desde "tiburones fantasma" hasta esponjas llamadas "bola de la muerte". El océano profundo sigue siendo el ecosistema menos explorado del planeta.</p>
+        </div>
+
+        <div class="card c-laurel" style="gap:0;">
+          <h3><i class="fa-solid fa-snowflake" style="color:#3d6b4a;"></i> COMIENZA EL INVIERNO: SOLSTICIO DEL 21 DE JUNIO</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">Junio 2026 · NASA Ciencia</p>
+          <p>El <strong>solsticio del 21 de junio</strong> marca el inicio del invierno en el hemisferio sur: la noche más larga del año en Chile. Además, entre el 11 y el 15 de junio, <strong>Mercurio</strong> se asoma al atardecer en un mini-desfile planetario.</p>
         </div>
 
       </div>
