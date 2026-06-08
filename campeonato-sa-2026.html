@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Campeonato SA 2026 | El Rincón de Felipe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{
+  --sea-deep:#060f1e; --sea-mid:#0c1f38; --sea-light:#163356;
+  --gold:#c9a84c; --gold-light:#e8c870; --gold-bright:#f5d980; --gold-dark:#8b6914;
+  --marble:#fdfbf7;
+  --ff-title:'Cinzel','Palatino Linotype',Palatino,serif;
+  --ff-body:'Outfit',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  min-height:100vh; display:flex; flex-direction:column;
+  font-family:var(--ff-body); color:#fff; background:var(--sea-deep);
+  overflow-x:hidden; -webkit-font-smoothing:antialiased;
+}
+body::after{
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(26,64,104,.55) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 85% 100%, rgba(12,31,56,.7) 0%, transparent 55%);
+}
+body::before{
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(201,168,76,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,168,76,.04) 1px,transparent 1px);
+  background-size:52px 52px;
+}
+
+.frieze{
+  position:relative; z-index:5; height:5px; flex-shrink:0;
+  background:linear-gradient(90deg,var(--sea-deep) 0%,var(--gold-dark) 8%,var(--gold) 20%,var(--gold-bright) 35%,var(--gold) 50%,var(--gold-bright) 65%,var(--gold) 80%,var(--gold-dark) 92%,var(--sea-deep) 100%);
+  box-shadow:0 0 18px rgba(201,168,76,.45),0 2px 8px rgba(0,0,0,.6);
+}
+
+header{
+  position:relative; z-index:5; flex-shrink:0;
+  background:rgba(6,14,26,.92);
+  backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border-bottom:1px solid rgba(201,168,76,.2);
+  box-shadow:0 8px 40px rgba(0,0,0,.55);
+}
+.header-inner{
+  max-width:1200px; margin:0 auto; padding:.9rem 1.2rem;
+  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+}
+.brand{
+  display:flex; align-items:center; gap:10px;
+  font-family:var(--ff-title); color:var(--gold-light);
+  font-size:1.1rem; letter-spacing:2px; font-weight:700;
+}
+.brand i{ color:var(--gold); filter:drop-shadow(0 0 6px rgba(201,168,76,.5)); }
+.home-link{
+  display:inline-flex; align-items:center; gap:8px;
+  color:rgba(255,255,255,.8); text-decoration:none;
+  font-family:var(--ff-body); font-size:.78rem; letter-spacing:.5px; font-weight:600;
+  padding:9px 16px; border:1.5px solid rgba(201,168,76,.3); border-radius:9px;
+  transition:all .25s;
+}
+.home-link:hover{ background:rgba(201,168,76,.08); border-color:var(--gold); color:var(--gold-light); }
+
+/* Pestañas tipo pastilla (6 secciones) */
+.tabs{
+  position:relative; z-index:5; width:100%;
+  max-width:1200px; margin:1.1rem auto .9rem; padding:0 1.2rem;
+  display:flex; gap:9px; flex-wrap:wrap;
+}
+.tab{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  padding:11px 16px; cursor:pointer; min-height:44px;
+  font-family:var(--ff-title); font-size:.7rem; letter-spacing:.1em; font-weight:700;
+  color:rgba(255,255,255,.78);
+  background:rgba(12,24,42,.7); border:1.5px solid rgba(201,168,76,.22);
+  border-radius:10px; transition:all .22s; white-space:nowrap;
+}
+.tab i{ font-size:.92rem; }
+.tab:hover{ color:#fff; background:rgba(20,40,70,.85); transform:translateY(-1px); }
+.tab.active{ color:#fff; transform:translateY(-1px); box-shadow:0 6px 18px rgba(0,0,0,.3); }
+
+main{
+  position:relative; z-index:5; flex:1; width:100%;
+  max-width:1200px; margin:0 auto; padding:0 1.2rem 1.2rem;
+  display:flex; flex-direction:column;
+}
+.viewer{
+  flex:1; position:relative; min-height:78vh;
+  border:1.5px solid rgba(201,168,76,.25); border-radius:14px;
+  overflow:hidden; background:var(--marble);
+  box-shadow:0 18px 50px rgba(0,0,0,.4);
+}
+.viewer iframe{
+  position:absolute; inset:0; width:100%; height:100%; border:none; display:block; background:#fff;
+}
+.pane{ display:none; }
+.pane.active{ display:block; }
+
+footer{
+  position:relative; z-index:5; flex-shrink:0;
+  background:rgba(4,9,18,.98); border-top:1px solid rgba(201,168,76,.15);
+  padding:1rem; text-align:center;
+  font-family:var(--ff-body); font-size:.7rem; letter-spacing:1.5px; color:rgba(255,255,255,.35);
+}
+
+@media (max-width:600px){
+  .header-inner{ padding:.8rem 1rem; }
+  .brand{ font-size:.92rem; letter-spacing:1.2px; }
+  .home-link{ font-size:.72rem; padding:8px 12px; }
+  .tabs{
+    padding:0 .8rem; gap:8px; flex-wrap:nowrap; overflow-x:auto;
+    -webkit-overflow-scrolling:touch; scrollbar-width:none;
+    margin:.9rem auto .8rem;
+  }
+  .tabs::-webkit-scrollbar{ display:none; }
+  .tab{ flex:0 0 auto; font-size:.66rem; padding:10px 14px; }
+  main{ padding:0 .8rem .8rem; }
+  .viewer{ min-height:82vh; }
+}
+@supports (padding:env(safe-area-inset-bottom)){
+  footer{ padding-bottom:calc(1rem + env(safe-area-inset-bottom)); }
+}
+</style>
+</head>
+<body>
+
+<div class="frieze"></div>
+
+<header>
+  <div class="header-inner">
+    <div class="brand"><i class="fa-solid fa-trophy"></i> CAMPEONATO SA 2026</div>
+    <a class="home-link" href="index.html"><i class="fa-solid fa-house"></i> Volver al inicio</a>
+  </div>
+</header>
+
+<div class="tabs" role="tablist">
+  <button class="tab active" data-tab="varones"   role="tab" aria-selected="true"  onclick="showPane('varones')"><i class="fa-solid fa-mars"></i> Liga Varones</button>
+  <button class="tab"        data-tab="damas"      role="tab" aria-selected="false" onclick="showPane('damas')"><i class="fa-solid fa-venus"></i> Liga Damas</button>
+  <button class="tab"        data-tab="goleadores" role="tab" aria-selected="false" onclick="showPane('goleadores')"><i class="fa-solid fa-futbol"></i> Goleadores</button>
+  <button class="tab"        data-tab="goleadoras" role="tab" aria-selected="false" onclick="showPane('goleadoras')"><i class="fa-solid fa-futbol"></i> Goleadoras</button>
+  <button class="tab"        data-tab="calendario" role="tab" aria-selected="false" onclick="showPane('calendario')"><i class="fa-solid fa-calendar-days"></i> Calendario</button>
+  <button class="tab"        data-tab="bases"      role="tab" aria-selected="false" onclick="showPane('bases')"><i class="fa-solid fa-scroll"></i> Bases</button>
+</div>
+
+<main>
+  <div class="viewer">
+    <div class="pane active" id="pane-varones"><iframe src="tablafutbol.html" title="Liga Varones" loading="eager"></iframe></div>
+    <div class="pane" id="pane-damas"><iframe data-src="tablafutbol_fem.html" title="Liga Damas" loading="lazy"></iframe></div>
+    <div class="pane" id="pane-goleadores"><iframe data-src="goleadores.html" title="Goleadores" loading="lazy"></iframe></div>
+    <div class="pane" id="pane-goleadoras"><iframe data-src="goleadoras.html" title="Goleadoras" loading="lazy"></iframe></div>
+    <div class="pane" id="pane-calendario"><iframe data-src="calendario_futbol.html" title="Calendario" loading="lazy"></iframe></div>
+    <div class="pane" id="pane-bases"><iframe data-src="bases_campeonato.html" title="Bases" loading="lazy"></iframe></div>
+  </div>
+</main>
+
+<footer>EL RINCÓN DE FELIPE © <span id="yr"></span> · CAMPEONATO SAN AGUSTÍN 2026</footer>
+
+<script>
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  // Color de cada pestaña cuando está activa
+  var TABCOLORS = {
+    varones:   '#2d6a9f',
+    damas:     '#e0458a',
+    goleadores:'#b8902f',
+    goleadoras:'#d6589a',
+    calendario:'#2e7d52',
+    bases:     '#8b6914'
+  };
+
+  function showPane(name){
+    // Carga diferida del iframe la primera vez que se abre la pestaña
+    var pane = document.getElementById('pane-' + name);
+    var ifr = pane.querySelector('iframe');
+    if(ifr && !ifr.src && ifr.getAttribute('data-src')){
+      ifr.src = ifr.getAttribute('data-src');
+    }
+
+    document.querySelectorAll('.pane').forEach(function(p){ p.classList.remove('active'); });
+    pane.classList.add('active');
+
+    document.querySelectorAll('.tab').forEach(function(t){
+      var n = t.getAttribute('data-tab');
+      var active = (n === name);
+      t.classList.toggle('active', active);
+      t.setAttribute('aria-selected', active ? 'true' : 'false');
+      t.style.background  = active ? TABCOLORS[n] : 'rgba(12,24,42,.7)';
+      t.style.borderColor = active ? TABCOLORS[n] : 'rgba(201,168,76,.22)';
+    });
+  }
+
+  // Estado inicial: Liga Varones activa con su color
+  (function(){
+    var t = document.querySelector('.tab[data-tab="varones"]');
+    t.style.background = TABCOLORS.varones;
+    t.style.borderColor = TABCOLORS.varones;
+  })();
+</script>
+
+</body>
+</html>
