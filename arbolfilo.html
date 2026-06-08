@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Explorador Filogenético Científico de Mamíferos</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            text-align: center; 
+            padding: 30px; 
+            background-color: #f5f7fa; 
+            color: #2c3e50;
+        }
+        h1 { margin-bottom: 5px; color: #1a252f; }
+        .subtitulo { color: #7f8c8d; margin-bottom: 25px; font-size: 14px; }
+        
+        select { 
+            padding: 12px 25px; 
+            font-size: 16px; 
+            border-radius: 25px; 
+            border: 2px solid #27ae60; 
+            background-color: white;
+            cursor: pointer;
+            outline: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        
+        #resultado { 
+            margin-top: 30px; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 20px; 
+            display: inline-block; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            text-align: left;
+            max-width: 700px;
+            width: 100%;
+        }
+        
+        .info-especie { margin-bottom: 20px; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; }
+        .info-especie h2 { margin: 0; color: #27ae60; }
+        .cientifico { font-style: italic; color: #7f8c8d; margin: 5px 0 0 0; }
+
+        /* Estilos del cladograma basado en texto */
+        .arbol-contenedor {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            background: #1e272e;
+            color: #d2dae2;
+            padding: 25px;
+            border-radius: 12px;
+            overflow-x: auto;
+        }
+        
+        .clado { color: #f5cd79; font-weight: bold; }
+        .resaltado { background-color: #27ae60; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
+        
+        .nota-cientifica {
+            margin-top: 20px;
+            font-size: 13px;
+            color: #4f5d73;
+            line-height: 1.5;
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        /* Sección de fuentes */
+        .fuentes-contenedor {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed #cbd5e1;
+        }
+        .fuentes-contenedor h4 { margin: 0 0 10px 0; color: #2c3e50; font-size: 14px; }
+        .lista-fuentes { list-style: none; padding: 0; margin: 0; }
+        .lista-fuentes li { margin-bottom: 8px; font-size: 13px; }
+        .lista-fuentes a { color: #2980b9; text-decoration: none; font-weight: bold; }
+        .lista-fuentes a:hover { text-decoration: underline; color: #3498db; }
+    </style>
+</head>
+<body>
+
+    <h1>Árbol Filogenético de los Mamíferos</h1>
+    <div class="subtitulo">Basado en consenso filogenómico molecular y cladística de Amniotas</div>
+
+    <label for="selectorEspecie"><strong>Investigar Especie:</strong></label>
+    <select id="selectorEspecie" onchange="actualizarArbol()">
+        <option value="">-- Selecciona una especie para ubicarla --</option>
+        <option value="Elefante">Elefante africano (Loxodonta africana)</option>
+        <option value="Humano">Humano (Homo sapiens)</option>
+        <option value="Chimpancé">Chimpancé (Pan troglodytes)</option>
+        <option value="Ratón">Ratón de ciudad (Mus musculus)</option>
+        <option value="Oso Pardo">Oso pardo (Ursus arctos)</option>
+        <option value="Perro">Perro (Canis lupus familiaris)</option>
+        <option value="Gato">Gato (Felis catus)</option>
+        <option value="Jirafa">Jirafa (Giraffa camelopardalis)</option>
+        <option value="Tonina">Tonina / Delfín (Tursiops truncatus)</option>
+    </select>
+
+    <div id="resultado" style="display: none;">
+        <div class="info-especie">
+            <h2 id="nombreComun">Especie</h2>
+            <p id="nombreCientifico" class="cientifico"></p>
+        </div>
+        
+        <div class="arbol-contenedor">
+            <pre id="cladograma"></pre>
+        </div>
+        
+        <div class="nota-cientifica">
+            <strong>Respaldo Filogenético:</strong> Los nodos reflejan la divergencia evolutiva real. Notarás que el elefante se separa primero en el grupo <em>Afrotheria</em>. Los humanos, chimpancés y ratones comparten el superorden <em>Euarchontoglires</em>. Los carnívoros (oso, perro, gato) y los cetartiodáctilos (jirafa, tonina) comparten el clado <em>Laurasiatheria</em>, demostrando que las toninas (cetáceos) evolucionaron directamente de mamíferos con pezuñas terrestres.
+        </div>
+
+        <div class="fuentes-contenedor">
+            <h4>🔬 Fuentes Oficiales de Investigación Relacionada:</h4>
+            <ul class="lista-fuentes" id="listaFuentes">
+                </ul>
+        </div>
+    </div>
+
+    <script>
+        // Catálogo de especies con taxonomía exacta y enlaces específicos a bases de datos científicas internacionales
+        const especies = {
+            "Elefante": { 
+                cientifico: "Loxodonta africana", 
+                id: "ELEFANTE",
+                ncbi: "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=9785",
+                opentree: "https://tree.opentreeoflife.org/opentree/argus/opentree14.9@483669",
+                paleo: "https://paleobiodb.org/classic/checkTaxonInfo?taxon_no=108480"
+            },
+            "Humano": { 
+                cientifico: "Homo sapiens", 
+                id: "HUMANO",
+                ncbi: "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=9606",
+                opentree: "https://tree.opentreeoflife.org/opentree/argus/opentree14.9@843519",
+                paleo: "https://paleobiodb.org/classic/checkTaxonInfo?taxon_no=83082"
+            },
+            "Chimpancé": { 
+                cientifico: "Pan troglodytes", 
+                id: "CHIMPANCE",
+                ncbi: "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=9598",
+                opentree: "https://tree.opentreeoflife.org/opentree/argus/opentree14.9@410502",
+                paleo: "https://paleobiodb.org/classic/checkTaxonInfo?taxon_no=92198"
+            },
+            "Ratón": { 
+                cientifico: "Mus musculus", 
+                id: "RATON",
+                ncbi: "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=10090",
+                opentree: "https://tree.opentreeoflife.org/opentree/argus/opentree14.9@446215",
+                paleo: "https://paleobiodb.org/classic/checkTaxonInfo?taxon_no=104149"
+            },
+            "Oso Pardo": { 
+                cientifico: "Ursus arctos", 
+                id: "OSO",
+                ncbi: "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=9644",
+                opentree: "https://tree.opentreeoflife.org/opentree/argus/opentree14.9@943015",
+                paleo: "https://paleobiodb.org/classic/checkTaxonInfo?taxon_no=52607"
+            },
+            "Perro": { 
+                cientifico: "Canis lupus familiaris", 
+                id: "PERRO",
+                ncbi: "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=9615",
+                opentree: "https://tree.opentreeoflife.org/opentree/argus/opentree14.9@410023",
+                paleo: "https://paleobiodb.org/classic/checkTaxonInfo?taxon_no=369234"
+            },
+            "Gato": { 
+                cientifico: "Felis catus", 
+                id: "GATO",
+                ncbi: "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=9685",
+                opentree: "https://tree.opentreeoflife.org/opentree/argus/opentree14.9@245790",
+                paleo: "https://paleobiodb.org/classic/checkTaxonInfo?taxon_no=224057"
+            },
+            "Jirafa": { 
+                cientifico: "Giraffa camelopardalis", 
+                id: "JIRAFA",
+                ncbi: "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=9894",
+                opentree: "https://tree.opentreeoflife.org/opentree/argus/opentree14.9@854497",
+                paleo: "https://paleobiodb.org/classic/checkTaxonInfo?taxon_no=83617"
+            },
+            "Tonina": { 
+                cientifico: "Tursiops truncatus", 
+                id: "TONINA",
+                ncbi: "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=9739",
+                opentree: "https://tree.opentreeoflife.org/opentree/argus/opentree14.9@665474",
+                paleo: "https://paleobiodb.org/classic/checkTaxonInfo?taxon_no=63531"
+            }
+        };
+
+        function generarCladograma(idResaltar) {
+            const check = (id, texto) => id === idResaltar ? `<span class="resaltado">${texto} ◄ TU SELECCIÓN</span>` : texto;
+
+            return `
+MAMMALIA (Ancestros comunes de los mamíferos)
+ ├── <span class="clado">AFROTHERIA</span> (Divergencia temprana)
+ │    └── ${check('ELEFANTE', 'Elefante africano (Loxodonta africana)')}
+ └── <span class="clado">BOREOEUTHERIA</span>
+      ├── <span class="clado">EUARCHONTOGLIRES</span>
+      │    ├── <span class="clado">Rodentia</span>
+      │    │    └── ${check('RATON', 'Ratón de ciudad (Mus musculus)')}
+      │    └── <span class="clado">Primates</span> (Hominidae)
+      │         ├── ${check('HUMANO', 'Humano (Homo sapiens)')}
+      │         └── ${check('CHIMPANCE', 'Chimpancé (Pan troglodytes)')}
+      └── <span class="clado">LAURASIATHERIA</span>
+           ├── <span class="clado">Carnivora</span>
+           │    ├── <span class="clado">Feliformia</span>
+           │    │    └── ${check('GATO', 'Gato (Felis catus)')}
+           │    └── <span class="clado">Caniformia</span>
+           │         ├── ${check('PERRO', 'Perro (Canis lupus familiaris)')}
+           │         └── ${check('OSO', 'Oso pardo (Ursus arctos)')}
+           └── <span class="clado">CETARTIODACTYLA</span> (Ungulados y Cetáceos)
+                ├── ${check('JIRAFA', 'Jirafa (Giraffa camelopardalis)')}
+                └── ${check('TONINA', 'Tonina / Delfín (Tursiops truncatus)')}
+            `.trim();
+        }
+
+        function actualizarArbol() {
+            const seleccion = document.getElementById("selectorEspecie").value;
+            const contenedorResultado = document.getElementById("resultado");
+            const listaFuentes = document.getElementById("listaFuentes");
+            
+            if (seleccion) {
+                const info = especies[seleccion];
+                document.getElementById("nombreComun").innerText = seleccion;
+                document.getElementById("nombreCientifico").innerText = "Nombre científico: " + info.cientifico;
+                
+                // Actualiza el mapa visual
+                document.getElementById("cladograma").innerHTML = generarCladograma(info.id);
+                
+                // Genera dinámicamente los hipervínculos de fuentes científicas para la especie exacta
+                listaFuentes.innerHTML = `
+                    <li>🧬 <strong>Genómica y Taxonomía Molecular:</strong> <a href="${info.ncbi}" target="_blank">NCBI Taxonomy Browser - ${info.cientifico}</a></li>
+                    <li>🌿 <strong>Árbol de la Vida Interactivo:</strong> <a href="${info.opentree}" target="_blank">Open Tree of Life Reference - ${info.id}</a></li>
+                    <li>🦴 <strong>Registro Fósil y Evolución Cronológica:</strong> <a href="${info.paleo}" target="_blank">Paleobiology Database (PBDB)</a></li>
+                `;
+                
+                contenedorResultado.style.display = "inline-block";
+            } else {
+                contenedorResultado.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
