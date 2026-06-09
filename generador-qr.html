@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Generador de QR | El Rincón de Felipe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{
+  --sea:#1a4068; --sea-deep:#0c2138; --gold:#c9a84c; --gold-dark:#8b6914;
+  --laurel:#2e7d52; --violet:#6d3bb5;
+  --ink:#2a1f10; --ink-soft:#4a3820;
+  --paper:#fdfbf7; --paper-2:#f4efe4; --line:rgba(139,105,20,.22);
+  --ff-title:'Cinzel',Palatino,serif;
+  --ff-body:'Outfit',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  font-family:var(--ff-body); color:var(--ink); background:var(--paper);
+  -webkit-font-smoothing:antialiased; padding:18px 16px 32px;
+  background-image:
+    radial-gradient(ellipse 70% 40% at 50% -5%, rgba(201,168,76,.08), transparent 60%);
+}
+.wrap{ max-width:560px; margin:0 auto; }
+
+.head{ text-align:center; margin-bottom:1.3rem; }
+.head h1{
+  font-family:var(--ff-title); font-size:1.35rem; letter-spacing:1px;
+  color:var(--sea-deep); display:flex; align-items:center; justify-content:center; gap:10px;
+}
+.head h1 i{ color:var(--violet); }
+.head p{ font-size:.82rem; color:var(--ink-soft); margin-top:.3rem; }
+
+.card{
+  background:linear-gradient(180deg,#fff,var(--paper-2));
+  border:1px solid var(--line); border-radius:16px;
+  padding:1.2rem 1.1rem; box-shadow:0 10px 30px rgba(60,40,10,.1);
+}
+
+label{ display:block; font-size:.72rem; font-weight:700; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--gold-dark); margin:0 0 6px 2px; }
+
+textarea, select, input[type="text"]{
+  width:100%; font-family:var(--ff-body); font-size:1rem; color:var(--ink);
+  background:#fff; border:1.5px solid var(--line); border-radius:10px;
+  padding:12px 14px; transition:border-color .2s, box-shadow .2s;
+}
+textarea{ min-height:92px; resize:vertical; line-height:1.4; }
+textarea:focus, select:focus, input:focus{
+  outline:none; border-color:var(--violet); box-shadow:0 0 0 3px rgba(109,59,181,.15);
+}
+
+.row{ display:flex; gap:12px; flex-wrap:wrap; margin-top:1rem; }
+.row > div{ flex:1; min-width:130px; }
+
+.colors{ display:flex; gap:12px; margin-top:1rem; }
+.colors > div{ flex:1; }
+.color-field{ display:flex; align-items:center; gap:10px;
+  background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:6px 10px; }
+.color-field input[type="color"]{
+  -webkit-appearance:none; appearance:none; width:34px; height:34px;
+  border:none; border-radius:8px; background:none; cursor:pointer; padding:0;
+}
+.color-field input[type="color"]::-webkit-color-swatch{ border:1px solid var(--line); border-radius:8px; }
+.color-field input[type="color"]::-moz-color-swatch{ border:1px solid var(--line); border-radius:8px; }
+.color-field span{ font-size:.8rem; color:var(--ink-soft); font-weight:600; }
+
+.actions{ display:flex; gap:12px; margin-top:1.3rem; flex-wrap:wrap; }
+button.act{
+  flex:1; min-width:150px; padding:14px 16px; border:none; border-radius:11px; cursor:pointer;
+  font-family:var(--ff-title); font-size:.78rem; letter-spacing:.1em;
+  display:flex; align-items:center; justify-content:center; gap:9px;
+  transition:transform .15s, filter .2s, box-shadow .2s;
+}
+button.act:active{ transform:translateY(1px); }
+.btn-gen{ background:linear-gradient(135deg,var(--violet),#8b5cf6); color:#fff;
+  box-shadow:0 8px 20px rgba(109,59,181,.32); }
+.btn-gen:hover{ filter:brightness(1.07); }
+.btn-dl{ background:linear-gradient(135deg,var(--laurel),#22c55e); color:#fff;
+  box-shadow:0 8px 20px rgba(46,125,82,.3); }
+.btn-dl:hover{ filter:brightness(1.07); }
+.btn-dl:disabled{ background:#d7d2c6; color:#fff; box-shadow:none; cursor:not-allowed; }
+
+.result{
+  margin-top:1.3rem; display:flex; flex-direction:column; align-items:center; gap:.7rem;
+}
+.qr-box{
+  background:#fff; border:1px solid var(--line); border-radius:14px;
+  padding:16px; box-shadow:0 6px 20px rgba(60,40,10,.12);
+  display:inline-flex; min-width:120px; min-height:120px;
+  align-items:center; justify-content:center;
+}
+.qr-box img, .qr-box canvas{ display:block; max-width:100%; height:auto; border-radius:4px; }
+.hint{ font-size:.78rem; color:var(--ink-soft); text-align:center; }
+.error{ color:#b3261e; font-weight:600; }
+.placeholder{ color:#b8ad95; font-size:.85rem; text-align:center; padding:20px; }
+
+@media (max-width:430px){
+  .head h1{ font-size:1.15rem; }
+  button.act{ min-width:100%; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <h1><i class="fa-solid fa-qrcode"></i> Generador de Códigos QR</h1>
+    <p>Crea un QR para un enlace, texto o dato y descárgalo en PNG.</p>
+  </div>
+
+  <div class="card">
+    <label for="txt">Contenido (URL o texto)</label>
+    <textarea id="txt" placeholder="https://elrincondefelipe.cl  ·  o cualquier texto…">https://</textarea>
+
+    <div class="row">
+      <div>
+        <label for="size">Tamaño</label>
+        <select id="size">
+          <option value="160">Pequeño (160 px)</option>
+          <option value="256" selected>Mediano (256 px)</option>
+          <option value="384">Grande (384 px)</option>
+          <option value="512">Extra grande (512 px)</option>
+        </select>
+      </div>
+      <div>
+        <label for="ecl">Corrección de error</label>
+        <select id="ecl">
+          <option value="L">Baja (L)</option>
+          <option value="M" selected>Media (M)</option>
+          <option value="Q">Alta (Q)</option>
+          <option value="H">Máxima (H)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="colors">
+      <div>
+        <label>Color del código</label>
+        <div class="color-field">
+          <input type="color" id="dark" value="#0c2138">
+          <span id="darkHex">#0c2138</span>
+        </div>
+      </div>
+      <div>
+        <label>Color de fondo</label>
+        <div class="color-field">
+          <input type="color" id="light" value="#ffffff">
+          <span id="lightHex">#ffffff</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="act btn-gen" id="gen"><i class="fa-solid fa-bolt"></i> GENERAR QR</button>
+      <button class="act btn-dl" id="dl" disabled><i class="fa-solid fa-download"></i> DESCARGAR PNG</button>
+    </div>
+
+    <div class="result">
+      <div class="qr-box" id="qrbox"><div class="placeholder">Tu código QR aparecerá aquí</div></div>
+      <div class="hint" id="hint">Sugerencia: para imprimir, usa tamaño grande y corrección Alta o Máxima.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function loadQR(srcs, i){
+  i = i || 0;
+  if (i >= srcs.length) return;
+  var s = document.createElement('script');
+  s.src = srcs[i];
+  s.onload = function(){ window._qrReady = true; };
+  s.onerror = function(){ loadQR(srcs, i + 1); };
+  document.head.appendChild(s);
+})([
+  'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
+  'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js'
+]);
+
+var box   = document.getElementById('qrbox');
+var hint  = document.getElementById('hint');
+var dlBtn = document.getElementById('dl');
+
+function setHint(msg, isError){
+  hint.textContent = msg;
+  hint.className = 'hint' + (isError ? ' error' : '');
+}
+
+function syncHex(input, label){
+  input.addEventListener('input', function(){ label.textContent = input.value; });
+}
+syncHex(document.getElementById('dark'),  document.getElementById('darkHex'));
+syncHex(document.getElementById('light'), document.getElementById('lightHex'));
+
+function generate(){
+  var text = document.getElementById('txt').value.trim();
+  if(!text || text === 'https://'){
+    setHint('Escribe un enlace o texto primero.', true);
+    return;
+  }
+  if(typeof QRCode === 'undefined'){
+    setHint('Cargando la librería de QR… intenta de nuevo en un segundo.', true);
+    return;
+  }
+
+  var size  = parseInt(document.getElementById('size').value, 10);
+  var dark  = document.getElementById('dark').value;
+  var light = document.getElementById('light').value;
+  var eclMap = { L:QRCode.CorrectLevel.L, M:QRCode.CorrectLevel.M, Q:QRCode.CorrectLevel.Q, H:QRCode.CorrectLevel.H };
+  var ecl = eclMap[document.getElementById('ecl').value] || QRCode.CorrectLevel.M;
+
+  box.innerHTML = '';
+  try{
+    new QRCode(box, {
+      text: text, width: size, height: size,
+      colorDark: dark, colorLight: light, correctLevel: ecl
+    });
+    dlBtn.disabled = false;
+    setHint('¡Listo! Ya puedes descargar tu QR en PNG.', false);
+  }catch(e){
+    box.innerHTML = '<div class="placeholder">No se pudo generar</div>';
+    dlBtn.disabled = true;
+    setHint('El texto es demasiado largo para este nivel de corrección. Prueba con corrección Baja o un texto más corto.', true);
+  }
+}
+
+function download(){
+  var canvas = box.querySelector('canvas');
+  var img = box.querySelector('img');
+  var dataURL;
+  if(canvas){ dataURL = canvas.toDataURL('image/png'); }
+  else if(img && img.src){ dataURL = img.src; }
+  if(!dataURL){ setHint('Genera un QR antes de descargar.', true); return; }
+
+  var a = document.createElement('a');
+  a.href = dataURL;
+  a.download = 'codigo-qr.png';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+document.getElementById('gen').addEventListener('click', generate);
+document.getElementById('dl').addEventListener('click', download);
+document.getElementById('txt').addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && (e.metaKey || e.ctrlKey)){ generate(); }
+});
+</script>
+
+</body>
+</html>
