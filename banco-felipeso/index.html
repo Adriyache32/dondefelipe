@@ -3,551 +3,573 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Banco Felipeso · Dashboard</title>
+<title>Banco Felipeso</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
-  /* ─── Variables ─────────────────────────────────────────── */
-  :root {
-    --ink:       #0d1b2a;
-    --paper:     #f5f0e8;
-    --gold:      #c9a84c;
-    --gold-lt:   #f0e6c8;
-    --blue:      #1b3a6b;
-    --blue-md:   #2e6db4;
-    --blue-lt:   #dce8f7;
-    --green:     #1e6e1e;
-    --red:       #b22222;
-    --muted:     #7a7a6e;
-    --border:    #d4c9a8;
-    --card-bg:   #fffdf6;
-    --shadow:    0 2px 20px rgba(13,27,42,0.10);
-    --shadow-lg: 0 8px 40px rgba(13,27,42,0.16);
-  }
+:root {
+  --perg:    #f2e8d0;
+  --perg-dk: #e8d9b5;
+  --perg-xs: #f8f2e3;
+  --ink:     #1c1207;
+  --ink-lt:  #4a3a1e;
+  --ink-md:  #2e2009;
+  --gold:    #8b6914;
+  --gold-lt: #c9a84c;
+  --gold-xs: #f5e8c0;
+  --rust:    #7a2412;
+  --green:   #1a4a1a;
+  --border:  #b09050;
+  --border-lt: #d4be8a;
+  --shadow:  rgba(28,18,7,0.18);
+}
 
-  /* ─── Reset & base ──────────────────────────────────────── */
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { font-size: 16px; scroll-behavior: smooth; }
-  body {
-    background: var(--paper);
-    background-image:
-      radial-gradient(ellipse at 10% 10%, rgba(201,168,76,0.08) 0%, transparent 60%),
-      radial-gradient(ellipse at 90% 90%, rgba(27,58,107,0.06) 0%, transparent 60%);
-    color: var(--ink);
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-  }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
 
-  /* ─── Header ────────────────────────────────────────────── */
-  header {
-    background: var(--blue);
-    background-image: linear-gradient(135deg, #0d1b2a 0%, #1b3a6b 50%, #2e6db4 100%);
-    padding: 1.5rem 1.25rem 1.25rem;
-    position: relative;
-    overflow: hidden;
-  }
-  header::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: repeating-linear-gradient(
-      -45deg,
-      transparent, transparent 18px,
-      rgba(255,255,255,0.025) 18px, rgba(255,255,255,0.025) 19px
-    );
-  }
-  .header-inner { position: relative; z-index: 1; }
-  .banco-label {
-    font-family: 'DM Mono', monospace;
-    font-size: .65rem;
-    letter-spacing: .18em;
-    color: var(--gold);
-    text-transform: uppercase;
-    margin-bottom: .3rem;
-  }
-  h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(1.7rem, 6vw, 2.4rem);
-    font-weight: 900;
-    color: #fff;
-    line-height: 1;
-    letter-spacing: -.02em;
-  }
-  h1 span { color: var(--gold); }
-  .header-sub {
-    font-size: .78rem;
-    color: rgba(255,255,255,0.55);
-    margin-top: .35rem;
-    font-weight: 300;
-  }
-  .live-badge {
-    display: inline-flex; align-items: center; gap: .35rem;
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 999px;
-    padding: .25rem .7rem;
-    font-size: .68rem;
-    color: #fff;
-    margin-top: .75rem;
-    font-family: 'DM Mono', monospace;
-  }
-  .dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: #4caf50;
-    animation: pulse-dot 1.8s ease-in-out infinite;
-  }
-  .dot.offline { background: #ff5252; animation: none; }
-  @keyframes pulse-dot {
-    0%,100% { opacity: 1; transform: scale(1); }
-    50%      { opacity: .4; transform: scale(.7); }
-  }
+body {
+  background-color: #2a1f0e;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,0,0,0.07) 39px, rgba(0,0,0,0.07) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,0,0,0.04) 39px, rgba(0,0,0,0.04) 40px);
+  min-height: 100vh;
+  padding: 1rem;
+  color: var(--ink);
+  font-family: 'EB Garamond', serif;
+}
 
-  /* ─── Main layout ───────────────────────────────────────── */
-  main { padding: 1.25rem; max-width: 480px; margin: 0 auto; }
+/* ── Pergamino contenedor ─────────────────────────────── */
+.pergamino {
+  max-width: 500px;
+  margin: 0 auto;
+  background: var(--perg);
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 0 0 4px #1a1206, 0 0 0 6px var(--border), 0 12px 40px rgba(0,0,0,0.6);
+  overflow: hidden;
+}
 
-  /* ─── Section titles ────────────────────────────────────── */
-  .section-title {
-    font-family: 'DM Mono', monospace;
-    font-size: .6rem;
-    letter-spacing: .2em;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin: 1.5rem 0 .7rem;
-    padding-left: .1rem;
-    border-left: 2px solid var(--gold);
-    padding-left: .5rem;
-  }
+/* ── Cabecera ─────────────────────────────────────────── */
+.cabecera {
+  background: var(--ink-md);
+  padding: 1.5rem 1.25rem 1.25rem;
+  text-align: center;
+  position: relative;
+  border-bottom: 3px solid var(--gold);
+}
+.cabecera::before, .cabecera::after {
+  content: '⚜';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gold-lt);
+  font-size: 1.4rem;
+  opacity: .7;
+}
+.cabecera::before { left: 1rem; }
+.cabecera::after  { right: 1rem; }
 
-  /* ─── KPI cards ─────────────────────────────────────────── */
-  .kpi-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: .7rem;
-  }
-  .kpi-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: .9rem 1rem;
-    box-shadow: var(--shadow);
-    position: relative;
-    overflow: hidden;
-    transition: transform .15s, box-shadow .15s;
-  }
-  .kpi-card:active { transform: scale(.97); }
-  .kpi-card.wide { grid-column: 1 / -1; }
-  .kpi-card::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--blue), var(--gold));
-    border-radius: 10px 10px 0 0;
-  }
-  .kpi-label {
-    font-size: .68rem;
-    color: var(--muted);
-    font-weight: 400;
-    margin-bottom: .3rem;
-    line-height: 1.3;
-  }
-  .kpi-value {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.9rem;
-    font-weight: 700;
-    color: var(--blue);
-    line-height: 1;
-  }
-  .kpi-value.green { color: var(--green); }
-  .kpi-value.gold  { color: var(--gold); }
-  .kpi-unit {
-    font-family: 'DM Mono', monospace;
-    font-size: .65rem;
-    color: var(--muted);
-    margin-top: .25rem;
-  }
-  .kpi-loading { color: var(--border); font-size: 1.4rem; }
+.sello-corona {
+  width: 48px; height: 48px;
+  margin: 0 auto .5rem;
+  background: var(--gold);
+  border-radius: 50%;
+  border: 2px solid var(--gold-lt);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem;
+}
+.banco-titulo {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(1.5rem, 6vw, 2.1rem);
+  font-weight: 700;
+  color: var(--gold-lt);
+  letter-spacing: .08em;
+  line-height: 1;
+}
+.banco-subtitulo {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: .85rem;
+  color: rgba(201,168,76,.65);
+  margin-top: .3rem;
+  letter-spacing: .04em;
+}
+.estado-live {
+  display: inline-flex; align-items: center; gap: .4rem;
+  margin-top: .75rem;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(201,168,76,.3);
+  border-radius: 999px;
+  padding: .2rem .8rem;
+  font-family: 'EB Garamond', serif;
+  font-size: .78rem;
+  color: rgba(201,168,76,.8);
+  cursor: pointer;
+}
+.dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #5cb85c;
+  animation: pulsar 2s ease-in-out infinite;
+}
+.dot.offline { background: #c0392b; animation: none; }
+@keyframes pulsar { 0%,100%{opacity:1}50%{opacity:.3} }
 
-  /* ─── Movimientos recientes ─────────────────────────────── */
-  .mov-list { display: flex; flex-direction: column; gap: .5rem; }
-  .mov-item {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: .75rem 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: var(--shadow);
-    animation: fadeSlide .35s ease both;
-  }
-  @keyframes fadeSlide {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .mov-left { flex: 1; min-width: 0; }
-  .mov-nombre {
-    font-size: .83rem;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .mov-concepto {
-    font-size: .7rem;
-    color: var(--muted);
-    margin-top: .1rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .mov-fecha {
-    font-family: 'DM Mono', monospace;
-    font-size: .62rem;
-    color: var(--muted);
-  }
-  .mov-monto {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.05rem;
-    font-weight: 700;
-    margin-left: .75rem;
-    white-space: nowrap;
-  }
-  .mov-monto.pos { color: var(--green); }
-  .mov-monto.neg { color: var(--red); }
-  .tipo-badge {
-    font-family: 'DM Mono', monospace;
-    font-size: .58rem;
-    padding: .15rem .5rem;
-    border-radius: 999px;
-    font-weight: 500;
-    margin-top: .2rem;
-    display: inline-block;
-  }
-  .tipo-badge.credito { background: #e8f5e9; color: var(--green); }
-  .tipo-badge.debito  { background: #fdecea; color: var(--red); }
-  .tipo-badge.multa   { background: #fff3e0; color: #e65100; }
-  .tipo-badge.premio  { background: #fef9e7; color: #c9a84c; }
+/* ── Divisor ornamental ───────────────────────────────── */
+.divisor {
+  display: flex; align-items: center; gap: .5rem;
+  padding: 0 1.25rem;
+  margin: 1.1rem 0 .6rem;
+}
+.divisor-linea { flex: 1; height: 1px; background: var(--border-lt); }
+.divisor-texto {
+  font-family: 'Cinzel', serif;
+  font-size: .6rem;
+  letter-spacing: .18em;
+  color: var(--gold);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.divisor-glyph { color: var(--gold-lt); font-size: .85rem; }
 
-  /* ─── Ranking de cuentas ────────────────────────────────── */
-  .ranking-list { display: flex; flex-direction: column; gap: .45rem; }
-  .rank-item {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: .6rem 1rem;
-    display: flex;
-    align-items: center;
-    gap: .7rem;
-    box-shadow: var(--shadow);
-  }
-  .rank-num {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: var(--border);
-    min-width: 1.5rem;
-    text-align: center;
-  }
-  .rank-num.top1 { color: #c9a84c; }
-  .rank-num.top2 { color: #9e9e9e; }
-  .rank-num.top3 { color: #a0522d; }
-  .rank-info { flex: 1; min-width: 0; }
-  .rank-nombre {
-    font-size: .82rem;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .rank-curso {
-    font-size: .67rem;
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-  }
-  .rank-saldo {
-    font-family: 'Playfair Display', serif;
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--blue);
-    white-space: nowrap;
-  }
-  .rank-bar-wrap {
-    height: 3px;
-    background: var(--blue-lt);
-    border-radius: 2px;
-    margin-top: .3rem;
-    overflow: hidden;
-  }
-  .rank-bar {
-    height: 100%;
-    background: linear-gradient(90deg, var(--blue), var(--gold));
-    border-radius: 2px;
-    transition: width .6s cubic-bezier(.4,0,.2,1);
-  }
+/* ── Cuerpo ────────────────────────────────────────────── */
+.cuerpo { padding: 0 1.25rem 1.5rem; }
 
-  /* ─── Inventario billetes ───────────────────────────────── */
-  .billetes-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: .55rem;
-  }
-  .billete-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: .7rem .6rem;
-    text-align: center;
-    box-shadow: var(--shadow);
-    position: relative;
-    overflow: hidden;
-  }
-  .billete-card::before {
-    content: '₣';
-    position: absolute;
-    top: -8px; right: 2px;
-    font-family: 'Playfair Display', serif;
-    font-size: 2.5rem;
-    color: rgba(201,168,76,0.1);
-    font-weight: 900;
-  }
-  .billete-denom {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--blue);
-  }
-  .billete-unit { font-size: .6rem; color: var(--muted); font-family: 'DM Mono', monospace; }
-  .billete-count {
-    font-size: .72rem;
-    color: var(--muted);
-    margin-top: .3rem;
-  }
-  .billete-count strong { color: var(--green); }
+/* ── KPIs ──────────────────────────────────────────────── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .6rem;
+  margin-bottom: .3rem;
+}
+.kpi-card {
+  background: var(--perg-xs);
+  border: 1px solid var(--border-lt);
+  border-radius: 3px;
+  padding: .8rem .9rem;
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card.ancho { grid-column: 1 / -1; }
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.kpi-rotulo {
+  font-family: 'Cinzel', serif;
+  font-size: .56rem;
+  letter-spacing: .14em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: .25rem;
+}
+.kpi-valor {
+  font-family: 'IM Fell English', serif;
+  font-size: 1.75rem;
+  color: var(--ink);
+  line-height: 1;
+  transition: transform .2s;
+}
+.kpi-valor.oro { color: var(--gold); font-size: 1.5rem; }
+.kpi-valor.verde { color: var(--green); }
+.kpi-pie {
+  font-size: .68rem;
+  color: var(--ink-lt);
+  margin-top: .2rem;
+  font-style: italic;
+}
 
-  /* ─── Footer ────────────────────────────────────────────── */
-  footer {
-    text-align: center;
-    padding: 1.5rem 1rem 2rem;
-    font-size: .67rem;
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-    line-height: 1.8;
-  }
+/* ── Tabs de curso ────────────────────────────────────── */
+.tabs-wrap {
+  display: flex; gap: .35rem;
+  overflow-x: auto; scrollbar-width: none;
+  padding-bottom: .1rem;
+}
+.tabs-wrap::-webkit-scrollbar { display: none; }
+.tab {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--border-lt);
+  border-radius: 2px;
+  padding: .28rem .75rem;
+  font-family: 'Cinzel', serif;
+  font-size: .65rem;
+  letter-spacing: .08em;
+  color: var(--ink-lt);
+  cursor: pointer;
+  transition: all .15s;
+}
+.tab:hover { border-color: var(--gold); color: var(--gold); }
+.tab.activo {
+  background: var(--ink-md);
+  border-color: var(--gold);
+  color: var(--gold-lt);
+}
 
-  /* ─── Estado / loading ──────────────────────────────────── */
-  .estado-bar {
-    background: var(--blue-lt);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: .6rem 1rem;
-    font-size: .72rem;
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-    text-align: center;
-    margin-bottom: .5rem;
-  }
-  .error-msg {
-    background: #fdecea;
-    border: 1px solid #ffcdd2;
-    border-radius: 8px;
-    padding: 1rem;
-    color: var(--red);
-    font-size: .78rem;
-    line-height: 1.6;
-  }
-  .spinner {
-    display: inline-block;
-    width: 12px; height: 12px;
-    border: 2px solid var(--border);
-    border-top-color: var(--blue);
-    border-radius: 50%;
-    animation: spin .7s linear infinite;
-    vertical-align: middle;
-    margin-right: .4rem;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+/* ── Ranking ───────────────────────────────────────────── */
+.ranking { display: flex; flex-direction: column; gap: .4rem; }
+.rank-fila {
+  display: flex; align-items: center; gap: .6rem;
+  background: var(--perg-xs);
+  border: 1px solid var(--border-lt);
+  border-radius: 3px;
+  padding: .55rem .85rem;
+  animation: aparecer .3s ease both;
+  transition: border-color .15s;
+}
+.rank-fila:hover { border-color: var(--gold); }
+.rank-fila.primero {
+  background: var(--gold-xs);
+  border-color: var(--gold);
+}
+@keyframes aparecer { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+.rank-num {
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  min-width: 1.5rem;
+  text-align: center;
+  color: var(--border);
+  flex-shrink: 0;
+}
+.rank-num.p1 { color: var(--gold); font-size: 1.15rem; }
+.rank-num.p2 { color: #9e9e9e; }
+.rank-num.p3 { color: #8b5a2b; }
+.rank-info { flex: 1; min-width: 0; }
+.rank-nombre {
+  font-size: .85rem;
+  font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--ink);
+}
+.rank-tag {
+  display: inline-block;
+  font-family: 'Cinzel', serif;
+  font-size: .55rem;
+  letter-spacing: .08em;
+  background: var(--perg-dk);
+  border: 1px solid var(--border-lt);
+  border-radius: 2px;
+  padding: .05rem .4rem;
+  color: var(--gold);
+  margin-top: .15rem;
+}
+.rank-barra-wrap {
+  height: 2px;
+  background: var(--perg-dk);
+  border-radius: 1px;
+  margin-top: .3rem;
+  overflow: hidden;
+}
+.rank-barra {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--gold-lt));
+  border-radius: 1px;
+  transition: width .7s cubic-bezier(.4,0,.2,1);
+}
+.rank-saldo {
+  font-family: 'IM Fell English', serif;
+  font-size: .95rem;
+  color: var(--ink);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
 
-  /* ─── Config panel ──────────────────────────────────────── */
-  .config-box {
-    background: var(--card-bg);
-    border: 1px dashed var(--gold);
-    border-radius: 10px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-  }
-  .config-box label {
-    display: block;
-    font-size: .7rem;
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-    margin-bottom: .4rem;
-    letter-spacing: .05em;
-  }
-  .config-box input {
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: .5rem .7rem;
-    font-family: 'DM Mono', monospace;
-    font-size: .72rem;
-    color: var(--ink);
-    background: var(--paper);
-    outline: none;
-    margin-bottom: .5rem;
-  }
-  .config-box input:focus { border-color: var(--blue); }
-  .btn-conectar {
-    width: 100%;
-    background: var(--blue);
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    padding: .6rem;
-    font-family: 'DM Sans', sans-serif;
-    font-size: .82rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background .15s;
-  }
-  .btn-conectar:hover { background: var(--blue-md); }
-  .config-hint {
-    font-size: .65rem;
-    color: var(--muted);
-    margin-top: .5rem;
-    line-height: 1.5;
-  }
+/* ── Tabla de cuentas ────────────────────────────────── */
+.tabla-wrap {
+  border: 1px solid var(--border-lt);
+  border-radius: 3px;
+  overflow: hidden;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--perg-xs);
+  font-size: .8rem;
+  table-layout: fixed;
+}
+colgroup col:nth-child(1) { width: 22%; }
+colgroup col:nth-child(2) { width: 40%; }
+colgroup col:nth-child(3) { width: 16%; }
+colgroup col:nth-child(4) { width: 22%; }
+thead tr {
+  background: var(--ink-md);
+}
+th {
+  font-family: 'Cinzel', serif;
+  font-size: .55rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--gold-lt);
+  padding: .5rem .7rem;
+  text-align: left;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+th.der { text-align: right; }
+td {
+  padding: .42rem .7rem;
+  border-bottom: 1px solid var(--border-lt);
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+td.mono {
+  font-size: .7rem;
+  color: var(--ink-lt);
+  font-style: italic;
+}
+td.saldo {
+  text-align: right;
+  font-family: 'IM Fell English', serif;
+  font-size: .9rem;
+  color: var(--ink);
+}
+td.saldo.neg { color: var(--rust); }
+tr:last-child td { border-bottom: none; }
+tr:nth-child(even) td { background: rgba(176,144,80,0.07); }
+.curso-pill {
+  font-family: 'Cinzel', serif;
+  font-size: .55rem;
+  letter-spacing: .06em;
+  background: var(--perg-dk);
+  border: 1px solid var(--border-lt);
+  border-radius: 2px;
+  padding: .06rem .4rem;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+/* ── Resumen por curso ───────────────────────────────── */
+.cursos-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .55rem;
+}
+.curso-carta {
+  background: var(--perg-xs);
+  border: 1px solid var(--border-lt);
+  border-radius: 3px;
+  padding: .75rem .9rem;
+  position: relative;
+  overflow: hidden;
+}
+.curso-carta::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--gold);
+}
+.curso-grado {
+  font-family: 'Cinzel', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.curso-dato {
+  font-size: .7rem;
+  color: var(--ink-lt);
+  font-style: italic;
+  margin-top: .1rem;
+}
+.curso-monto {
+  font-family: 'IM Fell English', serif;
+  font-size: .88rem;
+  color: var(--green);
+  margin-top: .4rem;
+}
+
+/* ── Footer ──────────────────────────────────────────── */
+.pie {
+  background: var(--ink-md);
+  border-top: 2px solid var(--gold);
+  padding: .7rem 1.25rem;
+  text-align: center;
+}
+.pie-texto {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: .72rem;
+  color: rgba(201,168,76,.55);
+  line-height: 1.8;
+}
+
+/* ── Estado/error ────────────────────────────────────── */
+.cargando {
+  text-align: center;
+  padding: 1.5rem;
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  color: var(--ink-lt);
+  font-size: .9rem;
+}
+.error-carta {
+  background: #f9e8e5;
+  border: 1px solid #c0392b;
+  border-radius: 3px;
+  padding: .85rem 1rem;
+  font-size: .78rem;
+  color: var(--rust);
+  line-height: 1.6;
+  font-style: italic;
+}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="header-inner">
-    <div class="banco-label">Sistema Bancario Escolar</div>
-    <h1>Banco <span>Felipeso</span></h1>
-    <div class="header-sub">Colegio San Agustín · Villa Alemana</div>
-    <div class="live-badge">
+<div class="pergamino">
+
+  <!-- Cabecera -->
+  <div class="cabecera">
+    <div class="sello-corona">⚜</div>
+    <div class="banco-titulo">Banco Felipeso</div>
+    <div class="banco-subtitulo">Colegio San Agustín · Villa Alemana</div>
+    <div class="estado-live" onclick="actualizar()" title="Actualizar ahora">
       <span class="dot" id="liveDot"></span>
       <span id="liveText">Conectando…</span>
     </div>
   </div>
-</header>
 
-<main>
+  <div class="cuerpo">
 
-  <!-- Panel de configuración (se oculta al conectar) -->
-  <div class="config-box" id="configBox">
-    <label>URL CSV de Google Sheets</label>
-    <input type="text" id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv&gid=…"
-           value="">
-    <button class="btn-conectar" onclick="conectar()">Conectar al banco</button>
-    <div class="config-hint">
-      💡 Pega aquí el link de tu Google Sheet publicado como CSV.<br>
-      Ver instrucciones debajo para obtenerlo.
+    <div id="mensajeError" style="display:none; margin-top:.8rem;"></div>
+    <div id="baraCarga" class="cargando" style="display:none">
+      Consultando los registros del banco…
+    </div>
+
+    <!-- KPIs -->
+    <div class="divisor">
+      <div class="divisor-linea"></div>
+      <span class="divisor-glyph">§</span>
+      <span class="divisor-texto">Arcas del Banco</span>
+      <span class="divisor-glyph">§</span>
+      <div class="divisor-linea"></div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card ancho">
+        <div class="kpi-rotulo">Total en circulación</div>
+        <div class="kpi-valor oro" id="kpi-total">—</div>
+        <div class="kpi-pie">Felipesos (₣) en todas las cuentas activas</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-rotulo">Cuentas activas</div>
+        <div class="kpi-valor" id="kpi-cuentas">—</div>
+        <div class="kpi-pie">titulares</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-rotulo">Saldo promedio</div>
+        <div class="kpi-valor verde" id="kpi-promedio">—</div>
+        <div class="kpi-pie">₣ por estudiante</div>
+      </div>
+    </div>
+
+    <!-- Por curso -->
+    <div class="divisor">
+      <div class="divisor-linea"></div>
+      <span class="divisor-glyph">§</span>
+      <span class="divisor-texto">Por Curso</span>
+      <span class="divisor-glyph">§</span>
+      <div class="divisor-linea"></div>
+    </div>
+    <div class="cursos-grid" id="cursosGrid">
+      <div class="cargando" style="grid-column:1/-1">—</div>
+    </div>
+
+    <!-- Filtro tabs -->
+    <div class="divisor" style="margin-top:1.1rem">
+      <div class="divisor-linea"></div>
+      <span class="divisor-glyph">§</span>
+      <span class="divisor-texto">Registros</span>
+      <span class="divisor-glyph">§</span>
+      <div class="divisor-linea"></div>
+    </div>
+    <div class="tabs-wrap" id="tabsCurso" style="margin-bottom:.8rem">
+      <button class="tab activo" data-curso="todos" onclick="filtrar(this)">Todos</button>
+    </div>
+
+    <!-- Ranking -->
+    <div class="divisor" style="margin:.6rem 0 .6rem">
+      <div class="divisor-linea"></div>
+      <span class="divisor-glyph">✦</span>
+      <span class="divisor-texto">Tabla de Honor</span>
+      <span class="divisor-glyph">✦</span>
+      <div class="divisor-linea"></div>
+    </div>
+    <div class="ranking" id="rankingLista">
+      <div class="cargando">—</div>
+    </div>
+
+    <!-- Tabla de cuentas -->
+    <div class="divisor" style="margin-top:1.1rem">
+      <div class="divisor-linea"></div>
+      <span class="divisor-glyph">§</span>
+      <span class="divisor-texto">Libro Mayor</span>
+      <span class="divisor-glyph">§</span>
+      <div class="divisor-linea"></div>
+    </div>
+    <div class="tabla-wrap">
+      <table>
+        <colgroup><col><col><col><col></colgroup>
+        <thead>
+          <tr>
+            <th>N° Cuenta</th>
+            <th>Titular</th>
+            <th>Curso</th>
+            <th class="der">Saldo</th>
+          </tr>
+        </thead>
+        <tbody id="tablaCuerpo">
+          <tr><td colspan="4" class="cargando">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /cuerpo -->
+
+  <div class="pie">
+    <div class="pie-texto">
+      Última consulta: <span id="ultimaHora">—</span><br>
+      Refrescado cada XXX · Banco Felipeso © <span id="anio"></span>
     </div>
   </div>
 
-  <div id="estadoBar" class="estado-bar" style="display:none">
-    <span class="spinner"></span>Cargando datos…
-  </div>
-  <div id="errorMsg" style="display:none"></div>
-
-  <!-- KPIs -->
-  <div class="section-title">Resumen del banco</div>
-  <div class="kpi-grid">
-    <div class="kpi-card wide">
-      <div class="kpi-label">Total Felipesos en circulación</div>
-      <div class="kpi-value gold" id="kpi-circulacion">—</div>
-      <div class="kpi-unit">Felipesos (₣)</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Cuentas activas</div>
-      <div class="kpi-value" id="kpi-cuentas">—</div>
-      <div class="kpi-unit">estudiantes</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Transacciones registradas</div>
-      <div class="kpi-value" id="kpi-transacciones">—</div>
-      <div class="kpi-unit">movimientos</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Billetes emitidos</div>
-      <div class="kpi-value" id="kpi-billetes">—</div>
-      <div class="kpi-unit">en circulación</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Saldo promedio</div>
-      <div class="kpi-value green" id="kpi-promedio">—</div>
-      <div class="kpi-unit">₣ por estudiante</div>
-    </div>
-  </div>
-
-  <!-- Ranking -->
-  <div class="section-title">🏆 Ranking de saldos</div>
-  <div class="ranking-list" id="rankingList">
-    <div class="estado-bar">Sin datos aún</div>
-  </div>
-
-  <!-- Movimientos recientes -->
-  <div class="section-title">💸 Últimos movimientos</div>
-  <div class="mov-list" id="movList">
-    <div class="estado-bar">Sin datos aún</div>
-  </div>
-
-  <!-- Inventario billetes -->
-  <div class="section-title">🖨️ Billetes por denominación</div>
-  <div class="billetes-grid" id="billetesGrid">
-    <div class="estado-bar" style="grid-column:1/-1">Sin datos aún</div>
-  </div>
-
-</main>
-
-<footer>
-  Última actualización: <span id="ultimaActualizacion">—</span><br>
-  Se actualiza cada 30 segundos · Banco Felipeso © 2025
-</footer>
+</div><!-- /pergamino -->
 
 <script>
-// ─── Configuración ───────────────────────────────────────────
-const SHEET_IDS = {
-  cuentas:      2069311796,
-  movimientos:  576521274,
-  billetes:     1762995761,
-  inventario:   1604599035,
-};
+const BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR-s_o4FbzEG69moK_bPywXTSYNsQEWVHTw2gYJEC_5hoJIWHjI9XVH1p05VMAp50_x5TaF9htPx6ql/pub';
+const GID_CUENTAS = 1235251889;
 
-const DEFAULT_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR-s_o4FbzEG69moK_bPywXTSYNsQEWVHTw2gYJEC_5hoJIWHjI9XVH1p05VMAp50_x5TaF9htPx6ql/pub';
-let BASE_URL = localStorage.getItem('felipeso_sheet_url') || DEFAULT_URL;
-let intervalo = null;
+let datosCuentas = [];
+let cursosDisponibles = [];
+let cursoActivo = 'todos';
 
-// ─── Utilidades ──────────────────────────────────────────────
-function csvUrl(gid) {
-  // Funciona tanto con links /pub como con links /d/ID normales
-  if (BASE_URL.includes('/pub')) {
-    return `${BASE_URL.split('?')[0]}?output=csv&gid=${gid}&t=${Date.now()}`;
-  }
-  const base = BASE_URL.split('?')[0].split('/edit')[0];
-  return `${base}/export?format=csv&gid=${gid}&t=${Date.now()}`;
+function csvUrl() {
+  return `${BASE_URL}?output=csv&gid=${GID_CUENTAS}&t=${Date.now()}`;
 }
 
 async function fetchCSV(url) {
   const r = await fetch(url);
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  const text = await r.text();
-  return parseCSV(text);
+  return parseCSV(await r.text());
 }
 
 function parseCSV(text) {
   const rows = [];
-  const lines = text.split(/\r?\n/);
-  for (const line of lines) {
+  for (const line of text.split(/\r?\n/)) {
     if (!line.trim()) continue;
-    const cols = [];
-    let cur = '', inQ = false;
+    const cols = []; let cur = '', inQ = false;
     for (let i = 0; i < line.length; i++) {
-      if (line[i] === '"') { inQ = !inQ; }
-      else if (line[i] === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+      if (line[i] === '"') { inQ = !inQ; continue; }
+      if (line[i] === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
       else cur += line[i];
     }
     cols.push(cur.trim());
@@ -556,203 +578,159 @@ function parseCSV(text) {
   return rows;
 }
 
-function num(str) {
-  if (!str) return 0;
-  return parseFloat(String(str).replace(/[₣\s,]/g,'')) || 0;
+function num(s) {
+  return parseFloat(String(s||'').replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',','.')) || 0;
 }
-
 function fmt(n) {
   return new Intl.NumberFormat('es-CL').format(Math.round(n));
 }
-
-function tipoClass(tipo) {
-  if (!tipo) return '';
-  const t = tipo.toLowerCase();
-  if (t.includes('créd') || t.includes('cred')) return 'credito';
-  if (t.includes('déb')  || t.includes('deb'))  return 'debito';
-  if (t.includes('mult')) return 'multa';
-  if (t.includes('prem')) return 'premio';
-  return 'credito';
-}
-
-// ─── Render KPIs ─────────────────────────────────────────────
-function renderKPIs(cuentas, movs, billetes, inventario) {
-  // Cuentas activas y saldo total
-  const activas = cuentas.filter(r => r[7] === 'Activa');
-  const saldoTotal = activas.reduce((s, r) => s + num(r[6]), 0);
-  const promedio   = activas.length > 0 ? saldoTotal / activas.length : 0;
-
-  // Billetes en circulación
-  const billetesCirc = billetes.filter(r => r[3] === 'En circulación').length;
-
-  // Total ₣ circulando (desde inventario si existe, si no calculamos)
-  let circulacion = 0;
-  if (inventario.length > 1) {
-    // última fila no vacía con fórmula de total
-    for (const r of inventario) {
-      if (r[0] && r[0].toString().toLowerCase().includes('total')) {
-        circulacion = num(r[5]); break;
-      }
-    }
-  }
-  if (!circulacion) circulacion = saldoTotal;
-
-  setKPI('kpi-circulacion', fmt(circulacion) + ' ₣');
-  setKPI('kpi-cuentas', activas.length);
-  setKPI('kpi-transacciones', movs.length);
-  setKPI('kpi-billetes', billetesCirc);
-  setKPI('kpi-promedio', fmt(promedio) + ' ₣');
-}
-
-function setKPI(id, val) {
+function setVal(id, v) {
   const el = document.getElementById(id);
-  if (!el) return;
-  if (el.textContent !== String(val)) {
-    el.style.transform = 'scale(1.08)';
-    el.style.transition = 'transform .2s';
-    el.textContent = val;
-    setTimeout(() => { el.style.transform = ''; }, 250);
-  }
+  if (!el || el.textContent === String(v)) return;
+  el.style.transform = 'scale(1.08)';
+  el.textContent = v;
+  setTimeout(()=>{ el.style.transform=''; }, 220);
 }
 
-// ─── Render Ranking ───────────────────────────────────────────
+function filtrar(btn) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('activo'));
+  btn.classList.add('activo');
+  cursoActivo = btn.dataset.curso;
+  renderTodo();
+}
+
+function filtradas() {
+  if (cursoActivo === 'todos') return datosCuentas;
+  return datosCuentas.filter(r => (r[4]||'').trim() === cursoActivo);
+}
+
+function buildTabs(cursos) {
+  const wrap = document.getElementById('tabsCurso');
+  wrap.innerHTML = `<button class="tab${cursoActivo==='todos'?' activo':''}" data-curso="todos" onclick="filtrar(this)">Todos</button>`;
+  cursos.forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'tab' + (cursoActivo===c?' activo':'');
+    b.dataset.curso = c;
+    b.textContent = c;
+    b.onclick = function(){ filtrar(this); };
+    wrap.appendChild(b);
+  });
+}
+
+function renderTodo() {
+  const fil = filtradas();
+  const activas = fil.filter(r => r[7]==='Activa');
+  const total   = activas.reduce((s,r)=>s+num(r[6]),0);
+  const prom    = activas.length ? total/activas.length : 0;
+  setVal('kpi-total',    fmt(total)+' ₣');
+  setVal('kpi-cuentas',  activas.length);
+  setVal('kpi-promedio', fmt(prom)+' ₣');
+  renderCursos();
+  renderRanking(fil);
+  renderTabla(fil);
+}
+
+function renderCursos() {
+  const grid = document.getElementById('cursosGrid');
+  const grupos = {};
+  datosCuentas.filter(r=>r[7]==='Activa').forEach(r=>{
+    const c = (r[4]||'?').trim();
+    if (!grupos[c]) grupos[c]={n:0,total:0};
+    grupos[c].n++;
+    grupos[c].total+=num(r[6]);
+  });
+  const sorted = Object.entries(grupos).sort((a,b)=>b[1].total-a[1].total);
+  if (!sorted.length) { grid.innerHTML='<div class="cargando" style="grid-column:1/-1">Sin datos</div>'; return; }
+  grid.innerHTML = sorted.map(([c,d])=>`
+    <div class="curso-carta">
+      <div class="curso-grado">${c}</div>
+      <div class="curso-dato">${d.n} cuenta${d.n!==1?'s':''} activa${d.n!==1?'s':''}</div>
+      <div class="curso-monto">₣ ${fmt(d.total)}</div>
+    </div>`).join('');
+}
+
 function renderRanking(cuentas) {
-  const list = document.getElementById('rankingList');
+  const list = document.getElementById('rankingLista');
   const activas = cuentas
-    .filter(r => r[7] === 'Activa' && r[2])
-    .map(r => ({ apellido: r[2], nombre: r[3], curso: r[4], saldo: num(r[6]) }))
-    .sort((a, b) => b.saldo - a.saldo)
-    .slice(0, 8);
-
-  if (!activas.length) { list.innerHTML = '<div class="estado-bar">Sin datos</div>'; return; }
+    .filter(r=>r[7]==='Activa' && (r[2]||r[3]))
+    .map(r=>({ ap:r[2]||'', nom:r[3]||'', curso:(r[4]||'').trim(), saldo:num(r[6]) }))
+    .sort((a,b)=>b.saldo-a.saldo)
+    .slice(0,10);
+  if (!activas.length) { list.innerHTML='<div class="cargando">Sin datos</div>'; return; }
   const max = activas[0].saldo || 1;
-
-  list.innerHTML = activas.map((e, i) => {
-    const pct = Math.round((e.saldo / max) * 100);
-    const numClass = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+  const medallas = ['I','II','III'];
+  list.innerHTML = activas.map((e,i)=>{
+    const pct  = Math.round((e.saldo/max)*100);
+    const nCls = i===0?'p1':i===1?'p2':i===2?'p3':'';
+    const num2 = i<3 ? medallas[i] : (i+1);
     return `
-    <div class="rank-item">
-      <div class="rank-num ${numClass}">${i+1}</div>
+    <div class="rank-fila${i===0?' primero':''}">
+      <div class="rank-num ${nCls}">${num2}</div>
       <div class="rank-info">
-        <div class="rank-nombre">${e.apellido} ${e.nombre}</div>
-        <div class="rank-curso">${e.curso || '—'}</div>
-        <div class="rank-bar-wrap"><div class="rank-bar" style="width:${pct}%"></div></div>
+        <div class="rank-nombre">${e.ap} ${e.nom}</div>
+        <span class="rank-tag">${e.curso||'—'}</span>
+        <div class="rank-barra-wrap"><div class="rank-barra" style="width:${pct}%"></div></div>
       </div>
       <div class="rank-saldo">${fmt(e.saldo)} ₣</div>
     </div>`;
   }).join('');
 }
 
-// ─── Render Movimientos ───────────────────────────────────────
-function renderMovimientos(movs) {
-  const list = document.getElementById('movList');
-  const recientes = [...movs].reverse().slice(0, 10);
-
-  if (!recientes.length) { list.innerHTML = '<div class="estado-bar">Sin movimientos</div>'; return; }
-
-  list.innerHTML = recientes.map(r => {
-    const monto = num(r[7]);
-    const pos   = monto >= 0;
-    const tipo  = r[5] || '';
-    return `
-    <div class="mov-item">
-      <div class="mov-left">
-        <div class="mov-nombre">${r[4] || '—'}</div>
-        <div class="mov-concepto">${r[6] || ''}</div>
-        <span class="tipo-badge ${tipoClass(tipo)}">${tipo}</span>
-      </div>
-      <div style="text-align:right">
-        <div class="mov-monto ${pos?'pos':'neg'}">${pos?'+':''}${fmt(monto)} ₣</div>
-        <div class="mov-fecha">${r[1] || ''}</div>
-      </div>
-    </div>`;
+function renderTabla(cuentas) {
+  const tbody = document.getElementById('tablaCuerpo');
+  const activas = cuentas.filter(r=>r[7]==='Activa').sort((a,b)=>num(b[6])-num(a[6]));
+  if (!activas.length) { tbody.innerHTML='<tr><td colspan="4" class="cargando">Sin datos</td></tr>'; return; }
+  tbody.innerHTML = activas.map(r=>{
+    const s = num(r[6]);
+    return `<tr>
+      <td class="mono">${r[0]||'—'}</td>
+      <td><strong>${r[2]||''}</strong> ${r[3]||''}</td>
+      <td><span class="curso-pill">${(r[4]||'—').trim()}</span></td>
+      <td class="saldo${s<0?' neg':''}">${fmt(s)} ₣</td>
+    </tr>`;
   }).join('');
 }
 
-// ─── Render Inventario billetes ───────────────────────────────
-function renderBilletes(inventario) {
-  const grid = document.getElementById('billetesGrid');
-  const filas = inventario.filter(r => r[0] && !isNaN(num(r[0])) && num(r[0]) > 0);
-
-  if (!filas.length) { grid.innerHTML = '<div class="estado-bar" style="grid-column:1/-1">Sin datos</div>'; return; }
-
-  grid.innerHTML = filas.map(r => {
-    const denom = num(r[0]);
-    const circu = num(r[3]);
-    const total = num(r[2]);
-    return `
-    <div class="billete-card">
-      <div class="billete-denom">${fmt(denom)}</div>
-      <div class="billete-unit">Felipeso${denom !== 1 ? 's' : ''}</div>
-      <div class="billete-count">Circulando: <strong>${circu}</strong><br>Emitidos: ${total}</div>
-    </div>`;
-  }).join('');
-}
-
-// ─── Fetch & render completo ──────────────────────────────────
 async function actualizar() {
   const dot  = document.getElementById('liveDot');
-  const text = document.getElementById('liveText');
-
+  const txt  = document.getElementById('liveText');
+  const err  = document.getElementById('mensajeError');
   try {
-    const [cuentas, movs, billetes, inventario] = await Promise.all([
-      fetchCSV(csvUrl(SHEET_IDS.cuentas)),
-      fetchCSV(csvUrl(SHEET_IDS.movimientos)),
-      fetchCSV(csvUrl(SHEET_IDS.billetes)),
-      fetchCSV(csvUrl(SHEET_IDS.inventario)),
-    ]);
+    const raw = await fetchCSV(csvUrl());
+    // fila 0 = título del banco, fila 1 = encabezados, desde fila 2 datos
+    datosCuentas = raw.slice(2).filter(r => r[0] && !r[0].toLowerCase().includes('total') && r[0].trim() !== '');
 
-    // Saltar fila de encabezado (fila 0 = título, fila 1 = headers)
-    const dataCuentas    = cuentas.slice(2).filter(r => r[0]);
-    const dataMov        = movs.slice(2).filter(r => r[0]);
-    const dataBilletes   = billetes.slice(2).filter(r => r[0]);
-    const dataInventario = inventario.slice(2).filter(r => r[0]);
+    const cursos = [...new Set(datosCuentas.map(r=>(r[4]||'').trim()).filter(Boolean))].sort();
+    if (JSON.stringify(cursos) !== JSON.stringify(cursosDisponibles)) {
+      cursosDisponibles = cursos;
+      buildTabs(cursos);
+    }
 
-    renderKPIs(dataCuentas, dataMov, dataBilletes, dataInventario);
-    renderRanking(dataCuentas);
-    renderMovimientos(dataMov);
-    renderBilletes(dataInventario);
+    renderTodo();
 
     dot.classList.remove('offline');
-    const hora = new Date().toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-    text.textContent = 'En vivo · ' + hora;
-    document.getElementById('ultimaActualizacion').textContent = hora;
-    document.getElementById('estadoBar').style.display = 'none';
-    document.getElementById('errorMsg').style.display = 'none';
+    const h = new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    txt.textContent = 'En vivo · ' + h;
+    document.getElementById('ultimaHora').textContent = h;
+    document.getElementById('baraCarga').style.display = 'none';
+    err.style.display = 'none';
+
   } catch(e) {
     dot.classList.add('offline');
-    text.textContent = 'Error de conexión';
-    const err = document.getElementById('errorMsg');
+    txt.textContent = 'Sin conexión';
     err.style.display = 'block';
-    err.className = 'error-msg';
-    err.innerHTML = `⚠️ No se pudo cargar el banco.<br><small>${e.message}</small><br><br>
-      Verifica que el Sheet esté publicado en la web y que el URL sea correcto.`;
+    err.className = 'error-carta';
+    err.innerHTML = `⚠ No se pudo consultar el registro.<br><em>${e.message}</em>`;
+    document.getElementById('baraCarga').style.display = 'none';
   }
 }
 
-// ─── Conectar ─────────────────────────────────────────────────
-function conectar() {
-  const url = document.getElementById('sheetUrl').value.trim();
-  if (!url) return alert('Ingresa el URL del Google Sheet.');
-  BASE_URL = url;
-  localStorage.setItem('felipeso_sheet_url', url);
-  document.getElementById('configBox').style.display = 'none';
-  document.getElementById('estadoBar').style.display = 'block';
-  iniciar();
-}
-
-function iniciar() {
-  if (intervalo) clearInterval(intervalo);
+document.getElementById('anio').textContent = new Date().getFullYear();
+document.querySelector('.pie-texto').innerHTML = document.querySelector('.pie-texto').innerHTML.replace('XXX','30 s');
+window.addEventListener('DOMContentLoaded', ()=>{
+  document.getElementById('baraCarga').style.display = 'block';
   actualizar();
-  intervalo = setInterval(actualizar, 30000);
-}
-
-// ─── Auto-start si ya hay URL guardada ────────────────────────
-window.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('sheetUrl').value = BASE_URL;
-  document.getElementById('configBox').style.display = 'none';
-  document.getElementById('estadoBar').style.display = 'block';
-  iniciar();
+  setInterval(actualizar, 30000);
 });
 </script>
 </body>
