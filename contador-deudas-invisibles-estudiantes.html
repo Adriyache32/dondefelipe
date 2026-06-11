@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contador de Deudas Invisibles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,550;1,9..144,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --fondo:#EDF0F3;        /* luz de día, niebla de la costa */
+    --panel:#FFFFFF;
+    --linea:#D7DDE5;
+    --tinta:#1D2838;        /* la noche quedó solo en la letra */
+    --tenue:#66707F;
+    --ocre:#A8690F;         /* tiempo prestado, a plena luz */
+    --ocre-suave:#F4E8D4;
+    --rojo:#A8443E;
+    --salvia:#47704A;
+    --salvia-suave:#E7F0E6;
+    --radio:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--fondo);
+    color:var(--tinta);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    line-height:1.55;
+    min-height:100vh;
+    padding:1.4rem 1rem 4rem;
+  }
+  .marco{max-width:660px;margin:0 auto}
+
+  /* ---------- Cabecera ---------- */
+  .ojal{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:.66rem;letter-spacing:.22em;
+    color:var(--ocre);text-transform:uppercase;
+    margin-bottom:.55rem;
+  }
+  h1{
+    font-family:"Fraunces",serif;
+    font-weight:550;font-size:clamp(1.8rem,6vw,2.5rem);
+    line-height:1.12;letter-spacing:-.015em;
+  }
+  .lema{
+    color:var(--tenue);font-size:.93rem;
+    margin-top:.65rem;max-width:48ch;
+  }
+  .lema em{color:var(--tinta);font-family:"Fraunces",serif}
+
+  /* ---------- Balance vivo ---------- */
+  .balance{
+    margin:1.7rem 0 1.5rem;
+    border:1px solid var(--linea);
+    border-top:3px solid var(--ocre);
+    border-radius:var(--radio);
+    background:var(--panel);
+    padding:1.15rem 1.2rem 1rem;
+    box-shadow:0 1px 3px rgba(29,40,56,.06);
+  }
+  .balance .rotulo{
+    font-family:"IBM Plex Mono",monospace;font-size:.64rem;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--tenue);
+  }
+  .cifra{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:clamp(2rem,8.5vw,2.9rem);
+    color:var(--ocre);margin-top:.2rem;
+    font-variant-numeric:tabular-nums;
+  }
+  .cifra .unidad{font-size:.42em;color:var(--tenue);letter-spacing:.04em}
+  .nota-interes{font-size:.78rem;color:var(--tenue);margin-top:.35rem}
+
+  /* ---------- Registro ---------- */
+  .seccion-titulo{
+    font-family:"Fraunces",serif;font-weight:550;font-size:1.18rem;
+    margin:1.7rem 0 .7rem;
+  }
+  .registro{
+    border:1px solid var(--linea);border-radius:var(--radio);
+    background:var(--panel);padding:1rem;
+    display:grid;gap:.75rem;
+    box-shadow:0 1px 3px rgba(29,40,56,.06);
+  }
+  label{font-size:.76rem;color:var(--tenue);display:block;margin-bottom:.3rem}
+  input{
+    width:100%;background:var(--fondo);color:var(--tinta);
+    border:1px solid var(--linea);border-radius:8px;
+    padding:.65rem .75rem;font-size:1rem;font-family:inherit;
+  }
+  input::placeholder{color:#9AA4B2}
+  input:focus,button:focus-visible{
+    outline:2px solid var(--ocre);outline-offset:2px;border-color:var(--ocre);
+  }
+  .fila-final{display:grid;grid-template-columns:120px 1fr;gap:.75rem;align-items:end}
+  button{
+    cursor:pointer;border:none;border-radius:8px;
+    font-family:inherit;font-size:.95rem;padding:.7rem 1rem;
+  }
+  .btn-principal{background:var(--ocre);color:#fff;font-weight:600}
+  .btn-principal:hover{filter:brightness(1.08)}
+  .btn-fantasma{
+    background:var(--panel);color:var(--tinta);
+    border:1px solid var(--linea);font-size:.9rem;
+  }
+  .btn-fantasma:hover{border-color:var(--ocre);color:var(--ocre)}
+  .pista{font-size:.74rem;color:var(--tenue)}
+  .eco{
+    font-family:"Fraunces",serif;font-style:italic;font-size:.95rem;
+    color:var(--ocre);margin-top:.7rem;min-height:1.5em;
+    opacity:0;transition:opacity .8s ease;
+  }
+  .eco.visible{opacity:1}
+
+  /* ---------- Libro de deudas ---------- */
+  .libro{display:grid;gap:.65rem;margin-top:.6rem}
+  .asiento{
+    border:1px solid var(--linea);border-left:4px solid var(--ocre);
+    border-radius:var(--radio);background:var(--panel);
+    padding:.9rem 1rem;display:grid;gap:.45rem;
+    box-shadow:0 1px 3px rgba(29,40,56,.05);
+  }
+  .asiento.saldada{border-left-color:var(--salvia);background:var(--salvia-suave)}
+  .asiento .que{font-size:1rem}
+  .asiento .meta{
+    display:flex;flex-wrap:wrap;gap:.4rem .8rem;align-items:center;
+    font-family:"IBM Plex Mono",monospace;font-size:.7rem;color:var(--tenue);
+  }
+  .chip{
+    display:inline-block;padding:.12rem .6rem;border-radius:99px;
+    background:var(--ocre-suave);color:var(--ocre);
+    font-size:.7rem;font-weight:500;border:none;cursor:pointer;
+    font-family:"IBM Plex Mono",monospace;
+  }
+  .chip.duda{background:var(--fondo);color:var(--tenue);border:1px dashed var(--linea)}
+  .chip:hover{filter:brightness(.96)}
+  .asiento.saldada .chip{background:#fff}
+  .pie{display:flex;align-items:center;justify-content:space-between;gap:.6rem}
+  .monto{
+    font-family:"IBM Plex Mono",monospace;color:var(--ocre);
+    font-size:1.08rem;font-weight:500;font-variant-numeric:tabular-nums;
+  }
+  .asiento.saldada .monto{color:var(--salvia)}
+  .btn-saldar{
+    background:#fff;border:1px solid var(--salvia);
+    color:var(--salvia);font-size:.78rem;padding:.4rem .8rem;
+  }
+  .btn-saldar:hover{background:var(--salvia-suave)}
+  .panel-pago{display:none;gap:.5rem;margin-top:.2rem}
+  .panel-pago.abierto{display:grid}
+  .vacio{
+    color:var(--tenue);font-size:.9rem;border:1px dashed var(--linea);
+    border-radius:var(--radio);padding:1.2rem;text-align:center;background:var(--panel);
+  }
+
+  /* ---------- Resumen ---------- */
+  .resumen{display:grid;gap:.6rem;margin-top:.9rem}
+  .barra-fila{display:grid;gap:.25rem}
+  .barra-fila .etq{
+    display:flex;justify-content:space-between;
+    font-family:"IBM Plex Mono",monospace;font-size:.74rem;color:var(--tenue);
+  }
+  .barra{height:8px;border-radius:99px;background:var(--linea);overflow:hidden}
+  .barra>span{display:block;height:100%;background:var(--ocre);border-radius:99px;transition:width .6s ease}
+
+  /* ---------- La negativa: la única pantalla que sigue siendo noche ---------- */
+  .velo{
+    position:fixed;inset:0;background:rgba(13,18,28,.97);color:#E8E3D5;
+    display:none;align-items:center;justify-content:center;
+    flex-direction:column;gap:1.6rem;text-align:center;padding:2rem;z-index:50;
+  }
+  .velo.activo{display:flex}
+  .velo h2{
+    font-family:"Fraunces",serif;font-weight:400;font-style:italic;
+    font-size:clamp(1.5rem,6vw,2.2rem);max-width:18ch;
+  }
+  .circulo{
+    width:90px;height:90px;border-radius:50%;
+    border:1px solid #E0A458;
+    animation:respira 5s ease-in-out infinite;
+  }
+  @keyframes respira{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.22);opacity:1}}
+  @media (prefers-reduced-motion:reduce){.circulo{animation:none}}
+  .velo p{color:#9AA3B5;font-size:.85rem;max-width:36ch}
+  .velo .cuenta{font-family:"IBM Plex Mono",monospace;color:#E0A458;font-size:1.1rem}
+
+  footer{
+    margin-top:2.6rem;color:var(--tenue);
+    font-size:.74rem;font-family:"IBM Plex Mono",monospace;
+    border-top:1px solid var(--linea);padding-top:1rem;
+  }
+</style>
+</head>
+<body>
+<div class="marco">
+
+  <header>
+    <div class="ojal">Artefacto recuperado · Siglo XXV · Traducción al español</div>
+    <h1>Contador de Deudas Invisibles</h1>
+    <p class="lema">Tu época contabiliza el dinero al centavo y no contabiliza nada más.
+    <em>Este libro registra lo que pides prestado al futuro.</em></p>
+  </header>
+
+  <section class="balance" aria-live="polite">
+    <div class="rotulo">Deuda total acumulada</div>
+    <div class="cifra"><span id="total">0,00</span> <span class="unidad">min de vida</span></div>
+    <div class="nota-interes">El interés corre mientras miras esta cifra. Así funciona el tiempo.</div>
+  </section>
+
+  <h2 class="seccion-titulo">Registrar un préstamo</h2>
+  <div class="registro">
+    <div>
+      <label for="que">Cuenta lo que pasó, con tus palabras</label>
+      <input id="que" type="text" placeholder="Ej: me quedé hasta las 2 am viendo videos antes de la prueba" maxlength="140">
+      <p class="pista" style="margin-top:.35rem">El libro deducirá solo a quién le pediste prestado.</p>
+    </div>
+    <div class="fila-final">
+      <div>
+        <label for="minutos">Minutos</label>
+        <input id="minutos" type="number" min="1" max="1440" value="30">
+      </div>
+      <button class="btn-principal" id="btn-anotar" type="button">Anotar en el libro</button>
+    </div>
+  </div>
+  <p class="eco" id="eco" aria-live="polite"></p>
+
+  <h2 class="seccion-titulo">Libro mayor</h2>
+  <div class="libro" id="libro"></div>
+
+  <h2 class="seccion-titulo">Balance por acreedor</h2>
+  <button class="btn-fantasma" id="btn-balance" type="button">Consultar balance</button>
+  <div class="resumen" id="resumen"></div>
+
+  <footer>
+    v0.2 · Nota del traductor: el original incluía un módulo que el siglo XXI
+    aún no sabe ejecutar — se llamaba «presencia». Las comillas de «saldada»
+    también son del original: ninguna deuda de tiempo se paga del todo;
+    a lo más, deja de crecer.
+  </footer>
+</div>
+
+<div class="velo" id="velo" role="dialog" aria-modal="true">
+  <div class="circulo" aria-hidden="true"></div>
+  <h2 id="frase-velo">Esto no se mide, se vive.</h2>
+  <p>El balance se negó a mostrarse. Respira con el círculo.
+  Vuelve cuando hayas mirado por la ventana.</p>
+  <p class="cuenta" id="cuenta">12</p>
+</div>
+
+<script>
+/* =========================================================
+   MODELO — interés compuesto continuo: 1,6% por hora.
+   No es economía: es una metáfora ejecutable.
+   ========================================================= */
+const TASA_HORA = 0.016;
+let deudas = [];
+let proximaNegativa = Math.random() < 0.25;
+
+/* --- Persistencia opcional (GitHub Pages) -------------------
+   Descomenta estas funciones y las llamadas marcadas con (*).
+
+function guardar(){ localStorage.setItem('deudasInvisibles', JSON.stringify(deudas)); }
+function cargar(){
+  const d = localStorage.getItem('deudasInvisibles');
+  if (d) deudas = JSON.parse(d);
+}
+------------------------------------------------------------ */
+
+/* ============== ACREEDORES: EXTRACCIÓN ==============
+   El libro lee la frase y deduce a quién le debes.
+   Cada acreedor tiene raíces de palabras (sin tildes,
+   en minúscula). Gana el que más coincidencias tenga. */
+const ACREEDORES = [
+  { nombre:"Mi cuerpo", raices:["dorm","sueno","trasnoch","acost","desvel","comid","comi ","chatarra","ejercicio","entren","cans","energetica","bebida","agua","salud","dolor","cuerpo","almuerzo","almorc","desayun","cena"] },
+  { nombre:"Mi familia", raices:["mama","papa","madre","padre","herman","abuel","familia","tio","tia","prim","mascota","perr","gat"] },
+  { nombre:"Mis amigos", raices:["amig","polol","junta","carrete","cumpleanos","salir","plaza","grupo"] },
+  { nombre:"Mis estudios", raices:["estudi","prueba","tarea","trabajo","materia","clase","colegio","liceo","profe","cuaderno","examen","ensayo","paes","simce","nota"] },
+  { nombre:"Mis talentos", raices:["dibuj","music","guitarr","cant","bail","futbol","basquet","taller","leer","lectur","escrib","crear","proyecto","practic"] },
+  { nombre:"El planeta", raices:["basura","plastic","recicl","planeta","ambiente","desech"] },
+  { nombre:"Mi yo de manana", etiqueta:"Mi yo de mañana", raices:["manana","posterg","aplaz","procrastin","pendiente","despues","deje para","tiktok","instagram","celular","telefono","juego","jugue","consola","youtube","scroll","video","serie","netflix","stream"] }
+];
+const SIN_ACREEDOR = "¿Acreedor?";
+const LISTA_CICLO = ["Mi yo de mañana","Mi cuerpo","Mi familia","Mis amigos","Mis estudios","Mis talentos","El planeta"];
+
+function normalizar(s){
+  return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+}
+
+function deducirAcreedor(frase){
+  const texto = normalizar(frase);
+  let mejor = null, mejorPuntaje = 0;
+  for (const a of ACREEDORES){
+    let puntaje = 0;
+    for (const r of a.raices){ if (texto.includes(r)) puntaje++; }
+    if (puntaje > mejorPuntaje){ mejorPuntaje = puntaje; mejor = a; }
+  }
+  if (!mejor) return { nombre: SIN_ACREEDOR, claro:false };
+  return { nombre: mejor.etiqueta || mejor.nombre, claro:true };
+}
+
+/* ============== FRASES ============== */
+const FRASES_ECO = [
+  "Anotado. La deuda no es culpa: es memoria con dirección.",
+  "Registrado. Nombrar lo que debes ya es empezar a pagarlo.",
+  "El libro no juzga. Solo te ayuda a mirar.",
+  "Un préstamo reconocido pesa menos que uno escondido.",
+  "Anotado. El futuro toma nota de quién lo toma en cuenta.",
+  "Todos le deben algo al futuro. Tú al menos lo sabes."
+];
+const FRASES_VELO = [
+  "Esto no se mide, se vive.",
+  "El balance más exacto es una conversación sin apuro.",
+  "Hay cuentas que solo se saldan estando presente.",
+  "No todo lo que cuenta puede contarse.",
+  "Cierra el libro. Abre la ventana."
+];
+function alAzar(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+/* ============== UTILIDADES ============== */
+function valorActual(d){
+  if (d.saldada) return d.valorFinal;
+  const horas = (Date.now() - d.creada) / 3600000;
+  return d.minutos * Math.exp(TASA_HORA * horas);
+}
+function fmt(n){ return n.toLocaleString('es-CL',{minimumFractionDigits:2, maximumFractionDigits:2}); }
+function escapar(s){
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ============== REGISTRO ============== */
+document.getElementById('btn-anotar').addEventListener('click', () => {
+  const campoQue = document.getElementById('que');
+  const que = campoQue.value.trim();
+  const minutos = parseFloat(document.getElementById('minutos').value);
+  if (!que){ campoQue.focus(); return; }
+  if (!(minutos > 0)) return;
+  const deducido = deducirAcreedor(que);
+  deudas.unshift({
+    id: Date.now(),
+    que,
+    acreedor: deducido.nombre,
+    acreedorClaro: deducido.claro,
+    minutos,
+    creada: Date.now(),
+    saldada: false,
+    valorFinal: null
+  });
+  // guardar(); (*)
+  campoQue.value = '';
+  document.getElementById('minutos').value = 30;
+  const eco = document.getElementById('eco');
+  eco.textContent = alAzar(FRASES_ECO);
+  eco.classList.add('visible');
+  setTimeout(() => eco.classList.remove('visible'), 6000);
+  pintarLibro();
+});
+
+/* Tocar el chip corrige al acreedor (cicla la lista) */
+function ciclarAcreedor(id){
+  const d = deudas.find(x => x.id === id);
+  if (!d || d.saldada) return;
+  const i = LISTA_CICLO.indexOf(d.acreedor);
+  d.acreedor = LISTA_CICLO[(i + 1) % LISTA_CICLO.length];
+  d.acreedorClaro = true;
+  // guardar(); (*)
+  pintarLibro();
+}
+
+function abrirPago(id){
+  document.querySelectorAll('.panel-pago').forEach(p => p.classList.remove('abierto'));
+  const panel = document.getElementById('pago-' + id);
+  if (panel){ panel.classList.add('abierto'); panel.querySelector('input').focus(); }
+}
+
+function confirmarPago(id){
+  const d = deudas.find(x => x.id === id);
+  if (!d) return;
+  const campo = document.querySelector('#pago-' + id + ' input');
+  d.valorFinal = valorActual(d);   // primero congelar el valor
+  d.saldada = true;                // recién entonces declararla pagada
+  d.pago = (campo && campo.value.trim()) || 'pago sin registro';
+  // guardar(); (*)
+  pintarLibro();
+}
+
+/* ============== VISTAS ============== */
+function pintarLibro(){
+  const libro = document.getElementById('libro');
+  if (deudas.length === 0){
+    libro.innerHTML = '<div class="vacio">El libro está en blanco. Eso no significa que no debas nada: significa que aún no lo has mirado.</div>';
+    return;
+  }
+  libro.innerHTML = deudas.map(d => `
+    <article class="asiento ${d.saldada ? 'saldada' : ''}">
+      <div class="que">${escapar(d.que)}</div>
+      <div class="meta">
+        <button class="chip ${d.acreedorClaro ? '' : 'duda'}" onclick="ciclarAcreedor(${d.id})" type="button"
+          title="Toca para corregir el acreedor">${escapar(d.acreedor)}</button>
+        <span>capital: ${d.minutos} min</span>
+        ${d.saldada ? `<span>«saldada» con: ${escapar(d.pago)}</span>` : ''}
+      </div>
+      <div class="pie">
+        <span class="monto" data-id="${d.id}">${fmt(valorActual(d))} min</span>
+        ${d.saldada ? '' : `<button class="btn-saldar" onclick="abrirPago(${d.id})" type="button">Saldar deuda</button>`}
+      </div>
+      ${d.saldada ? '' : `
+      <div class="panel-pago" id="pago-${d.id}">
+        <input type="text" maxlength="100" placeholder="¿Cómo la pagaste? Ej: me acosté temprano, estudié con tiempo">
+        <button class="btn-saldar" onclick="confirmarPago(${d.id})" type="button">Confirmar pago</button>
+      </div>`}
+    </article>`).join('');
+}
+
+setInterval(() => {
+  let total = 0;
+  deudas.forEach(d => {
+    const v = valorActual(d);
+    if (!d.saldada) total += v;
+    const el = document.querySelector('.monto[data-id="' + d.id + '"]');
+    if (el) el.textContent = fmt(v) + ' min';
+  });
+  document.getElementById('total').textContent = fmt(total);
+}, 1000);
+
+/* ============== BALANCE Y LA NEGATIVA ============== */
+document.getElementById('btn-balance').addEventListener('click', () => {
+  if (proximaNegativa && deudas.length > 0){
+    proximaNegativa = Math.random() < 0.25;
+    negarse();
+    return;
+  }
+  proximaNegativa = Math.random() < 0.25;
+  const porAcreedor = {};
+  deudas.filter(d => !d.saldada).forEach(d => {
+    porAcreedor[d.acreedor] = (porAcreedor[d.acreedor] || 0) + valorActual(d);
+  });
+  const entradas = Object.entries(porAcreedor).sort((a,b) => b[1]-a[1]);
+  const max = entradas.length ? entradas[0][1] : 1;
+  document.getElementById('resumen').innerHTML = entradas.length
+    ? entradas.map(([a,v]) => `
+        <div class="barra-fila">
+          <div class="etq"><span>${escapar(a)}</span><span>${fmt(v)} min</span></div>
+          <div class="barra"><span style="width:${(v/max)*100}%"></span></div>
+        </div>`).join('')
+    : '<div class="vacio">Sin deudas activas. Sospechoso, pero posible.</div>';
+});
+
+function negarse(){
+  const velo = document.getElementById('velo');
+  const cuenta = document.getElementById('cuenta');
+  document.getElementById('frase-velo').textContent = alAzar(FRASES_VELO);
+  let s = 12;
+  cuenta.textContent = s;
+  velo.classList.add('activo');
+  const t = setInterval(() => {
+    s--;
+    cuenta.textContent = s;
+    if (s <= 0){ clearInterval(t); velo.classList.remove('activo'); }
+  }, 1000);
+}
+
+/* cargar(); (*) — para GitHub Pages */
+pintarLibro();
+</script>
+</body>
+</html>
