@@ -1049,6 +1049,7 @@ body { overscroll-behavior-y: none; }
       </li>
       <li><a href="campeonato-sa-2026.html" class="nav-lib" style="color:#8fe3b4; border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='#8fe3b4'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-trophy"></i> CAMPEONATO SA 2026</a></li>
       <li><a href="mundial2026.html" class="nav-lib" style="color:#f2a65a; border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='#f2a65a'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-earth-americas"></i> MUNDIAL 2026</a></li>
+      <li><a href="radio.html" class="nav-lib" style="color:#f59ca6; border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='#f59ca6'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-radio"></i> RADIO</a></li>
       <li><a href="#" onclick="go('juegos'); closeNav(); return false;" class="nav-lib" style="color:#caa8f0; border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='#caa8f0'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-gamepad"></i> JUEGOS</a></li>
       <li><a href="banco-felipesos.html" class="nav-lib" style="color:#a8d8e8; border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='#a8d8e8'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-piggy-bank"></i> BANCO FELIPESOS</a></li>
       <li><a href="#" onclick="go('biblioteca'); closeNav(); return false;" class="nav-lib"><i class="fa-solid fa-book-open"></i> BIBLIOTECA</a></li>
@@ -1140,6 +1141,19 @@ function rHome(stage){
             <li style="display:flex; align-items:flex-start; gap:10px; font-size:0.95rem; color:var(--text-soft);"><span style="font-size:1.1rem;">👆</span><span>Se mejora el <strong>control del juego solo con los dedos</strong> (táctil).</span></li>
           </ul>
           <a href="profe-rpg-v4.html" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:8px; margin-top:14px; padding:11px 20px; border-radius:9px; background:linear-gradient(135deg,#8b5cf6,#6d3bb5); color:#fff; font-family:var(--ff-title); font-size:0.74rem; letter-spacing:0.1em; text-decoration:none; box-shadow:0 6px 16px rgba(109,59,181,.3);"><i class="fa-solid fa-gamepad"></i> JUGAR SAN AGUSTÍN RPG</a>
+        </div>
+      </div>
+
+      <!-- 📻 RADIO EL RINCÓN -->
+      <div style="margin-bottom:1.6rem;">
+        <div class="card" style="gap:0; border-top:3px solid #e05a6a; background:linear-gradient(160deg,#fffbfb 0%,#fbeef0 100%);">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+            <span style="font-size:1.5rem;">📻</span>
+            <h3 style="font-family:var(--ff-title); font-size:1rem; letter-spacing:1px; color:#9c2733; margin:0;">RADIO EL RINCÓN</h3>
+            <span id="home-radio-badge" style="margin-left:auto; background:#9aa3ad; color:#fff; font-family:var(--ff-title); font-size:0.72rem; letter-spacing:1px; padding:4px 13px; border-radius:20px;">SINTONIZANDO…</span>
+          </div>
+          <p style="font-size:0.95rem; color:var(--text-soft);">Transmisiones en vivo desde el Rincón: música, ciencia y comentarios del campeonato. Cuando el indicador esté en rojo, ¡estamos al aire!</p>
+          <a href="radio.html" style="display:inline-flex; align-items:center; gap:8px; margin-top:14px; padding:11px 20px; border-radius:9px; background:linear-gradient(135deg,#e05a6a,#9c2733); color:#fff; font-family:var(--ff-title); font-size:0.74rem; letter-spacing:0.1em; text-decoration:none; box-shadow:0 6px 16px rgba(156,39,51,.3);"><i class="fa-solid fa-radio"></i> IR A LA RADIO</a>
         </div>
       </div>
 
@@ -1408,6 +1422,28 @@ function rHome(stage){
       </div>
 
     </div>`;
+  updateRadioBadge();
+}
+
+/* ── 📻 Estado de la radio en la portada (misma hoja que radio.html) ── */
+const RADIO_SHEET = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSBqwbo0u0aum5yUsCO7nNTBPVVsJGyGe7X3T8snBmaQ4Llz2VhUu5va6o8GThgHwGaz8BAitrg6aYP/pub?output=csv';
+function updateRadioBadge(){
+  const badge = document.getElementById('home-radio-badge');
+  if (!badge) return;
+  fetch(RADIO_SHEET + '&t=' + Date.now())
+    .then(r => r.text())
+    .then(t => {
+      const firstLine = t.split(/\r?\n/)[0] || '';
+      const url = firstLine.split(',')[0].replace(/"/g,'').trim();
+      if (url.startsWith('https://')) {
+        badge.textContent = '🔴 AL AIRE';
+        badge.style.background = '#e02440';
+        badge.style.boxShadow = '0 0 12px rgba(224,36,64,.5)';
+      } else {
+        badge.textContent = 'FUERA DEL AIRE';
+      }
+    })
+    .catch(() => { badge.textContent = 'FUERA DEL AIRE'; });
 }
 function rJuegos(stage){
   stage.innerHTML = `
