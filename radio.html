@@ -1,0 +1,27 @@
+<div id="radio-container">
+  <p id="radio-status">Sintonizando...</p>
+  <audio id="radio-player" controls style="display:none"></audio>
+</div>
+
+<script>
+// La misma técnica de la galleta: hoja publicada como CSV
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSBqwbo0u0aum5yUsCO7nNTBPVVsJGyGe7X3T8snBmaQ4Llz2VhUu5va6o8GThgHwGaz8BAitrg6aYP/pub?output=csv';
+
+fetch(SHEET_URL)
+  .then(r => r.text())
+  .then(text => {
+    const url = text.replace(/"/g, '').trim();
+    const status = document.getElementById('radio-status');
+    const player = document.getElementById('radio-player');
+    if (url.startsWith('https://')) {
+      player.src = url + '/stream';
+      player.style.display = 'block';
+      status.textContent = '🔴 ¡Estamos al aire!';
+    } else {
+      status.textContent = '📻 Radio fuera del aire por ahora';
+    }
+  })
+  .catch(() => {
+    document.getElementById('radio-status').textContent = 'No se pudo sintonizar 😞';
+  });
+</script>
