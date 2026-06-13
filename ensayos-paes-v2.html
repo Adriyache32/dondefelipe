@@ -380,42 +380,7 @@ function buildEnsayo(area){
   }));
 }
 
-/* ================================================================
-   UI: inicio
-   ================================================================ */
-const $=s=>document.querySelector(s);
-const screens={load:$("#loadScreen"),home:$("#homeScreen"),exam:$("#examScreen"),results:$("#resultsScreen")};
-function show(name){ for(const k in screens) screens[k].classList.toggle("on",k===name); window.scrollTo(0,0); }
 
-function renderHome(){
-  $("#weekEyebrow").textContent = "Ensayo de la semana · "+state.semana;
-  if(state.demo){
-    const b=$("#demoBanner"); b.style.display="block";
-    b.innerHTML = `<b>Modo demostración.</b> Estás viendo preguntas de ejemplo. Para conectar tu banco, pega el ID de tu Google Sheet en <code>CONFIG.SHEET_ID</code> dentro del archivo.`;
-  }
-  const list=$("#subjectList"); list.innerHTML="";
-  const ids=Object.keys(state.subjects);
-  if(!ids.length){ list.innerHTML=`<p style="color:var(--muted)">No hay preguntas para la semana ${state.semana}. Revisa la columna <b>semana</b> en tu Sheet.</p>`; }
-  ids.forEach(id=>{
-    const s=state.subjects[id];
-    const card=document.createElement("button");
-    card.className="subject";
-    card.innerHTML=`<div class="tag" style="background:${s.color}">${s.short}</div><h3>${s.name}</h3><span>${s.pool.length} preguntas en el banco</span>`;
-    card.onclick=()=>{
-      state.area=id;
-      document.querySelectorAll(".subject").forEach(c=>c.classList.remove("active"));
-      card.classList.add("active");
-      $("#startBtn").disabled=false;
-      const n=Math.min(CONFIG.PREGUNTAS_POR_ENSAYO,s.pool.length);
-      $("#startNote").textContent=`Listo: ${s.name}, ${n} preguntas al azar.`;
-    };
-    list.appendChild(card);
-  });
-  document.querySelectorAll(".mode").forEach(m=>{
-    const pick=()=>{document.querySelectorAll(".mode").forEach(x=>x.classList.remove("active"));m.classList.add("active");state.mode=m.dataset.mode;};
-    m.onclick=pick; m.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();pick();}};
-  });
-}
 
 /* ================================================================
    UI: ensayo
