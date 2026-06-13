@@ -28,7 +28,6 @@
   .ghost-btn{border:1px solid var(--line);background:var(--surface);color:var(--muted);font:inherit;font-size:13px;font-weight:600;padding:7px 13px;border-radius:999px;cursor:pointer}
   .ghost-btn:hover{color:var(--ink);border-color:var(--ink)}
 
-  /* Banner de modo demo */
   .demo-banner{background:#FFF7ED;border:1px solid #FED7AA;color:#9A3412;border-radius:12px;padding:12px 16px;font-size:13.5px;margin:18px 0 0}
   .demo-banner b{color:#7C2D12}
   .demo-banner code{background:#FFEAD5;padding:1px 6px;border-radius:5px;font-family:"JetBrains Mono";font-size:12px}
@@ -233,14 +232,13 @@
    CONFIGURACIÓN  ── lo único que tú editas habitualmente
    ================================================================ */
 const CONFIG = {
-  // Pega aquí el ID de tu Google Sheet (lo que va entre /d/ y /edit en la URL).
-  // Deja "" para usar los datos de ejemplo incluidos abajo.
-  SHEET_ID: "1DXcK6H21l50vFJmyVdv7UW7FVIF0DoiZwvdxUVZVGfc",
-  TAB_PREGUNTAS: "Preguntas",     // nombre de la pestaña con las preguntas
-  TAB_LECTURAS:  "Lecturas",      // nombre de la pestaña con los textos de lectura
-  PREGUNTAS_POR_ENSAYO: 30,       // cuántas saca al azar del banco de la semana (pon 100 para el banco completo)
-  SEGUNDOS_POR_PREGUNTA: 90,      // tiempo del modo ensayo = preguntas × esto
-  BARAJAR_ALTERNATIVAS: true      // mezcla el orden de A–E para evitar memorización
+  // Asegúrate de poner el ID de EDICIÓN aquí, no el link de Publicar en la Web.
+  SHEET_ID: "1sY87k_Tu_ID_DE_EDICIÓN_AQUÍ",
+  TAB_PREGUNTAS: "Preguntas",     
+  TAB_LECTURAS:  "Lecturas",      
+  PREGUNTAS_POR_ENSAYO: 30,       
+  SEGUNDOS_POR_PREGUNTA: 90,      
+  BARAJAR_ALTERNATIVAS: true      
 };
 
 // Áreas: id (como va en la columna "area" del Sheet) → nombre visible, sigla y color.
@@ -251,39 +249,20 @@ const AREAS = {
   historia: { name:"Historia y Ed. Ciudadana",    short:"HC", color:"#D97706" }
 };
 
-// Tabla de conversión referencial: fracción de acierto → puntaje (escala 100–1000).
-// OJO: el puntaje PAES real es estandarizado a nivel nacional; esto es solo una ESTIMACIÓN.
-// Ajusta los puntos a tu criterio (o a las tablas referenciales del DEMRE).
 const TABLA_PUNTAJE = [[0,100],[0.30,500],[0.50,650],[0.70,800],[0.85,900],[1,1000]];
 
-/* ================================================================
-   DATOS DE EJEMPLO (se usan si SHEET_ID está vacío o falla la carga)
-   Reproducen exactamente la forma que tendrán las filas del Sheet.
-   ================================================================ */
-const DEMO_LECTURAS = [
-  { lectura_id:"L1", titulo:"Leer despacio en la era de la distracción",
-    texto:"Leer un texto extenso exige hoy un esfuerzo poco habitual. Acostumbrados a desplazarnos por pantallas que renuevan su contenido cada pocos segundos, hemos entrenado a nuestra atención para saltar antes que para detenerse.||Sin embargo, comprender una idea compleja requiere lo contrario: permanecer. Quien lee con calma construye relaciones, anticipa, duda y vuelve atrás cuando algo no calza.||Esa lentitud no es una pérdida de tiempo, sino la condición del pensamiento profundo. Leer despacio no es nostalgia, sino una forma de resistencia frente a una cultura que premia la velocidad por sobre la comprensión." }
-];
+const DEMO_LECTURAS = [];
 const DEMO_PREGUNTAS = [
-  {semana:"2026-W24",area:"lectora",enunciado:"¿Cuál es el propósito principal del texto?",A:"Criticar el uso de pantallas.",B:"Defender el valor de la lectura pausada para el pensamiento.",C:"Describir cómo funciona la atención.",D:"Comparar lectura digital y en papel.",E:"Lamentar la desaparición de los libros.",correcta:"B",retro:"Argumenta a favor de “leer despacio” como condición del pensamiento profundo; no se limita a criticar ni describir.",lectura_id:"L1"},
-  {semana:"2026-W24",area:"lectora",enunciado:"¿Qué implica “permanecer” al leer, según el texto?",A:"Memorizar el texto.",B:"Mantener la atención de forma sostenida.",C:"Evitar los dispositivos.",D:"Leer solo textos difíciles.",E:"Detenerse en palabras nuevas.",correcta:"B",retro:"“Permanecer” se opone a “saltar”: es atención sostenida, no memorización.",lectura_id:"L1"},
-  {semana:"2026-W24",area:"lectora",enunciado:"La expresión “forma de resistencia” en el cierre…",A:"Indica esfuerzo físico.",B:"Plantea la lectura pausada como postura crítica frente a la cultura de la velocidad.",C:"Dice que leer está prohibido.",D:"Propone dejar la tecnología.",E:"Expresa nostalgia.",correcta:"B",retro:"Se opone a “una cultura que premia la velocidad”; el texto descarta la nostalgia.",lectura_id:"L1"},
-  {semana:"2026-W24",area:"m1",enunciado:"Si 3(x − 2) = 2x + 4, ¿cuál es el valor de x?",A:"−2",B:"2",C:"6",D:"8",E:"10",correcta:"E",retro:"3x − 6 = 2x + 4 → x − 6 = 4 → x = 10.",lectura_id:""},
-  {semana:"2026-W24",area:"m1",enunciado:"Un producto cuesta $12.000 con 25% de descuento. Precio final:",A:"$3.000",B:"$8.000",C:"$9.000",D:"$9.600",E:"$15.000",correcta:"C",retro:"25% de 12.000 = 3.000. Final = 12.000 − 3.000 = 9.000.",lectura_id:""},
-  {semana:"2026-W24",area:"m1",enunciado:"Catetos de 6 y 8 cm. ¿Hipotenusa?",A:"10 cm",B:"12 cm",C:"14 cm",D:"48 cm",E:"100 cm",correcta:"A",retro:"Pitágoras: √(36+64)=√100=10 cm.",lectura_id:""},
-  {semana:"2026-W24",area:"ciencias",enunciado:"Función principal de los glóbulos rojos:",A:"Defender de infecciones.",B:"Transportar oxígeno.",C:"Coagular la sangre.",D:"Producir anticuerpos.",E:"Regular la temperatura.",correcta:"B",retro:"La hemoglobina transporta oxígeno desde los pulmones a los tejidos.",lectura_id:""},
-  {semana:"2026-W24",area:"ciencias",enunciado:"¿Cuál es un cambio químico?",A:"Derretir hielo.",B:"Disolver azúcar.",C:"Oxidación del hierro.",D:"Romper un vidrio.",E:"Evaporar agua.",correcta:"C",retro:"La oxidación forma una sustancia nueva; los demás son cambios físicos.",lectura_id:""},
-  {semana:"2026-W24",area:"historia",enunciado:"Órgano que elabora las leyes en Chile:",A:"Poder Judicial.",B:"Congreso Nacional.",C:"Contraloría.",D:"Banco Central.",E:"Tribunal Constitucional.",correcta:"B",retro:"El Congreso (Diputados + Senado) ejerce la función legislativa.",lectura_id:""},
-  {semana:"2026-W24",area:"historia",enunciado:"La “separación de poderes” busca principalmente:",A:"Concentrar el poder.",B:"Equilibrar poderes independientes para evitar abusos.",C:"Eliminar el poder judicial.",D:"Dar el legislativo al presidente.",E:"Reducir la participación.",correcta:"B",retro:"Poderes que se controlan entre sí evitan la concentración y el abuso.",lectura_id:""}
+  {semana:"DEMO",area:"ciencias",enunciado:"Modo Demo Activo. Conecta tu SheetID para ver tus preguntas.",A:"Opción 1",B:"Opción 2",C:"Opción 3",D:"Opción 4",E:"Opción 5",correcta:"A",retro:"Revisa la consola si el Sheet no carga.",lectura_id:""}
 ];
 
 /* ================================================================
-   CARGA DE DATOS (Google Sheet vía gviz/CSV, con respaldo demo)
+   CARGA DE DATOS 
    ================================================================ */
 function gvizURL(tab){
   return `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
 }
-// Parser de CSV tolerante (maneja comillas, comas y saltos de línea dentro de celdas).
+
 function parseCSV(text){
   const rows=[]; let row=[], field="", inQ=false, i=0;
   while(i<text.length){
@@ -301,13 +280,16 @@ function parseCSV(text){
   if(field.length||row.length){row.push(field);rows.push(row);}
   return rows;
 }
+
 function rowsToObjects(rows){
   if(!rows.length) return [];
+  // Forzamos a minúsculas los encabezados para tolerar columnas 'A', 'B', 'C' en mayúsculas
   const head=rows[0].map(h=>h.trim().toLowerCase());
   return rows.slice(1).filter(r=>r.some(c=>c.trim()!=="")).map(r=>{
     const o={}; head.forEach((h,k)=>o[h]=(r[k]||"").trim()); return o;
   });
 }
+
 async function fetchTab(tab){
   const res=await fetch(gvizURL(tab));
   if(!res.ok) throw new Error("HTTP "+res.status);
@@ -316,45 +298,44 @@ async function fetchTab(tab){
 
 const state={ subjects:{}, semana:"", demo:false, area:null, mode:"practica",
               ensayo:[], i:0, answers:[], startMs:0, timerId:null, finished:false };
+const screens={ load:document.getElementById("loadScreen"), home:document.getElementById("homeScreen"),
+                exam:document.getElementById("examScreen"), results:document.getElementById("resultsScreen") };
+const $=id=>document.getElementById(id);
+function show(id){ Object.values(screens).forEach(s=>s.classList.remove("on")); screens[id].classList.add("on"); }
 
+// LÓGICA DE CARGA RESILIENTE
 async function loadData(){
-  let preguntas, lecturas;
-  // Usamos directamente tus URLs de publicación en la web en formato CSV
-  const urlPreguntas = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHvi5eHTHk5p6KAKH0gYgHapEDLFifMwt3tMrJQAFvQ4uLxN03RY-wjF7E-9itEwl4NVX2YdT4F9hF/pub?output=csv&gid=0"; 
-  // NOTA: Asegúrate de cambiar el "gid=0" por el ID de la pestaña correspondiente si es necesario
-  const urlLecturas = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHvi5eHTHk5p6KAKH0gYgHapEDLFifMwt3tMrJQAFvQ4uLxN03RY-wjF7E-9itEwl4NVX2YdT4F9hF/pub?output=csv&gid=123456789"; 
-
-  try {
-    const [resPreguntas, resLecturas] = await Promise.all([
-      fetch(urlPreguntas),
-      fetch(urlLecturas).catch(() => null)
-    ]);
-
-    if(!resPreguntas.ok) throw new Error("Error al cargar preguntas");
-    
-    preguntas = rowsToObjects(parseCSV(await resPreguntas.text()));
-    lecturas = resLecturas && resLecturas.ok ? rowsToObjects(parseCSV(await resLecturas.text())) : [];
-    
-  } catch(err) {
-    console.warn("No se pudo leer el Sheet publicado, usando datos demo:", err);
-    preguntas = DEMO_PREGUNTAS; 
-    lecturas = DEMO_LECTURAS; 
-    state.demo = true;
+  let preguntas = [], lecturas = [];
+  if(CONFIG.SHEET_ID && CONFIG.SHEET_ID.length > 10){
+    try{
+      console.log("Cargando preguntas...");
+      preguntas = await fetchTab(CONFIG.TAB_PREGUNTAS);
+      
+      try {
+        console.log("Intentando cargar lecturas opcionales...");
+        lecturas = await fetchTab(CONFIG.TAB_LECTURAS);
+      } catch(err) {
+        console.log("Aviso: Pestaña de lecturas no encontrada. Se omitirá.");
+      }
+      
+    }catch(err){
+      console.error("Error crítico al cargar desde el Sheet:", err);
+      alert("No se pudo conectar con el Google Sheet.\nAsegúrate de que el archivo esté compartido como 'Cualquier persona con el enlace' y que usaste el ID de edición.\n\nMostrando datos de prueba.");
+      preguntas=DEMO_PREGUNTAS; lecturas=DEMO_LECTURAS; state.demo=true;
+    }
+  }else{
+    preguntas=DEMO_PREGUNTAS; lecturas=DEMO_LECTURAS; state.demo=true;
   }
-  
   buildSubjects(preguntas, lecturas);
 }
 
 function buildSubjects(preguntas, lecturas){
-  // Mapa de lecturas por id
   const lecMap={};
   (lecturas||[]).forEach(l=>{
     if(!l.lectura_id) return;
-    lecMap[l.lectura_id]={ titulo:l.titulo||"Texto",
-      paras:(l.texto||"").split(/\|\||\n{2,}/).map(p=>p.trim()).filter(Boolean) };
+    lecMap[l.lectura_id]={ titulo:l.titulo||"Texto", paras:(l.texto||"").split(/\|\||\n{2,}/).map(p=>p.trim()).filter(Boolean) };
   });
 
-  // Semana activa = la mayor etiqueta presente (usa formato ISO 2026-W24 para que ordene bien)
   const semanas=[...new Set(preguntas.map(p=>p.semana).filter(Boolean))].sort();
   state.semana = semanas.length ? semanas[semanas.length-1] : "—";
 
@@ -377,67 +358,77 @@ function buildSubjects(preguntas, lecturas){
   state.subjects=subjects;
 }
 
-/* ================================================================
-   ARMADO DEL ENSAYO (aleatorio)
-   ================================================================ */
+function renderHome(){
+  if(state.demo){ $("demoBanner").innerHTML=`Estás viendo datos de prueba. Revisa la consola o actualiza tu <b>SHEET_ID</b>.`; $("demoBanner").style.display="block"; }
+  $("weekEyebrow").textContent=`Semana activa: ${state.semana}`;
+  const list=$("subjectList"); list.innerHTML="";
+  Object.values(state.subjects).forEach(s=>{
+    const d=document.createElement("div"); d.className="subject";
+    d.innerHTML=`<div class="tag" style="background:${s.color}">${s.short}</div><h3>${s.name}</h3><span>${s.pool.length} preguntas disponibles</span>`;
+    d.onclick=()=>{ document.querySelectorAll(".subject").forEach(el=>el.classList.remove("active")); d.classList.add("active"); state.area=s.id; $("startBtn").disabled=false; $("startNote").textContent=s.pool.length+" preguntas listas."; };
+    list.appendChild(d);
+  });
+  if(!Object.keys(state.subjects).length) $("startNote").textContent="No se encontraron preguntas para mostrar.";
+  
+  document.querySelectorAll(".mode").forEach(m=>{
+    m.onclick=()=>{ document.querySelectorAll(".mode").forEach(el=>el.classList.remove("active")); m.classList.add("active"); state.mode=m.dataset.mode; };
+  });
+}
+
 function shuffle(a){ const x=a.slice(); for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];} return x; }
 function buildEnsayo(area){
   const pool=state.subjects[area].pool;
   const picked=shuffle(pool).slice(0, Math.min(CONFIG.PREGUNTAS_POR_ENSAYO, pool.length));
-  return picked.map(q=>({
-    text:q.text, retro:q.retro, passage:q.passage,
-    options: CONFIG.BARAJAR_ALTERNATIVAS ? shuffle(q.options) : q.options.slice()
-  }));
+  return picked.map(q=>({ text:q.text, retro:q.retro, passage:q.passage, options: CONFIG.BARAJAR_ALTERNATIVAS ? shuffle(q.options) : q.options.slice() }));
 }
 
-
-
-/* ================================================================
-   UI: ensayo
-   ================================================================ */
 function fmt(s){const m=Math.floor(s/60),r=s%60;return String(m).padStart(2,"0")+":"+String(r).padStart(2,"0");}
 function startTimer(){
   state.startMs=Date.now();
   const total=state.ensayo.length*CONFIG.SEGUNDOS_POR_PREGUNTA;
   state.timerId=setInterval(()=>{
-    const el=$("#timer"), elapsed=Math.floor((Date.now()-state.startMs)/1000);
+    const el=$("timer"), elapsed=Math.floor((Date.now()-state.startMs)/1000);
     if(state.mode==="ensayo"){
       const left=total-elapsed; el.textContent=fmt(Math.max(0,left));
       el.classList.toggle("danger",left<=60); if(left<=0) finishExam();
     }else el.textContent=fmt(elapsed);
   },1000);
 }
+
 function startExam(){
   state.ensayo=buildEnsayo(state.area);
   state.i=0; state.finished=false; state.answers=new Array(state.ensayo.length).fill(null);
   const s=state.subjects[state.area];
-  $("#examControls").style.display="flex";
-  $("#subjectPill").innerHTML=`<span style="width:8px;height:8px;border-radius:50%;background:${s.color};display:inline-block"></span>${s.short}`;
-  $("#timer").classList.remove("danger"); $("#timer").textContent="00:00";
+  $("examControls").style.display="flex";
+  $("subjectPill").innerHTML=`<span style="width:8px;height:8px;border-radius:50%;background:${s.color};display:inline-block"></span>${s.short}`;
+  $("timer").classList.remove("danger"); $("timer").textContent="00:00";
   buildAnswerSheet(); startTimer(); show("exam"); renderQuestion();
 }
+
 function buildAnswerSheet(){
-  const sheet=$("#answerSheet"); sheet.innerHTML="";
+  const sheet=$("answerSheet"); sheet.innerHTML="";
   state.ensayo.forEach((_,idx)=>{const d=document.createElement("button");d.className="sheet-dot";d.textContent=idx+1;d.onclick=()=>{state.i=idx;renderQuestion();};sheet.appendChild(d);});
 }
+
 function refreshAnswerSheet(){
   document.querySelectorAll(".sheet-dot").forEach((d,idx)=>{d.classList.toggle("answered",state.answers[idx]!==null);d.classList.toggle("current",idx===state.i);});
 }
+
 function renderQuestion(){
   const q=state.ensayo[state.i], n=state.ensayo.length, letters=["A","B","C","D","E"];
   const s=state.subjects[state.area];
-  $("#qNum").textContent=String(state.i+1).padStart(2,"0");
-  $("#qMeta").textContent=`Pregunta ${state.i+1} de ${n} · ${s.name}`;
-  $("#qText").textContent=q.text;
-  $("#progressFill").style.width=(n>1?(state.i/(n-1)*100):100)+"%";
+  $("qNum").textContent=String(state.i+1).padStart(2,"0");
+  $("qMeta").textContent=`Pregunta ${state.i+1} de ${n} · ${s.name}`;
+  $("qText").textContent=q.text;
+  $("progressFill").style.width=(n>1?(state.i/(n-1)*100):100)+"%";
 
-  const grid=$("#examGrid"), box=$("#passageBox");
+  const grid=$("examGrid"), box=$("passageBox");
   if(q.passage){
     grid.classList.add("has-passage"); box.style.display="block";
     box.innerHTML=`<div class="kicker">Lectura</div><h2 class="serif">${q.passage.titulo}</h2>`+q.passage.paras.map(p=>`<p>${p}</p>`).join("");
   }else{ grid.classList.remove("has-passage"); box.style.display="none"; }
 
-  const ob=$("#optionsBox"); ob.innerHTML="";
+  const ob=$("optionsBox"); ob.innerHTML="";
   const given=state.answers[state.i];
   const reveal=state.mode==="practica" && given!==null;
   q.options.forEach((opt,idx)=>{
@@ -448,29 +439,28 @@ function renderQuestion(){
     b.onclick=()=>answer(idx); ob.appendChild(b);
   });
 
-  const fb=$("#feedbackBox");
+  const fb=$("feedbackBox");
   if(reveal){
     const ok=q.options[given].correct;
     const correctLetter=letters[q.options.findIndex(o=>o.correct)];
     fb.className="feedback show "+(ok?"ok":"no");
-    $("#fbBadge").textContent=ok?"¡Correcto!":"Incorrecto · la respuesta es "+correctLetter;
-    $("#fbText").textContent=q.retro;
+    $("fbBadge").textContent=ok?"¡Correcto!":"Incorrecto · la respuesta es "+correctLetter;
+    $("fbText").textContent=q.retro;
   }else fb.className="feedback";
 
-  $("#prevBtn").disabled=state.i===0;
-  $("#nextBtn").textContent=state.i===n-1?"Finalizar ✓":"Siguiente →";
+  $("prevBtn").disabled=state.i===0;
+  $("nextBtn").textContent=state.i===n-1?"Finalizar ✓":"Siguiente →";
   refreshAnswerSheet();
 }
+
 function answer(idx){
   if(state.mode==="practica" && state.answers[state.i]!==null) return;
   state.answers[state.i]=idx; renderQuestion();
 }
+
 function next(){ state.i===state.ensayo.length-1 ? finishExam() : (state.i++, renderQuestion()); }
 function prev(){ if(state.i>0){state.i--;renderQuestion();} }
 
-/* ================================================================
-   Puntaje y resultados
-   ================================================================ */
 function puntajeRef(correct,total){
   const f=total?correct/total:0;
   for(let k=1;k<TABLA_PUNTAJE.length;k++){
@@ -481,6 +471,7 @@ function puntajeRef(correct,total){
   }
   return TABLA_PUNTAJE[TABLA_PUNTAJE.length-1][1];
 }
+
 function finishExam(){
   if(state.finished) return; state.finished=true; clearInterval(state.timerId);
   const qs=state.ensayo, letters=["A","B","C","D","E"];
@@ -490,16 +481,16 @@ function finishExam(){
   const elapsed=Math.floor((Date.now()-state.startMs)/1000);
   const s=state.subjects[state.area];
 
-  $("#pctNum").textContent=pct+"%";
-  $("#stCorrect").textContent=correct; $("#stWrong").textContent=wrong; $("#stBlank").textContent=blank;
-  $("#stScore").textContent="≈ "+puntajeRef(correct,qs.length); $("#stTime").textContent=fmt(elapsed);
-  $("#resultSub").textContent=`${s.name} · ${correct} de ${qs.length} correctas · semana ${state.semana}`;
-  $("#resultHeadline").textContent= pct>=80?"¡Excelente dominio!":pct>=50?"Buen avance, sigue puliendo":"A reforzar lo esencial";
-  $("#scoreNote").textContent="El puntaje es referencial: el puntaje PAES oficial se estandariza a nivel nacional y no puede calcularse localmente. Ajusta la tabla de conversión a tu criterio.";
+  $("pctNum").textContent=pct+"%";
+  $("stCorrect").textContent=correct; $("stWrong").textContent=wrong; $("stBlank").textContent=blank;
+  $("stScore").textContent="≈ "+puntajeRef(correct,qs.length); $("stTime").textContent=fmt(elapsed);
+  $("resultSub").textContent=`${s.name} · ${correct} de ${qs.length} correctas · semana ${state.semana}`;
+  $("resultHeadline").textContent= pct>=80?"¡Excelente dominio!":pct>=50?"Buen avance, sigue puliendo":"A reforzar lo esencial";
+  $("scoreNote").textContent="El puntaje es referencial: el puntaje PAES oficial se estandariza a nivel nacional y no puede calcularse localmente. Ajusta la tabla de conversión a tu criterio.";
 
-  const circ=2*Math.PI*62; $("#ringFill").style.stroke=s.color; $("#ringFill").style.strokeDashoffset=circ*(1-pct/100);
+  const circ=2*Math.PI*62; $("ringFill").style.stroke=s.color; $("ringFill").style.strokeDashoffset=circ*(1-pct/100);
 
-  const rl=$("#reviewList"); rl.innerHTML="";
+  const rl=$("reviewList"); rl.innerHTML="";
   qs.forEach((q,idx)=>{
     const a=state.answers[idx], ok=a!==null&&q.options[a].correct;
     const ci=q.options.findIndex(o=>o.correct);
@@ -511,16 +502,13 @@ function finishExam(){
       <div class="retro"><b>Retroalimentación · </b>${q.retro||"—"}</div>`;
     rl.appendChild(item);
   });
-  $("#examControls").style.display="none"; show("results");
+  $("examControls").style.display="none"; show("results");
 }
 
-/* ================================================================
-   Eventos + arranque
-   ================================================================ */
-$("#startBtn").onclick=startExam;
-$("#nextBtn").onclick=next; $("#prevBtn").onclick=prev;
-$("#retryBtn").onclick=()=>{clearInterval(state.timerId);show("home");};
-$("#exitBtn").onclick=()=>{if(confirm("¿Salir del ensayo? Perderás el progreso.")){clearInterval(state.timerId);$("#examControls").style.display="none";show("home");}};
+$("startBtn").onclick=startExam;
+$("nextBtn").onclick=next; $("prevBtn").onclick=prev;
+$("retryBtn").onclick=()=>{clearInterval(state.timerId);show("home");};
+$("exitBtn").onclick=()=>{if(confirm("¿Salir del ensayo? Perderás el progreso.")){clearInterval(state.timerId);$("examControls").style.display="none";show("home");}};
 document.addEventListener("keydown",e=>{
   if(!screens.exam.classList.contains("on")) return;
   if(e.key==="ArrowRight")next(); if(e.key==="ArrowLeft")prev();
