@@ -1,27 +1,542 @@
-<div id="radio-container">
-  <p id="radio-status">Sintonizando...</p>
-  <audio id="radio-player" controls style="display:none"></audio>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Radio El Rincón | Profe Felipe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+:root {
+  --sea-deep:    #060f1e;
+  --sea-mid:     #0c1f38;
+  --sea-light:   #163356;
+  --gold:        #c9a84c;
+  --gold-light:  #e8c870;
+  --gold-bright: #f5d980;
+  --gold-dark:   #8b6914;
+  --bronze:      #6b4a12;
+  --marble:      #fdfbf7;
+  --stone:       #ede5d0;
+  --text:        #2a1f10;
+  --text-soft:   #4a3820;
+  --onair:       #e02440;
+  --offair:      #9aa3ad;
+  --border-gold: rgba(201,168,76,.25);
+  --ff-title: 'Cinzel', 'Palatino Linotype', Palatino, serif;
+  --ff-body:  'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ff-serif: 'Cormorant Garamond', Georgia, serif;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --card-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(20,16,8,.05);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  font-family: var(--ff-body);
+  color: var(--text);
+  background:
+    radial-gradient(ellipse at 18% -8%, rgba(22,51,86,.85) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 112%, rgba(201,168,76,.12) 0%, transparent 50%),
+    var(--sea-deep);
+  -webkit-font-smoothing: antialiased;
+  padding: 0 1rem 3.5rem;
+  overflow-x: hidden;
+}
+
+/* Burbujas ambientales sutiles (jardín submarino) */
+.bubbles { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+.bubbles i {
+  position: absolute; bottom: -30px;
+  border-radius: 50%;
+  border: 1px solid rgba(201,168,76,.18);
+  background: radial-gradient(circle at 35% 30%, rgba(232,200,112,.10), transparent 60%);
+  animation: rise linear infinite;
+}
+.bubbles i:nth-child(1){ left:8%;  width:10px; height:10px; animation-duration:22s; }
+.bubbles i:nth-child(2){ left:22%; width:16px; height:16px; animation-duration:30s; animation-delay:-8s; }
+.bubbles i:nth-child(3){ left:55%; width:8px;  height:8px;  animation-duration:18s; animation-delay:-4s; }
+.bubbles i:nth-child(4){ left:74%; width:13px; height:13px; animation-duration:26s; animation-delay:-14s; }
+.bubbles i:nth-child(5){ left:90%; width:9px;  height:9px;  animation-duration:21s; animation-delay:-10s; }
+@keyframes rise {
+  to { transform: translateY(-110vh); opacity: 0; }
+}
+
+main { position: relative; z-index: 1; width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+/* ── Barra superior ── */
+.topbar {
+  width: 100%; max-width: 880px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.1rem 0.2rem;
+}
+.back-link {
+  display: inline-flex; align-items: center; gap: 8px;
+  color: var(--gold-light); text-decoration: none;
+  font-family: var(--ff-title); font-size: 0.78rem; letter-spacing: 2px;
+  transition: color .25s var(--ease-out);
+}
+.back-link:hover { color: var(--gold-bright); text-shadow: 0 0 14px rgba(232,200,112,.6); }
+.topbar .brand { color: rgba(232,200,112,.55); font-family: var(--ff-title); font-size: 0.72rem; letter-spacing: 3px; }
+
+/* ── Encabezado ── */
+header { text-align: center; margin: 1.4rem 0 2rem; }
+header .eyebrow {
+  font-family: var(--ff-title); font-size: 0.7rem; letter-spacing: 5px;
+  color: var(--gold); opacity: .8; margin-bottom: .6rem;
+}
+header h1 {
+  font-family: var(--ff-title); font-weight: 700;
+  font-size: clamp(1.7rem, 6vw, 2.9rem);
+  letter-spacing: 6px; color: var(--gold-light);
+  text-shadow: 0 0 34px rgba(201,168,76,.4);
+}
+header .sub {
+  font-family: var(--ff-serif); font-style: italic;
+  color: var(--stone); opacity: .85;
+  font-size: clamp(1rem, 3vw, 1.25rem); margin-top: .55rem;
+}
+
+/* ═══════════════════════════════════════════
+   LA CONSOLA — radio vintage de mármol y oro
+═══════════════════════════════════════════ */
+.console {
+  width: 100%; max-width: 660px;
+  background: linear-gradient(168deg, var(--marble) 0%, var(--stone) 135%);
+  border-radius: 26px;
+  border: 1px solid var(--border-gold);
+  box-shadow: 0 28px 80px rgba(0,0,0,.55), 0 6px 20px rgba(0,0,0,.35),
+              inset 0 1px 0 rgba(255,255,255,.75);
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+.console::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, transparent, var(--gold), var(--gold-bright), var(--gold), transparent);
+  z-index: 2;
+}
+
+/* ── EL DIAL DE SINTONIZACIÓN (firma de la página) ── */
+.dial {
+  position: relative;
+  background: linear-gradient(180deg, #100c04 0%, #1d1608 100%);
+  padding: 1.5rem 1.6rem 1.2rem;
+  border-bottom: 2px solid var(--gold-dark);
+}
+.dial-scale {
+  position: relative;
+  height: 58px;
+  border-top: 1px solid rgba(201,168,76,.4);
+  border-bottom: 1px solid rgba(201,168,76,.4);
+  display: flex; align-items: stretch;
+  overflow: hidden;
+}
+/* marcas del dial */
+.dial-scale .ticks {
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(201,168,76,.55) 0 1px, transparent 1px 10%) ,
+    repeating-linear-gradient(90deg,
+      rgba(201,168,76,.28) 0 1px, transparent 1px 2.5%);
+  background-size: 100% 38%, 100% 20%;
+  background-position: bottom, bottom;
+  background-repeat: no-repeat;
+}
+.dial-scale .stations {
+  position: absolute; inset: 0;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 7px 4px 0;
+  font-family: var(--ff-title); font-size: 0.6rem; letter-spacing: 1.5px;
+  color: rgba(232,200,112,.75);
+  user-select: none;
+}
+.dial-scale .stations span.active { color: var(--gold-bright); text-shadow: 0 0 10px rgba(245,217,128,.7); }
+
+/* la aguja */
+.needle {
+  position: absolute; top: -6px; bottom: -6px; left: 50%;
+  width: 3px;
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+  box-shadow: 0 0 8px rgba(245,217,128,.55);
+  transform: translateX(-50%);
+  transition: box-shadow .5s;
+}
+.needle::after {
+  content: '';
+  position: absolute; top: -5px; left: 50%; transform: translateX(-50%);
+  width: 11px; height: 11px; border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, var(--gold-bright), var(--gold-dark));
+  box-shadow: 0 0 8px rgba(245,217,128,.6);
+}
+.console.live .needle { box-shadow: 0 0 16px rgba(245,217,128,.95); animation: hum 2.4s ease-in-out infinite; }
+@keyframes hum {
+  0%, 100% { transform: translateX(-50%); }
+  50%      { transform: translateX(calc(-50% + 2px)); }
+}
+.dial-label {
+  margin-top: 10px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--ff-title); letter-spacing: 3px; font-size: 0.68rem;
+  color: rgba(232,200,112,.6);
+}
+.dial-label .freq { color: var(--gold-light); font-size: 0.82rem; letter-spacing: 4px; }
+
+/* ── Cuerpo de la consola ── */
+.console-body { padding: 1.8rem 1.8rem 1.6rem; }
+
+.status-row { display: flex; align-items: center; gap: 12px; margin-bottom: 1.3rem; flex-wrap: wrap; }
+.lamp {
+  width: 15px; height: 15px; border-radius: 50%;
+  background: var(--offair);
+  border: 1px solid rgba(0,0,0,.15);
+  transition: all .4s var(--ease-out);
+  flex-shrink: 0;
+}
+.lamp.on {
+  background: var(--onair);
+  box-shadow: 0 0 10px var(--onair), 0 0 26px rgba(224,36,64,.6);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 10px var(--onair), 0 0 26px rgba(224,36,64,.6); }
+  50%      { box-shadow: 0 0 15px var(--onair), 0 0 44px rgba(224,36,64,.85); }
+}
+.status-text { font-family: var(--ff-title); font-size: 1rem; letter-spacing: 3px; color: var(--text-soft); }
+.status-text.on { color: var(--onair); }
+.refresh-btn {
+  margin-left: auto;
+  background: none; border: 1px solid var(--border-gold);
+  border-radius: 10px; padding: 8px 14px;
+  color: var(--bronze); cursor: pointer;
+  font-family: var(--ff-body); font-size: 0.82rem;
+  transition: all .25s var(--ease-out);
+}
+.refresh-btn:hover { background: rgba(201,168,76,.12); border-color: var(--gold); }
+.refresh-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* Ecualizador */
+.eq {
+  display: flex; align-items: flex-end; justify-content: center; gap: 5px;
+  height: 66px; margin: .4rem 0 1.3rem;
+}
+.eq span {
+  width: 7px; border-radius: 4px 4px 0 0;
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold), var(--bronze));
+  height: 12%;
+  opacity: .3;
+  transition: opacity .5s;
+}
+.eq.live span { opacity: 1; animation: bounce 1.1s ease-in-out infinite; }
+.eq span:nth-child(1)  { animation-delay: -0.9s; }
+.eq span:nth-child(2)  { animation-delay: -0.5s; }
+.eq span:nth-child(3)  { animation-delay: -1.1s; }
+.eq span:nth-child(4)  { animation-delay: -0.2s; }
+.eq span:nth-child(5)  { animation-delay: -0.7s; }
+.eq span:nth-child(6)  { animation-delay: -0.4s; }
+.eq span:nth-child(7)  { animation-delay: -1.0s; }
+.eq span:nth-child(8)  { animation-delay: -0.6s; }
+.eq span:nth-child(9)  { animation-delay: -0.3s; }
+.eq span:nth-child(10) { animation-delay: -0.8s; }
+.eq span:nth-child(11) { animation-delay: -0.1s; }
+.eq span:nth-child(12) { animation-delay: -1.2s; }
+@keyframes bounce {
+  0%, 100% { height: 14%; }
+  30%      { height: 88%; }
+  60%      { height: 40%; }
+}
+
+.message {
+  text-align: center;
+  font-family: var(--ff-serif); font-size: 1.2rem; font-style: italic;
+  color: var(--text-soft);
+  margin-bottom: 1.3rem;
+  min-height: 1.6em;
+}
+
+audio { width: 100%; border-radius: 12px; display: none; }
+audio.visible { display: block; }
+
+.console-foot {
+  margin-top: 1.4rem; padding-top: 1rem;
+  border-top: 1px solid var(--border-gold);
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 0.78rem; color: var(--text-soft); opacity: .8;
+  flex-wrap: wrap; gap: 8px;
+}
+
+/* ═══════════════════════════════════════════
+   PARRILLA DE PROGRAMACIÓN
+═══════════════════════════════════════════ */
+.section-title {
+  margin: 2.8rem 0 1.3rem;
+  text-align: center;
+  font-family: var(--ff-title); font-size: clamp(1rem, 3.4vw, 1.3rem);
+  letter-spacing: 4px; color: var(--gold-light);
+  display: flex; align-items: center; gap: 16px;
+  width: 100%; max-width: 880px;
+}
+.section-title::before, .section-title::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-gold));
+}
+.section-title::after { background: linear-gradient(90deg, var(--border-gold), transparent); }
+
+.programs {
+  width: 100%; max-width: 880px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+  gap: 1rem;
+}
+.program {
+  background: linear-gradient(165deg, var(--marble) 0%, var(--stone) 160%);
+  border-radius: 18px;
+  border: 1px solid var(--border-gold);
+  border-top: 3px solid var(--accent, var(--gold));
+  box-shadow: var(--card-shadow);
+  padding: 1.3rem 1.2rem 1.2rem;
+  transition: transform .3s var(--ease-out), box-shadow .3s var(--ease-out);
+  position: relative;
+}
+.program:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 28px rgba(20,16,8,.18), 0 18px 52px rgba(20,16,8,.12);
+}
+.program .icon {
+  width: 46px; height: 46px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.25rem; color: #fff;
+  background: var(--accent, var(--gold));
+  box-shadow: 0 6px 16px rgba(20,16,8,.25);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--accent, var(--gold)) 40%, transparent);
+  margin-bottom: .9rem;
+}
+.program h3 {
+  font-family: var(--ff-title); font-size: 0.92rem; letter-spacing: 1.5px;
+  color: var(--text); margin-bottom: .45rem;
+}
+.program p { font-size: 0.88rem; color: var(--text-soft); line-height: 1.55; }
+.program .slot {
+  display: inline-block; margin-top: .8rem;
+  font-family: var(--ff-title); font-size: 0.66rem; letter-spacing: 1.5px;
+  color: var(--accent, var(--bronze));
+  border: 1px solid var(--border-gold);
+  border-color: color-mix(in srgb, var(--accent, var(--gold)) 40%, transparent);
+  border-radius: 16px; padding: 4px 12px;
+}
+
+/* acentos por programa (paleta de las tarjetas del Rincón) */
+.program.musica      { --accent: #c47a1b; }
+.program.podcast     { --accent: #1a6ecc; }
+.program.entrevistas { --accent: #2e7d52; }
+.program.noticias    { --accent: #9c2733; }
+
+/* ── Nota al pie ── */
+.info {
+  width: 100%; max-width: 880px;
+  margin-top: 2rem;
+  background: rgba(253,251,247,.05);
+  border: 1px solid rgba(201,168,76,.18);
+  border-radius: 16px;
+  padding: 1.1rem 1.4rem;
+  color: var(--stone);
+  font-size: 0.9rem; line-height: 1.6;
+  text-align: center;
+}
+.info strong { color: var(--gold-light); }
+
+@media (max-width: 520px) {
+  .console-body { padding: 1.4rem 1.1rem 1.2rem; }
+  .dial { padding: 1.2rem 1rem 1rem; }
+  .dial-scale .stations { font-size: 0.5rem; letter-spacing: .8px; }
+  header h1 { letter-spacing: 3px; }
+  .refresh-btn { margin-left: 0; width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eq.live span, .lamp.on, .console.live .needle, .bubbles i { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="bubbles" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+
+<main>
+
+<div class="topbar">
+  <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> EL RINCÓN</a>
+  <span class="brand">PROFE FELIPE · 2026</span>
 </div>
 
-<script>
-// La misma técnica de la galleta: hoja publicada como CSV
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSBqwbo0u0aum5yUsCO7nNTBPVVsJGyGe7X3T8snBmaQ4Llz2VhUu5va6o8GThgHwGaz8BAitrg6aYP/pub?output=csv';
+<header>
+  <p class="eyebrow">DESDE EL JARDÍN SUBMARINO</p>
+  <h1>📻 RADIO EL RINCÓN</h1>
+  <p class="sub">Ciencia, música y campeonato — transmisión en vivo</p>
+</header>
 
-fetch(SHEET_URL)
-  .then(r => r.text())
-  .then(text => {
-    const url = text.replace(/"/g, '').trim();
-    const status = document.getElementById('radio-status');
-    const player = document.getElementById('radio-player');
-    if (url.startsWith('https://')) {
-      player.src = url + '/stream';
-      player.style.display = 'block';
-      status.textContent = '🔴 ¡Estamos al aire!';
-    } else {
-      status.textContent = '📻 Radio fuera del aire por ahora';
-    }
-  })
-  .catch(() => {
-    document.getElementById('radio-status').textContent = 'No se pudo sintonizar 😞';
-  });
+<!-- ═══ LA CONSOLA ═══ -->
+<div class="console" id="console">
+
+  <!-- Dial de sintonización -->
+  <div class="dial">
+    <div class="dial-scale">
+      <div class="ticks"></div>
+      <div class="stations">
+        <span>88</span><span>92</span><span>96</span>
+        <span class="active">₣M&nbsp;RINCÓN</span>
+        <span>104</span><span>108</span>
+      </div>
+      <div class="needle"></div>
+    </div>
+    <div class="dial-label">
+      <span>SAN AGUSTÍN · VILLA ALEMANA</span>
+      <span class="freq">₣M ONLINE</span>
+      <span>EST. 2026</span>
+    </div>
+  </div>
+
+  <!-- Cuerpo -->
+  <div class="console-body">
+    <div class="status-row">
+      <span class="lamp" id="lamp"></span>
+      <span class="status-text" id="status-text">SINTONIZANDO…</span>
+      <button class="refresh-btn" id="refresh" title="Volver a sintonizar">
+        <i class="fa-solid fa-rotate"></i> Sintonizar
+      </button>
+    </div>
+
+    <div class="eq" id="eq" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    <p class="message" id="message">Buscando la señal…</p>
+
+    <audio id="player" controls preload="none"></audio>
+
+    <div class="console-foot">
+      <span><i class="fa-solid fa-tower-broadcast" style="color:var(--gold);"></i> Transmisión propia · sin algoritmos</span>
+      <span>🐙 El Rincón de Felipe</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PROGRAMACIÓN ═══ -->
+<h2 class="section-title">PROGRAMACIÓN</h2>
+
+<div class="programs">
+
+  <div class="program musica">
+    <div class="icon"><i class="fa-solid fa-music"></i></div>
+    <h3>MÚSICA</h3>
+    <p>Selección musical del Rincón: clásicos, descubrimientos y, por supuesto, algo de Beatles para el jardín submarino.</p>
+    <span class="slot">BLOQUE MUSICAL</span>
+  </div>
+
+  <div class="program podcast">
+    <div class="icon"><i class="fa-solid fa-podcast"></i></div>
+    <h3>PODCAST</h3>
+    <p>Conversaciones sobre ciencia y curiosidades: evolución, física cotidiana y preguntas que valen la pena hacerse.</p>
+    <span class="slot">CIENCIA & IDEAS</span>
+  </div>
+
+  <div class="program entrevistas">
+    <div class="icon"><i class="fa-solid fa-microphone-lines"></i></div>
+    <h3>ENTREVISTAS</h3>
+    <p>Voces de la comunidad San Agustín: estudiantes, profesores y protagonistas del campeonato frente al micrófono.</p>
+    <span class="slot">COMUNIDAD</span>
+  </div>
+
+  <div class="program noticias">
+    <div class="icon"><i class="fa-solid fa-newspaper"></i></div>
+    <h3>NOTICIAS</h3>
+    <p>Lo que pasa en el colegio y en el mundo: resultados de la Copa San Agustín, avisos importantes y actualidad científica.</p>
+    <span class="slot">EN BREVE</span>
+  </div>
+
+</div>
+
+<div class="info">
+  <strong>¿Cómo escuchar?</strong> La radio transmite en vivo solo en horarios anunciados.
+  Cuando la lámpara esté en <strong>rojo</strong>, dale play y sube el volumen. Si está fuera del aire,
+  presiona «Sintonizar» más tarde para revisar de nuevo. 🎙️
+</div>
+
+</main>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   CONFIGURACIÓN — hoja publicada en la web (CSV)
+   La celda A1 debe contener la URL del túnel SIN /stream,
+   ej: https://palabras-random.trycloudflare.com
+═══════════════════════════════════════════════════════ */
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSBqwbo0u0aum5yUsCO7nNTBPVVsJGyGe7X3T8snBmaQ4Llz2VhUu5va6o8GThgHwGaz8BAitrg6aYP/pub?output=csv';
+const MOUNT     = '/stream';   // mountpoint configurado en BUTT
+/* ═══════════════════════════════════════════════════════ */
+
+const consoleEl = document.getElementById('console');
+const lamp      = document.getElementById('lamp');
+const status_   = document.getElementById('status-text');
+const message   = document.getElementById('message');
+const player    = document.getElementById('player');
+const eq        = document.getElementById('eq');
+
+function setState(state, msg){
+  const live = state === 'live';
+  lamp.classList.toggle('on', live);
+  status_.classList.toggle('on', live);
+  eq.classList.toggle('live', live);
+  consoleEl.classList.toggle('live', live);
+  if (live) {
+    status_.textContent = 'AL AIRE';
+    player.classList.add('visible');
+  } else {
+    status_.textContent = state === 'error' ? 'SIN SEÑAL' : 'FUERA DEL AIRE';
+    player.classList.remove('visible');
+    player.removeAttribute('src');
+  }
+  message.textContent = msg;
+}
+
+function sintonizar(){
+  status_.textContent = 'SINTONIZANDO…';
+  message.textContent = 'Buscando la señal…';
+
+  fetch(SHEET_URL + '&t=' + Date.now())
+    .then(r => { if (!r.ok) throw new Error('sheet'); return r.text(); })
+    .then(text => {
+      // Tomamos solo la primera celda (A1) del CSV publicado
+      const firstLine = text.split(/\r?\n/)[0] || '';
+      const url = firstLine.split(',')[0].replace(/"/g, '').trim();
+      if (url.startsWith('https://')) {
+        player.src = url.replace(/\/+$/, '') + MOUNT;
+        setState('live', '¡Estamos transmitiendo! Dale play. 🔴');
+      } else {
+        setState('off', 'No hay transmisión en este momento. Vuelve más tarde. 🌙');
+      }
+    })
+    .catch(() => {
+      setState('error', 'No se pudo revisar la señal. Revisa tu conexión y presiona «Sintonizar».');
+    });
+}
+
+document.getElementById('refresh').addEventListener('click', sintonizar);
+
+/* Si el oyente deja la página abierta, revisa la señal cada 90 segundos
+   mientras NO esté reproduciendo (para no interrumpir el audio). */
+setInterval(() => { if (player.paused || !player.src) sintonizar(); }, 90000);
+
+sintonizar();
 </script>
+
+</body>
+</html>
