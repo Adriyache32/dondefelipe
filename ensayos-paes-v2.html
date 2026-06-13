@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sala de Ensayo · PAES</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --base:#EEF1F6; --surface:#FFFFFF; --ink:#16202E; --muted:#64748B; --line:#E2E8F0;
+    --action:#4338CA; --action-soft:#EEF0FD;
+    --correct:#16A34A; --correct-soft:#E7F6ED; --wrong:#E11D48; --wrong-soft:#FDEAEF;
+    --radius:16px; --shadow:0 1px 2px rgba(16,32,46,.04), 0 8px 30px rgba(16,32,46,.06);
+  }
+  *{box-sizing:border-box} html,body{margin:0;padding:0}
+  body{font-family:"Inter",system-ui,sans-serif;background:var(--base);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+  .serif{font-family:"Fraunces",Georgia,serif} .mono{font-family:"JetBrains Mono",monospace}
+
+  header.topbar{position:sticky;top:0;z-index:20;background:rgba(238,241,246,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .topbar .row{display:flex;align-items:center;gap:16px;height:60px}
+  .brand{font-family:"Fraunces";font-weight:600;font-size:18px;letter-spacing:-.01em} .brand b{color:var(--action)}
+  .topbar .right{margin-left:auto;display:flex;align-items:center;gap:14px}
+  .pill{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--muted);background:var(--surface);border:1px solid var(--line);padding:6px 12px;border-radius:999px}
+  .timer{color:var(--ink)} .timer.danger{color:var(--wrong);border-color:var(--wrong)}
+  .ghost-btn{border:1px solid var(--line);background:var(--surface);color:var(--muted);font:inherit;font-size:13px;font-weight:600;padding:7px 13px;border-radius:999px;cursor:pointer}
+  .ghost-btn:hover{color:var(--ink);border-color:var(--ink)}
+
+  /* Banner de modo demo */
+  .demo-banner{background:#FFF7ED;border:1px solid #FED7AA;color:#9A3412;border-radius:12px;padding:12px 16px;font-size:13.5px;margin:18px 0 0}
+  .demo-banner b{color:#7C2D12}
+  .demo-banner code{background:#FFEAD5;padding:1px 6px;border-radius:5px;font-family:"JetBrains Mono";font-size:12px}
+
+  .hero{padding:44px 0 24px}
+  .eyebrow{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--action)}
+  .hero h1{font-family:"Fraunces";font-weight:600;font-size:clamp(34px,6vw,54px);line-height:1.05;letter-spacing:-.02em;margin:14px 0 12px;max-width:18ch}
+  .hero p{font-size:18px;color:var(--muted);max-width:54ch;margin:0}
+
+  .section-label{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:40px 0 14px}
+  .subjects{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+  .subject{text-align:left;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;transition:border-color .15s, transform .15s, box-shadow .15s}
+  .subject:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:transparent}
+  .subject.active{border-color:var(--action);box-shadow:0 0 0 3px var(--action-soft)}
+  .subject .tag{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-family:"JetBrains Mono";font-weight:700;color:#fff;margin-bottom:14px;font-size:15px}
+  .subject h3{margin:0 0 4px;font-size:16px;font-weight:600} .subject span{font-size:13px;color:var(--muted)}
+
+  .modes{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  .mode{cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;transition:border-color .15s, box-shadow .15s}
+  .mode:hover{border-color:var(--ink)} .mode.active{border-color:var(--action);box-shadow:0 0 0 3px var(--action-soft)}
+  .mode h4{margin:0 0 4px;font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px} .mode p{margin:0;font-size:13px;color:var(--muted)}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--line)} .mode.active .dot{background:var(--action)}
+
+  .start-row{display:flex;align-items:center;gap:16px;margin:34px 0 80px;flex-wrap:wrap}
+  .btn-primary{background:var(--action);color:#fff;border:none;font:inherit;font-weight:600;font-size:16px;padding:15px 30px;border-radius:12px;cursor:pointer;transition:filter .15s, transform .1s}
+  .btn-primary:hover{filter:brightness(1.08)} .btn-primary:active{transform:scale(.98)} .btn-primary:disabled{opacity:.4;cursor:not-allowed}
+  .start-note{font-size:14px;color:var(--muted)}
+
+  .screen{display:none} .screen.on{display:block}
+  .progress-track{height:4px;background:var(--line)} .progress-fill{height:100%;background:var(--action);width:0;transition:width .3s ease}
+  .exam-grid{display:grid;grid-template-columns:1fr;gap:24px;padding:30px 0 140px}
+  .exam-grid.has-passage{grid-template-columns:1fr 1fr}
+  .passage{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:26px 28px;align-self:start;position:sticky;top:84px;max-height:calc(100vh - 110px);overflow:auto}
+  .passage .kicker{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--action);margin-bottom:10px}
+  .passage h2{font-family:"Fraunces";font-weight:600;font-size:21px;margin:0 0 14px;letter-spacing:-.01em}
+  .passage p{font-size:15.5px;color:#33414f;margin:0 0 13px}
+
+  .qcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:28px}
+  .qhead{display:flex;align-items:baseline;gap:12px;margin-bottom:18px}
+  .qnum{font-family:"JetBrains Mono";font-weight:700;font-size:13px;color:#fff;background:var(--ink);padding:4px 9px;border-radius:7px}
+  .qmeta{font-size:13px;color:var(--muted);font-weight:500}
+  .qtext{font-family:"Fraunces";font-weight:500;font-size:20px;line-height:1.4;margin:0 0 22px;letter-spacing:-.01em}
+
+  .options{display:flex;flex-direction:column;gap:10px}
+  .opt{display:flex;align-items:flex-start;gap:14px;text-align:left;width:100%;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:14px 16px;cursor:pointer;font:inherit;font-size:15.5px;color:var(--ink);transition:border-color .12s, background .12s}
+  .opt:hover:not(:disabled){border-color:var(--action)} .opt:disabled{cursor:default}
+  .bubble{flex-shrink:0;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-family:"JetBrains Mono";font-weight:700;font-size:14px;color:var(--muted);transition:all .12s}
+  .opt.selected{border-color:var(--action);background:var(--action-soft)} .opt.selected .bubble{background:var(--action);border-color:var(--action);color:#fff}
+  .opt.correct{border-color:var(--correct);background:var(--correct-soft)} .opt.correct .bubble{background:var(--correct);border-color:var(--correct);color:#fff}
+  .opt.wrong{border-color:var(--wrong);background:var(--wrong-soft)} .opt.wrong .bubble{background:var(--wrong);border-color:var(--wrong);color:#fff}
+  .opt-text{padding-top:3px}
+
+  .feedback{margin-top:20px;border-radius:12px;padding:16px 18px;font-size:15px;display:none} .feedback.show{display:block}
+  .feedback .badge{font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase;display:inline-block;margin-bottom:6px}
+  .feedback.ok{background:var(--correct-soft)} .feedback.ok .badge{color:var(--correct)}
+  .feedback.no{background:var(--wrong-soft)} .feedback.no .badge{color:var(--wrong)} .feedback p{margin:0;color:#33414f}
+
+  .navbar{position:fixed;bottom:0;left:0;right:0;z-index:15;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
+  .navbar .row{display:flex;align-items:center;gap:14px;padding:14px 0}
+  .nav-btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:600;font-size:14px;padding:11px 20px;border-radius:10px;cursor:pointer}
+  .nav-btn:hover:not(:disabled){border-color:var(--ink)} .nav-btn:disabled{opacity:.4;cursor:not-allowed}
+  .nav-btn.solid{background:var(--action);border-color:var(--action);color:#fff} .nav-btn.solid:hover{filter:brightness(1.08)}
+  .answersheet{display:flex;gap:7px;flex-wrap:wrap;margin-left:auto}
+  .sheet-dot{width:30px;height:30px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);font-family:"JetBrains Mono";font-weight:700;font-size:12px;color:var(--muted);cursor:pointer;display:grid;place-items:center;transition:all .12s}
+  .sheet-dot.answered{background:var(--ink);color:#fff;border-color:var(--ink)} .sheet-dot.current{box-shadow:0 0 0 3px var(--action-soft);border-color:var(--action)}
+
+  .results{padding:50px 0 90px;max-width:760px;margin:0 auto}
+  .score-card{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:36px;display:flex;align-items:center;gap:34px;flex-wrap:wrap;margin-bottom:6px}
+  .ring{position:relative;width:140px;height:140px;flex-shrink:0} .ring svg{transform:rotate(-90deg)}
+  .ring .pct{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+  .ring .pct b{font-family:"Fraunces";font-size:34px;font-weight:600;display:block;line-height:1} .ring .pct span{font-size:12px;color:var(--muted);font-weight:600}
+  .score-meta h2{font-family:"Fraunces";font-weight:600;font-size:26px;margin:0 0 6px;letter-spacing:-.01em} .score-meta p{margin:0 0 16px;color:var(--muted)}
+  .stats{display:flex;gap:26px;flex-wrap:wrap}
+  .stat b{font-family:"JetBrains Mono";font-size:22px;display:block;line-height:1.1} .stat span{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+  .stat.c b{color:var(--correct)} .stat.w b{color:var(--wrong)} .stat.p b{color:var(--action)}
+  .score-disclaimer{font-size:12.5px;color:var(--muted);margin:8px 2px 0}
+  .review-title{font-family:"Fraunces";font-weight:600;font-size:20px;margin:34px 0 16px}
+  .review-item{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:12px}
+  .review-item .rq{font-weight:600;font-size:15.5px;margin:0 0 12px;display:flex;gap:10px} .review-item .rq .n{font-family:"JetBrains Mono";color:var(--muted);flex-shrink:0}
+  .ans-line{font-size:14.5px;margin:4px 0;display:flex;gap:8px;align-items:flex-start} .ans-line .lbl{font-weight:600;min-width:120px;color:var(--muted)}
+  .ans-line.ok .val{color:var(--correct);font-weight:600} .ans-line.no .val{color:var(--wrong);font-weight:600}
+  .retro{margin-top:12px;padding:13px 15px;background:var(--base);border-radius:10px;font-size:14.5px;color:#33414f} .retro b{color:var(--ink)}
+
+  /* Pantalla de carga */
+  .loader{min-height:60vh;display:grid;place-content:center;text-align:center;gap:16px}
+  .spinner{width:38px;height:38px;border:3px solid var(--line);border-top-color:var(--action);border-radius:50%;margin:0 auto;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loader p{color:var(--muted);font-size:15px;margin:0}
+
+  @media (max-width:780px){
+    .exam-grid.has-passage{grid-template-columns:1fr} .passage{position:static;max-height:none}
+    .modes{grid-template-columns:1fr} .answersheet{display:none}
+    .navbar .row{gap:10px} .nav-btn{flex:1;text-align:center;padding:13px 10px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important};.spinner{animation:none}}
+  :focus-visible{outline:3px solid var(--action);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap row">
+    <div class="brand">Sala de <b>Ensayo</b></div>
+    <div class="right" id="examControls" style="display:none">
+      <span class="pill" id="subjectPill">—</span>
+      <span class="pill mono timer" id="timer">00:00</span>
+      <button class="ghost-btn" id="exitBtn">Salir</button>
+    </div>
+  </div>
+</header>
+
+<!-- CARGA -->
+<section class="screen on" id="loadScreen">
+  <div class="wrap loader">
+    <div class="spinner"></div>
+    <p>Cargando los ensayos de la semana…</p>
+  </div>
+</section>
+
+<!-- INICIO -->
+<section class="screen" id="homeScreen">
+  <div class="wrap">
+    <div class="demo-banner" id="demoBanner" style="display:none"></div>
+    <div class="hero">
+      <div class="eyebrow" id="weekEyebrow">Facsímil interactivo</div>
+      <h1 class="serif">Practica para la PAES y revisa cada respuesta al instante.</h1>
+      <p>Elige una prueba, responde un ensayo armado al azar desde el banco de la semana y recibe retroalimentación pregunta por pregunta.</p>
+    </div>
+    <div class="section-label">1 · Elige la prueba</div>
+    <div class="subjects" id="subjectList"></div>
+    <div class="section-label">2 · Elige el modo</div>
+    <div class="modes">
+      <div class="mode active" data-mode="practica" tabindex="0" role="button">
+        <h4><span class="dot"></span>Práctica guiada</h4>
+        <p>Ves si acertaste y la explicación justo después de cada pregunta. Ideal para aprender.</p>
+      </div>
+      <div class="mode" data-mode="ensayo" tabindex="0" role="button">
+        <h4><span class="dot"></span>Ensayo cronometrado</h4>
+        <p>Tiempo en contra y sin pistas. La retroalimentación llega al final, como en la prueba real.</p>
+      </div>
+    </div>
+    <div class="start-row">
+      <button class="btn-primary" id="startBtn" disabled>Comenzar ensayo</button>
+      <span class="start-note" id="startNote">Selecciona una prueba para empezar.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ENSAYO -->
+<section class="screen" id="examScreen">
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="wrap">
+    <div class="exam-grid" id="examGrid">
+      <div class="passage" id="passageBox" style="display:none"></div>
+      <div class="qcard">
+        <div class="qhead"><span class="qnum" id="qNum">01</span><span class="qmeta" id="qMeta"></span></div>
+        <p class="qtext serif" id="qText"></p>
+        <div class="options" id="optionsBox"></div>
+        <div class="feedback" id="feedbackBox"><span class="badge" id="fbBadge"></span><p id="fbText"></p></div>
+      </div>
+    </div>
+  </div>
+  <div class="navbar"><div class="wrap row">
+    <button class="nav-btn" id="prevBtn">← Anterior</button>
+    <button class="nav-btn solid" id="nextBtn">Siguiente →</button>
+    <div class="answersheet" id="answerSheet"></div>
+  </div></div>
+</section>
+
+<!-- RESULTADOS -->
+<section class="screen" id="resultsScreen">
+  <div class="wrap results">
+    <div class="score-card">
+      <div class="ring">
+        <svg width="140" height="140">
+          <circle cx="70" cy="70" r="62" fill="none" stroke="#E2E8F0" stroke-width="14"/>
+          <circle id="ringFill" cx="70" cy="70" r="62" fill="none" stroke="#4338CA" stroke-width="14" stroke-linecap="round" stroke-dasharray="389.5" stroke-dashoffset="389.5"/>
+        </svg>
+        <div class="pct"><b id="pctNum">0%</b><span>logro</span></div>
+      </div>
+      <div class="score-meta">
+        <h2 class="serif" id="resultHeadline">Ensayo finalizado</h2>
+        <p id="resultSub"></p>
+        <div class="stats">
+          <div class="stat c"><b id="stCorrect">0</b><span>Correctas</span></div>
+          <div class="stat w"><b id="stWrong">0</b><span>Incorrectas</span></div>
+          <div class="stat"><b id="stBlank">0</b><span>Omitidas</span></div>
+          <div class="stat p"><b id="stScore" class="mono">—</b><span>Puntaje ref.</span></div>
+          <div class="stat"><b id="stTime" class="mono">00:00</b><span>Tiempo</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="score-disclaimer" id="scoreNote"></p>
+    <h3 class="review-title">Retroalimentación pregunta por pregunta</h3>
+    <div id="reviewList"></div>
+    <div class="start-row"><button class="btn-primary" id="retryBtn">Hacer otro ensayo</button></div>
+  </div>
+</section>
+
+<script>
+/* ================================================================
+   CONFIGURACIÓN  ── lo único que tú editas habitualmente
+   ================================================================ */
+const CONFIG = {
+  // Pega aquí el ID de tu Google Sheet (lo que va entre /d/ y /edit en la URL).
+  // Deja "" para usar los datos de ejemplo incluidos abajo.
+  SHEET_ID: "",
+  TAB_PREGUNTAS: "Preguntas",     // nombre de la pestaña con las preguntas
+  TAB_LECTURAS:  "Lecturas",      // nombre de la pestaña con los textos de lectura
+  PREGUNTAS_POR_ENSAYO: 30,       // cuántas saca al azar del banco de la semana (pon 100 para el banco completo)
+  SEGUNDOS_POR_PREGUNTA: 90,      // tiempo del modo ensayo = preguntas × esto
+  BARAJAR_ALTERNATIVAS: true      // mezcla el orden de A–E para evitar memorización
+};
+
+// Áreas: id (como va en la columna "area" del Sheet) → nombre visible, sigla y color.
+const AREAS = {
+  lectora:  { name:"Competencia Lectora",        short:"CL", color:"#4338CA" },
+  m1:       { name:"Competencia Matemática (M1)", short:"M1", color:"#0D9488" },
+  ciencias: { name:"Ciencias",                    short:"CS", color:"#DB2777" },
+  historia: { name:"Historia y Ed. Ciudadana",    short:"HC", color:"#D97706" }
+};
+
+// Tabla de conversión referencial: fracción de acierto → puntaje (escala 100–1000).
+// OJO: el puntaje PAES real es estandarizado a nivel nacional; esto es solo una ESTIMACIÓN.
+// Ajusta los puntos a tu criterio (o a las tablas referenciales del DEMRE).
+const TABLA_PUNTAJE = [[0,100],[0.30,500],[0.50,650],[0.70,800],[0.85,900],[1,1000]];
+
+/* ================================================================
+   DATOS DE EJEMPLO (se usan si SHEET_ID está vacío o falla la carga)
+   Reproducen exactamente la forma que tendrán las filas del Sheet.
+   ================================================================ */
+const DEMO_LECTURAS = [
+  { lectura_id:"L1", titulo:"Leer despacio en la era de la distracción",
+    texto:"Leer un texto extenso exige hoy un esfuerzo poco habitual. Acostumbrados a desplazarnos por pantallas que renuevan su contenido cada pocos segundos, hemos entrenado a nuestra atención para saltar antes que para detenerse.||Sin embargo, comprender una idea compleja requiere lo contrario: permanecer. Quien lee con calma construye relaciones, anticipa, duda y vuelve atrás cuando algo no calza.||Esa lentitud no es una pérdida de tiempo, sino la condición del pensamiento profundo. Leer despacio no es nostalgia, sino una forma de resistencia frente a una cultura que premia la velocidad por sobre la comprensión." }
+];
+const DEMO_PREGUNTAS = [
+  {semana:"2026-W24",area:"lectora",enunciado:"¿Cuál es el propósito principal del texto?",A:"Criticar el uso de pantallas.",B:"Defender el valor de la lectura pausada para el pensamiento.",C:"Describir cómo funciona la atención.",D:"Comparar lectura digital y en papel.",E:"Lamentar la desaparición de los libros.",correcta:"B",retro:"Argumenta a favor de “leer despacio” como condición del pensamiento profundo; no se limita a criticar ni describir.",lectura_id:"L1"},
+  {semana:"2026-W24",area:"lectora",enunciado:"¿Qué implica “permanecer” al leer, según el texto?",A:"Memorizar el texto.",B:"Mantener la atención de forma sostenida.",C:"Evitar los dispositivos.",D:"Leer solo textos difíciles.",E:"Detenerse en palabras nuevas.",correcta:"B",retro:"“Permanecer” se opone a “saltar”: es atención sostenida, no memorización.",lectura_id:"L1"},
+  {semana:"2026-W24",area:"lectora",enunciado:"La expresión “forma de resistencia” en el cierre…",A:"Indica esfuerzo físico.",B:"Plantea la lectura pausada como postura crítica frente a la cultura de la velocidad.",C:"Dice que leer está prohibido.",D:"Propone dejar la tecnología.",E:"Expresa nostalgia.",correcta:"B",retro:"Se opone a “una cultura que premia la velocidad”; el texto descarta la nostalgia.",lectura_id:"L1"},
+  {semana:"2026-W24",area:"m1",enunciado:"Si 3(x − 2) = 2x + 4, ¿cuál es el valor de x?",A:"−2",B:"2",C:"6",D:"8",E:"10",correcta:"E",retro:"3x − 6 = 2x + 4 → x − 6 = 4 → x = 10.",lectura_id:""},
+  {semana:"2026-W24",area:"m1",enunciado:"Un producto cuesta $12.000 con 25% de descuento. Precio final:",A:"$3.000",B:"$8.000",C:"$9.000",D:"$9.600",E:"$15.000",correcta:"C",retro:"25% de 12.000 = 3.000. Final = 12.000 − 3.000 = 9.000.",lectura_id:""},
+  {semana:"2026-W24",area:"m1",enunciado:"Catetos de 6 y 8 cm. ¿Hipotenusa?",A:"10 cm",B:"12 cm",C:"14 cm",D:"48 cm",E:"100 cm",correcta:"A",retro:"Pitágoras: √(36+64)=√100=10 cm.",lectura_id:""},
+  {semana:"2026-W24",area:"ciencias",enunciado:"Función principal de los glóbulos rojos:",A:"Defender de infecciones.",B:"Transportar oxígeno.",C:"Coagular la sangre.",D:"Producir anticuerpos.",E:"Regular la temperatura.",correcta:"B",retro:"La hemoglobina transporta oxígeno desde los pulmones a los tejidos.",lectura_id:""},
+  {semana:"2026-W24",area:"ciencias",enunciado:"¿Cuál es un cambio químico?",A:"Derretir hielo.",B:"Disolver azúcar.",C:"Oxidación del hierro.",D:"Romper un vidrio.",E:"Evaporar agua.",correcta:"C",retro:"La oxidación forma una sustancia nueva; los demás son cambios físicos.",lectura_id:""},
+  {semana:"2026-W24",area:"historia",enunciado:"Órgano que elabora las leyes en Chile:",A:"Poder Judicial.",B:"Congreso Nacional.",C:"Contraloría.",D:"Banco Central.",E:"Tribunal Constitucional.",correcta:"B",retro:"El Congreso (Diputados + Senado) ejerce la función legislativa.",lectura_id:""},
+  {semana:"2026-W24",area:"historia",enunciado:"La “separación de poderes” busca principalmente:",A:"Concentrar el poder.",B:"Equilibrar poderes independientes para evitar abusos.",C:"Eliminar el poder judicial.",D:"Dar el legislativo al presidente.",E:"Reducir la participación.",correcta:"B",retro:"Poderes que se controlan entre sí evitan la concentración y el abuso.",lectura_id:""}
+];
+
+/* ================================================================
+   CARGA DE DATOS (Google Sheet vía gviz/CSV, con respaldo demo)
+   ================================================================ */
+function gvizURL(tab){
+  return `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
+}
+// Parser de CSV tolerante (maneja comillas, comas y saltos de línea dentro de celdas).
+function parseCSV(text){
+  const rows=[]; let row=[], field="", inQ=false, i=0;
+  while(i<text.length){
+    const c=text[i];
+    if(inQ){
+      if(c==='"'){ if(text[i+1]==='"'){field+='"';i+=2;continue;} inQ=false;i++;continue; }
+      field+=c;i++;continue;
+    }
+    if(c==='"'){inQ=true;i++;continue;}
+    if(c===','){row.push(field);field="";i++;continue;}
+    if(c==='\r'){i++;continue;}
+    if(c==='\n'){row.push(field);rows.push(row);row=[];field="";i++;continue;}
+    field+=c;i++;
+  }
+  if(field.length||row.length){row.push(field);rows.push(row);}
+  return rows;
+}
+function rowsToObjects(rows){
+  if(!rows.length) return [];
+  const head=rows[0].map(h=>h.trim().toLowerCase());
+  return rows.slice(1).filter(r=>r.some(c=>c.trim()!=="")).map(r=>{
+    const o={}; head.forEach((h,k)=>o[h]=(r[k]||"").trim()); return o;
+  });
+}
+async function fetchTab(tab){
+  const res=await fetch(gvizURL(tab));
+  if(!res.ok) throw new Error("HTTP "+res.status);
+  return rowsToObjects(parseCSV(await res.text()));
+}
+
+const state={ subjects:{}, semana:"", demo:false, area:null, mode:"practica",
+              ensayo:[], i:0, answers:[], startMs:0, timerId:null, finished:false };
+
+async function loadData(){
+  let preguntas, lecturas;
+  if(CONFIG.SHEET_ID){
+    try{
+      [preguntas, lecturas] = await Promise.all([
+        fetchTab(CONFIG.TAB_PREGUNTAS),
+        fetchTab(CONFIG.TAB_LECTURAS).catch(()=>[])  // las lecturas son opcionales
+      ]);
+    }catch(err){
+      console.warn("No se pudo leer el Sheet, uso datos de ejemplo:",err);
+      preguntas=DEMO_PREGUNTAS; lecturas=DEMO_LECTURAS; state.demo=true;
+    }
+  }else{
+    preguntas=DEMO_PREGUNTAS; lecturas=DEMO_LECTURAS; state.demo=true;
+  }
+  buildSubjects(preguntas, lecturas);
+}
+
+function buildSubjects(preguntas, lecturas){
+  // Mapa de lecturas por id
+  const lecMap={};
+  (lecturas||[]).forEach(l=>{
+    if(!l.lectura_id) return;
+    lecMap[l.lectura_id]={ titulo:l.titulo||"Texto",
+      paras:(l.texto||"").split(/\|\||\n{2,}/).map(p=>p.trim()).filter(Boolean) };
+  });
+
+  // Semana activa = la mayor etiqueta presente (usa formato ISO 2026-W24 para que ordene bien)
+  const semanas=[...new Set(preguntas.map(p=>p.semana).filter(Boolean))].sort();
+  state.semana = semanas.length ? semanas[semanas.length-1] : "—";
+
+  const letters=["a","b","c","d","e"];
+  const subjects={};
+  preguntas.filter(p=> (p.semana||state.semana)===state.semana ).forEach(p=>{
+    const areaId=(p.area||"").toLowerCase();
+    if(!areaId || !p.enunciado) return;
+    const meta=AREAS[areaId] || { name:areaId, short:areaId.slice(0,2).toUpperCase(), color:"#4338CA" };
+    if(!subjects[areaId]) subjects[areaId]={ id:areaId, ...meta, pool:[] };
+    const correctLetter=(p.correcta||"").trim().toLowerCase();
+    const options=letters
+      .filter(L=> (p[L]||"").trim()!=="")
+      .map(L=>({ text:p[L].trim(), correct:L===correctLetter }));
+    subjects[areaId].pool.push({
+      text:p.enunciado, options, retro:p.retro||"",
+      passage: p.lectura_id && lecMap[p.lectura_id] ? lecMap[p.lectura_id] : null
+    });
+  });
+  state.subjects=subjects;
+}
+
+/* ================================================================
+   ARMADO DEL ENSAYO (aleatorio)
+   ================================================================ */
+function shuffle(a){ const x=a.slice(); for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];} return x; }
+function buildEnsayo(area){
+  const pool=state.subjects[area].pool;
+  const picked=shuffle(pool).slice(0, Math.min(CONFIG.PREGUNTAS_POR_ENSAYO, pool.length));
+  return picked.map(q=>({
+    text:q.text, retro:q.retro, passage:q.passage,
+    options: CONFIG.BARAJAR_ALTERNATIVAS ? shuffle(q.options) : q.options.slice()
+  }));
+}
+
+/* ================================================================
+   UI: inicio
+   ================================================================ */
+const $=s=>document.querySelector(s);
+const screens={load:$("#loadScreen"),home:$("#homeScreen"),exam:$("#examScreen"),results:$("#resultsScreen")};
+function show(name){ for(const k in screens) screens[k].classList.toggle("on",k===name); window.scrollTo(0,0); }
+
+function renderHome(){
+  $("#weekEyebrow").textContent = "Ensayo de la semana · "+state.semana;
+  if(state.demo){
+    const b=$("#demoBanner"); b.style.display="block";
+    b.innerHTML = `<b>Modo demostración.</b> Estás viendo preguntas de ejemplo. Para conectar tu banco, pega el ID de tu Google Sheet en <code>CONFIG.SHEET_ID</code> dentro del archivo.`;
+  }
+  const list=$("#subjectList"); list.innerHTML="";
+  const ids=Object.keys(state.subjects);
+  if(!ids.length){ list.innerHTML=`<p style="color:var(--muted)">No hay preguntas para la semana ${state.semana}. Revisa la columna <b>semana</b> en tu Sheet.</p>`; }
+  ids.forEach(id=>{
+    const s=state.subjects[id];
+    const card=document.createElement("button");
+    card.className="subject";
+    card.innerHTML=`<div class="tag" style="background:${s.color}">${s.short}</div><h3>${s.name}</h3><span>${s.pool.length} preguntas en el banco</span>`;
+    card.onclick=()=>{
+      state.area=id;
+      document.querySelectorAll(".subject").forEach(c=>c.classList.remove("active"));
+      card.classList.add("active");
+      $("#startBtn").disabled=false;
+      const n=Math.min(CONFIG.PREGUNTAS_POR_ENSAYO,s.pool.length);
+      $("#startNote").textContent=`Listo: ${s.name}, ${n} preguntas al azar.`;
+    };
+    list.appendChild(card);
+  });
+  document.querySelectorAll(".mode").forEach(m=>{
+    const pick=()=>{document.querySelectorAll(".mode").forEach(x=>x.classList.remove("active"));m.classList.add("active");state.mode=m.dataset.mode;};
+    m.onclick=pick; m.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();pick();}};
+  });
+}
+
+/* ================================================================
+   UI: ensayo
+   ================================================================ */
+function fmt(s){const m=Math.floor(s/60),r=s%60;return String(m).padStart(2,"0")+":"+String(r).padStart(2,"0");}
+function startTimer(){
+  state.startMs=Date.now();
+  const total=state.ensayo.length*CONFIG.SEGUNDOS_POR_PREGUNTA;
+  state.timerId=setInterval(()=>{
+    const el=$("#timer"), elapsed=Math.floor((Date.now()-state.startMs)/1000);
+    if(state.mode==="ensayo"){
+      const left=total-elapsed; el.textContent=fmt(Math.max(0,left));
+      el.classList.toggle("danger",left<=60); if(left<=0) finishExam();
+    }else el.textContent=fmt(elapsed);
+  },1000);
+}
+function startExam(){
+  state.ensayo=buildEnsayo(state.area);
+  state.i=0; state.finished=false; state.answers=new Array(state.ensayo.length).fill(null);
+  const s=state.subjects[state.area];
+  $("#examControls").style.display="flex";
+  $("#subjectPill").innerHTML=`<span style="width:8px;height:8px;border-radius:50%;background:${s.color};display:inline-block"></span>${s.short}`;
+  $("#timer").classList.remove("danger"); $("#timer").textContent="00:00";
+  buildAnswerSheet(); startTimer(); show("exam"); renderQuestion();
+}
+function buildAnswerSheet(){
+  const sheet=$("#answerSheet"); sheet.innerHTML="";
+  state.ensayo.forEach((_,idx)=>{const d=document.createElement("button");d.className="sheet-dot";d.textContent=idx+1;d.onclick=()=>{state.i=idx;renderQuestion();};sheet.appendChild(d);});
+}
+function refreshAnswerSheet(){
+  document.querySelectorAll(".sheet-dot").forEach((d,idx)=>{d.classList.toggle("answered",state.answers[idx]!==null);d.classList.toggle("current",idx===state.i);});
+}
+function renderQuestion(){
+  const q=state.ensayo[state.i], n=state.ensayo.length, letters=["A","B","C","D","E"];
+  const s=state.subjects[state.area];
+  $("#qNum").textContent=String(state.i+1).padStart(2,"0");
+  $("#qMeta").textContent=`Pregunta ${state.i+1} de ${n} · ${s.name}`;
+  $("#qText").textContent=q.text;
+  $("#progressFill").style.width=(n>1?(state.i/(n-1)*100):100)+"%";
+
+  const grid=$("#examGrid"), box=$("#passageBox");
+  if(q.passage){
+    grid.classList.add("has-passage"); box.style.display="block";
+    box.innerHTML=`<div class="kicker">Lectura</div><h2 class="serif">${q.passage.titulo}</h2>`+q.passage.paras.map(p=>`<p>${p}</p>`).join("");
+  }else{ grid.classList.remove("has-passage"); box.style.display="none"; }
+
+  const ob=$("#optionsBox"); ob.innerHTML="";
+  const given=state.answers[state.i];
+  const reveal=state.mode==="practica" && given!==null;
+  q.options.forEach((opt,idx)=>{
+    const b=document.createElement("button"); b.className="opt";
+    if(given===idx) b.classList.add("selected");
+    if(reveal){ b.disabled=true; if(opt.correct) b.classList.add("correct"); else if(idx===given) b.classList.add("wrong"); }
+    b.innerHTML=`<span class="bubble">${letters[idx]}</span><span class="opt-text">${opt.text}</span>`;
+    b.onclick=()=>answer(idx); ob.appendChild(b);
+  });
+
+  const fb=$("#feedbackBox");
+  if(reveal){
+    const ok=q.options[given].correct;
+    const correctLetter=letters[q.options.findIndex(o=>o.correct)];
+    fb.className="feedback show "+(ok?"ok":"no");
+    $("#fbBadge").textContent=ok?"¡Correcto!":"Incorrecto · la respuesta es "+correctLetter;
+    $("#fbText").textContent=q.retro;
+  }else fb.className="feedback";
+
+  $("#prevBtn").disabled=state.i===0;
+  $("#nextBtn").textContent=state.i===n-1?"Finalizar ✓":"Siguiente →";
+  refreshAnswerSheet();
+}
+function answer(idx){
+  if(state.mode==="practica" && state.answers[state.i]!==null) return;
+  state.answers[state.i]=idx; renderQuestion();
+}
+function next(){ state.i===state.ensayo.length-1 ? finishExam() : (state.i++, renderQuestion()); }
+function prev(){ if(state.i>0){state.i--;renderQuestion();} }
+
+/* ================================================================
+   Puntaje y resultados
+   ================================================================ */
+function puntajeRef(correct,total){
+  const f=total?correct/total:0;
+  for(let k=1;k<TABLA_PUNTAJE.length;k++){
+    if(f<=TABLA_PUNTAJE[k][0]){
+      const [x0,y0]=TABLA_PUNTAJE[k-1],[x1,y1]=TABLA_PUNTAJE[k];
+      return Math.round(y0+(y1-y0)*(f-x0)/(x1-x0));
+    }
+  }
+  return TABLA_PUNTAJE[TABLA_PUNTAJE.length-1][1];
+}
+function finishExam(){
+  if(state.finished) return; state.finished=true; clearInterval(state.timerId);
+  const qs=state.ensayo, letters=["A","B","C","D","E"];
+  let correct=0,wrong=0,blank=0;
+  qs.forEach((q,idx)=>{const a=state.answers[idx]; if(a===null)blank++; else if(q.options[a].correct)correct++; else wrong++;});
+  const pct=Math.round(correct/qs.length*100);
+  const elapsed=Math.floor((Date.now()-state.startMs)/1000);
+  const s=state.subjects[state.area];
+
+  $("#pctNum").textContent=pct+"%";
+  $("#stCorrect").textContent=correct; $("#stWrong").textContent=wrong; $("#stBlank").textContent=blank;
+  $("#stScore").textContent="≈ "+puntajeRef(correct,qs.length); $("#stTime").textContent=fmt(elapsed);
+  $("#resultSub").textContent=`${s.name} · ${correct} de ${qs.length} correctas · semana ${state.semana}`;
+  $("#resultHeadline").textContent= pct>=80?"¡Excelente dominio!":pct>=50?"Buen avance, sigue puliendo":"A reforzar lo esencial";
+  $("#scoreNote").textContent="El puntaje es referencial: el puntaje PAES oficial se estandariza a nivel nacional y no puede calcularse localmente. Ajusta la tabla de conversión a tu criterio.";
+
+  const circ=2*Math.PI*62; $("#ringFill").style.stroke=s.color; $("#ringFill").style.strokeDashoffset=circ*(1-pct/100);
+
+  const rl=$("#reviewList"); rl.innerHTML="";
+  qs.forEach((q,idx)=>{
+    const a=state.answers[idx], ok=a!==null&&q.options[a].correct;
+    const ci=q.options.findIndex(o=>o.correct);
+    const yourTxt=a===null?"— (omitida)":`${letters[a]}) ${q.options[a].text}`;
+    const item=document.createElement("div"); item.className="review-item";
+    item.innerHTML=`<p class="rq"><span class="n">${String(idx+1).padStart(2,"0")}</span>${q.text}</p>
+      <div class="ans-line ${ok?'ok':'no'}"><span class="lbl">Tu respuesta</span><span class="val">${yourTxt}</span></div>
+      ${ok?"":`<div class="ans-line ok"><span class="lbl">Correcta</span><span class="val">${letters[ci]}) ${q.options[ci].text}</span></div>`}
+      <div class="retro"><b>Retroalimentación · </b>${q.retro||"—"}</div>`;
+    rl.appendChild(item);
+  });
+  $("#examControls").style.display="none"; show("results");
+}
+
+/* ================================================================
+   Eventos + arranque
+   ================================================================ */
+$("#startBtn").onclick=startExam;
+$("#nextBtn").onclick=next; $("#prevBtn").onclick=prev;
+$("#retryBtn").onclick=()=>{clearInterval(state.timerId);show("home");};
+$("#exitBtn").onclick=()=>{if(confirm("¿Salir del ensayo? Perderás el progreso.")){clearInterval(state.timerId);$("#examControls").style.display="none";show("home");}};
+document.addEventListener("keydown",e=>{
+  if(!screens.exam.classList.contains("on")) return;
+  if(e.key==="ArrowRight")next(); if(e.key==="ArrowLeft")prev();
+  const map={a:0,b:1,c:2,d:3,e:4}; if(map[e.key.toLowerCase()]!==undefined)answer(map[e.key.toLowerCase()]);
+});
+
+(async function init(){
+  await loadData();
+  renderHome();
+  show("home");
+})();
+</script>
+</body>
+</html>
