@@ -319,19 +319,29 @@ const state={ subjects:{}, semana:"", demo:false, area:null, mode:"practica",
 
 async function loadData(){
   let preguntas, lecturas;
-  if(CONFIG.SHEET_ID){
-    try{
-      [preguntas, lecturas] = await Promise.all([
-        fetchTab(CONFIG.TAB_PREGUNTAS),
-        fetchTab(CONFIG.TAB_LECTURAS).catch(()=>[])  // las lecturas son opcionales
-      ]);
-    }catch(err){
-      console.warn("No se pudo leer el Sheet, uso datos de ejemplo:",err);
-      preguntas=DEMO_PREGUNTAS; lecturas=DEMO_LECTURAS; state.demo=true;
-    }
-  }else{
-    preguntas=DEMO_PREGUNTAS; lecturas=DEMO_LECTURAS; state.demo=true;
+  // Usamos directamente tus URLs de publicación en la web en formato CSV
+  const urlPreguntas = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHvi5eHTHk5p6KAKH0gYgHapEDLFifMwt3tMrJQAFvQ4uLxN03RY-wjF7E-9itEwl4NVX2YdT4F9hF/pub?output=csv&gid=0"; 
+  // NOTA: Asegúrate de cambiar el "gid=0" por el ID de la pestaña correspondiente si es necesario
+  const urlLecturas = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHvi5eHTHk5p6KAKH0gYgHapEDLFifMwt3tMrJQAFvQ4uLxN03RY-wjF7E-9itEwl4NVX2YdT4F9hF/pub?output=csv&gid=123456789"; 
+
+  try {
+    const [resPreguntas, resLecturas] = await Promise.all([
+      fetch(urlPreguntas),
+      fetch(urlLecturas).catch(() => null)
+    ]);
+
+    if(!resPreguntas.ok) throw new Error("Error al cargar preguntas");
+    
+    preguntas = rowsToObjects(parseCSV(await resPreguntas.text()));
+    lecturas = resLecturas && resLecturas.ok ? rowsToObjects(parseCSV(await resLecturas.text())) : [];
+    
+  } catch(err) {
+    console.warn("No se pudo leer el Sheet publicado, usando datos demo:", err);
+    preguntas = DEMO_PREGUNTAS; 
+    lecturas = DEMO_LECTURAS; 
+    state.demo = true;
   }
+  
   buildSubjects(preguntas, lecturas);
 }
 
