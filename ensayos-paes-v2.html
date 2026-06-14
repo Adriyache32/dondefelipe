@@ -303,9 +303,15 @@ function parseCSV(text){
   if(field.length||row.length){row.push(field);rows.push(row);}
   return rows;
 }
+// Normaliza nombres de columnas: minúsculas, sin espacios extra y SIN ACENTOS.
+// Así "Área", "AREA" o "área" se entienden todas como "area".
+function quitarAcentos(s){ return String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,""); }
+function normKey(k){ return quitarAcentos(String(k).trim().toLowerCase()); }
+function normObj(o){ const n={}; for(const k in o){ n[normKey(k)] = o[k]; } return n; }
+
 function rowsToObjects(rows){
   if(!rows.length) return [];
-  const head=rows[0].map(h=>h.trim().toLowerCase());
+  const head=rows[0].map(h=>normKey(h));
   return rows.slice(1).filter(r=>r.some(c=>c.trim()!=="")).map(r=>{
     const o={}; head.forEach((h,k)=>o[h]=(r[k]||"").trim()); return o;
   });
@@ -337,7 +343,7 @@ async function loadData(){
       clearTimeout(t);
       if(!res.ok) throw new Error("HTTP "+res.status);
       const data=await res.json();
-      const preguntas=data.preguntas||[], lecturas=data.lecturas||[];
+      const preguntas=(data.preguntas||[]).map(normObj), lecturas=(data.lecturas||[]).map(normObj);
       if(!preguntas.length || !preguntas.some(p=>p.area && p.enunciado)){
         banner(`<b>El Apps Script respondió, pero sin preguntas válidas.</b> Revisa que la pestaña «${CONFIG.TAB_PREGUNTAS}» tenga los encabezados: semana, area, enunciado, A, B, C, D, E, correcta, retro, lectura_id.`);
         state.demo=true; buildSubjects(DEMO_PREGUNTAS, DEMO_LECTURAS); return;
