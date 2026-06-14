@@ -233,8 +233,10 @@
    CONFIGURACIÓN  ── lo único que tú editas habitualmente
    ================================================================ */
 const CONFIG = {
-  // Pega aquí el ID de tu Google Sheet (lo que va entre /d/ y /edit en la URL).
-  // Deja "" para usar los datos de ejemplo incluidos abajo.
+  // OPCIÓN RECOMENDADA: pega aquí la URL del Apps Script (termina en /exec).
+  // Si está puesta, se usa esta y se ignora el SHEET_ID de abajo.
+  WEBAPP_URL: "https://script.google.com/macros/s/AKfycbzW_Kf-vNiZy_iYwAPfoEKQuwkqD5DA2mS7r2gXmpBbss3HsDk4-wPHOAzgPoXvHJcj/exec",
+  // Opción heredada: lectura directa del Sheet (puede fallar por CORS en hosting).
   SHEET_ID: "1DXcK6H21l50vFJmyVdv7UW7FVIF0DoiZwvdxUVZVGfc",
   TAB_PREGUNTAS: "Preguntas",     // nombre de la pestaña con las preguntas
   TAB_LECTURAS:  "Lecturas",      // nombre de la pestaña con los textos de lectura
@@ -327,6 +329,27 @@ const state={ subjects:{}, semana:"", demo:false, area:null, mode:"practica",
               ensayo:[], i:0, answers:[], startMs:0, timerId:null, finished:false };
 
 async function loadData(){
+  // ===== OPCIÓN A (recomendada): Apps Script Web App que entrega JSON =====
+  if(CONFIG.WEBAPP_URL && CONFIG.WEBAPP_URL.indexOf("http")===0){
+    try{
+      const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),12000);
+      const res=await fetch(CONFIG.WEBAPP_URL, {signal:ctrl.signal});
+      clearTimeout(t);
+      if(!res.ok) throw new Error("HTTP "+res.status);
+      const data=await res.json();
+      const preguntas=data.preguntas||[], lecturas=data.lecturas||[];
+      if(!preguntas.length || !preguntas.some(p=>p.area && p.enunciado)){
+        banner(`<b>El Apps Script respondió, pero sin preguntas válidas.</b> Revisa que la pestaña «${CONFIG.TAB_PREGUNTAS}» tenga los encabezados: semana, area, enunciado, A, B, C, D, E, correcta, retro, lectura_id.`);
+        state.demo=true; buildSubjects(DEMO_PREGUNTAS, DEMO_LECTURAS); return;
+      }
+      buildSubjects(preguntas, lecturas); return;
+    }catch(err){
+      console.error("Error al leer el Apps Script:", err);
+      banner(`<b>No se pudo leer el Apps Script.</b> Verifica que la implementación sea «Aplicación web», con acceso «Cualquier persona», y que la URL termine en /exec. Detalle: ${err.message||err}`);
+      state.demo=true; buildSubjects(DEMO_PREGUNTAS, DEMO_LECTURAS); return;
+    }
+  }
+  // ===== OPCIÓN B (heredada): lectura directa del Sheet vía gviz =====
   let preguntas=[], lecturas=[];
   if(CONFIG.SHEET_ID && CONFIG.SHEET_ID.length>10){
     // 1) Preguntas (obligatorias)
