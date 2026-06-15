@@ -594,7 +594,8 @@
 </div>
 
 <footer>
-  Copa Mundial FIFA 2026 · Datos oficiales FIFA · Horarios en hora de Chile (CLT / UTC-4)
+  Copa Mundial FIFA 2026 · Resultados cargados manualmente hasta el 14 de junio · Horarios en hora de Chile (CLT / UTC-4)<br>
+  * "Resultado pendiente": el partido ya debió finalizar pero su marcador aún no se ha actualizado en este archivo.
 </footer>
 
 <script>
@@ -632,21 +633,21 @@ function mkDate(y, mo, d, h, min) {
 // PARTIDOS FASE DE GRUPOS (hora Chile CLT = UTC-4)
 const MATCHES = [
   // ---- 11 JUN ----
-  { id:1,  date: mkDate(2026,6,11,15,0), home:'México',        away:'Sudáfrica',    group:'A', venue:'Ciudad de México' },
-  { id:2,  date: mkDate(2026,6,11,22,0), home:'Corea del Sur', away:'Rep. Checa',   group:'A', venue:'Guadalajara' },
+  { id:1,  date: mkDate(2026,6,11,15,0), home:'México',        away:'Sudáfrica',    group:'A', venue:'Ciudad de México', score:[2,0] },
+  { id:2,  date: mkDate(2026,6,11,22,0), home:'Corea del Sur', away:'Rep. Checa',   group:'A', venue:'Guadalajara', score:[2,1] },
   // ---- 12 JUN ----
-  { id:3,  date: mkDate(2026,6,12,15,0), home:'Canadá',        away:'Bosnia y Herz.',group:'B', venue:'Toronto' },
-  { id:4,  date: mkDate(2026,6,12,21,0), home:'EE.UU.',        away:'Paraguay',     group:'D', venue:'Los Ángeles' },
+  { id:3,  date: mkDate(2026,6,12,15,0), home:'Canadá',        away:'Bosnia y Herz.',group:'B', venue:'Toronto', score:[1,1] },
+  { id:4,  date: mkDate(2026,6,12,21,0), home:'EE.UU.',        away:'Paraguay',     group:'D', venue:'Los Ángeles', score:[4,1] },
   // ---- 13 JUN ----
-  { id:5,  date: mkDate(2026,6,13,15,0), home:'Qatar',         away:'Suiza',        group:'B', venue:'San Francisco' },
-  { id:6,  date: mkDate(2026,6,13,18,0), home:'Brasil',        away:'Marruecos',    group:'C', venue:'Nueva Jersey' },
-  { id:7,  date: mkDate(2026,6,13,21,0), home:'Haití',         away:'Escocia',      group:'C', venue:'Boston' },
-  { id:8,  date: mkDate(2026,6,14,0,0),  home:'Australia',     away:'Turquía',      group:'D', venue:'Vancouver' },
+  { id:5,  date: mkDate(2026,6,13,15,0), home:'Qatar',         away:'Suiza',        group:'B', venue:'San Francisco', score:[1,1] },
+  { id:6,  date: mkDate(2026,6,13,18,0), home:'Brasil',        away:'Marruecos',    group:'C', venue:'Nueva Jersey', score:[1,1] },
+  { id:7,  date: mkDate(2026,6,13,21,0), home:'Haití',         away:'Escocia',      group:'C', venue:'Boston', score:[0,1] },
+  { id:8,  date: mkDate(2026,6,14,0,0),  home:'Australia',     away:'Turquía',      group:'D', venue:'Vancouver', score:[2,0] },
   // ---- 14 JUN ----
-  { id:9,  date: mkDate(2026,6,14,13,0), home:'Alemania',      away:'Curazao',      group:'E', venue:'Houston' },
-  { id:10, date: mkDate(2026,6,14,16,0), home:'P. Bajos',      away:'Japón',        group:'F', venue:'Dallas' },
-  { id:11, date: mkDate(2026,6,14,19,0), home:'Costa de Marfil',away:'Ecuador',     group:'E', venue:'Philadelphia' },
-  { id:12, date: mkDate(2026,6,14,22,0), home:'Suecia',        away:'Túnez',        group:'F', venue:'Monterrey' },
+  { id:9,  date: mkDate(2026,6,14,13,0), home:'Alemania',      away:'Curazao',      group:'E', venue:'Houston', score:[7,1] },
+  { id:10, date: mkDate(2026,6,14,16,0), home:'P. Bajos',      away:'Japón',        group:'F', venue:'Dallas', score:[2,2] },
+  { id:11, date: mkDate(2026,6,14,19,0), home:'Costa de Marfil',away:'Ecuador',     group:'E', venue:'Philadelphia', score:[1,0] },
+  { id:12, date: mkDate(2026,6,14,22,0), home:'Suecia',        away:'Túnez',        group:'F', venue:'Monterrey', score:[5,1] },
   // ---- 15 JUN ----
   { id:13, date: mkDate(2026,6,15,12,0), home:'España',        away:'Cabo Verde',   group:'H', venue:'Atlanta' },
   { id:14, date: mkDate(2026,6,15,15,0), home:'Bélgica',       away:'Egipto',       group:'G', venue:'Seattle' },
@@ -889,12 +890,13 @@ function isUpcoming(date) {
 }
 
 // Estado del partido
-function matchStatus(date) {
+function matchStatus(m) {
+  if (m.score) return 'finished';
   const now = new Date();
-  const diff = (now - date) / 60000; // minutos
+  const diff = (now - m.date) / 60000; // minutos
   if (diff < 0) return 'upcoming';
-  if (diff <= 105) return 'live';
-  return 'finished';
+  if (diff <= 130) return 'live';
+  return 'pending'; // ya debería haber terminado pero no tenemos el resultado cargado
 }
 
 // ============================================================
@@ -923,20 +925,23 @@ function renderFixture() {
     html += `<div class="date-header${todayClass}">${todayDot}${label}</div>`;
 
     matches.forEach(m => {
-      const status = matchStatus(m.date);
+      const status = matchStatus(m);
       const timeStr = formatTime(m.date);
       let cardClass = 'match-card';
       if (isToday(m.date)) cardClass += ' today-match';
       if (status === 'live') cardClass += ' live';
-      if (status === 'finished') cardClass += ' finished';
+      if (status === 'finished' || status === 'pending') cardClass += ' finished';
 
       let centerHtml;
       if (status === 'live') {
         centerHtml = `<div class="match-score live-score">? - ?</div>
                       <span class="match-badge vivo">● EN VIVO</span>`;
       } else if (status === 'finished') {
-        centerHtml = `<div class="match-score">- - -</div>
+        centerHtml = `<div class="match-score">${m.score[0]} - ${m.score[1]}</div>
                       <span class="match-badge">Finalizado</span>`;
+      } else if (status === 'pending') {
+        centerHtml = `<div class="match-score">- - -</div>
+                      <span class="match-badge">Resultado pendiente*</span>`;
       } else {
         centerHtml = `<div class="match-time">${timeStr}</div>
                       <span class="match-badge grupo">Grupo ${m.group}</span>`;
@@ -994,7 +999,7 @@ function applyFilters() {
     let show = true;
     if (activeFilter === 'today' && !today) show = false;
     if (activeFilter === 'upcoming' && status !== 'upcoming') show = false;
-    if (activeFilter === 'played' && status !== 'finished') show = false;
+    if (activeFilter === 'played' && status !== 'finished' && status !== 'pending') show = false;
     if (searchTerm && !home.includes(searchTerm) && !away.includes(searchTerm)) show = false;
 
     card.classList.toggle('hidden', !show);
@@ -1013,8 +1018,47 @@ function applyFilters() {
 }
 
 // ============================================================
-// RENDER GRUPOS
+// CÁLCULO DE TABLA DE POSICIONES
 // ============================================================
+
+function computeStandings() {
+  // Reinicia stats
+  Object.values(GROUPS).forEach(teams => {
+    teams.forEach(t => {
+      t.pj = 0; t.pg = 0; t.pe = 0; t.pp = 0;
+      t.gf = 0; t.gc = 0; t.pts = 0;
+    });
+  });
+
+  MATCHES.forEach(m => {
+    if (!m.score) return;
+    const teams = GROUPS[m.group];
+    if (!teams) return;
+    const home = teams.find(t => t.name === m.home);
+    const away = teams.find(t => t.name === m.away);
+    if (!home || !away) return;
+
+    const [hg, ag] = m.score;
+    home.pj++; away.pj++;
+    home.gf += hg; home.gc += ag;
+    away.gf += ag; away.gc += hg;
+
+    if (hg > ag) { home.pg++; home.pts += 3; away.pp++; }
+    else if (hg < ag) { away.pg++; away.pts += 3; home.pp++; }
+    else { home.pe++; away.pe++; home.pts += 1; away.pts += 1; }
+  });
+
+  // Ordena cada grupo: Pts > Diferencia de gol > Goles a favor
+  Object.values(GROUPS).forEach(teams => {
+    teams.sort((a, b) => {
+      const gdA = a.gf - a.gc, gdB = b.gf - b.gc;
+      if (b.pts !== a.pts) return b.pts - a.pts;
+      if (gdB !== gdA) return gdB - gdA;
+      return b.gf - a.gf;
+    });
+  });
+}
+
 
 function renderGroups() {
   const container = document.getElementById('groups-container');
@@ -1034,13 +1078,15 @@ function renderGroups() {
       </div>
       <ul class="group-teams">`;
     teams.forEach((t, i) => {
+      const gd = t.gf - t.gc;
+      const gdStr = gd > 0 ? `+${gd}` : `${gd}`;
       html += `<li class="group-team-row">
         <span class="gt-pos">${i+1}</span>
         <span class="gt-flag">${t.flag}</span>
         <span class="gt-name">${t.name}</span>
         <span class="gt-stat">${t.pj}</span>
         <span class="gt-stat">${t.pg}</span>
-        <span class="gt-stat">0</span>
+        <span class="gt-stat">${gdStr}</span>
         <span class="gt-pts">${t.pts}</span>
       </li>`;
     });
@@ -1157,6 +1203,7 @@ function showSection(id) {
 // ============================================================
 
 renderFixture();
+computeStandings();
 renderGroups();
 renderKnockout();
 renderSedes();
