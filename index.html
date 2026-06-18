@@ -1,1 +1,1742 @@
-PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVzIj4KPGhlYWQ+CjxtZXRhIGNoYXJzZXQ9IlVURi04Ij4KPG1ldGEgbmFtZT0idmlld3BvcnQiIGNvbnRlbnQ9IndpZHRoPWRldmljZS13aWR0aCwgaW5pdGlhbC1zY2FsZT0xLjAsIHZpZXdwb3J0LWZpdD1jb3ZlciI+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>El Rincón de Felipe | Profe Felipe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+/* ═══════════════════════════════════════════════
+   TOKENS — Paleta Mediterránea Moderna
+═══════════════════════════════════════════════ */
+:root {
+  --sea-deep:    #060f1e;
+  --sea-mid:     #0c1f38;
+  --sea-light:   #163356;
+  --gold:        #c9a84c;
+  --gold-light:  #e8c870;
+  --gold-bright: #f5d980;
+  --gold-dark:   #8b6914;
+  --gold-glow:   rgba(201,168,76,0.18);
+  --marble:      #fdfbf7;
+  --stone:       #ede5d0;
+  --ivory:       #faf8f4;
+  --bronze:      #6b4a12;
+  --bronze-rich: #5c3f0e;
+  --text:        #2a1f10;
+  --text-soft:   #4a3820;
+  --laurel:      #3d6e4a;
+  --border-gold: rgba(201,168,76,.25);
+  --border-gold-strong: rgba(201,168,76,.55);
+  /* Altura de la franja superior (ticker) — controla también el offset del nav */
+  --ticker-h: 32px;
+  /* Sombras modernas en capas (elevación material) */
+  --card-shadow:  0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(20,16,8,.05);
+  --shadow-hover: 0 8px 24px rgba(20,16,8,.1), 0 16px 48px rgba(20,16,8,.08);
+  --shadow-float: 0 20px 60px rgba(0,0,0,.45), 0 8px 24px rgba(0,0,0,.3);
+  /* Radios modernos */
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 28px;
+  /* Curvas de animación */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Tipografía */
+  --ff-title: 'Cinzel', 'Palatino Linotype', Palatino, serif;
+  --ff-body:  'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ff-serif: 'Cormorant Garamond', Georgia, serif;
+}
+
+/* ═══════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  font-family: var(--ff-body);
+  color: var(--text);
+  background: var(--sea-deep);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Fondo multicapa atmosférico */
+body::after {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 0%,   rgba(26,64,104,.55) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 85% 100%,  rgba(12,31,56,.7)  0%, transparent 55%),
+    radial-gradient(ellipse 100% 40% at 50% 50%,  rgba(6,15,30,.4)   0%, transparent 70%);
+  animation: auroraShift 22s ease-in-out infinite alternate;
+}
+@keyframes auroraShift {
+  0%   { opacity: .85; filter: hue-rotate(0deg); }
+  50%  { opacity: 1;   filter: hue-rotate(8deg); }
+  100% { opacity: .9;  filter: hue-rotate(-5deg); }
+}
+
+/* Grilla hexagonal sutil */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(201,168,76,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,168,76,.04) 1px, transparent 1px);
+  background-size: 52px 52px;
+}
+
+/* ═══════════════════════════════════════════════
+   FRISO ORNAMENTAL SUPERIOR
+═══════════════════════════════════════════════ */
+.frieze {
+  position: relative; z-index: 100;
+  height: 5px; flex-shrink: 0;
+  background: linear-gradient(90deg,
+    var(--sea-deep) 0%,
+    var(--gold-dark) 8%,
+    var(--gold) 20%,
+    var(--gold-bright) 35%,
+    var(--gold) 50%,
+    var(--gold-bright) 65%,
+    var(--gold) 80%,
+    var(--gold-dark) 92%,
+    var(--sea-deep) 100%
+  );
+  box-shadow: 0 0 18px rgba(201,168,76,.45), 0 2px 8px rgba(0,0,0,.6);
+}
+
+/* ═══════════════════════════════════════════════
+   TICKER FELIPESOS — Bolsa de Comercio
+═══════════════════════════════════════════════ */
+.ticker-bar {
+  position: sticky; top: 0; z-index: 150; flex-shrink: 0;
+  background: rgba(4, 10, 20, 0.97);
+  border-bottom: 1px solid rgba(201,168,76,.18);
+  height: var(--ticker-h); overflow: hidden;
+  display: flex; align-items: center;
+}
+
+.ticker-label {
+  flex-shrink: 0;
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+  color: #0a0600;
+  font-family: var(--ff-title);
+  font-size: 0.6rem; letter-spacing: 2px; font-weight: 700;
+  padding: 0 14px;
+  height: 100%; display: flex; align-items: center; gap: 6px;
+  white-space: nowrap;
+  box-shadow: 4px 0 16px rgba(201,168,76,.25);
+  z-index: 2;
+}
+.ticker-label i { font-size: 0.65rem; }
+
+.ticker-track {
+  flex: 1; overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent 0%, black 4%, black 96%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 4%, black 96%, transparent 100%);
+}
+
+.ticker-scroll {
+  display: flex; gap: 0;
+  animation: tickerMove 28s linear infinite;
+  width: max-content;
+  will-change: transform;
+}
+.ticker-scroll:hover { animation-play-state: paused; }
+
+@keyframes tickerMove {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-item {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 0 28px;
+  font-family: var(--ff-body); font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.3px; color: rgba(255,255,255,.88);
+  white-space: nowrap;
+  border-right: 1px solid rgba(201,168,76,.1);
+  transition: background 0.2s;
+  cursor: default;
+  user-select: none;
+}
+.ticker-item:hover { background: rgba(201,168,76,.06); }
+
+.ticker-item .t-name {
+  color: rgba(255,255,255,.55);
+  font-size: 0.65rem; letter-spacing: 1.5px; text-transform: uppercase;
+  font-weight: 400;
+}
+
+.ticker-item .t-price {
+  color: var(--gold-bright);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+}
+
+.ticker-item .t-icon {
+  font-size: 0.8rem;
+  opacity: .75;
+}
+
+.ticker-sep {
+  display: inline-flex; align-items: center;
+  padding: 0 6px;
+  color: rgba(201,168,76,.25);
+  font-size: 0.7rem;
+}
+
+/* Sticky junto a la nav */
+.ticker-bar + nav {
+  top: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   NAVEGACIÓN
+═══════════════════════════════════════════════ */
+nav {
+  position: sticky; top: var(--ticker-h); z-index: 200; flex-shrink: 0;
+  background: rgba(6, 14, 26, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(201,168,76,.2);
+  box-shadow: 0 1px 0 rgba(201,168,76,.08), 0 8px 40px rgba(0,0,0,.55);
+}
+
+.nav-inner {
+  max-width: 1200px; margin: 0 auto;
+  padding: 0 1.5rem; height: 62px;
+  display: flex; align-items: stretch; justify-content: space-between;
+}
+
+.nav-brand {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--ff-title);
+  color: var(--gold-light); text-decoration: none;
+  font-size: 1.05rem; letter-spacing: 2px; font-weight: 700;
+  transition: all 0.35s;
+}
+.nav-brand i { color: var(--gold); filter: drop-shadow(0 0 6px rgba(201,168,76,.5)); }
+.nav-brand:hover { color: #fff; text-shadow: 0 0 16px rgba(232,200,112,.6); }
+
+/* Hamburguesa */
+.hamburger {
+  display: none; flex-direction: column; justify-content: center; gap: 5px;
+  background: none; border: none; cursor: pointer;
+  padding: 0 0.5rem; height: 100%; z-index: 300;
+}
+.hamburger span {
+  display: block; width: 26px; height: 2px;
+  background: var(--gold); border-radius: 2px;
+  transition: all 0.3s ease-in-out;
+}
+.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+.nav-menu { display: flex; align-items: stretch; list-style: none; }
+.dropdown { position: relative; display: flex; align-items: stretch; }
+
+.drop-btn {
+  background: none; border: none; cursor: pointer; height: 100%;
+  padding: 0 1.1rem;
+  font-family: var(--ff-body); font-size: 0.8rem; letter-spacing: 1px; font-weight: 500;
+  color: rgba(255,255,255,.85);
+  display: flex; align-items: center; gap: 6px;
+  border-bottom: 2px solid transparent;
+  transition: all 0.25s;
+  position: relative;
+}
+.drop-btn i.fa-chevron-down { font-size: 0.62rem; color: var(--gold); opacity: .7; transition: transform 0.3s; }
+.dropdown:hover .drop-btn i.fa-chevron-down { transform: rotate(180deg); }
+.drop-btn:hover, .drop-btn.active-menu {
+  color: var(--gold-light);
+  border-bottom-color: var(--gold);
+  background: rgba(201,168,76,.04);
+}
+
+.drop-content {
+  display: none; position: absolute; top: calc(100% + 1px); left: 0;
+  min-width: 230px;
+  background: rgba(7,16,30,.97);
+  border: 1px solid rgba(201,168,76,.2);
+  border-top: 2px solid var(--gold);
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.7), inset 0 0 30px rgba(201,168,76,.02);
+  z-index: 300; overflow: hidden;
+}
+.dropdown:hover .drop-content { display: block; animation: dropDown 0.25s cubic-bezier(0.16,1,0.3,1) forwards; }
+
+@keyframes dropDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.drop-content a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 18px;
+  color: rgba(255,255,255,.8); text-decoration: none;
+  font-family: var(--ff-body); font-size: 0.82rem; letter-spacing: 0.4px; font-weight: 500;
+  border-bottom: 1px solid rgba(201,168,76,.07);
+  transition: all 0.2s;
+}
+.drop-content a i { color: var(--gold); opacity: .65; font-size: 0.8rem; width: 14px; }
+.drop-content a:last-child { border-bottom: none; }
+.drop-content a:hover {
+  background: linear-gradient(90deg, rgba(201,168,76,.12), transparent);
+  color: var(--gold-bright); padding-left: 24px;
+}
+
+.nav-lib {
+  background: none; cursor: pointer; height: 100%;
+  padding: 0 1.1rem;
+  font-family: var(--ff-body); font-size: 0.8rem; letter-spacing: 1px; font-weight: 500;
+  color: rgba(255,255,255,.85); text-decoration: none;
+  display: flex; align-items: center; gap: 6px;
+  border-bottom: 2px solid transparent;
+  transition: all 0.25s;
+}
+.nav-lib:hover { color: var(--gold-light); border-bottom-color: var(--gold); background: rgba(201,168,76,.04); }
+
+/* ═══════════════════════════════════════════════
+   PANEL PRINCIPAL
+═══════════════════════════════════════════════ */
+.main-panel {
+  position: relative; z-index: 10;
+  width: 96%; max-width: 1060px;
+  margin: 2.5rem auto; flex: 1;
+}
+
+/* Panel principal — vidrio claro moderno */
+.tablet {
+  background: rgba(253, 251, 247, 0.96);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--r-xl);
+  padding: 3rem 4rem;
+  position: relative; overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(201,168,76,.06),
+    var(--shadow-float),
+    inset 0 1px 0 rgba(255,255,255,.9);
+}
+
+/* Marca de agua ornamental centrada */
+.tablet::before {
+  content: '✦';
+  position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+  font-size: 1rem; color: rgba(201,168,76,.15); pointer-events: none; letter-spacing: 20px;
+}
+
+/* Franja inferior decorativa */
+.tablet::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,.25) 30%, rgba(201,168,76,.35) 50%, rgba(201,168,76,.25) 70%, transparent);
+}
+
+.tablet-header {
+  text-align: center;
+  padding-bottom: 1.8rem; margin-bottom: 2.2rem;
+  position: relative;
+}
+.tablet-header::after {
+  content: '';
+  position: absolute; bottom: 0; left: 10%; right: 10%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,.4) 30%, rgba(201,168,76,.5) 50%, rgba(201,168,76,.4) 70%, transparent);
+}
+
+h1 {
+  font-family: var(--ff-title);
+  font-size: clamp(1.5rem, 4.5vw, 2.3rem);
+  letter-spacing: 5px;
+  color: var(--bronze);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 1px 2px rgba(0,0,0,.06);
+}
+
+h1.shimmer {
+  background: linear-gradient(90deg,
+    var(--gold-dark) 0%, var(--gold) 25%, var(--gold-bright) 50%, var(--gold) 75%, var(--gold-dark) 100%);
+  background-size: 300%;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 7s linear infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+.page-sub { font-family: var(--ff-body); font-size: 0.8rem; color: var(--text-soft); letter-spacing: 2px; font-weight: 400; margin-top: 6px; text-transform: uppercase; }
+
+h2.sh {
+  font-family: var(--ff-title); font-size: 0.8rem; letter-spacing: 2px;
+  color: var(--bronze-rich); font-weight: 700;
+  padding: 11px 0 11px 16px;
+  margin: 2.8rem 0 1.6rem;
+  border-left: 3px solid var(--gold);
+  background: linear-gradient(90deg, rgba(201,168,76,.07), transparent 70%);
+  display: flex; align-items: center; gap: 10px;
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+}
+h2.sh::before { content: '⬧'; color: var(--gold); font-size: 0.75rem; opacity: .8; }
+
+/* ═══════════════════════════════════════════════
+   GRILLAS Y TARJETAS — Modernas
+═══════════════════════════════════════════════ */
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+
+.card {
+  background: var(--marble);
+  border: 1px solid rgba(201,168,76,.16);
+  border-radius: var(--r-md); padding: 1.7rem;
+  position: relative; overflow: hidden;
+  transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out), border-color 0.3s;
+  box-shadow: var(--card-shadow);
+  display: flex; flex-direction: column;
+  /* Animación de entrada */
+  animation: cardIn 0.6s var(--ease-out) both;
+}
+
+/* Stagger: cada tarjeta entra con leve retraso */
+.grid .card:nth-child(1) { animation-delay: 0.02s; }
+.grid .card:nth-child(2) { animation-delay: 0.08s; }
+.grid .card:nth-child(3) { animation-delay: 0.14s; }
+.grid .card:nth-child(4) { animation-delay: 0.20s; }
+.grid .card:nth-child(5) { animation-delay: 0.26s; }
+.grid .card:nth-child(6) { animation-delay: 0.32s; }
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(18px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Reflejo superior en cada card */
+.card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.85) 50%, transparent);
+  z-index: 2;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-hover), 0 0 0 1px var(--border-gold-strong);
+}
+
+.card h3 {
+  font-family: var(--ff-title); font-size: 0.86rem; letter-spacing: 0.5px; margin-bottom: 12px;
+  line-height: 1.45;
+  display: flex; align-items: flex-start; gap: 8px;
+}
+.card h3 i { margin-top: 2px; flex-shrink: 0; }
+.card p { font-size: 0.95rem; color: var(--text-soft); line-height: 1.6; flex-grow: 1; font-weight: 400; }
+.card p strong { color: var(--text); font-weight: 600; }
+
+.card.c-sea {
+  border-top: 3px solid #2d6a9f;
+  background: linear-gradient(160deg, #fdfcfa 0%, #f5f8fc 100%);
+}
+.card.c-sea::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 60px;
+  background: linear-gradient(180deg, rgba(45,106,159,.05), transparent);
+  pointer-events: none;
+}
+.card.c-sea h3 { color: #1a4e7a; }
+
+.card.c-gold {
+  border-top: 3px solid var(--gold);
+  background: linear-gradient(160deg, #fdfcf8 0%, #faf6ec 100%);
+}
+.card.c-gold::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 60px;
+  background: linear-gradient(180deg, rgba(201,168,76,.07), transparent);
+  pointer-events: none;
+}
+.card.c-gold h3 { color: var(--bronze); }
+
+.card.c-laurel {
+  border-top: 3px solid var(--laurel);
+  background: linear-gradient(160deg, #fdfcf9 0%, #f3f8f4 100%);
+}
+.card.c-laurel::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 60px;
+  background: linear-gradient(180deg, rgba(61,110,74,.06), transparent);
+  pointer-events: none;
+}
+.card.c-laurel h3 { color: #3d5e2a; }
+
+.card.c-fem {
+  border-top: 3px solid #e0458a;
+  background: linear-gradient(160deg, #fdfcfc 0%, #fdf3f8 100%);
+}
+.card.c-fem::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 60px;
+  background: linear-gradient(180deg, rgba(224,69,138,.06), transparent);
+  pointer-events: none;
+}
+.card.c-fem h3 { color: #7a1a54; }
+
+/* ═══════════════════════════════════════════════
+   BOTONES — Modernos
+═══════════════════════════════════════════════ */
+.btn-group { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+.btn-p {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: #fff; border: none; cursor: pointer;
+  padding: 0.85rem 1.5rem;
+  font-family: var(--ff-body); font-size: 0.82rem; letter-spacing: 0.4px; font-weight: 600;
+  border-radius: var(--r-sm); text-decoration: none;
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s ease, filter 0.3s;
+  flex: 1; min-width: 120px;
+  box-shadow: 0 2px 8px rgba(201,168,76,0.25);
+  position: relative; overflow: hidden;
+}
+.btn-p::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
+  transform: translateX(-120%); transition: transform 0.6s var(--ease-out);
+}
+.btn-p:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(201,168,76,0.4); filter: brightness(1.06); }
+.btn-p:hover::after { transform: translateX(120%); }
+.btn-p:active { transform: translateY(0); }
+
+.btn-s {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: transparent;
+  color: var(--bronze); border: 1.5px solid var(--border-gold);
+  padding: 0.85rem 1.5rem;
+  font-family: var(--ff-body); font-size: 0.82rem; letter-spacing: 0.4px; font-weight: 600;
+  border-radius: var(--r-sm); cursor: pointer; text-decoration: none;
+  transition: all 0.3s var(--ease-out);
+  width: 100%; margin-top: 12px;
+}
+.btn-s:hover { background: rgba(201,168,76,0.07); border-color: var(--gold); color: var(--gold-dark); transform: translateY(-1px); }
+
+/* ═══════════════════════════════════════════════
+   PÓSTER RPG CLICKEABLE
+═══════════════════════════════════════════════ */
+.rpg-poster-wrap {
+  position: relative;
+  display: block;
+  cursor: pointer;
+  border-radius: 16px;
+  overflow: hidden;
+  margin: 0 auto 2rem;
+  max-width: 340px;
+  box-shadow:
+    0 0 0 2px rgba(201,168,76,.35),
+    0 20px 60px rgba(0,0,0,.35),
+    0 0 40px rgba(201,168,76,.12);
+  transition: transform 0.35s cubic-bezier(0.16,1,0.3,1),
+              box-shadow 0.35s ease;
+  text-decoration: none;
+}
+.rpg-poster-wrap:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow:
+    0 0 0 3px var(--gold),
+    0 30px 70px rgba(0,0,0,.45),
+    0 0 60px rgba(201,168,76,.3);
+}
+.rpg-poster-wrap img {
+  display: block; width: 100%; height: auto;
+  border-radius: 16px;
+}
+.rpg-poster-overlay {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 1.4rem 1.2rem 1.2rem;
+  background: linear-gradient(to top, rgba(4,10,22,.9) 0%, rgba(4,10,22,.55) 60%, transparent 100%);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.rpg-poster-wrap:hover .rpg-poster-overlay { opacity: 1; }
+.rpg-poster-overlay span {
+  font-family: var(--ff-title);
+  font-size: 1rem; letter-spacing: 3px;
+  color: var(--gold-bright);
+  text-shadow: 0 0 20px rgba(201,168,76,.8);
+  display: flex; align-items: center; gap: 8px;
+}
+.rpg-poster-badge {
+  position: absolute; top: 14px; right: 14px;
+  background: var(--gold);
+  color: #1a0e00;
+  font-family: var(--ff-title); font-size: 0.65rem; letter-spacing: 1.5px; font-weight: 700;
+  padding: 4px 10px; border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(201,168,76,.5);
+  animation: badgePulse 2.5s ease-in-out infinite;
+}
+@keyframes badgePulse {
+  0%, 100% { box-shadow: 0 2px 12px rgba(201,168,76,.5); }
+  50%       { box-shadow: 0 2px 24px rgba(201,168,76,.9); }
+}
+
+/* Layout especial para póster + tarjeta RPG lado a lado */
+.rpg-featured {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 24px;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+@media (max-width: 680px) {
+  .rpg-featured { grid-template-columns: 1fr; }
+  .rpg-poster-wrap { max-width: 100%; }
+}
+
+.embed-frame {
+  width: 100%;
+  height: 75vh; min-height: 550px;
+  border: 1px solid rgba(201,168,76,.25);
+  border-radius: var(--r-md); display: block;
+  margin-top: 1.5rem; background: #fff;
+  box-shadow: 0 12px 40px rgba(0,0,0,.08), 0 0 0 1px rgba(201,168,76,.08);
+}
+
+.fade-in { animation: fadeIn 0.45s cubic-bezier(0.16,1,0.3,1); }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════ */
+footer {
+  position: relative; z-index: 10;
+  background: rgba(4,9,18,.98);
+  border-top: 1px solid rgba(201,168,76,.15);
+  padding: 1.4rem 2rem; text-align: center;
+  font-family: var(--ff-body); font-size: 0.72rem;
+  letter-spacing: 1.5px; color: rgba(255,255,255,.35); font-weight: 400;
+  margin-top: auto;
+}
+footer::before {
+  content: '';
+  display: block; width: 120px; height: 1px; margin: 0 auto 12px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,.3), transparent);
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVO — MULTI-DISPOSITIVO
+   Breakpoints: 480 · 680 · 850 · 1060 · 1280
+═══════════════════════════════════════════════ */
+
+/* ── Dispositivos grandes (1280px+) ── */
+@media (min-width: 1280px) {
+  .main-panel { max-width: 1100px; }
+  .tablet { padding: 3.5rem 5rem; }
+  .grid { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+}
+
+/* ── Desktop estándar (1060–1279px) — ya cubierto por defecto ── */
+
+/* ── Tablet grande / laptop pequeño (850–1059px) ── */
+@media (max-width: 1059px) and (min-width: 851px) {
+  .tablet { padding: 2.5rem 3rem; }
+  .grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .rpg-featured { grid-template-columns: 220px 1fr; }
+  .rpg-poster-wrap { max-width: 220px; }
+}
+
+/* ── Tablet / móvil grande (≤ 850px) ── */
+@media (max-width: 850px) {
+  .hamburger { display: flex; }
+  .nav-inner { padding: 0 1rem; }
+
+  .nav-menu {
+    position: absolute; top: 100%; left: 0; right: 0;
+    flex-direction: column;
+    background: rgba(6,12,24,.98);
+    border-bottom: 2px solid rgba(201,168,76,.2);
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.16,1,0.3,1);
+    box-shadow: 0 20px 50px rgba(0,0,0,.7);
+  }
+  .nav-menu.open { max-height: 85vh; overflow-y: auto; }
+  .dropdown { flex-direction: column; }
+  .drop-btn {
+    width: 100%; padding: 16px 20px; justify-content: space-between;
+    border-bottom: 1px solid rgba(255,255,255,.06); font-size: 0.85rem;
+    min-height: 48px;
+  }
+  .drop-content {
+    position: static; box-shadow: none; border: none;
+    border-left: 2px solid rgba(201,168,76,.3); border-radius: 0;
+    margin-left: 22px; background: rgba(0,0,0,.12);
+    display: none; width: auto;
+  }
+  .dropdown:hover .drop-content,
+  .dropdown:focus-within .drop-content { display: block; }
+  .drop-content a { padding: 12px 18px; font-size: 0.82rem; min-height: 44px; }
+  .nav-lib {
+    width: 100%; padding: 16px 20px; justify-content: flex-start;
+    border-bottom: 1px solid rgba(255,255,255,.06); font-size: 0.85rem;
+    min-height: 48px;
+  }
+
+  .main-panel { width: 100%; margin: 0.8rem 0; }
+  .tablet { padding: 1.6rem 1.2rem; border-radius: 8px; }
+  h1 { font-size: clamp(1.2rem, 5vw, 1.5rem); letter-spacing: 2px; }
+  .grid { gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .embed-frame { height: 80vh; min-height: 480px; border-radius: 8px; }
+  .rpg-featured { grid-template-columns: 1fr; }
+  .rpg-poster-wrap { max-width: 100%; margin-bottom: 0; }
+  .btn-p, .btn-s { min-height: 44px; padding: 0.7rem 1.2rem; font-size: 0.75rem; }
+}
+
+/* ── Tablet vertical / móvil grande (680–849px) ── */
+@media (max-width: 849px) and (min-width: 681px) {
+  .tablet { padding: 2rem 1.8rem; border-radius: 12px; }
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  h1 { font-size: 1.45rem; }
+  .rpg-featured { grid-template-columns: 180px 1fr; gap: 18px; }
+  .rpg-poster-wrap { max-width: 180px; }
+}
+
+/* ── Móvil estándar (≤ 680px) ── */
+@media (max-width: 680px) {
+  :root { --ticker-h: 40px; }
+  .ticker-label { font-size: 0.62rem; padding: 0 14px; }
+  .ticker-item { font-size: 0.8rem; padding: 0 22px; }
+  .ticker-item .t-name { font-size: 0.62rem; }
+  .ticker-item .t-price { font-size: 0.84rem; }
+  .tablet { padding: 1.4rem 1rem; border-radius: 0; border-left: none; border-right: none; box-shadow: 0 8px 24px rgba(0,0,0,.28); }
+  h1 { font-size: clamp(1.1rem, 6vw, 1.35rem); letter-spacing: 1.5px; }
+  h2.sh { font-size: 0.75rem; letter-spacing: 2px; padding: 8px 0 8px 12px; margin: 2rem 0 1.2rem; }
+  .page-sub { font-size: 0.8rem; letter-spacing: 1.5px; }
+  .grid { grid-template-columns: 1fr; gap: 12px; }
+  .card { padding: 1.4rem 1.2rem; border-radius: 10px; }
+  .card h3 { font-size: 0.82rem; }
+  .card p { font-size: 0.92rem; }
+  .btn-group { flex-direction: column; gap: 8px; }
+  .btn-p, .btn-s { min-height: 46px; width: 100%; font-size: 0.74rem; }
+  .embed-frame { height: 85vh; min-height: 400px; border-radius: 6px; margin-top: 1rem; }
+  .rpg-featured { grid-template-columns: 1fr; gap: 14px; }
+  .rpg-poster-wrap { max-width: 88%; margin: 0 auto; }
+  .rpg-poster-wrap:hover { transform: none; } /* desactivar hover en touch */
+}
+
+/* ── Móvil pequeño (≤ 480px) ── */
+@media (max-width: 480px) {
+  .frieze { height: 4px; }
+  :root { --ticker-h: 42px; }
+  .ticker-label { font-size: 0.6rem; letter-spacing: 1px; padding: 0 12px; }
+  .ticker-item { font-size: 0.78rem; padding: 0 18px; }
+  .ticker-item .t-name { font-size: 0.6rem; }
+  .ticker-item .t-price { font-size: 0.82rem; }
+  .nav-inner { height: 54px; }
+  .nav-brand { font-size: 0.88rem; letter-spacing: 2px; }
+  .tablet { padding: 1.2rem 0.85rem; }
+  h1 { font-size: clamp(1rem, 7vw, 1.2rem); letter-spacing: 1px; }
+  h2.sh { font-size: 0.7rem; }
+  .card { padding: 1.2rem 1rem; }
+  .card h3 { font-size: 0.78rem; letter-spacing: 0.8px; }
+  .card p { font-size: 0.88rem; }
+  .grid { gap: 10px; }
+  .tablet-header { padding-bottom: 1.2rem; margin-bottom: 1.6rem; }
+  .rpg-poster-wrap { max-width: 100%; }
+  .embed-frame { height: 88vh; }
+  footer { padding: 1rem; font-size: 0.62rem; letter-spacing: 2px; }
+}
+
+/* ── Pantallas muy anchas (TV / monitor 4K) ── */
+@media (min-width: 1600px) {
+  .main-panel { max-width: 1200px; }
+  .tablet { padding: 4rem 6rem; }
+  h1 { font-size: 2.6rem; }
+  .grid { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 22px; }
+}
+
+/* ── Soporte safe-area para iPhone con notch ── */
+@supports (padding: env(safe-area-inset-bottom)) {
+  footer { padding-bottom: calc(1.4rem + env(safe-area-inset-bottom)); }
+  nav { padding-top: env(safe-area-inset-top); }
+  @media (max-width: 480px) {
+    .nav-inner { height: calc(54px + env(safe-area-inset-top)); }
+    nav { top: var(--ticker-h); }
+  }
+}
+
+/* ── Modo oscuro del SO (respeta preferencia) ── */
+@media (prefers-color-scheme: dark) {
+  /* El index ya tiene fondo oscuro; aquí solo ajustamos la galleta si se carga independiente */
+}
+
+/* ── Reducción de movimiento (accesibilidad) ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ═══════════════════════════════════════════════
+   REFINAMIENTOS MODERNOS
+═══════════════════════════════════════════════ */
+/* Scrollbar moderna */
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: var(--sea-deep); }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(var(--gold-dark), var(--bronze));
+  border-radius: 10px; border: 2px solid var(--sea-deep);
+}
+::-webkit-scrollbar-thumb:hover { background: linear-gradient(var(--gold), var(--gold-dark)); }
+* { scrollbar-width: thin; scrollbar-color: var(--bronze) var(--sea-deep); }
+
+/* Selección de texto */
+::selection { background: rgba(201,168,76,.3); color: var(--bronze-rich); }
+
+/* Foco accesible moderno */
+a:focus-visible, button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* iOS smooth scroll + overscroll */
+html { -webkit-text-size-adjust: 100%; }
+body { overscroll-behavior-y: none; }
+
+/* ═══════════════════════════════════════════════
+   JARDÍN SUBMARINO · Guiño a The Beatles
+   (submarino amarillo · pulpo · burbujas · notas)
+═══════════════════════════════════════════════ */
+.ocean-deco {
+  position: fixed; inset: 0; z-index: 1;
+  pointer-events: none; overflow: hidden;
+}
+.ocean-deco svg { position: absolute; will-change: transform; }
+
+/* Submarino amarillo principal */
+.deco-sub {
+  width: 130px; opacity: .5; top: 15%; left: -150px;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,.45));
+  animation: subCruise 40s linear infinite;
+}
+@keyframes subCruise {
+  0%   { transform: translateX(0) translateY(0) rotate(-2deg); }
+  50%  { transform: translateX(52vw) translateY(-22px) rotate(2deg); }
+  100% { transform: translateX(118vw) translateY(0) rotate(-2deg); }
+}
+
+/* Segundo submarino, más pequeño y en sentido inverso */
+.deco-sub-2 {
+  width: 92px; opacity: .34; top: 66%; left: auto; right: -140px;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,.45));
+  animation: subCruiseRev 56s linear infinite;
+}
+@keyframes subCruiseRev {
+  0%   { transform: translateX(0) rotate(2deg) scaleX(-1); }
+  50%  { transform: translateX(-54vw) translateY(24px) rotate(-2deg) scaleX(-1); }
+  100% { transform: translateX(-118vw) rotate(2deg) scaleX(-1); }
+}
+
+/* Pulpos del jardín submarino */
+.deco-octo {
+  width: 100px; opacity: .42; bottom: 5%; left: 2.5%;
+  filter: drop-shadow(0 8px 18px rgba(0,0,0,.5));
+  animation: octoBob 7s ease-in-out infinite;
+}
+.deco-octo-2 {
+  width: 74px; opacity: .3; top: 28%; left: auto; right: 3.5%; bottom: auto;
+  animation: octoBob 9.5s ease-in-out infinite reverse;
+}
+@keyframes octoBob {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50%      { transform: translateY(-18px) rotate(3deg); }
+}
+.octo-arm { transform-box: fill-box; transform-origin: top center; animation: armWave 3.4s ease-in-out infinite; }
+.octo-arm:nth-child(odd) { animation-delay: -1.3s; }
+@keyframes armWave { 0%,100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+
+/* Burbujas que ascienden */
+.bubble {
+  position: absolute; bottom: -50px; border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, rgba(255,255,255,.55), rgba(168,216,232,.12));
+  border: 1px solid rgba(255,255,255,.2);
+  animation-name: bubbleRise; animation-timing-function: linear; animation-iteration-count: infinite;
+}
+@keyframes bubbleRise {
+  0%   { transform: translateY(0) translateX(0) scale(.7); opacity: 0; }
+  12%  { opacity: .7; }
+  88%  { opacity: .5; }
+  100% { transform: translateY(-108vh) translateX(34px) scale(1); opacity: 0; }
+}
+
+/* Notas musicales psicodélicas */
+.note {
+  position: absolute; color: var(--gold-light); font-size: 1.5rem; opacity: 0;
+  text-shadow: 0 0 12px rgba(201,168,76,.6);
+  animation-name: noteFloat; animation-timing-function: ease-in; animation-iteration-count: infinite;
+}
+@keyframes noteFloat {
+  0%   { transform: translateY(0) rotate(0); opacity: 0; }
+  18%  { opacity: .55; }
+  100% { transform: translateY(-62vh) rotate(28deg); opacity: 0; }
+}
+
+/* Ajuste responsivo: aligerar la escena en pantallas pequeñas */
+@media (max-width: 850px) {
+  .deco-sub-2, .deco-octo-2, .note { display: none; }
+  .deco-sub  { width: 84px; opacity: .3; }
+  .deco-octo { width: 70px; opacity: .3; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ocean-deco { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ JARDÍN SUBMARINO · Guiño a The Beatles ══ -->
+<div class="ocean-deco" aria-hidden="true">
+  <!-- Submarino amarillo -->
+  <svg class="deco-sub" viewBox="0 0 130 64" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20 38 L4 24 L4 52 Z" fill="#d4a93b"/>
+    <ellipse cx="66" cy="40" rx="48" ry="18" fill="#f2c94c"/>
+    <ellipse cx="66" cy="37" rx="48" ry="12" fill="#f7d873"/>
+    <rect x="52" y="14" width="26" height="16" rx="6" fill="#e3b73f"/>
+    <rect x="62" y="6" width="5" height="12" rx="2.5" fill="#c9a84c"/>
+    <circle cx="64.5" cy="6" r="3.5" fill="#c9a84c"/>
+    <circle cx="46" cy="40" r="7" fill="#0c1f38" stroke="#fff" stroke-width="2.5"/>
+    <circle cx="66" cy="40" r="7" fill="#0c1f38" stroke="#fff" stroke-width="2.5"/>
+    <circle cx="86" cy="40" r="7" fill="#0c1f38" stroke="#fff" stroke-width="2.5"/>
+    <circle cx="114" cy="40" r="6" fill="#e3b73f"/>
+    <ellipse cx="56" cy="30" rx="20" ry="4" fill="#fff" opacity=".35"/>
+  </svg>
+
+  <svg class="deco-sub deco-sub-2" viewBox="0 0 130 64" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20 38 L4 24 L4 52 Z" fill="#d4a93b"/>
+    <ellipse cx="66" cy="40" rx="48" ry="18" fill="#f2c94c"/>
+    <ellipse cx="66" cy="37" rx="48" ry="12" fill="#f7d873"/>
+    <rect x="52" y="14" width="26" height="16" rx="6" fill="#e3b73f"/>
+    <rect x="62" y="6" width="5" height="12" rx="2.5" fill="#c9a84c"/>
+    <circle cx="64.5" cy="6" r="3.5" fill="#c9a84c"/>
+    <circle cx="46" cy="40" r="7" fill="#0c1f38" stroke="#fff" stroke-width="2.5"/>
+    <circle cx="66" cy="40" r="7" fill="#0c1f38" stroke="#fff" stroke-width="2.5"/>
+    <circle cx="86" cy="40" r="7" fill="#0c1f38" stroke="#fff" stroke-width="2.5"/>
+    <circle cx="114" cy="40" r="6" fill="#e3b73f"/>
+    <ellipse cx="56" cy="30" rx="20" ry="4" fill="#fff" opacity=".35"/>
+  </svg>
+
+  <!-- Pulpo (Octopus's Garden) -->
+  <svg class="deco-octo" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+    <g fill="#c95f86">
+      <path class="octo-arm" d="M30 72 q-15 16 -11 38 q2 8 8 6 q-2 -18 7 -34 z"/>
+      <path class="octo-arm" d="M42 78 q-9 20 -5 40 q2 6 7 4 q-3 -22 2 -42 z"/>
+      <path class="octo-arm" d="M58 78 q9 20 5 40 q-2 6 -7 4 q3 -22 -2 -42 z"/>
+      <path class="octo-arm" d="M70 72 q15 16 11 38 q-2 8 -8 6 q2 -18 -7 -34 z"/>
+      <path class="octo-arm" d="M50 80 q1 22 0 40 q0 6 -5 5 q-2 -24 0 -44 z"/>
+    </g>
+    <ellipse cx="50" cy="48" rx="30" ry="34" fill="#d56e94"/>
+    <ellipse cx="50" cy="42" rx="30" ry="28" fill="#e07ea3"/>
+    <circle cx="34" cy="54" r="5" fill="#f29bbb" opacity=".7"/>
+    <circle cx="66" cy="54" r="5" fill="#f29bbb" opacity=".7"/>
+    <circle cx="40" cy="42" r="8" fill="#fff"/>
+    <circle cx="60" cy="42" r="8" fill="#fff"/>
+    <circle cx="41" cy="44" r="4" fill="#241018"/>
+    <circle cx="61" cy="44" r="4" fill="#241018"/>
+    <circle cx="43" cy="42" r="1.5" fill="#fff"/>
+    <circle cx="63" cy="42" r="1.5" fill="#fff"/>
+    <path d="M44 58 q6 6 12 0" stroke="#a83e63" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  </svg>
+
+  <svg class="deco-octo deco-octo-2" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+    <g fill="#5a8fb0">
+      <path class="octo-arm" d="M30 72 q-15 16 -11 38 q2 8 8 6 q-2 -18 7 -34 z"/>
+      <path class="octo-arm" d="M42 78 q-9 20 -5 40 q2 6 7 4 q-3 -22 2 -42 z"/>
+      <path class="octo-arm" d="M58 78 q9 20 5 40 q-2 6 -7 4 q3 -22 -2 -42 z"/>
+      <path class="octo-arm" d="M70 72 q15 16 11 38 q-2 8 -8 6 q2 -18 -7 -34 z"/>
+    </g>
+    <ellipse cx="50" cy="48" rx="30" ry="34" fill="#6fa3c4"/>
+    <ellipse cx="50" cy="42" rx="30" ry="28" fill="#86b8d6"/>
+    <circle cx="40" cy="42" r="8" fill="#fff"/>
+    <circle cx="60" cy="42" r="8" fill="#fff"/>
+    <circle cx="41" cy="44" r="4" fill="#16303f"/>
+    <circle cx="61" cy="44" r="4" fill="#16303f"/>
+    <path d="M44 58 q6 6 12 0" stroke="#2d5a72" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  </svg>
+
+  <!-- Burbujas -->
+  <span class="bubble" style="left:7%;  width:14px; height:14px; animation-duration:15s; animation-delay:0s;"></span>
+  <span class="bubble" style="left:18%; width:9px;  height:9px;  animation-duration:11s; animation-delay:3s;"></span>
+  <span class="bubble" style="left:84%; width:16px; height:16px; animation-duration:17s; animation-delay:1.5s;"></span>
+  <span class="bubble" style="left:92%; width:10px; height:10px; animation-duration:13s; animation-delay:5s;"></span>
+  <span class="bubble" style="left:5%;  width:8px;  height:8px;  animation-duration:12s; animation-delay:7s;"></span>
+  <span class="bubble" style="left:78%; width:12px; height:12px; animation-duration:16s; animation-delay:9s;"></span>
+
+  <!-- Notas musicales -->
+  <span class="note" style="left:11%; bottom:22%; animation-duration:10s; animation-delay:1s;">♪</span>
+  <span class="note" style="left:88%; bottom:30%; animation-duration:12s; animation-delay:6s;">♫</span>
+  <span class="note" style="left:82%; bottom:14%; animation-duration:11s; animation-delay:3.5s;">♩</span>
+</div>
+
+<!-- ══ TICKER FELIPESOS ══ -->
+<div class="ticker-bar" title="Pasa el cursor para pausar">
+  <div class="ticker-label">
+    <i class="fa-solid fa-coins"></i> FELIPESOS
+  </div>
+  <div class="ticker-track">
+    <div class="ticker-scroll" id="tickerScroll">
+      <!-- Items duplicados para loop continuo -->
+      <span class="ticker-item"><span class="t-icon">🪙</span><span class="t-name">PUNTOS</span><span class="t-price">$10.000</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item"><span class="t-icon">🗑️</span><span class="t-name">ELIM. FORMATIVA</span><span class="t-price">$100.000</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item"><span class="t-icon">😄</span><span class="t-name">MINUTO FELIZ</span><span class="t-price">$25.000</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item"><span class="t-icon">🎯</span><span class="t-name">50/50</span><span class="t-price">$50.000</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item"><span class="t-icon">🎫</span><span class="t-name">CUPÓN AL AZAR</span><span class="t-price">$20.000</span></span>
+      <span class="ticker-sep">◆</span>
+      <!-- Duplicado para loop -->
+      <span class="ticker-item"><span class="t-icon">🪙</span><span class="t-name">PUNTOS</span><span class="t-price">$10.000</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item"><span class="t-icon">🗑️</span><span class="t-name">ELIM. FORMATIVA</span><span class="t-price">$100.000</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item"><span class="t-icon">😄</span><span class="t-name">MINUTO FELIZ</span><span class="t-price">$25.000</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item"><span class="t-icon">🎯</span><span class="t-name">50/50</span><span class="t-price">$50.000</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item"><span class="t-icon">🎫</span><span class="t-name">CUPÓN AL AZAR</span><span class="t-price">$20.000</span></span>
+      <span class="ticker-sep">◆</span>
+    </div>
+  </div>
+</div>
+
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-brand" onclick="go('home');return false;">
+      <i class="fa-solid fa-water"></i> EL RINCÓN DE FELIPE
+    </a>
+
+    <button class="hamburger" id="ham" onclick="toggleNav()">
+      <span></span><span></span><span></span>
+    </button>
+
+    <ul class="nav-menu" id="nav-menu">
+      <li class="dropdown" tabindex="0">
+        <button class="drop-btn">CURSOS <i class="fa-solid fa-chevron-down"></i></button>
+        <div class="drop-content">
+          <a href="#" onclick="go('6basico'); closeNav(); return false;"><i class="fa-solid fa-flask"></i> VI° Básico</a>
+          <a href="#" onclick="go('7basico'); closeNav(); return false;"><i class="fa-solid fa-microscope"></i> VII° Básico</a>
+          <a href="#" onclick="go('8basico'); closeNav(); return false;"><i class="fa-solid fa-atom"></i> VIII° Básico</a>
+          <a href="#" onclick="go('1medio'); closeNav(); return false;"><i class="fa-solid fa-dna"></i> I° Medio</a>
+          <a href="#" onclick="go('2medio'); closeNav(); return false;"><i class="fa-solid fa-bolt"></i> II° Medio</a>
+          <a href="#" onclick="go('3medio'); closeNav(); return false;"><i class="fa-solid fa-gears"></i> III° Medio</a>
+          <a href="#" onclick="go('4medio'); closeNav(); return false;"><i class="fa-solid fa-meteor"></i> IV° Medio</a>
+        </div>
+      </li>
+      <li><a href="campeonato-sa-2026.html" class="nav-lib" style="color:#8fe3b4; border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='#8fe3b4'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-trophy"></i> CAMPEONATO SA 2026</a></li>
+      <li><a href="mundial2026.html" class="nav-lib" style="color:#f2a65a; border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='#f2a65a'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-earth-americas"></i> MUNDIAL 2026</a></li>
+      <li><a href="radio.html" class="nav-lib" style="color:#f59ca6; border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='#f59ca6'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-radio"></i> RADIO</a></li>
+      <li><a href="#" onclick="go('juegos'); closeNav(); return false;" class="nav-lib" style="color:#caa8f0; border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='#caa8f0'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-gamepad"></i> JUEGOS</a></li>
+      <li><a href="banco-felipesos.html" class="nav-lib" style="color:#a8d8e8; border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='#a8d8e8'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-piggy-bank"></i> BANCO FELIPESOS</a></li>
+      <li><a href="#" onclick="go('biblioteca'); closeNav(); return false;" class="nav-lib"><i class="fa-solid fa-book-open"></i> BIBLIOTECA</a></li>
+      <li><a href="#" onclick="go('herramientas'); closeNav(); return false;" class="nav-lib" style="color:#a8d8a8; border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='#a8d8a8'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-wrench"></i> HERRAMIENTAS</a></li>
+      <li><a href="#" onclick="go('ensayos-paes'); closeNav(); return false;" class="nav-lib" style="color:var(--gold-light); border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='var(--gold-light)'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-graduation-cap"></i> ENSAYOS PAES</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="main-panel">
+  <div class="tablet">
+    <main id="main-content" class="fade-in"></main>
+  </div>
+</div>
+
+<footer>
+  EL RINCÓN DE FELIPE © <span id="yr"></span> · PROF. FELIPE JIMÉNEZ
+</footer>
+
+<script>
+// Manejo del menú móvil
+function toggleNav() {
+  document.getElementById('ham').classList.toggle('open');
+  document.getElementById('nav-menu').classList.toggle('open');
+}
+
+function closeNav() {
+  document.getElementById('ham').classList.remove('open');
+  document.getElementById('nav-menu').classList.remove('open');
+}
+
+const ROUTES = {
+  home: rHome,
+  '1medio': s => rComing(s, 'I° Medio'),
+  '2medio': s => rComing(s, 'II° Medio'),
+  '3medio': r3,
+  '4medio': r4,
+  '6basico': r6,
+  '7basico': r7,
+  '8basico': r8basico,
+  'cesfam': rCesfam,
+  'futbol_varones': rFutbolVarones,
+  'futbol_damas': rFutbolDamas,
+  'goleadores': rGoleadores,
+  'goleadoras': rGoleadoras,
+  'bases_futbol': rBasesFutbol,
+  'calendario_futbol': rCalendarioFutbol,
+  juegos: rJuegos,
+  biblioteca: rLib,
+  'game-rpg': s => rGame(s, 'juego_rpg_colegio.html', '🎒 RPG Escolar: Un Día de Clases'),
+  'game-snake': s => rGame(s, 'juego_snake.html', '🐍 Snake'),
+  'game-memoria': s => rGame(s, 'juego_memoria.html', '🃏 Memoria Clásico'),
+  'game-tres': s => rGame(s, 'juego_tictactoe.html', '❌ Tres en Raya'),
+  'game-toninas-mem': s => rGame(s, 'juego_memorice_toninas.html', '🐬 Memorice Toninas'),
+  'game-toninas-lab': s => rGame(s, 'juego_laberinto_toninas.html', '🌀 Laberinto Toninas'),
+  'game-rpg-v4': rGameRPGv4,
+  'reglamento': rReglamento,
+  'herramientas': rHerramientas,
+  'ensayos-paes': rEnsayosPaes
+};
+
+function go(page){
+  const stage = document.getElementById('main-content');
+  const fn = ROUTES[page];
+  if(!fn) return;
+  stage.innerHTML = '';
+  fn(stage);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function rHome(stage){
+  stage.innerHTML = `
+    <div class="fade-in">
+      <div class="tablet-header">
+        <h1 class="shimmer">EL RINCÓN DE FELIPE</h1>
+        <p class="page-sub">🐙 Ciencia, Deporte y Jardín Submarino · 2026</p>
+      </div>
+
+      <!-- 🎮 NOVEDADES DEL RPG · v16 -->
+      <div style="margin-bottom:1.6rem;">
+        <div class="card" style="gap:0; border-top:3px solid #8b5cf6; background:linear-gradient(160deg,#fdfbff 0%,#f1ebfb 100%);">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
+            <span style="font-size:1.5rem;">🎮</span>
+            <h3 style="font-family:var(--ff-title); font-size:1rem; letter-spacing:1px; color:#5b21b6; margin:0;">SAN AGUSTÍN RPG — NOVEDADES</h3>
+            <span style="margin-left:auto; background:#8b5cf6; color:#fff; font-family:var(--ff-title); font-size:0.72rem; letter-spacing:1px; padding:4px 13px; border-radius:20px;">v16</span>
+          </div>
+          <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:9px;">
+            <li style="display:flex; align-items:flex-start; gap:10px; font-size:0.95rem; color:var(--text-soft);"><span style="font-size:1.1rem;">🦁</span><span>Se agrega <strong>BuinZoo</strong> como nueva zona para explorar.</span></li>
+            <li style="display:flex; align-items:flex-start; gap:10px; font-size:0.95rem; color:var(--text-soft);"><span style="font-size:1.1rem;">🛠️</span><span><strong>Optimización de errores</strong> y mejoras de rendimiento.</span></li>
+            <li style="display:flex; align-items:flex-start; gap:10px; font-size:0.95rem; color:var(--text-soft);"><span style="font-size:1.1rem;">👆</span><span>Se mejora el <strong>control del juego solo con los dedos</strong> (táctil).</span></li>
+          </ul>
+          <a href="profe-rpg-v4.html" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:8px; margin-top:14px; padding:11px 20px; border-radius:9px; background:linear-gradient(135deg,#8b5cf6,#6d3bb5); color:#fff; font-family:var(--ff-title); font-size:0.74rem; letter-spacing:0.1em; text-decoration:none; box-shadow:0 6px 16px rgba(109,59,181,.3);"><i class="fa-solid fa-gamepad"></i> JUGAR SAN AGUSTÍN RPG</a>
+        </div>
+      </div>
+
+      <!-- 📻 RADIO EL RINCÓN -->
+      <div style="margin-bottom:1.6rem;">
+        <div class="card" style="gap:0; border-top:3px solid #e05a6a; background:linear-gradient(160deg,#fffbfb 0%,#fbeef0 100%);">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+            <span style="font-size:1.5rem;">📻</span>
+            <h3 style="font-family:var(--ff-title); font-size:1rem; letter-spacing:1px; color:#9c2733; margin:0;">RADIO EL RINCÓN</h3>
+            <span id="home-radio-badge" style="margin-left:auto; background:#9aa3ad; color:#fff; font-family:var(--ff-title); font-size:0.72rem; letter-spacing:1px; padding:4px 13px; border-radius:20px;">SINTONIZANDO…</span>
+          </div>
+          <p style="font-size:0.95rem; color:var(--text-soft);">Transmisiones en vivo desde el Rincón: música, ciencia y comentarios del campeonato. Cuando el indicador esté en rojo, ¡estamos al aire!</p>
+          <a href="radio.html" style="display:inline-flex; align-items:center; gap:8px; margin-top:14px; padding:11px 20px; border-radius:9px; background:linear-gradient(135deg,#e05a6a,#9c2733); color:#fff; font-family:var(--ff-title); font-size:0.74rem; letter-spacing:0.1em; text-decoration:none; box-shadow:0 6px 16px rgba(156,39,51,.3);"><i class="fa-solid fa-radio"></i> IR A LA RADIO</a>
+        </div>
+      </div>
+
+      <!-- 🌎 DATOS DEL MUNDIAL 2026 (iframe) -->
+      <h2 class="sh" style="margin-top:0.5rem;">🌎 DATOS DEL MUNDIAL 2026</h2>
+      <iframe src="mundial2026.html" class="embed-frame" title="Datos del Mundial 2026"
+        style="min-height:640px; border-radius:12px; border-top:3px solid #f2a65a;"
+        loading="lazy"></iframe>
+
+      <h2 class="sh">⚽ DEPORTES & NOVEDADES</h2>
+
+      <!-- Tarjeta deportes -->
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-bottom:1rem;">
+        <div class="card c-gold">
+          <h3><i class="fa-solid fa-trophy"></i> CAMPEONATO 2026</h3>
+          <p>Ligas activas. Revisa los máximos artilleros, fechas y reglamento oficial.</p>
+          <div class="btn-group">
+            <button class="btn-p" onclick="go('goleadores')"><i class="fa-solid fa-futbol"></i> Goleadores</button>
+            <button class="btn-p" onclick="go('calendario_futbol')" style="background: linear-gradient(135deg, #1b4d3e, #22c55e);"><i class="fa-solid fa-calendar"></i> Calendario</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🏆 RESULTADO DESTACADO -->
+      <div style="margin: 0.5rem 0 1.5rem;">
+        <div class="card c-laurel" style="gap:0; border-top:3px solid #22c55e; background: linear-gradient(160deg, #fdfcf9 0%, #f0f8f2 100%);">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+            <span style="font-size:1.4rem;">⚽</span>
+            <p style="font-size:0.7rem; color:#2e7d52; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;">3 Junio 2026 · Campeonato Interno · Liga Varones</p>
+          </div>
+          <h3 style="font-family:var(--ff-title); font-size:1rem; letter-spacing:1px; color:#1b4d2e; margin-bottom:8px; display:flex; align-items:center; gap:10px;">
+            <i class="fa-solid fa-futbol" style="color:#22c55e;"></i>
+            III° MEDIO <span style="font-size:1.4rem; font-weight:800; color:#22c55e; letter-spacing:2px; margin:0 6px;">5 – 1</span> II° MEDIO
+          </h3>
+          <p style="font-size:0.95rem; color:var(--text-soft);">Partidazo en la cancha del colegio. III° Medio dominó de principio a fin con un juego colectivo muy sólido, en lo que fue el partido <strong>más entretenido del campeonato</strong> hasta ahora. La hinchada llenó las graderías y el ambiente estuvo a la altura de una gran final.</p>
+          <button class="btn-s" onclick="go('futbol_varones')" style="width:auto; margin-top:14px;"><i class="fa-solid fa-table-list"></i> Ver tabla de posiciones</button>
+        </div>
+      </div>
+
+      <!-- 🌎 FÚTBOL · CAMINO AL MUNDIAL 2026 -->
+      <h2 class="sh" style="margin-top:2rem;">🌎 FÚTBOL MUNDIAL · JUNIO 2026</h2>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+
+        <div class="card c-gold" style="gap:0;">
+          <h3><i class="fa-solid fa-earth-americas" style="color:var(--bronze);"></i> EL MUNDIAL ARRANCA EL 11 DE JUNIO</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">11 Junio 2026 · FIFA / El Mostrador</p>
+          <p>La Copa del Mundo se disputa por primera vez en <strong>tres países</strong> (Estados Unidos, México y Canadá) y abre con México vs. Sudáfrica. En Chile, <strong>Chilevisión</strong> transmitirá una selección de partidos gratis en TV abierta.</p>
+        </div>
+
+        <div class="card c-sea" style="gap:0;">
+          <h3><i class="fa-solid fa-futbol" style="color:#c8102e;"></i> LA ROJA SE MIDE ANTE PORTUGAL Y CR7</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">6 Junio 2026 · ANFP / Redgol</p>
+          <p>Aunque Chile quedó fuera del Mundial, <strong>La Roja</strong> juega un amistoso de fuste ante <strong>Portugal</strong> —candidato al título y liderado por Cristiano Ronaldo— en el Estadio Nacional do Jamor, en Oeiras. Buena vitrina para los jóvenes valores.</p>
+        </div>
+
+      </div>
+
+      <!-- 🥠 GALLETA DE LA FORTUNA -->
+      <div style="display:flex; justify-content:center; margin: 0.5rem 0 2rem;">
+        <div style="width:100%; max-width:460px; border-radius:14px; overflow:hidden; border:1px solid rgba(201,168,76,.28); border-top:3px solid var(--gold); box-shadow: 0 8px 28px rgba(0,0,0,.06), 0 0 0 1px rgba(201,168,76,.06); background:var(--marble);">
+          <iframe src="galleta.html"
+            style="width:100%; height:148px; border:none; display:block;"
+            scrolling="no"
+            loading="lazy"
+            title="Galleta de la Fortuna — Sabiduría del Mundo">
+          </iframe>
+        </div>
+      </div>
+
+      <!-- 🔭 CIENCIAS -->
+      <h2 class="sh" style="margin-top:2rem;">🔭 CIENCIAS · JUNIO 2026</h2>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+
+        <div class="card c-sea" style="gap:0;">
+          <h3><i class="fa-solid fa-star" style="color:#2d6a9f;"></i> NASA DETECTA "CORONA" CÓSMICA EN CÚMULO ESTELAR ANTIGUO</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">Junio 2026 · NASA / Calendario de Ciencia</p>
+          <p>Misiones de la NASA detectaron una <strong>"corona" cósmica en el cúmulo NGC 602</strong>, en la Pequeña Nube de Magallanes a 200.000 años luz. Sus estrellas imitan condiciones del universo primitivo, revelando cómo se formaron las primeras galaxias.</p>
+        </div>
+
+        <div class="card c-laurel" style="gap:0;">
+          <h3><i class="fa-solid fa-fish" style="color:#3d6b4a;"></i> NUEVO PEPINO DE MAR CON "INMORTALIDAD TISULAR"</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">Mayo 2026 · CNN Ciencia</p>
+          <p>Científicos descubrieron accidentalmente un <strong>pepino de mar con regeneración tisular casi ilimitada</strong>. El animal puede reconstituir órganos completos tras lesiones severas, abriendo nuevas líneas de investigación en medicina regenerativa.</p>
+        </div>
+
+        <div class="card c-gold" style="gap:0;">
+          <h3><i class="fa-solid fa-layer-group" style="color:var(--bronze);"></i> NUEVO LÍMITE DE PLACAS TECTÓNICAS EN FORMACIÓN</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">Mayo 2026 · CNN / Universidad de Oxford</p>
+          <p>Científicos de Oxford hallaron <strong>indicios de un nuevo límite de placas tectónicas</strong> formándose actualmente. El descubrimiento, detectado mediante sismología y datos satelitales, podría reescribir los modelos de geodinámica del planeta.</p>
+        </div>
+
+        <div class="card c-fem" style="gap:0;">
+          <h3><i class="fa-solid fa-dna" style="color:#801d5e;"></i> CRISPR SALVA A BEBÉ CON ENFERMEDAD MORTAL PERSONALIZADA</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">Mayo 2026 · National Geographic / Penn Medicine</p>
+          <p>En un hito médico, el Hospital Infantil de Filadelfia desarrolló en tiempo récord una <strong>terapia génica CRISPR personalizada</strong> para KJ, bebé con deficiencia letal de CPS1. Por primera vez se editó el genoma de un paciente con una secuencia diseñada solo para él.</p>
+        </div>
+
+        <div class="card c-gold" style="gap:0;">
+          <h3><i class="fa-solid fa-scroll" style="color:var(--bronze);"></i> MOMIAS CON "LENGUAS DE ORO" EN EGIPTO</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">Junio 2026 · Muy Interesante / Misión Oxirrinco</p>
+          <p>Arqueólogos descubrieron en <strong>Oxirrinco</strong> (Egipto) momias con pequeñas <strong>láminas de oro en la boca</strong>, a modo de lengua. El hallazgo abre una ventana a las prácticas funerarias y la vida religiosa del antiguo Egipto.</p>
+        </div>
+
+        <div class="card c-sea" style="gap:0;">
+          <h3><i class="fa-solid fa-car-battery" style="color:#2d6a9f;"></i> LLEGAN LAS BATERÍAS DE HIERRO-AIRE</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">2026 · CAS Insights</p>
+          <p>Nuevas baterías basadas en <strong>metales abundantes como el hierro</strong> empiezan a comercializarse en 2026, superando a las de litio en costo y disponibilidad. Clave para almacenar energía renovable durante días.</p>
+        </div>
+
+      </div>
+
+      <!-- 🎮 VIDEOJUEGOS & TECH -->
+      <h2 class="sh" style="margin-top:2.5rem;">🎮 VIDEOJUEGOS & TECH · JUNIO 2026</h2>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+
+        <div class="card c-sea" style="gap:0; border-top-color:#1a6ecc;">
+          <h3><i class="fa-solid fa-gamepad" style="color:#1a6ecc;"></i> STATE OF PLAY: GOD OF WAR LAUFEY Y UNTIL DAWN 2</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">3 Junio 2026 · PlayStation Blog</p>
+          <p>El State of Play de PlayStation reveló <strong>God of War Laufey</strong> —protagonizado por la esposa de Kratos— y confirmó <strong>Until Dawn 2</strong> para PS5 en 2027. También se mostró Kemuri, aventura sobrenatural del estudio Unseen (Ikumi Nakamura).</p>
+        </div>
+
+        <div class="card c-gold" style="gap:0; border-top-color:#c47a1b;">
+          <h3><i class="fa-solid fa-sword" style="color:#c47a1b;"></i> GOTHIC REMAKE Y STAR FOX LLEGAN EN JUNIO</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">5 y 19 Junio 2026 · 3DJuegos / Nintendo</p>
+          <p><strong>Gothic Remake</strong> (5 jun) renueva el clásico RPG de mundo abierto en PC y consolas. Nintendo responde con el nuevo <strong>Star Fox</strong> exclusivo para Switch 2, coincidiendo con el primer aniversario de la consola. Mes cargado para los fans de los RPG.</p>
+        </div>
+
+        <div class="card c-laurel" style="gap:0; border-top-color:#2e7d52;">
+          <h3><i class="fa-solid fa-shield-halved" style="color:#2e7d52;"></i> SUMMER GAME FEST 2026: LA SEMANA MÁS GRANDE DEL AÑO</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">Primera semana de Junio 2026 · Clavecd / IGN</p>
+          <p>Seis conferencias en una semana: <strong>Xbox Games Showcase, Summer Game Fest, PlayStation State of Play, Day of the Devs, Future Games Show y PC Gaming Show</strong>. Los fanáticos esperan el Direct de Nintendo para el aniversario de Switch 2.</p>
+        </div>
+
+        <div class="card c-fem" style="gap:0; border-top-color:#801d5e;">
+          <h3><i class="fa-solid fa-meteor" style="color:#801d5e;"></i> FINAL FANTASY VII REBIRTH LLEGA A SWITCH 2</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">Junio 2026 · Nintendo / Atomix</p>
+          <p><strong>Final Fantasy VII Rebirth</strong>, la segunda parte del remake de Square Enix, llega a Nintendo Switch 2 este mes. Cloud y compañía salen de Midgar en una aventura de mundo abierto enorme. También llega <strong>Dune: Awakening</strong> a PS5 el 22 de septiembre.</p>
+        </div>
+
+        <div class="card c-sea" style="gap:0; border-top-color:#1a6ecc;">
+          <h3><i class="fa-solid fa-tv" style="color:#1a6ecc;"></i> SUMMER GAME FEST 2026: HOY, LA EDICIÓN MÁS GRANDE</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">5 Junio 2026 · 3DJuegos / SGF</p>
+          <p>El gran escaparate del videojuego (el "no-E3"), conducido por <strong>Geoff Keighley</strong> desde el Dolby Theatre de Los Ángeles, vuelve hoy con su edición más ambiciosa: tráilers, estrenos mundiales y sorpresas para el cierre de 2026.</p>
+        </div>
+
+        <div class="card c-laurel" style="gap:0; border-top-color:#2e7d52;">
+          <h3><i class="fa-solid fa-ghost" style="color:#2e7d52;"></i> VUELVE RESIDENT EVIL CODE: VERONICA</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">5 Junio 2026 · LevelUp / SGF</p>
+          <p>Capcom anunció el <strong>remake de Resident Evil Code: Veronica</strong>, clásico de terror que cumple un cuarto de siglo. Protagonizado por Claire y Chris Redfield, llegará en 2027 reimaginado para una nueva generación.</p>
+        </div>
+
+        <div class="card c-gold" style="gap:0; border-top-color:#c47a1b;">
+          <h3><i class="fa-solid fa-mug-hot" style="color:#c47a1b;"></i> NUEVO CUPHEAD Y EL FINAL DE FF VII</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">5 Junio 2026 · GamerFocus / SGF</p>
+          <p>Studio MDHR reveló <strong>Mighty Cuphead Adventure</strong>, un spin-off de estilo 8-bit, y confirmó una nueva entrega principal. Square Enix cerró el evento con <strong>Final Fantasy VII Revelation</strong>, la tercera y última parte del remake (primavera 2027).</p>
+        </div>
+
+      </div>
+
+      <!-- 🌍 CIENCIA Y MUNDO -->
+      <h2 class="sh" style="margin-top:2.5rem;">🌍 PLANETA Y ASTRONOMÍA · JUNIO 2026</h2>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+
+        <div class="card c-sea" style="gap:0;">
+          <h3><i class="fa-solid fa-satellite" style="color:#2d6a9f;"></i> CIELO DE JUNIO: VENUS, JÚPITER Y LLUVIA DE METEOROS</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">Junio 2026 · NASA / Prensa Libre</p>
+          <p>Entre el 8 y 9 de junio, <strong>Júpiter y Venus se verán muy cerca</strong> en el cielo nocturno. El 11 de junio, Marte, la Luna y Saturno formarán una línea diagonal al amanecer. El 10 de junio pico de las <strong>Ariétidas</strong>, la lluvia de meteoros diurna más activa.</p>
+        </div>
+
+        <div class="card c-laurel" style="gap:0;">
+          <h3><i class="fa-solid fa-temperature-arrow-up" style="color:#3d6b4a;"></i> MODELOS CLIMÁTICOS 2026: PREDICCIONES REGIONALES MÁS EXACTAS</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">2026 · National Geographic / OKDiario</p>
+          <p>Gracias a mayor potencia computacional y datos satelitales precisos, los modelos climáticos de 2026 permiten <strong>predicciones regionales exactas</strong> sobre sequías y tormentas extremas, convirtiendo la ciencia climática en una herramienta de planificación local real.</p>
+        </div>
+
+        <div class="card c-gold" style="gap:0;">
+          <h3><i class="fa-solid fa-rocket" style="color:var(--bronze);"></i> ARTEMIS II: ASTRONAUTAS CIRCUNNAVEGARÁN LA LUNA</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">2026 · NASA / N+</p>
+          <p>La NASA envía astronautas a bordo de la nave Orion en la <strong>misión Artemis II</strong>: el primer vuelo tripulado alrededor de la Luna desde el Apolo 17. Los astronautas no pisarán la superficie, pero completarán una órbita completa antes de volver a la Tierra.</p>
+        </div>
+
+        <div class="card c-fem" style="gap:0;">
+          <h3><i class="fa-solid fa-spider" style="color:#801d5e;"></i> MÁS DE 1.100 NUEVAS ESPECIES OCEÁNICAS DESCUBIERTAS</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">Mayo 2026 · CNN Ciencia</p>
+          <p>Una expedición de aguas profundas catalogó <strong>más de 1.100 especies marinas nunca vistas</strong>, desde "tiburones fantasma" hasta esponjas llamadas "bola de la muerte". El océano profundo sigue siendo el ecosistema menos explorado del planeta.</p>
+        </div>
+
+        <div class="card c-laurel" style="gap:0;">
+          <h3><i class="fa-solid fa-snowflake" style="color:#3d6b4a;"></i> COMIENZA EL INVIERNO: SOLSTICIO DEL 21 DE JUNIO</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">Junio 2026 · NASA Ciencia</p>
+          <p>El <strong>solsticio del 21 de junio</strong> marca el inicio del invierno en el hemisferio sur: la noche más larga del año en Chile. Además, entre el 11 y el 15 de junio, <strong>Mercurio</strong> se asoma al atardecer en un mini-desfile planetario.</p>
+        </div>
+
+      </div>
+      <h2 class="sh" style="margin-top:2.5rem;">MÓDULOS DE ESTUDIO</h2>
+      <div class="grid">
+        <div class="card c-sea" style="cursor:pointer" onclick="go('4medio')">
+          <h3><i class="fa-solid fa-meteor"></i> IV° MEDIO · FÍSICA</h3>
+          <p>Explora el módulo interactivo: Fuerzas Centrales y Dinámica Estelar.</p>
+        </div>
+        <div class="card c-laurel" style="cursor:pointer" onclick="go('biblioteca')">
+          <h3><i class="fa-solid fa-book-open"></i> BIBLIOTECA DIGITAL</h3>
+          <p>Accede a guías, apuntes y recursos de estudio organizados por nivel.</p>
+        </div>
+        <div class="card c-gold" style="cursor:pointer" onclick="go('juegos')">
+          <h3><i class="fa-solid fa-gamepad"></i> SALA DE JUEGOS</h3>
+          <p>Desafíos lógicos, trivia de ciencias y aventuras educativas interactivas.</p>
+        </div>
+        <div class="card c-sea" style="cursor:pointer" onclick="go('ensayos-paes')">
+          <h3><i class="fa-solid fa-graduation-cap"></i> ENSAYOS PAES</h3>
+          <p>Practica con ensayos para la Prueba de Acceso a la Educación Superior.</p>
+        </div>
+      </div>
+
+      <!-- 🧮 ACCESO DIRECTO: CONTADOR DE DEUDAS INVISIBLES -->
+      <h2 class="sh" style="margin-top:2.4rem;">🧮 CONTADOR DE DEUDAS INVISIBLES</h2>
+      <p style="text-align:center; font-size:0.82rem; color:var(--text-soft); margin:-0.4rem 0 1.2rem; font-style:italic;">Acceso directo a las dos versiones del contador.</p>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+        <div class="card c-sea" style="cursor:pointer" onclick="window.location.href='contador-deudas-invisibles-estudiantes.html'">
+          <h3><i class="fa-solid fa-hand-holding-heart" style="color:#0e7490;"></i> VERSIÓN ESTUDIANTES</h3>
+          <p>Una mirada amable a las deudas invisibles del día a día, pensada para estudiantes.</p>
+        </div>
+        <div class="card c-fem" style="cursor:pointer" onclick="window.location.href='contador-deudas-invisibles.html'">
+          <h3><i class="fa-solid fa-scale-balanced" style="color:#9d174d;"></i> VERSIÓN ADULTOS</h3>
+          <p>La versión completa del contador de deudas invisibles, para público adulto.</p>
+        </div>
+      </div>
+
+      <!-- 📰 ÚLTIMA HORA · ACTUALIDAD -->
+      <h2 class="sh" style="margin-top:2.6rem;">📰 ÚLTIMA HORA · ACTUALIDAD</h2>
+      <p style="text-align:center; font-size:0.82rem; color:var(--text-soft); margin:-0.4rem 0 1.2rem; font-style:italic;">Lo más reciente en Mundial, tecnología y videojuegos.</p>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+
+        <div class="card c-gold" style="gap:0;">
+          <h3><i class="fa-solid fa-earth-americas" style="color:var(--bronze);"></i> 🌎 EL MUNDIAL SE INAUGURA EN EL AZTECA</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">11 Junio 2026 · FIFA</p>
+          <p>Este jueves arranca la Copa del Mundo con <strong>México vs. Sudáfrica</strong> en el Estadio Azteca, primer recinto en albergar tres mundiales. Son <strong>48 selecciones</strong> y tres países anfitriones; la final será el 19 de julio en Nueva York/Nueva Jersey.</p>
+        </div>
+
+        <div class="card c-sea" style="gap:0;">
+          <h3><i class="fa-solid fa-music" style="color:#1a4e7a;"></i> 🎶 FIESTA INAUGURAL CON MANÁ Y LOS ÁNGELES AZULES</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">9 Junio 2026 · La Nación</p>
+          <p>La ceremonia, 90 minutos antes del primer partido, celebrará la cultura mexicana con <strong>Alejandro Fernández, Belinda, J Balvin, Danny Ocean, Los Ángeles Azules y Maná</strong>. Habrá ceremonias también en Canadá y EE.UU.</p>
+        </div>
+
+        <div class="card c-laurel" style="gap:0;">
+          <h3><i class="fa-solid fa-microchip" style="color:#3d6b4a;"></i> 💻 NVIDIA ESTRENA "VERA RUBIN"</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">2026 · El Espectador</p>
+          <p>NVIDIA puso en producción <strong>Vera Rubin</strong>, su nueva plataforma de computación para IA con un rendimiento hasta cinco veces mayor. Su CEO, Jensen Huang, recibió la Medalla de Honor IEEE 2026.</p>
+        </div>
+
+        <div class="card c-fem" style="gap:0;">
+          <h3><i class="fa-solid fa-robot" style="color:#801d5e;"></i> 💻 GOOGLE I/O 2026: LA ERA DE LOS AGENTES</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">2026 · Google</p>
+          <p>Google presentó <strong>Gemini impulsado por agentes</strong>: asistentes de IA que ya no solo responden, sino que <strong>actúan</strong> por nosotros (planifican, gestionan tareas). 2026 es el año en que la IA "que actúa" llega al día a día.</p>
+        </div>
+
+        <div class="card c-gold" style="gap:0;">
+          <h3><i class="fa-solid fa-gamepad" style="color:var(--bronze);"></i> 🎮 VUELVE ZELDA: OCARINA OF TIME</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">9 Junio 2026 · Nintendo Direct</p>
+          <p>Cerrando el Summer Game Fest, Nintendo confirmó el <strong>remake desde cero de Ocarina of Time</strong> (fin de 2026) para Switch 2, junto a un nuevo <strong>Xenoblade</strong>, <strong>Kingdom Hearts 4</strong> y el regreso de <strong>Star Fox</strong>.</p>
+        </div>
+
+        <div class="card c-sea" style="gap:0;">
+          <h3><i class="fa-solid fa-ghost" style="color:#1a4e7a;"></i> 🎮 GOD OF WAR LAUFEY Y UNTIL DAWN 2</h3>
+          <p style="font-size:0.7rem; color:#6b4f0e; margin-bottom:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; opacity:1;">2 Junio 2026 · PlayStation</p>
+          <p>En el State of Play, Sony reveló <strong>God of War: Laufey</strong> —centrado en la historia de Faye— y anunció <strong>Until Dawn 2</strong> para 2027, además de nuevo metraje de Marvel: Lobezno.</p>
+        </div>
+
+      </div>
+
+    </div>`;
+  updateRadioBadge();
+}
+
+/* ── 📻 Estado de la radio en la portada (misma hoja que radio.html) ── */
+const RADIO_SHEET = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSBqwbo0u0aum5yUsCO7nNTBPVVsJGyGe7X3T8snBmaQ4Llz2VhUu5va6o8GThgHwGaz8BAitrg6aYP/pub?output=csv';
+function updateRadioBadge(){
+  const badge = document.getElementById('home-radio-badge');
+  if (!badge) return;
+  fetch(RADIO_SHEET + '&t=' + Date.now())
+    .then(r => r.text())
+    .then(t => {
+      const firstLine = t.split(/\r?\n/)[0] || '';
+      const url = firstLine.split(',')[0].replace(/"/g,'').trim();
+      if (url.startsWith('https://')) {
+        badge.textContent = '🔴 AL AIRE';
+        badge.style.background = '#e02440';
+        badge.style.boxShadow = '0 0 12px rgba(224,36,64,.5)';
+      } else {
+        badge.textContent = 'FUERA DEL AIRE';
+      }
+    })
+    .catch(() => { badge.textContent = 'FUERA DEL AIRE'; });
+}
+function rJuegos(stage){
+  stage.innerHTML = `
+    <div class="fade-in">
+      <div class="tablet-header">
+        <h1>🎮 SALA DE JUEGOS</h1>
+        <p class="page-sub">Desafíos lógicos y aventuras</p>
+      </div>
+
+      <!-- 🎮 JUEGO PRINCIPAL: SAN AGUSTÍN RPG -->
+      <div class="rpg-featured" style="margin-bottom:2.2rem;">
+        <a class="rpg-poster-wrap"
+           href="profe-rpg-v4.html"
+           target="_blank"
+           rel="noopener"
+           title="Jugar San Agustín RPG">
+          <span class="rpg-poster-badge">v16</span>
+          <img src="RPG/Diseño_sin_título__1_.png" alt="San Agustín El RPG">
+        </a>
+        <div>
+          <p style="font-size:0.7rem; color:#6b4f0e; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:6px;">⭐ Juego principal</p>
+          <h2 style="font-family:var(--ff-title); font-size:1.3rem; letter-spacing:1px; color:var(--bronze); margin-bottom:10px;">SAN AGUSTÍN: EL RPG</h2>
+          <p style="font-size:0.95rem; color:var(--text-soft); line-height:1.55;">Una aventura ambientada en el <strong>Colegio San Agustín</strong> y en <strong>Villa Alemana</strong>, con las historias del Profe Felipe. Visita las salas, recorre la ciudad, admira los <strong>trofeos de los campeonatos</strong>, conversa con los profesores y <strong>captura alumnos</strong> en tu camino.</p>
+          <a href="profe-rpg-v4.html" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:8px; margin-top:16px; padding:12px 24px; border-radius:9px; background:linear-gradient(135deg,#8b5cf6,#6d3bb5); color:#fff; font-family:var(--ff-title); font-size:0.8rem; letter-spacing:0.1em; text-decoration:none; box-shadow:0 8px 20px rgba(109,59,181,.32);"><i class="fa-solid fa-play"></i> JUGAR AHORA</a>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card c-sea" style="cursor:pointer" onclick="go('game-toninas-mem')">
+          <h3>🐬 MEMORICE TONINAS</h3>
+          <p>Entrena tu memoria visual con los habitantes del océano.</p>
+        </div>
+        <div class="card c-fem" style="cursor:pointer" onclick="go('game-toninas-lab')">
+          <h3>🌀 LABERINTO TONINAS</h3>
+          <p>Ayuda a la tonina a escapar encontrando el camino.</p>
+        </div>
+        <div class="card c-gold" style="cursor:pointer" onclick="go('game-snake')">
+          <h3>🐍 SNAKE</h3>
+          <p>El clásico juego de la serpiente en código retro.</p>
+        </div>
+        <div class="card c-laurel" style="cursor:pointer" onclick="go('game-memoria')">
+          <h3>🃏 MEMORIA CLÁSICO</h3>
+          <p>Encuentra todas las parejas y pon a prueba tu memoria.</p>
+        </div>
+        <div class="card c-sea" style="cursor:pointer" onclick="go('game-tres')">
+          <h3>❌ TRES EN RAYA</h3>
+          <p>El gato de toda la vida: alinea tres símbolos para ganar.</p>
+        </div>
+        <div class="card c-gold" style="cursor:pointer" onclick="go('game-rpg')">
+          <h3>🎒 RPG ESCOLAR</h3>
+          <p>Vive un día de clases como aventura por turnos.</p>
+        </div>
+      </div>
+    </div>`;
+}
+
+function r8basico(s){
+  s.innerHTML = `
+    <div class="fade-in">
+      <div class="tablet-header">
+        <h1><i class="fa-solid fa-atom" style="color:#2d6a9f;"></i> VIII° BÁSICO · CIENCIAS</h1>
+        <p class="page-sub">Módulos y recursos · 2026</p>
+      </div>
+
+      <h2 class="sh">RECURSOS DEL MÓDULO</h2>
+      <div class="grid">
+
+        <div class="card c-sea" style="cursor:pointer;" onclick="go('cesfam')">
+          <h3><i class="fa-solid fa-house-medical" style="color:#2d6a9f;"></i> CHATBOT CESFAM · REGLAMENTO</h3>
+          <p>Consulta de forma interactiva el reglamento y servicios del CESFAM. Asistente con inteligencia artificial para resolver tus dudas de salud comunitaria.</p>
+          <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-comment-medical"></i> Abrir Chatbot</button>
+        </div>
+
+        <div class="card c-laurel">
+          <h3><i class="fa-solid fa-microscope" style="color:#3d6b4a;"></i> MÓDULO EN CONSTRUCCIÓN</h3>
+          <p>Próximamente más recursos para VIII° Básico: guías, actividades y material de estudio.</p>
+        </div>
+
+      </div>
+    </div>`;
+}
+
+function rCesfam(s){
+  s.innerHTML = `
+    <div class="fade-in">
+      <div class="tablet-header">
+        <h1><i class="fa-solid fa-house-medical"></i> CHATBOT CESFAM</h1>
+        <p class="page-sub">Consulta el reglamento y servicios con IA</p>
+      </div>
+      <iframe src="cesfam_diagnostico.html" class="embed-frame" style="min-height:680px; border-radius:12px; border-top:3px solid #2d6a9f;"></iframe>
+    </div>`;
+}
+
+function rGoleadores(s){ s.innerHTML = '<h1><i class="fa-solid fa-shoe-prints"></i> GOLEADORES</h1><iframe src="goleadores.html" class="embed-frame"></iframe>'; }
+function rGoleadoras(s){ s.innerHTML = '<h1><i class="fa-solid fa-shoe-prints" style="color:#ff4d94;"></i> GOLEADORAS</h1><iframe src="goleadoras.html" class="embed-frame"></iframe>'; }
+function r3(s){
+  // Crear por DOM (no innerHTML) para que scripts del iframe se ejecuten correctamente
+  s.innerHTML = '';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'fade-in';
+
+  const hdr = document.createElement('div');
+  hdr.className = 'tablet-header';
+  hdr.innerHTML = `
+    <h1><i class="fa-solid fa-gears" style="color:var(--laurel);"></i> III° MEDIO · TECNOLOGÍA</h1>
+    <p class="page-sub">Bitácora de actividades · 2026</p>`;
+
+  const loader = document.createElement('p');
+  loader.id = 'bita-loader';
+  loader.style.cssText = 'text-align:center;color:var(--text-soft);font-style:italic;padding:1rem;';
+  loader.textContent = 'Cargando bitácora…';
+
+  const fr = document.createElement('iframe');
+  fr.src = 'bitacora_tech.html';
+  fr.className = 'embed-frame';
+  fr.style.cssText = 'min-height:600px;';
+  fr.setAttribute('allowfullscreen','');
+  fr.setAttribute('loading','eager');
+  fr.onload  = () => { loader.style.display = 'none'; };
+  fr.onerror = () => { loader.innerHTML = '⚠️ No se pudo cargar la bitácora. Verifica que <code>bitacora_tech.html</code> esté en el servidor.'; };
+
+  wrap.appendChild(hdr);
+  wrap.appendChild(loader);
+  wrap.appendChild(fr);
+  s.appendChild(wrap);
+}
+function r4(s){ s.innerHTML = '<h1>IV° Medio: Física</h1><iframe src="tesoros_espacio.html" class="embed-frame"></iframe>'; }
+function r6(s){ s.innerHTML = '<h1>VI° Básico: Ciencias</h1><iframe src="bitacora_6basico.html" class="embed-frame"></iframe>'; }
+function r7(s){ s.innerHTML = '<h1><i class="fa-solid fa-map"></i> VII° Básico: Tesoro</h1><iframe src="tesoro_7basico.html" class="embed-frame"></iframe>'; }
+function rLib(s){ s.innerHTML = '<h1><i class="fa-solid fa-book-open"></i> Biblioteca</h1><iframe src="https://drive.google.com/embeddedfolderview?id=1_8SD_30CH4lAwBrLSg4sw9yKZiC9kNNJ#list" class="embed-frame"></iframe>'; }
+function rFutbolVarones(s){ s.innerHTML = '<h1><i class="fa-solid fa-mars"></i> LIGA VARONES</h1><iframe src="tablafutbol.html" class="embed-frame"></iframe>'; }
+function rFutbolDamas(s){ s.innerHTML = '<h1><i class="fa-solid fa-venus"></i> LIGA DAMAS</h1><iframe src="tablafutbol_fem.html" class="embed-frame"></iframe>'; }
+function rBasesFutbol(s){ s.innerHTML = '<h1><i class="fa-solid fa-scroll"></i> BASES OFICIALES</h1><iframe src="bases_campeonato.html" class="embed-frame"></iframe>'; }
+function rCalendarioFutbol(s){ s.innerHTML = '<h1><i class="fa-solid fa-calendar-days"></i> CALENDARIO</h1><iframe src="calendario_futbol.html" class="embed-frame"></iframe>'; }
+
+function rReglamento(s){
+  s.innerHTML = `
+    <div class="fade-in">
+      <div class="tablet-header">
+        <h1><i class="fa-solid fa-scale-balanced"></i> REGLAMENTO INTERNO 2026</h1>
+        <p class="page-sub">Consulta el reglamento con inteligencia artificial</p>
+      </div>
+      <iframe src="indexreglamento.html" class="embed-frame" style="min-height:680px; border-radius:12px;"></iframe>
+    </div>`;
+}
+
+function rEnsayosPaes(s){
+  s.innerHTML = `
+    <div class="fade-in">
+      <div class="tablet-header">
+        <h1><i class="fa-solid fa-graduation-cap" style="color:var(--gold);"></i> ENSAYOS PAES</h1>
+        <p class="page-sub">Práctica y ensayos para la Prueba de Acceso a la Educación Superior</p>
+      </div>
+      <iframe src="ensayos-paes-v2.html" class="embed-frame" style="min-height:720px; border-radius:12px; border-top:3px solid var(--gold);"></iframe>
+    </div>`;
+}
+
+function rGameRPGv4(s){
+  window.open('profe-rpg-v4.html', '_blank');
+}
+
+function rGame(s, file, name){
+  s.innerHTML = `
+    <div class="fade-in">
+      <h1>${name}</h1>
+      <button class="btn-s" onclick="go('juegos')" style="width: auto; margin-bottom:15px;"><i class="fa-solid fa-arrow-left"></i> Volver a Juegos</button>
+      <iframe src="${file}" class="embed-frame" style="background:var(--bg-color); padding: 0;"></iframe>
+    </div>`;
+}
+
+function rComing(s, name){
+  s.innerHTML = `
+    <div class="fade-in" style="text-align:center; padding:4rem 1rem;">
+      <i class="fa-solid fa-person-digging" style="font-size: 3rem; color: var(--gold); margin-bottom: 20px;"></i>
+      <h2>${name}</h2>
+      <p style="color:var(--text-soft); margin-top:1rem; font-size: 1.1rem;">Módulo en construcción. Pronto habrá novedades.</p>
+      <button class="btn-p" onclick="go('home')" style="margin-top:2rem; width: auto;"><i class="fa-solid fa-house"></i> Volver al Inicio</button>
+    </div>`;
+}
+
+function rHerramientas(s){
+  s.innerHTML = `
+    <div class="fade-in">
+      <div class="tablet-header">
+        <h1><i class="fa-solid fa-wrench" style="color:var(--laurel);"></i> HERRAMIENTAS</h1>
+        <p class="page-sub">Utilidades para el aula</p>
+      </div>
+
+      <!-- ── MISCELÁNEOS ── -->
+      <h2 class="sh">🧰 MISCELÁNEOS</h2>
+      <div class="tool-row" style="display:flex; gap:10px; margin-bottom:1.2rem; flex-wrap:wrap;">
+        <button class="tool-tab" data-tool="copletos" onclick="switchTool('copletos')"
+          style="flex:1; min-width:150px; padding:12px 16px; border-radius:8px; border:2px solid var(--laurel);
+                 background:var(--laurel); color:#fff; font-family:var(--ff-title); font-size:.7rem;
+                 letter-spacing:.12em; cursor:pointer; display:flex; align-items:center; gap:8px; justify-content:center;">
+          <i class="fa-solid fa-hotdog"></i> CALC. COMPLETOS
+        </button>
+        <button class="tool-tab" data-tool="calc" onclick="switchTool('calc')"
+          style="flex:1; min-width:150px; padding:12px 16px; border-radius:8px; border:2px solid rgba(201,168,76,.35);
+                 background:transparent; color:var(--text-soft); font-family:var(--ff-title); font-size:.7rem;
+                 letter-spacing:.12em; cursor:pointer; display:flex; align-items:center; gap:8px; justify-content:center;">
+          <i class="fa-solid fa-divide"></i> CALCULADORA
+        </button>
+        <button class="tool-tab" data-tool="eliminatorias" onclick="switchTool('eliminatorias')"
+          style="flex:1; min-width:150px; padding:12px 16px; border-radius:8px; border:2px solid rgba(201,168,76,.35);
+                 background:transparent; color:var(--text-soft); font-family:var(--ff-title); font-size:.7rem;
+                 letter-spacing:.12em; cursor:pointer; display:flex; align-items:center; gap:8px; justify-content:center;">
+          <i class="fa-solid fa-trophy"></i> CREADOR DE ELIMINATORIAS
+        </button>
+        <button class="tool-tab" data-tool="qr" onclick="switchTool('qr')"
+          style="flex:1; min-width:150px; padding:12px 16px; border-radius:8px; border:2px solid rgba(201,168,76,.35);
+                 background:transparent; color:var(--text-soft); font-family:var(--ff-title); font-size:.7rem;
+                 letter-spacing:.12em; cursor:pointer; display:flex; align-items:center; gap:8px; justify-content:center;">
+          <i class="fa-solid fa-qrcode"></i> GENERADOR QR
+        </button>
+        <button class="tool-tab" data-tool="deudas_est" onclick="switchTool('deudas_est')"
+          style="flex:1; min-width:150px; padding:12px 16px; border-radius:8px; border:2px solid rgba(201,168,76,.35);
+                 background:transparent; color:var(--text-soft); font-family:var(--ff-title); font-size:.7rem;
+                 letter-spacing:.12em; cursor:pointer; display:flex; align-items:center; gap:8px; justify-content:center;">
+          <i class="fa-solid fa-hand-holding-heart"></i> DEUDAS · ESTUDIANTES
+        </button>
+        <button class="tool-tab" data-tool="deudas_adt" onclick="switchTool('deudas_adt')"
+          style="flex:1; min-width:150px; padding:12px 16px; border-radius:8px; border:2px solid rgba(201,168,76,.35);
+                 background:transparent; color:var(--text-soft); font-family:var(--ff-title); font-size:.7rem;
+                 letter-spacing:.12em; cursor:pointer; display:flex; align-items:center; gap:8px; justify-content:center;">
+          <i class="fa-solid fa-scale-balanced"></i> DEUDAS · ADULTOS
+        </button>
+      </div>
+
+      <!-- ── CIENCIAS ── -->
+      <h2 class="sh">🔬 CIENCIAS</h2>
+      <div class="tool-row" style="display:flex; gap:10px; margin-bottom:1.4rem; flex-wrap:wrap;">
+        <button class="tool-tab" data-tool="arbolfilo" onclick="switchTool('arbolfilo')"
+          style="flex:1; min-width:150px; padding:12px 16px; border-radius:8px; border:2px solid rgba(201,168,76,.35);
+                 background:transparent; color:var(--text-soft); font-family:var(--ff-title); font-size:.7rem;
+                 letter-spacing:.12em; cursor:pointer; display:flex; align-items:center; gap:8px; justify-content:center;">
+          <i class="fa-solid fa-sitemap"></i> ÁRBOL FILOGENÉTICO
+        </button>
+        <button class="tool-tab" data-tool="rutas" onclick="switchTool('rutas')"
+          style="flex:1; min-width:150px; padding:12px 16px; border-radius:8px; border:2px solid rgba(201,168,76,.35);
+                 background:transparent; color:var(--text-soft); font-family:var(--ff-title); font-size:.7rem;
+                 letter-spacing:.12em; cursor:pointer; display:flex; align-items:center; gap:8px; justify-content:center;">
+          <i class="fa-solid fa-diagram-project"></i> RUTAS METABÓLICAS
+        </button>
+      </div>
+
+      <!-- Visor de herramienta -->
+      <iframe id="tool-frame" class="embed-frame" src="completos.html" data-tool="copletos"
+        style="min-height:720px; border-radius:12px; border-top:3px solid var(--laurel);"
+        loading="eager"></iframe>
+    </div>`;
+}
+
+// Configuración de herramientas (fácil de ampliar a futuro)
+const TOOLS = {
+  copletos:      { src: 'completos.html',     color: 'var(--laurel)', text: '#fff',    min: 720 },
+  calc:          { src: 'calculadora.html',   color: '#2d5a8e',       text: '#fff',    min: 520 },
+  eliminatorias: { src: 'eliminatorias.html', color: 'var(--gold)',   text: '#1a0e00', min: 720 },
+  qr:            { src: 'generador-qr.html',  color: '#6d3bb5',       text: '#fff',    min: 620 },
+  deudas_est:    { src: 'contador-deudas-invisibles-estudiantes.html', color: '#0e7490', text: '#fff', min: 760 },
+  deudas_adt:    { src: 'contador-deudas-invisibles.html',             color: '#9d174d', text: '#fff', min: 760 },
+  arbolfilo:     { src: 'arbolfilo.html',     color: '#2e7d52',       text: '#fff',    min: 720 },
+  rutas:         { src: 'rutas_metabolicas.html', color: '#b45309',   text: '#fff',    min: 720 }
+};
+
+function switchTool(tool){
+  const cfg = TOOLS[tool];
+  if(!cfg) return;
+
+  const fr = document.getElementById('tool-frame');
+  if (fr && fr.getAttribute('data-tool') !== tool){
+    fr.src = cfg.src;
+    fr.setAttribute('data-tool', tool);
+  }
+  if (fr){
+    fr.style.borderTop  = '3px solid ' + cfg.color;
+    fr.style.minHeight  = cfg.min + 'px';
+  }
+
+  document.querySelectorAll('.tool-tab').forEach(btn => {
+    const t = btn.getAttribute('data-tool');
+    const c = TOOLS[t];
+    const active = (t === tool);
+    btn.style.background  = active ? c.color : 'transparent';
+    btn.style.color       = active ? c.text  : 'var(--text-soft)';
+    btn.style.borderColor = active ? c.color : 'rgba(201,168,76,.35)';
+  });
+}
+
+document.getElementById('yr').textContent = new Date().getFullYear();
+go('home');
+</script>
+
+</body>
+</html>
