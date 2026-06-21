@@ -177,6 +177,30 @@ canvas{width:100%;aspect-ratio:1/1;max-width:450px;max-height:450px;background:#
 #lb-list::-webkit-scrollbar{width:4px}
 #lb-list::-webkit-scrollbar-track{background:#1e293b}
 #lb-list::-webkit-scrollbar-thumb{background:#374151;border-radius:2px}
+/* ─ Panel de Control ─ */
+.stab{flex:1;padding:7px 4px;background:#1e293b;border:1px solid #374151;border-radius:6px;color:#9ca3af;font-family:'VT323',monospace;font-size:.85rem;cursor:pointer;transition:.15s;text-align:center}
+.stab.on{background:linear-gradient(180deg,#d97706,#b45309);border-color:#f59e0b;color:#fff}
+.stab:hover:not(.on){border-color:#4b5563;color:#d1d5db}
+.sc-sec{display:none}.sc-sec.on{display:block}
+.tgl-wrap{display:flex;justify-content:space-between;align-items:center;background:#1e293b;border-radius:8px;padding:10px 14px;margin-bottom:8px}
+.tgl-lbl{font-family:'VT323',monospace;font-size:.92rem;color:#f1f5f9}
+.tgl{position:relative;width:44px;height:24px;cursor:pointer;flex-shrink:0}
+.tgl input{opacity:0;width:0;height:0;position:absolute}
+.tgl-sl{position:absolute;inset:0;background:#374151;border-radius:24px;transition:.25s}
+.tgl-sl:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#6b7280;border-radius:50%;transition:.25s}
+.tgl input:checked+.tgl-sl{background:#f59e0b}
+.tgl input:checked+.tgl-sl:before{transform:translateX(20px);background:#fff}
+.kbd{display:inline-block;background:#0f172a;border:1px solid #374151;border-bottom:3px solid #0d1117;border-radius:4px;padding:1px 7px;font-family:'Press Start 2P',monospace;font-size:.37rem;color:#fcd34d;white-space:nowrap}
+.ctrl-row{display:flex;justify-content:space-between;align-items:center;padding:7px 4px;border-bottom:1px solid #1e293b;gap:8px}
+.ctrl-desc{font-family:'VT323',monospace;font-size:.88rem;color:#d1d5db}
+.ctrl-keys{display:flex;gap:4px;align-items:center;flex-shrink:0}
+.tut-step{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;background:#1e293b;border-radius:8px;margin-bottom:6px}
+.tut-ico{font-size:1.3rem;flex-shrink:0;margin-top:2px}
+.tut-t{font-family:'Press Start 2P',monospace;font-size:.38rem;color:#fcd34d;margin-bottom:4px}
+.tut-d{font-family:'VT323',monospace;font-size:.84rem;color:#9ca3af;line-height:1.4}
+#sc-tutorial::-webkit-scrollbar{width:4px}
+#sc-tutorial::-webkit-scrollbar-track{background:#0f172a}
+#sc-tutorial::-webkit-scrollbar-thumb{background:#374151;border-radius:2px}
 </style>
 </head>
 <body>
@@ -212,6 +236,7 @@ canvas{width:100%;aspect-ratio:1/1;max-width:450px;max-height:450px;background:#
     <button class="btn-ui" onclick="saveGame()" title="Guardar partida" style="font-size:.8rem;padding:2px 6px">💾</button>
     <button class="btn-ui" onclick="loadGame()" title="Cargar partida" style="font-size:.8rem;padding:2px 6px;background:linear-gradient(180deg,#4b5563,#374151);color:#d1d5db;border-color:#6b7280">📂</button>
     <button class="btn-ui" onclick="openLeaderboard()" title="Ranking" style="font-size:.8rem;padding:2px 6px;background:linear-gradient(180deg,#d97706,#92400e);border-color:#78350f">🏆</button>
+    <button class="btn-ui" onclick="openSettings()" title="Panel de control" style="font-size:.8rem;padding:2px 6px;background:linear-gradient(180deg,#374151,#1f2937);color:#9ca3af;border-color:#4b5563">⚙️</button>
   </div>
 </div>
 
@@ -282,6 +307,57 @@ canvas{width:100%;aspect-ratio:1/1;max-width:450px;max-height:450px;background:#
     <div class="s7-sub">Del cofre de la Cancha del Colegio</div>
     <div class="s7-hint">¿Qué revelará este número?</div>
     <button class="s7-btn" onclick="closeSevenPanel()">Continuar →</button>
+  </div>
+
+  <!-- PANEL DE CONTROL -->
+  <div id="settings-panel" class="ov center" style="max-width:460px">
+    <div style="font-family:'Press Start 2P',monospace;font-size:.52rem;color:#fcd34d;text-align:center;margin-bottom:12px">⚙️ PANEL DE CONTROL</div>
+    <div style="display:flex;gap:5px;margin-bottom:14px">
+      <button class="stab on" id="stab-music" onclick="switchStab('music')">🔊 Música</button>
+      <button class="stab" id="stab-controls" onclick="switchStab('controls')">🎮 Controles</button>
+      <button class="stab" id="stab-tutorial" onclick="switchStab('tutorial')">📖 Tutorial</button>
+    </div>
+    <!-- Música -->
+    <div id="sc-music" class="sc-sec on">
+      <div class="tgl-wrap">
+        <span class="tgl-lbl">🎵 Música de fondo</span>
+        <label class="tgl"><input type="checkbox" id="tgl-music" checked onchange="toggleMusicSetting(this)"><div class="tgl-sl"></div></label>
+      </div>
+      <div style="background:#0f172a;border-radius:6px;padding:10px 12px;font-family:'VT323',monospace;font-size:.85rem;color:#6b7280;line-height:1.5">
+        La música cambia automáticamente según el área del mapa.<br>Desactívala si necesitas silencio en clase 🤫
+      </div>
+    </div>
+    <!-- Controles -->
+    <div id="sc-controls" class="sc-sec">
+      <div class="tgl-wrap">
+        <span class="tgl-lbl">🕹️ D-Pad táctil (móvil)</span>
+        <label class="tgl"><input type="checkbox" id="tgl-dpad" checked onchange="toggleDpadSetting(this)"><div class="tgl-sl"></div></label>
+      </div>
+      <div style="background:#0f172a;border-radius:6px;padding:8px 12px;margin-bottom:6px">
+        <div style="font-family:'Press Start 2P',monospace;font-size:.38rem;color:#4b5563;margin-bottom:8px;letter-spacing:.5px">⌨️ TECLADO</div>
+        <div class="ctrl-row"><span class="ctrl-desc">Moverse</span><div class="ctrl-keys"><span class="kbd">↑↓←→</span><span style="color:#4b5563;font-size:.8rem;font-family:'VT323',monospace">o</span><span class="kbd">W A S D</span></div></div>
+        <div class="ctrl-row"><span class="ctrl-desc">Interactuar / Avanzar</span><div class="ctrl-keys"><span class="kbd">Espacio</span><span style="color:#4b5563;font-size:.8rem;font-family:'VT323',monospace">o</span><span class="kbd">Enter</span></div></div>
+        <div class="ctrl-row" style="border:none"><span class="ctrl-desc">Salir de sala</span><div class="ctrl-keys"><span class="kbd">Esc</span></div></div>
+      </div>
+      <div style="background:#0f172a;border-radius:6px;padding:8px 12px">
+        <div style="font-family:'Press Start 2P',monospace;font-size:.38rem;color:#4b5563;margin-bottom:8px;letter-spacing:.5px">📱 MÓVIL / TÁCTIL</div>
+        <div class="ctrl-row"><span class="ctrl-desc">Moverse</span><span class="ctrl-desc" style="color:#6b7280">D-Pad o deslizar pantalla</span></div>
+        <div class="ctrl-row" style="border:none"><span class="ctrl-desc">Interactuar</span><span class="ctrl-desc" style="color:#6b7280">Botón OK</span></div>
+      </div>
+    </div>
+    <!-- Tutorial -->
+    <div id="sc-tutorial" class="sc-sec" style="max-height:290px;overflow-y:auto;padding-right:3px">
+      <div class="tut-step"><div class="tut-ico">🗺️</div><div><div class="tut-t">EXPLORAR EL COLEGIO</div><div class="tut-d">Muévete por el mapa con flechas o WASD. Entra por las puertas 🚪 para visitar salas. Presiona Esc o usa el botón Salir para volver al mapa anterior.</div></div></div>
+      <div class="tut-step"><div class="tut-ico">💬</div><div><div class="tut-t">HABLAR CON PERSONAJES</div><div class="tut-d">Acércate a un profe o personaje y presiona Espacio. Pueden darte misiones 📓, hacerte preguntas para ganar 🪙 monedas o curarte los stats.</div></div></div>
+      <div class="tut-step"><div class="tut-ico">⚔️</div><div><div class="tut-t">SISTEMA DE BATALLAS</div><div class="tut-d">Al tocar un enemigo 😈 se inicia la batalla. Elige: ⚡ Explicar (daño normal), 💡 Motivar (usa MP, daño x2), ☕ Café (cura HP), 🚪 Huir. ¡Ganas XP y 🪙 al vencer!</div></div></div>
+      <div class="tut-step"><div class="tut-ico">📊</div><div><div class="tut-t">STATS Y NIVELES</div><div class="tut-d">❤️ HP = vida. 💙 MP = energía para habilidades. ⭐ XP = experiencia. Al subir de nivel aumentan todos tus atributos y se restauran HP/MP.</div></div></div>
+      <div class="tut-step"><div class="tut-ico">🍽️</div><div><div class="tut-t">HAMBRE</div><div class="tut-d">El hambre baja con el tiempo. Si llega a 0 pierdes HP paulatinamente. Come 🍬 caramelos del inventario o visita el huerto para recuperarla.</div></div></div>
+      <div class="tut-step"><div class="tut-ico">🪙</div><div><div class="tut-t">MONEDAS Y TIENDA</div><div class="tut-d">Gana monedas respondiendo preguntas a los profes, ganando batallas o recogiéndolas del suelo. Cómpralas en el kiosco de la Tía Kella 👩 en el patio.</div></div></div>
+      <div class="tut-step"><div class="tut-ico">📓</div><div><div class="tut-t">MISIONES</div><div class="tut-d">Presiona 📓 para ver tus misiones activas. Los personajes especiales te dan misiones al hablar con ellos. ¡Completarlas da recompensas únicas!</div></div></div>
+      <div class="tut-step"><div class="tut-ico">👥</div><div><div class="tut-t">EQUIPO DE COMPAÑEROS</div><div class="tut-d">En la Plaza Belén puedes reclutar compañeros (Renata 🌟, Isi 💙, Este 💻). En batalla usa el botón 👥 para llamarlos. Cada uno tiene una habilidad especial.</div></div></div>
+      <div class="tut-step"><div class="tut-ico">💾</div><div><div class="tut-t">GUARDAR Y RANKING</div><div class="tut-d">Se guarda automáticamente al ganar batallas y subir de nivel. Presiona 💾 para guardar manual, 📂 para cargar y 🏆 para ver el ranking de tu curso en tiempo real.</div></div></div>
+    </div>
+    <button class="dlg-btn" onclick="closeSettings()" style="margin-top:12px">Cerrar</button>
   </div>
 
   <!-- LEADERBOARD -->
@@ -8043,6 +8119,37 @@ function _activateAdmin(){
   badge.textContent='🔑 ADMIN';
   document.body.appendChild(badge);
   showDialog('🔓 MODO ADMINISTRATIVO\n\n⚡ ¡Código secreto activado!\n\n✅ Todas las puertas abiertas\n✅ Nivel 10 | 250HP | 120MP\n✅ +999 🪙 monedas\n✅ Armadura de Bronce\n✅ Todas las misiones\n✅ Café x10\n\n"Con gran poder viene\ngran responsabilidad."\n\n🔑 Modo Admin activo');
+}
+
+// ═══ PANEL DE CONTROL ═══
+function openSettings(){
+  const tglMusic=_('tgl-music');
+  if(tglMusic) tglMusic.checked=!Music.muted;
+  const tglDpad=_('tgl-dpad');
+  if(tglDpad) tglDpad.checked=_('ctrl').style.display!=='none';
+  _('settings-panel').style.display='block';
+  STATE='dialog';
+}
+function closeSettings(){
+  _('settings-panel').style.display='none';
+  if(STATE==='dialog') STATE='exploring';
+}
+function switchStab(tab){
+  ['music','controls','tutorial'].forEach(t=>{
+    _('stab-'+t).classList.toggle('on',t===tab);
+    _('sc-'+t).classList.toggle('on',t===tab);
+  });
+}
+function toggleMusicSetting(el){
+  const on=Music.toggle(); el.checked=on;
+  const btn=_('btn-music');
+  if(btn){btn.textContent=on?'🎵':'🔇';btn.style.opacity=on?'1':'.45';}
+}
+function toggleDpadSetting(el){
+  const ctrl=_('ctrl'),btn=_('ctrl-toggle'),show=el.checked;
+  ctrl.style.display=show?'flex':'none';
+  if(btn) btn.textContent=show?'🎮 Ocultar controles':'🎮 Mostrar controles';
+  try{localStorage.setItem('rpg_dpad',show?'1':'0');}catch(e){}
 }
 
 // ═══ FIREBASE + MULTIJUGADOR ═══
