@@ -360,6 +360,14 @@ canvas{width:100%;aspect-ratio:1/1;max-width:450px;max-height:450px;background:#
     <button class="dlg-btn" onclick="closeSettings()" style="margin-top:12px">Cerrar</button>
   </div>
 
+  <!-- METRO -->
+  <div id="metro-panel" class="ov center" style="max-width:340px;background:rgba(10,10,30,.97);border:2px solid #6366f1;border-radius:12px;padding:18px 20px">
+    <div style="font-family:'Press Start 2P',monospace;font-size:.55rem;color:#a5b4fc;margin-bottom:4px">🚇 MERVAL — DESTINOS</div>
+    <div style="font-size:.6rem;color:#6b7280;margin-bottom:14px">Selecciona tu destino:</div>
+    <div id="metro-options" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px"></div>
+    <button class="dlg-btn" onclick="closeMetro()" style="background:#374151;border:1px solid #4b5563">Cancelar</button>
+  </div>
+
   <!-- LEADERBOARD -->
   <div id="leaderboard-panel" class="ov center">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -637,7 +645,43 @@ sala_8vo:[
   ],
   estacion_villa:[
     ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'],
-    ['#','V','V','#','W','W','W','W','#','V','V','#','W','W','W','W','#','V','V','.'],
+    ['#','V','V','#','W','W','W','W','#','V','V','#','W','W','W','W','#','V','V','#'],
+    ['#','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','#'],
+    ['#','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','#'],
+    ['E','.','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','.','#'],
+    ['#','.','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','.','#'],
+    ['#','.','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','.','#'],
+    ['#','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','#'],
+    ['#','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','#'],
+    ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#']
+  ],
+  estacion_quilpue:[
+    ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'],
+    ['#','V','V','#','W','W','W','W','#','V','V','#','W','W','W','W','#','V','V','#'],
+    ['#','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','#'],
+    ['#','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','#'],
+    ['E','.','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','.','#'],
+    ['#','.','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','.','#'],
+    ['#','.','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','.','#'],
+    ['#','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','#'],
+    ['#','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','#'],
+    ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#']
+  ],
+  estacion_vina:[
+    ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'],
+    ['#','V','V','#','W','W','W','W','#','V','V','#','W','W','W','W','#','V','V','#'],
+    ['#','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','#'],
+    ['#','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','#'],
+    ['E','.','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','.','#'],
+    ['#','.','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','.','#'],
+    ['#','.','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','.','#'],
+    ['#','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','#'],
+    ['#','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','#'],
+    ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#']
+  ],
+  estacion_valpo:[
+    ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'],
+    ['#','V','V','#','W','W','W','W','#','V','V','#','W','W','W','W','#','V','V','#'],
     ['#','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','#'],
     ['#','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','#'],
     ['E','.','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','.','#'],
@@ -824,6 +868,7 @@ sala_8vo:[
   ]
 };
 const WALKABLE=new Set(['.','E','g','e','N','b','v','a','Z','V','p','H','S','B','8','9','^','>','*','d','r','D','q','n','c']);
+const STATION_MAPS_SET=new Set(['estacion_villa','estacion_quilpue','estacion_vina','estacion_valpo']);
 // Tiles SÓLIDOS específicos del BuinZoo (animales/recintos/bancas), pese a ser walkable en otros mapas
 const BUINZOO_SOLID=new Set(['t','p','r','l','e','m','f','o','j','k','b','W','I','S','B']);
 const updateCamera=()=>{ const m=MAPS[currentMap],mW=m[0].length,mH=m.length; camera.x=Math.max(0,Math.min(player.x-4,mW-10)); camera.y=Math.max(0,Math.min(player.y-4,mH-10)); };
@@ -2207,11 +2252,18 @@ function drawVillaTile(t,sx,sy,mR,mC){
       ctx.fillStyle='rgba(255,255,255,.2)'; ctx.fillRect(sx+6,sy+6,5,5);
       ctx.strokeStyle='#6b7280'; ctx.lineWidth=1.5; ctx.strokeRect(sx+4,sy+4,TS-8,TS-8);
       break;}
-    case 'W':{ // Letrero VILLA ALEMANA
-      ctx.fillStyle='#15803d'; ctx.fillRect(sx,sy,TS,TS);
-      ctx.fillStyle='#ea580c'; ctx.fillRect(sx+2,sy+TS/2-8,TS-4,16);
+    case 'W':{ // Letrero estación — nombre varía según mapa
+      const _stCfg={
+        estacion_villa: {bg:'#15803d',band:'#ea580c',lines:['VILLA','ALEMANA']},
+        estacion_quilpue:{bg:'#1d4ed8',band:'#f59e0b',lines:['QUILPUÉ','']},
+        estacion_vina:  {bg:'#0e7490',band:'#22d3ee',lines:['VIÑA DEL','MAR']},
+        estacion_valpo: {bg:'#7c3aed',band:'#f97316',lines:['VALPA-','RAÍSO']},
+      }[currentMap]||{bg:'#15803d',band:'#ea580c',lines:['ESTACIÓN','']};
+      ctx.fillStyle=_stCfg.bg; ctx.fillRect(sx,sy,TS,TS);
+      ctx.fillStyle=_stCfg.band; ctx.fillRect(sx+2,sy+TS/2-8,TS-4,16);
       ctx.fillStyle='white'; ctx.font='bold 4.5px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText('VILLA',sx+TS/2,sy+TS/2-3); ctx.fillText('ALEMANA',sx+TS/2,sy+TS/2+5);
+      ctx.fillText(_stCfg.lines[0],sx+TS/2,sy+TS/2-3);
+      if(_stCfg.lines[1]) ctx.fillText(_stCfg.lines[1],sx+TS/2,sy+TS/2+5);
       ctx.textAlign='left'; break;}
     case 'p':{ // Andén / plataforma
       ctx.fillStyle='#e2e8f0'; ctx.fillRect(sx,sy,TS,TS);
@@ -2220,11 +2272,13 @@ function drawVillaTile(t,sx,sy,mR,mC){
       ctx.fillStyle='#fef08a'; ctx.fillRect(sx,sy+TS-5,TS,5);
       ctx.strokeStyle='rgba(0,0,0,.15)'; ctx.lineWidth=.5; ctx.strokeRect(sx,sy+TS-5,TS,5);
       break;}
-    case 'E':{ // Salida
+    case 'E':{ // Salida — destino depende del mapa
       const ge=.5+.5*Math.sin(tick*.09); ctx.fillStyle=`rgba(21,128,61,${.3+.1*ge})`; ctx.fillRect(sx,sy,TS,TS);
       ctx.strokeStyle=`rgba(74,222,128,${.7+.2*ge})`; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6);
       ctx.globalAlpha=.7+.3*ge; ctx.font='10px serif'; ctx.textBaseline='middle'; ctx.textAlign='center';
-      ctx.fillText('↩',sx+TS/2,sy+TS*.44); ctx.globalAlpha=1; ctx.font='bold 3px sans-serif'; ctx.fillStyle='#bbf7d0'; ctx.textBaseline='bottom'; ctx.fillText('PASILLO',sx+TS/2,sy+TS-2); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break;}
+      ctx.fillText('↩',sx+TS/2,sy+TS*.44); ctx.globalAlpha=1; ctx.font='bold 3px sans-serif'; ctx.fillStyle='#bbf7d0';
+      const _eLabel={estacion_villa:'SECTOR N.',estacion_quilpue:'VILLA A.',estacion_vina:'VILLA A.',estacion_valpo:'VILLA A.'}[currentMap]||'SALIDA';
+      ctx.textBaseline='bottom'; ctx.fillText(_eLabel,sx+TS/2,sy+TS-2); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break;}
     case 'r':{ // Rieles
       ctx.fillStyle='#374151'; ctx.fillRect(sx,sy,TS,TS);
       // Durmientes de madera
@@ -2282,13 +2336,32 @@ function drawVillaTile(t,sx,sy,mR,mC){
   }
 }
 function drawVillaOverlays(){
-  // Efecto de neblina costera (tenue)
+  // Efecto de neblina (tenue)
   if(tick%3===0){
     const grd=ctx.createLinearGradient(0,0,canvas.width,0);
     grd.addColorStop(0,'rgba(186,230,253,.04)');
     grd.addColorStop(.5,'rgba(186,230,253,.02)');
     grd.addColorStop(1,'rgba(186,230,253,.04)');
     ctx.fillStyle=grd; ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
+  // NPCs / hitos por estación
+  const _stNPC={
+    estacion_villa: {col:14,row:5,emoji:'🚉',label:'INSPECTOR',color:'#4ade80'},
+    estacion_quilpue:{col:14,row:5,emoji:'🏫',label:'VECINO',   color:'#fbbf24'},
+    estacion_vina:  {col:14,row:5,emoji:'🌊',label:'TURISTA',  color:'#38bdf8'},
+    estacion_valpo: {col:14,row:5,emoji:'🎨',label:'ARTISTA',  color:'#c084fc'},
+  }[currentMap];
+  if(_stNPC){
+    const sx=(_stNPC.col-camera.x)*TS, sy=(_stNPC.row-camera.y)*TS;
+    if(sx>=0&&sy>=0&&sx<canvas.width&&sy<canvas.height){
+      drawNPC(sx,sy,_stNPC.emoji,_stNPC.color,_stNPC.label);
+    }
+  }
+  // Hint de abordaje al bajar al andén
+  if(STATION_MAPS_SET.has(currentMap)&&player.y===6){
+    ctx.fillStyle='rgba(0,0,0,.6)'; ctx.fillRect(2,canvas.height-22,220,18);
+    ctx.fillStyle='#6ee7b7'; ctx.font='bold 6px monospace';
+    ctx.fillText('🚇 [A/OK] Abordar el tren MERVAL',6,canvas.height-10);
   }
 }
 
@@ -3438,7 +3511,7 @@ function drawReservaOverlays(){
 }
 // ─ Draw Map ─
 const ARROW_OFF={up:[TS/2-4,-2,'▲'],down:[TS/2-4,TS+9,'▼'],left:[-10,TS/2+4,'◀'],right:[TS+2,TS/2+4,'▶']};
-const ML={pasillo:'PASILLO',cancha:'🏀 CANCHA',sala_vela:'🕯 SALA SECRETA',biblioteca:'📚 BIBLIOTECA',sala_cont:'💜 SALA DE CONTENCIÓN',plaza:'🌳 PLAZA BELÉN',estacion_villa:'🚂 EST. VILLA ALEMANA',salon_trofeos:'🏆 SALÓN DE TROFEOS',secretaria:'🏢 SECRETARÍA',centro_villa:'🏘️ CENTRO VILLA ALEMANA',biologia:'🔬 BIOLOGÍA DE ECOSISTEMAS',reserva:'🌿 RESERVA ECOLÓGICA DE VILLA ALEMANA'};
+const ML={pasillo:'PASILLO',cancha:'🏀 CANCHA',sala_vela:'🕯 SALA SECRETA',biblioteca:'📚 BIBLIOTECA',sala_cont:'💜 SALA DE CONTENCIÓN',plaza:'🌳 PLAZA BELÉN',estacion_villa:'🚂 EST. VILLA ALEMANA',salon_trofeos:'🏆 SALÓN DE TROFEOS',secretaria:'🏢 SECRETARÍA',centro_villa:'🏘️ CENTRO VILLA ALEMANA',biologia:'🔬 BIOLOGÍA DE ECOSISTEMAS',reserva:'🌿 RESERVA ECOLÓGICA DE VILLA ALEMANA',estacion_quilpue:'🚂 EST. QUILPUÉ',estacion_vina:'🚂 EST. VIÑA DEL MAR',estacion_valpo:'🚂 EST. VALPARAÍSO'};
 function drawBuinZooTile(t,sx,sy,mR,mC){
   const TSk=TS;
   // helper: animal en su recinto (fondo arena + reja + emoji + cartel)
@@ -4199,7 +4272,7 @@ function drawMap(){
     else if(currentMap==='biblioteca') drawBibliotecaTile(t,sx,sy,mR,mC);
     else if(currentMap==='sala_cont'){try{drawSalaContTile(t,sx,sy,mR,mC);}catch(e){ctx.fillStyle='#4a1a6e';ctx.fillRect(sx,sy,TS,TS);}}
     else if(currentMap==='plaza'){try{drawPlazaTile(t,sx,sy,mR,mC);}catch(e){ctx.fillStyle='#388e3c';ctx.fillRect(c*TS,r*TS,TS,TS);}}
-    else if(currentMap==='estacion_villa') drawVillaTile(t,sx,sy,mR,mC);
+    else if(['estacion_villa','estacion_quilpue','estacion_vina','estacion_valpo'].includes(currentMap)) drawVillaTile(t,sx,sy,mR,mC);
     else if(currentMap==='salon_trofeos') drawSalonTile(t,sx,sy,mR,mC);
     else if(currentMap==='secretaria') drawSecretariaTile(t,sx,sy,mR,mC);
     else if(currentMap==='centro_villa') drawCentroTile(t,sx,sy,mR,mC);
@@ -4216,7 +4289,7 @@ function drawMap(){
   if(currentMap==='cancha'){ drawCourtMarkings(); drawCanchaOverlays(); }
   if(currentMap==='biblioteca') drawBibliotecaOverlays();
   if(currentMap==='sala_cont') drawSalaContOverlays();
-  if(currentMap==='estacion_villa') drawVillaOverlays();
+  if(['estacion_villa','estacion_quilpue','estacion_vina','estacion_valpo'].includes(currentMap)) drawVillaOverlays();
   if(currentMap==='salon_trofeos') drawSalonOverlays();
   if(currentMap==='secretaria') drawSecretariaOverlays();
   if(currentMap==='centro_villa') drawCentroOverlays();
@@ -5320,9 +5393,12 @@ const NPC_ACT={
     progress.joseProfIdx=(jj+1)%msgs.length;
     showDialog(msgs[jj]);
   },
+  '=':()=>{
+    if(STATION_MAPS_SET&&STATION_MAPS_SET.has(currentMap)){openMetro();return;}
+  },
   'L':()=>{
     // Profesora Camila — 8vo Básico, Región de La Araucanía
-    if(currentMap==='estacion_villa'){drawVillaTile&&showDialog('🚂 Locomotora histórica'); return;}
+    if(STATION_MAPS_SET&&STATION_MAPS_SET.has(currentMap)){openMetro();return;}
     if(currentMap!=='sala_8vo'){showDialog('👩‍🏫 Profesora Camila');return;}
     const msgs=[
       '👩‍🏫 Profesora Camila\n(8° Básico — Región de La Araucanía)\n\n"¡Bienvenidos!\n\nLa Araucanía es la región\ncon mayor presencia del\npueblo mapuche de Chile.\n\nEl rehue, el kultrun y el\nchemamull son símbolos\nde la cultura mapuche."',
@@ -5399,6 +5475,16 @@ function checkMapExit(){
   // ── VA Sector Norte ──
   if(currentMap==='estacion_villa'&&MAPS.estacion_villa[player.y]?.[player.x]==='E'){
     transitionTo('sector_norte',24,14); return true;
+  }
+  // ── Estaciones metro ──
+  if(currentMap==='estacion_quilpue'&&MAPS.estacion_quilpue[player.y]?.[player.x]==='E'){
+    transitionTo('estacion_villa',5,5); return true;
+  }
+  if(currentMap==='estacion_vina'&&MAPS.estacion_vina[player.y]?.[player.x]==='E'){
+    transitionTo('estacion_villa',5,5); return true;
+  }
+  if(currentMap==='estacion_valpo'&&MAPS.estacion_valpo[player.y]?.[player.x]==='E'){
+    transitionTo('estacion_villa',5,5); return true;
   }
   if(currentMap==='plaza'&&MAPS.plaza[player.y]?.[player.x]==='n'){
     transitionTo('sector_norte',1,2);
@@ -8302,6 +8388,52 @@ function closeLeaderboard(){
   _('leaderboard-panel').style.display='none';
   if(_lbRef) _lbRef.off(); _lbRef=null;
   if(STATE==='dialog') STATE='exploring';
+}
+
+// ═══ METRO MERVAL ═══
+const METRO_DESTS={
+  estacion_villa: {name:'Villa Alemana',emoji:'🌿',color:'#4ade80'},
+  estacion_quilpue:{name:'Quilpué',     emoji:'🏫',color:'#fbbf24'},
+  estacion_vina:  {name:'Viña del Mar', emoji:'🌊',color:'#38bdf8'},
+  estacion_valpo: {name:'Valparaíso',   emoji:'🎨',color:'#c084fc'},
+};
+
+function openMetro(){
+  if(!STATION_MAPS_SET.has(currentMap)) return;
+  STATE='dialog';
+  const panel=_('metro-panel'), opts=_('metro-options');
+  opts.innerHTML='';
+  Object.entries(METRO_DESTS).forEach(([mapId,d])=>{
+    if(mapId===currentMap) return;
+    const btn=document.createElement('button');
+    btn.className='dlg-btn';
+    btn.style.cssText=`text-align:left;padding:10px 14px;border:1px solid ${d.color}40;background:${d.color}15;color:${d.color};font-size:.65rem`;
+    btn.innerHTML=`${d.emoji} <strong>${d.name}</strong>`;
+    btn.onclick=()=>boardMetro(mapId);
+    opts.appendChild(btn);
+  });
+  panel.style.display='block';
+}
+
+function closeMetro(){
+  _('metro-panel').style.display='none';
+  STATE='exploring';
+}
+
+function boardMetro(destMap){
+  _('metro-panel').style.display='none';
+  STATE='exploring';
+  // Efecto de transición: fade negro breve
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:#000;opacity:0;z-index:9999;pointer-events:none;transition:opacity .4s';
+  document.body.appendChild(ov);
+  requestAnimationFrame(()=>{
+    ov.style.opacity='1';
+    setTimeout(()=>{
+      transitionTo(destMap,5,5);
+      setTimeout(()=>{ ov.style.opacity='0'; setTimeout(()=>ov.remove(),420); },200);
+    },420);
+  });
 }
 
 // ═══ SISTEMA DE GUARDADO ═══
