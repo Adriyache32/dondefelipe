@@ -235,10 +235,12 @@ canvas{width:100%;aspect-ratio:1/1;max-width:450px;max-height:450px;background:#
     <button id="btn-quest" onclick="toggleQuestLog()" title="Misiones" style="font-size:.8rem;padding:2px 6px">📓</button>
     <button class="btn-ui" onclick="saveGame()" title="Guardar partida" style="font-size:.8rem;padding:2px 6px">💾</button>
     <button class="btn-ui" onclick="loadGame()" title="Cargar partida" style="font-size:.8rem;padding:2px 6px;background:linear-gradient(180deg,#4b5563,#374151);color:#d1d5db;border-color:#6b7280">📂</button>
+    <button class="btn-ui" onclick="exportSave()" title="Exportar partida" style="font-size:.8rem;padding:2px 6px;background:linear-gradient(180deg,#1d4ed8,#1e3a8a);border-color:#2563eb">📤</button>
     <button class="btn-ui" onclick="openLeaderboard()" title="Ranking" style="font-size:.8rem;padding:2px 6px;background:linear-gradient(180deg,#d97706,#92400e);border-color:#78350f">🏆</button>
     <button class="btn-ui" onclick="openSettings()" title="Panel de control" style="font-size:.8rem;padding:2px 6px;background:linear-gradient(180deg,#374151,#1f2937);color:#9ca3af;border-color:#4b5563">⚙️</button>
   </div>
 </div>
+<input type="file" id="import-file-input" accept=".json" style="display:none" onchange="_onImportFile(this)">
 
 
 <!-- compatibility stubs --><span id="hp-v" style="display:none"></span><span id="mp-v" style="display:none"></span><span id="xp-v" style="display:none"></span><span id="hp-bar" style="display:none"></span><span id="mp-bar" style="display:none"></span><span id="xp-bar" style="display:none"></span><span id="lv-badge" style="display:none">LV 1</span><span id="coin-n" style="display:none">0</span><span id="blue-display" style="display:none"></span><span id="blue-n" style="display:none">0</span>
@@ -8508,6 +8510,63 @@ function _fbInit(){
   }catch(e){console.warn('Firebase no disponible:',e);}
 }
 
+// ── IndexedDB (almacenamiento más confiable en Android Chrome) ──
+const _IDB=(function(){
+  let _idb=null;
+  function _open(){
+    if(_idb) return Promise.resolve(_idb);
+    return new Promise((res,rej)=>{
+      const r=indexedDB.open('profeRpgDB',1);
+      r.onupgradeneeded=e=>e.target.result.createObjectStore('saves',{keyPath:'k'});
+      r.onsuccess=e=>{_idb=e.target.result;res(_idb);};
+      r.onerror=()=>rej(r.error);
+    });
+  }
+  return{
+    set(k,v){_open().then(db=>{const tx=db.transaction('saves','readwrite');tx.objectStore('saves').put({k,v});}).catch(()=>{});},
+    get(k){return _open().then(db=>new Promise((res,rej)=>{const tx=db.transaction('saves','readonly');const r=tx.objectStore('saves').get(k);r.onsuccess=()=>res(r.result?r.result.v:null);r.onerror=()=>rej(r.error);})).catch(()=>null);}
+  };
+})();
+
+// ── Ranking local (fallback sin Firebase) ──
+const _LB_KEY='profeRpg_lb_v2';
+function _updateLocalLB(){
+  if(!_playerKey) return;
+  const entry={key:_playerKey,name:_playerName,level:stats.level,coins,xp:stats.xp,lastSeen:Date.now()};
+  const _mergeLB=rows=>{const idx=rows.findIndex(e=>e.key===_playerKey);if(idx>=0)rows[idx]=entry;else rows.push(entry);rows.sort((a,b)=>b.level-a.level||b.coins-a.coins||b.xp-a.xp);return rows.slice(0,50);};
+  try{const lb=_mergeLB(JSON.parse(localStorage.getItem(_LB_KEY)||'[]'));localStorage.setItem(_LB_KEY,JSON.stringify(lb));}catch(e){}
+  _IDB.get(_LB_KEY).then(d=>{_IDB.set(_LB_KEY,JSON.stringify(_mergeLB(d?JSON.parse(d):[])));}).catch(()=>{});
+}
+
+// ── Export / Import ──
+function exportSave(){
+  let data=null;
+  try{data=localStorage.getItem(SAVE_KEY);}catch(e){}
+  if(!data){showDialog('⚠️ Guarda la partida primero antes de exportar.');return;}
+  try{
+    const blob=new Blob([data],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='profeRpg_save.json';document.body.appendChild(a);a.click();document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showDialog('📤 Partida exportada.\nGuarda el archivo .json como respaldo.');
+  }catch(e){showDialog('❌ Error al exportar: '+e.message);}
+}
+function _onImportFile(el){
+  const file=el.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      _applyGameState(data);
+      saveGameSilent();
+      showDialog('📥 Partida importada con éxito.\n¡Bienvenido de vuelta, Profe Felipe!');
+    }catch(err){showDialog('❌ Archivo inválido o corrupto.');}
+  };
+  reader.readAsText(file);
+  el.value='';
+}
+
 function _fbSave(){
   if(!_db||!_playerKey) return;
   try{
@@ -8533,8 +8592,10 @@ function registerPlayer(){
   _playerName=name;
   const sanitized=name.toLowerCase().replace(/[^a-z0-9]/g,'_').slice(0,14);
   _playerKey=sanitized+'_'+Math.random().toString(36).slice(2,6);
-  localStorage.setItem('profeRpg_playerKey',_playerKey);
-  localStorage.setItem('profeRpg_playerName',_playerName);
+  try{localStorage.setItem('profeRpg_playerKey',_playerKey);}catch(e){}
+  try{localStorage.setItem('profeRpg_playerName',_playerName);}catch(e){}
+  _IDB.set('profeRpg_playerKey',_playerKey);
+  _IDB.set('profeRpg_playerName',_playerName);
   _fbInit();
   _('register-screen').style.display='none';
   _startGameLoop();
@@ -8544,37 +8605,50 @@ function registerPlayer(){
 const _MAP_SHORT={pasillo:'Pasillo',patio:'Patio',jardin_eden:'Jardín Edén',segundo_piso:'2do Piso',sala_5to:'Sala 5to',sala_6to:'Sala 6to',sala_7mo:'Sala 7mo',sala_8vo:'Sala 8vo',biblioteca:'Biblioteca',cancha:'Cancha',villa_alemana:'Villa Alemana',centro_villa:'Centro Villa',buin_zoo:'Buin Zoo',reserva:'Reserva',lago:'Lago'};
 let _lbRef=null;
 
+function _renderLBRows(rows,list,isLocal){
+  const medals=['🥇','🥈','🥉'];
+  _('lb-count').textContent=rows.length+(isLocal?' jugadores (local)':' jugadores');
+  if(!rows.length){list.innerHTML='<div style="text-align:center;color:#6b7280;padding:16px;font-family:\'VT323\',monospace">Sin jugadores aún</div>';return;}
+  const header=isLocal?'<div style="font-size:.65rem;color:#6b7280;text-align:center;margin-bottom:6px;font-family:\'VT323\',monospace">📱 Ranking local · Guarda partida para aparecer</div>':'';
+  list.innerHTML=header+rows.slice(0,20).map((p,i)=>{
+    const isMe=p.key===_playerKey;
+    const ago=p.lastSeen?Math.round((Date.now()-p.lastSeen)/60000):null;
+    const agoStr=ago===null?'':ago<1?'🟢 ahora':ago<60?ago+'m':ago<1440?Math.floor(ago/60)+'h':Math.floor(ago/1440)+'d';
+    const rank=i<3?medals[i]:`#${i+1}`;
+    const sub=isLocal?`Lv${p.level} · ${p.xp||0} XP`:(_MAP_SHORT[p.currentMap]||p.currentMap||'?');
+    return `<div style="display:flex;align-items:center;gap:8px;background:${isMe?'rgba(253,212,66,.1)':'#1e293b'};border:1px solid ${isMe?'#fcd34d':'#374151'};padding:7px 10px;border-radius:7px">
+      <div style="font-size:.9rem;min-width:22px;text-align:center">${rank}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'VT323',monospace;font-size:.92rem;color:${isMe?'#fcd34d':'#f1f5f9'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}${isMe?' ◀':''}</div>
+        <div style="font-size:.62rem;color:#6b7280">${sub}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:'Press Start 2P',monospace;font-size:.42rem;color:#a78bfa">Lv${p.level}</div>
+        <div style="font-size:.68rem;color:#fcd34d">🪙${p.coins||0}</div>
+      </div>
+      <div style="font-size:.55rem;color:#4b5563;min-width:30px;text-align:right">${agoStr}</div>
+    </div>`;
+  }).join('');
+}
+
+function _showLocalLB(list){
+  const render=rows=>_renderLBRows(rows,list,true);
+  let rows=[];
+  try{rows=JSON.parse(localStorage.getItem(_LB_KEY)||'[]');}catch(e){}
+  if(rows.length){render(rows);return;}
+  _IDB.get(_LB_KEY).then(d=>{try{rows=d?JSON.parse(d):[];}catch(e){}render(rows);}).catch(()=>render([]));
+}
+
 function openLeaderboard(){
   const panel=_('leaderboard-panel'); panel.style.display='block'; STATE='dialog';
   const list=_('lb-list'); list.innerHTML='<div style="text-align:center;color:#6b7280;padding:16px;font-family:\'VT323\',monospace">Cargando...</div>';
-  if(!_db){list.innerHTML='<div style="text-align:center;color:#6b7280;padding:16px;font-family:\'VT323\',monospace">⚠ Firebase no configurado</div>';return;}
+  if(!_db){_showLocalLB(list);return;}
   _lbRef=_db.ref('players').orderByChild('level');
   _lbRef.on('value',snap=>{
     const rows=[];
     snap.forEach(child=>rows.push({key:child.key,...child.val()}));
     rows.sort((a,b)=>b.level-a.level||b.coins-a.coins||b.xp-a.xp);
-    _('lb-count').textContent=rows.length+' jugadores';
-    if(!rows.length){list.innerHTML='<div style="text-align:center;color:#6b7280;padding:16px;font-family:\'VT323\',monospace">Sin jugadores aún</div>';return;}
-    const medals=['🥇','🥈','🥉'];
-    list.innerHTML=rows.slice(0,20).map((p,i)=>{
-      const isMe=p.key===_playerKey;
-      const ago=p.lastSeen?Math.round((Date.now()-p.lastSeen)/60000):null;
-      const agoStr=ago===null?'':ago<1?'🟢 ahora':ago<60?ago+'m':ago<1440?Math.floor(ago/60)+'h':Math.floor(ago/1440)+'d';
-      const rank=i<3?medals[i]:`#${i+1}`;
-      const mapName=_MAP_SHORT[p.currentMap]||p.currentMap||'?';
-      return `<div style="display:flex;align-items:center;gap:8px;background:${isMe?'rgba(253,212,66,.1)':'#1e293b'};border:1px solid ${isMe?'#fcd34d':'#374151'};padding:7px 10px;border-radius:7px">
-        <div style="font-size:.9rem;min-width:22px;text-align:center">${rank}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-family:'VT323',monospace;font-size:.92rem;color:${isMe?'#fcd34d':'#f1f5f9'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}${isMe?' ◀':''}</div>
-          <div style="font-size:.62rem;color:#6b7280">${mapName}</div>
-        </div>
-        <div style="text-align:right;flex-shrink:0">
-          <div style="font-family:'Press Start 2P',monospace;font-size:.42rem;color:#a78bfa">Lv${p.level}</div>
-          <div style="font-size:.68rem;color:#fcd34d">🪙${p.coins||0}</div>
-        </div>
-        <div style="font-size:.55rem;color:#4b5563;min-width:30px;text-align:right">${agoStr}</div>
-      </div>`;
-    }).join('');
+    _renderLBRows(rows,list,false);
   });
 }
 
@@ -8643,18 +8717,25 @@ function _rehydrateItem(item){
 }
 
 function saveGameSilent(){
+  let saved=false;
   try{
     const partyData=PARTY_MEMBERS.map(m=>({id:m.id,hp:m.hp,found:m.found,inTeam:m.inTeam}));
     const invData=inventory.map(({use,...rest})=>rest);
     const data={player,stats,coins,progress,currentMap,equipment,party:partyData,inventory:invData};
-    localStorage.setItem(SAVE_KEY,JSON.stringify(data));
-  }catch(e){console.warn('Save failed:',e);}
+    const json=JSON.stringify(data);
+    try{localStorage.setItem(SAVE_KEY,json);saved=true;}catch(e){console.warn('localStorage fallo:',e);}
+    _IDB.set(SAVE_KEY,json);  // respaldo en IndexedDB (async, más confiable en Android)
+    _updateLocalLB();
+    saved=true;
+  }catch(e){console.warn('Save error:',e);}
   _fbSave();
+  return saved;
 }
 
 function saveGame(){
-  saveGameSilent();
-  showDialog('💾 Partida guardada con éxito.');
+  const ok=saveGameSilent();
+  if(ok) showDialog('💾 Partida guardada con éxito.');
+  else showDialog('❌ Error al guardar.\nUsa 📤 para exportar tu partida como respaldo.');
 }
 
 function _applyGameState(data){
@@ -8667,24 +8748,34 @@ function _applyGameState(data){
   if(!progress.questLog) progress.questLog={};
   syncUI(); updateCamera();
 }
+
+function _loadLocal(){
+  // 1. Intenta localStorage
+  try{
+    const saved=localStorage.getItem(SAVE_KEY);
+    if(saved){_applyGameState(JSON.parse(saved));showDialog('📂 Partida cargada.\n¡Bienvenido de vuelta, Profe Felipe!');return;}
+  }catch(e){}
+  // 2. Intenta IndexedDB (más confiable en Android Chrome)
+  _IDB.get(SAVE_KEY).then(idbSaved=>{
+    if(idbSaved){
+      try{_applyGameState(JSON.parse(idbSaved));showDialog('📂 Partida cargada.\n¡Bienvenido de vuelta, Profe Felipe!');return;}
+      catch(e){}
+    }
+    showDialog('⚠️ No hay ninguna partida guardada.',[{text:'📥 Importar desde archivo',action:()=>_('import-file-input').click()},{text:'Cerrar',action:null}]);
+  }).catch(()=>{
+    showDialog('⚠️ No hay ninguna partida guardada.',[{text:'📥 Importar desde archivo',action:()=>_('import-file-input').click()},{text:'Cerrar',action:null}]);
+  });
+}
+
 function loadGame(){
   if(_db&&_playerKey){
     _db.ref('players/'+_playerKey+'/fullState').once('value',snap=>{
       const fbData=snap.val();
       if(fbData){_applyGameState(fbData);showDialog('📂 Partida cargada desde la nube ☁️');}
-      else{
-        const saved=localStorage.getItem(SAVE_KEY);
-        if(saved){_applyGameState(JSON.parse(saved));showDialog('📂 Partida cargada localmente.');}
-        else showDialog('⚠️ No hay ninguna partida guardada.');
-      }
+      else _loadLocal();
     });
   } else {
-    try{
-      const saved=localStorage.getItem(SAVE_KEY);
-      if(!saved){showDialog('⚠️ No hay ninguna partida guardada.');return;}
-      _applyGameState(JSON.parse(saved));
-      showDialog('📂 Partida cargada.\n¡Bienvenido de vuelta, Profe Felipe!');
-    }catch(e){showDialog('❌ Error al cargar la partida.');console.error('Load failed:',e);}
+    _loadLocal();
   }
 }
 
@@ -8695,15 +8786,21 @@ function _startGameLoop(){
 }
 // Verificar si el jugador ya está registrado
 (function(){
-  const key=localStorage.getItem('profeRpg_playerKey');
-  const name=localStorage.getItem('profeRpg_playerName');
+  let key=null,name=null;
+  try{key=localStorage.getItem('profeRpg_playerKey');name=localStorage.getItem('profeRpg_playerName');}catch(e){}
   if(key&&name){
-    _playerKey=key; _playerName=name;
-    _fbInit();
-    _('register-screen').style.display='none';
-    _startGameLoop();
+    _playerKey=key;_playerName=name;_fbInit();
+    _('register-screen').style.display='none';_startGameLoop();return;
   }
-  // Si no hay key, la pantalla de registro permanece visible
+  // Fallback a IndexedDB si localStorage no tiene los datos (Android Chrome)
+  Promise.all([_IDB.get('profeRpg_playerKey'),_IDB.get('profeRpg_playerName')]).then(([k,n])=>{
+    if(k&&n){
+      _playerKey=k;_playerName=n;
+      try{localStorage.setItem('profeRpg_playerKey',k);localStorage.setItem('profeRpg_playerName',n);}catch(e){}
+      _fbInit();_('register-screen').style.display='none';_startGameLoop();
+    }
+    // Si tampoco hay en IDB, la pantalla de registro permanece visible
+  }).catch(()=>{});
 })();
 // Start music on first interaction
 function _musicStart(){ try{ const ac=Music._ac; if(ac&&ac.state==='suspended')ac.resume(); } catch(e){} Music.play(currentMap); }
