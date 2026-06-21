@@ -178,6 +178,8 @@ canvas{width:100%;aspect-ratio:1/1;max-width:450px;max-height:450px;background:#
     <button class="btn-ui" onclick="openStats()" title="Stats" style="font-size:.8rem;padding:2px 6px">📊</button>
     <button class="btn-ui" onclick="openInv()" title="Mochila">🎒</button>
     <button id="btn-quest" onclick="toggleQuestLog()" title="Misiones" style="font-size:.8rem;padding:2px 6px">📓</button>
+    <button class="btn-ui" onclick="saveGame()" title="Guardar partida" style="font-size:.8rem;padding:2px 6px">💾</button>
+    <button class="btn-ui" onclick="loadGame()" title="Cargar partida" style="font-size:.8rem;padding:2px 6px;background:linear-gradient(180deg,#4b5563,#374151);color:#d1d5db;border-color:#6b7280">📂</button>
   </div>
 </div>
 
@@ -4360,7 +4362,8 @@ function battleWin(){ Music.battleOut();
     }
   }
   syncBP(); syncUI(); EL.bMsg.textContent=msg; hideBact();
-  EL.bAct.innerHTML=`<button class="bb bi" style="grid-column:1/3" onclick="closeBattle()">¡Continuar!</button>`; EL.bAct.classList.add('on'); battle=null;
+  EL.bAct.innerHTML=`<button class="bb bi" style="grid-column:1/3" onclick="closeBattle()">¡Continuar!</button>`; EL.bAct.classList.add('on');
+  battle=null; saveGameSilent();
 }
 function battleLose(){
   if(twT){ clearTimeout(twT); twT=null; }   // cancel any pending typeMsg
@@ -5687,6 +5690,7 @@ function showLvlUp(newLvl){
     inventory.push({id:'mp_lvl'+newLvl,name:'Poción de Maná',type:'consumable',effect:'mp',amount:30,desc:'+30 MP',emoji:'💙'});
     syncUI();
   }
+  saveGameSilent();
   _('lu-lv').textContent='NIVEL '+newLvl;
   _('lu-gains').innerHTML='+12 HP máx &nbsp;|&nbsp; +3 ATK &nbsp;|&nbsp; +1 DEF<br>✅ HP y MP restaurados';
   const bd=_('lu-bonus');
@@ -7997,6 +8001,54 @@ function _activateAdmin(){
   badge.textContent='🔑 ADMIN';
   document.body.appendChild(badge);
   showDialog('🔓 MODO ADMINISTRATIVO\n\n⚡ ¡Código secreto activado!\n\n✅ Todas las puertas abiertas\n✅ Nivel 10 | 250HP | 120MP\n✅ +999 🪙 monedas\n✅ Armadura de Bronce\n✅ Todas las misiones\n✅ Café x10\n\n"Con gran poder viene\ngran responsabilidad."\n\n🔑 Modo Admin activo');
+}
+
+// ═══ SISTEMA DE GUARDADO ═══
+const SAVE_KEY='profeRpgSave_v4';
+
+function _rehydrateItem(item){
+  if(!item) return item;
+  if(item.id==='caramelo'||item.type==='food')
+    item.use=()=>{stats.hunger=Math.min(stats.maxHunger,(stats.hunger||100)+50);syncUI();showDialog('🍬 +50 🍽️ ¡Dulce energía!');};
+  if(item.id==='linterna')
+    item.use=()=>showDialog('🔦 Linterna activa.\nIlumina automáticamente la noche.');
+  return item;
+}
+
+function saveGameSilent(){
+  try{
+    const partyData=PARTY_MEMBERS.map(m=>({id:m.id,hp:m.hp,found:m.found,inTeam:m.inTeam}));
+    const invData=inventory.map(({use,...rest})=>rest);
+    const data={player,stats,coins,progress,currentMap,equipment,party:partyData,inventory:invData};
+    localStorage.setItem(SAVE_KEY,JSON.stringify(data));
+  }catch(e){console.warn('Save failed:',e);}
+}
+
+function saveGame(){
+  saveGameSilent();
+  showDialog('💾 Partida guardada con éxito.');
+}
+
+function loadGame(){
+  try{
+    const saved=localStorage.getItem(SAVE_KEY);
+    if(!saved){showDialog('⚠️ No hay ninguna partida guardada.');return;}
+    const data=JSON.parse(saved);
+    player=data.player;
+    stats=data.stats;
+    coins=data.coins;
+    progress=data.progress||{};
+    currentMap=data.currentMap;
+    equipment=data.equipment||{armor:null,weapon:null,accessory:null};
+    if(data.party){data.party.forEach(sv=>{const m=PARTY_MEMBERS.find(p=>p.id===sv.id);if(m){m.hp=sv.hp;m.found=sv.found;m.inTeam=sv.inTeam;}});}
+    inventory=(data.inventory||[]).map(_rehydrateItem);
+    if(!progress.questLog) progress.questLog={};
+    syncUI(); updateCamera();
+    showDialog('📂 Partida cargada.\n¡Bienvenido de vuelta, Profe Felipe!');
+  }catch(e){
+    showDialog('❌ Error al cargar la partida.');
+    console.error('Load failed:',e);
+  }
 }
 
 // Clear initial static text from overlays
