@@ -761,8 +761,8 @@ function interact(tile, tx, ty) {
     }
     else if(tile === 'j') { currentMap[ty][tx]='.'; inventory.push('Caja de Jugos'); progress.questKella=2; updateUI(); Typewriter.show("", "¡Encontraste la Caja de Jugos perdida!"); }
     else if(tile === 'p') {
-        if(progress.questParvularia === 0) { progress.questParvularia = 1; saveGame(); Typewriter.show(title, `Los niños están aburridos. Escuché que hay un Memorice en el computador de Ciencias. ¿Lo resuelves por ellos?`); } 
-        else if(progress.questParvularia === 2) { progress.questParvularia = 3; progress.inspectoriaUnlocked = true; updateUI(); saveGame(); Typewriter.show(title, "¡Genial! Hablé con el Director, te dio pase VIP a la Inspectoría (Entrada del colegio)."); } 
+        if(progress.questParvularia === 0) { progress.questParvularia = 1; saveGameSilent(); Typewriter.show(title, `Los niños están aburridos. Escuché que hay un Memorice en el computador de Ciencias. ¿Lo resuelves por ellos?`); }
+        else if(progress.questParvularia === 2) { progress.questParvularia = 3; progress.inspectoriaUnlocked = true; updateUI(); saveGameSilent(); Typewriter.show(title, "¡Genial! Hablé con el Director, te dio pase VIP a la Inspectoría (Entrada del colegio)."); } 
         else { Typewriter.show(title, "Los niños te admiran mucho. Eres su ejemplo a seguir."); }
     }
     
@@ -917,7 +917,8 @@ function winBattle() {
     logBattle(`¡Ganaste! Ganas ${currentEnemy.exp} EXP y ${currentEnemy.coin} 🪙.`);
     coins += currentEnemy.coin;
     gainExp(currentEnemy.exp);
-    currentMap[enemyCoords.y][enemyCoords.x] = '.'; 
+    currentMap[enemyCoords.y][enemyCoords.x] = '.';
+    saveGameSilent();
     setTimeout(endBattle, 2000);
 }
 
@@ -939,6 +940,7 @@ function gainExp(amount) {
         player.lvl++; player.exp -= player.maxExp; player.maxExp = Math.floor(player.maxExp * 1.5);
         player.maxHp += 15; player.hp = player.maxHp; player.maxMp += 10; player.mp = player.maxMp; player.atk += 4;
         logBattle(`🌟 ¡NIVEL ${player.lvl}! Stats aumentados.`);
+        saveGameSilent();
     }
     updateUI();
 }
@@ -969,7 +971,7 @@ function promptName() {
 }
 function submitName() { 
     const input = document.getElementById('name-input').value.trim(); 
-    if(input.length > 0) { progress.playerName = input; progress.doorOpen = true; saveGame(); Typewriter.show("Guardia", `Registrado: ${progress.playerName}. No corra en los pasillos.`); } 
+    if(input.length > 0) { progress.playerName = input; progress.doorOpen = true; saveGameSilent(); Typewriter.show("Guardia", `Registrado: ${progress.playerName}. No corra en los pasillos.`); } 
 }
 
 // ==========================================
@@ -1014,8 +1016,32 @@ btnAction.addEventListener('touchstart', (e)=>{e.preventDefault(); if(document.g
 btnAction.addEventListener('mousedown', (e)=>{if(e.pointerType==='touch')return; if(document.getElementById('dialog-box').style.display==='block'){let btn=document.querySelector('.dialog-btn:not([onclick="submitName()"])');if(btn)btn.click();}else{checkAction();}});
 document.getElementById('btn-exit').addEventListener('click', exitRoom);
 
-function saveGame() { const data = { player, inventory, coins, progress, currentMapId, currentMap, previousMapId, previousPos }; localStorage.setItem('rpgEscolarSave_v11', JSON.stringify(data)); Typewriter.show("Sistema", "💾 Partida guardada con éxito."); }
-function loadGame() { const saved = localStorage.getItem('rpgEscolarSave_v11'); if(saved) { const data = JSON.parse(saved); player = data.player; inventory = data.inventory; coins = data.coins; progress = data.progress; currentMapId = data.currentMapId; currentMap = data.currentMap; previousMapId = data.previousMapId || 'entrada'; previousPos = data.previousPos || {x:5,y:8}; updateUI(); Typewriter.show("Sistema", `📂 Cargado, bienvenido ${progress.playerName}.`); } }
+function saveGameSilent() {
+    const data = { player, inventory, coins, progress, currentMapId, currentMap, previousMapId, previousPos };
+    localStorage.setItem('rpgEscolarSave_v11', JSON.stringify(data));
+}
+function saveGame() {
+    saveGameSilent();
+    Typewriter.show("Sistema", "💾 Partida guardada con éxito.");
+}
+function loadGame() {
+    const saved = localStorage.getItem('rpgEscolarSave_v11');
+    if (!saved) { Typewriter.show("Sistema", "⚠️ No hay ninguna partida guardada."); return; }
+    const data = JSON.parse(saved);
+    player = data.player;
+    player.px = player.x * TILE_SIZE;
+    player.py = player.y * TILE_SIZE;
+    inventory = data.inventory;
+    coins = data.coins;
+    progress = data.progress;
+    currentMapId = data.currentMapId;
+    currentMap = data.currentMap;
+    previousMapId = data.previousMapId || 'entrada';
+    previousPos = data.previousPos || { x: 5, y: 8 };
+    document.getElementById('equipped-weapon').innerText = player.weapon ? player.weapon.name : 'Manos desnudas';
+    updateUI();
+    Typewriter.show("Sistema", `📂 Partida cargada. ¡Bienvenido de vuelta, ${progress.playerName}!`);
+}
 
 updateUI();
 setTimeout(() => { if(!progress.playerName) promptName(); else Typewriter.show("Sistema", `🎒 ¡Día de Clases, ${progress.playerName}!`); }, 500);
