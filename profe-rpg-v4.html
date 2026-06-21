@@ -965,27 +965,60 @@ const hasItem=id=>inventory.some(i=>i.id===id);
 
 function drawNPC(sx,sy,emoji,color,label){
   const p=.5+.38*Math.sin(tick*.07);
-  // Dark base
-  ctx.fillStyle='rgba(0,0,0,.48)'; ctx.fillRect(sx+1,sy+12,TS-2,TS-13);
-  // Colored fill
-  ctx.fillStyle=color+'55'; ctx.fillRect(sx+1,sy+12,TS-2,TS-13);
-  // Bright border
-  ctx.strokeStyle=color; ctx.lineWidth=2.2; ctx.strokeRect(sx+1,sy+1,TS-2,TS-2);
-  ctx.strokeStyle=color+'66'; ctx.lineWidth=1; ctx.strokeRect(sx+4,sy+14,TS-8,TS-17);
-  // Floor shadow
-  ctx.fillStyle='rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(sx+TS/2,sy+TS-4,11,3.5,0,0,Math.PI*2); ctx.fill();
-  // Emoji (larger)
-  ctx.font='24px serif'; ctx.textBaseline='alphabetic'; ctx.textAlign='left';
-  ctx.fillText(emoji,sx+4,sy+TS-3);
-  // Name banner
-  ctx.fillStyle=color; ctx.fillRect(sx+1,sy+1,TS-2,11);
-  ctx.fillStyle='rgba(0,0,0,.3)'; ctx.fillRect(sx+1,sy+1,TS-2,11);
-  ctx.fillStyle='#fff'; ctx.font='bold 5.8px sans-serif';
+  const bobY=Math.sin(tick*.065)*2;
+  const ey=sy+bobY;
+  ctx.save();
+  // ── Sombra proyectada en el suelo ──
+  ctx.shadowColor='rgba(0,0,0,0)';
+  ctx.fillStyle='rgba(0,0,0,.32)';
+  ctx.beginPath(); ctx.ellipse(sx+TS/2,sy+TS-3,14,4.5,0,0,Math.PI*2); ctx.fill();
+  // ── Anillo de glow exterior (capa 1: blur suave) ──
+  ctx.save();
+  ctx.shadowColor=color; ctx.shadowBlur=14+8*p;
+  ctx.strokeStyle=color+'00'; ctx.lineWidth=0;
+  // truco: rect transparente fuerza el shadow
+  ctx.strokeRect(sx+2,ey+2,TS-4,TS-4);
+  ctx.restore();
+  // ── Borde brillante animado ──
+  const bAlpha=Math.round((0.55+0.4*p)*255).toString(16).padStart(2,'0');
+  ctx.save();
+  ctx.shadowColor=color; ctx.shadowBlur=10+6*p;
+  ctx.strokeStyle=color+bAlpha; ctx.lineWidth=2.2;
+  ctx.strokeRect(sx+2,ey+2,TS-4,TS-4);
+  ctx.restore();
+  // ── Fondo degradado radial ──
+  const bgGrd=ctx.createRadialGradient(sx+TS/2,ey+TS*.65,1,sx+TS/2,ey+TS*.55,TS*.72);
+  bgGrd.addColorStop(0,color+'40'); bgGrd.addColorStop(0.6,'rgba(0,0,0,.45)'); bgGrd.addColorStop(1,'rgba(0,0,0,.7)');
+  ctx.fillStyle=bgGrd; ctx.fillRect(sx+2,ey+12,TS-4,TS-14);
+  // ── Borde interior sutil ──
+  ctx.strokeStyle=color+'28'; ctx.lineWidth=1;
+  ctx.strokeRect(sx+5,ey+15,TS-10,TS-18);
+  // ── Emoji con sombra propia ──
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,.9)'; ctx.shadowBlur=7; ctx.shadowOffsetX=1; ctx.shadowOffsetY=2;
+  ctx.font='23px serif'; ctx.textBaseline='alphabetic'; ctx.textAlign='center';
+  ctx.fillText(emoji,sx+TS/2,ey+TS-3);
+  ctx.restore();
+  // ── Banner de nombre con gradiente ──
+  const bannerGrd=ctx.createLinearGradient(sx,ey,sx+TS,ey+12);
+  bannerGrd.addColorStop(0,color+'ee'); bannerGrd.addColorStop(1,color+'88');
+  ctx.fillStyle=bannerGrd; ctx.fillRect(sx+2,ey+2,TS-4,11);
+  ctx.fillStyle='rgba(0,0,0,.22)'; ctx.fillRect(sx+2,ey+10,TS-4,3);
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,.95)'; ctx.shadowBlur=4;
+  ctx.fillStyle='#fff'; ctx.font='bold 5.5px sans-serif';
   ctx.textBaseline='middle'; ctx.textAlign='center';
-  ctx.fillText(label,sx+TS/2,sy+7); ctx.textAlign='left';
-  // Chat bubble pulse
-  ctx.globalAlpha=.45+.5*p; ctx.font='9px serif'; ctx.textBaseline='top'; ctx.textAlign='right';
-  ctx.fillText('💬',sx+TS-1,sy+1); ctx.globalAlpha=1; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  ctx.fillText(label,sx+TS/2,ey+7.5);
+  ctx.restore();
+  // ── Bocadillo de diálogo pulsante ──
+  ctx.save();
+  ctx.shadowColor=color; ctx.shadowBlur=8*p;
+  ctx.globalAlpha=.5+.5*p;
+  ctx.font='9px serif'; ctx.textBaseline='top'; ctx.textAlign='right';
+  ctx.fillText('💬',sx+TS-1,ey+1);
+  ctx.restore();
+  ctx.restore();
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
 }
 function drawVerde(sx,sy,mR,mC){
   const b=.85+.15*Math.sin(tick*.04+mR+mC*.6);
@@ -2363,6 +2396,71 @@ function drawVillaOverlays(){
     ctx.fillStyle='#6ee7b7'; ctx.font='bold 6px monospace';
     ctx.fillText('🚇 [A/OK] Abordar el tren MERVAL',6,canvas.height-10);
   }
+}
+
+// ═══ GFX — capas globales de post-proceso ═══
+
+// Capa 1: ambient occlusion + light shafts — se llama justo DESPUÉS del loop de tiles
+function drawGFX(){
+  const map=MAPS[currentMap];
+  if(!map) return;
+  // ── Ambient occlusion: sombra en la base de cada muro ──
+  for(let r=0;r<10;r++) for(let c=0;c<10;c++){
+    const mR=r+camera.y, mC=c+camera.x, t=map[mR]?.[mC];
+    if(t==='#'||t==='1'||t==='2'||t==='3'){
+      const below=map[mR+1]?.[mC];
+      if(below&&below!=='#'&&below!=='1'&&below!=='2'){
+        const aoG=ctx.createLinearGradient(c*TS,(r+1)*TS,c*TS,(r+1)*TS+10);
+        aoG.addColorStop(0,'rgba(0,0,0,.42)'); aoG.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle=aoG; ctx.fillRect(c*TS,(r+1)*TS,TS,10);
+      }
+      const right=map[mR]?.[mC+1];
+      if(right&&right!=='#'){
+        const aoG=ctx.createLinearGradient((c+1)*TS,r*TS,(c+1)*TS+8,r*TS);
+        aoG.addColorStop(0,'rgba(0,0,0,.28)'); aoG.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle=aoG; ctx.fillRect((c+1)*TS,r*TS,8,TS);
+      }
+    }
+  }
+  // ── Light shafts en puertas (halo cálido) ──
+  for(let r=0;r<10;r++) for(let c=0;c<10;c++){
+    const mR=r+camera.y, mC=c+camera.x, t=map[mR]?.[mC];
+    let lCol=null;
+    if(t==='E') lCol='rgba(253,190,40,';
+    else if(t==='N') lCol='rgba(139,92,246,';
+    else if(t==='V') lCol='rgba(74,222,128,';
+    if(lCol){
+      const ex=c*TS+TS/2, ey=r*TS+TS/2;
+      const glow=ctx.createRadialGradient(ex,ey,3,ex,ey,TS*.95);
+      const pulse=.06+.03*Math.sin(tick*.08+c+r);
+      glow.addColorStop(0,lCol+(pulse+.04)+')');
+      glow.addColorStop(.55,lCol+pulse+')');
+      glow.addColorStop(1,lCol+'0)');
+      ctx.fillStyle=glow; ctx.fillRect(c*TS-2,r*TS-2,TS+4,TS+4);
+    }
+  }
+}
+
+// Capa 2: vignette + scanlines + depth haze — se llama al FINAL, encima de todo
+function drawPostFX(){
+  const W=canvas.width, H=canvas.height;
+  // Vignette
+  const vig=ctx.createRadialGradient(W*.5,H*.52,H*.18,W*.5,H*.52,H*.82);
+  vig.addColorStop(0,'rgba(0,0,0,0)');
+  vig.addColorStop(.65,'rgba(0,0,0,.04)');
+  vig.addColorStop(1,'rgba(0,0,0,.42)');
+  ctx.fillStyle=vig; ctx.fillRect(0,0,W,H);
+  // Profundidad superior (perspectiva top-down)
+  const topFog=ctx.createLinearGradient(0,0,0,TS*1.2);
+  topFog.addColorStop(0,'rgba(0,0,0,.2)'); topFog.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=topFog; ctx.fillRect(0,0,W,TS*1.2);
+  // Scanlines muy sutiles (retro CRT feel)
+  ctx.fillStyle='rgba(0,0,0,.035)';
+  for(let y=0;y<H;y+=2) ctx.fillRect(0,y,W,1);
+  // Borde interior biselado
+  ctx.strokeStyle='rgba(255,255,255,.04)'; ctx.lineWidth=1.5;
+  ctx.strokeRect(1,1,W-2,H-2);
+  ctx.lineWidth=1;
 }
 
 // ═══ SALÓN DE TROFEOS — DIBUJO (mármol blanco + suelo dorado) ═══
@@ -4286,6 +4384,7 @@ function drawMap(){
     else if(currentMap==='laboratorio'||currentMap==='taller') drawLabTile(t,sx,sy,mR,mC);
     else drawPasilloTile(t,sx,sy,mR,mC);
   }
+  drawGFX();
   if(currentMap==='cancha'){ drawCourtMarkings(); drawCanchaOverlays(); }
   if(currentMap==='biblioteca') drawBibliotecaOverlays();
   if(currentMap==='sala_cont') drawSalaContOverlays();
@@ -4321,10 +4420,9 @@ function drawMap(){
     BCPOS.forEach((cp,i)=>{ if(bCC[i]||cp.x<camera.x||cp.x>=camera.x+10||cp.y<camera.y||cp.y>=camera.y+10) return; const sx=(cp.x-camera.x)*TS+TS/2,sy=(cp.y-camera.y)*TS+TS/2,p=.55+.45*Math.sin(tick*.1+i*.7); ctx.save(); ctx.shadowColor='#60a5fa'; ctx.shadowBlur=10*p; ctx.fillStyle=`rgba(96,165,250,${.7+.3*p})`; ctx.beginPath(); ctx.arc(sx,sy,3.5+.8*p,0,Math.PI*2); ctx.fill(); ctx.restore(); });
   }
   const psx=(player.x-camera.x)*TS,psy=(player.y-camera.y)*TS;
-  ctx.save(); ctx.globalAlpha=.28; ctx.fillStyle='#000'; ctx.beginPath(); ctx.ellipse(psx+TS/2,psy+TS-4,11,4,0,0,Math.PI*2); ctx.fill(); ctx.restore();
   // Profe Felipe — héroe unificado (mismo sprite que en batalla)
   { const bob=Math.abs(Math.sin(tick*.12))*2.5;
-    drawHeroSprite(ctx, psx, psy, TS, bob); }
+    drawHeroSprite(ctx, psx, psy, TS, bob, player.facing); }
   if(currentMap==='sala_vela'){ctx.font='11px serif'; ctx.fillText('🕯',psx+TS-8,psy+8);}
   ctx.fillStyle='rgba(253,212,66,.82)'; ctx.font='bold 9px sans-serif';
   const [ao1,ao2,ar]=ARROW_OFF[player.facing]; ctx.fillText(ar,psx+ao1,psy+ao2);
@@ -4338,6 +4436,7 @@ function drawMap(){
   if(EL.btnBack) EL.btnBack.style.display=currentMap==='pasillo'?'none':'block';
   floats=floats.filter(f=>f.life>0);
   floats.forEach(f=>{ ctx.save(); ctx.globalAlpha=f.a; ctx.fillStyle=f.c; ctx.font='bold 11px Arial'; ctx.textBaseline='middle'; ctx.fillText(f.t,f.x,f.y); ctx.restore(); f.y+=f.vy; f.a-=1/75; f.life--; });
+  drawPostFX();
 }
 
 // ═══ UI ═══
@@ -7843,110 +7942,205 @@ function showAntiQuest(){
 // HÉROE — Profe Felipe (científico medieval) — sprite unificado
 // Se usa en overworld Y en batalla para consistencia total.
 // ════════════════════════════════════════════════════════════
-function drawHeroSprite(g, px, py, S, bob){
-  bob = bob||0;
-  // Sombra
-  g.fillStyle='rgba(0,0,0,.22)';
-  g.beginPath(); g.ellipse(px+S*.5,py+S-S*.06,S*.32,S*.1,0,0,Math.PI*2); g.fill();
+function drawHeroSprite(g, px, py, S, bob, facing){
+  bob=bob||0; facing=facing||'down';
+  const step=tick*.22;
+  const walkL=Math.sin(step)*S*.042, walkR=-walkL;
+  const armSwL=Math.sin(step)*.5, armSwR=-armSwL;
+  // Offsets de mirada por dirección
+  const faceOX=facing==='left'?-S*.02:facing==='right'?S*.02:0;
+  const eyeOX =facing==='left'?-S*.015:facing==='right'?S*.015:0;
+
+  // ── Sombra suelo multi-capa ──
+  g.save();
+  g.shadowColor='rgba(0,0,0,0)';
+  g.fillStyle='rgba(0,0,0,.15)';
+  g.beginPath(); g.ellipse(px+S*.5,py+S-S*.04,S*.38,S*.13,0,0,Math.PI*2); g.fill();
+  g.fillStyle='rgba(0,0,0,.12)';
+  g.beginPath(); g.ellipse(px+S*.5,py+S-S*.02,S*.44,S*.08,0,0,Math.PI*2); g.fill();
+  g.restore();
+
   py -= bob;
-  // ════ ROPA DE PROFESOR ════
-  // Pantalón formal (gris) + zapatos
-  g.fillStyle='#3a3f4a'; g.fillRect(px+S*.33,py+S*.74,S*.15,S*.2);
-  g.fillRect(px+S*.52,py+S*.74,S*.15,S*.2);
-  g.fillStyle='#2c3038'; g.fillRect(px+S*.5,py+S*.74,S*.02,S*.2); // entrepierna
-  g.fillStyle='#1a1a1f'; g.fillRect(px+S*.31,py+S*.92,S*.18,S*.06); // zapatos
-  g.fillRect(px+S*.51,py+S*.92,S*.18,S*.06);
-  g.fillStyle='#33333a'; g.fillRect(px+S*.31,py+S*.92,S*.18,S*.018);
-  g.fillRect(px+S*.51,py+S*.92,S*.18,S*.018);
-  // Camisa celeste (torso)
-  g.fillStyle='#cfe3f2'; g.fillRect(px+S*.28,py+S*.42,S*.44,S*.36);
-  // Chaleco/sweater de profesor (granate sobre la camisa)
-  g.fillStyle='#7b3245'; g.fillRect(px+S*.3,py+S*.46,S*.4,S*.3);
-  g.fillStyle='#6a2a3a'; g.fillRect(px+S*.3,py+S*.46,S*.08,S*.3); // sombra izq
-  g.fillStyle='#8c3a50'; g.fillRect(px+S*.62,py+S*.46,S*.08,S*.3); // luz der
-  // Escote en V del chaleco que muestra la camisa
+
+  // ── Pantalón formal con gradiente ──
+  const pantsGrd=g.createLinearGradient(px+S*.3,py+S*.74,px+S*.7,py+S*.95);
+  pantsGrd.addColorStop(0,'#4f5564'); pantsGrd.addColorStop(.5,'#3a3f4a'); pantsGrd.addColorStop(1,'#272b34');
+  g.fillStyle=pantsGrd;
+  g.fillRect(px+S*.33,py+S*.74+walkL,S*.16,S*.21);
+  g.fillRect(px+S*.51,py+S*.74+walkR,S*.16,S*.21);
+  g.fillStyle='rgba(0,0,0,.2)'; g.fillRect(px+S*.49,py+S*.74,S*.03,S*.21);
+
+  // ── Zapatos con brillo ──
+  const shoeGrd=g.createLinearGradient(px,py+S*.92,px,py+S);
+  shoeGrd.addColorStop(0,'#28282e'); shoeGrd.addColorStop(1,'#101012');
+  g.fillStyle=shoeGrd;
+  g.fillRect(px+S*.30,py+S*.93+walkL*.4,S*.2,S*.065);
+  g.fillRect(px+S*.50,py+S*.93+walkR*.4,S*.2,S*.065);
+  g.fillStyle='rgba(255,255,255,.12)';
+  g.fillRect(px+S*.31,py+S*.93+walkL*.4,S*.09,S*.02);
+  g.fillRect(px+S*.51,py+S*.93+walkR*.4,S*.09,S*.02);
+
+  // ── Camisa celeste con gradiente ──
+  const shirtGrd=g.createLinearGradient(px+S*.25,py+S*.42,px+S*.75,py+S*.78);
+  shirtGrd.addColorStop(0,'#dcf0ff'); shirtGrd.addColorStop(.5,'#cfe3f2'); shirtGrd.addColorStop(1,'#b4cce0');
+  g.fillStyle=shirtGrd; g.fillRect(px+S*.28,py+S*.42,S*.44,S*.36);
+
+  // ── Chaleco granate con degradado y AO ──
+  const chalGrd=g.createLinearGradient(px+S*.3,py+S*.46,px+S*.7,py+S*.76);
+  chalGrd.addColorStop(0,'#96384e'); chalGrd.addColorStop(.4,'#7b3245'); chalGrd.addColorStop(1,'#531f2d');
+  g.fillStyle=chalGrd; g.fillRect(px+S*.3,py+S*.46,S*.4,S*.3);
+  const aoL=g.createLinearGradient(px+S*.3,0,px+S*.38,0);
+  aoL.addColorStop(0,'rgba(0,0,0,.3)'); aoL.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=aoL; g.fillRect(px+S*.3,py+S*.46,S*.08,S*.3);
+  const rimR=g.createLinearGradient(px+S*.62,0,px+S*.7,0);
+  rimR.addColorStop(0,'rgba(255,255,255,0)'); rimR.addColorStop(1,'rgba(255,255,255,.1)');
+  g.fillStyle=rimR; g.fillRect(px+S*.62,py+S*.46,S*.08,S*.3);
+
+  // Escote V que muestra camisa
   g.fillStyle='#cfe3f2';
-  g.beginPath(); g.moveTo(px+S*.42,py+S*.46); g.lineTo(px+S*.5,py+S*.6); g.lineTo(px+S*.58,py+S*.46); g.closePath(); g.fill();
-  // Corbata
-  g.fillStyle='#1e3a5f'; g.fillRect(px+S*.475,py+S*.46,S*.05,S*.04);
-  g.beginPath(); g.moveTo(px+S*.475,py+S*.5); g.lineTo(px+S*.5,py+S*.62); g.lineTo(px+S*.525,py+S*.5); g.closePath(); g.fill();
-  g.fillStyle='#16a34a'; g.fillRect(px+S*.475,py+S*.54,S*.05,S*.012); // raya corbata
-  // Cuello de camisa
-  g.fillStyle='#eef6fc';
-  g.beginPath(); g.moveTo(px+S*.44,py+S*.44); g.lineTo(px+S*.5,py+S*.5); g.lineTo(px+S*.46,py+S*.44); g.closePath(); g.fill();
-  g.beginPath(); g.moveTo(px+S*.56,py+S*.44); g.lineTo(px+S*.5,py+S*.5); g.lineTo(px+S*.54,py+S*.44); g.closePath(); g.fill();
-  // ── BATA BLANCA de laboratorio (abierta, a los lados) ──
-  g.fillStyle='#f4f6fa'; g.fillRect(px+S*.2,py+S*.44,S*.12,S*.46);  // solapa izq
-  g.fillRect(px+S*.68,py+S*.44,S*.12,S*.46);                        // solapa der
-  g.fillStyle='#dde3ec'; g.fillRect(px+S*.2,py+S*.44,S*.04,S*.46);
-  g.fillStyle='#e6ebf2'; g.fillRect(px+S*.76,py+S*.44,S*.04,S*.46);
-  // Bolsillo de la bata con lápices
-  g.fillStyle='#e8edf4'; g.fillRect(px+S*.69,py+S*.6,S*.1,S*.09);
-  g.fillStyle='#b91c1c'; g.fillRect(px+S*.71,py+S*.55,S*.02,S*.07);
-  g.fillStyle='#1e3a5f'; g.fillRect(px+S*.74,py+S*.55,S*.02,S*.07);
-  // Brazos con mangas de bata
-  g.fillStyle='#f4f6fa'; g.fillRect(px+S*.18,py+S*.46,S*.1,S*.24);
-  g.fillRect(px+S*.72,py+S*.46,S*.1,S*.24);
-  g.fillStyle='#d2a374'; g.fillRect(px+S*.2,py+S*.68,S*.07,S*.06); // manos
-  g.fillRect(px+S*.73,py+S*.68,S*.07,S*.06);
-  // ════ CABEZA REDONDA (Profe Felipe) ════
-  // Cuello
-  g.fillStyle='#c89860'; g.fillRect(px+S*.43,py+S*.36,S*.14,S*.08);
-  g.fillStyle='#b8884f'; g.fillRect(px+S*.43,py+S*.36,S*.14,S*.03);
-  // Cara perfectamente redonda
-  g.fillStyle='#d2a374'; g.beginPath(); g.arc(px+S*.5,py+S*.25,S*.175,0,Math.PI*2); g.fill();
-  // Sombreado lateral para volumen
-  g.fillStyle='rgba(160,110,60,.35)'; g.beginPath(); g.arc(px+S*.5,py+S*.27,S*.175,.15,Math.PI-.15); g.fill();
-  // Orejas
-  g.fillStyle='#c89860';
-  g.beginPath(); g.arc(px+S*.325,py+S*.25,S*.032,0,Math.PI*2); g.fill();
-  g.beginPath(); g.arc(px+S*.675,py+S*.25,S*.032,0,Math.PI*2); g.fill();
-  // Pelo MUY corto (rapado), solo coronilla y laterales
-  g.fillStyle='#2e2008';
-  g.beginPath(); g.arc(px+S*.5,py+S*.205,S*.178,Math.PI*1.04,Math.PI*1.96); g.fill();
-  g.fillStyle='#3a2a10';
-  g.beginPath(); g.arc(px+S*.5,py+S*.2,S*.178,Math.PI*1.1,Math.PI*1.9); g.fill();
-  // textura de pelo rapado (puntitos)
-  g.fillStyle='rgba(46,32,8,.55)';
-  for(let i=0;i<5;i++){ g.fillRect(px+S*(.36+i*.07),py+S*.13,S*.014,S*.014); }
-  // Entradas (frente despejada por pelo corto)
+  g.beginPath(); g.moveTo(px+S*.42,py+S*.46); g.lineTo(px+S*.5,py+S*.61); g.lineTo(px+S*.58,py+S*.46); g.closePath(); g.fill();
+
+  // ── Corbata con gradiente y raya ──
+  const tieGrd=g.createLinearGradient(px+S*.475,py+S*.46,px+S*.525,py+S*.63);
+  tieGrd.addColorStop(0,'#265a9f'); tieGrd.addColorStop(1,'#1a3560');
+  g.fillStyle=tieGrd;
+  g.fillRect(px+S*.475,py+S*.46,S*.05,S*.04);
+  g.beginPath(); g.moveTo(px+S*.475,py+S*.5); g.lineTo(px+S*.5,py+S*.63); g.lineTo(px+S*.525,py+S*.5); g.closePath(); g.fill();
+  g.fillStyle='rgba(255,255,255,.13)'; g.fillRect(px+S*.483,py+S*.5,S*.015,S*.07);
+  g.fillStyle='#16a34a'; g.fillRect(px+S*.475,py+S*.55,S*.05,S*.012);
+
+  // Cuello camisa
+  g.fillStyle='#eef8ff';
+  g.beginPath(); g.moveTo(px+S*.44,py+S*.44); g.lineTo(px+S*.5,py+S*.51); g.lineTo(px+S*.46,py+S*.44); g.closePath(); g.fill();
+  g.beginPath(); g.moveTo(px+S*.56,py+S*.44); g.lineTo(px+S*.5,py+S*.51); g.lineTo(px+S*.54,py+S*.44); g.closePath(); g.fill();
+
+  // ── Bata blanca — solapa izq con AO ──
+  const bataGrd=g.createLinearGradient(px+S*.17,py+S*.44,px+S*.82,py+S*.9);
+  bataGrd.addColorStop(0,'#f9fbff'); bataGrd.addColorStop(.5,'#f0f3f9'); bataGrd.addColorStop(1,'#dde3ed');
+  g.fillStyle=bataGrd;
+  g.fillRect(px+S*.17,py+S*.44+armSwL*S*.03,S*.13,S*.47);
+  const bataAOL=g.createLinearGradient(px+S*.17,0,px+S*.3,0);
+  bataAOL.addColorStop(0,'rgba(0,0,0,.22)'); bataAOL.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=bataAOL; g.fillRect(px+S*.17,py+S*.44+armSwL*S*.03,S*.13,S*.47);
+
+  // Solapa der con rim light
+  g.fillStyle=bataGrd;
+  g.fillRect(px+S*.70,py+S*.44+armSwR*S*.03,S*.13,S*.47);
+  const bataRimR=g.createLinearGradient(px+S*.70,0,px+S*.83,0);
+  bataRimR.addColorStop(0,'rgba(255,255,255,0)'); bataRimR.addColorStop(1,'rgba(255,255,255,.18)');
+  g.fillStyle=bataRimR; g.fillRect(px+S*.70,py+S*.44+armSwR*S*.03,S*.13,S*.47);
+
+  // Bolsillo con lápices
+  g.fillStyle='#e2e8f2'; g.fillRect(px+S*.70,py+S*.61,S*.1,S*.09);
+  g.fillStyle='rgba(0,0,0,.1)'; g.fillRect(px+S*.70,py+S*.70,S*.1,S*.01);
+  g.fillStyle='#b91c1c'; g.fillRect(px+S*.72,py+S*.56,S*.02,S*.07);
+  g.fillStyle='#fff'; g.fillRect(px+S*.72,py+S*.56,S*.02,S*.012);
+  g.fillStyle='#1e3a5f'; g.fillRect(px+S*.755,py+S*.56,S*.02,S*.07);
+  g.fillStyle='#fff'; g.fillRect(px+S*.755,py+S*.56,S*.02,S*.012);
+
+  // ── Brazos (mangas bata) ──
+  g.fillStyle=bataGrd;
+  g.fillRect(px+S*.17,py+S*.47+armSwL*S*.05,S*.11,S*.24);
+  g.fillStyle='rgba(0,0,0,.14)'; g.fillRect(px+S*.17,py+S*.47+armSwL*S*.05,S*.03,S*.24);
+  g.fillStyle=bataGrd;
+  g.fillRect(px+S*.72,py+S*.47+armSwR*S*.05,S*.11,S*.24);
+  g.fillStyle='rgba(255,255,255,.1)'; g.fillRect(px+S*.79,py+S*.47+armSwR*S*.05,S*.03,S*.24);
+
+  // Manos con gradiente radial (piel)
+  const mkH=(cx,cy)=>{ const sg=g.createRadialGradient(cx,cy,0,cx,cy,S*.065); sg.addColorStop(0,'#dbb888'); sg.addColorStop(1,'#c2906a'); return sg; };
+  g.fillStyle=mkH(px+S*.228,py+S*.715+armSwL*S*.05); g.fillRect(px+S*.19,py+S*.70+armSwL*S*.05,S*.08,S*.068);
+  g.fillStyle=mkH(px+S*.762,py+S*.715+armSwR*S*.05); g.fillRect(px+S*.73,py+S*.70+armSwR*S*.05,S*.08,S*.068);
+
+  // ── Cuello ──
+  const neckGrd=g.createLinearGradient(px+S*.43,py+S*.36,px+S*.57,py+S*.44);
+  neckGrd.addColorStop(0,'#cfa070'); neckGrd.addColorStop(1,'#b88050');
+  g.fillStyle=neckGrd; g.fillRect(px+S*.43,py+S*.36,S*.14,S*.09);
+  g.fillStyle='rgba(0,0,0,.12)'; g.fillRect(px+S*.43,py+S*.36,S*.03,S*.09);
+
+  // ── Cara con degradado radial volumétrico ──
+  const fcx=px+S*.5+faceOX;
+  const faceGrd=g.createRadialGradient(fcx-S*.06,py+S*.20,S*.01,fcx,py+S*.25,S*.21);
+  faceGrd.addColorStop(0,'#e0b888'); faceGrd.addColorStop(.4,'#d2a374'); faceGrd.addColorStop(1,'#a87040');
+  g.fillStyle=faceGrd;
+  g.beginPath(); g.arc(fcx,py+S*.25,S*.178,0,Math.PI*2); g.fill();
+  // SSS mejillas
+  g.fillStyle='rgba(210,100,70,.06)';
+  g.beginPath(); g.arc(fcx-S*.13,py+S*.28,S*.065,0,Math.PI*2); g.fill();
+  g.beginPath(); g.arc(fcx+S*.13,py+S*.28,S*.065,0,Math.PI*2); g.fill();
+
+  // ── Orejas ──
+  const mkEar=(cx,cy)=>{ const eg=g.createRadialGradient(cx,cy,0,cx,cy,S*.04); eg.addColorStop(0,'#d8a878'); eg.addColorStop(1,'#b88050'); return eg; };
+  g.fillStyle=mkEar(fcx-S*.178,py+S*.255); g.beginPath(); g.arc(fcx-S*.178,py+S*.25,S*.034,0,Math.PI*2); g.fill();
+  g.fillStyle=mkEar(fcx+S*.178,py+S*.255); g.beginPath(); g.arc(fcx+S*.178,py+S*.25,S*.034,0,Math.PI*2); g.fill();
+
+  // ── Pelo rapado con gradiente y highlight ──
+  const hairGrd=g.createRadialGradient(fcx-S*.04,py+S*.17,0,fcx,py+S*.19,S*.21);
+  hairGrd.addColorStop(0,'#42300e'); hairGrd.addColorStop(.5,'#2e2008'); hairGrd.addColorStop(1,'#180e00');
+  g.fillStyle=hairGrd;
+  g.beginPath(); g.arc(fcx,py+S*.205,S*.178,Math.PI*1.04,Math.PI*1.96); g.fill();
+  g.fillStyle='rgba(90,65,20,.45)';
+  g.beginPath(); g.arc(fcx-S*.04,py+S*.185,S*.055,0,Math.PI*2); g.fill();
+  g.fillStyle='rgba(46,32,8,.4)';
+  for(let i=0;i<6;i++) g.fillRect(fcx-S*.16+i*S*.06,py+S*.135,S*.013,S*.013);
   g.fillStyle='#d2a374';
-  g.beginPath(); g.arc(px+S*.39,py+S*.16,S*.03,0,Math.PI*2); g.fill();
-  g.beginPath(); g.arc(px+S*.61,py+S*.16,S*.03,0,Math.PI*2); g.fill();
-  // ── BARBA corta y prolija (contorno mandíbula) ──
-  g.fillStyle='#2e2008';
-  g.beginPath(); g.arc(px+S*.5,py+S*.27,S*.172,.18,Math.PI-.18); g.fill();
-  // recorte interior para mejillas (deja la barba como borde)
+  g.beginPath(); g.arc(fcx-S*.11,py+S*.16,S*.03,0,Math.PI*2); g.fill();
+  g.beginPath(); g.arc(fcx+S*.11,py+S*.16,S*.03,0,Math.PI*2); g.fill();
+
+  // ── Barba y bigote ──
+  const beardGrd=g.createRadialGradient(fcx,py+S*.3,0,fcx,py+S*.3,S*.2);
+  beardGrd.addColorStop(0,'#3d2e10'); beardGrd.addColorStop(1,'#2a1e06');
+  g.fillStyle=beardGrd;
+  g.beginPath(); g.arc(fcx,py+S*.27,S*.174,.17,Math.PI-.17); g.fill();
   g.fillStyle='#d2a374';
-  g.beginPath(); g.arc(px+S*.5,py+S*.25,S*.135,.32,Math.PI-.32); g.fill();
-  // Bigote sobre el labio
-  g.fillStyle='#2e2008'; g.fillRect(px+S*.41,py+S*.3,S*.18,S*.028);
-  // Mosca/perilla bajo el labio
-  g.fillRect(px+S*.47,py+S*.345,S*.06,S*.03);
-  // Cejas
+  g.beginPath(); g.arc(fcx,py+S*.25,S*.137,.30,Math.PI-.30); g.fill();
   g.fillStyle='#2e2008';
-  g.fillRect(px+S*.38,py+S*.205,S*.09,S*.018);
-  g.fillRect(px+S*.53,py+S*.205,S*.09,S*.018);
-  // ── OJOS ──
-  g.fillStyle='#fff'; g.beginPath(); g.arc(px+S*.425,py+S*.245,S*.038,0,Math.PI*2); g.fill();
-  g.beginPath(); g.arc(px+S*.575,py+S*.245,S*.038,0,Math.PI*2); g.fill();
-  g.fillStyle='#3a2a18'; g.beginPath(); g.arc(px+S*.432,py+S*.247,S*.02,0,Math.PI*2); g.fill();
-  g.beginPath(); g.arc(px+S*.582,py+S*.247,S*.02,0,Math.PI*2); g.fill();
-  // Nariz
-  g.fillStyle='rgba(160,110,60,.5)'; g.fillRect(px+S*.487,py+S*.255,S*.026,S*.04);
-  // ── LENTES REDONDOS de profesor ──
-  g.strokeStyle='#16161a'; g.lineWidth=Math.max(1.2,S*.03);
-  g.beginPath(); g.arc(px+S*.425,py+S*.245,S*.058,0,Math.PI*2); g.stroke();
-  g.beginPath(); g.arc(px+S*.575,py+S*.245,S*.058,0,Math.PI*2); g.stroke();
-  // Puente
-  g.beginPath(); g.moveTo(px+S*.483,py+S*.243); g.lineTo(px+S*.517,py+S*.243); g.stroke();
-  // Patillas de los lentes hacia las orejas
-  g.beginPath(); g.moveTo(px+S*.367,py+S*.243); g.lineTo(px+S*.33,py+S*.25); g.stroke();
-  g.beginPath(); g.moveTo(px+S*.633,py+S*.243); g.lineTo(px+S*.67,py+S*.25); g.stroke();
-  // Brillo en los cristales
-  g.fillStyle='rgba(255,255,255,.45)';
-  g.beginPath(); g.arc(px+S*.41,py+S*.232,S*.018,0,Math.PI*2); g.fill();
-  g.beginPath(); g.arc(px+S*.56,py+S*.232,S*.018,0,Math.PI*2); g.fill();
+  g.fillRect(fcx-S*.09,py+S*.3,S*.18,S*.028);
+  g.fillRect(fcx-S*.03,py+S*.347,S*.06,S*.03);
+
+  // ── Cejas ──
+  g.fillStyle='#2e2008';
+  g.fillRect(fcx-S*.12,py+S*.205,S*.09,S*.019); g.fillRect(fcx+S*.03,py+S*.205,S*.09,S*.019);
+  g.fillStyle='rgba(46,32,8,.35)'; g.fillRect(fcx-S*.12,py+S*.2,S*.04,S*.01);
+
+  // ── Ojos con iris radial y catchlight ──
+  const eL=fcx-S*.075+eyeOX, eR=fcx+S*.075+eyeOX;
+  const mkEye=(cx,cy)=>{ const eg=g.createRadialGradient(cx-.008*S,cy-.008*S,0,cx,cy,S*.042); eg.addColorStop(0,'#ffffff'); eg.addColorStop(1,'#ece9e5'); return eg; };
+  g.fillStyle=mkEye(eL,py+S*.245); g.beginPath(); g.arc(eL,py+S*.245,S*.041,0,Math.PI*2); g.fill();
+  g.fillStyle=mkEye(eR,py+S*.245); g.beginPath(); g.arc(eR,py+S*.245,S*.041,0,Math.PI*2); g.fill();
+  // Iris con gradiente
+  const mkIris=(cx,cy)=>{ const ig=g.createRadialGradient(cx,cy,0,cx,cy,S*.025); ig.addColorStop(0,'#5a3820'); ig.addColorStop(.6,'#3a2810'); ig.addColorStop(1,'#100a00'); return ig; };
+  g.fillStyle=mkIris(eL+S*.007,py+S*.248); g.beginPath(); g.arc(eL+S*.007,py+S*.248,S*.024,0,Math.PI*2); g.fill();
+  g.fillStyle=mkIris(eR+S*.007,py+S*.248); g.beginPath(); g.arc(eR+S*.007,py+S*.248,S*.024,0,Math.PI*2); g.fill();
+  // Pupila
+  g.fillStyle='#060404';
+  g.beginPath(); g.arc(eL+S*.007,py+S*.249,S*.013,0,Math.PI*2); g.fill();
+  g.beginPath(); g.arc(eR+S*.007,py+S*.249,S*.013,0,Math.PI*2); g.fill();
+  // Catchlight
+  g.fillStyle='rgba(255,255,255,.9)';
+  g.beginPath(); g.arc(eL-S*.002,py+S*.241,S*.009,0,Math.PI*2); g.fill();
+  g.beginPath(); g.arc(eR-S*.002,py+S*.241,S*.009,0,Math.PI*2); g.fill();
+
+  // ── Nariz ──
+  g.fillStyle='rgba(155,105,55,.42)'; g.fillRect(fcx-S*.013,py+S*.255,S*.026,S*.042);
+  g.fillStyle='rgba(100,70,35,.28)'; g.fillRect(fcx-S*.013,py+S*.293,S*.026,S*.006);
+
+  // ── Lentes redondos con arco de brillo ──
+  g.save();
+  g.shadowColor='rgba(0,0,0,.5)'; g.shadowBlur=3; g.shadowOffsetX=1; g.shadowOffsetY=1;
+  g.strokeStyle='#12121a'; g.lineWidth=Math.max(1.4,S*.034);
+  g.beginPath(); g.arc(eL,py+S*.245,S*.063,0,Math.PI*2); g.stroke();
+  g.beginPath(); g.arc(eR,py+S*.245,S*.063,0,Math.PI*2); g.stroke();
+  g.beginPath(); g.moveTo(eL+S*.063,py+S*.243); g.lineTo(eR-S*.063,py+S*.243); g.stroke();
+  g.beginPath(); g.moveTo(eL-S*.063,py+S*.245); g.lineTo(eL-S*.1,py+S*.253); g.stroke();
+  g.beginPath(); g.moveTo(eR+S*.063,py+S*.245); g.lineTo(eR+S*.1,py+S*.253); g.stroke();
+  g.restore();
+  // Reflejo lentes (arco superior)
+  g.save();
+  g.strokeStyle='rgba(255,255,255,.55)'; g.lineWidth=Math.max(.8,S*.018);
+  g.beginPath(); g.arc(eL,py+S*.233,S*.026,Math.PI*1.22,Math.PI*1.78); g.stroke();
+  g.beginPath(); g.arc(eR,py+S*.233,S*.026,Math.PI*1.22,Math.PI*1.78); g.stroke();
+  g.restore();
+
   g.lineWidth=1;
 }
 
