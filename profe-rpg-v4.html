@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Profe Felipe RPG</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
 :root{--bg:#0d1117;--gold:#fcd34d;--sy:#f59e0b;--text:#f1f5f9}
 *{box-sizing:border-box;touch-action:manipulation;margin:0;padding:0}
@@ -160,9 +162,38 @@ canvas{width:100%;aspect-ratio:1/1;max-width:450px;max-height:450px;background:#
 
 @keyframes adminPulse{0%,100%{box-shadow:0 0 8px rgba(168,85,247,.5)}50%{box-shadow:0 0 18px rgba(168,85,247,.9),0 0 30px rgba(251,191,36,.3)}}
 #admin-badge{animation:adminPulse 2s infinite}
+/* ─ Registro ─ */
+#register-screen{position:fixed;inset:0;background:#0d1117;z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px}
+.reg-card{background:linear-gradient(160deg,#1a2030,#0f1420);border:3px solid #8a6d3b;border-radius:16px;padding:28px 24px;width:min(340px,95vw);text-align:center;box-shadow:0 0 40px rgba(245,158,11,.2)}
+.reg-title{font-family:'Press Start 2P',monospace;font-size:.62rem;color:#fcd34d;margin-bottom:6px;letter-spacing:1px}
+.reg-sub{font-family:'VT323',monospace;font-size:1rem;color:#9ca3af;margin-bottom:18px;line-height:1.4}
+.reg-input{width:100%;padding:11px;background:#0f172a;color:#fcd34d;border:2px solid #8a6d3b;border-radius:8px;font-family:'VT323',monospace;font-size:1.2rem;text-align:center;outline:none;transition:border-color .2s;margin-bottom:4px}
+.reg-input:focus{border-color:#fcd34d}
+.reg-err{color:#f87171;font-family:'VT323',monospace;font-size:.9rem;min-height:20px;margin:4px 0 6px}
+.reg-btn{width:100%;padding:11px;background:linear-gradient(180deg,#fcd34d,#f59e0b);color:#000;border:none;border-radius:8px;font-family:'VT323',monospace;font-size:1.15rem;font-weight:bold;cursor:pointer;transition:transform .1s}
+.reg-btn:active{transform:scale(.97)}
+/* ─ Leaderboard ─ */
+#leaderboard-panel{max-width:460px!important}
+#lb-list::-webkit-scrollbar{width:4px}
+#lb-list::-webkit-scrollbar-track{background:#1e293b}
+#lb-list::-webkit-scrollbar-thumb{background:#374151;border-radius:2px}
 </style>
 </head>
 <body>
+
+<!-- PANTALLA DE REGISTRO -->
+<div id="register-screen">
+  <div class="reg-card">
+    <div style="font-size:2.5rem;margin-bottom:10px">🏫</div>
+    <div class="reg-title">PROFE FELIPE RPG</div>
+    <div class="reg-sub">San Agustín de Pudahuel<br>Ingresa tu nombre para comenzar</div>
+    <input id="reg-name-input" class="reg-input" type="text" maxlength="20" placeholder="Tu nombre..."
+      onkeydown="if(event.key==='Enter')registerPlayer()" autocomplete="off">
+    <div class="reg-err" id="reg-error"></div>
+    <button class="reg-btn" onclick="registerPlayer()">¡Empezar aventura! →</button>
+  </div>
+</div>
+
 <div id="ui-bar" style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;gap:6px;min-height:32px">
   <div style="display:flex;align-items:center;gap:5px">
     <span id="btn-covid-status" style="font-size:.7rem;cursor:pointer;opacity:.7" onclick="if(COVID.status!=='healthy')showDialog('🦠 Estado COVID: '+COVID.status+'\n\nVariante: '+(COVID.VARIANTS[COVID.variant]?.name||'N/A')+'\n\nVacunado: '+(COVID.vaccinated?'✅':'❌')+'\n\nMáscara: '+(COVID.hasMask?'✅':'❌'))">🧬</span>
@@ -180,6 +211,7 @@ canvas{width:100%;aspect-ratio:1/1;max-width:450px;max-height:450px;background:#
     <button id="btn-quest" onclick="toggleQuestLog()" title="Misiones" style="font-size:.8rem;padding:2px 6px">📓</button>
     <button class="btn-ui" onclick="saveGame()" title="Guardar partida" style="font-size:.8rem;padding:2px 6px">💾</button>
     <button class="btn-ui" onclick="loadGame()" title="Cargar partida" style="font-size:.8rem;padding:2px 6px;background:linear-gradient(180deg,#4b5563,#374151);color:#d1d5db;border-color:#6b7280">📂</button>
+    <button class="btn-ui" onclick="openLeaderboard()" title="Ranking" style="font-size:.8rem;padding:2px 6px;background:linear-gradient(180deg,#d97706,#92400e);border-color:#78350f">🏆</button>
   </div>
 </div>
 
@@ -250,6 +282,16 @@ canvas{width:100%;aspect-ratio:1/1;max-width:450px;max-height:450px;background:#
     <div class="s7-sub">Del cofre de la Cancha del Colegio</div>
     <div class="s7-hint">¿Qué revelará este número?</div>
     <button class="s7-btn" onclick="closeSevenPanel()">Continuar →</button>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div id="leaderboard-panel" class="ov center">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-family:'Press Start 2P',monospace;font-size:.55rem;color:#fcd34d">🏆 RANKING EN VIVO</div>
+      <div style="font-size:.7rem;color:#6b7280" id="lb-count"></div>
+    </div>
+    <div id="lb-list" style="display:flex;flex-direction:column;gap:5px;max-height:310px;overflow-y:auto;margin-bottom:10px"></div>
+    <button class="dlg-btn" onclick="closeLeaderboard()">Cerrar</button>
   </div>
 </div>
 
@@ -8003,6 +8045,102 @@ function _activateAdmin(){
   showDialog('🔓 MODO ADMINISTRATIVO\n\n⚡ ¡Código secreto activado!\n\n✅ Todas las puertas abiertas\n✅ Nivel 10 | 250HP | 120MP\n✅ +999 🪙 monedas\n✅ Armadura de Bronce\n✅ Todas las misiones\n✅ Café x10\n\n"Con gran poder viene\ngran responsabilidad."\n\n🔑 Modo Admin activo');
 }
 
+// ═══ FIREBASE + MULTIJUGADOR ═══
+// 👉 Reemplaza estos valores con los de tu proyecto en console.firebase.google.com
+const FB_CONFIG={
+  apiKey:"TU_API_KEY",
+  authDomain:"TU-PROYECTO.firebaseapp.com",
+  databaseURL:"https://TU-PROYECTO-default-rtdb.firebaseio.com",
+  projectId:"TU-PROYECTO",
+  storageBucket:"TU-PROYECTO.appspot.com",
+  messagingSenderId:"000000000000",
+  appId:"1:000000000000:web:abcdef"
+};
+let _db=null,_playerKey=null,_playerName='';
+
+function _fbInit(){
+  try{
+    if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+    _db=firebase.database();
+  }catch(e){console.warn('Firebase no disponible:',e);}
+}
+
+function _fbSave(){
+  if(!_db||!_playerKey) return;
+  try{
+    const partyData=PARTY_MEMBERS.map(m=>({id:m.id,hp:m.hp,found:m.found,inTeam:m.inTeam}));
+    const invData=inventory.map(({use,...r})=>r);
+    const fullState={player,stats,coins,progress,currentMap,equipment,party:partyData,inventory:invData};
+    const MAP_LABELS={pasillo:'Pasillo',patio:'Patio',jardin_eden:'Jardín Edén',segundo_piso:'2do Piso',sala_5to:'Sala 5to',sala_6to:'Sala 6to',sala_7mo:'Sala 7mo',sala_8vo:'Sala 8vo',biblioteca:'Biblioteca',cancha:'Cancha',villa_alemana:'Villa Alemana',centro_villa:'Centro Villa',buin_zoo:'Buin Zoo',reserva:'Reserva Natural',lago:'Lago'};
+    _db.ref('players/'+_playerKey).set({
+      name:_playerName, level:stats.level, coins, xp:stats.xp,
+      hp:stats.hp, maxHp:stats.maxHp, currentMap,
+      mapLabel:MAP_LABELS[currentMap]||currentMap,
+      lastSeen:Date.now(), fullState
+    });
+  }catch(e){console.warn('Firebase save error:',e);}
+}
+
+// ── Registro de jugador ──
+function registerPlayer(){
+  const input=_('reg-name-input'), errEl=_('reg-error');
+  const name=input.value.trim();
+  if(name.length<2){errEl.textContent='⚠ Mínimo 2 caracteres';return;}
+  if(name.length>20){errEl.textContent='⚠ Máximo 20 caracteres';return;}
+  _playerName=name;
+  const sanitized=name.toLowerCase().replace(/[^a-z0-9]/g,'_').slice(0,14);
+  _playerKey=sanitized+'_'+Math.random().toString(36).slice(2,6);
+  localStorage.setItem('profeRpg_playerKey',_playerKey);
+  localStorage.setItem('profeRpg_playerName',_playerName);
+  _fbInit();
+  _('register-screen').style.display='none';
+  _startGameLoop();
+}
+
+// ── Leaderboard ──
+const _MAP_SHORT={pasillo:'Pasillo',patio:'Patio',jardin_eden:'Jardín Edén',segundo_piso:'2do Piso',sala_5to:'Sala 5to',sala_6to:'Sala 6to',sala_7mo:'Sala 7mo',sala_8vo:'Sala 8vo',biblioteca:'Biblioteca',cancha:'Cancha',villa_alemana:'Villa Alemana',centro_villa:'Centro Villa',buin_zoo:'Buin Zoo',reserva:'Reserva',lago:'Lago'};
+let _lbRef=null;
+
+function openLeaderboard(){
+  const panel=_('leaderboard-panel'); panel.style.display='block'; STATE='dialog';
+  const list=_('lb-list'); list.innerHTML='<div style="text-align:center;color:#6b7280;padding:16px;font-family:\'VT323\',monospace">Cargando...</div>';
+  if(!_db){list.innerHTML='<div style="text-align:center;color:#6b7280;padding:16px;font-family:\'VT323\',monospace">⚠ Firebase no configurado</div>';return;}
+  _lbRef=_db.ref('players').orderByChild('level');
+  _lbRef.on('value',snap=>{
+    const rows=[];
+    snap.forEach(child=>rows.push({key:child.key,...child.val()}));
+    rows.sort((a,b)=>b.level-a.level||b.coins-a.coins||b.xp-a.xp);
+    _('lb-count').textContent=rows.length+' jugadores';
+    if(!rows.length){list.innerHTML='<div style="text-align:center;color:#6b7280;padding:16px;font-family:\'VT323\',monospace">Sin jugadores aún</div>';return;}
+    const medals=['🥇','🥈','🥉'];
+    list.innerHTML=rows.slice(0,20).map((p,i)=>{
+      const isMe=p.key===_playerKey;
+      const ago=p.lastSeen?Math.round((Date.now()-p.lastSeen)/60000):null;
+      const agoStr=ago===null?'':ago<1?'🟢 ahora':ago<60?ago+'m':ago<1440?Math.floor(ago/60)+'h':Math.floor(ago/1440)+'d';
+      const rank=i<3?medals[i]:`#${i+1}`;
+      const mapName=_MAP_SHORT[p.currentMap]||p.currentMap||'?';
+      return `<div style="display:flex;align-items:center;gap:8px;background:${isMe?'rgba(253,212,66,.1)':'#1e293b'};border:1px solid ${isMe?'#fcd34d':'#374151'};padding:7px 10px;border-radius:7px">
+        <div style="font-size:.9rem;min-width:22px;text-align:center">${rank}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:'VT323',monospace;font-size:.92rem;color:${isMe?'#fcd34d':'#f1f5f9'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}${isMe?' ◀':''}</div>
+          <div style="font-size:.62rem;color:#6b7280">${mapName}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:'Press Start 2P',monospace;font-size:.42rem;color:#a78bfa">Lv${p.level}</div>
+          <div style="font-size:.68rem;color:#fcd34d">🪙${p.coins||0}</div>
+        </div>
+        <div style="font-size:.55rem;color:#4b5563;min-width:30px;text-align:right">${agoStr}</div>
+      </div>`;
+    }).join('');
+  });
+}
+
+function closeLeaderboard(){
+  _('leaderboard-panel').style.display='none';
+  if(_lbRef) _lbRef.off(); _lbRef=null;
+  if(STATE==='dialog') STATE='exploring';
+}
+
 // ═══ SISTEMA DE GUARDADO ═══
 const SAVE_KEY='profeRpgSave_v4';
 
@@ -8022,6 +8160,7 @@ function saveGameSilent(){
     const data={player,stats,coins,progress,currentMap,equipment,party:partyData,inventory:invData};
     localStorage.setItem(SAVE_KEY,JSON.stringify(data));
   }catch(e){console.warn('Save failed:',e);}
+  _fbSave();
 }
 
 function saveGame(){
@@ -8029,31 +8168,54 @@ function saveGame(){
   showDialog('💾 Partida guardada con éxito.');
 }
 
+function _applyGameState(data){
+  player=data.player; player.px=player.x*40; player.py=player.y*40;
+  stats=data.stats; coins=data.coins; progress=data.progress||{};
+  currentMap=data.currentMap;
+  equipment=data.equipment||{armor:null,weapon:null,accessory:null};
+  if(data.party){data.party.forEach(sv=>{const m=PARTY_MEMBERS.find(p=>p.id===sv.id);if(m){m.hp=sv.hp;m.found=sv.found;m.inTeam=sv.inTeam;}});}
+  inventory=(data.inventory||[]).map(_rehydrateItem);
+  if(!progress.questLog) progress.questLog={};
+  syncUI(); updateCamera();
+}
 function loadGame(){
-  try{
-    const saved=localStorage.getItem(SAVE_KEY);
-    if(!saved){showDialog('⚠️ No hay ninguna partida guardada.');return;}
-    const data=JSON.parse(saved);
-    player=data.player;
-    stats=data.stats;
-    coins=data.coins;
-    progress=data.progress||{};
-    currentMap=data.currentMap;
-    equipment=data.equipment||{armor:null,weapon:null,accessory:null};
-    if(data.party){data.party.forEach(sv=>{const m=PARTY_MEMBERS.find(p=>p.id===sv.id);if(m){m.hp=sv.hp;m.found=sv.found;m.inTeam=sv.inTeam;}});}
-    inventory=(data.inventory||[]).map(_rehydrateItem);
-    if(!progress.questLog) progress.questLog={};
-    syncUI(); updateCamera();
-    showDialog('📂 Partida cargada.\n¡Bienvenido de vuelta, Profe Felipe!');
-  }catch(e){
-    showDialog('❌ Error al cargar la partida.');
-    console.error('Load failed:',e);
+  if(_db&&_playerKey){
+    _db.ref('players/'+_playerKey+'/fullState').once('value',snap=>{
+      const fbData=snap.val();
+      if(fbData){_applyGameState(fbData);showDialog('📂 Partida cargada desde la nube ☁️');}
+      else{
+        const saved=localStorage.getItem(SAVE_KEY);
+        if(saved){_applyGameState(JSON.parse(saved));showDialog('📂 Partida cargada localmente.');}
+        else showDialog('⚠️ No hay ninguna partida guardada.');
+      }
+    });
+  } else {
+    try{
+      const saved=localStorage.getItem(SAVE_KEY);
+      if(!saved){showDialog('⚠️ No hay ninguna partida guardada.');return;}
+      _applyGameState(JSON.parse(saved));
+      showDialog('📂 Partida cargada.\n¡Bienvenido de vuelta, Profe Felipe!');
+    }catch(e){showDialog('❌ Error al cargar la partida.');console.error('Load failed:',e);}
   }
 }
 
 // Clear initial static text from overlays
-['sp-hp','sp-mp','sp-xp'].forEach(id=>{const el=_(id);if(el)el.textContent='';});
-syncUI(); updateCamera(); loop();
+function _startGameLoop(){
+  ['sp-hp','sp-mp','sp-xp'].forEach(id=>{const el=_(id);if(el)el.textContent='';});
+  syncUI(); updateCamera(); loop();
+}
+// Verificar si el jugador ya está registrado
+(function(){
+  const key=localStorage.getItem('profeRpg_playerKey');
+  const name=localStorage.getItem('profeRpg_playerName');
+  if(key&&name){
+    _playerKey=key; _playerName=name;
+    _fbInit();
+    _('register-screen').style.display='none';
+    _startGameLoop();
+  }
+  // Si no hay key, la pantalla de registro permanece visible
+})();
 // Start music on first interaction
 function _musicStart(){ try{ const ac=Music._ac; if(ac&&ac.state==='suspended')ac.resume(); } catch(e){} Music.play(currentMap); }
 document.addEventListener('click',_musicStart,{once:true});
