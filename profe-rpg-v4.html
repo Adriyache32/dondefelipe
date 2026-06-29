@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Profe Felipe RPG</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
 :root{--bg:#0d1117;--gold:#fcd34d;--sy:#f59e0b;--text:#f1f5f9}
 *{box-sizing:border-box;touch-action:manipulation;margin:0;padding:0}
@@ -160,9 +162,62 @@ canvas{width:100%;aspect-ratio:1/1;max-width:450px;max-height:450px;background:#
 
 @keyframes adminPulse{0%,100%{box-shadow:0 0 8px rgba(168,85,247,.5)}50%{box-shadow:0 0 18px rgba(168,85,247,.9),0 0 30px rgba(251,191,36,.3)}}
 #admin-badge{animation:adminPulse 2s infinite}
+/* ─ Registro ─ */
+#register-screen{position:fixed;inset:0;background:#0d1117;z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px}
+.reg-card{background:linear-gradient(160deg,#1a2030,#0f1420);border:3px solid #8a6d3b;border-radius:16px;padding:28px 24px;width:min(340px,95vw);text-align:center;box-shadow:0 0 40px rgba(245,158,11,.2)}
+.reg-title{font-family:'Press Start 2P',monospace;font-size:.62rem;color:#fcd34d;margin-bottom:6px;letter-spacing:1px}
+.reg-sub{font-family:'VT323',monospace;font-size:1rem;color:#9ca3af;margin-bottom:18px;line-height:1.4}
+.reg-input{width:100%;padding:11px;background:#0f172a;color:#fcd34d;border:2px solid #8a6d3b;border-radius:8px;font-family:'VT323',monospace;font-size:1.2rem;text-align:center;outline:none;transition:border-color .2s;margin-bottom:4px}
+.reg-input:focus{border-color:#fcd34d}
+.reg-err{color:#f87171;font-family:'VT323',monospace;font-size:.9rem;min-height:20px;margin:4px 0 6px}
+.reg-btn{width:100%;padding:11px;background:linear-gradient(180deg,#fcd34d,#f59e0b);color:#000;border:none;border-radius:8px;font-family:'VT323',monospace;font-size:1.15rem;font-weight:bold;cursor:pointer;transition:transform .1s}
+.reg-btn:active{transform:scale(.97)}
+/* ─ Leaderboard ─ */
+#leaderboard-panel{max-width:460px!important}
+#lb-list::-webkit-scrollbar{width:4px}
+#lb-list::-webkit-scrollbar-track{background:#1e293b}
+#lb-list::-webkit-scrollbar-thumb{background:#374151;border-radius:2px}
+/* ─ Panel de Control ─ */
+.stab{flex:1;padding:7px 4px;background:#1e293b;border:1px solid #374151;border-radius:6px;color:#9ca3af;font-family:'VT323',monospace;font-size:.85rem;cursor:pointer;transition:.15s;text-align:center}
+.stab.on{background:linear-gradient(180deg,#d97706,#b45309);border-color:#f59e0b;color:#fff}
+.stab:hover:not(.on){border-color:#4b5563;color:#d1d5db}
+.sc-sec{display:none}.sc-sec.on{display:block}
+.tgl-wrap{display:flex;justify-content:space-between;align-items:center;background:#1e293b;border-radius:8px;padding:10px 14px;margin-bottom:8px}
+.tgl-lbl{font-family:'VT323',monospace;font-size:.92rem;color:#f1f5f9}
+.tgl{position:relative;width:44px;height:24px;cursor:pointer;flex-shrink:0}
+.tgl input{opacity:0;width:0;height:0;position:absolute}
+.tgl-sl{position:absolute;inset:0;background:#374151;border-radius:24px;transition:.25s}
+.tgl-sl:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#6b7280;border-radius:50%;transition:.25s}
+.tgl input:checked+.tgl-sl{background:#f59e0b}
+.tgl input:checked+.tgl-sl:before{transform:translateX(20px);background:#fff}
+.kbd{display:inline-block;background:#0f172a;border:1px solid #374151;border-bottom:3px solid #0d1117;border-radius:4px;padding:1px 7px;font-family:'Press Start 2P',monospace;font-size:.37rem;color:#fcd34d;white-space:nowrap}
+.ctrl-row{display:flex;justify-content:space-between;align-items:center;padding:7px 4px;border-bottom:1px solid #1e293b;gap:8px}
+.ctrl-desc{font-family:'VT323',monospace;font-size:.88rem;color:#d1d5db}
+.ctrl-keys{display:flex;gap:4px;align-items:center;flex-shrink:0}
+.tut-step{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;background:#1e293b;border-radius:8px;margin-bottom:6px}
+.tut-ico{font-size:1.3rem;flex-shrink:0;margin-top:2px}
+.tut-t{font-family:'Press Start 2P',monospace;font-size:.38rem;color:#fcd34d;margin-bottom:4px}
+.tut-d{font-family:'VT323',monospace;font-size:.84rem;color:#9ca3af;line-height:1.4}
+#sc-tutorial::-webkit-scrollbar{width:4px}
+#sc-tutorial::-webkit-scrollbar-track{background:#0f172a}
+#sc-tutorial::-webkit-scrollbar-thumb{background:#374151;border-radius:2px}
 </style>
 </head>
 <body>
+
+<!-- PANTALLA DE REGISTRO -->
+<div id="register-screen">
+  <div class="reg-card">
+    <div style="font-size:2.5rem;margin-bottom:10px">🏫</div>
+    <div class="reg-title">PROFE FELIPE RPG</div>
+    <div class="reg-sub">San Agustín de Pudahuel<br>Ingresa tu nombre para comenzar</div>
+    <input id="reg-name-input" class="reg-input" type="text" maxlength="20" placeholder="Tu nombre..."
+      onkeydown="if(event.key==='Enter')registerPlayer()" autocomplete="off">
+    <div class="reg-err" id="reg-error"></div>
+    <button class="reg-btn" onclick="registerPlayer()">¡Empezar aventura! →</button>
+  </div>
+</div>
+
 <div id="ui-bar" style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;gap:6px;min-height:32px">
   <div style="display:flex;align-items:center;gap:5px">
     <span id="btn-covid-status" style="font-size:.7rem;cursor:pointer;opacity:.7" onclick="if(COVID.status!=='healthy')showDialog('🦠 Estado COVID: '+COVID.status+'\n\nVariante: '+(COVID.VARIANTS[COVID.variant]?.name||'N/A')+'\n\nVacunado: '+(COVID.vaccinated?'✅':'❌')+'\n\nMáscara: '+(COVID.hasMask?'✅':'❌'))">🧬</span>
@@ -178,8 +233,14 @@ canvas{width:100%;aspect-ratio:1/1;max-width:450px;max-height:450px;background:#
     <button class="btn-ui" onclick="openStats()" title="Stats" style="font-size:.8rem;padding:2px 6px">📊</button>
     <button class="btn-ui" onclick="openInv()" title="Mochila">🎒</button>
     <button id="btn-quest" onclick="toggleQuestLog()" title="Misiones" style="font-size:.8rem;padding:2px 6px">📓</button>
+    <button class="btn-ui" onclick="saveGame()" title="Guardar partida" style="font-size:.8rem;padding:2px 6px">💾</button>
+    <button class="btn-ui" onclick="loadGame()" title="Cargar partida" style="font-size:.8rem;padding:2px 6px;background:linear-gradient(180deg,#4b5563,#374151);color:#d1d5db;border-color:#6b7280">📂</button>
+    <button class="btn-ui" onclick="exportSave()" title="Exportar partida" style="font-size:.8rem;padding:2px 6px;background:linear-gradient(180deg,#1d4ed8,#1e3a8a);border-color:#2563eb">📤</button>
+    <button class="btn-ui" onclick="openLeaderboard()" title="Ranking" style="font-size:.8rem;padding:2px 6px;background:linear-gradient(180deg,#d97706,#92400e);border-color:#78350f">🏆</button>
+    <button class="btn-ui" onclick="openSettings()" title="Panel de control" style="font-size:.8rem;padding:2px 6px;background:linear-gradient(180deg,#374151,#1f2937);color:#9ca3af;border-color:#4b5563">⚙️</button>
   </div>
 </div>
+<input type="file" id="import-file-input" accept=".json" style="display:none" onchange="_onImportFile(this)">
 
 
 <!-- compatibility stubs --><span id="hp-v" style="display:none"></span><span id="mp-v" style="display:none"></span><span id="xp-v" style="display:none"></span><span id="hp-bar" style="display:none"></span><span id="mp-bar" style="display:none"></span><span id="xp-bar" style="display:none"></span><span id="lv-badge" style="display:none">LV 1</span><span id="coin-n" style="display:none">0</span><span id="blue-display" style="display:none"></span><span id="blue-n" style="display:none">0</span>
@@ -248,6 +309,75 @@ canvas{width:100%;aspect-ratio:1/1;max-width:450px;max-height:450px;background:#
     <div class="s7-sub">Del cofre de la Cancha del Colegio</div>
     <div class="s7-hint">¿Qué revelará este número?</div>
     <button class="s7-btn" onclick="closeSevenPanel()">Continuar →</button>
+  </div>
+
+  <!-- PANEL DE CONTROL -->
+  <div id="settings-panel" class="ov center" style="max-width:460px">
+    <div style="font-family:'Press Start 2P',monospace;font-size:.52rem;color:#fcd34d;text-align:center;margin-bottom:12px">⚙️ PANEL DE CONTROL</div>
+    <div style="display:flex;gap:5px;margin-bottom:14px">
+      <button class="stab on" id="stab-music" onclick="switchStab('music')">🔊 Música</button>
+      <button class="stab" id="stab-controls" onclick="switchStab('controls')">🎮 Controles</button>
+      <button class="stab" id="stab-tutorial" onclick="switchStab('tutorial')">📖 Tutorial</button>
+    </div>
+    <!-- Música -->
+    <div id="sc-music" class="sc-sec on">
+      <div class="tgl-wrap">
+        <span class="tgl-lbl">🎵 Música de fondo</span>
+        <label class="tgl"><input type="checkbox" id="tgl-music" checked onchange="toggleMusicSetting(this)"><div class="tgl-sl"></div></label>
+      </div>
+      <div style="background:#0f172a;border-radius:6px;padding:10px 12px;font-family:'VT323',monospace;font-size:.85rem;color:#6b7280;line-height:1.5">
+        La música cambia automáticamente según el área del mapa.<br>Desactívala si necesitas silencio en clase 🤫
+      </div>
+    </div>
+    <!-- Controles -->
+    <div id="sc-controls" class="sc-sec">
+      <div class="tgl-wrap">
+        <span class="tgl-lbl">🕹️ D-Pad táctil (móvil)</span>
+        <label class="tgl"><input type="checkbox" id="tgl-dpad" checked onchange="toggleDpadSetting(this)"><div class="tgl-sl"></div></label>
+      </div>
+      <div style="background:#0f172a;border-radius:6px;padding:8px 12px;margin-bottom:6px">
+        <div style="font-family:'Press Start 2P',monospace;font-size:.38rem;color:#4b5563;margin-bottom:8px;letter-spacing:.5px">⌨️ TECLADO</div>
+        <div class="ctrl-row"><span class="ctrl-desc">Moverse</span><div class="ctrl-keys"><span class="kbd">↑↓←→</span><span style="color:#4b5563;font-size:.8rem;font-family:'VT323',monospace">o</span><span class="kbd">W A S D</span></div></div>
+        <div class="ctrl-row"><span class="ctrl-desc">Interactuar / Avanzar</span><div class="ctrl-keys"><span class="kbd">Espacio</span><span style="color:#4b5563;font-size:.8rem;font-family:'VT323',monospace">o</span><span class="kbd">Enter</span></div></div>
+        <div class="ctrl-row" style="border:none"><span class="ctrl-desc">Salir de sala</span><div class="ctrl-keys"><span class="kbd">Esc</span></div></div>
+      </div>
+      <div style="background:#0f172a;border-radius:6px;padding:8px 12px">
+        <div style="font-family:'Press Start 2P',monospace;font-size:.38rem;color:#4b5563;margin-bottom:8px;letter-spacing:.5px">📱 MÓVIL / TÁCTIL</div>
+        <div class="ctrl-row"><span class="ctrl-desc">Moverse</span><span class="ctrl-desc" style="color:#6b7280">D-Pad o deslizar pantalla</span></div>
+        <div class="ctrl-row" style="border:none"><span class="ctrl-desc">Interactuar</span><span class="ctrl-desc" style="color:#6b7280">Botón OK</span></div>
+      </div>
+    </div>
+    <!-- Tutorial -->
+    <div id="sc-tutorial" class="sc-sec" style="max-height:290px;overflow-y:auto;padding-right:3px">
+      <div class="tut-step"><div class="tut-ico">🗺️</div><div><div class="tut-t">EXPLORAR EL COLEGIO</div><div class="tut-d">Muévete por el mapa con flechas o WASD. Entra por las puertas 🚪 para visitar salas. Presiona Esc o usa el botón Salir para volver al mapa anterior.</div></div></div>
+      <div class="tut-step"><div class="tut-ico">💬</div><div><div class="tut-t">HABLAR CON PERSONAJES</div><div class="tut-d">Acércate a un profe o personaje y presiona Espacio. Pueden darte misiones 📓, hacerte preguntas para ganar 🪙 monedas o curarte los stats.</div></div></div>
+      <div class="tut-step"><div class="tut-ico">⚔️</div><div><div class="tut-t">SISTEMA DE BATALLAS</div><div class="tut-d">Al tocar un enemigo 😈 se inicia la batalla. Elige: ⚡ Explicar (daño normal), 💡 Motivar (usa MP, daño x2), ☕ Café (cura HP), 🚪 Huir. ¡Ganas XP y 🪙 al vencer!</div></div></div>
+      <div class="tut-step"><div class="tut-ico">📊</div><div><div class="tut-t">STATS Y NIVELES</div><div class="tut-d">❤️ HP = vida. 💙 MP = energía para habilidades. ⭐ XP = experiencia. Al subir de nivel aumentan todos tus atributos y se restauran HP/MP.</div></div></div>
+      <div class="tut-step"><div class="tut-ico">🍽️</div><div><div class="tut-t">HAMBRE</div><div class="tut-d">El hambre baja con el tiempo. Si llega a 0 pierdes HP paulatinamente. Come 🍬 caramelos del inventario o visita el huerto para recuperarla.</div></div></div>
+      <div class="tut-step"><div class="tut-ico">🪙</div><div><div class="tut-t">MONEDAS Y TIENDA</div><div class="tut-d">Gana monedas respondiendo preguntas a los profes, ganando batallas o recogiéndolas del suelo. Cómpralas en el kiosco de la Tía Kella 👩 en el patio.</div></div></div>
+      <div class="tut-step"><div class="tut-ico">📓</div><div><div class="tut-t">MISIONES</div><div class="tut-d">Presiona 📓 para ver tus misiones activas. Los personajes especiales te dan misiones al hablar con ellos. ¡Completarlas da recompensas únicas!</div></div></div>
+      <div class="tut-step"><div class="tut-ico">👥</div><div><div class="tut-t">EQUIPO DE COMPAÑEROS</div><div class="tut-d">En la Plaza Belén puedes reclutar compañeros (Renata 🌟, Isi 💙, Este 💻). En batalla usa el botón 👥 para llamarlos. Cada uno tiene una habilidad especial.</div></div></div>
+      <div class="tut-step"><div class="tut-ico">💾</div><div><div class="tut-t">GUARDAR Y RANKING</div><div class="tut-d">Se guarda automáticamente al ganar batallas y subir de nivel. Presiona 💾 para guardar manual, 📂 para cargar y 🏆 para ver el ranking de tu curso en tiempo real.</div></div></div>
+    </div>
+    <button class="dlg-btn" onclick="closeSettings()" style="margin-top:12px">Cerrar</button>
+  </div>
+
+  <!-- METRO -->
+  <div id="metro-panel" class="ov center" style="max-width:340px;background:rgba(10,10,30,.97);border:2px solid #6366f1;border-radius:12px;padding:18px 20px">
+    <div style="font-family:'Press Start 2P',monospace;font-size:.55rem;color:#a5b4fc;margin-bottom:4px">🚇 MERVAL — DESTINOS</div>
+    <div style="font-size:.6rem;color:#6b7280;margin-bottom:14px">Selecciona tu destino:</div>
+    <div id="metro-options" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px"></div>
+    <button class="dlg-btn" onclick="closeMetro()" style="background:#374151;border:1px solid #4b5563">Cancelar</button>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div id="leaderboard-panel" class="ov center">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-family:'Press Start 2P',monospace;font-size:.55rem;color:#fcd34d">🏆 RANKING EN VIVO</div>
+      <div style="font-size:.7rem;color:#6b7280" id="lb-count"></div>
+    </div>
+    <div id="lb-list" style="display:flex;flex-direction:column;gap:5px;max-height:310px;overflow-y:auto;margin-bottom:10px"></div>
+    <button class="dlg-btn" onclick="closeLeaderboard()">Cerrar</button>
   </div>
 </div>
 
@@ -517,7 +647,43 @@ sala_8vo:[
   ],
   estacion_villa:[
     ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'],
-    ['#','V','V','#','W','W','W','W','#','V','V','#','W','W','W','W','#','V','V','.'],
+    ['#','V','V','#','W','W','W','W','#','V','V','#','W','W','W','W','#','V','V','#'],
+    ['#','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','#'],
+    ['#','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','#'],
+    ['E','.','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','.','#'],
+    ['#','.','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','.','#'],
+    ['#','.','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','.','#'],
+    ['#','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','#'],
+    ['#','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','#'],
+    ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#']
+  ],
+  estacion_quilpue:[
+    ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'],
+    ['#','V','V','#','W','W','W','W','#','V','V','#','W','W','W','W','#','V','V','#'],
+    ['#','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','#'],
+    ['#','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','#'],
+    ['E','.','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','.','#'],
+    ['#','.','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','.','#'],
+    ['#','.','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','.','#'],
+    ['#','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','#'],
+    ['#','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','#'],
+    ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#']
+  ],
+  estacion_vina:[
+    ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'],
+    ['#','V','V','#','W','W','W','W','#','V','V','#','W','W','W','W','#','V','V','#'],
+    ['#','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','#'],
+    ['#','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','#'],
+    ['E','.','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','.','#'],
+    ['#','.','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','.','#'],
+    ['#','.','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','.','#'],
+    ['#','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','#'],
+    ['#','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','L','#'],
+    ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#']
+  ],
+  estacion_valpo:[
+    ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'],
+    ['#','V','V','#','W','W','W','W','#','V','V','#','W','W','W','W','#','V','V','#'],
     ['#','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','#'],
     ['#','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','#'],
     ['E','.','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','p','.','#'],
@@ -704,6 +870,7 @@ sala_8vo:[
   ]
 };
 const WALKABLE=new Set(['.','E','g','e','N','b','v','a','Z','V','p','H','S','B','8','9','^','>','*','d','r','D','q','n','c']);
+const STATION_MAPS_SET=new Set(['estacion_villa','estacion_quilpue','estacion_vina','estacion_valpo']);
 // Tiles SÓLIDOS específicos del BuinZoo (animales/recintos/bancas), pese a ser walkable en otros mapas
 const BUINZOO_SOLID=new Set(['t','p','r','l','e','m','f','o','j','k','b','W','I','S','B']);
 const updateCamera=()=>{ const m=MAPS[currentMap],mW=m[0].length,mH=m.length; camera.x=Math.max(0,Math.min(player.x-4,mW-10)); camera.y=Math.max(0,Math.min(player.y-4,mH-10)); };
@@ -800,27 +967,60 @@ const hasItem=id=>inventory.some(i=>i.id===id);
 
 function drawNPC(sx,sy,emoji,color,label){
   const p=.5+.38*Math.sin(tick*.07);
-  // Dark base
-  ctx.fillStyle='rgba(0,0,0,.48)'; ctx.fillRect(sx+1,sy+12,TS-2,TS-13);
-  // Colored fill
-  ctx.fillStyle=color+'55'; ctx.fillRect(sx+1,sy+12,TS-2,TS-13);
-  // Bright border
-  ctx.strokeStyle=color; ctx.lineWidth=2.2; ctx.strokeRect(sx+1,sy+1,TS-2,TS-2);
-  ctx.strokeStyle=color+'66'; ctx.lineWidth=1; ctx.strokeRect(sx+4,sy+14,TS-8,TS-17);
-  // Floor shadow
-  ctx.fillStyle='rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(sx+TS/2,sy+TS-4,11,3.5,0,0,Math.PI*2); ctx.fill();
-  // Emoji (larger)
-  ctx.font='24px serif'; ctx.textBaseline='alphabetic'; ctx.textAlign='left';
-  ctx.fillText(emoji,sx+4,sy+TS-3);
-  // Name banner
-  ctx.fillStyle=color; ctx.fillRect(sx+1,sy+1,TS-2,11);
-  ctx.fillStyle='rgba(0,0,0,.3)'; ctx.fillRect(sx+1,sy+1,TS-2,11);
-  ctx.fillStyle='#fff'; ctx.font='bold 5.8px sans-serif';
+  const bobY=Math.sin(tick*.065)*2;
+  const ey=sy+bobY;
+  ctx.save();
+  // ── Sombra proyectada en el suelo ──
+  ctx.shadowColor='rgba(0,0,0,0)';
+  ctx.fillStyle='rgba(0,0,0,.32)';
+  ctx.beginPath(); ctx.ellipse(sx+TS/2,sy+TS-3,14,4.5,0,0,Math.PI*2); ctx.fill();
+  // ── Anillo de glow exterior (capa 1: blur suave) ──
+  ctx.save();
+  ctx.shadowColor=color; ctx.shadowBlur=14+8*p;
+  ctx.strokeStyle=color+'00'; ctx.lineWidth=0;
+  // truco: rect transparente fuerza el shadow
+  ctx.strokeRect(sx+2,ey+2,TS-4,TS-4);
+  ctx.restore();
+  // ── Borde brillante animado ──
+  const bAlpha=Math.round((0.55+0.4*p)*255).toString(16).padStart(2,'0');
+  ctx.save();
+  ctx.shadowColor=color; ctx.shadowBlur=10+6*p;
+  ctx.strokeStyle=color+bAlpha; ctx.lineWidth=2.2;
+  ctx.strokeRect(sx+2,ey+2,TS-4,TS-4);
+  ctx.restore();
+  // ── Fondo degradado radial ──
+  const bgGrd=ctx.createRadialGradient(sx+TS/2,ey+TS*.65,1,sx+TS/2,ey+TS*.55,TS*.72);
+  bgGrd.addColorStop(0,color+'40'); bgGrd.addColorStop(0.6,'rgba(0,0,0,.45)'); bgGrd.addColorStop(1,'rgba(0,0,0,.7)');
+  ctx.fillStyle=bgGrd; ctx.fillRect(sx+2,ey+12,TS-4,TS-14);
+  // ── Borde interior sutil ──
+  ctx.strokeStyle=color+'28'; ctx.lineWidth=1;
+  ctx.strokeRect(sx+5,ey+15,TS-10,TS-18);
+  // ── Emoji con sombra propia ──
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,.9)'; ctx.shadowBlur=7; ctx.shadowOffsetX=1; ctx.shadowOffsetY=2;
+  ctx.font='23px serif'; ctx.textBaseline='alphabetic'; ctx.textAlign='center';
+  ctx.fillText(emoji,sx+TS/2,ey+TS-3);
+  ctx.restore();
+  // ── Banner de nombre con gradiente ──
+  const bannerGrd=ctx.createLinearGradient(sx,ey,sx+TS,ey+12);
+  bannerGrd.addColorStop(0,color+'ee'); bannerGrd.addColorStop(1,color+'88');
+  ctx.fillStyle=bannerGrd; ctx.fillRect(sx+2,ey+2,TS-4,11);
+  ctx.fillStyle='rgba(0,0,0,.22)'; ctx.fillRect(sx+2,ey+10,TS-4,3);
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,.95)'; ctx.shadowBlur=4;
+  ctx.fillStyle='#fff'; ctx.font='bold 5.5px sans-serif';
   ctx.textBaseline='middle'; ctx.textAlign='center';
-  ctx.fillText(label,sx+TS/2,sy+7); ctx.textAlign='left';
-  // Chat bubble pulse
-  ctx.globalAlpha=.45+.5*p; ctx.font='9px serif'; ctx.textBaseline='top'; ctx.textAlign='right';
-  ctx.fillText('💬',sx+TS-1,sy+1); ctx.globalAlpha=1; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  ctx.fillText(label,sx+TS/2,ey+7.5);
+  ctx.restore();
+  // ── Bocadillo de diálogo pulsante ──
+  ctx.save();
+  ctx.shadowColor=color; ctx.shadowBlur=8*p;
+  ctx.globalAlpha=.5+.5*p;
+  ctx.font='9px serif'; ctx.textBaseline='top'; ctx.textAlign='right';
+  ctx.fillText('💬',sx+TS-1,ey+1);
+  ctx.restore();
+  ctx.restore();
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
 }
 function drawVerde(sx,sy,mR,mC){
   const b=.85+.15*Math.sin(tick*.04+mR+mC*.6);
@@ -835,7 +1035,7 @@ const CUADRO_PAL=[['#4a7c59','#2d5a3d'],['#1e3a8a','#2563eb'],['#7c2d12','#b4530
 function drawPasilloTile(t,sx,sy,mR,mC){
   switch(t){
     case '#': ctx.fillStyle='#4a4438'; ctx.fillRect(sx,sy,TS,TS); ctx.fillStyle='#5a5448'; ctx.fillRect(sx+1,sy+1,TS-3,TS*.45); ctx.fillStyle='#3a342a'; ctx.fillRect(sx+1,sy+TS*.5,TS-3,TS*.42); ctx.strokeStyle='rgba(0,0,0,.3)'; ctx.lineWidth=1; ctx.strokeRect(sx+1,sy+1,TS-2,TS-2); if(mR===0&&CUADRO_C.has(mC)){const ci=[...CUADRO_C].indexOf(mC),pal=CUADRO_PAL[ci]; ctx.fillStyle='#78350f'; ctx.fillRect(sx+4,sy+8,TS-8,TS-13); ctx.fillStyle=pal[0]; ctx.fillRect(sx+6,sy+10,TS-12,TS-17); ctx.fillStyle=pal[1]; ctx.beginPath(); ctx.arc(sx+TS/2,sy+17,4,0,Math.PI*2); ctx.fill();} ctx.strokeStyle='rgba(0,0,0,.2)'; ctx.lineWidth=.8; ctx.beginPath(); ctx.moveTo(sx,sy+TS*.6); ctx.lineTo(sx+TS,sy+TS*.6); ctx.stroke(); break;
-    case 'E': ctx.fillStyle='#d97706'; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle='#fcd34d'; ctx.lineWidth=2; ctx.strokeRect(sx+4,sy+4,TS-8,TS-8); ctx.fillStyle=`rgba(253,230,138,${.7+.3*Math.sin(tick*.1)})`; ctx.beginPath(); ctx.arc(sx+TS-11,sy+TS/2,3,0,Math.PI*2); ctx.fill(); break;
+    case 'E':{ const gep=.5+.5*Math.sin(tick*.1); ctx.fillStyle='#d97706'; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle='#fcd34d'; ctx.lineWidth=2; ctx.strokeRect(sx+4,sy+4,TS-8,TS-8); ctx.fillStyle=`rgba(253,230,138,${.7+.3*gep})`; ctx.beginPath(); ctx.arc(sx+TS-11,sy+TS/2,3,0,Math.PI*2); ctx.fill(); ctx.font='9px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('🚪',sx+TS*.38,sy+TS*.5); ctx.font='bold 3px sans-serif'; ctx.fillStyle='#fffbeb'; ctx.textBaseline='bottom'; ctx.fillText('PLAZA',sx+TS/2,sy+TS-2); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break;}
     case 'N': const lk=!hasItem('vela'); ctx.fillStyle=lk?'#110820':'#1a0c03'; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle=lk?'rgba(139,92,246,.6)':'rgba(245,158,11,.8)'; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6); ctx.globalAlpha=.5+.5*Math.sin(tick*.07); ctx.font='14px serif'; ctx.textBaseline='middle'; ctx.textAlign='center'; ctx.fillText(lk?'🔮':'🕯',sx+TS/2,sy+TS/2); ctx.globalAlpha=1; ctx.textAlign='left'; break;
     case 'V':{ // Puerta Villa Alemana
       const unlV=progress.alexBossDefeated, gv=.5+.5*Math.sin(tick*.09);
@@ -1185,7 +1385,7 @@ function drawCanchaTile(t,sx,sy,mR,mC){
   if(medTerrain(t,sx,sy,mC,mR)) return;
   switch(t){
     case '#': ctx.fillStyle='#172554'; ctx.fillRect(sx,sy,TS,TS); ctx.fillStyle='#1e3a8a'; ctx.fillRect(sx,sy+4,TS,8); ctx.fillStyle='#172554'; ctx.fillRect(sx,sy+18,TS,8); break;
-    case 'E': const gp=.5+.5*Math.sin(tick*.09); ctx.fillStyle=`rgba(34,197,94,${.25+.1*gp})`; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle=`rgba(74,222,128,${.6+.2*gp})`; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6); break;
+    case 'E':{ const gp=.5+.5*Math.sin(tick*.09); ctx.fillStyle=`rgba(34,197,94,${.25+.1*gp})`; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle=`rgba(74,222,128,${.6+.2*gp})`; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6); ctx.globalAlpha=.7+.3*gp; ctx.font='10px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('↩',sx+TS/2,sy+TS*.44); ctx.globalAlpha=1; ctx.font='bold 3px sans-serif'; ctx.fillStyle='#bbf7d0'; ctx.textBaseline='bottom'; ctx.fillText('PASILLO',sx+TS/2,sy+TS-2); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break;}
     case 'b': ctx.fillStyle=`hsl(${217+((mR+mC)%3)*3},85%,44%)`; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle='rgba(255,255,255,.04)'; ctx.lineWidth=.5; ctx.strokeRect(sx,sy,TS,TS); break;
     case 'K': drawVerde(sx,sy,mR,mC); ctx.fillStyle='#fde68a'; ctx.fillRect(sx+1,sy+1,TS-2,14); ctx.fillStyle='#f59e0b'; ctx.fillRect(sx+1,sy+13,TS-2,2); for(let i=0;i<4;i++){ctx.fillStyle=i%2?'#dc2626':'#fde68a'; ctx.fillRect(sx+3+i*9,sy+1,8,14);} ctx.fillStyle='#fffbeb'; ctx.fillRect(sx+3,sy+15,TS-6,TS-16); ctx.fillStyle='#fde68a'; ctx.fillRect(sx+3,sy+25,TS-6,4); break;
     case 'C': {
@@ -1358,7 +1558,7 @@ function drawCourtMarkings(){
 function drawSVTile(t,sx,sy,mR,mC){
   switch(t){
     case '#': ctx.fillStyle='#0f0a05'; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle='rgba(139,90,43,.2)'; ctx.lineWidth=1; ctx.strokeRect(sx+1,sy+1,TS-2,TS-2); break;
-    case 'E': const gp=.5+.5*Math.sin(tick*.1); ctx.fillStyle=`rgba(245,158,11,${.5+.2*gp})`; ctx.fillRect(sx,sy,TS,TS); ctx.globalAlpha=.7+.3*gp; ctx.font='14px serif'; ctx.textBaseline='middle'; ctx.textAlign='center'; ctx.fillText('↩',sx+TS/2,sy+TS/2); ctx.globalAlpha=1; ctx.textAlign='left'; break;
+    case 'E':{ const gp=.5+.5*Math.sin(tick*.1); ctx.fillStyle=`rgba(245,158,11,${.5+.2*gp})`; ctx.fillRect(sx,sy,TS,TS); ctx.globalAlpha=.7+.3*gp; ctx.font='10px serif'; ctx.textBaseline='middle'; ctx.textAlign='center'; ctx.fillText('↩',sx+TS/2,sy+TS*.44); ctx.globalAlpha=1; ctx.font='bold 3px sans-serif'; ctx.fillStyle='#fef3c7'; ctx.textBaseline='bottom'; ctx.fillText('PASILLO',sx+TS/2,sy+TS-2); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break;}
     case 's': ctx.fillStyle='#2c1a0a'; ctx.fillRect(sx,sy,TS,TS); ctx.fillStyle='#3d2510'; ctx.fillRect(sx+3,sy+3,TS-6,TS-6); ['#7c2d12','#1e3a5f','#14532d','#4a1942'].forEach((c,i)=>{ ctx.fillStyle=c; ctx.fillRect(sx+5+i*8,sy+10,6,18); }); break;
     case 'W': ctx.fillStyle='#1c1408'; ctx.fillRect(sx,sy,TS,TS); ctx.fillStyle='#3d2c18'; ctx.fillRect(sx+5,sy+18,TS-10,TS-18); const gw=Math.abs(Math.sin(tick*.06)); ctx.save(); ctx.shadowColor=`rgba(255,200,80,${gw*.8})`; ctx.shadowBlur=12; ctx.fillStyle='#8b5e14'; ctx.fillRect(sx+7,sy+5,TS-14,13); ctx.fillStyle='#c89030'; ctx.fillRect(sx+9,sy+6,TS-18,11); ctx.restore(); ctx.fillStyle=`rgba(255,230,130,${.5+.5*gw})`; ctx.font='7px serif'; ctx.textBaseline='middle'; ctx.textAlign='center'; ctx.fillText('✦',sx+TS/2,sy+11); ctx.textAlign='left'; break;
     case 'M':{ // Mina de extracción
@@ -1405,7 +1605,7 @@ function drawTV(sx,sy){ ctx.fillStyle='#1e293b'; ctx.fillRect(sx+2,sy+5,TS-4,TS-
 function drawBibliotecaTile(t,sx,sy,mR,mC){
   switch(t){
     case '#': ctx.fillStyle='#f0f4f8'; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle='rgba(100,116,139,.15)'; ctx.lineWidth=.5; ctx.strokeRect(sx,sy,TS,TS); if(mR===0&&mC===10) drawTV(sx,sy); break;
-    case 'E': const ge=.5+.5*Math.sin(tick*.09); ctx.fillStyle=`rgba(245,158,11,${.3+.1*ge})`; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle=`rgba(253,212,66,${.7+.2*ge})`; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6); ctx.globalAlpha=.7+.3*ge; ctx.font='13px serif'; ctx.textBaseline='middle'; ctx.textAlign='center'; ctx.fillText('↩',sx+TS/2,sy+TS/2); ctx.globalAlpha=1; ctx.textAlign='left'; break;
+    case 'E':{ const ge=.5+.5*Math.sin(tick*.09); ctx.fillStyle=`rgba(245,158,11,${.3+.1*ge})`; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle=`rgba(253,212,66,${.7+.2*ge})`; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6); ctx.globalAlpha=.7+.3*ge; ctx.font='10px serif'; ctx.textBaseline='middle'; ctx.textAlign='center'; ctx.fillText('↩',sx+TS/2,sy+TS*.44); ctx.globalAlpha=1; ctx.font='bold 3px sans-serif'; ctx.fillStyle='#fef3c7'; ctx.textBaseline='bottom'; ctx.fillText('PASILLO',sx+TS/2,sy+TS-2); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break;}
     case 's': ctx.fillStyle='#92400e'; ctx.fillRect(sx,sy,TS,TS); ctx.fillStyle='#78350f'; ctx.fillRect(sx+3,sy+3,TS-6,TS-6); const bc=['#dc2626','#2563eb','#16a34a','#9333ea','#ea580c','#0891b2']; for(let i=0;i<5;i++){ctx.fillStyle=bc[(i+mC)%bc.length]; ctx.fillRect(sx+3+i*7,sy+5,6,TS-12);} break;
     case 'w': ctx.fillStyle='#f8fafc'; ctx.fillRect(sx,sy,TS,TS); ctx.fillStyle='#e2e8f0'; ctx.fillRect(sx+2,sy+2,TS-4,TS-4); ctx.strokeStyle='rgba(148,163,184,.5)'; ctx.lineWidth=1; ctx.strokeRect(sx+2,sy+2,TS-4,TS-4); ctx.fillStyle='#94a3b8'; ctx.fillRect(sx+3,sy+TS-6,4,6); ctx.fillRect(sx+TS-7,sy+TS-6,4,6); break;
     case 'c': ctx.fillStyle='#1e293b'; ctx.fillRect(sx,sy,TS,TS); ctx.fillStyle='#0f172a'; ctx.fillRect(sx+3,sy+3,TS-6,TS-6); ctx.fillStyle=`rgba(59,130,246,${.6+.4*Math.sin(tick*.12+mC*.7)})`; ctx.fillRect(sx+6,sy+6,TS-12,TS-18); ctx.fillStyle='rgba(255,255,255,.15)'; ctx.fillRect(sx+7,sy+8,TS-16,3); ctx.fillStyle='#334155'; ctx.fillRect(sx+TS/2-3,sy+TS-10,6,4); ctx.fillRect(sx+TS/2-6,sy+TS-7,12,4); break;
@@ -1566,17 +1766,17 @@ function drawSalaContTile(t,sx,sy,mR,mC){
   const row=mR, col=mC;
   switch(t){
     case '#':{
-      ctx.fillStyle='#1e1040'; ctx.fillRect(sx,sy,TS,TS);
-      ctx.strokeStyle='rgba(192,132,252,.18)'; ctx.lineWidth=1; ctx.strokeRect(sx+1,sy+1,TS-2,TS-2);
+      ctx.fillStyle='#120a28'; ctx.fillRect(sx,sy,TS,TS);
+      ctx.strokeStyle='rgba(192,132,252,.25)'; ctx.lineWidth=1; ctx.strokeRect(sx+1,sy+1,TS-2,TS-2);
       const pm=SC_POSTERS[col]; if(row===0&&pm){ctx.fillStyle='rgba(236,72,153,.55)'; ctx.fillRect(sx+4,sy+5,TS-8,TS-11); ctx.fillStyle='white'; ctx.font='bold 5px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; pm.split('\n').forEach((l,i)=>ctx.fillText(l,sx+TS/2,sy+9+i*9)); ctx.textAlign='left';}
       const bm=SC_BOT[col]; if(row===9&&bm){ctx.fillStyle='rgba(167,139,250,.45)'; ctx.fillRect(sx+4,sy+5,TS-8,TS-11); ctx.fillStyle='white'; ctx.font='bold 5px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; bm.split('\n').forEach((l,i)=>ctx.fillText(l,sx+TS/2,sy+9+i*9)); ctx.textAlign='left';}
       break;}
-    case 'E':{const ge=.5+.5*Math.sin(tick*.09); ctx.fillStyle=`rgba(167,139,250,${.3+.1*ge})`; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle=`rgba(192,132,252,${.7+.2*ge})`; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6); ctx.globalAlpha=.7+.3*ge; ctx.font='13px serif'; ctx.textBaseline='middle'; ctx.textAlign='center'; ctx.fillText('↩',sx+TS/2,sy+TS/2); ctx.globalAlpha=1; ctx.textAlign='left'; break;}
+    case 'E':{const ge=.5+.5*Math.sin(tick*.09); ctx.fillStyle=`rgba(167,139,250,${.3+.1*ge})`; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle=`rgba(192,132,252,${.7+.2*ge})`; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6); ctx.globalAlpha=.7+.3*ge; ctx.font='10px serif'; ctx.textBaseline='middle'; ctx.textAlign='center'; ctx.fillText('↩',sx+TS/2,sy+TS*.45); ctx.globalAlpha=1; ctx.font='bold 3px sans-serif'; ctx.fillStyle='#e9d5ff'; ctx.textBaseline='bottom'; ctx.fillText('PASILLO',sx+TS/2,sy+TS-2); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break;}
     case 'a':{
-      ctx.fillStyle='#3b1754'; ctx.fillRect(sx,sy,TS,TS);
-      ctx.fillStyle='rgba(192,132,252,.11)';
+      ctx.fillStyle='#4a1a6e'; ctx.fillRect(sx,sy,TS,TS);
+      ctx.fillStyle='rgba(192,132,252,.18)';
       for(let i=0;i<3;i++) for(let j=0;j<3;j++) if((i+j)%2===0) ctx.fillRect(sx+2+i*13,sy+2+j*13,11,11);
-      ctx.strokeStyle='rgba(192,132,252,.13)'; ctx.lineWidth=.5; ctx.strokeRect(sx,sy,TS,TS); break;}
+      ctx.strokeStyle='rgba(192,132,252,.22)'; ctx.lineWidth=.5; ctx.strokeRect(sx,sy,TS,TS); break;}
     case 'h':{
       ctx.fillStyle='#3b1754'; ctx.fillRect(sx,sy,TS,TS);
       ctx.fillStyle='rgba(192,132,252,.1)';
@@ -1739,7 +1939,7 @@ function drawPlazaTile(t,sx,sy,mR,mC){
       ctx.strokeStyle='#4caf50'; ctx.lineWidth=.8; ctx.strokeRect(sx,sy,TS,TS);
       if(mR===0){ctx.font='10px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(['🌸','🌺','🌼'][mC%3],sx+TS/2,sy+TS/2); ctx.textAlign='left';}
       break;}
-    case 'E':{const ge=.5+.5*Math.sin(tick*.09); ctx.fillStyle=`rgba(100,221,23,${.3+.15*ge})`; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle=`rgba(174,234,0,${.7+.2*ge})`; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6); ctx.globalAlpha=.7+.3*ge; ctx.font='14px serif'; ctx.textBaseline='middle'; ctx.textAlign='center'; ctx.fillText('🚪',sx+TS/2,sy+TS/2); ctx.globalAlpha=1; ctx.textAlign='left'; break;}
+    case 'E':{const ge=.5+.5*Math.sin(tick*.09); ctx.fillStyle=`rgba(100,221,23,${.3+.15*ge})`; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle=`rgba(174,234,0,${.7+.2*ge})`; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6); ctx.globalAlpha=.7+.3*ge; ctx.font='10px serif'; ctx.textBaseline='middle'; ctx.textAlign='center'; ctx.fillText('🚪',sx+TS/2,sy+TS*.44); ctx.globalAlpha=1; ctx.font='bold 3px sans-serif'; ctx.fillStyle='#d9f99d'; ctx.textBaseline='bottom'; ctx.fillText('PASILLO',sx+TS/2,sy+TS-2); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break;}
     case '.':{ctx.fillStyle=(mR+mC)%2===0?'#c8e6c9':'#a5d6a7'; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle='rgba(0,100,0,.07)'; ctx.lineWidth=.5; ctx.strokeRect(sx,sy,TS,TS); break;}
     case 'T':{
       ctx.fillStyle='#388e3c'; ctx.fillRect(sx,sy,TS,TS);
@@ -2087,11 +2287,18 @@ function drawVillaTile(t,sx,sy,mR,mC){
       ctx.fillStyle='rgba(255,255,255,.2)'; ctx.fillRect(sx+6,sy+6,5,5);
       ctx.strokeStyle='#6b7280'; ctx.lineWidth=1.5; ctx.strokeRect(sx+4,sy+4,TS-8,TS-8);
       break;}
-    case 'W':{ // Letrero VILLA ALEMANA
-      ctx.fillStyle='#15803d'; ctx.fillRect(sx,sy,TS,TS);
-      ctx.fillStyle='#ea580c'; ctx.fillRect(sx+2,sy+TS/2-8,TS-4,16);
+    case 'W':{ // Letrero estación — nombre varía según mapa
+      const _stCfg={
+        estacion_villa: {bg:'#15803d',band:'#ea580c',lines:['VILLA','ALEMANA']},
+        estacion_quilpue:{bg:'#1d4ed8',band:'#f59e0b',lines:['QUILPUÉ','']},
+        estacion_vina:  {bg:'#0e7490',band:'#22d3ee',lines:['VIÑA DEL','MAR']},
+        estacion_valpo: {bg:'#7c3aed',band:'#f97316',lines:['VALPA-','RAÍSO']},
+      }[currentMap]||{bg:'#15803d',band:'#ea580c',lines:['ESTACIÓN','']};
+      ctx.fillStyle=_stCfg.bg; ctx.fillRect(sx,sy,TS,TS);
+      ctx.fillStyle=_stCfg.band; ctx.fillRect(sx+2,sy+TS/2-8,TS-4,16);
       ctx.fillStyle='white'; ctx.font='bold 4.5px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText('VILLA',sx+TS/2,sy+TS/2-3); ctx.fillText('ALEMANA',sx+TS/2,sy+TS/2+5);
+      ctx.fillText(_stCfg.lines[0],sx+TS/2,sy+TS/2-3);
+      if(_stCfg.lines[1]) ctx.fillText(_stCfg.lines[1],sx+TS/2,sy+TS/2+5);
       ctx.textAlign='left'; break;}
     case 'p':{ // Andén / plataforma
       ctx.fillStyle='#e2e8f0'; ctx.fillRect(sx,sy,TS,TS);
@@ -2100,11 +2307,13 @@ function drawVillaTile(t,sx,sy,mR,mC){
       ctx.fillStyle='#fef08a'; ctx.fillRect(sx,sy+TS-5,TS,5);
       ctx.strokeStyle='rgba(0,0,0,.15)'; ctx.lineWidth=.5; ctx.strokeRect(sx,sy+TS-5,TS,5);
       break;}
-    case 'E':{ // Salida
+    case 'E':{ // Salida — destino depende del mapa
       const ge=.5+.5*Math.sin(tick*.09); ctx.fillStyle=`rgba(21,128,61,${.3+.1*ge})`; ctx.fillRect(sx,sy,TS,TS);
       ctx.strokeStyle=`rgba(74,222,128,${.7+.2*ge})`; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6);
-      ctx.globalAlpha=.7+.3*ge; ctx.font='13px serif'; ctx.textBaseline='middle'; ctx.textAlign='center';
-      ctx.fillText('↩',sx+TS/2,sy+TS/2); ctx.globalAlpha=1; ctx.textAlign='left'; break;}
+      ctx.globalAlpha=.7+.3*ge; ctx.font='10px serif'; ctx.textBaseline='middle'; ctx.textAlign='center';
+      ctx.fillText('↩',sx+TS/2,sy+TS*.44); ctx.globalAlpha=1; ctx.font='bold 3px sans-serif'; ctx.fillStyle='#bbf7d0';
+      const _eLabel={estacion_villa:'SECTOR N.',estacion_quilpue:'VILLA A.',estacion_vina:'VILLA A.',estacion_valpo:'VILLA A.'}[currentMap]||'SALIDA';
+      ctx.textBaseline='bottom'; ctx.fillText(_eLabel,sx+TS/2,sy+TS-2); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break;}
     case 'r':{ // Rieles
       ctx.fillStyle='#374151'; ctx.fillRect(sx,sy,TS,TS);
       // Durmientes de madera
@@ -2162,7 +2371,7 @@ function drawVillaTile(t,sx,sy,mR,mC){
   }
 }
 function drawVillaOverlays(){
-  // Efecto de neblina costera (tenue)
+  // Efecto de neblina (tenue)
   if(tick%3===0){
     const grd=ctx.createLinearGradient(0,0,canvas.width,0);
     grd.addColorStop(0,'rgba(186,230,253,.04)');
@@ -2170,6 +2379,90 @@ function drawVillaOverlays(){
     grd.addColorStop(1,'rgba(186,230,253,.04)');
     ctx.fillStyle=grd; ctx.fillRect(0,0,canvas.width,canvas.height);
   }
+  // NPCs / hitos por estación
+  const _stNPC={
+    estacion_villa: {col:14,row:5,emoji:'🚉',label:'INSPECTOR',color:'#4ade80'},
+    estacion_quilpue:{col:14,row:5,emoji:'🏫',label:'VECINO',   color:'#fbbf24'},
+    estacion_vina:  {col:14,row:5,emoji:'🌊',label:'TURISTA',  color:'#38bdf8'},
+    estacion_valpo: {col:14,row:5,emoji:'🎨',label:'ARTISTA',  color:'#c084fc'},
+  }[currentMap];
+  if(_stNPC){
+    const sx=(_stNPC.col-camera.x)*TS, sy=(_stNPC.row-camera.y)*TS;
+    if(sx>=0&&sy>=0&&sx<canvas.width&&sy<canvas.height){
+      drawNPC(sx,sy,_stNPC.emoji,_stNPC.color,_stNPC.label);
+    }
+  }
+  // Hint de abordaje al bajar al andén
+  if(STATION_MAPS_SET.has(currentMap)&&player.y===6){
+    ctx.fillStyle='rgba(0,0,0,.6)'; ctx.fillRect(2,canvas.height-22,220,18);
+    ctx.fillStyle='#6ee7b7'; ctx.font='bold 6px monospace';
+    ctx.fillText('🚇 [A/OK] Abordar el tren MERVAL',6,canvas.height-10);
+  }
+}
+
+// ═══ GFX — capas globales de post-proceso ═══
+
+// Capa 1: ambient occlusion + light shafts — se llama justo DESPUÉS del loop de tiles
+function drawGFX(){
+  const map=MAPS[currentMap];
+  if(!map) return;
+  // ── Ambient occlusion: sombra en la base de cada muro ──
+  for(let r=0;r<10;r++) for(let c=0;c<10;c++){
+    const mR=r+camera.y, mC=c+camera.x, t=map[mR]?.[mC];
+    if(t==='#'||t==='1'||t==='2'||t==='3'){
+      const below=map[mR+1]?.[mC];
+      if(below&&below!=='#'&&below!=='1'&&below!=='2'){
+        const aoG=ctx.createLinearGradient(c*TS,(r+1)*TS,c*TS,(r+1)*TS+10);
+        aoG.addColorStop(0,'rgba(0,0,0,.42)'); aoG.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle=aoG; ctx.fillRect(c*TS,(r+1)*TS,TS,10);
+      }
+      const right=map[mR]?.[mC+1];
+      if(right&&right!=='#'){
+        const aoG=ctx.createLinearGradient((c+1)*TS,r*TS,(c+1)*TS+8,r*TS);
+        aoG.addColorStop(0,'rgba(0,0,0,.28)'); aoG.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle=aoG; ctx.fillRect((c+1)*TS,r*TS,8,TS);
+      }
+    }
+  }
+  // ── Light shafts en puertas (halo cálido) ──
+  for(let r=0;r<10;r++) for(let c=0;c<10;c++){
+    const mR=r+camera.y, mC=c+camera.x, t=map[mR]?.[mC];
+    let lCol=null;
+    if(t==='E') lCol='rgba(253,190,40,';
+    else if(t==='N') lCol='rgba(139,92,246,';
+    else if(t==='V') lCol='rgba(74,222,128,';
+    if(lCol){
+      const ex=c*TS+TS/2, ey=r*TS+TS/2;
+      const glow=ctx.createRadialGradient(ex,ey,3,ex,ey,TS*.95);
+      const pulse=.06+.03*Math.sin(tick*.08+c+r);
+      glow.addColorStop(0,lCol+(pulse+.04)+')');
+      glow.addColorStop(.55,lCol+pulse+')');
+      glow.addColorStop(1,lCol+'0)');
+      ctx.fillStyle=glow; ctx.fillRect(c*TS-2,r*TS-2,TS+4,TS+4);
+    }
+  }
+}
+
+// Capa 2: vignette + scanlines + depth haze — se llama al FINAL, encima de todo
+function drawPostFX(){
+  const W=canvas.width, H=canvas.height;
+  // Vignette
+  const vig=ctx.createRadialGradient(W*.5,H*.52,H*.18,W*.5,H*.52,H*.82);
+  vig.addColorStop(0,'rgba(0,0,0,0)');
+  vig.addColorStop(.65,'rgba(0,0,0,.04)');
+  vig.addColorStop(1,'rgba(0,0,0,.42)');
+  ctx.fillStyle=vig; ctx.fillRect(0,0,W,H);
+  // Profundidad superior (perspectiva top-down)
+  const topFog=ctx.createLinearGradient(0,0,0,TS*1.2);
+  topFog.addColorStop(0,'rgba(0,0,0,.2)'); topFog.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=topFog; ctx.fillRect(0,0,W,TS*1.2);
+  // Scanlines muy sutiles (retro CRT feel)
+  ctx.fillStyle='rgba(0,0,0,.035)';
+  for(let y=0;y<H;y+=2) ctx.fillRect(0,y,W,1);
+  // Borde interior biselado
+  ctx.strokeStyle='rgba(255,255,255,.04)'; ctx.lineWidth=1.5;
+  ctx.strokeRect(1,1,W-2,H-2);
+  ctx.lineWidth=1;
 }
 
 // ═══ SALÓN DE TROFEOS — DIBUJO (mármol blanco + suelo dorado) ═══
@@ -2254,9 +2547,9 @@ function drawSalonTile(t,sx,sy,mR,mC){
       ctx.fillStyle=eg; ctx.fillRect(sx,sy,TS,TS);
       ctx.strokeStyle=`rgba(255,240,100,${.8+.2*ge})`; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6);
       ctx.globalAlpha=.8+.2*ge; ctx.font='13px serif'; ctx.textBaseline='middle'; ctx.textAlign='center';
-      ctx.fillText('↩',sx+TS/2,sy+TS/2); ctx.globalAlpha=1; ctx.textAlign='left';
-      ctx.fillStyle='rgba(80,40,0,.85)'; ctx.font='bold 4.5px sans-serif'; ctx.textBaseline='top'; ctx.textAlign='center';
-      ctx.fillText('BIBLIO',sx+TS/2,sy+3); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break;}
+      ctx.fillText('↩',sx+TS/2,sy+TS*.44); ctx.globalAlpha=1; ctx.textAlign='left';
+      ctx.fillStyle='rgba(80,40,0,.85)'; ctx.font='bold 3px sans-serif'; ctx.textBaseline='bottom'; ctx.textAlign='center';
+      ctx.fillText('PLAZA',sx+TS/2,sy+TS-2); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break;}
     case 'm':{ // Memorice panel
       const mp=.5+.5*Math.sin(tick*.1+mC*.3);
       const modeColors={cancha:'#7c3aed',biblioteca:'#1d4ed8',sala_cont:'#0f766e',secretaria:'#b45309',biologia:'#15803d',salon_trofeos:'#b91c1c'};
@@ -2453,8 +2746,8 @@ function drawSecretariaTile(t,sx,sy,mR,mC){
     case 'E':{ const ge=.5+.5*Math.sin(tick*.09);
       ctx.fillStyle=`rgba(236,72,153,${.2+.1*ge})`; ctx.fillRect(sx,sy,TS,TS);
       ctx.strokeStyle=`rgba(249,168,212,${.7+.2*ge})`; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6);
-      ctx.globalAlpha=.7+.3*ge; ctx.font='13px serif'; ctx.textBaseline='middle'; ctx.textAlign='center';
-      ctx.fillText('↩',sx+TS/2,sy+TS/2); ctx.globalAlpha=1; ctx.textAlign='left'; break;}
+      ctx.globalAlpha=.7+.3*ge; ctx.font='10px serif'; ctx.textBaseline='middle'; ctx.textAlign='center';
+      ctx.fillText('↩',sx+TS/2,sy+TS*.44); ctx.globalAlpha=1; ctx.font='bold 3px sans-serif'; ctx.fillStyle='#fce7f3'; ctx.textBaseline='bottom'; ctx.fillText('PASILLO',sx+TS/2,sy+TS-2); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break;}
     case 'm':{ // Memorice panel
       const mp=.5+.5*Math.sin(tick*.1+mC*.3);
       const modeColors={cancha:'#7c3aed',biblioteca:'#1d4ed8',sala_cont:'#0f766e',secretaria:'#b45309',biologia:'#15803d',salon_trofeos:'#b91c1c'};
@@ -2714,8 +3007,8 @@ function drawCentroTile(t,sx,sy,mR,mC){
     case 'E':{ const ge=.5+.5*Math.sin(tick*.09);
       ctx.fillStyle=`rgba(59,130,246,${.25+.1*ge})`; ctx.fillRect(sx,sy,TS,TS);
       ctx.strokeStyle=`rgba(147,197,253,${.7+.2*ge})`; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6);
-      ctx.globalAlpha=.7+.3*ge; ctx.font='13px serif'; ctx.textBaseline='middle'; ctx.textAlign='center';
-      ctx.fillText('↩',sx+TS/2,sy+TS/2); ctx.globalAlpha=1; ctx.textAlign='left'; break;}
+      ctx.globalAlpha=.7+.3*ge; ctx.font='10px serif'; ctx.textBaseline='middle'; ctx.textAlign='center';
+      ctx.fillText('↩',sx+TS/2,sy+TS*.44); ctx.globalAlpha=1; ctx.font='bold 3px sans-serif'; ctx.fillStyle='#dbeafe'; ctx.textBaseline='bottom'; ctx.fillText('PLAZA',sx+TS/2,sy+TS-2); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break;}
     case '@':{ // Farmacia
       const pp=.5+.5*Math.sin(tick*.1);
       ctx.fillStyle='#0f2027'; ctx.fillRect(sx,sy,TS,TS);
@@ -2900,8 +3193,8 @@ function drawBiologiaTile(t,sx,sy,mR,mC){
     case 'E':{ const ge=.5+.5*Math.sin(tick*.09);
       ctx.fillStyle=`rgba(13,148,136,${.2+.1*ge})`; ctx.fillRect(sx,sy,TS,TS);
       ctx.strokeStyle=`rgba(94,234,212,${.7+.2*ge})`; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6);
-      ctx.globalAlpha=.7+.3*ge; ctx.font='13px serif'; ctx.textBaseline='middle'; ctx.textAlign='center';
-      ctx.fillText('↩',sx+TS/2,sy+TS/2); ctx.globalAlpha=1; ctx.textAlign='left'; break;}
+      ctx.globalAlpha=.7+.3*ge; ctx.font='10px serif'; ctx.textBaseline='middle'; ctx.textAlign='center';
+      ctx.fillText('↩',sx+TS/2,sy+TS*.44); ctx.globalAlpha=1; ctx.font='bold 3px sans-serif'; ctx.fillStyle='#ccfbf1'; ctx.textBaseline='bottom'; ctx.fillText('PLAZA',sx+TS/2,sy+TS-2); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break;}
     case 'm':{ // Memorice panel
       const mp=.5+.5*Math.sin(tick*.1+mC*.3);
       const modeColors={cancha:'#7c3aed',biblioteca:'#1d4ed8',sala_cont:'#0f766e',secretaria:'#b45309',biologia:'#15803d',salon_trofeos:'#b91c1c'};
@@ -3194,7 +3487,7 @@ function drawReservaTile(t,sx,sy,mR,mC){
       ctx.shadowColor='rgba(74,222,128,.2)'; ctx.shadowBlur=5;
       ctx.strokeStyle='rgba(74,222,128,.3)'; ctx.lineWidth=1; ctx.strokeRect(sx+2,sy+2,TS-4,TS-4);
       ctx.shadowBlur=0; ctx.shadowColor='transparent'; break;}
-        case 'E':{ const ge=.5+.5*Math.sin(tick*.09); ctx.fillStyle=`rgba(20,83,45,${.3+.1*ge})`; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle=`rgba(134,239,172,${.7+.2*ge})`; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6); ctx.globalAlpha=.7+.3*ge; ctx.font='13px serif'; ctx.textBaseline='middle'; ctx.textAlign='center'; ctx.fillText('↩',sx+TS/2,sy+TS/2); ctx.globalAlpha=1; ctx.textAlign='left'; break;}
+        case 'E':{ const ge=.5+.5*Math.sin(tick*.09); ctx.fillStyle=`rgba(20,83,45,${.3+.1*ge})`; ctx.fillRect(sx,sy,TS,TS); ctx.strokeStyle=`rgba(134,239,172,${.7+.2*ge})`; ctx.lineWidth=2; ctx.strokeRect(sx+3,sy+3,TS-6,TS-6); ctx.globalAlpha=.7+.3*ge; ctx.font='10px serif'; ctx.textBaseline='middle'; ctx.textAlign='center'; ctx.fillText('↩',sx+TS/2,sy+TS*.44); ctx.globalAlpha=1; ctx.font='bold 3px sans-serif'; ctx.fillStyle='#d1fae5'; ctx.textBaseline='bottom'; ctx.fillText('PASILLO',sx+TS/2,sy+TS-2); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break;}
     case 'm':{ // Memorice panel
       const mp=.5+.5*Math.sin(tick*.1+mC*.3);
       const modeColors={cancha:'#7c3aed',biblioteca:'#1d4ed8',sala_cont:'#0f766e',secretaria:'#b45309',biologia:'#15803d',salon_trofeos:'#b91c1c'};
@@ -3318,7 +3611,7 @@ function drawReservaOverlays(){
 }
 // ─ Draw Map ─
 const ARROW_OFF={up:[TS/2-4,-2,'▲'],down:[TS/2-4,TS+9,'▼'],left:[-10,TS/2+4,'◀'],right:[TS+2,TS/2+4,'▶']};
-const ML={pasillo:'PASILLO',cancha:'🏀 CANCHA',sala_vela:'🕯 SALA SECRETA',biblioteca:'📚 BIBLIOTECA',sala_cont:'💜 SALA DE CONTENCIÓN',plaza:'🌳 PLAZA BELÉN',estacion_villa:'🚂 EST. VILLA ALEMANA',salon_trofeos:'🏆 SALÓN DE TROFEOS',secretaria:'🏢 SECRETARÍA',centro_villa:'🏘️ CENTRO VILLA ALEMANA',biologia:'🔬 BIOLOGÍA DE ECOSISTEMAS',reserva:'🌿 RESERVA ECOLÓGICA DE VILLA ALEMANA'};
+const ML={pasillo:'PASILLO',cancha:'🏀 CANCHA',sala_vela:'🕯 SALA SECRETA',biblioteca:'📚 BIBLIOTECA',sala_cont:'💜 SALA DE CONTENCIÓN',plaza:'🌳 PLAZA BELÉN',estacion_villa:'🚂 EST. VILLA ALEMANA',salon_trofeos:'🏆 SALÓN DE TROFEOS',secretaria:'🏢 SECRETARÍA',centro_villa:'🏘️ CENTRO VILLA ALEMANA',biologia:'🔬 BIOLOGÍA DE ECOSISTEMAS',reserva:'🌿 RESERVA ECOLÓGICA DE VILLA ALEMANA',estacion_quilpue:'🚂 EST. QUILPUÉ',estacion_vina:'🚂 EST. VIÑA DEL MAR',estacion_valpo:'🚂 EST. VALPARAÍSO'};
 function drawBuinZooTile(t,sx,sy,mR,mC){
   const TSk=TS;
   // helper: animal en su recinto (fondo arena + reja + emoji + cartel)
@@ -3648,6 +3941,62 @@ function drawEstacionTile(t,sx,sy,mR,mC){
       ctx.textAlign='left'; ctx.textBaseline='alphabetic'; break;}
     default: drawStoneMed(sx,sy,mC,mR);
   }
+}
+
+// ─── Sector Norte: funciones auxiliares de casas medievales ───
+function drawHouseWall(sx,sy,mC,mR){
+  ctx.fillStyle='#78716c'; ctx.fillRect(sx,sy,TS,TS);
+  const bW=Math.ceil(TS/2.5),bH=Math.ceil(TS/3);
+  ctx.strokeStyle='#44403c'; ctx.lineWidth=.8;
+  for(let r=0;r<3;r++) for(let c=-1;c<=2;c++){
+    const ox=(r%2)*(bW/2);
+    ctx.strokeRect(sx+c*bW+ox,sy+r*bH,bW-1,bH-1);
+  }
+}
+function drawHouseWindow(sx,sy,mC,mR){
+  drawHouseWall(sx,sy,mC,mR);
+  ctx.fillStyle='#0c1931'; ctx.fillRect(sx+TS*.2,sy+TS*.2,TS*.6,TS*.6);
+  const wp=.4+.3*Math.sin(tick*.04+mC*.3);
+  ctx.fillStyle=`rgba(186,230,253,${.4+.2*wp})`; ctx.fillRect(sx+TS*.23,sy+TS*.23,TS*.54,TS*.54);
+  ctx.fillStyle='#78716c';
+  ctx.fillRect(sx+TS*.2,sy+TS*.47,TS*.6,TS*.06);
+  ctx.fillRect(sx+TS*.47,sy+TS*.2,TS*.06,TS*.6);
+}
+function drawHouseRoof(sx,sy,mC,mR){
+  ctx.fillStyle='#7f1d1d'; ctx.fillRect(sx,sy,TS,TS);
+  for(let i=0;i<3;i++){
+    ctx.fillStyle=i%2===0?'#991b1b':'#b91c1c';
+    ctx.fillRect(sx,sy+i*(TS/3),TS,TS/3-1);
+  }
+  ctx.fillStyle='rgba(0,0,0,.2)'; ctx.fillRect(sx,sy+TS-4,TS,4);
+  ctx.fillStyle='rgba(255,255,255,.07)'; ctx.fillRect(sx,sy,TS,3);
+}
+function drawRoofPeak(sx,sy){
+  ctx.fillStyle='#7f1d1d'; ctx.fillRect(sx,sy,TS,TS);
+  ctx.fillStyle='#b91c1c';
+  ctx.beginPath(); ctx.moveTo(sx+TS*.5,sy+2); ctx.lineTo(sx+2,sy+TS-2); ctx.lineTo(sx+TS-2,sy+TS-2); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,.25)'; ctx.fillRect(sx,sy+TS-4,TS,4);
+}
+function drawWell(sx,sy){
+  ctx.fillStyle='#44403c'; ctx.fillRect(sx,sy,TS,TS);
+  ctx.fillStyle='#78716c'; ctx.fillRect(sx+TS*.25,sy+TS*.38,TS*.5,TS*.32);
+  ctx.fillStyle='#0c4a6e';
+  ctx.beginPath(); ctx.ellipse(sx+TS*.5,sy+TS*.52,TS*.2,TS*.1,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#92400e';
+  ctx.fillRect(sx+TS*.18,sy+TS*.12,TS*.07,TS*.28);
+  ctx.fillRect(sx+TS*.75,sy+TS*.12,TS*.07,TS*.28);
+  ctx.fillRect(sx+TS*.12,sy+TS*.08,TS*.76,TS*.07);
+  ctx.font='8px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('💧',sx+TS*.5,sy+TS*.55); ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+}
+function drawHouseDoor(sx,sy){
+  drawHouseWall(sx,sy,0,0);
+  ctx.fillStyle='#3a1a00'; ctx.fillRect(sx+TS*.2,sy+TS*.15,TS*.6,TS*.85);
+  ctx.fillStyle='#5c2a00'; ctx.fillRect(sx+TS*.23,sy+TS*.18,TS*.54,TS*.79);
+  ctx.fillStyle='#3a1a00';
+  ctx.beginPath(); ctx.arc(sx+TS*.5,sy+TS*.36,TS*.27,Math.PI,0); ctx.fill();
+  ctx.fillStyle='#fbbf24';
+  ctx.beginPath(); ctx.arc(sx+TS*.62,sy+TS*.58,TS*.04,0,Math.PI*2); ctx.fill();
 }
 
 function drawSectorNorteTile(t,sx,sy,mR,mC){
@@ -4021,9 +4370,9 @@ function drawMap(){
     else if(currentMap==='cancha') drawCanchaTile(t,sx,sy,mR,mC);
     else if(currentMap==='sala_vela') drawSVTile(t,sx,sy,mR,mC);
     else if(currentMap==='biblioteca') drawBibliotecaTile(t,sx,sy,mR,mC);
-    else if(currentMap==='sala_cont') drawSalaContTile(t,sx,sy,mR,mC);
+    else if(currentMap==='sala_cont'){try{drawSalaContTile(t,sx,sy,mR,mC);}catch(e){ctx.fillStyle='#4a1a6e';ctx.fillRect(sx,sy,TS,TS);}}
     else if(currentMap==='plaza'){try{drawPlazaTile(t,sx,sy,mR,mC);}catch(e){ctx.fillStyle='#388e3c';ctx.fillRect(c*TS,r*TS,TS,TS);}}
-    else if(currentMap==='estacion_villa') drawVillaTile(t,sx,sy,mR,mC);
+    else if(['estacion_villa','estacion_quilpue','estacion_vina','estacion_valpo'].includes(currentMap)) drawVillaTile(t,sx,sy,mR,mC);
     else if(currentMap==='salon_trofeos') drawSalonTile(t,sx,sy,mR,mC);
     else if(currentMap==='secretaria') drawSecretariaTile(t,sx,sy,mR,mC);
     else if(currentMap==='centro_villa') drawCentroTile(t,sx,sy,mR,mC);
@@ -4031,16 +4380,17 @@ function drawMap(){
     else if(currentMap==='biologia') drawBiologiaTile(t,sx,sy,mR,mC);
     else if(currentMap==='reserva') drawReservaTile(t,sx,sy,mR,mC);
     else if(currentMap==='buinzoo') drawBuinZooTile(t,sx,sy,mR,mC);
-    else if(currentMap==='sector_norte') drawSectorNorteTile(t,sx,sy,mR,mC);
+    else if(currentMap==='sector_norte'){try{drawSectorNorteTile(t,sx,sy,mR,mC);}catch(e){ctx.fillStyle='#3d2e1a';ctx.fillRect(sx,sy,TS,TS);}}
     else if(currentMap==='estacion_villa') drawEstacionTile(t,sx,sy,mR,mC);
     else if(currentMap==='casa_1'||currentMap==='casa_2'||currentMap==='casa_3') drawCasaIntTile(t,sx,sy,mR,mC);
     else if(currentMap==='laboratorio'||currentMap==='taller') drawLabTile(t,sx,sy,mR,mC);
     else drawPasilloTile(t,sx,sy,mR,mC);
   }
+  drawGFX();
   if(currentMap==='cancha'){ drawCourtMarkings(); drawCanchaOverlays(); }
   if(currentMap==='biblioteca') drawBibliotecaOverlays();
   if(currentMap==='sala_cont') drawSalaContOverlays();
-  if(currentMap==='estacion_villa') drawVillaOverlays();
+  if(['estacion_villa','estacion_quilpue','estacion_vina','estacion_valpo'].includes(currentMap)) drawVillaOverlays();
   if(currentMap==='salon_trofeos') drawSalonOverlays();
   if(currentMap==='secretaria') drawSecretariaOverlays();
   if(currentMap==='centro_villa') drawCentroOverlays();
@@ -4072,10 +4422,9 @@ function drawMap(){
     BCPOS.forEach((cp,i)=>{ if(bCC[i]||cp.x<camera.x||cp.x>=camera.x+10||cp.y<camera.y||cp.y>=camera.y+10) return; const sx=(cp.x-camera.x)*TS+TS/2,sy=(cp.y-camera.y)*TS+TS/2,p=.55+.45*Math.sin(tick*.1+i*.7); ctx.save(); ctx.shadowColor='#60a5fa'; ctx.shadowBlur=10*p; ctx.fillStyle=`rgba(96,165,250,${.7+.3*p})`; ctx.beginPath(); ctx.arc(sx,sy,3.5+.8*p,0,Math.PI*2); ctx.fill(); ctx.restore(); });
   }
   const psx=(player.x-camera.x)*TS,psy=(player.y-camera.y)*TS;
-  ctx.save(); ctx.globalAlpha=.28; ctx.fillStyle='#000'; ctx.beginPath(); ctx.ellipse(psx+TS/2,psy+TS-4,11,4,0,0,Math.PI*2); ctx.fill(); ctx.restore();
   // Profe Felipe — héroe unificado (mismo sprite que en batalla)
   { const bob=Math.abs(Math.sin(tick*.12))*2.5;
-    drawHeroSprite(ctx, psx, psy, TS, bob); }
+    drawHeroSprite(ctx, psx, psy, TS, bob, player.facing); }
   if(currentMap==='sala_vela'){ctx.font='11px serif'; ctx.fillText('🕯',psx+TS-8,psy+8);}
   ctx.fillStyle='rgba(253,212,66,.82)'; ctx.font='bold 9px sans-serif';
   const [ao1,ao2,ar]=ARROW_OFF[player.facing]; ctx.fillText(ar,psx+ao1,psy+ao2);
@@ -4089,6 +4438,7 @@ function drawMap(){
   if(EL.btnBack) EL.btnBack.style.display=currentMap==='pasillo'?'none':'block';
   floats=floats.filter(f=>f.life>0);
   floats.forEach(f=>{ ctx.save(); ctx.globalAlpha=f.a; ctx.fillStyle=f.c; ctx.font='bold 11px Arial'; ctx.textBaseline='middle'; ctx.fillText(f.t,f.x,f.y); ctx.restore(); f.y+=f.vy; f.a-=1/75; f.life--; });
+  drawPostFX();
 }
 
 // ═══ UI ═══
@@ -4360,7 +4710,8 @@ function battleWin(){ Music.battleOut();
     }
   }
   syncBP(); syncUI(); EL.bMsg.textContent=msg; hideBact();
-  EL.bAct.innerHTML=`<button class="bb bi" style="grid-column:1/3" onclick="closeBattle()">¡Continuar!</button>`; EL.bAct.classList.add('on'); battle=null;
+  EL.bAct.innerHTML=`<button class="bb bi" style="grid-column:1/3" onclick="closeBattle()">¡Continuar!</button>`; EL.bAct.classList.add('on');
+  battle=null; saveGameSilent();
 }
 function battleLose(){
   if(twT){ clearTimeout(twT); twT=null; }   // cancel any pending typeMsg
@@ -5143,9 +5494,12 @@ const NPC_ACT={
     progress.joseProfIdx=(jj+1)%msgs.length;
     showDialog(msgs[jj]);
   },
+  '=':()=>{
+    if(STATION_MAPS_SET&&STATION_MAPS_SET.has(currentMap)){openMetro();return;}
+  },
   'L':()=>{
     // Profesora Camila — 8vo Básico, Región de La Araucanía
-    if(currentMap==='estacion_villa'){drawVillaTile&&showDialog('🚂 Locomotora histórica'); return;}
+    if(STATION_MAPS_SET&&STATION_MAPS_SET.has(currentMap)){openMetro();return;}
     if(currentMap!=='sala_8vo'){showDialog('👩‍🏫 Profesora Camila');return;}
     const msgs=[
       '👩‍🏫 Profesora Camila\n(8° Básico — Región de La Araucanía)\n\n"¡Bienvenidos!\n\nLa Araucanía es la región\ncon mayor presencia del\npueblo mapuche de Chile.\n\nEl rehue, el kultrun y el\nchemamull son símbolos\nde la cultura mapuche."',
@@ -5222,6 +5576,16 @@ function checkMapExit(){
   // ── VA Sector Norte ──
   if(currentMap==='estacion_villa'&&MAPS.estacion_villa[player.y]?.[player.x]==='E'){
     transitionTo('sector_norte',24,14); return true;
+  }
+  // ── Estaciones metro ──
+  if(currentMap==='estacion_quilpue'&&MAPS.estacion_quilpue[player.y]?.[player.x]==='E'){
+    transitionTo('estacion_villa',5,5); return true;
+  }
+  if(currentMap==='estacion_vina'&&MAPS.estacion_vina[player.y]?.[player.x]==='E'){
+    transitionTo('estacion_villa',5,5); return true;
+  }
+  if(currentMap==='estacion_valpo'&&MAPS.estacion_valpo[player.y]?.[player.x]==='E'){
+    transitionTo('estacion_villa',5,5); return true;
   }
   if(currentMap==='plaza'&&MAPS.plaza[player.y]?.[player.x]==='n'){
     transitionTo('sector_norte',1,2);
@@ -5687,6 +6051,7 @@ function showLvlUp(newLvl){
     inventory.push({id:'mp_lvl'+newLvl,name:'Poción de Maná',type:'consumable',effect:'mp',amount:30,desc:'+30 MP',emoji:'💙'});
     syncUI();
   }
+  saveGameSilent();
   _('lu-lv').textContent='NIVEL '+newLvl;
   _('lu-gains').innerHTML='+12 HP máx &nbsp;|&nbsp; +3 ATK &nbsp;|&nbsp; +1 DEF<br>✅ HP y MP restaurados';
   const bd=_('lu-bonus');
@@ -7579,110 +7944,205 @@ function showAntiQuest(){
 // HÉROE — Profe Felipe (científico medieval) — sprite unificado
 // Se usa en overworld Y en batalla para consistencia total.
 // ════════════════════════════════════════════════════════════
-function drawHeroSprite(g, px, py, S, bob){
-  bob = bob||0;
-  // Sombra
-  g.fillStyle='rgba(0,0,0,.22)';
-  g.beginPath(); g.ellipse(px+S*.5,py+S-S*.06,S*.32,S*.1,0,0,Math.PI*2); g.fill();
+function drawHeroSprite(g, px, py, S, bob, facing){
+  bob=bob||0; facing=facing||'down';
+  const step=tick*.22;
+  const walkL=Math.sin(step)*S*.042, walkR=-walkL;
+  const armSwL=Math.sin(step)*.5, armSwR=-armSwL;
+  // Offsets de mirada por dirección
+  const faceOX=facing==='left'?-S*.02:facing==='right'?S*.02:0;
+  const eyeOX =facing==='left'?-S*.015:facing==='right'?S*.015:0;
+
+  // ── Sombra suelo multi-capa ──
+  g.save();
+  g.shadowColor='rgba(0,0,0,0)';
+  g.fillStyle='rgba(0,0,0,.15)';
+  g.beginPath(); g.ellipse(px+S*.5,py+S-S*.04,S*.38,S*.13,0,0,Math.PI*2); g.fill();
+  g.fillStyle='rgba(0,0,0,.12)';
+  g.beginPath(); g.ellipse(px+S*.5,py+S-S*.02,S*.44,S*.08,0,0,Math.PI*2); g.fill();
+  g.restore();
+
   py -= bob;
-  // ════ ROPA DE PROFESOR ════
-  // Pantalón formal (gris) + zapatos
-  g.fillStyle='#3a3f4a'; g.fillRect(px+S*.33,py+S*.74,S*.15,S*.2);
-  g.fillRect(px+S*.52,py+S*.74,S*.15,S*.2);
-  g.fillStyle='#2c3038'; g.fillRect(px+S*.5,py+S*.74,S*.02,S*.2); // entrepierna
-  g.fillStyle='#1a1a1f'; g.fillRect(px+S*.31,py+S*.92,S*.18,S*.06); // zapatos
-  g.fillRect(px+S*.51,py+S*.92,S*.18,S*.06);
-  g.fillStyle='#33333a'; g.fillRect(px+S*.31,py+S*.92,S*.18,S*.018);
-  g.fillRect(px+S*.51,py+S*.92,S*.18,S*.018);
-  // Camisa celeste (torso)
-  g.fillStyle='#cfe3f2'; g.fillRect(px+S*.28,py+S*.42,S*.44,S*.36);
-  // Chaleco/sweater de profesor (granate sobre la camisa)
-  g.fillStyle='#7b3245'; g.fillRect(px+S*.3,py+S*.46,S*.4,S*.3);
-  g.fillStyle='#6a2a3a'; g.fillRect(px+S*.3,py+S*.46,S*.08,S*.3); // sombra izq
-  g.fillStyle='#8c3a50'; g.fillRect(px+S*.62,py+S*.46,S*.08,S*.3); // luz der
-  // Escote en V del chaleco que muestra la camisa
+
+  // ── Pantalón formal con gradiente ──
+  const pantsGrd=g.createLinearGradient(px+S*.3,py+S*.74,px+S*.7,py+S*.95);
+  pantsGrd.addColorStop(0,'#4f5564'); pantsGrd.addColorStop(.5,'#3a3f4a'); pantsGrd.addColorStop(1,'#272b34');
+  g.fillStyle=pantsGrd;
+  g.fillRect(px+S*.33,py+S*.74+walkL,S*.16,S*.21);
+  g.fillRect(px+S*.51,py+S*.74+walkR,S*.16,S*.21);
+  g.fillStyle='rgba(0,0,0,.2)'; g.fillRect(px+S*.49,py+S*.74,S*.03,S*.21);
+
+  // ── Zapatos con brillo ──
+  const shoeGrd=g.createLinearGradient(px,py+S*.92,px,py+S);
+  shoeGrd.addColorStop(0,'#28282e'); shoeGrd.addColorStop(1,'#101012');
+  g.fillStyle=shoeGrd;
+  g.fillRect(px+S*.30,py+S*.93+walkL*.4,S*.2,S*.065);
+  g.fillRect(px+S*.50,py+S*.93+walkR*.4,S*.2,S*.065);
+  g.fillStyle='rgba(255,255,255,.12)';
+  g.fillRect(px+S*.31,py+S*.93+walkL*.4,S*.09,S*.02);
+  g.fillRect(px+S*.51,py+S*.93+walkR*.4,S*.09,S*.02);
+
+  // ── Camisa celeste con gradiente ──
+  const shirtGrd=g.createLinearGradient(px+S*.25,py+S*.42,px+S*.75,py+S*.78);
+  shirtGrd.addColorStop(0,'#dcf0ff'); shirtGrd.addColorStop(.5,'#cfe3f2'); shirtGrd.addColorStop(1,'#b4cce0');
+  g.fillStyle=shirtGrd; g.fillRect(px+S*.28,py+S*.42,S*.44,S*.36);
+
+  // ── Chaleco granate con degradado y AO ──
+  const chalGrd=g.createLinearGradient(px+S*.3,py+S*.46,px+S*.7,py+S*.76);
+  chalGrd.addColorStop(0,'#96384e'); chalGrd.addColorStop(.4,'#7b3245'); chalGrd.addColorStop(1,'#531f2d');
+  g.fillStyle=chalGrd; g.fillRect(px+S*.3,py+S*.46,S*.4,S*.3);
+  const aoL=g.createLinearGradient(px+S*.3,0,px+S*.38,0);
+  aoL.addColorStop(0,'rgba(0,0,0,.3)'); aoL.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=aoL; g.fillRect(px+S*.3,py+S*.46,S*.08,S*.3);
+  const rimR=g.createLinearGradient(px+S*.62,0,px+S*.7,0);
+  rimR.addColorStop(0,'rgba(255,255,255,0)'); rimR.addColorStop(1,'rgba(255,255,255,.1)');
+  g.fillStyle=rimR; g.fillRect(px+S*.62,py+S*.46,S*.08,S*.3);
+
+  // Escote V que muestra camisa
   g.fillStyle='#cfe3f2';
-  g.beginPath(); g.moveTo(px+S*.42,py+S*.46); g.lineTo(px+S*.5,py+S*.6); g.lineTo(px+S*.58,py+S*.46); g.closePath(); g.fill();
-  // Corbata
-  g.fillStyle='#1e3a5f'; g.fillRect(px+S*.475,py+S*.46,S*.05,S*.04);
-  g.beginPath(); g.moveTo(px+S*.475,py+S*.5); g.lineTo(px+S*.5,py+S*.62); g.lineTo(px+S*.525,py+S*.5); g.closePath(); g.fill();
-  g.fillStyle='#16a34a'; g.fillRect(px+S*.475,py+S*.54,S*.05,S*.012); // raya corbata
-  // Cuello de camisa
-  g.fillStyle='#eef6fc';
-  g.beginPath(); g.moveTo(px+S*.44,py+S*.44); g.lineTo(px+S*.5,py+S*.5); g.lineTo(px+S*.46,py+S*.44); g.closePath(); g.fill();
-  g.beginPath(); g.moveTo(px+S*.56,py+S*.44); g.lineTo(px+S*.5,py+S*.5); g.lineTo(px+S*.54,py+S*.44); g.closePath(); g.fill();
-  // ── BATA BLANCA de laboratorio (abierta, a los lados) ──
-  g.fillStyle='#f4f6fa'; g.fillRect(px+S*.2,py+S*.44,S*.12,S*.46);  // solapa izq
-  g.fillRect(px+S*.68,py+S*.44,S*.12,S*.46);                        // solapa der
-  g.fillStyle='#dde3ec'; g.fillRect(px+S*.2,py+S*.44,S*.04,S*.46);
-  g.fillStyle='#e6ebf2'; g.fillRect(px+S*.76,py+S*.44,S*.04,S*.46);
-  // Bolsillo de la bata con lápices
-  g.fillStyle='#e8edf4'; g.fillRect(px+S*.69,py+S*.6,S*.1,S*.09);
-  g.fillStyle='#b91c1c'; g.fillRect(px+S*.71,py+S*.55,S*.02,S*.07);
-  g.fillStyle='#1e3a5f'; g.fillRect(px+S*.74,py+S*.55,S*.02,S*.07);
-  // Brazos con mangas de bata
-  g.fillStyle='#f4f6fa'; g.fillRect(px+S*.18,py+S*.46,S*.1,S*.24);
-  g.fillRect(px+S*.72,py+S*.46,S*.1,S*.24);
-  g.fillStyle='#d2a374'; g.fillRect(px+S*.2,py+S*.68,S*.07,S*.06); // manos
-  g.fillRect(px+S*.73,py+S*.68,S*.07,S*.06);
-  // ════ CABEZA REDONDA (Profe Felipe) ════
-  // Cuello
-  g.fillStyle='#c89860'; g.fillRect(px+S*.43,py+S*.36,S*.14,S*.08);
-  g.fillStyle='#b8884f'; g.fillRect(px+S*.43,py+S*.36,S*.14,S*.03);
-  // Cara perfectamente redonda
-  g.fillStyle='#d2a374'; g.beginPath(); g.arc(px+S*.5,py+S*.25,S*.175,0,Math.PI*2); g.fill();
-  // Sombreado lateral para volumen
-  g.fillStyle='rgba(160,110,60,.35)'; g.beginPath(); g.arc(px+S*.5,py+S*.27,S*.175,.15,Math.PI-.15); g.fill();
-  // Orejas
-  g.fillStyle='#c89860';
-  g.beginPath(); g.arc(px+S*.325,py+S*.25,S*.032,0,Math.PI*2); g.fill();
-  g.beginPath(); g.arc(px+S*.675,py+S*.25,S*.032,0,Math.PI*2); g.fill();
-  // Pelo MUY corto (rapado), solo coronilla y laterales
-  g.fillStyle='#2e2008';
-  g.beginPath(); g.arc(px+S*.5,py+S*.205,S*.178,Math.PI*1.04,Math.PI*1.96); g.fill();
-  g.fillStyle='#3a2a10';
-  g.beginPath(); g.arc(px+S*.5,py+S*.2,S*.178,Math.PI*1.1,Math.PI*1.9); g.fill();
-  // textura de pelo rapado (puntitos)
-  g.fillStyle='rgba(46,32,8,.55)';
-  for(let i=0;i<5;i++){ g.fillRect(px+S*(.36+i*.07),py+S*.13,S*.014,S*.014); }
-  // Entradas (frente despejada por pelo corto)
+  g.beginPath(); g.moveTo(px+S*.42,py+S*.46); g.lineTo(px+S*.5,py+S*.61); g.lineTo(px+S*.58,py+S*.46); g.closePath(); g.fill();
+
+  // ── Corbata con gradiente y raya ──
+  const tieGrd=g.createLinearGradient(px+S*.475,py+S*.46,px+S*.525,py+S*.63);
+  tieGrd.addColorStop(0,'#265a9f'); tieGrd.addColorStop(1,'#1a3560');
+  g.fillStyle=tieGrd;
+  g.fillRect(px+S*.475,py+S*.46,S*.05,S*.04);
+  g.beginPath(); g.moveTo(px+S*.475,py+S*.5); g.lineTo(px+S*.5,py+S*.63); g.lineTo(px+S*.525,py+S*.5); g.closePath(); g.fill();
+  g.fillStyle='rgba(255,255,255,.13)'; g.fillRect(px+S*.483,py+S*.5,S*.015,S*.07);
+  g.fillStyle='#16a34a'; g.fillRect(px+S*.475,py+S*.55,S*.05,S*.012);
+
+  // Cuello camisa
+  g.fillStyle='#eef8ff';
+  g.beginPath(); g.moveTo(px+S*.44,py+S*.44); g.lineTo(px+S*.5,py+S*.51); g.lineTo(px+S*.46,py+S*.44); g.closePath(); g.fill();
+  g.beginPath(); g.moveTo(px+S*.56,py+S*.44); g.lineTo(px+S*.5,py+S*.51); g.lineTo(px+S*.54,py+S*.44); g.closePath(); g.fill();
+
+  // ── Bata blanca — solapa izq con AO ──
+  const bataGrd=g.createLinearGradient(px+S*.17,py+S*.44,px+S*.82,py+S*.9);
+  bataGrd.addColorStop(0,'#f9fbff'); bataGrd.addColorStop(.5,'#f0f3f9'); bataGrd.addColorStop(1,'#dde3ed');
+  g.fillStyle=bataGrd;
+  g.fillRect(px+S*.17,py+S*.44+armSwL*S*.03,S*.13,S*.47);
+  const bataAOL=g.createLinearGradient(px+S*.17,0,px+S*.3,0);
+  bataAOL.addColorStop(0,'rgba(0,0,0,.22)'); bataAOL.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=bataAOL; g.fillRect(px+S*.17,py+S*.44+armSwL*S*.03,S*.13,S*.47);
+
+  // Solapa der con rim light
+  g.fillStyle=bataGrd;
+  g.fillRect(px+S*.70,py+S*.44+armSwR*S*.03,S*.13,S*.47);
+  const bataRimR=g.createLinearGradient(px+S*.70,0,px+S*.83,0);
+  bataRimR.addColorStop(0,'rgba(255,255,255,0)'); bataRimR.addColorStop(1,'rgba(255,255,255,.18)');
+  g.fillStyle=bataRimR; g.fillRect(px+S*.70,py+S*.44+armSwR*S*.03,S*.13,S*.47);
+
+  // Bolsillo con lápices
+  g.fillStyle='#e2e8f2'; g.fillRect(px+S*.70,py+S*.61,S*.1,S*.09);
+  g.fillStyle='rgba(0,0,0,.1)'; g.fillRect(px+S*.70,py+S*.70,S*.1,S*.01);
+  g.fillStyle='#b91c1c'; g.fillRect(px+S*.72,py+S*.56,S*.02,S*.07);
+  g.fillStyle='#fff'; g.fillRect(px+S*.72,py+S*.56,S*.02,S*.012);
+  g.fillStyle='#1e3a5f'; g.fillRect(px+S*.755,py+S*.56,S*.02,S*.07);
+  g.fillStyle='#fff'; g.fillRect(px+S*.755,py+S*.56,S*.02,S*.012);
+
+  // ── Brazos (mangas bata) ──
+  g.fillStyle=bataGrd;
+  g.fillRect(px+S*.17,py+S*.47+armSwL*S*.05,S*.11,S*.24);
+  g.fillStyle='rgba(0,0,0,.14)'; g.fillRect(px+S*.17,py+S*.47+armSwL*S*.05,S*.03,S*.24);
+  g.fillStyle=bataGrd;
+  g.fillRect(px+S*.72,py+S*.47+armSwR*S*.05,S*.11,S*.24);
+  g.fillStyle='rgba(255,255,255,.1)'; g.fillRect(px+S*.79,py+S*.47+armSwR*S*.05,S*.03,S*.24);
+
+  // Manos con gradiente radial (piel)
+  const mkH=(cx,cy)=>{ const sg=g.createRadialGradient(cx,cy,0,cx,cy,S*.065); sg.addColorStop(0,'#dbb888'); sg.addColorStop(1,'#c2906a'); return sg; };
+  g.fillStyle=mkH(px+S*.228,py+S*.715+armSwL*S*.05); g.fillRect(px+S*.19,py+S*.70+armSwL*S*.05,S*.08,S*.068);
+  g.fillStyle=mkH(px+S*.762,py+S*.715+armSwR*S*.05); g.fillRect(px+S*.73,py+S*.70+armSwR*S*.05,S*.08,S*.068);
+
+  // ── Cuello ──
+  const neckGrd=g.createLinearGradient(px+S*.43,py+S*.36,px+S*.57,py+S*.44);
+  neckGrd.addColorStop(0,'#cfa070'); neckGrd.addColorStop(1,'#b88050');
+  g.fillStyle=neckGrd; g.fillRect(px+S*.43,py+S*.36,S*.14,S*.09);
+  g.fillStyle='rgba(0,0,0,.12)'; g.fillRect(px+S*.43,py+S*.36,S*.03,S*.09);
+
+  // ── Cara con degradado radial volumétrico ──
+  const fcx=px+S*.5+faceOX;
+  const faceGrd=g.createRadialGradient(fcx-S*.06,py+S*.20,S*.01,fcx,py+S*.25,S*.21);
+  faceGrd.addColorStop(0,'#e0b888'); faceGrd.addColorStop(.4,'#d2a374'); faceGrd.addColorStop(1,'#a87040');
+  g.fillStyle=faceGrd;
+  g.beginPath(); g.arc(fcx,py+S*.25,S*.178,0,Math.PI*2); g.fill();
+  // SSS mejillas
+  g.fillStyle='rgba(210,100,70,.06)';
+  g.beginPath(); g.arc(fcx-S*.13,py+S*.28,S*.065,0,Math.PI*2); g.fill();
+  g.beginPath(); g.arc(fcx+S*.13,py+S*.28,S*.065,0,Math.PI*2); g.fill();
+
+  // ── Orejas ──
+  const mkEar=(cx,cy)=>{ const eg=g.createRadialGradient(cx,cy,0,cx,cy,S*.04); eg.addColorStop(0,'#d8a878'); eg.addColorStop(1,'#b88050'); return eg; };
+  g.fillStyle=mkEar(fcx-S*.178,py+S*.255); g.beginPath(); g.arc(fcx-S*.178,py+S*.25,S*.034,0,Math.PI*2); g.fill();
+  g.fillStyle=mkEar(fcx+S*.178,py+S*.255); g.beginPath(); g.arc(fcx+S*.178,py+S*.25,S*.034,0,Math.PI*2); g.fill();
+
+  // ── Pelo rapado con gradiente y highlight ──
+  const hairGrd=g.createRadialGradient(fcx-S*.04,py+S*.17,0,fcx,py+S*.19,S*.21);
+  hairGrd.addColorStop(0,'#42300e'); hairGrd.addColorStop(.5,'#2e2008'); hairGrd.addColorStop(1,'#180e00');
+  g.fillStyle=hairGrd;
+  g.beginPath(); g.arc(fcx,py+S*.205,S*.178,Math.PI*1.04,Math.PI*1.96); g.fill();
+  g.fillStyle='rgba(90,65,20,.45)';
+  g.beginPath(); g.arc(fcx-S*.04,py+S*.185,S*.055,0,Math.PI*2); g.fill();
+  g.fillStyle='rgba(46,32,8,.4)';
+  for(let i=0;i<6;i++) g.fillRect(fcx-S*.16+i*S*.06,py+S*.135,S*.013,S*.013);
   g.fillStyle='#d2a374';
-  g.beginPath(); g.arc(px+S*.39,py+S*.16,S*.03,0,Math.PI*2); g.fill();
-  g.beginPath(); g.arc(px+S*.61,py+S*.16,S*.03,0,Math.PI*2); g.fill();
-  // ── BARBA corta y prolija (contorno mandíbula) ──
-  g.fillStyle='#2e2008';
-  g.beginPath(); g.arc(px+S*.5,py+S*.27,S*.172,.18,Math.PI-.18); g.fill();
-  // recorte interior para mejillas (deja la barba como borde)
+  g.beginPath(); g.arc(fcx-S*.11,py+S*.16,S*.03,0,Math.PI*2); g.fill();
+  g.beginPath(); g.arc(fcx+S*.11,py+S*.16,S*.03,0,Math.PI*2); g.fill();
+
+  // ── Barba y bigote ──
+  const beardGrd=g.createRadialGradient(fcx,py+S*.3,0,fcx,py+S*.3,S*.2);
+  beardGrd.addColorStop(0,'#3d2e10'); beardGrd.addColorStop(1,'#2a1e06');
+  g.fillStyle=beardGrd;
+  g.beginPath(); g.arc(fcx,py+S*.27,S*.174,.17,Math.PI-.17); g.fill();
   g.fillStyle='#d2a374';
-  g.beginPath(); g.arc(px+S*.5,py+S*.25,S*.135,.32,Math.PI-.32); g.fill();
-  // Bigote sobre el labio
-  g.fillStyle='#2e2008'; g.fillRect(px+S*.41,py+S*.3,S*.18,S*.028);
-  // Mosca/perilla bajo el labio
-  g.fillRect(px+S*.47,py+S*.345,S*.06,S*.03);
-  // Cejas
+  g.beginPath(); g.arc(fcx,py+S*.25,S*.137,.30,Math.PI-.30); g.fill();
   g.fillStyle='#2e2008';
-  g.fillRect(px+S*.38,py+S*.205,S*.09,S*.018);
-  g.fillRect(px+S*.53,py+S*.205,S*.09,S*.018);
-  // ── OJOS ──
-  g.fillStyle='#fff'; g.beginPath(); g.arc(px+S*.425,py+S*.245,S*.038,0,Math.PI*2); g.fill();
-  g.beginPath(); g.arc(px+S*.575,py+S*.245,S*.038,0,Math.PI*2); g.fill();
-  g.fillStyle='#3a2a18'; g.beginPath(); g.arc(px+S*.432,py+S*.247,S*.02,0,Math.PI*2); g.fill();
-  g.beginPath(); g.arc(px+S*.582,py+S*.247,S*.02,0,Math.PI*2); g.fill();
-  // Nariz
-  g.fillStyle='rgba(160,110,60,.5)'; g.fillRect(px+S*.487,py+S*.255,S*.026,S*.04);
-  // ── LENTES REDONDOS de profesor ──
-  g.strokeStyle='#16161a'; g.lineWidth=Math.max(1.2,S*.03);
-  g.beginPath(); g.arc(px+S*.425,py+S*.245,S*.058,0,Math.PI*2); g.stroke();
-  g.beginPath(); g.arc(px+S*.575,py+S*.245,S*.058,0,Math.PI*2); g.stroke();
-  // Puente
-  g.beginPath(); g.moveTo(px+S*.483,py+S*.243); g.lineTo(px+S*.517,py+S*.243); g.stroke();
-  // Patillas de los lentes hacia las orejas
-  g.beginPath(); g.moveTo(px+S*.367,py+S*.243); g.lineTo(px+S*.33,py+S*.25); g.stroke();
-  g.beginPath(); g.moveTo(px+S*.633,py+S*.243); g.lineTo(px+S*.67,py+S*.25); g.stroke();
-  // Brillo en los cristales
-  g.fillStyle='rgba(255,255,255,.45)';
-  g.beginPath(); g.arc(px+S*.41,py+S*.232,S*.018,0,Math.PI*2); g.fill();
-  g.beginPath(); g.arc(px+S*.56,py+S*.232,S*.018,0,Math.PI*2); g.fill();
+  g.fillRect(fcx-S*.09,py+S*.3,S*.18,S*.028);
+  g.fillRect(fcx-S*.03,py+S*.347,S*.06,S*.03);
+
+  // ── Cejas ──
+  g.fillStyle='#2e2008';
+  g.fillRect(fcx-S*.12,py+S*.205,S*.09,S*.019); g.fillRect(fcx+S*.03,py+S*.205,S*.09,S*.019);
+  g.fillStyle='rgba(46,32,8,.35)'; g.fillRect(fcx-S*.12,py+S*.2,S*.04,S*.01);
+
+  // ── Ojos con iris radial y catchlight ──
+  const eL=fcx-S*.075+eyeOX, eR=fcx+S*.075+eyeOX;
+  const mkEye=(cx,cy)=>{ const eg=g.createRadialGradient(cx-.008*S,cy-.008*S,0,cx,cy,S*.042); eg.addColorStop(0,'#ffffff'); eg.addColorStop(1,'#ece9e5'); return eg; };
+  g.fillStyle=mkEye(eL,py+S*.245); g.beginPath(); g.arc(eL,py+S*.245,S*.041,0,Math.PI*2); g.fill();
+  g.fillStyle=mkEye(eR,py+S*.245); g.beginPath(); g.arc(eR,py+S*.245,S*.041,0,Math.PI*2); g.fill();
+  // Iris con gradiente
+  const mkIris=(cx,cy)=>{ const ig=g.createRadialGradient(cx,cy,0,cx,cy,S*.025); ig.addColorStop(0,'#5a3820'); ig.addColorStop(.6,'#3a2810'); ig.addColorStop(1,'#100a00'); return ig; };
+  g.fillStyle=mkIris(eL+S*.007,py+S*.248); g.beginPath(); g.arc(eL+S*.007,py+S*.248,S*.024,0,Math.PI*2); g.fill();
+  g.fillStyle=mkIris(eR+S*.007,py+S*.248); g.beginPath(); g.arc(eR+S*.007,py+S*.248,S*.024,0,Math.PI*2); g.fill();
+  // Pupila
+  g.fillStyle='#060404';
+  g.beginPath(); g.arc(eL+S*.007,py+S*.249,S*.013,0,Math.PI*2); g.fill();
+  g.beginPath(); g.arc(eR+S*.007,py+S*.249,S*.013,0,Math.PI*2); g.fill();
+  // Catchlight
+  g.fillStyle='rgba(255,255,255,.9)';
+  g.beginPath(); g.arc(eL-S*.002,py+S*.241,S*.009,0,Math.PI*2); g.fill();
+  g.beginPath(); g.arc(eR-S*.002,py+S*.241,S*.009,0,Math.PI*2); g.fill();
+
+  // ── Nariz ──
+  g.fillStyle='rgba(155,105,55,.42)'; g.fillRect(fcx-S*.013,py+S*.255,S*.026,S*.042);
+  g.fillStyle='rgba(100,70,35,.28)'; g.fillRect(fcx-S*.013,py+S*.293,S*.026,S*.006);
+
+  // ── Lentes redondos con arco de brillo ──
+  g.save();
+  g.shadowColor='rgba(0,0,0,.5)'; g.shadowBlur=3; g.shadowOffsetX=1; g.shadowOffsetY=1;
+  g.strokeStyle='#12121a'; g.lineWidth=Math.max(1.4,S*.034);
+  g.beginPath(); g.arc(eL,py+S*.245,S*.063,0,Math.PI*2); g.stroke();
+  g.beginPath(); g.arc(eR,py+S*.245,S*.063,0,Math.PI*2); g.stroke();
+  g.beginPath(); g.moveTo(eL+S*.063,py+S*.243); g.lineTo(eR-S*.063,py+S*.243); g.stroke();
+  g.beginPath(); g.moveTo(eL-S*.063,py+S*.245); g.lineTo(eL-S*.1,py+S*.253); g.stroke();
+  g.beginPath(); g.moveTo(eR+S*.063,py+S*.245); g.lineTo(eR+S*.1,py+S*.253); g.stroke();
+  g.restore();
+  // Reflejo lentes (arco superior)
+  g.save();
+  g.strokeStyle='rgba(255,255,255,.55)'; g.lineWidth=Math.max(.8,S*.018);
+  g.beginPath(); g.arc(eL,py+S*.233,S*.026,Math.PI*1.22,Math.PI*1.78); g.stroke();
+  g.beginPath(); g.arc(eR,py+S*.233,S*.026,Math.PI*1.22,Math.PI*1.78); g.stroke();
+  g.restore();
+
   g.lineWidth=1;
 }
 
@@ -7999,9 +8459,349 @@ function _activateAdmin(){
   showDialog('🔓 MODO ADMINISTRATIVO\n\n⚡ ¡Código secreto activado!\n\n✅ Todas las puertas abiertas\n✅ Nivel 10 | 250HP | 120MP\n✅ +999 🪙 monedas\n✅ Armadura de Bronce\n✅ Todas las misiones\n✅ Café x10\n\n"Con gran poder viene\ngran responsabilidad."\n\n🔑 Modo Admin activo');
 }
 
+// ═══ PANEL DE CONTROL ═══
+function openSettings(){
+  const tglMusic=_('tgl-music');
+  if(tglMusic) tglMusic.checked=!Music.muted;
+  const tglDpad=_('tgl-dpad');
+  if(tglDpad) tglDpad.checked=_('ctrl').style.display!=='none';
+  _('settings-panel').style.display='block';
+  STATE='dialog';
+}
+function closeSettings(){
+  _('settings-panel').style.display='none';
+  if(STATE==='dialog') STATE='exploring';
+}
+function switchStab(tab){
+  ['music','controls','tutorial'].forEach(t=>{
+    _('stab-'+t).classList.toggle('on',t===tab);
+    _('sc-'+t).classList.toggle('on',t===tab);
+  });
+}
+function toggleMusicSetting(el){
+  const on=Music.toggle(); el.checked=on;
+  const btn=_('btn-music');
+  if(btn){btn.textContent=on?'🎵':'🔇';btn.style.opacity=on?'1':'.45';}
+}
+function toggleDpadSetting(el){
+  const ctrl=_('ctrl'),btn=_('ctrl-toggle'),show=el.checked;
+  ctrl.style.display=show?'flex':'none';
+  if(btn) btn.textContent=show?'🎮 Ocultar controles':'🎮 Mostrar controles';
+  try{localStorage.setItem('rpg_dpad',show?'1':'0');}catch(e){}
+}
+
+// ═══ FIREBASE + MULTIJUGADOR ═══
+// 👉 Reemplaza estos valores con los de tu proyecto en console.firebase.google.com
+const FB_CONFIG={
+  apiKey:"TU_API_KEY",
+  authDomain:"TU-PROYECTO.firebaseapp.com",
+  databaseURL:"https://TU-PROYECTO-default-rtdb.firebaseio.com",
+  projectId:"TU-PROYECTO",
+  storageBucket:"TU-PROYECTO.appspot.com",
+  messagingSenderId:"000000000000",
+  appId:"1:000000000000:web:abcdef"
+};
+let _db=null,_playerKey=null,_playerName='';
+
+function _fbInit(){
+  try{
+    if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+    _db=firebase.database();
+  }catch(e){console.warn('Firebase no disponible:',e);}
+}
+
+// ── IndexedDB (almacenamiento más confiable en Android Chrome) ──
+const _IDB=(function(){
+  let _idb=null;
+  function _open(){
+    if(_idb) return Promise.resolve(_idb);
+    return new Promise((res,rej)=>{
+      const r=indexedDB.open('profeRpgDB',1);
+      r.onupgradeneeded=e=>e.target.result.createObjectStore('saves',{keyPath:'k'});
+      r.onsuccess=e=>{_idb=e.target.result;res(_idb);};
+      r.onerror=()=>rej(r.error);
+    });
+  }
+  return{
+    set(k,v){_open().then(db=>{const tx=db.transaction('saves','readwrite');tx.objectStore('saves').put({k,v});}).catch(()=>{});},
+    get(k){return _open().then(db=>new Promise((res,rej)=>{const tx=db.transaction('saves','readonly');const r=tx.objectStore('saves').get(k);r.onsuccess=()=>res(r.result?r.result.v:null);r.onerror=()=>rej(r.error);})).catch(()=>null);}
+  };
+})();
+
+// ── Ranking local (fallback sin Firebase) ──
+const _LB_KEY='profeRpg_lb_v2';
+function _updateLocalLB(){
+  if(!_playerKey) return;
+  const entry={key:_playerKey,name:_playerName,level:stats.level,coins,xp:stats.xp,lastSeen:Date.now()};
+  const _mergeLB=rows=>{const idx=rows.findIndex(e=>e.key===_playerKey);if(idx>=0)rows[idx]=entry;else rows.push(entry);rows.sort((a,b)=>b.level-a.level||b.coins-a.coins||b.xp-a.xp);return rows.slice(0,50);};
+  try{const lb=_mergeLB(JSON.parse(localStorage.getItem(_LB_KEY)||'[]'));localStorage.setItem(_LB_KEY,JSON.stringify(lb));}catch(e){}
+  _IDB.get(_LB_KEY).then(d=>{_IDB.set(_LB_KEY,JSON.stringify(_mergeLB(d?JSON.parse(d):[])));}).catch(()=>{});
+}
+
+// ── Export / Import ──
+function exportSave(){
+  let data=null;
+  try{data=localStorage.getItem(SAVE_KEY);}catch(e){}
+  if(!data){showDialog('⚠️ Guarda la partida primero antes de exportar.');return;}
+  try{
+    const blob=new Blob([data],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='profeRpg_save.json';document.body.appendChild(a);a.click();document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showDialog('📤 Partida exportada.\nGuarda el archivo .json como respaldo.');
+  }catch(e){showDialog('❌ Error al exportar: '+e.message);}
+}
+function _onImportFile(el){
+  const file=el.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      _applyGameState(data);
+      saveGameSilent();
+      showDialog('📥 Partida importada con éxito.\n¡Bienvenido de vuelta, Profe Felipe!');
+    }catch(err){showDialog('❌ Archivo inválido o corrupto.');}
+  };
+  reader.readAsText(file);
+  el.value='';
+}
+
+function _fbSave(){
+  if(!_db||!_playerKey) return;
+  try{
+    const partyData=PARTY_MEMBERS.map(m=>({id:m.id,hp:m.hp,found:m.found,inTeam:m.inTeam}));
+    const invData=inventory.map(({use,...r})=>r);
+    const fullState={player,stats,coins,progress,currentMap,equipment,party:partyData,inventory:invData};
+    const MAP_LABELS={pasillo:'Pasillo',patio:'Patio',jardin_eden:'Jardín Edén',segundo_piso:'2do Piso',sala_5to:'Sala 5to',sala_6to:'Sala 6to',sala_7mo:'Sala 7mo',sala_8vo:'Sala 8vo',biblioteca:'Biblioteca',cancha:'Cancha',villa_alemana:'Villa Alemana',centro_villa:'Centro Villa',buin_zoo:'Buin Zoo',reserva:'Reserva Natural',lago:'Lago'};
+    _db.ref('players/'+_playerKey).set({
+      name:_playerName, level:stats.level, coins, xp:stats.xp,
+      hp:stats.hp, maxHp:stats.maxHp, currentMap,
+      mapLabel:MAP_LABELS[currentMap]||currentMap,
+      lastSeen:Date.now(), fullState
+    });
+  }catch(e){console.warn('Firebase save error:',e);}
+}
+
+// ── Registro de jugador ──
+function registerPlayer(){
+  const input=_('reg-name-input'), errEl=_('reg-error');
+  const name=input.value.trim();
+  if(name.length<2){errEl.textContent='⚠ Mínimo 2 caracteres';return;}
+  if(name.length>20){errEl.textContent='⚠ Máximo 20 caracteres';return;}
+  _playerName=name;
+  const sanitized=name.toLowerCase().replace(/[^a-z0-9]/g,'_').slice(0,14);
+  _playerKey=sanitized+'_'+Math.random().toString(36).slice(2,6);
+  try{localStorage.setItem('profeRpg_playerKey',_playerKey);}catch(e){}
+  try{localStorage.setItem('profeRpg_playerName',_playerName);}catch(e){}
+  _IDB.set('profeRpg_playerKey',_playerKey);
+  _IDB.set('profeRpg_playerName',_playerName);
+  _fbInit();
+  _('register-screen').style.display='none';
+  _startGameLoop();
+}
+
+// ── Leaderboard ──
+const _MAP_SHORT={pasillo:'Pasillo',patio:'Patio',jardin_eden:'Jardín Edén',segundo_piso:'2do Piso',sala_5to:'Sala 5to',sala_6to:'Sala 6to',sala_7mo:'Sala 7mo',sala_8vo:'Sala 8vo',biblioteca:'Biblioteca',cancha:'Cancha',villa_alemana:'Villa Alemana',centro_villa:'Centro Villa',buin_zoo:'Buin Zoo',reserva:'Reserva',lago:'Lago'};
+let _lbRef=null;
+
+function _renderLBRows(rows,list,isLocal){
+  const medals=['🥇','🥈','🥉'];
+  _('lb-count').textContent=rows.length+(isLocal?' jugadores (local)':' jugadores');
+  if(!rows.length){list.innerHTML='<div style="text-align:center;color:#6b7280;padding:16px;font-family:\'VT323\',monospace">Sin jugadores aún</div>';return;}
+  const header=isLocal?'<div style="font-size:.65rem;color:#6b7280;text-align:center;margin-bottom:6px;font-family:\'VT323\',monospace">📱 Ranking local · Guarda partida para aparecer</div>':'';
+  list.innerHTML=header+rows.slice(0,20).map((p,i)=>{
+    const isMe=p.key===_playerKey;
+    const ago=p.lastSeen?Math.round((Date.now()-p.lastSeen)/60000):null;
+    const agoStr=ago===null?'':ago<1?'🟢 ahora':ago<60?ago+'m':ago<1440?Math.floor(ago/60)+'h':Math.floor(ago/1440)+'d';
+    const rank=i<3?medals[i]:`#${i+1}`;
+    const sub=isLocal?`Lv${p.level} · ${p.xp||0} XP`:(_MAP_SHORT[p.currentMap]||p.currentMap||'?');
+    return `<div style="display:flex;align-items:center;gap:8px;background:${isMe?'rgba(253,212,66,.1)':'#1e293b'};border:1px solid ${isMe?'#fcd34d':'#374151'};padding:7px 10px;border-radius:7px">
+      <div style="font-size:.9rem;min-width:22px;text-align:center">${rank}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'VT323',monospace;font-size:.92rem;color:${isMe?'#fcd34d':'#f1f5f9'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}${isMe?' ◀':''}</div>
+        <div style="font-size:.62rem;color:#6b7280">${sub}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:'Press Start 2P',monospace;font-size:.42rem;color:#a78bfa">Lv${p.level}</div>
+        <div style="font-size:.68rem;color:#fcd34d">🪙${p.coins||0}</div>
+      </div>
+      <div style="font-size:.55rem;color:#4b5563;min-width:30px;text-align:right">${agoStr}</div>
+    </div>`;
+  }).join('');
+}
+
+function _showLocalLB(list){
+  const render=rows=>_renderLBRows(rows,list,true);
+  let rows=[];
+  try{rows=JSON.parse(localStorage.getItem(_LB_KEY)||'[]');}catch(e){}
+  if(rows.length){render(rows);return;}
+  _IDB.get(_LB_KEY).then(d=>{try{rows=d?JSON.parse(d):[];}catch(e){}render(rows);}).catch(()=>render([]));
+}
+
+function openLeaderboard(){
+  const panel=_('leaderboard-panel'); panel.style.display='block'; STATE='dialog';
+  const list=_('lb-list'); list.innerHTML='<div style="text-align:center;color:#6b7280;padding:16px;font-family:\'VT323\',monospace">Cargando...</div>';
+  if(!_db){_showLocalLB(list);return;}
+  _lbRef=_db.ref('players').orderByChild('level');
+  _lbRef.on('value',snap=>{
+    const rows=[];
+    snap.forEach(child=>rows.push({key:child.key,...child.val()}));
+    rows.sort((a,b)=>b.level-a.level||b.coins-a.coins||b.xp-a.xp);
+    _renderLBRows(rows,list,false);
+  });
+}
+
+function closeLeaderboard(){
+  _('leaderboard-panel').style.display='none';
+  if(_lbRef) _lbRef.off(); _lbRef=null;
+  if(STATE==='dialog') STATE='exploring';
+}
+
+// ═══ METRO MERVAL ═══
+const METRO_DESTS={
+  estacion_villa: {name:'Villa Alemana',emoji:'🌿',color:'#4ade80'},
+  estacion_quilpue:{name:'Quilpué',     emoji:'🏫',color:'#fbbf24'},
+  estacion_vina:  {name:'Viña del Mar', emoji:'🌊',color:'#38bdf8'},
+  estacion_valpo: {name:'Valparaíso',   emoji:'🎨',color:'#c084fc'},
+};
+
+function openMetro(){
+  if(!STATION_MAPS_SET.has(currentMap)) return;
+  STATE='dialog';
+  const panel=_('metro-panel'), opts=_('metro-options');
+  opts.innerHTML='';
+  Object.entries(METRO_DESTS).forEach(([mapId,d])=>{
+    if(mapId===currentMap) return;
+    const btn=document.createElement('button');
+    btn.className='dlg-btn';
+    btn.style.cssText=`text-align:left;padding:10px 14px;border:1px solid ${d.color}40;background:${d.color}15;color:${d.color};font-size:.65rem`;
+    btn.innerHTML=`${d.emoji} <strong>${d.name}</strong>`;
+    btn.onclick=()=>boardMetro(mapId);
+    opts.appendChild(btn);
+  });
+  panel.style.display='block';
+}
+
+function closeMetro(){
+  _('metro-panel').style.display='none';
+  STATE='exploring';
+}
+
+function boardMetro(destMap){
+  _('metro-panel').style.display='none';
+  STATE='exploring';
+  // Efecto de transición: fade negro breve
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:#000;opacity:0;z-index:9999;pointer-events:none;transition:opacity .4s';
+  document.body.appendChild(ov);
+  requestAnimationFrame(()=>{
+    ov.style.opacity='1';
+    setTimeout(()=>{
+      transitionTo(destMap,5,5);
+      setTimeout(()=>{ ov.style.opacity='0'; setTimeout(()=>ov.remove(),420); },200);
+    },420);
+  });
+}
+
+// ═══ SISTEMA DE GUARDADO ═══
+const SAVE_KEY='profeRpgSave_v4';
+
+function _rehydrateItem(item){
+  if(!item) return item;
+  if(item.id==='caramelo'||item.type==='food')
+    item.use=()=>{stats.hunger=Math.min(stats.maxHunger,(stats.hunger||100)+50);syncUI();showDialog('🍬 +50 🍽️ ¡Dulce energía!');};
+  if(item.id==='linterna')
+    item.use=()=>showDialog('🔦 Linterna activa.\nIlumina automáticamente la noche.');
+  return item;
+}
+
+function saveGameSilent(){
+  let saved=false;
+  try{
+    const partyData=PARTY_MEMBERS.map(m=>({id:m.id,hp:m.hp,found:m.found,inTeam:m.inTeam}));
+    const invData=inventory.map(({use,...rest})=>rest);
+    const data={player,stats,coins,progress,currentMap,equipment,party:partyData,inventory:invData};
+    const json=JSON.stringify(data);
+    try{localStorage.setItem(SAVE_KEY,json);saved=true;}catch(e){console.warn('localStorage fallo:',e);}
+    _IDB.set(SAVE_KEY,json);  // respaldo en IndexedDB (async, más confiable en Android)
+    _updateLocalLB();
+    saved=true;
+  }catch(e){console.warn('Save error:',e);}
+  _fbSave();
+  return saved;
+}
+
+function saveGame(){
+  const ok=saveGameSilent();
+  if(ok) showDialog('💾 Partida guardada con éxito.');
+  else showDialog('❌ Error al guardar.\nUsa 📤 para exportar tu partida como respaldo.');
+}
+
+function _applyGameState(data){
+  player=data.player; player.px=player.x*40; player.py=player.y*40;
+  stats=data.stats; coins=data.coins; progress=data.progress||{};
+  currentMap=data.currentMap;
+  equipment=data.equipment||{armor:null,weapon:null,accessory:null};
+  if(data.party){data.party.forEach(sv=>{const m=PARTY_MEMBERS.find(p=>p.id===sv.id);if(m){m.hp=sv.hp;m.found=sv.found;m.inTeam=sv.inTeam;}});}
+  inventory=(data.inventory||[]).map(_rehydrateItem);
+  if(!progress.questLog) progress.questLog={};
+  syncUI(); updateCamera();
+}
+
+function _loadLocal(){
+  // 1. Intenta localStorage
+  try{
+    const saved=localStorage.getItem(SAVE_KEY);
+    if(saved){_applyGameState(JSON.parse(saved));showDialog('📂 Partida cargada.\n¡Bienvenido de vuelta, Profe Felipe!');return;}
+  }catch(e){}
+  // 2. Intenta IndexedDB (más confiable en Android Chrome)
+  _IDB.get(SAVE_KEY).then(idbSaved=>{
+    if(idbSaved){
+      try{_applyGameState(JSON.parse(idbSaved));showDialog('📂 Partida cargada.\n¡Bienvenido de vuelta, Profe Felipe!');return;}
+      catch(e){}
+    }
+    showDialog('⚠️ No hay ninguna partida guardada.',[{text:'📥 Importar desde archivo',action:()=>_('import-file-input').click()},{text:'Cerrar',action:null}]);
+  }).catch(()=>{
+    showDialog('⚠️ No hay ninguna partida guardada.',[{text:'📥 Importar desde archivo',action:()=>_('import-file-input').click()},{text:'Cerrar',action:null}]);
+  });
+}
+
+function loadGame(){
+  if(_db&&_playerKey){
+    _db.ref('players/'+_playerKey+'/fullState').once('value',snap=>{
+      const fbData=snap.val();
+      if(fbData){_applyGameState(fbData);showDialog('📂 Partida cargada desde la nube ☁️');}
+      else _loadLocal();
+    });
+  } else {
+    _loadLocal();
+  }
+}
+
 // Clear initial static text from overlays
-['sp-hp','sp-mp','sp-xp'].forEach(id=>{const el=_(id);if(el)el.textContent='';});
-syncUI(); updateCamera(); loop();
+function _startGameLoop(){
+  ['sp-hp','sp-mp','sp-xp'].forEach(id=>{const el=_(id);if(el)el.textContent='';});
+  syncUI(); updateCamera(); loop();
+}
+// Verificar si el jugador ya está registrado
+(function(){
+  let key=null,name=null;
+  try{key=localStorage.getItem('profeRpg_playerKey');name=localStorage.getItem('profeRpg_playerName');}catch(e){}
+  if(key&&name){
+    _playerKey=key;_playerName=name;_fbInit();
+    _('register-screen').style.display='none';_startGameLoop();return;
+  }
+  // Fallback a IndexedDB si localStorage no tiene los datos (Android Chrome)
+  Promise.all([_IDB.get('profeRpg_playerKey'),_IDB.get('profeRpg_playerName')]).then(([k,n])=>{
+    if(k&&n){
+      _playerKey=k;_playerName=n;
+      try{localStorage.setItem('profeRpg_playerKey',k);localStorage.setItem('profeRpg_playerName',n);}catch(e){}
+      _fbInit();_('register-screen').style.display='none';_startGameLoop();
+    }
+    // Si tampoco hay en IDB, la pantalla de registro permanece visible
+  }).catch(()=>{});
+})();
 // Start music on first interaction
 function _musicStart(){ try{ const ac=Music._ac; if(ac&&ac.state==='suspended')ac.resume(); } catch(e){} Music.play(currentMap); }
 document.addEventListener('click',_musicStart,{once:true});
