@@ -1151,7 +1151,7 @@ function rHome(stage){
         </div>
 
         <!-- Botón para mostrar/ocultar reglas -->
-        <button onclick="const r=document.getElementById('mc-rules');const b=this;if(r.style.display==='none'){r.style.display='block';b.innerHTML='<i class=\'fa-solid fa-chevron-up\'></i> Ocultar Reglas';}else{r.style.display='none';b.innerHTML='<i class=\'fa-solid fa-scroll\'></i> Ver Reglas del Servidor';}"
+        <button onclick="const r=document.getElementById('mc-rules');const b=this;if(r.style.display==='none'){r.style.display='block';b.innerHTML='<i class=\\'fa-solid fa-chevron-up\\'></i> Ocultar Reglas';}else{r.style.display='none';b.innerHTML='<i class=\\'fa-solid fa-scroll\\'></i> Ver Reglas del Servidor';}"
           style="width:100%; padding:10px; border-radius:8px; border:1.5px solid rgba(61,140,64,.35); background:transparent; color:#1a5c1e; font-family:var(--ff-title); font-size:0.7rem; letter-spacing:0.1em; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-weight:600; transition:all .2s;"
           onmouseover="this.style.background='rgba(61,140,64,.08)'" onmouseout="this.style.background='transparent'">
           <i class="fa-solid fa-scroll"></i> Ver Reglas del Servidor
@@ -1194,28 +1194,6 @@ function rHome(stage){
           </div>
         </div>
       </div>
-      <script>
-      (function(){
-        function pad(n){ return String(n).padStart(2,'0'); }
-        function tick(){
-          const now = new Date();
-          const year = now.getMonth() >= 8 && (now.getMonth() > 8 || now.getDate() >= 18) ? now.getFullYear()+1 : now.getFullYear();
-          const target = new Date(year, 8, 18);
-          const diff = target - now;
-          const el = document.getElementById('cd-dieciocho');
-          if(!el) return;
-          if(diff <= 0){ el.innerHTML = '<span style="font-size:1rem;color:#fff;font-weight:700;">¡Hoy es el 18! 🎉</span>'; return; }
-          const d = Math.floor(diff/86400000);
-          const h = Math.floor((diff%86400000)/3600000);
-          const m = Math.floor((diff%3600000)/60000);
-          const s = Math.floor((diff%60000)/1000);
-          const box = (val,lbl) => \`<div style="text-align:center;background:rgba(255,255,255,.15);border-radius:8px;padding:6px 10px;min-width:52px;"><span style="display:block;font-size:1.4rem;font-weight:700;color:#fff;line-height:1;">\${pad(val)}</span><span style="font-size:0.6rem;color:rgba(255,255,255,.75);letter-spacing:1px;">\${lbl}</span></div>\`;
-          el.innerHTML = box(d,'DÍAS') + box(h,'HRS') + box(m,'MIN') + box(s,'SEG');
-        }
-        tick();
-        setInterval(tick, 1000);
-      })();
-      </script>
 
       <!-- 🥠 GALLETA DE LA FORTUNA -->
       <div style="display:flex; justify-content:center; margin: 0.5rem 0 2rem;">
@@ -1231,6 +1209,31 @@ function rHome(stage){
 
     </div>`;
   updateRadioBadge();
+  startCountdown18();
+}
+
+/* ── 🇨🇱 Cuenta regresiva 18 de Septiembre ── */
+let _countdown18Interval = null;
+function startCountdown18(){
+  if(_countdown18Interval) clearInterval(_countdown18Interval);
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function tick(){
+    const now = new Date();
+    const year = now.getMonth() >= 8 && (now.getMonth() > 8 || now.getDate() >= 18) ? now.getFullYear()+1 : now.getFullYear();
+    const target = new Date(year, 8, 18);
+    const diff = target - now;
+    const el = document.getElementById('cd-dieciocho');
+    if(!el){ clearInterval(_countdown18Interval); return; }
+    if(diff <= 0){ el.innerHTML = '<span style="font-size:1rem;color:#fff;font-weight:700;">¡Hoy es el 18! 🎉</span>'; return; }
+    const d = Math.floor(diff/86400000);
+    const h = Math.floor((diff%86400000)/3600000);
+    const m = Math.floor((diff%3600000)/60000);
+    const s = Math.floor((diff%60000)/1000);
+    const box = (v,l) => `<div style="text-align:center;background:rgba(255,255,255,.15);border-radius:8px;padding:6px 10px;min-width:52px;"><span style="display:block;font-size:1.4rem;font-weight:700;color:#fff;line-height:1;">${pad(v)}</span><span style="font-size:0.6rem;color:rgba(255,255,255,.75);letter-spacing:1px;">${l}</span></div>`;
+    el.innerHTML = box(d,'DÍAS') + box(h,'HRS') + box(m,'MIN') + box(s,'SEG');
+  }
+  tick();
+  _countdown18Interval = setInterval(tick, 1000);
 }
 
 /* ── 📻 Estado de la radio en la portada (misma hoja que radio.html) ── */
