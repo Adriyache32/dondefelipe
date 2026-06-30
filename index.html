@@ -1182,6 +1182,41 @@ function rHome(stage){
         </div>
       </div>
 
+      <!-- 🇨🇱 CUENTA REGRESIVA 18 DE SEPTIEMBRE -->
+      <div style="margin-bottom:1.6rem;">
+        <div style="background:linear-gradient(135deg,#d4001a 0%,#a00014 100%); border-radius:var(--r-md); padding:1.2rem 1.5rem; display:flex; align-items:center; gap:16px; flex-wrap:wrap; box-shadow:0 4px 18px rgba(180,0,20,.25);">
+          <span style="font-size:2rem; flex-shrink:0;">🇨🇱</span>
+          <div style="flex:1; min-width:180px;">
+            <p style="font-family:var(--ff-title); font-size:0.65rem; letter-spacing:2px; color:rgba(255,255,255,.7); text-transform:uppercase; margin-bottom:4px;">Fiestas Patrias · 18 de Septiembre</p>
+            <div id="cd-dieciocho" style="display:flex; gap:10px; flex-wrap:wrap;">
+              <span style="font-size:0.78rem; color:#fff; font-weight:600;">Calculando…</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script>
+      (function(){
+        function pad(n){ return String(n).padStart(2,'0'); }
+        function tick(){
+          const now = new Date();
+          const year = now.getMonth() >= 8 && (now.getMonth() > 8 || now.getDate() >= 18) ? now.getFullYear()+1 : now.getFullYear();
+          const target = new Date(year, 8, 18);
+          const diff = target - now;
+          const el = document.getElementById('cd-dieciocho');
+          if(!el) return;
+          if(diff <= 0){ el.innerHTML = '<span style="font-size:1rem;color:#fff;font-weight:700;">¡Hoy es el 18! 🎉</span>'; return; }
+          const d = Math.floor(diff/86400000);
+          const h = Math.floor((diff%86400000)/3600000);
+          const m = Math.floor((diff%3600000)/60000);
+          const s = Math.floor((diff%60000)/1000);
+          const box = (val,lbl) => \`<div style="text-align:center;background:rgba(255,255,255,.15);border-radius:8px;padding:6px 10px;min-width:52px;"><span style="display:block;font-size:1.4rem;font-weight:700;color:#fff;line-height:1;">\${pad(val)}</span><span style="font-size:0.6rem;color:rgba(255,255,255,.75);letter-spacing:1px;">\${lbl}</span></div>\`;
+          el.innerHTML = box(d,'DÍAS') + box(h,'HRS') + box(m,'MIN') + box(s,'SEG');
+        }
+        tick();
+        setInterval(tick, 1000);
+      })();
+      </script>
+
       <!-- 🎮 NOVEDADES DEL RPG · v16 -->
       <div style="margin-bottom:1.6rem;">
         <div class="card" style="gap:0; border-top:3px solid #8b5cf6; background:linear-gradient(160deg,#fdfbff 0%,#f1ebfb 100%);">
