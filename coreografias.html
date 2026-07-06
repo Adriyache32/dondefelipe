@@ -88,10 +88,11 @@
   #btnDetails.has-content::after{content:'';position:absolute;top:5px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--coral);}
 
   .workspace{flex:1;display:flex;align-items:center;justify-content:center;padding:16px;overflow:hidden;min-height:0;position:relative;}
-  .stage-wrap{width:100%;max-width:1200px;background:var(--panel-2);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
+  .stage-wrap{width:100%;max-width:1200px;background:var(--panel-2);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.35);position:relative;}
   #stageSvg{width:100%;height:100%;display:block;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none;}
   #stageSvg.tool-arrow{cursor:crosshair;}
   #stageSvg.tool-erase{cursor:not-allowed;}
+  #dockHint{position:absolute;display:none;background:rgba(232,179,74,0.32);border:2px dashed var(--gold);border-radius:8px;pointer-events:none;z-index:5;}
 
   .scene-strip{
     background:var(--panel);border-top:1px solid var(--border);
@@ -244,6 +245,7 @@
         <g id="dynamicLayer"></g>
         <line id="tempArrow" x1="0" y1="0" x2="0" y2="0" stroke="#ff6b5b" stroke-width="3" stroke-linecap="round" marker-end="url(#arrowhead)" style="display:none"></line>
       </svg>
+      <div id="dockHint"></div>
     </div>
 
     <div id="panelBackdrop"></div>
@@ -648,7 +650,7 @@
   });
 
   document.getElementById('btnHelp').addEventListener('click', function(){
-    alert('Cómo usar En Escena:\n\n✋ Mover: arrastra los puntos por el escenario o hacia Bastidores si aún no salen a escena.\n➜ Flecha: arrastra desde un bailarín hacia su próxima posición (incluso desde Bastidores hacia el piso).\n✖ Borrar: toca una flecha para eliminarla.\n\n👥 Bailarines: agrega o quita gente de toda la coreografía, y elige si los Bastidores van detrás o a un costado.\n📝 Detalles: título y observaciones de esta viñeta.\n➕ Nueva viñeta: crea el siguiente paso a partir de la formación actual.');
+    alert('Cómo usar En Escena:\n\n✋ Mover: arrastra los puntos por el escenario o hacia Bastidores si aún no salen a escena. También puedes arrastrar el cajón de Bastidores completo hacia un costado, detrás, o el otro costado.\n➜ Flecha: arrastra desde un bailarín hacia su próxima posición (incluso desde Bastidores hacia el piso).\n✖ Borrar: toca una flecha para eliminarla.\n\n👥 Bailarines: agrega o quita gente de toda la coreografía.\n📝 Detalles: título y observaciones de esta viñeta.\n➕ Nueva viñeta: crea el siguiente paso a partir de la formación actual.');
   });
 
   /* ---------- Paneles deslizables ---------- */
@@ -785,8 +787,35 @@
   /* ---------- Interacción en el escenario ---------- */
   var svg = document.getElementById('stageSvg');
   var tempArrowEl = document.getElementById('tempArrow');
+  var dockHintEl = document.getElementById('dockHint');
   var dragPointId = null;
   var drawing = null;
+  var layoutDragging = false;
+  var dockTarget = null;
+
+  function pointInRect(p, r){
+    return p.x >= r.x && p.x <= r.x+r.w && p.y >= r.y && p.y <= r.y+r.h;
+  }
+
+  function classifyDockTarget(evt){
+    var rect = svg.getBoundingClientRect();
+    var fx = (evt.clientX - rect.left) / rect.width;
+    if(fx < 0.25) return 'left';
+    if(fx > 0.75) return 'right';
+    return 'top';
+  }
+
+  function showDockHint(target){
+    dockHintEl.style.display = 'block';
+    if(target === 'left'){
+      dockHintEl.style.left='0'; dockHintEl.style.top='0'; dockHintEl.style.width='25%'; dockHintEl.style.height='100%';
+    } else if(target === 'right'){
+      dockHintEl.style.left='75%'; dockHintEl.style.top='0'; dockHintEl.style.width='25%'; dockHintEl.style.height='100%';
+    } else {
+      dockHintEl.style.left='0'; dockHintEl.style.top='0'; dockHintEl.style.width='100%'; dockHintEl.style.height='22%';
+    }
+  }
+  function hideDockHint(){ dockHintEl.style.display = 'none'; }
 
   function toSVGPoint(evt){
     var pt = svg.createSVGPoint();
@@ -830,7 +859,19 @@
     var scene = currentScene();
     if(state.tool === 'move'){
       var hit = hitTestPoint(scene, p);
-      if(hit){ dragPointId = hit.id; svg.setPointerCapture(e.pointerId); }
+      if(hit){
+        dragPointId = hit.id;
+        svg.setPointerCapture(e.pointerId);
+        svg.style.cursor = 'grabbing';
+      } else {
+        var L0 = currentLayout();
+        if(pointInRect(p, L0.backstageRect)){
+          layoutDragging = true;
+          dockTarget = state.layout;
+          svg.setPointerCapture(e.pointerId);
+          svg.style.cursor = 'grabbing';
+        }
+      }
     } else if(state.tool === 'arrow'){
       var snap = hitTestPoint(scene, p, 28);
       var start = snap ? {x:snap.x, y:snap.y} : p;
@@ -858,12 +899,21 @@
       }
     } else if(drawing){
       tempArrowEl.setAttribute('x2', p.x); tempArrowEl.setAttribute('y2', p.y);
+    } else if(layoutDragging){
+      dockTarget = classifyDockTarget(e);
+      showDockHint(dockTarget);
     }
   });
 
   svg.addEventListener('pointerup', function(e){
     var scene = currentScene();
     if(dragPointId){ dragPointId = null; render(); }
+    if(layoutDragging){
+      hideDockHint();
+      if(dockTarget && dockTarget !== state.layout){ setLayout(dockTarget); }
+      layoutDragging = false;
+      dockTarget = null;
+    }
     if(drawing){
       var p = toSVGPoint(e);
       var snap = hitTestPoint(scene, p, 28);
@@ -876,6 +926,7 @@
       tempArrowEl.style.display = 'none';
       render();
     }
+    svg.style.cursor = '';
     try{ svg.releasePointerCapture(e.pointerId); }catch(err){}
   });
 
