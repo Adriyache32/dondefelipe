@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>En Escena · Diseñador de Coreografías</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#17131f;
+    --panel:#211c30;
+    --panel-2:#2a2340;
+    --border:rgba(255,255,255,0.09);
+    --text:#f4f1ea;
+    --muted:#a89bc4;
+    --gold:#e8b34a;
+    --coral:#ff6b5b;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;overflow:hidden;}
+  button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}
+  button,input,textarea{touch-action:manipulation;}
+  input,textarea{font-family:inherit;}
+
+  /* ---------- Setup screen ---------- */
+  #setupScreen{
+    position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    background:
+      radial-gradient(ellipse 700px 500px at 50% 15%, rgba(232,179,74,0.14), transparent 60%),
+      var(--bg);
+    padding:calc(24px + env(safe-area-inset-top)) calc(24px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left));
+    overflow-y:auto;
+  }
+  .setup-card{width:100%;max-width:460px;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:36px 32px;box-shadow:0 30px 80px rgba(0,0,0,0.5);}
+  .setup-card h1{font-family:'Bebas Neue',sans-serif;font-size:44px;letter-spacing:3px;margin:0 0 6px;color:var(--gold);}
+  .setup-card p.sub{color:var(--muted);margin:0 0 30px;font-size:14px;line-height:1.5;}
+  .step-label{font-size:13px;color:var(--muted);margin:0 0 12px;font-weight:600;}
+  .mode-grid{display:flex;gap:14px;}
+  .mode-opt{flex:1;border:2px solid var(--border);border-radius:14px;padding:22px 10px;text-align:center;cursor:pointer;background:var(--panel-2);transition:.15s;}
+  .mode-opt:hover{border-color:var(--coral);transform:translateY(-2px);}
+  .mode-opt:active{filter:brightness(0.9);}
+  .mode-opt.selected{border-color:var(--gold);background:rgba(232,179,74,0.12);}
+  .mode-opt .ico{font-size:30px;display:block;margin-bottom:8px;}
+  .mode-opt .lbl{font-weight:600;font-size:14px;}
+  .step2{display:none;margin-top:24px;}
+  .step2.visible{display:block;}
+  .back-link{background:none;border:none;color:var(--muted);font-size:12px;padding:6px 0;margin-bottom:10px;}
+  .back-link:hover{color:var(--coral);}
+  #namesInput{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px;resize:vertical;font-size:16px;}
+  #countInput{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px;font-size:16px;text-align:center;}
+  .count-hint{color:var(--muted);font-size:12px;margin:8px 0 16px;}
+  .btn-primary{background:var(--gold);color:#1a1420;border:none;border-radius:10px;padding:16px;font-weight:700;font-size:15px;width:100%;transition:.15s;}
+  .btn-primary:disabled{opacity:.4;cursor:not-allowed;}
+  .btn-primary:not(:disabled):hover{filter:brightness(1.08);transform:translateY(-1px);}
+  .btn-primary:not(:disabled):active{filter:brightness(0.92);transform:none;}
+  .btn-secondary{background:transparent;color:var(--gold);border:1.5px solid var(--gold);border-radius:10px;padding:13px;font-weight:700;font-size:14px;width:100%;transition:.15s;}
+  .btn-secondary:hover{background:rgba(232,179,74,0.1);}
+  .btn-secondary:active{filter:brightness(0.92);}
+  .setup-divider{display:flex;align-items:center;gap:10px;margin:22px 0;color:var(--muted);font-size:12px;}
+  .setup-divider::before,.setup-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+  /* ---------- Design screen ---------- */
+  #designScreen{position:fixed;inset:0;display:none;flex-direction:column;}
+  .toolbar{
+    background:var(--panel);border-bottom:1px solid var(--border);
+    padding:calc(10px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 8px calc(16px + env(safe-area-inset-left));
+    display:flex;flex-direction:column;gap:8px;
+    -webkit-user-select:none;user-select:none;
+  }
+  .toolbar-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .toolbar-row.between{justify-content:space-between;}
+  .tb-left{display:flex;align-items:center;gap:10px;min-width:0;}
+  .tb-right{display:flex;align-items:center;gap:8px;}
+  .brand-mini{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);letter-spacing:2px;white-space:nowrap;}
+  .scene-indicator{color:var(--muted);font-size:13px;white-space:nowrap;}
+  .seg{display:flex;background:var(--panel-2);border-radius:10px;padding:3px;gap:2px;flex:1 1 auto;}
+  .seg button{border:none;background:transparent;color:var(--muted);padding:10px 14px;border-radius:8px;font-size:13px;flex:1;white-space:nowrap;}
+  .seg button.active{background:var(--coral);color:#fff;}
+  .seg button:active{filter:brightness(0.9);}
+  .btn-icon{background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:9px 14px;border-radius:9px;font-size:13px;white-space:nowrap;position:relative;}
+  .btn-icon:hover:not(:disabled){border-color:var(--coral);}
+  .btn-icon:active:not(:disabled){filter:brightness(0.88);}
+  .btn-icon:disabled{opacity:.35;cursor:not-allowed;}
+  .btn-export{background:var(--gold);color:#1a1420;font-weight:700;border:none;}
+  .btn-export:hover{filter:brightness(1.08);}
+  .btn-help{border-radius:50%;width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;font-weight:700;flex:0 0 auto;}
+  #btnDetails.has-content::after{content:'';position:absolute;top:5px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--coral);}
+
+  .workspace{flex:1;display:flex;align-items:center;justify-content:center;padding:16px;overflow:hidden;min-height:0;position:relative;}
+  .stage-wrap{width:100%;aspect-ratio:900/560;max-width:1100px;background:var(--panel-2);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
+  #stageSvg{width:100%;height:100%;display:block;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none;}
+  #stageSvg.tool-arrow{cursor:crosshair;}
+  #stageSvg.tool-erase{cursor:not-allowed;}
+
+  .scene-strip{
+    background:var(--panel);border-top:1px solid var(--border);
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+    display:flex;gap:10px;overflow-x:auto;align-items:flex-start;
+    -webkit-overflow-scrolling:touch;-webkit-user-select:none;user-select:none;
+  }
+  .thumb{flex:0 0 auto;width:110px;cursor:pointer;position:relative;}
+  .thumb svg{width:100%;aspect-ratio:900/560;border-radius:8px;border:2px solid var(--border);background:var(--panel-2);display:block;}
+  .thumb.active svg{border-color:var(--gold);}
+  .thumb .cap{font-size:11px;color:var(--muted);text-align:center;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .thumb .del{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:13px;line-height:20px;text-align:center;padding:0;opacity:0.9;}
+  .thumb .del:active{opacity:1;filter:brightness(0.9);}
+  .thumb .note-badge{position:absolute;top:-6px;left:-6px;width:20px;height:20px;border-radius:50%;background:var(--panel);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;}
+  .thumb-add{flex:0 0 auto;width:110px;aspect-ratio:900/560;border-radius:8px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:26px;background:transparent;}
+  .thumb-add:hover{border-color:var(--gold);color:var(--gold);}
+  .thumb-add:active{filter:brightness(0.9);}
+
+  /* ---------- Details panel (título + observaciones) ---------- */
+  #detailsBackdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:15;display:none;}
+  #detailsBackdrop.open{display:block;}
+  #detailsPanel{
+    position:absolute;left:0;right:0;top:0;
+    background:var(--panel);border-bottom:1px solid var(--border);
+    z-index:20;padding:18px 20px calc(20px + env(safe-area-inset-bottom));
+    box-shadow:0 16px 40px rgba(0,0,0,.45);
+    transform:translateY(-115%);transition:transform .22s ease;
+    max-height:82vh;overflow-y:auto;
+  }
+  #detailsPanel.open{transform:translateY(0);}
+  .details-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .details-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--gold);}
+  .btn-close{background:var(--panel-2);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:8px;font-size:14px;}
+  .field-label{display:block;font-size:12px;color:var(--muted);font-weight:600;margin:14px 0 6px;}
+  .field-label:first-of-type{margin-top:0;}
+  #sceneTitleInput, #sceneNotesInput{width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:11px 12px;border-radius:9px;font-size:16px;}
+  #sceneNotesInput{resize:vertical;line-height:1.4;}
+  #sceneTitleInput:focus,#sceneNotesInput:focus{outline:2px solid var(--gold);border-color:transparent;}
+  .details-divider{height:1px;background:var(--border);margin:20px 0 4px;}
+  .progress-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+  .progress-actions .btn-icon{flex:1;text-align:center;justify-content:center;}
+  .hint-text{color:var(--muted);font-size:11.5px;margin:10px 0 0;line-height:1.4;}
+
+  @media (max-width:700px){
+    .setup-card{padding:28px 22px;}
+    .setup-card h1{font-size:36px;}
+    .brand-mini{font-size:17px;}
+    .scene-indicator{font-size:11px;}
+    .btn-icon{padding:10px 12px;font-size:12px;}
+    #btnClearArrows,#btnAddScene,#btnDeleteScene{flex:1 1 auto;justify-content:center;text-align:center;}
+    .seg{flex:1 1 100%;order:1;}
+    .btn-help{order:2;}
+    #btnClearArrows{order:3;}
+    #btnAddScene{order:4;}
+    #btnDeleteScene{order:5;}
+    .thumb,.thumb-add{width:88px;}
+  }
+</style>
+</head>
+<body>
+
+<div id="setupScreen">
+  <div class="setup-card">
+    <h1>EN ESCENA</h1>
+    <p class="sub">Diseña formaciones de coreografía, marca direcciones de movimiento entre viñetas y exporta todo en PDF.</p>
+
+    <button class="btn-secondary" id="btnLoadProgressSetup">📂 Continuar un avance guardado</button>
+    <div class="setup-divider"><span>o empieza uno nuevo</span></div>
+
+    <div id="step1">
+      <p class="step-label">¿Cómo quieres identificar a los bailarines?</p>
+      <div class="mode-grid">
+        <div class="mode-opt" id="optNames" data-mode="names">
+          <span class="ico">🔤</span>
+          <span class="lbl">Por nombre</span>
+        </div>
+        <div class="mode-opt" id="optNumbers" data-mode="numbers">
+          <span class="ico">#️⃣</span>
+          <span class="lbl">Por número</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="step2Names" class="step2">
+      <button class="back-link" data-back>← Cambiar</button>
+      <p class="step-label">Escribe un nombre por línea</p>
+      <textarea id="namesInput" rows="7" placeholder="Sofía&#10;Matías&#10;Valentina&#10;..."></textarea>
+      <p class="count-hint" id="namesCount">0 bailarines</p>
+      <button class="btn-primary" id="namesContinue" disabled>Comenzar a diseñar →</button>
+    </div>
+
+    <div id="step2Numbers" class="step2">
+      <button class="back-link" data-back>← Cambiar</button>
+      <p class="step-label">¿Cuántos bailarines participan?</p>
+      <input type="number" id="countInput" min="1" max="80" value="8" inputmode="numeric">
+      <button class="btn-primary" id="numbersContinue" style="margin-top:16px;">Comenzar a diseñar →</button>
+    </div>
+  </div>
+</div>
+
+<div id="designScreen">
+  <div class="toolbar">
+    <div class="toolbar-row between">
+      <div class="tb-left">
+        <div class="brand-mini">EN ESCENA</div>
+        <div class="scene-indicator" id="sceneIndicator">Viñeta 1 de 1</div>
+      </div>
+      <div class="tb-right">
+        <button class="btn-icon" id="btnDetails" title="Título y observaciones">📝 Detalles</button>
+        <button class="btn-icon btn-export" id="btnExport">⬇ Exportar PDF</button>
+      </div>
+    </div>
+    <div class="toolbar-row">
+      <div class="seg" role="group" aria-label="Herramienta de dibujo">
+        <button data-tool="move" class="active">✋ Mover</button>
+        <button data-tool="arrow">➜ Flecha</button>
+        <button data-tool="erase">✖ Borrar</button>
+      </div>
+      <button class="btn-icon btn-help" id="btnHelp" title="Ayuda" aria-label="Ayuda">?</button>
+      <button class="btn-icon" id="btnClearArrows">🧹 Limpiar flechas</button>
+      <button class="btn-icon" id="btnAddScene">➕ Nueva viñeta</button>
+      <button class="btn-icon" id="btnDeleteScene" title="Eliminar viñeta">🗑 Eliminar</button>
+    </div>
+  </div>
+
+  <div class="workspace">
+    <div class="stage-wrap">
+      <svg id="stageSvg" viewBox="0 0 900 560" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="floorGrid" width="45" height="45" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="1.3" fill="rgba(255,255,255,0.07)"></circle>
+          </pattern>
+          <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#ff6b5b"></path>
+          </marker>
+        </defs>
+        <g id="dynamicLayer"></g>
+        <line id="tempArrow" x1="0" y1="0" x2="0" y2="0" stroke="#ff6b5b" stroke-width="3" stroke-linecap="round" marker-end="url(#arrowhead)" style="display:none"></line>
+      </svg>
+    </div>
+
+    <div id="detailsBackdrop"></div>
+    <div id="detailsPanel">
+      <div class="details-header">
+        <span class="details-title">Detalles de la viñeta</span>
+        <button class="btn-close" id="btnCloseDetails" aria-label="Cerrar">✕</button>
+      </div>
+      <label class="field-label" for="sceneTitleInput">Título</label>
+      <input type="text" id="sceneTitleInput" placeholder="Ej: Formación en V">
+      <label class="field-label" for="sceneNotesInput">Observaciones</label>
+      <textarea id="sceneNotesInput" rows="4" placeholder="Notas para esta viñeta: conteos, indicaciones, vestuario, etc."></textarea>
+
+      <div class="details-divider"></div>
+      <p class="field-label">Progreso</p>
+      <div class="progress-actions">
+        <button class="btn-icon" id="btnSaveProgress">💾 Guardar avance</button>
+        <button class="btn-icon" id="btnLoadProgressDetails">📂 Cargar otro avance</button>
+      </div>
+      <p class="hint-text">💡 El PDF es para imprimir o compartir. Guarda el avance (.json) para seguir editando más tarde, en este u otro computador.</p>
+    </div>
+  </div>
+
+  <div class="scene-strip" id="sceneStrip"></div>
+</div>
+
+<input type="file" id="loadFileInput" accept="application/json,.json" style="display:none">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var COLORS = ['#e8b34a','#ff6b5b','#7ed9a8','#6fb8e8','#ef8fbe','#c9a6ff','#f2a65a','#8fe0d0','#f4d35e','#9fb8f0'];
+  var DEFS_MARKUP = '<defs><pattern id="floorGrid" width="45" height="45" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1.3" fill="rgba(255,255,255,0.07)"/></pattern><marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#ff6b5b"/></marker></defs>';
+
+  var state = { mode:null, scenes:[], current:0, tool:'move' };
+  var idSeq = 1;
+  function genId(prefix){ return prefix + '_' + (idSeq++); }
+
+  function escapeXML(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'})[c];
+    });
+  }
+
+  function shortLabel(mode, label){
+    if(mode === 'numbers') return String(label);
+    var trimmed = String(label).trim();
+    var parts = trimmed.split(/\s+/).filter(Boolean);
+    if(parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return trimmed.slice(0,2).toUpperCase();
+  }
+
+  function clamp(v,min,max){ return Math.min(max, Math.max(min, v)); }
+
+  /* ---------- Formación por defecto ---------- */
+  function defaultFormation(list){
+    var W=900, H=560, padX=110, padY=130;
+    var n = list.length;
+    var cols = Math.max(1, Math.min(n, Math.ceil(Math.sqrt(n * (W-2*padX) / (H-2*padY-40)))));
+    var rows = Math.ceil(n/cols);
+    var stepX = cols>1 ? (W-2*padX)/(cols-1) : 0;
+    var stepY = rows>1 ? (H-2*padY-40)/(rows-1) : 0;
+    return list.map(function(p,i){
+      var row = Math.floor(i/cols), col = i%cols;
+      var rowCount = Math.min(cols, n-row*cols);
+      var rowWidth = (rowCount-1)*stepX;
+      var startX = (W-rowWidth)/2;
+      var x = rowCount===1 ? W/2 : startX + col*stepX;
+      var y = padY + row*stepY;
+      return { id:p.id, label:p.label, color:p.color, x:x, y:y };
+    });
+  }
+
+  /* ---------- Render de contenido SVG (compartido: escenario vivo, miniaturas y export) ---------- */
+  function fullBackground(){
+    return '<rect width="900" height="560" fill="#241f33"/>' +
+      '<rect x="40" y="40" width="820" height="480" rx="10" fill="url(#floorGrid)" stroke="#4a3f66" stroke-width="2"/>' +
+      '<path d="M 110 500 Q 450 545 790 500" stroke="#6a5c8f" stroke-width="2" fill="none" stroke-dasharray="5 5"/>' +
+      '<text x="450" y="530" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" letter-spacing="3" fill="#a89bc4">PÚBLICO</text>';
+  }
+
+  function pointMarkup(p, mode){
+    var short = shortLabel(mode, p.label);
+    return '<g>' +
+      '<circle cx="'+p.x+'" cy="'+p.y+'" r="18" fill="'+p.color+'" stroke="#17131f" stroke-width="2.5"/>' +
+      '<text x="'+p.x+'" y="'+(p.y+5)+'" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#17131f">'+escapeXML(short)+'</text>' +
+      '<rect x="'+(p.x-32)+'" y="'+(p.y+22)+'" width="64" height="17" rx="8.5" fill="rgba(23,19,31,0.75)"/>' +
+      '<text x="'+p.x+'" y="'+(p.y+34)+'" text-anchor="middle" font-family="Arial, sans-serif" font-size="10.5" fill="#f4f1ea">'+escapeXML(p.label)+'</text>' +
+      '</g>';
+  }
+
+  function arrowMarkup(a){
+    return '<g>' +
+      '<line x1="'+a.x1+'" y1="'+a.y1+'" x2="'+a.x2+'" y2="'+a.y2+'" stroke="#17131f" stroke-width="6" stroke-linecap="round" opacity="0.25"/>' +
+      '<line x1="'+a.x1+'" y1="'+a.y1+'" x2="'+a.x2+'" y2="'+a.y2+'" stroke="#ff6b5b" stroke-width="3" stroke-linecap="round" marker-end="url(#arrowhead)"/>' +
+      '</g>';
+  }
+
+  function stageContent(scene, mode){
+    return scene.arrows.map(arrowMarkup).join('') + scene.points.map(function(p){ return pointMarkup(p, mode); }).join('');
+  }
+
+  function wrapTextLines(text, maxChars, maxLines){
+    var words = text.split(/\s+/).filter(Boolean);
+    var lines = [];
+    var cur = '';
+    for(var i=0;i<words.length;i++){
+      var w = words[i];
+      var test = cur ? (cur+' '+w) : w;
+      if(test.length > maxChars){
+        if(cur) lines.push(cur);
+        cur = w;
+        if(lines.length >= maxLines) break;
+      } else {
+        cur = test;
+      }
+    }
+    if(cur && lines.length < maxLines) lines.push(cur);
+    var totalUsed = lines.join(' ').length;
+    if(lines.length >= maxLines && totalUsed < text.length){
+      var last = lines[maxLines-1];
+      lines[maxLines-1] = (last.length>3 ? last.slice(0,last.length-1) : last) + '…';
+    }
+    return lines.slice(0,maxLines);
+  }
+
+  function footerMarkup(notes){
+    var hasNotes = notes && notes.trim().length > 0;
+    var body;
+    if(hasNotes){
+      var lines = wrapTextLines(notes.trim(), 110, 2);
+      var tspans = lines.map(function(line,i){
+        return '<tspan x="40" dy="'+(i===0?'0':'17')+'">'+escapeXML(line)+'</tspan>';
+      }).join('');
+      body = '<text x="40" y="34" font-family="Arial, sans-serif" font-size="14" fill="#f4f1ea">'+tspans+'</text>';
+    } else {
+      body = '<text x="40" y="34" font-family="Arial, sans-serif" font-size="13" fill="#6f6591" font-style="italic">Sin observaciones</text>';
+    }
+    return '<rect width="900" height="60" fill="#211c30"/>' +
+      '<text x="40" y="16" font-family="Arial, sans-serif" font-size="10.5" font-weight="700" letter-spacing="2" fill="#a89bc4">OBSERVACIONES</text>' +
+      body;
+  }
+
+  /* ---------- Escenas ---------- */
+  function currentScene(){ return state.scenes[state.current]; }
+
+  function addScene(){
+    var src = currentScene();
+    var ns = { id:genId('scene'), title:'', notes:'', points: src.points.map(function(p){ return {id:p.id,label:p.label,color:p.color,x:p.x,y:p.y}; }), arrows: [] };
+    state.scenes.splice(state.current+1, 0, ns);
+    state.current++;
+    render();
+    openDetails();
+    var ti = document.getElementById('sceneTitleInput');
+    setTimeout(function(){ ti.focus(); }, 240);
+  }
+
+  function deleteScene(i){
+    if(state.scenes.length <= 1) return;
+    if(!confirm('¿Eliminar esta viñeta?')) return;
+    state.scenes.splice(i,1);
+    if(state.current >= state.scenes.length) state.current = state.scenes.length-1;
+    else if(i < state.current) state.current--;
+    render();
+  }
+
+  function clearArrows(){
+    var scene = currentScene();
+    if(scene.arrows.length === 0) return;
+    if(!confirm('¿Borrar todas las flechas de esta viñeta?')) return;
+    scene.arrows = [];
+    render();
+  }
+
+  /* ---------- Render principal ---------- */
+  function updateDetailsIndicator(){
+    var scene = currentScene();
+    var has = (scene.title && scene.title.trim()) || (scene.notes && scene.notes.trim());
+    document.getElementById('btnDetails').classList.toggle('has-content', !!has);
+  }
+
+  function render(){
+    var scene = currentScene();
+    document.getElementById('dynamicLayer').innerHTML = fullBackground() + stageContent(scene, state.mode);
+    document.getElementById('sceneTitleInput').value = scene.title || '';
+    document.getElementById('sceneNotesInput').value = scene.notes || '';
+    document.getElementById('sceneIndicator').textContent = 'Viñeta ' + (state.current+1) + ' de ' + state.scenes.length;
+    document.getElementById('btnDeleteScene').disabled = state.scenes.length <= 1;
+    document.getElementById('btnClearArrows').disabled = scene.arrows.length === 0;
+    updateDetailsIndicator();
+    renderStrip();
+  }
+
+  function renderStrip(){
+    var strip = document.getElementById('sceneStrip');
+    var html = state.scenes.map(function(s,i){
+      var badge = (s.notes && s.notes.trim()) ? '<span class="note-badge" title="Tiene observaciones">📝</span>' : '';
+      return '<div class="thumb '+(i===state.current?'active':'')+'" data-idx="'+i+'">' +
+        badge +
+        '<svg viewBox="0 0 900 560" xmlns="http://www.w3.org/2000/svg">'+DEFS_MARKUP+fullBackground()+stageContent(s, state.mode)+'</svg>' +
+        '<button class="del" data-del="'+i+'" title="Eliminar viñeta">×</button>' +
+        '<div class="cap">'+(i+1)+'. '+escapeXML(s.title || 'Sin título')+'</div>' +
+        '</div>';
+    }).join('') + '<button class="thumb-add" id="btnAddFromStrip" title="Nueva viñeta">+</button>';
+    strip.innerHTML = html;
+  }
+
+  document.getElementById('sceneStrip').addEventListener('click', function(e){
+    var del = e.target.closest('[data-del]');
+    if(del){ e.stopPropagation(); deleteScene(parseInt(del.dataset.del,10)); return; }
+    var add = e.target.closest('#btnAddFromStrip');
+    if(add){ addScene(); return; }
+    var th = e.target.closest('.thumb');
+    if(th){ state.current = parseInt(th.dataset.idx,10); render(); }
+  });
+
+  /* ---------- Herramientas ---------- */
+  function setTool(t){
+    state.tool = t;
+    document.querySelectorAll('.seg button').forEach(function(b){
+      b.classList.toggle('active', b.dataset.tool === t);
+    });
+    var svgEl = document.getElementById('stageSvg');
+    svgEl.classList.remove('tool-move','tool-arrow','tool-erase');
+    svgEl.classList.add('tool-'+t);
+  }
+  document.querySelectorAll('.seg button').forEach(function(b){
+    b.addEventListener('click', function(){ setTool(b.dataset.tool); });
+  });
+
+  document.getElementById('btnClearArrows').addEventListener('click', clearArrows);
+  document.getElementById('btnAddScene').addEventListener('click', addScene);
+  document.getElementById('btnDeleteScene').addEventListener('click', function(){ deleteScene(state.current); });
+  document.getElementById('sceneTitleInput').addEventListener('input', function(e){
+    currentScene().title = e.target.value;
+    updateDetailsIndicator();
+    renderStrip();
+  });
+  document.getElementById('sceneNotesInput').addEventListener('input', function(e){
+    currentScene().notes = e.target.value;
+    updateDetailsIndicator();
+    renderStrip();
+  });
+
+  document.getElementById('btnHelp').addEventListener('click', function(){
+    alert('Cómo usar En Escena:\n\n✋ Mover: arrastra los puntos por el escenario.\n➜ Flecha: elige la herramienta y arrastra desde un bailarín hacia su próxima posición.\n✖ Borrar: toca una flecha para eliminarla.\n\n📝 Detalles: agrega un título y observaciones a la viñeta actual.\n\n➕ Nueva viñeta: crea el siguiente paso a partir de la formación actual.');
+  });
+
+  /* ---------- Panel de detalles (overlay) ---------- */
+  function openDetails(){
+    var toolbarH = document.querySelector('.toolbar').offsetHeight;
+    document.getElementById('detailsPanel').style.top = toolbarH + 'px';
+    document.getElementById('detailsBackdrop').classList.add('open');
+    document.getElementById('detailsPanel').classList.add('open');
+  }
+  function closeDetails(){
+    document.getElementById('detailsBackdrop').classList.remove('open');
+    document.getElementById('detailsPanel').classList.remove('open');
+  }
+  document.getElementById('btnDetails').addEventListener('click', function(){
+    var panel = document.getElementById('detailsPanel');
+    if(panel.classList.contains('open')) closeDetails(); else openDetails();
+  });
+  document.getElementById('btnCloseDetails').addEventListener('click', closeDetails);
+  document.getElementById('detailsBackdrop').addEventListener('click', closeDetails);
+
+  /* ---------- Ajuste dinámico del tamaño del escenario (clave para celulares) ---------- */
+  function fitStage(){
+    var workspace = document.querySelector('.workspace');
+    var wrap = document.querySelector('.stage-wrap');
+    if(!workspace || !wrap) return;
+    var availW = workspace.clientWidth - 32;
+    var availH = workspace.clientHeight - 32;
+    if(availW <= 0 || availH <= 0) return;
+    var ratio = 900/560;
+    var w = availW, h = w/ratio;
+    if(h > availH){ h = availH; w = h*ratio; }
+    wrap.style.width = Math.max(w,120) + 'px';
+    wrap.style.height = Math.max(h,80) + 'px';
+  }
+  window.addEventListener('resize', fitStage);
+  window.addEventListener('orientationchange', function(){ setTimeout(fitStage, 250); });
+  if(window.ResizeObserver){
+    var ro = new ResizeObserver(function(){ fitStage(); });
+    ro.observe(document.querySelector('.toolbar'));
+  }
+
+  /* ---------- Interacción en el escenario ---------- */
+  var svg = document.getElementById('stageSvg');
+  var tempArrowEl = document.getElementById('tempArrow');
+  var dragPointId = null;
+  var drawing = null;
+
+  function toSVGPoint(evt){
+    var pt = svg.createSVGPoint();
+    pt.x = evt.clientX; pt.y = evt.clientY;
+    var ctm = svg.getScreenCTM();
+    var loc = pt.matrixTransform(ctm.inverse());
+    return { x: loc.x, y: loc.y };
+  }
+
+  function hitTestPoint(scene, p, radius){
+    radius = radius || 27;
+    var best = null, bestD = Infinity;
+    scene.points.forEach(function(pt){
+      var d = Math.hypot(pt.x-p.x, pt.y-p.y);
+      if(d < radius && d < bestD){ best = pt; bestD = d; }
+    });
+    return best;
+  }
+
+  function distToSegment(p,a,b){
+    var l2 = Math.pow(b.x-a.x,2) + Math.pow(b.y-a.y,2);
+    if(l2 === 0) return Math.hypot(p.x-a.x, p.y-a.y);
+    var t = ((p.x-a.x)*(b.x-a.x) + (p.y-a.y)*(b.y-a.y)) / l2;
+    t = Math.max(0, Math.min(1, t));
+    var proj = { x:a.x+t*(b.x-a.x), y:a.y+t*(b.y-a.y) };
+    return Math.hypot(p.x-proj.x, p.y-proj.y);
+  }
+
+  function hitTestArrow(scene, p, tol){
+    tol = tol || 13;
+    var best = null, bestD = Infinity;
+    scene.arrows.forEach(function(a){
+      var d = distToSegment(p, {x:a.x1,y:a.y1}, {x:a.x2,y:a.y2});
+      if(d < tol && d < bestD){ best = a; bestD = d; }
+    });
+    return best;
+  }
+
+  svg.addEventListener('pointerdown', function(e){
+    var p = toSVGPoint(e);
+    var scene = currentScene();
+    if(state.tool === 'move'){
+      var hit = hitTestPoint(scene, p);
+      if(hit){ dragPointId = hit.id; svg.setPointerCapture(e.pointerId); }
+    } else if(state.tool === 'arrow'){
+      var snap = hitTestPoint(scene, p, 28);
+      var start = snap ? {x:snap.x, y:snap.y} : p;
+      drawing = { x1:start.x, y1:start.y };
+      svg.setPointerCapture(e.pointerId);
+      tempArrowEl.style.display = 'block';
+      tempArrowEl.setAttribute('x1', start.x); tempArrowEl.setAttribute('y1', start.y);
+      tempArrowEl.setAttribute('x2', start.x); tempArrowEl.setAttribute('y2', start.y);
+    } else if(state.tool === 'erase'){
+      var hitA = hitTestArrow(scene, p);
+      if(hitA){ scene.arrows = scene.arrows.filter(function(a){ return a.id !== hitA.id; }); render(); }
+    }
+  });
+
+  svg.addEventListener('pointermove', function(e){
+    var p = toSVGPoint(e);
+    if(dragPointId){
+      var scene = currentScene();
+      var pt = scene.points.find(function(pp){ return pp.id === dragPointId; });
+      if(pt){
+        pt.x = clamp(p.x, 65, 835);
+        pt.y = clamp(p.y, 70, 480);
+        document.getElementById('dynamicLayer').innerHTML = fullBackground() + stageContent(scene, state.mode);
+      }
+    } else if(drawing){
+      tempArrowEl.setAttribute('x2', p.x); tempArrowEl.setAttribute('y2', p.y);
+    }
+  });
+
+  svg.addEventListener('pointerup', function(e){
+    var scene = currentScene();
+    if(dragPointId){ dragPointId = null; render(); }
+    if(drawing){
+      var p = toSVGPoint(e);
+      var snap = hitTestPoint(scene, p, 28);
+      var end = snap ? {x:snap.x, y:snap.y} : p;
+      var dx = end.x-drawing.x1, dy = end.y-drawing.y1;
+      if(Math.hypot(dx,dy) > 14){
+        scene.arrows.push({ id:genId('arrow'), x1:drawing.x1, y1:drawing.y1, x2:end.x, y2:end.y });
+      }
+      drawing = null;
+      tempArrowEl.style.display = 'none';
+      render();
+    }
+    try{ svg.releasePointerCapture(e.pointerId); }catch(err){}
+  });
+
+  /* ---------- Exportar PDF ---------- */
+  function buildExportSVGString(scene, idx, total, mode){
+    var title = (scene.title && scene.title.trim()) ? scene.title.trim() : ('Viñeta ' + idx);
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 660" width="900" height="660">' +
+      DEFS_MARKUP +
+      '<rect width="900" height="660" fill="#17131f"/>' +
+      '<text x="40" y="34" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#e8b34a">'+escapeXML(title)+'</text>' +
+      '<text x="860" y="34" text-anchor="end" font-family="Arial, sans-serif" font-size="14" fill="#a89bc4">'+idx+' / '+total+'</text>' +
+      '<g transform="translate(0,40)">' + fullBackground() + stageContent(scene, mode) + '</g>' +
+      '<g transform="translate(0,600)">' + footerMarkup(scene.notes) + '</g>' +
+      '</svg>';
+  }
+
+  function loadImage(src){
+    return new Promise(function(resolve, reject){
+      var img = new Image();
+      img.onload = function(){ resolve(img); };
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+
+  function exportPDF(){
+    var btn = document.getElementById('btnExport');
+    btn.disabled = true;
+    var oldText = btn.textContent;
+    btn.textContent = 'Generando…';
+    (async function(){
+      try{
+        if(!window.jspdf){
+          alert('No se pudo cargar la librería de PDF. Revisa tu conexión a internet e inténtalo de nuevo.');
+          return;
+        }
+        var jsPDF = window.jspdf.jsPDF;
+        var doc = new jsPDF({ orientation:'landscape', unit:'px', format:[900,660] });
+        for(var i=0; i<state.scenes.length; i++){
+          var svgStr = buildExportSVGString(state.scenes[i], i+1, state.scenes.length, state.mode);
+          var dataUrl = 'data:image/svg+xml;charset=utf-8;base64,' + btoa(unescape(encodeURIComponent(svgStr)));
+          var img = await loadImage(dataUrl);
+          var canvas = document.createElement('canvas');
+          var scale = 2;
+          canvas.width = 900*scale; canvas.height = 660*scale;
+          var ctx = canvas.getContext('2d');
+          ctx.scale(scale, scale);
+          ctx.drawImage(img, 0, 0, 900, 660);
+          var png = canvas.toDataURL('image/png');
+          if(i>0) doc.addPage([900,660], 'landscape');
+          doc.addImage(png, 'PNG', 0, 0, 900, 660);
+        }
+        doc.save('coreografia.pdf');
+      } catch(err){
+        console.error(err);
+        alert('Ocurrió un problema al generar el PDF. Intenta nuevamente.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = oldText;
+      }
+    })();
+  }
+  document.getElementById('btnExport').addEventListener('click', exportPDF);
+
+  /* ---------- Guardar / cargar avance (.json) ---------- */
+  function saveProgress(){
+    var data = { app:'en-escena', version:1, mode: state.mode, scenes: state.scenes };
+    var blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    var stamp = new Date().toISOString().slice(0,10);
+    a.download = 'coreografia-avance-' + stamp + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function loadProgressFromFile(file){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      try{
+        var data = JSON.parse(e.target.result);
+        if(!data || typeof data.mode !== 'string' || !Array.isArray(data.scenes) || data.scenes.length < 1){
+          alert('Este archivo no parece ser un avance válido de En Escena.');
+          return;
+        }
+        data.scenes.forEach(function(s){
+          if(typeof s.title !== 'string') s.title = '';
+          if(typeof s.notes !== 'string') s.notes = '';
+          if(!Array.isArray(s.points)) s.points = [];
+          if(!Array.isArray(s.arrows)) s.arrows = [];
+        });
+        state.mode = data.mode;
+        state.scenes = data.scenes;
+        state.current = 0;
+        document.getElementById('setupScreen').style.display = 'none';
+        document.getElementById('designScreen').style.display = 'flex';
+        closeDetails();
+        setTool('move');
+        render();
+        requestAnimationFrame(fitStage);
+      } catch(err){
+        console.error(err);
+        alert('No se pudo leer el archivo. Asegúrate de que sea un avance exportado desde En Escena (.json).');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  document.getElementById('loadFileInput').addEventListener('change', function(e){
+    var f = e.target.files[0];
+    if(f) loadProgressFromFile(f);
+    e.target.value = '';
+  });
+  document.getElementById('btnSaveProgress').addEventListener('click', saveProgress);
+  document.getElementById('btnLoadProgressSetup').addEventListener('click', function(){
+    document.getElementById('loadFileInput').click();
+  });
+  document.getElementById('btnLoadProgressDetails').addEventListener('click', function(){
+    if(confirm('Cargar un avance reemplazará el diseño actual (asegúrate de haber guardado antes si quieres conservarlo). ¿Continuar?')){
+      document.getElementById('loadFileInput').click();
+    }
+  });
+
+  /* ---------- Pantalla inicial (setup) ---------- */
+  function chooseMode(m){
+    document.getElementById('optNames').classList.toggle('selected', m==='names');
+    document.getElementById('optNumbers').classList.toggle('selected', m==='numbers');
+    document.getElementById('step2Names').classList.toggle('visible', m==='names');
+    document.getElementById('step2Numbers').classList.toggle('visible', m==='numbers');
+    document.getElementById('step1').style.display = 'none';
+  }
+  function backToStep1(){
+    document.getElementById('step2Names').classList.remove('visible');
+    document.getElementById('step2Numbers').classList.remove('visible');
+    document.getElementById('optNames').classList.remove('selected');
+    document.getElementById('optNumbers').classList.remove('selected');
+    document.getElementById('step1').style.display = 'block';
+  }
+  document.getElementById('optNames').addEventListener('click', function(){ chooseMode('names'); });
+  document.getElementById('optNumbers').addEventListener('click', function(){ chooseMode('numbers'); });
+  document.querySelectorAll('[data-back]').forEach(function(b){ b.addEventListener('click', backToStep1); });
+
+  var namesInput = document.getElementById('namesInput');
+  var namesContinue = document.getElementById('namesContinue');
+  namesInput.addEventListener('input', function(){
+    var n = namesInput.value.split('\n').map(function(s){ return s.trim(); }).filter(Boolean).length;
+    document.getElementById('namesCount').textContent = n + (n===1 ? ' bailarín' : ' bailarines');
+    namesContinue.disabled = n < 1;
+  });
+  namesContinue.addEventListener('click', function(){
+    var lines = namesInput.value.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+    if(lines.length < 1) return;
+    startApp('names', lines);
+  });
+
+  document.getElementById('numbersContinue').addEventListener('click', function(){
+    var n = parseInt(document.getElementById('countInput').value, 10);
+    if(!n || n < 1) return;
+    var list = [];
+    for(var i=1; i<=n; i++) list.push(String(i));
+    startApp('numbers', list);
+  });
+
+  function startApp(mode, labels){
+    state.mode = mode;
+    var participants = labels.map(function(lab,i){
+      return { id:genId('p'), label:lab, color:COLORS[i % COLORS.length] };
+    });
+    var positioned = defaultFormation(participants);
+    state.scenes = [{ id:genId('scene'), title:'Formación inicial', notes:'', points:positioned, arrows:[] }];
+    state.current = 0;
+    document.getElementById('setupScreen').style.display = 'none';
+    document.getElementById('designScreen').style.display = 'flex';
+    setTool('move');
+    render();
+    requestAnimationFrame(fitStage);
+  }
+
+})();
+</script>
+</body>
+</html>
