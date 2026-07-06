@@ -69,9 +69,9 @@
     -webkit-user-select:none;user-select:none;
   }
   .toolbar-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-  .toolbar-row.between{justify-content:space-between;}
-  .tb-left{display:flex;align-items:center;gap:10px;min-width:0;}
-  .tb-right{display:flex;align-items:center;gap:8px;}
+  .toolbar-row.between{justify-content:space-between;row-gap:6px;}
+  .tb-left{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap;}
+  .tb-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
   .brand-mini{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);letter-spacing:2px;white-space:nowrap;}
   .scene-indicator{color:var(--muted);font-size:13px;white-space:nowrap;}
   .seg{display:flex;background:var(--panel-2);border-radius:10px;padding:3px;gap:2px;flex:1 1 auto;}
@@ -88,7 +88,7 @@
   #btnDetails.has-content::after{content:'';position:absolute;top:5px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--coral);}
 
   .workspace{flex:1;display:flex;align-items:center;justify-content:center;padding:16px;overflow:hidden;min-height:0;position:relative;}
-  .stage-wrap{width:100%;aspect-ratio:900/560;max-width:1100px;background:var(--panel-2);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
+  .stage-wrap{width:100%;max-width:1200px;background:var(--panel-2);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
   #stageSvg{width:100%;height:100%;display:block;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none;}
   #stageSvg.tool-arrow{cursor:crosshair;}
   #stageSvg.tool-erase{cursor:not-allowed;}
@@ -99,21 +99,21 @@
     display:flex;gap:10px;overflow-x:auto;align-items:flex-start;
     -webkit-overflow-scrolling:touch;-webkit-user-select:none;user-select:none;
   }
-  .thumb{flex:0 0 auto;width:110px;cursor:pointer;position:relative;}
-  .thumb svg{width:100%;aspect-ratio:900/560;border-radius:8px;border:2px solid var(--border);background:var(--panel-2);display:block;}
+  .thumb{flex:0 0 auto;width:130px;cursor:pointer;position:relative;}
+  .thumb svg{width:100%;height:auto;display:block;border-radius:8px;border:2px solid var(--border);background:var(--panel-2);}
   .thumb.active svg{border-color:var(--gold);}
   .thumb .cap{font-size:11px;color:var(--muted);text-align:center;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .thumb .del{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:13px;line-height:20px;text-align:center;padding:0;opacity:0.9;}
   .thumb .del:active{opacity:1;filter:brightness(0.9);}
   .thumb .note-badge{position:absolute;top:-6px;left:-6px;width:20px;height:20px;border-radius:50%;background:var(--panel);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;}
-  .thumb-add{flex:0 0 auto;width:110px;aspect-ratio:900/560;border-radius:8px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:26px;background:transparent;}
+  .thumb-add{flex:0 0 auto;width:130px;height:96px;border-radius:8px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:26px;background:transparent;}
   .thumb-add:hover{border-color:var(--gold);color:var(--gold);}
   .thumb-add:active{filter:brightness(0.9);}
 
-  /* ---------- Details panel (título + observaciones) ---------- */
-  #detailsBackdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:15;display:none;}
-  #detailsBackdrop.open{display:block;}
-  #detailsPanel{
+  /* ---------- Paneles deslizables (Detalles / Bailarines) ---------- */
+  #panelBackdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:15;display:none;}
+  #panelBackdrop.open{display:block;}
+  #detailsPanel,#rosterPanel{
     position:absolute;left:0;right:0;top:0;
     background:var(--panel);border-bottom:1px solid var(--border);
     z-index:20;padding:18px 20px calc(20px + env(safe-area-inset-bottom));
@@ -121,19 +121,31 @@
     transform:translateY(-115%);transition:transform .22s ease;
     max-height:82vh;overflow-y:auto;
   }
-  #detailsPanel.open{transform:translateY(0);}
+  #detailsPanel.open,#rosterPanel.open{transform:translateY(0);}
   .details-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
   .details-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--gold);}
   .btn-close{background:var(--panel-2);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:8px;font-size:14px;}
   .field-label{display:block;font-size:12px;color:var(--muted);font-weight:600;margin:14px 0 6px;}
   .field-label:first-of-type{margin-top:0;}
-  #sceneTitleInput, #sceneNotesInput{width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:11px 12px;border-radius:9px;font-size:16px;}
+  #sceneTitleInput, #sceneNotesInput, #newDancerName{width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:11px 12px;border-radius:9px;font-size:16px;}
   #sceneNotesInput{resize:vertical;line-height:1.4;}
-  #sceneTitleInput:focus,#sceneNotesInput:focus{outline:2px solid var(--gold);border-color:transparent;}
+  #sceneTitleInput:focus,#sceneNotesInput:focus,#newDancerName:focus{outline:2px solid var(--gold);border-color:transparent;}
   .details-divider{height:1px;background:var(--border);margin:20px 0 4px;}
   .progress-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
   .progress-actions .btn-icon{flex:1;text-align:center;justify-content:center;}
   .hint-text{color:var(--muted);font-size:11.5px;margin:10px 0 0;line-height:1.4;}
+
+  .layout-options{display:flex;gap:6px;margin:0 0 14px;}
+  .layout-opt{flex:1;background:var(--panel-2);border:1px solid var(--border);color:var(--muted);padding:10px 4px;border-radius:8px;font-size:12px;text-align:center;}
+  .layout-opt.active{background:var(--coral);color:#fff;border-color:var(--coral);}
+
+  #rosterList{max-height:230px;overflow-y:auto;margin-top:4px;}
+  .roster-row{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--border);}
+  .roster-dot{width:16px;height:16px;border-radius:50%;flex:0 0 auto;}
+  .roster-label{flex:1;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .roster-remove{background:var(--panel-2);border:1px solid var(--border);color:var(--coral);width:30px;height:30px;border-radius:8px;font-size:13px;flex:0 0 auto;}
+  .roster-add-row{display:flex;gap:8px;}
+  .roster-add-row #newDancerName{flex:1;}
 
   @media (max-width:700px){
     .setup-card{padding:28px 22px;}
@@ -147,7 +159,7 @@
     #btnClearArrows{order:3;}
     #btnAddScene{order:4;}
     #btnDeleteScene{order:5;}
-    .thumb,.thumb-add{width:88px;}
+    .thumb,.thumb-add{width:100px;}
   }
 </style>
 </head>
@@ -200,6 +212,7 @@
         <div class="scene-indicator" id="sceneIndicator">Viñeta 1 de 1</div>
       </div>
       <div class="tb-right">
+        <button class="btn-icon" id="btnRoster" title="Bailarines">👥 Bailarines</button>
         <button class="btn-icon" id="btnDetails" title="Título y observaciones">📝 Detalles</button>
         <button class="btn-icon btn-export" id="btnExport">⬇ Exportar PDF</button>
       </div>
@@ -219,7 +232,7 @@
 
   <div class="workspace">
     <div class="stage-wrap">
-      <svg id="stageSvg" viewBox="0 0 900 560" xmlns="http://www.w3.org/2000/svg">
+      <svg id="stageSvg" viewBox="0 0 900 660" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="floorGrid" width="45" height="45" patternUnits="userSpaceOnUse">
             <circle cx="1" cy="1" r="1.3" fill="rgba(255,255,255,0.07)"></circle>
@@ -233,7 +246,8 @@
       </svg>
     </div>
 
-    <div id="detailsBackdrop"></div>
+    <div id="panelBackdrop"></div>
+
     <div id="detailsPanel">
       <div class="details-header">
         <span class="details-title">Detalles de la viñeta</span>
@@ -252,6 +266,34 @@
       </div>
       <p class="hint-text">💡 El PDF es para imprimir o compartir. Guarda el avance (.json) para seguir editando más tarde, en este u otro computador.</p>
     </div>
+
+    <div id="rosterPanel">
+      <div class="details-header">
+        <span class="details-title" id="rosterTitle">Bailarines</span>
+        <button class="btn-close" id="btnCloseRoster" aria-label="Cerrar">✕</button>
+      </div>
+
+      <p class="field-label" style="margin-top:0;">Ubicación de bastidores</p>
+      <div class="layout-options" id="layoutOptions">
+        <button class="layout-opt" data-layout="left">⬅ Costado izq.</button>
+        <button class="layout-opt" data-layout="top">⬆ Detrás</button>
+        <button class="layout-opt" data-layout="right">➡ Costado der.</button>
+      </div>
+
+      <p class="hint-text" style="margin:0 0 10px;">Agregar o quitar bailarines aquí afecta a toda la coreografía. Si alguien no participa solo en una viñeta puntual, mejor arrástralo a <strong>Bastidores</strong> en esa viñeta.</p>
+      <div id="rosterList"></div>
+      <div class="details-divider"></div>
+      <div id="rosterAddNames">
+        <label class="field-label" for="newDancerName">Agregar bailarín</label>
+        <div class="roster-add-row">
+          <input type="text" id="newDancerName" placeholder="Nombre">
+          <button class="btn-icon" id="btnAddDancerName">+ Agregar</button>
+        </div>
+      </div>
+      <div id="rosterAddNumbers">
+        <button class="btn-icon" id="btnAddDancerNumber" style="width:100%;justify-content:center;">+ Agregar siguiente número</button>
+      </div>
+    </div>
   </div>
 
   <div class="scene-strip" id="sceneStrip"></div>
@@ -267,9 +309,15 @@
   var COLORS = ['#e8b34a','#ff6b5b','#7ed9a8','#6fb8e8','#ef8fbe','#c9a6ff','#f2a65a','#8fe0d0','#f4d35e','#9fb8f0'];
   var DEFS_MARKUP = '<defs><pattern id="floorGrid" width="45" height="45" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1.3" fill="rgba(255,255,255,0.07)"/></pattern><marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#ff6b5b"/></marker></defs>';
 
-  var state = { mode:null, scenes:[], current:0, tool:'move' };
+  var state = { mode:null, layout:'top', roster:[], scenes:[], current:0, tool:'move' };
   var idSeq = 1;
   function genId(prefix){ return prefix + '_' + (idSeq++); }
+  function clamp(v,min,max){ return Math.min(max, Math.max(min, v)); }
+
+  function rosterById(id){
+    for(var i=0;i<state.roster.length;i++){ if(state.roster[i].id===id) return state.roster[i]; }
+    return null;
+  }
 
   function escapeXML(s){
     return String(s).replace(/[&<>"']/g, function(c){
@@ -285,33 +333,142 @@
     return trimmed.slice(0,2).toUpperCase();
   }
 
-  function clamp(v,min,max){ return Math.min(max, Math.max(min, v)); }
+  /* ---------- Geometría del escenario según ubicación de bastidores ---------- */
+  var FLOOR_W = 820, FLOOR_H = 480, MARGIN = 40, GAP = 40, THICK = 100;
 
-  /* ---------- Formación por defecto ---------- */
-  function defaultFormation(list){
-    var W=900, H=560, padX=110, padY=130;
+  function getLayoutConfig(pos){
+    if(pos === 'left'){
+      var canvasW = THICK+GAP+FLOOR_W+MARGIN, canvasH = MARGIN+FLOOR_H+MARGIN;
+      var floor = {x:THICK+GAP, y:MARGIN, w:FLOOR_W, h:FLOOR_H};
+      var band = {x:10, y:20, w:80, h:canvasH-40};
+      var cy = floor.y+floor.h/2;
+      return {
+        position:'left', canvasW:canvasW, canvasH:canvasH, floor:floor, backstageRect:band, axis:'y',
+        curtain:{x1:4,y1:20,x2:4,y2:canvasH-20},
+        label:{x:band.x+band.w/2, y:band.y+band.h/2, anchor:'middle', rotate:true},
+        chevron:'M 96 '+(cy-10)+' L 96 '+(cy+10)+' L 112 '+cy+' Z',
+        audiencePath:'M '+(floor.x+70)+' '+(floor.y+floor.h-20)+' Q '+(floor.x+floor.w/2)+' '+(floor.y+floor.h+25)+' '+(floor.x+floor.w-70)+' '+(floor.y+floor.h-20),
+        audienceText:{x:floor.x+floor.w/2, y:floor.y+floor.h+10},
+        clamp:{xMin:26, xMax:floor.x+floor.w-25, yMin:floor.y+25, yMax:floor.y+floor.h-25}
+      };
+    }
+    if(pos === 'right'){
+      var floor2 = {x:MARGIN, y:MARGIN, w:FLOOR_W, h:FLOOR_H};
+      var canvasW2 = MARGIN+FLOOR_W+GAP+THICK, canvasH2 = MARGIN+FLOOR_H+MARGIN;
+      var bandX = floor2.x+floor2.w+GAP;
+      var band2 = {x:bandX+10, y:20, w:80, h:canvasH2-40};
+      var cy2 = floor2.y+floor2.h/2;
+      return {
+        position:'right', canvasW:canvasW2, canvasH:canvasH2, floor:floor2, backstageRect:band2, axis:'y',
+        curtain:{x1:bandX+4,y1:20,x2:bandX+4,y2:canvasH2-20},
+        label:{x:band2.x+band2.w/2, y:band2.y+band2.h/2, anchor:'middle', rotate:true},
+        chevron:'M '+(floor2.x+floor2.w-6)+' '+(cy2-10)+' L '+(floor2.x+floor2.w-6)+' '+(cy2+10)+' L '+(floor2.x+floor2.w-22)+' '+cy2+' Z',
+        audiencePath:'M '+(floor2.x+70)+' '+(floor2.y+floor2.h-20)+' Q '+(floor2.x+floor2.w/2)+' '+(floor2.y+floor2.h+25)+' '+(floor2.x+floor2.w-70)+' '+(floor2.y+floor2.h-20),
+        audienceText:{x:floor2.x+floor2.w/2, y:floor2.y+floor2.h+10},
+        clamp:{xMin:floor2.x+25, xMax:bandX+THICK-26, yMin:floor2.y+25, yMax:floor2.y+floor2.h-25}
+      };
+    }
+    /* 'top' (por defecto) */
+    var floor3 = {x:MARGIN, y:THICK+GAP, w:FLOOR_W, h:FLOOR_H};
+    var canvasW3 = MARGIN+FLOOR_W+MARGIN, canvasH3 = THICK+GAP+FLOOR_H+MARGIN;
+    var band3 = {x:20, y:10, w:canvasW3-40, h:80};
+    var cx3 = canvasW3/2;
+    return {
+      position:'top', canvasW:canvasW3, canvasH:canvasH3, floor:floor3, backstageRect:band3, axis:'x',
+      curtain:{x1:20,y1:4,x2:canvasW3-20,y2:4},
+      label:{x:34, y:29, anchor:'start', rotate:false},
+      chevron:'M '+(cx3-10)+' 104 L '+(cx3+10)+' 104 L '+cx3+' 120 Z',
+      audiencePath:'M '+(floor3.x+70)+' '+(floor3.y+floor3.h-20)+' Q '+(floor3.x+floor3.w/2)+' '+(floor3.y+floor3.h+25)+' '+(floor3.x+floor3.w-70)+' '+(floor3.y+floor3.h-20),
+      audienceText:{x:floor3.x+floor3.w/2, y:floor3.y+floor3.h+10},
+      clamp:{xMin:floor3.x+25, xMax:floor3.x+floor3.w-25, yMin:26, yMax:floor3.y+floor3.h-40}
+    };
+  }
+
+  function currentLayout(){ return getLayoutConfig(state.layout || 'top'); }
+
+  /* Reubica un punto al cambiar la ubicación de bastidores, preservando si estaba en el piso o en bastidores */
+  function remapPoint(pt, oldL, newL){
+    var inFloor = pt.x >= oldL.floor.x && pt.x <= oldL.floor.x+oldL.floor.w && pt.y >= oldL.floor.y && pt.y <= oldL.floor.y+oldL.floor.h;
+    if(inFloor){
+      var relX = clamp((pt.x-oldL.floor.x)/oldL.floor.w, 0, 1);
+      var relY = clamp((pt.y-oldL.floor.y)/oldL.floor.h, 0, 1);
+      return { x:newL.floor.x+relX*newL.floor.w, y:newL.floor.y+relY*newL.floor.h };
+    }
+    var rel;
+    if(oldL.axis === 'x'){ rel = (pt.x-oldL.backstageRect.x)/oldL.backstageRect.w; }
+    else { rel = (pt.y-oldL.backstageRect.y)/oldL.backstageRect.h; }
+    rel = clamp(rel,0,1);
+    if(newL.axis === 'x'){
+      return { x:newL.backstageRect.x+rel*newL.backstageRect.w, y:newL.backstageRect.y+newL.backstageRect.h/2 };
+    }
+    return { x:newL.backstageRect.x+newL.backstageRect.w/2, y:newL.backstageRect.y+rel*newL.backstageRect.h };
+  }
+
+  function setLayout(pos){
+    if(pos === state.layout) return;
+    var oldL = currentLayout();
+    state.layout = pos;
+    var newL = currentLayout();
+    state.scenes.forEach(function(s){
+      s.points.forEach(function(p){
+        var np = remapPoint(p, oldL, newL);
+        p.x = np.x; p.y = np.y;
+      });
+    });
+    updateLayoutButtons();
+    render();
+    requestAnimationFrame(fitStage);
+  }
+  function updateLayoutButtons(){
+    document.querySelectorAll('.layout-opt').forEach(function(b){
+      b.classList.toggle('active', b.dataset.layout === state.layout);
+    });
+  }
+  document.querySelectorAll('.layout-opt').forEach(function(b){
+    b.addEventListener('click', function(){ setLayout(b.dataset.layout); });
+  });
+
+  /* ---------- Formación por defecto (todos parten en el piso) ---------- */
+  function defaultFormation(list, floor){
+    var padX = 110, topInset = 90, usableH = 260;
     var n = list.length;
-    var cols = Math.max(1, Math.min(n, Math.ceil(Math.sqrt(n * (W-2*padX) / (H-2*padY-40)))));
+    var cols = Math.max(1, Math.min(n, Math.ceil(Math.sqrt(n * (floor.w-2*padX) / usableH))));
     var rows = Math.ceil(n/cols);
-    var stepX = cols>1 ? (W-2*padX)/(cols-1) : 0;
-    var stepY = rows>1 ? (H-2*padY-40)/(rows-1) : 0;
+    var stepX = cols>1 ? (floor.w-2*padX)/(cols-1) : 0;
+    var stepY = rows>1 ? usableH/(rows-1) : 0;
+    var topY = floor.y + topInset;
     return list.map(function(p,i){
       var row = Math.floor(i/cols), col = i%cols;
       var rowCount = Math.min(cols, n-row*cols);
       var rowWidth = (rowCount-1)*stepX;
-      var startX = (W-rowWidth)/2;
-      var x = rowCount===1 ? W/2 : startX + col*stepX;
-      var y = padY + row*stepY;
-      return { id:p.id, label:p.label, color:p.color, x:x, y:y };
+      var startX = floor.x + (floor.w-rowWidth)/2;
+      var x = rowCount===1 ? floor.x+floor.w/2 : startX + col*stepX;
+      var y = topY + row*stepY;
+      return { id:p.id, x:x, y:y };
     });
   }
 
+  function backstageDefaultPos(L){
+    var n = state.roster.length;
+    var t = (n % 7) - 3;
+    if(L.axis === 'x'){
+      return { x: clamp(L.backstageRect.x+L.backstageRect.w/2 + t*90, L.backstageRect.x+20, L.backstageRect.x+L.backstageRect.w-20), y: L.backstageRect.y+L.backstageRect.h/2 };
+    }
+    return { x: L.backstageRect.x+L.backstageRect.w/2, y: clamp(L.backstageRect.y+L.backstageRect.h/2 + t*70, L.backstageRect.y+20, L.backstageRect.y+L.backstageRect.h-20) };
+  }
+
   /* ---------- Render de contenido SVG (compartido: escenario vivo, miniaturas y export) ---------- */
-  function fullBackground(){
-    return '<rect width="900" height="560" fill="#241f33"/>' +
-      '<rect x="40" y="40" width="820" height="480" rx="10" fill="url(#floorGrid)" stroke="#4a3f66" stroke-width="2"/>' +
-      '<path d="M 110 500 Q 450 545 790 500" stroke="#6a5c8f" stroke-width="2" fill="none" stroke-dasharray="5 5"/>' +
-      '<text x="450" y="530" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" letter-spacing="3" fill="#a89bc4">PÚBLICO</text>';
+  function fullBackground(L){
+    var labelRotate = L.label.rotate ? ' transform="rotate(-90 '+L.label.x+' '+L.label.y+')"' : '';
+    var labelBaseline = L.label.anchor==='middle' ? ' dominant-baseline="middle"' : '';
+    return '<rect width="'+L.canvasW+'" height="'+L.canvasH+'" fill="#241f33"/>' +
+      '<line x1="'+L.curtain.x1+'" y1="'+L.curtain.y1+'" x2="'+L.curtain.x2+'" y2="'+L.curtain.y2+'" stroke="#e8b34a" stroke-width="2" stroke-dasharray="10 6" opacity="0.5"/>' +
+      '<rect x="'+L.backstageRect.x+'" y="'+L.backstageRect.y+'" width="'+L.backstageRect.w+'" height="'+L.backstageRect.h+'" rx="10" fill="#1c1830" stroke="#4a3f66" stroke-width="2" stroke-dasharray="6 5"/>' +
+      '<text x="'+L.label.x+'" y="'+L.label.y+'" text-anchor="'+L.label.anchor+'"'+labelBaseline+' font-family="Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="2" fill="#a89bc4"'+labelRotate+'>BASTIDORES</text>' +
+      '<path d="'+L.chevron+'" fill="#6a5c8f" opacity="0.65"/>' +
+      '<rect x="'+L.floor.x+'" y="'+L.floor.y+'" width="'+L.floor.w+'" height="'+L.floor.h+'" rx="10" fill="url(#floorGrid)" stroke="#4a3f66" stroke-width="2"/>' +
+      '<path d="'+L.audiencePath+'" stroke="#6a5c8f" stroke-width="2" fill="none" stroke-dasharray="5 5"/>' +
+      '<text x="'+L.audienceText.x+'" y="'+L.audienceText.y+'" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" letter-spacing="3" fill="#a89bc4">PÚBLICO</text>';
   }
 
   function pointMarkup(p, mode){
@@ -332,7 +489,11 @@
   }
 
   function stageContent(scene, mode){
-    return scene.arrows.map(arrowMarkup).join('') + scene.points.map(function(p){ return pointMarkup(p, mode); }).join('');
+    var pts = scene.points.map(function(pp){
+      var m = rosterById(pp.id) || {label:'?', color:'#999999'};
+      return { x:pp.x, y:pp.y, label:m.label, color:m.color };
+    });
+    return scene.arrows.map(arrowMarkup).join('') + pts.map(function(p){ return pointMarkup(p, mode); }).join('');
   }
 
   function wrapTextLines(text, maxChars, maxLines){
@@ -359,11 +520,11 @@
     return lines.slice(0,maxLines);
   }
 
-  function footerMarkup(notes){
+  function footerMarkup(notes, W){
     var hasNotes = notes && notes.trim().length > 0;
     var body;
     if(hasNotes){
-      var lines = wrapTextLines(notes.trim(), 110, 2);
+      var lines = wrapTextLines(notes.trim(), Math.max(40, Math.floor(W/7.5)), 2);
       var tspans = lines.map(function(line,i){
         return '<tspan x="40" dy="'+(i===0?'0':'17')+'">'+escapeXML(line)+'</tspan>';
       }).join('');
@@ -371,7 +532,7 @@
     } else {
       body = '<text x="40" y="34" font-family="Arial, sans-serif" font-size="13" fill="#6f6591" font-style="italic">Sin observaciones</text>';
     }
-    return '<rect width="900" height="60" fill="#211c30"/>' +
+    return '<rect width="'+W+'" height="60" fill="#211c30"/>' +
       '<text x="40" y="16" font-family="Arial, sans-serif" font-size="10.5" font-weight="700" letter-spacing="2" fill="#a89bc4">OBSERVACIONES</text>' +
       body;
   }
@@ -381,7 +542,7 @@
 
   function addScene(){
     var src = currentScene();
-    var ns = { id:genId('scene'), title:'', notes:'', points: src.points.map(function(p){ return {id:p.id,label:p.label,color:p.color,x:p.x,y:p.y}; }), arrows: [] };
+    var ns = { id:genId('scene'), title:'', notes:'', points: src.points.map(function(p){ return {id:p.id,x:p.x,y:p.y}; }), arrows: [] };
     state.scenes.splice(state.current+1, 0, ns);
     state.current++;
     render();
@@ -414,25 +575,34 @@
     document.getElementById('btnDetails').classList.toggle('has-content', !!has);
   }
 
+  function updateRosterButtonLabel(){
+    document.getElementById('btnRoster').textContent = '👥 Bailarines (' + state.roster.length + ')';
+  }
+
   function render(){
+    var L = currentLayout();
     var scene = currentScene();
-    document.getElementById('dynamicLayer').innerHTML = fullBackground() + stageContent(scene, state.mode);
+    var svgEl = document.getElementById('stageSvg');
+    svgEl.setAttribute('viewBox', '0 0 '+L.canvasW+' '+L.canvasH);
+    document.getElementById('dynamicLayer').innerHTML = fullBackground(L) + stageContent(scene, state.mode);
     document.getElementById('sceneTitleInput').value = scene.title || '';
     document.getElementById('sceneNotesInput').value = scene.notes || '';
     document.getElementById('sceneIndicator').textContent = 'Viñeta ' + (state.current+1) + ' de ' + state.scenes.length;
     document.getElementById('btnDeleteScene').disabled = state.scenes.length <= 1;
     document.getElementById('btnClearArrows').disabled = scene.arrows.length === 0;
     updateDetailsIndicator();
+    updateRosterButtonLabel();
     renderStrip();
   }
 
   function renderStrip(){
+    var L = currentLayout();
     var strip = document.getElementById('sceneStrip');
     var html = state.scenes.map(function(s,i){
       var badge = (s.notes && s.notes.trim()) ? '<span class="note-badge" title="Tiene observaciones">📝</span>' : '';
       return '<div class="thumb '+(i===state.current?'active':'')+'" data-idx="'+i+'">' +
         badge +
-        '<svg viewBox="0 0 900 560" xmlns="http://www.w3.org/2000/svg">'+DEFS_MARKUP+fullBackground()+stageContent(s, state.mode)+'</svg>' +
+        '<svg viewBox="0 0 '+L.canvasW+' '+L.canvasH+'" xmlns="http://www.w3.org/2000/svg">'+DEFS_MARKUP+fullBackground(L)+stageContent(s, state.mode)+'</svg>' +
         '<button class="del" data-del="'+i+'" title="Eliminar viñeta">×</button>' +
         '<div class="cap">'+(i+1)+'. '+escapeXML(s.title || 'Sin título')+'</div>' +
         '</div>';
@@ -478,36 +648,128 @@
   });
 
   document.getElementById('btnHelp').addEventListener('click', function(){
-    alert('Cómo usar En Escena:\n\n✋ Mover: arrastra los puntos por el escenario.\n➜ Flecha: elige la herramienta y arrastra desde un bailarín hacia su próxima posición.\n✖ Borrar: toca una flecha para eliminarla.\n\n📝 Detalles: agrega un título y observaciones a la viñeta actual.\n\n➕ Nueva viñeta: crea el siguiente paso a partir de la formación actual.');
+    alert('Cómo usar En Escena:\n\n✋ Mover: arrastra los puntos por el escenario o hacia Bastidores si aún no salen a escena.\n➜ Flecha: arrastra desde un bailarín hacia su próxima posición (incluso desde Bastidores hacia el piso).\n✖ Borrar: toca una flecha para eliminarla.\n\n👥 Bailarines: agrega o quita gente de toda la coreografía, y elige si los Bastidores van detrás o a un costado.\n📝 Detalles: título y observaciones de esta viñeta.\n➕ Nueva viñeta: crea el siguiente paso a partir de la formación actual.');
   });
 
-  /* ---------- Panel de detalles (overlay) ---------- */
+  /* ---------- Paneles deslizables ---------- */
+  function panelTop(){ return document.querySelector('.toolbar').offsetHeight + 'px'; }
+  function showBackdrop(){ document.getElementById('panelBackdrop').classList.add('open'); }
+  function maybeHideBackdrop(){
+    var d = document.getElementById('detailsPanel').classList.contains('open');
+    var r = document.getElementById('rosterPanel').classList.contains('open');
+    if(!d && !r) document.getElementById('panelBackdrop').classList.remove('open');
+  }
   function openDetails(){
-    var toolbarH = document.querySelector('.toolbar').offsetHeight;
-    document.getElementById('detailsPanel').style.top = toolbarH + 'px';
-    document.getElementById('detailsBackdrop').classList.add('open');
-    document.getElementById('detailsPanel').classList.add('open');
+    closeRoster();
+    var panel = document.getElementById('detailsPanel');
+    panel.style.top = panelTop();
+    panel.classList.add('open');
+    showBackdrop();
   }
   function closeDetails(){
-    document.getElementById('detailsBackdrop').classList.remove('open');
     document.getElementById('detailsPanel').classList.remove('open');
+    maybeHideBackdrop();
+  }
+  function openRoster(){
+    closeDetails();
+    var panel = document.getElementById('rosterPanel');
+    panel.style.top = panelTop();
+    panel.classList.add('open');
+    showBackdrop();
+    updateLayoutButtons();
+    renderRosterList();
+  }
+  function closeRoster(){
+    document.getElementById('rosterPanel').classList.remove('open');
+    maybeHideBackdrop();
   }
   document.getElementById('btnDetails').addEventListener('click', function(){
     var panel = document.getElementById('detailsPanel');
     if(panel.classList.contains('open')) closeDetails(); else openDetails();
   });
   document.getElementById('btnCloseDetails').addEventListener('click', closeDetails);
-  document.getElementById('detailsBackdrop').addEventListener('click', closeDetails);
+  document.getElementById('btnRoster').addEventListener('click', function(){
+    var panel = document.getElementById('rosterPanel');
+    if(panel.classList.contains('open')) closeRoster(); else openRoster();
+  });
+  document.getElementById('btnCloseRoster').addEventListener('click', closeRoster);
+  document.getElementById('panelBackdrop').addEventListener('click', function(){ closeDetails(); closeRoster(); });
+
+  /* ---------- Gestión de bailarines (roster) ---------- */
+  function nextNumberLabel(){
+    var maxN = 0;
+    state.roster.forEach(function(r){
+      var n = parseInt(r.label,10);
+      if(!isNaN(n) && n>maxN) maxN=n;
+    });
+    return String(maxN+1);
+  }
+
+  function addDancer(label){
+    label = String(label).trim();
+    if(!label) return;
+    var color = COLORS[state.roster.length % COLORS.length];
+    var newP = { id:genId('p'), label:label, color:color };
+    state.roster.push(newP);
+    var L = currentLayout();
+    var pos = backstageDefaultPos(L);
+    state.scenes.forEach(function(s){ s.points.push({ id:newP.id, x:pos.x, y:pos.y }); });
+    renderRosterList();
+    render();
+  }
+
+  function removeDancer(id){
+    if(state.roster.length <= 1){ alert('Debe quedar al menos un bailarín.'); return; }
+    if(!confirm('¿Quitar a este bailarín de toda la coreografía? Se eliminará de todas las viñetas.')) return;
+    state.roster = state.roster.filter(function(r){ return r.id !== id; });
+    state.scenes.forEach(function(s){ s.points = s.points.filter(function(p){ return p.id !== id; }); });
+    renderRosterList();
+    render();
+  }
+
+  function renderRosterList(){
+    document.getElementById('rosterTitle').textContent = 'Bailarines (' + state.roster.length + ')';
+    var html = state.roster.map(function(r){
+      return '<div class="roster-row">' +
+        '<span class="roster-dot" style="background:'+r.color+'"></span>' +
+        '<span class="roster-label">'+escapeXML(r.label)+'</span>' +
+        '<button class="roster-remove" data-remove-dancer="'+r.id+'" title="Quitar">✕</button>' +
+        '</div>';
+    }).join('');
+    document.getElementById('rosterList').innerHTML = html;
+    document.getElementById('rosterAddNames').style.display = state.mode==='names' ? 'block' : 'none';
+    document.getElementById('rosterAddNumbers').style.display = state.mode==='numbers' ? 'block' : 'none';
+    var numBtn = document.getElementById('btnAddDancerNumber');
+    if(numBtn) numBtn.textContent = '+ Agregar bailarín n.º ' + nextNumberLabel();
+  }
+
+  document.getElementById('rosterList').addEventListener('click', function(e){
+    var btn = e.target.closest('[data-remove-dancer]');
+    if(btn) removeDancer(btn.dataset.removeDancer);
+  });
+  document.getElementById('btnAddDancerName').addEventListener('click', function(){
+    var input = document.getElementById('newDancerName');
+    addDancer(input.value);
+    input.value = '';
+    input.focus();
+  });
+  document.getElementById('newDancerName').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ document.getElementById('btnAddDancerName').click(); }
+  });
+  document.getElementById('btnAddDancerNumber').addEventListener('click', function(){
+    addDancer(nextNumberLabel());
+  });
 
   /* ---------- Ajuste dinámico del tamaño del escenario (clave para celulares) ---------- */
   function fitStage(){
     var workspace = document.querySelector('.workspace');
     var wrap = document.querySelector('.stage-wrap');
     if(!workspace || !wrap) return;
+    var L = currentLayout();
     var availW = workspace.clientWidth - 32;
     var availH = workspace.clientHeight - 32;
     if(availW <= 0 || availH <= 0) return;
-    var ratio = 900/560;
+    var ratio = L.canvasW/L.canvasH;
     var w = availW, h = w/ratio;
     if(h > availH){ h = availH; w = h*ratio; }
     wrap.style.width = Math.max(w,120) + 'px';
@@ -587,11 +849,12 @@
     var p = toSVGPoint(e);
     if(dragPointId){
       var scene = currentScene();
+      var L = currentLayout();
       var pt = scene.points.find(function(pp){ return pp.id === dragPointId; });
       if(pt){
-        pt.x = clamp(p.x, 65, 835);
-        pt.y = clamp(p.y, 70, 480);
-        document.getElementById('dynamicLayer').innerHTML = fullBackground() + stageContent(scene, state.mode);
+        pt.x = clamp(p.x, L.clamp.xMin, L.clamp.xMax);
+        pt.y = clamp(p.y, L.clamp.yMin, L.clamp.yMax);
+        document.getElementById('dynamicLayer').innerHTML = fullBackground(L) + stageContent(scene, state.mode);
       }
     } else if(drawing){
       tempArrowEl.setAttribute('x2', p.x); tempArrowEl.setAttribute('y2', p.y);
@@ -617,15 +880,16 @@
   });
 
   /* ---------- Exportar PDF ---------- */
-  function buildExportSVGString(scene, idx, total, mode){
+  function buildExportSVGString(scene, idx, total, mode, L){
     var title = (scene.title && scene.title.trim()) ? scene.title.trim() : ('Viñeta ' + idx);
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 660" width="900" height="660">' +
+    var W = L.canvasW, H = L.canvasH + 100; /* +40 encabezado +60 pie */
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'">' +
       DEFS_MARKUP +
-      '<rect width="900" height="660" fill="#17131f"/>' +
+      '<rect width="'+W+'" height="'+H+'" fill="#17131f"/>' +
       '<text x="40" y="34" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#e8b34a">'+escapeXML(title)+'</text>' +
-      '<text x="860" y="34" text-anchor="end" font-family="Arial, sans-serif" font-size="14" fill="#a89bc4">'+idx+' / '+total+'</text>' +
-      '<g transform="translate(0,40)">' + fullBackground() + stageContent(scene, mode) + '</g>' +
-      '<g transform="translate(0,600)">' + footerMarkup(scene.notes) + '</g>' +
+      '<text x="'+(W-40)+'" y="34" text-anchor="end" font-family="Arial, sans-serif" font-size="14" fill="#a89bc4">'+idx+' / '+total+'</text>' +
+      '<g transform="translate(0,40)">' + fullBackground(L) + stageContent(scene, mode) + '</g>' +
+      '<g transform="translate(0,'+(40+L.canvasH)+')">' + footerMarkup(scene.notes, W) + '</g>' +
       '</svg>';
   }
 
@@ -649,21 +913,23 @@
           alert('No se pudo cargar la librería de PDF. Revisa tu conexión a internet e inténtalo de nuevo.');
           return;
         }
+        var L = currentLayout();
+        var W = L.canvasW, H = L.canvasH + 100;
         var jsPDF = window.jspdf.jsPDF;
-        var doc = new jsPDF({ orientation:'landscape', unit:'px', format:[900,660] });
+        var doc = new jsPDF({ orientation:'landscape', unit:'px', format:[W,H] });
         for(var i=0; i<state.scenes.length; i++){
-          var svgStr = buildExportSVGString(state.scenes[i], i+1, state.scenes.length, state.mode);
+          var svgStr = buildExportSVGString(state.scenes[i], i+1, state.scenes.length, state.mode, L);
           var dataUrl = 'data:image/svg+xml;charset=utf-8;base64,' + btoa(unescape(encodeURIComponent(svgStr)));
           var img = await loadImage(dataUrl);
           var canvas = document.createElement('canvas');
           var scale = 2;
-          canvas.width = 900*scale; canvas.height = 660*scale;
+          canvas.width = W*scale; canvas.height = H*scale;
           var ctx = canvas.getContext('2d');
           ctx.scale(scale, scale);
-          ctx.drawImage(img, 0, 0, 900, 660);
+          ctx.drawImage(img, 0, 0, W, H);
           var png = canvas.toDataURL('image/png');
-          if(i>0) doc.addPage([900,660], 'landscape');
-          doc.addImage(png, 'PNG', 0, 0, 900, 660);
+          if(i>0) doc.addPage([W,H], 'landscape');
+          doc.addImage(png, 'PNG', 0, 0, W, H);
         }
         doc.save('coreografia.pdf');
       } catch(err){
@@ -679,7 +945,7 @@
 
   /* ---------- Guardar / cargar avance (.json) ---------- */
   function saveProgress(){
-    var data = { app:'en-escena', version:1, mode: state.mode, scenes: state.scenes };
+    var data = { app:'en-escena', version:3, mode: state.mode, layout: state.layout, roster: state.roster, scenes: state.scenes };
     var blob = new Blob([JSON.stringify(data)], {type:'application/json'});
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
@@ -701,18 +967,45 @@
           alert('Este archivo no parece ser un avance válido de En Escena.');
           return;
         }
-        data.scenes.forEach(function(s){
-          if(typeof s.title !== 'string') s.title = '';
-          if(typeof s.notes !== 'string') s.notes = '';
-          if(!Array.isArray(s.points)) s.points = [];
-          if(!Array.isArray(s.arrows)) s.arrows = [];
-        });
+        var roster, scenes;
+        if(data.version >= 2 && Array.isArray(data.roster)){
+          roster = data.roster.map(function(r){ return {id:r.id, label:String(r.label||''), color:r.color||'#e8b34a'}; });
+          scenes = data.scenes.map(function(s){
+            return {
+              id: s.id || genId('scene'),
+              title: typeof s.title==='string' ? s.title : '',
+              notes: typeof s.notes==='string' ? s.notes : '',
+              points: (Array.isArray(s.points)?s.points:[]).map(function(p){ return {id:p.id, x:Number(p.x)||0, y:Number(p.y)||0}; }),
+              arrows: Array.isArray(s.arrows) ? s.arrows : []
+            };
+          });
+        } else {
+          var rosterMap = {};
+          data.scenes.forEach(function(s){
+            (s.points||[]).forEach(function(p){
+              if(!rosterMap[p.id]) rosterMap[p.id] = { id:p.id, label:String(p.label||'?'), color:p.color||'#e8b34a' };
+            });
+          });
+          roster = Object.keys(rosterMap).map(function(k){ return rosterMap[k]; });
+          scenes = data.scenes.map(function(s){
+            return {
+              id: s.id || genId('scene'),
+              title: typeof s.title==='string' ? s.title : '',
+              notes: typeof s.notes==='string' ? s.notes : '',
+              points: (Array.isArray(s.points)?s.points:[]).map(function(p){ return {id:p.id, x:Number(p.x)||0, y:Number(p.y)||0}; }),
+              arrows: Array.isArray(s.arrows) ? s.arrows : []
+            };
+          });
+        }
         state.mode = data.mode;
-        state.scenes = data.scenes;
+        state.layout = (data.layout==='left'||data.layout==='right'||data.layout==='top') ? data.layout : 'top';
+        state.roster = roster;
+        state.scenes = scenes;
         state.current = 0;
         document.getElementById('setupScreen').style.display = 'none';
         document.getElementById('designScreen').style.display = 'flex';
         closeDetails();
+        closeRoster();
         setTool('move');
         render();
         requestAnimationFrame(fitStage);
@@ -781,15 +1074,18 @@
 
   function startApp(mode, labels){
     state.mode = mode;
-    var participants = labels.map(function(lab,i){
+    state.layout = 'top';
+    state.roster = labels.map(function(lab,i){
       return { id:genId('p'), label:lab, color:COLORS[i % COLORS.length] };
     });
-    var positioned = defaultFormation(participants);
+    var L = currentLayout();
+    var positioned = defaultFormation(state.roster, L.floor);
     state.scenes = [{ id:genId('scene'), title:'Formación inicial', notes:'', points:positioned, arrows:[] }];
     state.current = 0;
     document.getElementById('setupScreen').style.display = 'none';
     document.getElementById('designScreen').style.display = 'flex';
     setTool('move');
+    updateLayoutButtons();
     render();
     requestAnimationFrame(fitStage);
   }
