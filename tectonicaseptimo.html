@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deriva Continental, Tectónica de Placas y Chile</title>
+    <style>
+        /* --- ESTILOS GENERALES Y CONFIGURACIÓN --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow: hidden; /* Evita el scroll vertical general */
+        }
+
+        /* --- CONTENEDOR DE LAS DIAPOSITIVAS --- */
+        .slider-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            scroll-snap-type: x mandatory;
+        }
+
+        /* Ocultar barra de scroll en navegadores */
+        .slider-container::-webkit-scrollbar {
+            display: none;
+        }
+        .slider-container {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* --- ESTILO DE CADA DIAPOSITIVA --- */
+        .slide {
+            min-width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            scroll-snap-align: start;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Fondos degradados temáticos */
+        #slide1 { background: linear-gradient(135deg, #1e3a8a, #3b82f6); }
+        #slide2 { background: linear-gradient(135deg, #115e59, #14b8a6); }
+        #slide3 { background: linear-gradient(135deg, #7c2d12, #ea580c); }
+        #slide4 { background: linear-gradient(135deg, #4c1d95, #8b5cf6); }
+        #slide5 { background: linear-gradient(135deg, #334155, #64748b); }
+
+        /* --- CONTENIDO TEXTUAL --- */
+        .content {
+            max-width: 800px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 40px;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            color: #f1f5f9;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #ccfbf1;
+        }
+
+        p {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            color: #e2e8f0;
+        }
+
+        ul {
+            text-align: left;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        li {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            list-style-type: "🌍 ";
+        }
+
+        /* --- NAVEGACIÓN (BOTONES FIJOS) --- */
+        .navigation {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .nav-btn {
+            width: 50px;
+            height: 12px;
+            background-color: rgba(255, 255, 255, 0.4);
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background-color: rgba(255, 255, 255, 0.8);
+            transform: scaleY(1.2);
+        }
+
+        /* Indicador visual simulado mediante CSS al pasar el cursor o hacer click */
+        .nav-btn:focus {
+            background-color: #fff;
+            box-shadow: 0 0 10px #fff;
+        }
+
+        /* Instrucción de scroll */
+        .scroll-hint {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            font-size: 0.9rem;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        /* --- NUEVO ESTILO PARA LA DIAPOSITIVA INTERACTIVA (SLIDE 5) --- */
+        #slide5 {
+            display: flex;
+            flex-direction: row; /* Diseño de dos columnas */
+            justify-content: space-around;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .interactive-container {
+            width: 70%;
+            height: 90vh;
+            border-radius: 16px;
+            background: rgba(0,0,0,0.2);
+            border: 2px solid rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden; /* Importante para el efecto de movimiento */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #movingImage {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            transition: transform 0.5s cubic-bezier(0.3, 1, 0.2, 1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            border-radius: 8px;
+            cursor: move;
+        }
+
+        .control-panel {
+            width: 25%;
+            height: 80vh;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 20px;
+            text-align: center;
+        }
+
+        .control-panel h3 {
+            font-size: 1.8rem;
+            color: #e2e8f0;
+            margin-bottom: 10px;
+        }
+
+        .move-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 10px;
+            width: 150px;
+            margin: 0 auto;
+        }
+
+        .move-btn {
+            background-color: #475569;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1.5rem;
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .move-btn:hover {
+            background-color: #64748b;
+        }
+
+        #moveUp    { grid-column: 2; grid-row: 1; }
+        #moveLeft  { grid-column: 1; grid-row: 2; }
+        #moveReset { grid-column: 2; grid-row: 2; font-size: 1.1rem; }
+        #moveRight { grid-column: 3; grid-row: 2; }
+        #moveDown  { grid-column: 2; grid-row: 3; }
+
+        .zoom-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .zoom-btn {
+            background-color: #334155;
+            color: white;
+            font-size: 1.2rem;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .zoom-btn:hover {
+            background-color: #475569;
+            transform: scale(1.05);
+        }
+
+        /* Responsive para Slide 5 */
+        @media (max-width: 768px) {
+            #slide5 {
+                flex-direction: column-reverse;
+                justify-content: flex-end;
+            }
+            .control-panel {
+                width: 100%;
+                height: 30vh;
+                padding: 10px;
+            }
+            .interactive-container {
+                width: 100%;
+                height: 60vh;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scroll-hint">Usa las flechas ◄ ► o los botones inferiores</div>
+
+    <div class="slider-container">
+        
+        <section class="slide" id="slide1">
+            <div class="content">
+                <h1>La Tierra en Movimiento</h1>
+                <p>Descubre cómo nuestro planeta se transforma constantemente a través de la Deriva Continental y la Tectónica de Placas, dos teorías que revolucionaron la geología.</p>
+            </div>
+        </section>
+
+        <section class="slide" id="slide2">
+            <div class="content">
+                <h2>1. Deriva Continental</h2>
+                <p>Propuesta por <strong>Alfred Wegener en 1912</strong>, esta teoría sostenía que los continentes actuales estuvieron unidos en el pasado en un único supercontinente llamado <strong>Pangea</strong>.</p>
+                <p>Wegener aportó pruebas contundentes:</p>
+                <ul>
+                    <li><strong>Geográficas:</strong> El encaje casi perfecto de las costas (como África y Sudamérica).</li>
+                    <li><strong>Paleontológicas:</strong> Fósiles de las mismas especies en continentes separados por océanos.</li>
+                    <li><strong>Paleoclimáticas:</strong> Indicios de glaciaciones antiguas en zonas hoy tropicales.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="slide" id="slide3">
+            <div class="content">
+                <h2>2. Tectónica de Placas</h2>
+                <p>Surgida en la década de 1960, es la evolución científica de la deriva continental. Explica que la capa externa de la Tierra (<strong>litosfera</strong>) está fragmentada como un rompecabezas en grandes bloques llamados placas tectónicas.</p>
+                <p>Estas placas flotan y se mueven sobre la <strong>astenosfera</strong> (una capa de roca pastosa y caliente) debido a las corrientes de convección del manto terrestre.</p>
+            </div>
+        </section>
+
+        <section class="slide" id="slide4">
+            <div class="content">
+                <h2>3. Límites y Consecuencias</h2>
+                <p>Las interacciones en los bordes de las placas provocan los fenómenos geológicos más drásticos de la Tierra:</p>
+                <ul>
+                    <li><strong>Límites Divergentes:</strong> Las placas se separan, creando nuevo suelo oceánico (ej. Dorsal Mesoatlántica).</li>
+                    <li><strong>Límites Convergentes:</strong> Las placas chocan. Una puede hundirse bajo otra (subducción) creando fosas y volcanes, o ambas se comprimen creando cordilleras (ej. El Himalaya).</li>
+                    <li><strong>Límites Transformantes:</strong> Las placas se deslizan lateralmente, acumulando tensión que desata grandes terremotos (ej. Falla de San Andrés).</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="slide" id="slide5">
+            
+            <aside class="control-panel content">
+                <h3>4. El Caso de Chile</h3>
+                <p>Usa los controles para mover e interactuar con la infografía.</p>
+                <div class="move-controls">
+                    <button class="move-btn" id="moveUp" title="Subir">↑</button>
+                    <button class="move-btn" id="moveLeft" title="Izquierda">←</button>
+                    <button class="move-btn" id="moveReset" title="Reiniciar">⦿</button>
+                    <button class="move-btn" id="moveRight" title="Derecha">→</button>
+                    <button class="move-btn" id="moveDown" title="Bajar">↓</button>
+                </div>
+                <div class="zoom-controls">
+                    <button class="zoom-btn" id="zoomOut">🔍–</button>
+                    <button class="zoom-btn" id="zoomIn">🔍+</button>
+                </div>
+                <p style="font-size: 0.9rem; margin-top: 15px; opacity: 0.8;">Chile es un país formado por la subducción de la Placa de Nazca bajo la Sudamericana.</p>
+            </aside>
+
+            <div class="interactive-container">
+                <img src="image_0.png" alt="Tectónica de Placas en Chile" id="movingImage">
+            </div>
+
+        </section>
+
+    </div>
+
+    <nav class="navigation">
+        <a href="#slide1" class="nav-btn" title="Inicio"></a>
+        <a href="#slide2" class="nav-btn" title="Deriva Continental"></a>
+        <a href="#slide3" class="nav-btn" title="Tectónica de Placas"></a>
+        <a href="#slide4" class="nav-btn" title="Límites"></a>
+        <a href="#slide5" class="nav-btn" title="Interactividad en Chile" style="background-color: rgba(255,255,255,0.7)"></a> </nav>
+
+    <script>
+        const image = document.getElementById('movingImage');
+        let currentX = 0;
+        let currentY = 0;
+        let currentScale = 1;
+        const moveStep = 100; // Pixeles a mover por clic
+        const scaleStep = 0.2; // Escala a cambiar por clic
+
+        function updateTransform() {
+            image.style.transform = `translate(${currentX}px, ${currentY}px) scale(${currentScale})`;
+        }
+
+        // Controles de Movimiento
+        document.getElementById('moveUp').addEventListener('click', () => { currentY -= moveStep; updateTransform(); });
+        document.getElementById('moveDown').addEventListener('click', () => { currentY += moveStep; updateTransform(); });
+        document.getElementById('moveLeft').addEventListener('click', () => { currentX -= moveStep; updateTransform(); });
+        document.getElementById('moveRight').addEventListener('click', () => { currentX += moveStep; updateTransform(); });
+
+        // Controles de Zoom
+        document.getElementById('zoomIn').addEventListener('click', () => { currentScale = Math.min(currentScale + scaleStep, 3); updateTransform(); });
+        document.getElementById('zoomOut').addEventListener('click', () => { currentScale = Math.max(currentScale - scaleStep, 0.5); updateTransform(); });
+
+        // Control de Reinicio
+        document.getElementById('moveReset').addEventListener('click', () => {
+            currentX = 0;
+            currentY = 0;
+            currentScale = 1;
+            updateTransform();
+        });
+    </script>
+
+</body>
+</html>
