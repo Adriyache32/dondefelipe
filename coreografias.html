@@ -16,12 +16,23 @@
     --muted:#a89bc4;
     --gold:#e8b34a;
     --coral:#ff6b5b;
+    --shadow-sm:0 2px 8px rgba(0,0,0,0.28);
+    --shadow-md:0 8px 24px rgba(0,0,0,0.38);
+    --shadow-lg:0 24px 60px rgba(0,0,0,0.5);
+    --shadow-gold:0 0 0 3px rgba(232,179,74,0.18), 0 8px 20px rgba(232,179,74,0.15);
+    --ease:cubic-bezier(.22,1,.36,1);
   }
   *{box-sizing:border-box;}
   html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;overflow:hidden;}
   button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}
   button,input,textarea{touch-action:manipulation;}
   input,textarea{font-family:inherit;}
+
+  @keyframes fadeInUp{ from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);} }
+  @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+  @keyframes popIn{ from{opacity:0; transform:scale(.85);} to{opacity:1; transform:scale(1);} }
+  @keyframes toastIn{ from{opacity:0; transform:translate(-50%,16px);} to{opacity:1; transform:translate(-50%,0);} }
+  @keyframes softGlow{ 0%,100%{box-shadow:var(--shadow-gold);} 50%{box-shadow:0 0 0 3px rgba(232,179,74,0.32), 0 10px 26px rgba(232,179,74,0.26);} }
 
   /* ---------- Setup screen ---------- */
   #setupScreen{
@@ -32,31 +43,34 @@
     padding:calc(24px + env(safe-area-inset-top)) calc(24px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left));
     overflow-y:auto;
   }
-  .setup-card{width:100%;max-width:460px;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:36px 32px;box-shadow:0 30px 80px rgba(0,0,0,0.5);}
-  .setup-card h1{font-family:'Bebas Neue',sans-serif;font-size:44px;letter-spacing:3px;margin:0 0 6px;color:var(--gold);}
+  .setup-card{width:100%;max-width:460px;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:36px 32px;box-shadow:var(--shadow-lg);animation:fadeInUp .5s var(--ease);}
+  .setup-card h1{font-family:'Bebas Neue',sans-serif;font-size:44px;letter-spacing:3px;margin:0 0 6px;color:var(--gold);text-shadow:0 2px 18px rgba(232,179,74,0.35);}
   .setup-card p.sub{color:var(--muted);margin:0 0 30px;font-size:14px;line-height:1.5;}
   .step-label{font-size:13px;color:var(--muted);margin:0 0 12px;font-weight:600;}
+  .step2{animation:fadeInUp .35s var(--ease);}
   .mode-grid{display:flex;gap:14px;}
-  .mode-opt{flex:1;border:2px solid var(--border);border-radius:14px;padding:22px 10px;text-align:center;cursor:pointer;background:var(--panel-2);transition:.15s;}
-  .mode-opt:hover{border-color:var(--coral);transform:translateY(-2px);}
-  .mode-opt:active{filter:brightness(0.9);}
-  .mode-opt.selected{border-color:var(--gold);background:rgba(232,179,74,0.12);}
-  .mode-opt .ico{font-size:30px;display:block;margin-bottom:8px;}
+  .mode-opt{flex:1;border:2px solid var(--border);border-radius:14px;padding:22px 10px;text-align:center;cursor:pointer;background:var(--panel-2);transition:transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s var(--ease);box-shadow:var(--shadow-sm);}
+  .mode-opt:hover{border-color:var(--coral);transform:translateY(-3px);box-shadow:var(--shadow-md);}
+  .mode-opt:active{filter:brightness(0.9);transform:translateY(-1px);}
+  .mode-opt.selected{border-color:var(--gold);background:rgba(232,179,74,0.12);box-shadow:var(--shadow-gold);}
+  .mode-opt .ico{font-size:30px;display:block;margin-bottom:8px;transition:transform .2s var(--ease);}
+  .mode-opt:hover .ico{transform:scale(1.12) rotate(-4deg);}
   .mode-opt .lbl{font-weight:600;font-size:14px;}
   .step2{display:none;margin-top:24px;}
   .step2.visible{display:block;}
-  .back-link{background:none;border:none;color:var(--muted);font-size:12px;padding:6px 0;margin-bottom:10px;}
+  .back-link{background:none;border:none;color:var(--muted);font-size:12px;padding:6px 0;margin-bottom:10px;transition:color .15s;}
   .back-link:hover{color:var(--coral);}
-  #namesInput{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px;resize:vertical;font-size:16px;}
-  #countInput{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px;font-size:16px;text-align:center;}
+  #namesInput{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px;resize:vertical;font-size:16px;transition:box-shadow .15s, border-color .15s;}
+  #countInput{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px;font-size:16px;text-align:center;transition:box-shadow .15s, border-color .15s;}
+  #namesInput:focus,#countInput:focus{outline:none;border-color:var(--gold);box-shadow:var(--shadow-gold);}
   .count-hint{color:var(--muted);font-size:12px;margin:8px 0 16px;}
-  .btn-primary{background:var(--gold);color:#1a1420;border:none;border-radius:10px;padding:16px;font-weight:700;font-size:15px;width:100%;transition:.15s;}
-  .btn-primary:disabled{opacity:.4;cursor:not-allowed;}
-  .btn-primary:not(:disabled):hover{filter:brightness(1.08);transform:translateY(-1px);}
-  .btn-primary:not(:disabled):active{filter:brightness(0.92);transform:none;}
+  .btn-primary{background:var(--gold);color:#1a1420;border:none;border-radius:10px;padding:16px;font-weight:700;font-size:15px;width:100%;transition:filter .15s, transform .15s var(--ease), box-shadow .2s;box-shadow:0 6px 18px rgba(232,179,74,0.25);}
+  .btn-primary:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
+  .btn-primary:not(:disabled):hover{filter:brightness(1.08);transform:translateY(-2px);box-shadow:0 10px 26px rgba(232,179,74,0.35);}
+  .btn-primary:not(:disabled):active{filter:brightness(0.92);transform:translateY(0);box-shadow:0 4px 12px rgba(232,179,74,0.25);}
   .btn-secondary{background:transparent;color:var(--gold);border:1.5px solid var(--gold);border-radius:10px;padding:13px;font-weight:700;font-size:14px;width:100%;transition:.15s;}
-  .btn-secondary:hover{background:rgba(232,179,74,0.1);}
-  .btn-secondary:active{filter:brightness(0.92);}
+  .btn-secondary:hover{background:rgba(232,179,74,0.1);transform:translateY(-1px);box-shadow:var(--shadow-sm);}
+  .btn-secondary:active{filter:brightness(0.92);transform:none;}
   .setup-divider{display:flex;align-items:center;gap:10px;margin:22px 0;color:var(--muted);font-size:12px;}
   .setup-divider::before,.setup-divider::after{content:'';flex:1;height:1px;background:var(--border);}
 
@@ -74,25 +88,27 @@
   .tb-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
   .brand-mini{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);letter-spacing:2px;white-space:nowrap;}
   .scene-indicator{color:var(--muted);font-size:13px;white-space:nowrap;}
-  .seg{display:flex;background:var(--panel-2);border-radius:10px;padding:3px;gap:2px;flex:1 1 auto;}
-  .seg button{border:none;background:transparent;color:var(--muted);padding:10px 14px;border-radius:8px;font-size:13px;flex:1;white-space:nowrap;}
-  .seg button.active{background:var(--coral);color:#fff;}
+  .seg{display:flex;background:var(--panel-2);border-radius:10px;padding:3px;gap:2px;flex:1 1 auto;box-shadow:inset 0 1px 4px rgba(0,0,0,0.3);}
+  .seg button{border:none;background:transparent;color:var(--muted);padding:10px 14px;border-radius:8px;font-size:13px;flex:1;white-space:nowrap;transition:background .18s var(--ease), color .18s var(--ease), box-shadow .18s var(--ease);}
+  .seg button.active{background:var(--coral);color:#fff;box-shadow:0 4px 14px rgba(255,107,91,0.4);}
   .seg button:active{filter:brightness(0.9);}
-  .btn-icon{background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:9px 14px;border-radius:9px;font-size:13px;white-space:nowrap;position:relative;}
-  .btn-icon:hover:not(:disabled){border-color:var(--coral);}
-  .btn-icon:active:not(:disabled){filter:brightness(0.88);}
+  .btn-icon{background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:9px 14px;border-radius:9px;font-size:13px;white-space:nowrap;position:relative;transition:border-color .18s, transform .15s var(--ease), box-shadow .18s;}
+  .btn-icon:hover:not(:disabled){border-color:var(--coral);transform:translateY(-2px);box-shadow:var(--shadow-sm);}
+  .btn-icon:active:not(:disabled){filter:brightness(0.88);transform:translateY(0);}
   .btn-icon:disabled{opacity:.35;cursor:not-allowed;}
-  .btn-export{background:var(--gold);color:#1a1420;font-weight:700;border:none;}
+  .btn-export{background:var(--gold);color:#1a1420;font-weight:700;border:none;box-shadow:0 4px 14px rgba(232,179,74,0.28);}
   .btn-export:hover{filter:brightness(1.08);}
   .btn-help{border-radius:50%;width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;font-weight:700;flex:0 0 auto;}
-  #btnDetails.has-content::after{content:'';position:absolute;top:5px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--coral);}
+  #btnDetails.has-content::after{content:'';position:absolute;top:5px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 3px rgba(255,107,91,0.25);animation:softGlow 2.4s ease-in-out infinite;}
 
   .workspace{flex:1;display:flex;align-items:center;justify-content:center;padding:16px;overflow:hidden;min-height:0;position:relative;}
-  .stage-wrap{width:100%;max-width:1200px;background:var(--panel-2);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.35);position:relative;}
+  .stage-wrap{width:100%;max-width:1360px;background:var(--panel-2);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-lg), inset 0 0 0 1px rgba(255,255,255,0.03);position:relative;transition:box-shadow .25s;animation:fadeIn .4s var(--ease);}
   #stageSvg{width:100%;height:100%;display:block;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none;}
   #stageSvg.tool-arrow{cursor:crosshair;}
   #stageSvg.tool-erase{cursor:not-allowed;}
-  #dockHint{position:absolute;display:none;background:rgba(232,179,74,0.32);border:2px dashed var(--gold);border-radius:8px;pointer-events:none;z-index:5;}
+  #dockHint{position:absolute;display:none;background:rgba(232,179,74,0.32);border:2px dashed var(--gold);border-radius:8px;pointer-events:none;z-index:5;transition:left .12s var(--ease), top .12s var(--ease), width .12s var(--ease), height .12s var(--ease);box-shadow:0 0 0 4px rgba(232,179,74,0.12);}
+  #dynamicLayer circle{filter:drop-shadow(0 3px 5px rgba(0,0,0,0.4));}
+  .thumb svg circle{filter:drop-shadow(0 1.5px 2px rgba(0,0,0,0.4));}
 
   .scene-strip{
     background:var(--panel);border-top:1px solid var(--border);
@@ -100,53 +116,90 @@
     display:flex;gap:10px;overflow-x:auto;align-items:flex-start;
     -webkit-overflow-scrolling:touch;-webkit-user-select:none;user-select:none;
   }
-  .thumb{flex:0 0 auto;width:130px;cursor:pointer;position:relative;}
-  .thumb svg{width:100%;height:auto;display:block;border-radius:8px;border:2px solid var(--border);background:var(--panel-2);}
-  .thumb.active svg{border-color:var(--gold);}
+  .thumb{flex:0 0 auto;width:130px;cursor:pointer;position:relative;animation:popIn .25s var(--ease);}
+  .thumb svg{width:100%;height:auto;display:block;border-radius:8px;border:2px solid var(--border);background:var(--panel-2);transition:border-color .18s, box-shadow .18s, transform .18s var(--ease);box-shadow:var(--shadow-sm);}
+  .thumb:hover svg{transform:translateY(-3px);box-shadow:var(--shadow-md);}
+  .thumb.active svg{border-color:var(--gold);box-shadow:var(--shadow-gold);}
   .thumb .cap{font-size:11px;color:var(--muted);text-align:center;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .thumb .del{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:13px;line-height:20px;text-align:center;padding:0;opacity:0.9;}
-  .thumb .del:active{opacity:1;filter:brightness(0.9);}
-  .thumb .note-badge{position:absolute;top:-6px;left:-6px;width:20px;height:20px;border-radius:50%;background:var(--panel);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;}
-  .thumb-add{flex:0 0 auto;width:130px;height:96px;border-radius:8px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:26px;background:transparent;}
-  .thumb-add:hover{border-color:var(--gold);color:var(--gold);}
-  .thumb-add:active{filter:brightness(0.9);}
+  .thumb .del{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:13px;line-height:20px;text-align:center;padding:0;opacity:0.9;box-shadow:0 3px 8px rgba(255,107,91,0.45);transition:opacity .15s, transform .15s var(--ease);}
+  .thumb .del:hover{transform:scale(1.12);opacity:1;}
+  .thumb .del:active{opacity:1;filter:brightness(0.9);transform:scale(0.95);}
+  .thumb .note-badge{position:absolute;top:-6px;left:-6px;width:20px;height:20px;border-radius:50%;background:var(--panel);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;box-shadow:var(--shadow-sm);}
+  .thumb-add{flex:0 0 auto;width:130px;height:96px;border-radius:8px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:26px;background:transparent;transition:border-color .18s, color .18s, transform .18s var(--ease), background .18s;}
+  .thumb-add:hover{border-color:var(--gold);color:var(--gold);transform:translateY(-3px);background:rgba(232,179,74,0.06);}
+  .thumb-add:active{filter:brightness(0.9);transform:translateY(0);}
 
   /* ---------- Paneles deslizables (Detalles / Bailarines) ---------- */
-  #panelBackdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:15;display:none;}
-  #panelBackdrop.open{display:block;}
-  #detailsPanel,#rosterPanel{
+  #panelBackdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:15;display:none;backdrop-filter:blur(2px);transition:opacity .2s;opacity:0;}
+  #panelBackdrop.open{display:block;opacity:1;}
+  #detailsPanel,#rosterPanel,#progressPanel{
     position:absolute;left:0;right:0;top:0;
     background:var(--panel);border-bottom:1px solid var(--border);
     z-index:20;padding:18px 20px calc(20px + env(safe-area-inset-bottom));
-    box-shadow:0 16px 40px rgba(0,0,0,.45);
-    transform:translateY(-115%);transition:transform .22s ease;
+    box-shadow:var(--shadow-lg);
+    transform:translateY(-115%);opacity:0;transition:transform .26s var(--ease), opacity .2s ease;
     max-height:82vh;overflow-y:auto;
   }
-  #detailsPanel.open,#rosterPanel.open{transform:translateY(0);}
+  #detailsPanel.open,#rosterPanel.open,#progressPanel.open{transform:translateY(0);opacity:1;}
   .details-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
   .details-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--gold);}
-  .btn-close{background:var(--panel-2);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:8px;font-size:14px;}
+  .btn-close{background:var(--panel-2);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:8px;font-size:14px;transition:transform .15s var(--ease), border-color .15s;}
+  .btn-close:hover{border-color:var(--coral);transform:rotate(90deg);}
   .field-label{display:block;font-size:12px;color:var(--muted);font-weight:600;margin:14px 0 6px;}
   .field-label:first-of-type{margin-top:0;}
-  #sceneTitleInput, #sceneNotesInput, #newDancerName{width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:11px 12px;border-radius:9px;font-size:16px;}
+  #sceneTitleInput, #sceneNotesInput, #newDancerName{width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:11px 12px;border-radius:9px;font-size:16px;transition:box-shadow .15s, border-color .15s;}
   #sceneNotesInput{resize:vertical;line-height:1.4;}
-  #sceneTitleInput:focus,#sceneNotesInput:focus,#newDancerName:focus{outline:2px solid var(--gold);border-color:transparent;}
+  #sceneTitleInput:focus,#sceneNotesInput:focus,#newDancerName:focus{outline:none;border-color:var(--gold);box-shadow:var(--shadow-gold);}
   .details-divider{height:1px;background:var(--border);margin:20px 0 4px;}
   .progress-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
   .progress-actions .btn-icon{flex:1;text-align:center;justify-content:center;}
+
+  /* ---------- Presencia de bailarines por viñeta ---------- */
+  .presence-list{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 4px;}
+  .presence-chip{display:flex;align-items:center;gap:7px;background:var(--panel-2);border:1.5px solid var(--border);border-radius:20px;padding:7px 12px 7px 8px;font-size:12.5px;color:var(--muted);transition:border-color .18s var(--ease), background .18s var(--ease), color .18s var(--ease), transform .15s var(--ease), box-shadow .18s;}
+  .presence-chip:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm);}
+  .presence-chip:active{transform:translateY(0);}
+  .presence-chip .chip-dot{width:12px;height:12px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 2px rgba(0,0,0,0.25) inset;}
+  .presence-chip .chip-label{font-weight:600;color:var(--text);}
+  .presence-chip .chip-status{font-size:10.5px;letter-spacing:.3px;}
+  .presence-chip.on-floor{border-color:rgba(232,179,74,0.55);background:rgba(232,179,74,0.1);}
+  .presence-chip.on-floor .chip-status{color:var(--gold);}
+  .presence-chip.off-floor .chip-status{color:var(--muted);}
+  .presence-chip.off-floor{opacity:0.75;}
   .hint-text{color:var(--muted);font-size:11.5px;margin:10px 0 0;line-height:1.4;}
 
   .layout-options{display:flex;gap:6px;margin:0 0 14px;}
-  .layout-opt{flex:1;background:var(--panel-2);border:1px solid var(--border);color:var(--muted);padding:10px 4px;border-radius:8px;font-size:12px;text-align:center;}
-  .layout-opt.active{background:var(--coral);color:#fff;border-color:var(--coral);}
+  .layout-opt{flex:1;background:var(--panel-2);border:1px solid var(--border);color:var(--muted);padding:10px 4px;border-radius:8px;font-size:12px;text-align:center;transition:background .18s var(--ease), color .18s, transform .15s var(--ease), box-shadow .18s;}
+  .layout-opt:hover{transform:translateY(-2px);}
+  .layout-opt.active{background:var(--coral);color:#fff;border-color:var(--coral);box-shadow:0 4px 14px rgba(255,107,91,0.4);}
 
   #rosterList{max-height:230px;overflow-y:auto;margin-top:4px;}
-  .roster-row{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--border);}
-  .roster-dot{width:16px;height:16px;border-radius:50%;flex:0 0 auto;}
+  .roster-row{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--border);transition:background .15s;}
+  .roster-row:hover{background:rgba(255,255,255,0.03);}
+  .roster-dot{width:16px;height:16px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 2px rgba(0,0,0,0.25) inset;}
   .roster-label{flex:1;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .roster-remove{background:var(--panel-2);border:1px solid var(--border);color:var(--coral);width:30px;height:30px;border-radius:8px;font-size:13px;flex:0 0 auto;}
+  .roster-remove{background:var(--panel-2);border:1px solid var(--border);color:var(--coral);width:30px;height:30px;border-radius:8px;font-size:13px;flex:0 0 auto;transition:transform .15s var(--ease), box-shadow .15s;}
+  .roster-remove:hover{transform:scale(1.1);box-shadow:var(--shadow-sm);}
   .roster-add-row{display:flex;gap:8px;}
   .roster-add-row #newDancerName{flex:1;}
+
+  /* ---------- Aviso de guardado (toast) ---------- */
+  .save-toast{
+    position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));
+    transform:translate(-50%,16px);
+    background:var(--panel);border:1px solid rgba(232,179,74,0.4);
+    border-radius:14px;padding:10px 10px 10px 16px;
+    display:flex;align-items:center;gap:10px;max-width:min(92vw,420px);
+    box-shadow:var(--shadow-lg);z-index:25;
+    opacity:0;pointer-events:none;transition:opacity .25s var(--ease), transform .25s var(--ease);
+  }
+  .save-toast.show{opacity:1;pointer-events:auto;transform:translate(-50%,0);animation:toastIn .3s var(--ease);}
+  .save-toast-icon{font-size:18px;flex:0 0 auto;}
+  .save-toast-text{font-size:12.5px;color:var(--text);line-height:1.35;flex:1;}
+  .save-toast-btn{background:var(--gold);color:#1a1420;border:none;border-radius:9px;padding:8px 12px;font-weight:700;font-size:12.5px;flex:0 0 auto;transition:filter .15s, transform .15s var(--ease);}
+  .save-toast-btn:hover{filter:brightness(1.08);transform:translateY(-1px);}
+  .save-toast-close{background:transparent;border:none;color:var(--muted);font-size:14px;padding:4px 6px;flex:0 0 auto;}
+  .save-toast-close:hover{color:var(--coral);}
 
   @media (max-width:700px){
     .setup-card{padding:28px 22px;}
@@ -215,6 +268,7 @@
       <div class="tb-right">
         <button class="btn-icon" id="btnRoster" title="Bailarines">👥 Bailarines</button>
         <button class="btn-icon" id="btnDetails" title="Título y observaciones">📝 Detalles</button>
+        <button class="btn-icon" id="btnProgress" title="Guardar o cargar avance">💾 Progreso</button>
         <button class="btn-icon btn-export" id="btnExport">⬇ Exportar PDF</button>
       </div>
     </div>
@@ -246,6 +300,12 @@
         <line id="tempArrow" x1="0" y1="0" x2="0" y2="0" stroke="#ff6b5b" stroke-width="3" stroke-linecap="round" marker-end="url(#arrowhead)" style="display:none"></line>
       </svg>
       <div id="dockHint"></div>
+      <div class="save-toast" id="saveToast" role="status" aria-live="polite">
+        <span class="save-toast-icon">💾</span>
+        <span class="save-toast-text">Llevas varias viñetas nuevas sin guardar. ¿Guardamos tu avance?</span>
+        <button class="save-toast-btn" id="btnToastSave">Guardar</button>
+        <button class="save-toast-close" id="btnToastClose" aria-label="Cerrar aviso">✕</button>
+      </div>
     </div>
 
     <div id="panelBackdrop"></div>
@@ -261,7 +321,16 @@
       <textarea id="sceneNotesInput" rows="4" placeholder="Notas para esta viñeta: conteos, indicaciones, vestuario, etc."></textarea>
 
       <div class="details-divider"></div>
-      <p class="field-label">Progreso</p>
+      <p class="field-label">Bailarines en esta viñeta</p>
+      <p class="hint-text" style="margin:0 0 10px;">Toca para mandar a un bailarín al piso o a bastidores solo en esta viñeta. Para sumar o sacar a alguien de toda la coreografía, usa <strong>👥 Bailarines</strong>.</p>
+      <div class="presence-list" id="scenePresenceList"></div>
+    </div>
+
+    <div id="progressPanel">
+      <div class="details-header">
+        <span class="details-title">Progreso</span>
+        <button class="btn-close" id="btnCloseProgress" aria-label="Cerrar">✕</button>
+      </div>
       <div class="progress-actions">
         <button class="btn-icon" id="btnSaveProgress">💾 Guardar avance</button>
         <button class="btn-icon" id="btnLoadProgressDetails">📂 Cargar otro avance</button>
@@ -282,7 +351,7 @@
         <button class="layout-opt" data-layout="right">➡ Costado der.</button>
       </div>
 
-      <p class="hint-text" style="margin:0 0 10px;">Agregar o quitar bailarines aquí afecta a toda la coreografía. Si alguien no participa solo en una viñeta puntual, mejor arrástralo a <strong>Bastidores</strong> en esa viñeta.</p>
+      <p class="hint-text" style="margin:0 0 10px;">Agregar o quitar bailarines aquí afecta a toda la coreografía. Si alguien no participa solo en una viñeta puntual, arrástralo a <strong>Bastidores</strong> en el escenario, o usa la lista de <strong>📝 Detalles → Bailarines en esta viñeta</strong> para hacerlo con un toque.</p>
       <div id="rosterList"></div>
       <div class="details-divider"></div>
       <div id="rosterAddNames">
@@ -336,19 +405,22 @@
   }
 
   /* ---------- Geometría del escenario según ubicación de bastidores ---------- */
-  var FLOOR_W = 820, FLOOR_H = 480, MARGIN = 40, GAP = 40, THICK = 100;
+  /* THICK define el ancho/alto del cajón de Bastidores: se agrandó para dar más espacio para ubicar bailarines. */
+  var FLOOR_W = 820, FLOOR_H = 480, MARGIN = 40, GAP = 40, THICK = 160;
+  var BAND = THICK - 20;
 
   function getLayoutConfig(pos){
     if(pos === 'left'){
       var canvasW = THICK+GAP+FLOOR_W+MARGIN, canvasH = MARGIN+FLOOR_H+MARGIN;
       var floor = {x:THICK+GAP, y:MARGIN, w:FLOOR_W, h:FLOOR_H};
-      var band = {x:10, y:20, w:80, h:canvasH-40};
+      var band = {x:10, y:20, w:BAND, h:canvasH-40};
       var cy = floor.y+floor.h/2;
+      var bandEnd = band.x+band.w;
       return {
         position:'left', canvasW:canvasW, canvasH:canvasH, floor:floor, backstageRect:band, axis:'y',
         curtain:{x1:4,y1:20,x2:4,y2:canvasH-20},
         label:{x:band.x+band.w/2, y:band.y+band.h/2, anchor:'middle', rotate:true},
-        chevron:'M 96 '+(cy-10)+' L 96 '+(cy+10)+' L 112 '+cy+' Z',
+        chevron:'M '+(bandEnd+6)+' '+(cy-10)+' L '+(bandEnd+6)+' '+(cy+10)+' L '+(bandEnd+22)+' '+cy+' Z',
         audiencePath:'M '+(floor.x+70)+' '+(floor.y+floor.h-20)+' Q '+(floor.x+floor.w/2)+' '+(floor.y+floor.h+25)+' '+(floor.x+floor.w-70)+' '+(floor.y+floor.h-20),
         audienceText:{x:floor.x+floor.w/2, y:floor.y+floor.h+10},
         clamp:{xMin:26, xMax:floor.x+floor.w-25, yMin:floor.y+25, yMax:floor.y+floor.h-25}
@@ -358,7 +430,7 @@
       var floor2 = {x:MARGIN, y:MARGIN, w:FLOOR_W, h:FLOOR_H};
       var canvasW2 = MARGIN+FLOOR_W+GAP+THICK, canvasH2 = MARGIN+FLOOR_H+MARGIN;
       var bandX = floor2.x+floor2.w+GAP;
-      var band2 = {x:bandX+10, y:20, w:80, h:canvasH2-40};
+      var band2 = {x:bandX+10, y:20, w:BAND, h:canvasH2-40};
       var cy2 = floor2.y+floor2.h/2;
       return {
         position:'right', canvasW:canvasW2, canvasH:canvasH2, floor:floor2, backstageRect:band2, axis:'y',
@@ -373,16 +445,17 @@
     /* 'top' (por defecto) */
     var floor3 = {x:MARGIN, y:THICK+GAP, w:FLOOR_W, h:FLOOR_H};
     var canvasW3 = MARGIN+FLOOR_W+MARGIN, canvasH3 = THICK+GAP+FLOOR_H+MARGIN;
-    var band3 = {x:20, y:10, w:canvasW3-40, h:80};
+    var band3 = {x:20, y:10, w:canvasW3-40, h:BAND};
     var cx3 = canvasW3/2;
+    var bandEnd3 = band3.y+band3.h;
     return {
       position:'top', canvasW:canvasW3, canvasH:canvasH3, floor:floor3, backstageRect:band3, axis:'x',
       curtain:{x1:20,y1:4,x2:canvasW3-20,y2:4},
       label:{x:34, y:29, anchor:'start', rotate:false},
-      chevron:'M '+(cx3-10)+' 104 L '+(cx3+10)+' 104 L '+cx3+' 120 Z',
+      chevron:'M '+(cx3-10)+' '+(bandEnd3+14)+' L '+(cx3+10)+' '+(bandEnd3+14)+' L '+cx3+' '+(bandEnd3+30)+' Z',
       audiencePath:'M '+(floor3.x+70)+' '+(floor3.y+floor3.h-20)+' Q '+(floor3.x+floor3.w/2)+' '+(floor3.y+floor3.h+25)+' '+(floor3.x+floor3.w-70)+' '+(floor3.y+floor3.h-20),
       audienceText:{x:floor3.x+floor3.w/2, y:floor3.y+floor3.h+10},
-      clamp:{xMin:floor3.x+25, xMax:floor3.x+floor3.w-25, yMin:26, yMax:floor3.y+floor3.h-40}
+      clamp:{xMin:floor3.x+25, xMax:floor3.x+floor3.w-25, yMin:band3.y+16, yMax:floor3.y+floor3.h-40}
     };
   }
 
@@ -542,6 +615,9 @@
   /* ---------- Escenas ---------- */
   function currentScene(){ return state.scenes[state.current]; }
 
+  var scenesSinceReminder = 0;
+  var SAVE_REMINDER_EVERY = 4;
+
   function addScene(){
     var src = currentScene();
     var ns = { id:genId('scene'), title:'', notes:'', points: src.points.map(function(p){ return {id:p.id,x:p.x,y:p.y}; }), arrows: [] };
@@ -551,6 +627,12 @@
     openDetails();
     var ti = document.getElementById('sceneTitleInput');
     setTimeout(function(){ ti.focus(); }, 240);
+
+    scenesSinceReminder++;
+    if(scenesSinceReminder >= SAVE_REMINDER_EVERY){
+      scenesSinceReminder = 0;
+      showSaveToast();
+    }
   }
 
   function deleteScene(i){
@@ -594,8 +676,58 @@
     document.getElementById('btnClearArrows').disabled = scene.arrows.length === 0;
     updateDetailsIndicator();
     updateRosterButtonLabel();
+    renderScenePresenceList();
     renderStrip();
   }
+
+  /* ---------- Presencia de bailarines por viñeta (piso / bastidores, sin afectar otras viñetas) ---------- */
+  function isPointOnFloor(pt, L){
+    return pt.x >= L.floor.x && pt.x <= L.floor.x+L.floor.w && pt.y >= L.floor.y && pt.y <= L.floor.y+L.floor.h;
+  }
+
+  function floorDefaultPos(L, scene){
+    var cx = L.floor.x + L.floor.w/2;
+    var cy = L.floor.y + L.floor.h/2;
+    var jitterX = (Math.random()-0.5) * Math.min(220, L.floor.w*0.5);
+    var jitterY = (Math.random()-0.5) * Math.min(160, L.floor.h*0.5);
+    return { x: clamp(cx+jitterX, L.clamp.xMin, L.clamp.xMax), y: clamp(cy+jitterY, L.clamp.yMin, L.clamp.yMax) };
+  }
+
+  function togglePresence(dancerId){
+    var scene = currentScene();
+    var L = currentLayout();
+    var pt = scene.points.find(function(p){ return p.id === dancerId; });
+    if(!pt) return;
+    if(isPointOnFloor(pt, L)){
+      var back = backstageDefaultPos(L);
+      pt.x = back.x; pt.y = back.y;
+    } else {
+      var front = floorDefaultPos(L, scene);
+      pt.x = front.x; pt.y = front.y;
+    }
+    render();
+  }
+
+  function renderScenePresenceList(){
+    var list = document.getElementById('scenePresenceList');
+    if(!list) return;
+    var scene = currentScene();
+    var L = currentLayout();
+    list.innerHTML = state.roster.map(function(r){
+      var pt = scene.points.find(function(p){ return p.id === r.id; });
+      var onFloor = pt ? isPointOnFloor(pt, L) : false;
+      return '<button type="button" class="presence-chip '+(onFloor?'on-floor':'off-floor')+'" data-presence="'+r.id+'" title="'+(onFloor?'Enviar a bastidores':'Sacar al piso')+' en esta viñeta">' +
+        '<span class="chip-dot" style="background:'+r.color+'"></span>' +
+        '<span class="chip-label">'+escapeXML(r.label)+'</span>' +
+        '<span class="chip-status">'+(onFloor?'En escena':'Bastidores')+'</span>' +
+        '</button>';
+    }).join('');
+  }
+
+  document.getElementById('scenePresenceList').addEventListener('click', function(e){
+    var btn = e.target.closest('[data-presence]');
+    if(btn) togglePresence(btn.dataset.presence);
+  });
 
   function renderStrip(){
     var L = currentLayout();
@@ -650,7 +782,7 @@
   });
 
   document.getElementById('btnHelp').addEventListener('click', function(){
-    alert('Cómo usar En Escena:\n\n✋ Mover: arrastra los puntos por el escenario o hacia Bastidores si aún no salen a escena. También puedes arrastrar el cajón de Bastidores completo hacia un costado, detrás, o el otro costado.\n➜ Flecha: arrastra desde un bailarín hacia su próxima posición (incluso desde Bastidores hacia el piso).\n✖ Borrar: toca una flecha para eliminarla.\n\n👥 Bailarines: agrega o quita gente de toda la coreografía.\n📝 Detalles: título y observaciones de esta viñeta.\n➕ Nueva viñeta: crea el siguiente paso a partir de la formación actual.');
+    alert('Cómo usar En Escena:\n\n✋ Mover: arrastra los puntos por el escenario o hacia Bastidores si aún no salen a escena. También puedes arrastrar el cajón de Bastidores completo hacia un costado, detrás, o el otro costado.\n➜ Flecha: arrastra desde un bailarín hacia su próxima posición (incluso desde Bastidores hacia el piso).\n✖ Borrar: toca una flecha para eliminarla.\n\n👥 Bailarines: agrega o quita gente de toda la coreografía.\n📝 Detalles: título, observaciones, y una lista para mandar bailarines al piso o a bastidores solo en esta viñeta (con un toque, sin arrastrar).\n💾 Progreso: guarda o carga tu avance (.json) cuando quieras.\n➕ Nueva viñeta: crea el siguiente paso a partir de la formación actual.');
   });
 
   /* ---------- Paneles deslizables ---------- */
@@ -659,10 +791,13 @@
   function maybeHideBackdrop(){
     var d = document.getElementById('detailsPanel').classList.contains('open');
     var r = document.getElementById('rosterPanel').classList.contains('open');
-    if(!d && !r) document.getElementById('panelBackdrop').classList.remove('open');
+    var p = document.getElementById('progressPanel').classList.contains('open');
+    if(!d && !r && !p) document.getElementById('panelBackdrop').classList.remove('open');
   }
   function openDetails(){
     closeRoster();
+    closeProgress();
+    renderScenePresenceList();
     var panel = document.getElementById('detailsPanel');
     panel.style.top = panelTop();
     panel.classList.add('open');
@@ -674,6 +809,7 @@
   }
   function openRoster(){
     closeDetails();
+    closeProgress();
     var panel = document.getElementById('rosterPanel');
     panel.style.top = panelTop();
     panel.classList.add('open');
@@ -683,6 +819,18 @@
   }
   function closeRoster(){
     document.getElementById('rosterPanel').classList.remove('open');
+    maybeHideBackdrop();
+  }
+  function openProgress(){
+    closeDetails();
+    closeRoster();
+    var panel = document.getElementById('progressPanel');
+    panel.style.top = panelTop();
+    panel.classList.add('open');
+    showBackdrop();
+  }
+  function closeProgress(){
+    document.getElementById('progressPanel').classList.remove('open');
     maybeHideBackdrop();
   }
   document.getElementById('btnDetails').addEventListener('click', function(){
@@ -695,7 +843,30 @@
     if(panel.classList.contains('open')) closeRoster(); else openRoster();
   });
   document.getElementById('btnCloseRoster').addEventListener('click', closeRoster);
-  document.getElementById('panelBackdrop').addEventListener('click', function(){ closeDetails(); closeRoster(); });
+  document.getElementById('btnProgress').addEventListener('click', function(){
+    var panel = document.getElementById('progressPanel');
+    if(panel.classList.contains('open')) closeProgress(); else openProgress();
+  });
+  document.getElementById('btnCloseProgress').addEventListener('click', closeProgress);
+  document.getElementById('panelBackdrop').addEventListener('click', function(){ closeDetails(); closeRoster(); closeProgress(); });
+
+  /* ---------- Aviso de guardado (toast no intrusivo) ---------- */
+  var saveToastTimer = null;
+  function showSaveToast(){
+    var t = document.getElementById('saveToast');
+    t.classList.add('show');
+    clearTimeout(saveToastTimer);
+    saveToastTimer = setTimeout(function(){ t.classList.remove('show'); }, 7000);
+  }
+  function hideSaveToast(){
+    document.getElementById('saveToast').classList.remove('show');
+    clearTimeout(saveToastTimer);
+  }
+  document.getElementById('btnToastSave').addEventListener('click', function(){
+    saveProgress();
+    hideSaveToast();
+  });
+  document.getElementById('btnToastClose').addEventListener('click', hideSaveToast);
 
   /* ---------- Gestión de bailarines (roster) ---------- */
   function nextNumberLabel(){
@@ -1073,7 +1244,11 @@
     if(f) loadProgressFromFile(f);
     e.target.value = '';
   });
-  document.getElementById('btnSaveProgress').addEventListener('click', saveProgress);
+  document.getElementById('btnSaveProgress').addEventListener('click', function(){
+    saveProgress();
+    scenesSinceReminder = 0;
+    hideSaveToast();
+  });
   document.getElementById('btnLoadProgressSetup').addEventListener('click', function(){
     document.getElementById('loadFileInput').click();
   });
