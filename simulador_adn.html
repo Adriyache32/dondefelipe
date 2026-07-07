@@ -227,7 +227,35 @@
   }
 
   @media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important; transition-duration:.001ms !important;}}
-</style>
+/* --- MEJORAS UI/UX AÑADIDAS --- */
+
+/* Animación de destello positivo al encajar un nucleótido correctamente */
+@keyframes correctGlow {
+  0% { box-shadow: 0 0 0 0 rgba(31, 182, 160, 0.8); background-color: rgba(31,182,160,0.2); }
+  70% { box-shadow: 0 0 0 12px rgba(31, 182, 160, 0); background-color: transparent; }
+  100% { box-shadow: 0 0 0 0 rgba(31, 182, 160, 0); }
+}
+
+.slot.filled {
+  animation: correctGlow 0.6s ease-out;
+  border: 2px solid var(--accent-teal); /* Fija el color verde cuando está completo */
+  background-color: rgba(31, 182, 160, 0.05);
+}
+
+/* Mejora al diseño de los botones para exportar el PDF (llamados a la acción visuales) */
+#btn-rep-pdf, #btn-prot-pdf {
+  background: linear-gradient(135deg, #1fb6a0 0%, #178f7d 100%);
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  box-shadow: 0 6px 15px -4px rgba(31, 182, 160, 0.6);
+  transition: all 0.2s ease;
+}
+
+#btn-rep-pdf:hover, #btn-prot-pdf:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -5px rgba(31, 182, 160, 0.8);
+}</style>
 </head>
 <body>
 
@@ -1436,7 +1464,7 @@
 
   function downloadSummaryPdf(){
     if (!window.jspdf || !window.jspdf.jsPDF){
-      toast('No se pudo cargar el generador de PDF. Revisa tu conexión a internet.', 'err');
+      toast('No se pudo cargar el generador de PDF. Revisa tu internet.', 'err');
       return;
     }
     var jsPDF = window.jspdf.jsPDF;
@@ -1445,6 +1473,137 @@
     var margin = 18;
     var maxWidth = pageWidth - margin*2;
     var y = 22;
+
+    // --- Colores y Estilos ---
+    var colorPrimary = [31, 182, 160]; // accent-teal
+    var colorDark = [10, 21, 18];
+    var colorText = [60, 60, 60];
+
+    function checkPageBreak(next){
+      if (y + next > 275){ doc.addPage(); y = 20; }
+    }
+    
+    // Función para dibujar una cabecera de color
+    function drawHeader(title){
+      doc.setFillColor(colorPrimary[0], colorPrimary[1], colorPrimary[2]);
+      doc.rect(0, 0, pageWidth, 25, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica','bold'); doc.setFontSize(16);
+      doc.text(title, margin, 16);
+      doc.setTextColor(colorText[0], colorText[1], colorText[2]);
+      y = 35;
+    }
+    
+    function h2(text, icon = ''){
+      checkPageBreak(12);
+      doc.setDrawColor(colorPrimary[0], colorPrimary[1], colorPrimary[2]);
+      doc.setLineWidth(0.5);
+      doc.line(margin, y+2, pageWidth-margin, y+2); // Línea separadora
+      doc.setTextColor(colorDark[0], colorDark[1], colorDark[2]);
+      doc.setFont('helvetica','bold'); doc.setFontSize(13);
+      doc.text(icon + ' ' + text, margin, y); 
+      y += 8;
+    }
+    
+    function p(text, isBold = false){
+      if(!text) return;
+      doc.setFont('helvetica', isBold ? 'bold' : 'normal'); 
+      doc.setFontSize(10.5);
+      doc.setTextColor(colorText[0], colorText[1], colorText[2]);
+      var lines = doc.splitTextToSize(text, maxWidth);
+      lines.forEach(function(line){
+        checkPageBreak(6);
+        doc.text(line, margin, y);
+        y += 6;
+      });
+      y += 2;
+    }
+
+    // Función para crear cajas de estudio para la evaluación
+    function studyBox(title, textArray){
+      checkPageBreak(12 + textArray.length * 6);
+      doc.setFillColor(245, 248, 246);
+      doc.setDrawColor(colorPrimary[0], colorPrimary[1], colorPrimary[2]);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(margin, y, maxWidth, 10 + textArray.length * 6, 3, 3, 'FD');
+      y += 7;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+      doc.text(title, margin + 4, y);
+      y += 5;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
+      textArray.forEach(function(txt){
+         doc.text('• ' + txt, margin + 4, y);
+         y += 5;
+      });
+      y += 4;
+    }
+
+    drawHeader('Fábrica Molecular — Reporte y Guía de Estudio');
+
+    doc.setFont('helvetica','italic'); doc.setFontSize(9.5);
+    doc.text('Fecha de generación: ' + new Date().toLocaleString('es-CL'), margin, y);
+    y += 8;
+
+    h2('1. Caso Clínico y Contexto', '📋');
+    p(ACTIVE_EVENT ? (ACTIVE_EVENT.title + ' (' + ACTIVE_EVENT.fileNumber + ')') : 'Sin caso asignado.');
+    if (ACTIVE_EVENT) p(ACTIVE_EVENT.narrative);
+
+    // --- REPORTE DE REPLICACIÓN ---
+    if (sessionLog.replication){
+      h2('2. Proceso Biológico: Replicación del ADN', '🧬');
+      p('Objetivo de la célula:', true); p(sessionLog.replication.purpose);
+      p('Resultado obtenido:', true); p(sessionLog.replication.resultText);
+      
+      // Caja de estudio pedagógica
+      studyBox('📌 Conceptos clave para la evaluación', [
+         'Replicación Semiconservativa: Ambas hebras originales sirven de molde.',
+         'Emparejamiento de bases de ADN: La Adenina (A) se une con la Timina (T).',
+         'Emparejamiento de bases de ADN: La Citosina (C) se une con la Guanina (G).'
+      ]);
+
+      h2('Enzimas involucradas', '⚙️');
+      var repEnzymes = [];
+      if (sessionLog.replication.usedExtraSteps) repEnzymes.push(ENZYME_DESCRIPTIONS.topoisomerasa);
+      repEnzymes.push(ENZYME_DESCRIPTIONS.helicasa, ENZYME_DESCRIPTIONS.adnPolimerasa, ENZYME_DESCRIPTIONS.ligasa);
+      repEnzymes.forEach(function(txt){ p('• ' + txt); });
+    }
+
+    // --- REPORTE DE TRANSCRIPCIÓN ---
+    if (sessionLog.translation){
+      h2('2. Proceso Biológico: Síntesis de Proteínas', '🔬');
+      p('Objetivo:', true); p(sessionLog.translation.purpose);
+      p('ARNm sintetizado:', true); doc.setFont('courier', 'bold'); p(sessionLog.translation.mrna); doc.setFont('helvetica', 'normal');
+      p('Cadena de aminoácidos obtenida:', true); p(sessionLog.translation.chain);
+      p('Análisis celular:', true); p(sessionLog.translation.insight + " " + sessionLog.translation.outcome);
+
+      // Caja de estudio pedagógica
+      studyBox('📌 Conceptos clave para la evaluación', [
+         'Transcripción: El ADN se usa de molde para crear ARN mensajero (ARNm).',
+         'Diferencia del ARN: En lugar de Timina (T), el ARN utiliza Uracilo (U).',
+         'Traducción: El ribosoma lee los codones (tripletes de ARNm) para unir aminoácidos.'
+      ]);
+
+      h2('Maquinaria celular involucrada', '⚙️');
+      var trEnzymes = [ENZYME_DESCRIPTIONS.arnPolimerasa];
+      if (sessionLog.translation.usedExtraSteps) trEnzymes.push(ENZYME_DESCRIPTIONS.factoresTranscripcion);
+      trEnzymes.push(ENZYME_DESCRIPTIONS.ribosoma, ENZYME_DESCRIPTIONS.arnt, ENZYME_DESCRIPTIONS.factorLiberacion);
+      trEnzymes.forEach(function(txt){ p('• ' + txt); });
+    }
+
+    // Firmas y código en el pie de página de cada hoja
+    var code = generateReportCode();
+    var pageCount = doc.internal.getNumberOfPages();
+    for (var i=1;i<=pageCount;i++){
+      doc.setPage(i);
+      doc.setFont('helvetica','normal'); doc.setFontSize(8);
+      doc.setTextColor(150,150,150);
+      doc.text('Código estudiante: ' + code, margin, 287);
+      doc.text('Colegio San Agustín | Prof. Felipe Jiménez', pageWidth-margin, 287, { align:'right' });
+    }
+
+    doc.save('Guia-Estudio-ADN.pdf');
+    toast('PDF generado con éxito. Listo para estudiar.', 'ok');
+}
 
     function checkPageBreak(next){
       if (y + next > 275){ doc.addPage(); y = 20; }
