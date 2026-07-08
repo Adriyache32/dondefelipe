@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Registro de Saldos</title>
+<title>Saldo de Puntos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -196,10 +196,15 @@
   .stamp.ok{ color: var(--green); }
   .stamp.warn{ color: var(--red); }
 
-  .passbook-rows{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
+  .passbook-rows.extra{
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--paper-line);
+    gap: 8px;
+  }
+  .passbook-rows.extra .value{
+    font-size: 14px;
+    color: var(--ink);
   }
   .prow{
     display:flex;
@@ -313,7 +318,7 @@
 <div class="sheet">
 
   <p class="eyebrow">Cuenta estudiantil</p>
-  <h1>Registro de Saldos</h1>
+  <h1>Saldo de Puntos</h1>
   <p class="subtitle">Busca tu nombre para ver tu saldo actual.</p>
 
   <div class="search-box">
@@ -412,6 +417,8 @@ async function loadData(){
     const idxTotalIng = headers.findIndex(h => h.includes('TOTAL') && h.includes('INGRES'));
     const idxTotalDesc = headers.findIndex(h => h.includes('TOTAL') && h.includes('DESCUENT'));
     const idxSaldo = headers.findIndex(h => h === 'SALDO');
+    const idxMinutoFeliz = headers.findIndex(h => h.includes('MINUTO') && h.includes('FELIZ'));
+    const idxEliminarFormativa = headers.findIndex(h => h.includes('ELIMINAR') && h.includes('FORMATIVA'));
 
     if([idxEstudiante, idxID, idxTotalIng, idxTotalDesc, idxSaldo].includes(-1)){
       throw new Error('No se reconocieron las columnas. Revisa que el Sheet mantenga los encabezados originales.');
@@ -429,6 +436,8 @@ async function loadData(){
         totalIngresos: parseNumber(row[idxTotalIng]),
         totalDescuentos: parseNumber(row[idxTotalDesc]),
         saldo: parseNumber(row[idxSaldo]),
+        minutoFeliz: idxMinutoFeliz > -1 ? (row[idxMinutoFeliz] || '').trim() : '',
+        eliminarFormativa: idxEliminarFormativa > -1 ? (row[idxEliminarFormativa] || '').trim() : '',
       });
     }
 
@@ -460,6 +469,11 @@ function renderResult(rec){
         <div class="prow"><span class="label">Total descuentos</span><span class="value neg">$${formatCLP(rec.totalDescuentos)}</span></div>
         <div class="prow total"><span class="label">Saldo</span><span class="value ${positivo?'pos':'neg'}">$${formatCLP(rec.saldo)}</span></div>
       </div>
+      ${(rec.minutoFeliz || rec.eliminarFormativa) ? `
+      <div class="passbook-rows extra">
+        <div class="prow"><span class="label">Minuto feliz</span><span class="value">${rec.minutoFeliz || '-'}</span></div>
+        <div class="prow"><span class="label">Eliminar formativa</span><span class="value">${rec.eliminarFormativa || '-'}</span></div>
+      </div>` : ''}
     </div>
   `;
 }
@@ -473,12 +487,14 @@ function renderFullTable(){
       <td class="num">$${formatCLP(r.totalIngresos)}</td>
       <td class="num">$${formatCLP(r.totalDescuentos)}</td>
       <td class="num" style="color:${r.saldo>=0?'var(--green)':'var(--red)'}">$${formatCLP(r.saldo)}</td>
+      <td class="num">${r.minutoFeliz || '-'}</td>
+      <td class="num">${r.eliminarFormativa || '-'}</td>
     </tr>
   `).join('');
   container.innerHTML = `
     <table>
       <thead>
-        <tr><th>Estudiante</th><th class="num">Ingresos</th><th class="num">Descuentos</th><th class="num">Saldo</th></tr>
+        <tr><th>Estudiante</th><th class="num">Ingresos</th><th class="num">Descuentos</th><th class="num">Saldo</th><th class="num">Minuto feliz</th><th class="num">Eliminar formativa</th></tr>
       </thead>
       <tbody>${rows}</tbody>
     </table>
