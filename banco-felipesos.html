@@ -595,11 +595,11 @@ let cursosDisponibles = [];
 let cursoActivo = 'todos';
 
 function csvUrl() {
-  return `${BASE_URL}?output=csv&gid=${GID_CUENTAS}&t=${Date.now()}`;
+  return `${BASE_URL}?output=csv&gid=${GID_CUENTAS}`;
 }
 
 async function fetchCSV(url) {
-  const r = await fetch(url);
+  const r = await fetch(url, { cache: 'no-store' });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return parseCSV(await r.text());
 }
