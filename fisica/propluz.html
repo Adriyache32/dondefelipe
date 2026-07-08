@@ -242,6 +242,47 @@
   }
   .summary-card:hover{border-color:var(--accent);transform:translateY(-2px);}
 
+  /* Evaluación — preguntas de alternativas */
+  .quiz-list{display:flex;flex-direction:column;gap:1rem;margin-top:1.3rem;}
+  .quiz-q{background:var(--bg-elevated);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.3rem;}
+  .quiz-question{font-size:0.95rem;color:var(--ink);margin-bottom:0.85rem;line-height:1.5;}
+  .quiz-options{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;}
+  .quiz-opt{
+    background:var(--bg-elevated-2);border:1px solid var(--line);border-radius:8px;
+    padding:0.55rem 0.85rem;text-align:left;color:var(--ink);cursor:pointer;
+    font-size:0.85rem;font-family:'Inter',system-ui,sans-serif;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .quiz-opt:hover{border-color:var(--ink-dim);}
+  .quiz-opt.correct{background:rgba(34,197,94,0.16);border-color:var(--green);}
+  .quiz-opt.correct::after{content:' ✓';color:var(--green);font-weight:700;}
+  .quiz-opt.incorrect{background:rgba(239,68,68,0.16);border-color:var(--red);}
+  .quiz-opt.incorrect::after{content:' ✗';color:var(--red);font-weight:700;}
+
+  /* Evaluación — preguntas de desarrollo */
+  .dev-list{display:flex;flex-direction:column;gap:0.9rem;margin-top:1.3rem;}
+  .dev-q{display:flex;gap:0.9rem;align-items:flex-start;background:var(--bg-elevated);border:1px solid var(--line);border-radius:12px;padding:1rem 1.2rem;}
+  .dev-num{
+    flex:none;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#0b0e1a;
+    font-family:'JetBrains Mono',monospace;font-weight:700;font-size:0.85rem;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .dev-q p{font-size:0.92rem;color:var(--ink);line-height:1.55;}
+
+  /* Repaso — memorice */
+  .memo-stats{font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--ink-dim);margin-top:0.5rem;}
+  .memo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0.6rem;margin-top:1rem;}
+  .memo-card{
+    background:var(--bg-elevated);border:1px solid var(--line);border-radius:10px;
+    min-height:100px;display:flex;align-items:center;justify-content:center;
+    text-align:center;padding:0.55rem;font-size:0.78rem;color:var(--ink);cursor:pointer;
+    line-height:1.35;transition:border-color .15s ease, background .15s ease;
+  }
+  .memo-card.hidden-face{font-size:1.5rem;color:var(--ink-dim);}
+  .memo-card.flipped{border-color:var(--accent);background:var(--bg-elevated-2);}
+  .memo-card.matched{border-color:var(--green);background:rgba(34,197,94,0.14);cursor:default;}
+  .memo-tag{display:block;font-family:'JetBrains Mono',monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-dim);margin-bottom:0.25rem;}
+
   /* Nav */
   .controls{
     position:fixed;left:0;right:0;bottom:0;
@@ -280,6 +321,22 @@
     color:#0b0e1a;max-width:78px;letter-spacing:0.01em;
   }
 
+  .sound-toggle{
+    position:fixed;
+    top:max(20px, env(safe-area-inset-top));
+    left:max(20px, env(safe-area-inset-left));
+    z-index:70;
+    width:44px;height:44px;border-radius:50%;
+    border:1px solid var(--line);
+    background:rgba(18,22,42,0.92);
+    color:var(--ink);font-size:1.15rem;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 14px rgba(0,0,0,0.3);
+    transition:background .2s ease, opacity .2s ease;
+  }
+  .sound-toggle:hover{background:rgba(255,255,255,0.1);}
+  .sound-toggle.muted{opacity:0.55;}
+
   .progress{
     position:fixed;
     left:max(6vw, env(safe-area-inset-left));
@@ -304,6 +361,11 @@
     }
     .qr-badge .qr-code{width:44px;height:44px;}
     .qr-badge .qr-label{font-size:0.52rem;max-width:56px;line-height:1.2;}
+    .sound-toggle{
+      top:max(10px, env(safe-area-inset-top));
+      left:max(10px, env(safe-area-inset-left));
+      width:38px;height:38px;font-size:1rem;
+    }
   }
 
   /* Si ya se está viendo desde un celular (pantalla angosta + táctil),
@@ -341,6 +403,15 @@
     .summary-card{padding:0.8rem 0.85rem;font-size:0.8rem;min-height:44px;}
     .hero-wrap svg{max-width:240px;margin:0 auto;display:block;}
 
+    .quiz-options{grid-template-columns:1fr;}
+    .quiz-q{padding:0.9rem 1rem;}
+    .quiz-question{font-size:0.88rem;}
+    .dev-q{padding:0.85rem 1rem;gap:0.7rem;}
+    .dev-q p{font-size:0.88rem;}
+    .memo-grid{grid-template-columns:repeat(2,1fr);gap:0.5rem;}
+    .memo-card{min-height:84px;font-size:0.72rem;padding:0.45rem;}
+    .memo-card.hidden-face{font-size:1.2rem;}
+
     .controls{
       height:calc(60px + env(safe-area-inset-bottom));
       padding-left:max(4vw, env(safe-area-inset-left));
@@ -364,6 +435,7 @@
     .lede,.body-text{font-size:0.85rem;}
     .card{padding:0.8rem 1rem;}
     .qr-badge{transform:scale(0.85);transform-origin:top right;}
+    .sound-toggle{transform:scale(0.85);transform-origin:top left;}
     .controls{height:52px;}
     .nav-btn{width:36px;height:36px;}
     .progress{bottom:40px;}
@@ -845,8 +917,173 @@
       <p class="lede">Haz clic en cualquier tarjeta para repasar esa propiedad.</p>
       <div class="summary-grid" id="summaryGrid"></div>
       <div class="think" style="margin-top:1.5rem;">🔎 <b>Para comentar:</b> ¿cuál de estas propiedades de la luz te gustaría investigar más a fondo? Coméntalo con tu compañero o compañera.</div>
+      <button class="btn-primary" id="goToQuizBtn" style="margin-top:1.4rem;">Ir a las preguntas de repaso →</button>
     </div>
   </section>
+
+  <!-- SLIDE 17 — EVALUACIÓN: ALTERNATIVAS -->
+  <section class="slide" id="slide-17" style="--accent:#7c3aed">
+    <div class="slide-inner">
+      <div class="eyebrow">Evaluación · Alternativas</div>
+      <h1 class="title">Preguntas de alternativas</h1>
+      <div class="underline"></div>
+      <p class="lede">Elige una alternativa en cada pregunta. Al hacer clic se marca la respuesta correcta.</p>
+      <div class="quiz-list" id="quizList">
+        <div class="quiz-q">
+          <p class="quiz-question"><b>1.</b> ¿Qué modelo de la luz explica bien la reflexión, pero no logra explicar la difracción?</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="false">Modelo ondulatorio</button>
+            <button class="quiz-opt" data-correct="true">Modelo corpuscular</button>
+            <button class="quiz-opt" data-correct="false">Modelo dual</button>
+            <button class="quiz-opt" data-correct="false">Modelo electromagnético</button>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <p class="quiz-question"><b>2.</b> La rapidez de la luz en el vacío es aproximadamente:</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="false">300 m/s</button>
+            <button class="quiz-opt" data-correct="true">300.000 km/s</button>
+            <button class="quiz-opt" data-correct="false">3.000.000 km/s</button>
+            <button class="quiz-opt" data-correct="false">30.000 km/s</button>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <p class="quiz-question"><b>3.</b> La zona de una sombra donde no llega luz directa se llama:</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="false">Penumbra</button>
+            <button class="quiz-opt" data-correct="false">Foco</button>
+            <button class="quiz-opt" data-correct="true">Umbra</button>
+            <button class="quiz-opt" data-correct="false">Eclipse</button>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <p class="quiz-question"><b>4.</b> Según la ley de reflexión, la relación correcta entre los ángulos es:</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="false">θᵢ &gt; θᵣ</button>
+            <button class="quiz-opt" data-correct="true">θᵢ = θᵣ</button>
+            <button class="quiz-opt" data-correct="false">θᵢ &lt; θᵣ</button>
+            <button class="quiz-opt" data-correct="false">No existe relación fija</button>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <p class="quiz-question"><b>5.</b> ¿Qué tipo de espejo siempre forma imágenes virtuales, más pequeñas y con mayor campo de visión?</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="false">Plano</button>
+            <button class="quiz-opt" data-correct="false">Cóncavo</button>
+            <button class="quiz-opt" data-correct="true">Convexo</button>
+            <button class="quiz-opt" data-correct="false">Ninguno de los anteriores</button>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <p class="quiz-question"><b>6.</b> Cuando la luz pasa del aire a un medio más denso, como el agua, su rapidez:</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="false">Aumenta</button>
+            <button class="quiz-opt" data-correct="true">Disminuye</button>
+            <button class="quiz-opt" data-correct="false">Se mantiene igual</button>
+            <button class="quiz-opt" data-correct="false">Se vuelve cero</button>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <p class="quiz-question"><b>7.</b> Una lente convergente concentra los rayos de luz en un punto llamado:</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="false">Ángulo crítico</button>
+            <button class="quiz-opt" data-correct="true">Foco</button>
+            <button class="quiz-opt" data-correct="false">Vértice</button>
+            <button class="quiz-opt" data-correct="false">Eje óptico</button>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <p class="quiz-question"><b>8.</b> La reflexión total interna ocurre cuando el ángulo de incidencia:</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="false">Es menor al ángulo crítico</button>
+            <button class="quiz-opt" data-correct="false">Es igual a 0°</button>
+            <button class="quiz-opt" data-correct="true">Supera el ángulo crítico</button>
+            <button class="quiz-opt" data-correct="false">No depende del ángulo</button>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <p class="quiz-question"><b>9.</b> El fenómeno que separa la luz blanca en los colores del arcoíris al pasar por un prisma se llama:</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="false">Difracción</button>
+            <button class="quiz-opt" data-correct="false">Interferencia</button>
+            <button class="quiz-opt" data-correct="true">Dispersión cromática</button>
+            <button class="quiz-opt" data-correct="false">Efecto Doppler</button>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <p class="quiz-question"><b>10.</b> La difracción de la luz es un fenómeno que:</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="false">Explica bien el modelo corpuscular</button>
+            <button class="quiz-opt" data-correct="true">Es exclusivamente ondulatorio</button>
+            <button class="quiz-opt" data-correct="false">Solo ocurre con luz blanca</button>
+            <button class="quiz-opt" data-correct="false">No depende de la longitud de onda</button>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <p class="quiz-question"><b>11.</b> El experimento de la doble rendija de Thomas Young es evidencia clave de:</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="false">La naturaleza corpuscular de la luz</button>
+            <button class="quiz-opt" data-correct="true">La naturaleza ondulatoria de la luz</button>
+            <button class="quiz-opt" data-correct="false">El efecto Doppler</button>
+            <button class="quiz-opt" data-correct="false">La reflexión total interna</button>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <p class="quiz-question"><b>12.</b> Si una fuente de luz se aleja de un observador, se produce:</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="false">Corrimiento al azul</button>
+            <button class="quiz-opt" data-correct="true">Corrimiento al rojo</button>
+            <button class="quiz-opt" data-correct="false">Reflexión total</button>
+            <button class="quiz-opt" data-correct="false">Difracción</button>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <p class="quiz-question"><b>13.</b> Ordenando de menor a mayor energía, ¿cuál es el orden correcto en el espectro electromagnético?</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="false">Rayos gamma, UV, visible, radio</button>
+            <button class="quiz-opt" data-correct="true">Radio, infrarrojo, visible, rayos X</button>
+            <button class="quiz-opt" data-correct="false">Visible, radio, gamma, UV</button>
+            <button class="quiz-opt" data-correct="false">UV, radio, gamma, visible</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 18 — EVALUACIÓN: DESARROLLO -->
+  <section class="slide" id="slide-18" style="--accent:#2563eb">
+    <div class="slide-inner">
+      <div class="eyebrow">Evaluación · Desarrollo</div>
+      <h1 class="title">Preguntas de desarrollo</h1>
+      <div class="underline"></div>
+      <p class="lede">Responde con tus palabras. Te sugerimos usar la estructura <b style="color:var(--ink)">AER: Afirmación – Evidencia – Razonamiento.</b></p>
+      <div class="dev-list">
+        <div class="dev-q"><span class="dev-num">1</span><p>Explica con tus palabras por qué ningún modelo de la luz —corpuscular u ondulatorio— logra explicar, por sí solo, todos sus fenómenos. Da un ejemplo de un fenómeno que cada modelo explica bien.</p></div>
+        <div class="dev-q"><span class="dev-num">2</span><p>Un rayo de luz incide sobre la superficie de un lago a 30° respecto de la normal. Describe qué le ocurre a ese rayo, considerando que la reflexión y la refracción ocurren simultáneamente.</p></div>
+        <div class="dev-q"><span class="dev-num">3</span><p>¿Por qué la fibra óptica no pierde señal aunque el cable se doble varias veces? Fundamenta tu respuesta usando el concepto de reflexión total interna.</p></div>
+        <div class="dev-q"><span class="dev-num">4</span><p>Explica, usando el modelo ondulatorio, por qué la difracción y la interferencia no pueden ser explicadas por el modelo corpuscular de Newton.</p></div>
+        <div class="dev-q"><span class="dev-num">5</span><p>Los astrónomos afirman que el universo se está expandiendo, basándose en el corrimiento al rojo de la luz proveniente de galaxias lejanas. Explica el razonamiento físico detrás de esa afirmación.</p></div>
+        <div class="dev-q"><span class="dev-num">6</span><p>Diseña un experimento sencillo para demostrar que la luz blanca contiene todos los colores del espectro visible. Describe los materiales que usarías y cómo se lo explicarías a un compañero o compañera.</p></div>
+        <div class="dev-q"><span class="dev-num">7</span><p>Compara las imágenes que forman un espejo cóncavo y uno convexo. ¿En qué situaciones cotidianas usarías cada uno? Justifica tu respuesta.</p></div>
+        <div class="dev-q"><span class="dev-num">8</span><p>¿Qué evidencia histórica o experimental fue clave para que la comunidad científica aceptara la naturaleza dual (onda-partícula) de la luz?</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 19 — REPASO: MEMORICE -->
+  <section class="slide" id="slide-19" style="--accent:#22c55e">
+    <div class="slide-inner">
+      <div class="eyebrow">Repaso · Memorice</div>
+      <h1 class="title">Memorice: concepto y descripción</h1>
+      <div class="underline"></div>
+      <p class="lede">Haz clic en dos cartas para revelarlas. Si un concepto y su descripción coinciden, quedan emparejados.</p>
+      <div class="memo-stats">Pares encontrados: <span id="memoFound">0</span>/8 · Intentos: <span id="memoTries">0</span></div>
+      <div class="memo-grid" id="memoGrid" aria-live="polite"></div>
+      <button class="btn-ghost" id="memoReset" style="margin-top:1rem;">🔄 Reiniciar juego</button>
+    </div>
+  </section>
+
+  <button class="sound-toggle" id="soundToggle" aria-label="Silenciar sonido" title="Sonido activado (clic para silenciar)">🔊</button>
 
   <div class="qr-badge" aria-hidden="false">
     <div class="qr-code">
@@ -867,6 +1104,151 @@
 <script>
 (function(){
   "use strict";
+
+  /* ---------- Efectos de sonido (sintetizados con Web Audio API — sin archivos externos) ---------- */
+  var SFX = (function(){
+    var ctx = null;
+    var enabled = true;
+
+    function getCtx(){
+      if (!ctx){
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        ctx = new AC();
+      }
+      if (ctx.state === 'suspended') ctx.resume();
+      return ctx;
+    }
+    function now(c){ return c.currentTime; }
+
+    function tone(c, freq, startTime, duration, type, gainPeak, freqEnd){
+      var osc = c.createOscillator();
+      var gain = c.createGain();
+      osc.type = type || 'square';
+      osc.frequency.setValueAtTime(freq, startTime);
+      if (freqEnd) osc.frequency.exponentialRampToValueAtTime(Math.max(freqEnd, 1), startTime + duration);
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(gainPeak || 0.22, startTime + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+      osc.connect(gain).connect(c.destination);
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.03);
+    }
+
+    function noiseBurst(c, startTime, duration, gainPeak, lowpassFreq){
+      var bufferSize = Math.max(1, Math.floor(c.sampleRate * duration));
+      var buffer = c.createBuffer(1, bufferSize, c.sampleRate);
+      var data = buffer.getChannelData(0);
+      for (var i = 0; i < bufferSize; i++){ data[i] = Math.random() * 2 - 1; }
+      var src = c.createBufferSource();
+      src.buffer = buffer;
+      var filter = c.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = lowpassFreq || 800;
+      var gain = c.createGain();
+      gain.gain.setValueAtTime(gainPeak || 0.2, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+      src.connect(filter).connect(gain).connect(c.destination);
+      src.start(startTime);
+      src.stop(startTime + duration + 0.03);
+    }
+
+    /* "Salto de barril": dos golpes graves descendentes, estilo plataformero retro. */
+    function playNav(){
+      if (!enabled) return;
+      var c = getCtx(); if (!c) return;
+      var t = now(c);
+      tone(c, 180, t, 0.09, 'sine', 0.28, 95);
+      tone(c, 145, t + 0.07, 0.09, 'sine', 0.2, 75);
+    }
+    /* "Balanceo de liana": barrido descendente filtrado, para saltos grandes entre diapositivas. */
+    function playWhoosh(){
+      if (!enabled) return;
+      var c = getCtx(); if (!c) return;
+      var t = now(c);
+      var osc = c.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(760, t);
+      osc.frequency.exponentialRampToValueAtTime(130, t + 0.22);
+      var filter = c.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(2200, t);
+      filter.frequency.exponentialRampToValueAtTime(220, t + 0.22);
+      var gain = c.createGain();
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.16, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+      osc.connect(filter).connect(gain).connect(c.destination);
+      osc.start(t); osc.stop(t + 0.24);
+    }
+    /* Tres notas ascendentes tipo "coleccionaste algo" — respuesta correcta. */
+    function playCorrect(){
+      if (!enabled) return;
+      var c = getCtx(); if (!c) return;
+      var t = now(c);
+      tone(c, 523.25, t, 0.09, 'square', 0.2);
+      tone(c, 659.25, t + 0.08, 0.09, 'square', 0.2);
+      tone(c, 783.99, t + 0.16, 0.16, 'square', 0.22);
+    }
+    /* Zumbido grave descendente — respuesta incorrecta. */
+    function playIncorrect(){
+      if (!enabled) return;
+      var c = getCtx(); if (!c) return;
+      tone(c, 180, now(c), 0.18, 'sawtooth', 0.16, 85);
+    }
+    /* Blip agudo — al voltear una carta del memorice. */
+    function playFlip(){
+      if (!enabled) return;
+      var c = getCtx(); if (!c) return;
+      tone(c, 300, now(c), 0.05, 'square', 0.1, 440);
+    }
+    /* Campanita — par encontrado en el memorice. */
+    function playMatch(){
+      if (!enabled) return;
+      var c = getCtx(); if (!c) return;
+      var t = now(c);
+      tone(c, 660, t, 0.08, 'triangle', 0.2);
+      tone(c, 880, t + 0.07, 0.14, 'triangle', 0.22);
+    }
+    /* Golpe seco de madera — par que no coincide. */
+    function playMismatch(){
+      if (!enabled) return;
+      var c = getCtx(); if (!c) return;
+      noiseBurst(c, now(c), 0.1, 0.16, 450);
+    }
+    /* Destello ascendente — al dispersar la luz en el prisma. */
+    function playSparkle(){
+      if (!enabled) return;
+      var c = getCtx(); if (!c) return;
+      var t = now(c);
+      [880, 1046.5, 1318.5].forEach(function(f, i){ tone(c, f, t + i * 0.05, 0.12, 'triangle', 0.14); });
+    }
+
+    return {
+      playNav: playNav, playWhoosh: playWhoosh, playCorrect: playCorrect, playIncorrect: playIncorrect,
+      playFlip: playFlip, playMatch: playMatch, playMismatch: playMismatch, playSparkle: playSparkle,
+      setEnabled: function(v){ enabled = v; if (v) getCtx(); },
+      isEnabled: function(){ return enabled; }
+    };
+  })();
+
+  var soundToggle = document.getElementById('soundToggle');
+  function updateSoundUI(){
+    if (!soundToggle) return;
+    var on = SFX.isEnabled();
+    soundToggle.textContent = on ? '🔊' : '🔇';
+    soundToggle.classList.toggle('muted', !on);
+    soundToggle.setAttribute('aria-label', on ? 'Silenciar sonido' : 'Activar sonido');
+    soundToggle.title = on ? 'Sonido activado (clic para silenciar)' : 'Sonido silenciado (clic para activar)';
+  }
+  if (soundToggle){
+    soundToggle.addEventListener('click', function(){
+      SFX.setEnabled(!SFX.isEnabled());
+      updateSoundUI();
+      if (SFX.isEnabled()) SFX.playNav();
+    });
+    updateSoundUI();
+  }
 
   /* ---------- Deck navigation ---------- */
   var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
@@ -923,10 +1305,12 @@
   function goTo(i){
     i = Math.max(0, Math.min(total - 1, i));
     if (i === current) return;
+    var distance = Math.abs(i - current);
     slides[current].classList.remove('active');
     current = i;
     slides[current].classList.add('active');
     updateNav();
+    if (distance <= 1) SFX.playNav(); else SFX.playWhoosh();
   }
 
   document.addEventListener('keydown', function(e){
@@ -1047,6 +1431,7 @@
       prismSvg.classList.remove('dispersed');
       void prismSvg.offsetWidth;
       prismSvg.classList.add('dispersed');
+      SFX.playSparkle();
     });
   }
 
@@ -1193,6 +1578,134 @@
       summaryGrid.appendChild(btn);
     });
   }
+
+  var goToQuizBtn = document.getElementById('goToQuizBtn');
+  if (goToQuizBtn) goToQuizBtn.addEventListener('click', function(){ goTo(17); });
+
+  /* ---------- Slide 17: preguntas de alternativas ---------- */
+  var quizList = document.getElementById('quizList');
+  if (quizList){
+    quizList.addEventListener('click', function(e){
+      var btn = e.target.closest('.quiz-opt');
+      if (!btn) return;
+      var container = btn.closest('.quiz-options');
+      if (!container) return;
+      var opts = container.querySelectorAll('.quiz-opt');
+      opts.forEach(function(o){ o.classList.remove('correct', 'incorrect'); });
+      if (btn.dataset.correct === 'true'){
+        btn.classList.add('correct');
+        SFX.playCorrect();
+      } else {
+        btn.classList.add('incorrect');
+        var correctBtn = container.querySelector('.quiz-opt[data-correct="true"]');
+        if (correctBtn) correctBtn.classList.add('correct');
+        SFX.playIncorrect();
+      }
+    });
+  }
+
+  /* ---------- Slide 19: memorice concepto / descripción ---------- */
+  (function(){
+    var grid = document.getElementById('memoGrid');
+    if (!grid) return;
+    var foundEl = document.getElementById('memoFound');
+    var triesEl = document.getElementById('memoTries');
+    var resetBtn = document.getElementById('memoReset');
+
+    var pairs = [
+      { concept:'Umbra', desc:'Zona de sombra total, sin luz directa.' },
+      { concept:'Penumbra', desc:'Zona de sombra parcial, con algo de luz.' },
+      { concept:'Ángulo crítico', desc:'Ángulo mínimo de incidencia para que ocurra reflexión total interna.' },
+      { concept:'Índice de refracción (n)', desc:'n = c / v: mide cuánto se "dobla" la luz al entrar a un medio.' },
+      { concept:'Dispersión cromática', desc:'Separación de la luz blanca en los colores del espectro visible.' },
+      { concept:'Difracción', desc:'La luz se curva al pasar por una rendija o un obstáculo.' },
+      { concept:'Corrimiento al rojo', desc:'Ocurre cuando la fuente de luz se aleja del observador.' },
+      { concept:'Fotón', desc:'Partícula que transporta la energía de la luz.' }
+    ];
+
+    var cards = [], flipped = [], lock = false, found = 0, tries = 0;
+
+    function shuffle(arr){
+      for (var i = arr.length - 1; i > 0; i--){
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+      }
+      return arr;
+    }
+
+    function buildDeck(){
+      var deck = [];
+      pairs.forEach(function(p, i){
+        deck.push({ pairId: i, type: 'concept', text: p.concept });
+        deck.push({ pairId: i, type: 'desc', text: p.desc });
+      });
+      return shuffle(deck);
+    }
+
+    function flipCard(idx, btn){
+      var d = cards[idx];
+      btn.classList.remove('hidden-face');
+      btn.classList.add('flipped');
+      btn.innerHTML = '<span><span class="memo-tag">' + (d.type === 'concept' ? 'Concepto' : 'Descripción') + '</span>' + d.text + '</span>';
+    }
+    function unflipCard(btn){
+      btn.classList.remove('flipped');
+      btn.classList.add('hidden-face');
+      btn.textContent = '?';
+    }
+
+    function handleClick(idx, btn){
+      if (lock) return;
+      if (btn.classList.contains('matched') || btn.classList.contains('flipped')) return;
+      flipCard(idx, btn);
+      SFX.playFlip();
+      flipped.push({ idx: idx, btn: btn });
+      if (flipped.length === 2){
+        lock = true;
+        tries++;
+        if (triesEl) triesEl.textContent = tries;
+        var a = flipped[0], b = flipped[1];
+        var same = cards[a.idx].pairId === cards[b.idx].pairId && cards[a.idx].type !== cards[b.idx].type;
+        if (same){
+          a.btn.classList.add('matched');
+          b.btn.classList.add('matched');
+          found++;
+          if (foundEl) foundEl.textContent = found;
+          flipped = [];
+          lock = false;
+          SFX.playMatch();
+        } else {
+          SFX.playMismatch();
+          setTimeout(function(){
+            unflipCard(a.btn);
+            unflipCard(b.btn);
+            flipped = [];
+            lock = false;
+          }, 900);
+        }
+      }
+    }
+
+    function render(){
+      grid.innerHTML = '';
+      flipped = []; lock = false; found = 0; tries = 0;
+      if (foundEl) foundEl.textContent = 0;
+      if (triesEl) triesEl.textContent = 0;
+      cards = buildDeck();
+      cards.forEach(function(cardData, idx){
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'memo-card hidden-face';
+        btn.textContent = '?';
+        btn.setAttribute('aria-label', 'Carta oculta, memorice');
+        btn.addEventListener('click', function(){ handleClick(idx, btn); });
+        grid.appendChild(btn);
+      });
+    }
+
+    if (resetBtn) resetBtn.addEventListener('click', render);
+    render();
+  })();
 
 })();
 </script>
