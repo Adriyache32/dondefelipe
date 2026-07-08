@@ -375,9 +375,11 @@ function parseNumber(raw){
   if(raw == null) return 0;
   let s = String(raw).trim();
   if(s === '' || s === '-') return 0;
-  const negative = /^\(.*\)$/.test(s);
-  s = s.replace(/[()]/g,'').replace(/[^0-9.\-]/g,'');
-  let n = parseFloat(s);
+  const negative = /^\(.*\)$/.test(s) || s.startsWith('-');
+  s = s.replace(/[()]/g,'');
+  // Quita cualquier separador de miles (punto o coma) y símbolos, deja solo dígitos
+  s = s.replace(/[^0-9]/g,'');
+  let n = parseInt(s, 10);
   if(isNaN(n)) n = 0;
   return negative ? -Math.abs(n) : n;
 }
