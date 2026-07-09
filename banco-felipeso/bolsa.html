@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bolsa de Comercio Felipesa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  :root{
+    --bg: #0F241C;
+    --bg-deep: #0A1913;
+    --paper: #F1E9D2;
+    --paper-edge: #E4D8B4;
+    --ink: #1C2A22;
+    --ink-soft: #45543E;
+    --green: #163C2E;
+    --green-light: #1F5A42;
+    --gold: #C9A227;
+    --gold-bright: #E4C555;
+    --oxblood: #8A3A32;
+    --line: rgba(201,162,39,0.35);
+    --shadow: 0 20px 50px -20px rgba(0,0,0,0.55);
+    --font-display: 'Fraunces', serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --font-body: 'Inter', sans-serif;
+    --radius: 14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(201,162,39,0.08), transparent 45%),
+      radial-gradient(circle at 90% 20%, rgba(31,90,66,0.35), transparent 50%),
+      var(--bg-deep);
+    color: var(--paper);
+    font-family: var(--font-body);
+    min-height:100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  a{color:inherit;}
+  ::selection{ background: var(--gold); color:#1C2A22; }
+
+  /* ---------- Header ---------- */
+  header.top{
+    padding: 22px clamp(16px,4vw,48px) 16px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    flex-wrap:wrap;
+    border-bottom: 1px solid rgba(201,162,39,0.25);
+  }
+  .brand{
+    display:flex; align-items:center; gap:14px;
+  }
+  .brand .mark{
+    width:44px; height:44px; border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, var(--gold-bright), var(--gold) 60%, #8a6d1c 100%);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display); font-weight:700; color:#2a2107; font-size:18px;
+    box-shadow: 0 0 0 3px rgba(201,162,39,0.15), 0 6px 14px rgba(0,0,0,0.4);
+    flex-shrink:0;
+  }
+  .brand h1{
+    font-family: var(--font-display);
+    font-weight:600;
+    font-size: clamp(20px, 3vw, 30px);
+    letter-spacing:0.01em;
+    margin:0;
+    line-height:1.1;
+  }
+  .brand p{
+    margin:2px 0 0;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color: var(--gold-bright);
+    opacity:0.85;
+  }
+  #adminToggle{
+    background: rgba(201,162,39,0.1);
+    border:1px solid var(--line);
+    color: var(--paper);
+    font-family: var(--font-mono);
+    font-size:12.5px;
+    letter-spacing:0.04em;
+    padding:10px 16px;
+    border-radius: 999px;
+    cursor:pointer;
+    display:flex; align-items:center; gap:8px;
+    transition: background 0.2s ease, transform 0.15s ease;
+  }
+  #adminToggle:hover{ background: rgba(201,162,39,0.2); transform: translateY(-1px); }
+  #adminToggle.active{ background: var(--gold); color:#231a05; border-color:var(--gold); }
+
+  /* ---------- Ticker ---------- */
+  .ticker-wrap{
+    background: linear-gradient(90deg, var(--bg-deep), var(--green) 50%, var(--bg-deep));
+    border-bottom: 1px solid rgba(201,162,39,0.25);
+    overflow:hidden;
+    white-space:nowrap;
+    position:relative;
+  }
+  .ticker-track{
+    display:inline-flex;
+    animation: scroll-ticker 38s linear infinite;
+    padding: 10px 0;
+  }
+  @keyframes scroll-ticker{
+    from{ transform: translateX(0); }
+    to{ transform: translateX(-50%); }
+  }
+  .ticker-item{
+    font-family: var(--font-mono);
+    font-size:13px;
+    padding: 0 26px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    color: var(--paper);
+    border-right: 1px solid rgba(241,233,210,0.15);
+  }
+  .ticker-item b{ color: var(--gold-bright); letter-spacing:0.03em;}
+  .tk-up{ color:#8FD4A8; }
+  .tk-down{ color:#E39A93; }
+  @media (prefers-reduced-motion: reduce){
+    .ticker-track{ animation:none; overflow-x:auto; }
+  }
+
+  main{
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: clamp(20px,4vw,44px);
+    display:flex;
+    flex-direction:column;
+    gap: 40px;
+  }
+
+  section h2.section-title{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size: clamp(18px,2.4vw,24px);
+    margin:0 0 4px;
+    display:flex; align-items:baseline; gap:10px;
+  }
+  section h2.section-title .eyebrow{
+    font-family: var(--font-mono);
+    font-size:11px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color: var(--gold-bright);
+    opacity:0.8;
+  }
+  section > p.hint{
+    margin:0 0 18px;
+    font-size:13.5px;
+    color: rgba(241,233,210,0.65);
+    max-width:560px;
+  }
+
+  /* ---------- Search ---------- */
+  .search-row{
+    display:flex; gap:12px; flex-wrap:wrap; align-items:center;
+  }
+  .search-row input[type="text"]{
+    flex:1; min-width:220px;
+    background: rgba(241,233,210,0.06);
+    border:1px solid var(--line);
+    color:var(--paper);
+    padding: 13px 16px;
+    border-radius: 10px;
+    font-size:15px;
+    font-family: var(--font-body);
+  }
+  .search-row input::placeholder{ color: rgba(241,233,210,0.4); }
+  .search-row input:focus{ outline:2px solid var(--gold); outline-offset:1px; }
+  .search-results{
+    margin-top:10px;
+    display:flex; flex-direction:column; gap:6px;
+    max-height: 260px; overflow-y:auto;
+  }
+  .search-result-item{
+    display:flex; justify-content:space-between; gap:10px;
+    padding:10px 14px;
+    background: rgba(241,233,210,0.05);
+    border:1px solid transparent;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:14px;
+    transition: background 0.15s ease, border-color .15s ease;
+  }
+  .search-result-item:hover{ background: rgba(201,162,39,0.14); border-color: var(--line); }
+  .search-result-item .curso-tag{
+    font-family:var(--font-mono); font-size:11px; color:var(--gold-bright); opacity:0.85;
+  }
+
+  /* ---------- Layout: certificate + leaderboard ---------- */
+  .grid-two{
+    display:grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 26px;
+    align-items:start;
+  }
+  @media (max-width: 860px){
+    .grid-two{ grid-template-columns: 1fr; }
+  }
+
+  /* Certificate card */
+  .certificate{
+    background:
+      linear-gradient(var(--paper), var(--paper)) padding-box,
+      repeating-linear-gradient(45deg, var(--gold), var(--gold) 2px, transparent 2px, transparent 10px) border-box;
+    border: 3px solid transparent;
+    border-radius: var(--radius);
+    color: var(--ink);
+    padding: 26px 26px 22px;
+    box-shadow: var(--shadow);
+    position:relative;
+    min-height: 220px;
+  }
+  .certificate.empty{
+    display:flex; align-items:center; justify-content:center;
+    text-align:center;
+    color: rgba(241,233,210,0.5);
+    background: rgba(241,233,210,0.04);
+    border: 1px dashed var(--line);
+    font-family: var(--font-body);
+    font-size:14px;
+    min-height:180px;
+  }
+  .certificate::before{
+    content:"";
+    position:absolute; inset:8px;
+    border:1px solid rgba(28,42,34,0.25);
+    border-radius: 8px;
+    pointer-events:none;
+  }
+  .cert-head{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:12px;
+    border-bottom: 1px solid rgba(28,42,34,0.2);
+    padding-bottom:14px; margin-bottom:16px;
+  }
+  .cert-head .eyebrow{
+    font-family:var(--font-mono); font-size:10.5px; letter-spacing:0.16em; text-transform:uppercase;
+    color: var(--green-light); opacity:0.85;
+  }
+  .cert-head h3{
+    font-family: var(--font-display);
+    font-size: clamp(20px,2.6vw,26px);
+    margin: 2px 0 4px;
+    color: var(--ink);
+  }
+  .cert-head .meta{ font-size:12.5px; color: var(--ink-soft); font-family: var(--font-mono); }
+  .seal{
+    width:56px; height:56px; border-radius:50%; flex-shrink:0;
+    background: radial-gradient(circle at 35% 30%, #234a38, #163c2e 65%);
+    color: var(--gold-bright);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:700; font-size:18px;
+    border: 2px solid var(--gold);
+  }
+  table.cert-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  table.cert-table th{
+    text-align:left; font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase;
+    letter-spacing:0.08em; color: var(--ink-soft); padding: 6px 6px; border-bottom:1px solid rgba(28,42,34,0.18);
+  }
+  table.cert-table td{ padding: 8px 6px; border-bottom:1px dashed rgba(28,42,34,0.12); }
+  table.cert-table tr:last-child td{ border-bottom:none; }
+  .bar-cell{ width:110px; }
+  .bar-track{ background: rgba(28,42,34,0.1); border-radius:4px; height:6px; overflow:hidden; }
+  .bar-fill{ height:100%; background: linear-gradient(90deg, var(--green-light), var(--gold)); }
+  .cert-total{
+    display:flex; justify-content:space-between; align-items:baseline;
+    margin-top:16px; padding-top:14px; border-top: 2px solid var(--ink);
+  }
+  .cert-total .label{ font-family:var(--font-mono); font-size:12px; text-transform:uppercase; letter-spacing:0.1em; color: var(--ink-soft); }
+  .cert-total .value{ font-family:var(--font-display); font-weight:700; font-size: clamp(22px,3vw,30px); color: var(--green); }
+
+  /* Leaderboard */
+  .leaderboard{
+    background: rgba(241,233,210,0.05);
+    border:1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .leaderboard ol{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px; }
+  .leaderboard li{
+    display:flex; align-items:center; gap:12px;
+    padding: 9px 8px;
+    border-radius:8px;
+    font-size:13.5px;
+    cursor:pointer;
+  }
+  .leaderboard li:hover{ background: rgba(201,162,39,0.1); }
+  .lb-rank{
+    font-family:var(--font-mono); width:22px; text-align:right; color: var(--gold-bright); font-size:12.5px; flex-shrink:0;
+  }
+  .lb-name{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .lb-curso{ font-family:var(--font-mono); font-size:11px; opacity:0.6; }
+  .lb-value{ font-family:var(--font-mono); font-size:13px; color: var(--gold-bright); flex-shrink:0; }
+
+  /* ---------- Empresas grid ---------- */
+  .empresas-grid{
+    display:grid; grid-template-columns: repeat(auto-fill,minmax(230px,1fr)); gap:16px;
+  }
+  .empresa-card{
+    background: rgba(241,233,210,0.05);
+    border:1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .empresa-card .row1{ display:flex; justify-content:space-between; align-items:flex-start; }
+  .empresa-card .ticker{ font-family:var(--font-mono); font-weight:700; color:var(--gold-bright); font-size:14px; letter-spacing:0.05em; }
+  .empresa-card .nombre{ font-family:var(--font-display); font-size:16px; margin:2px 0 0; }
+  .empresa-card .valor{ font-family:var(--font-mono); font-size:22px; font-weight:600; }
+  .empresa-card .change{ font-family:var(--font-mono); font-size:12px; }
+  .empresa-card .desc{ font-size:12.5px; color: rgba(241,233,210,0.6); line-height:1.4; }
+  .empresa-card .circ{ font-family:var(--font-mono); font-size:11px; color: rgba(241,233,210,0.5); border-top:1px solid rgba(241,233,210,0.1); padding-top:8px; margin-top:2px; }
+
+  /* ---------- Admin panel ---------- */
+  #adminPanel{
+    display:none;
+    background: rgba(10,25,19,0.6);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px;
+    flex-direction:column;
+    gap:26px;
+  }
+  #adminPanel.open{ display:flex; }
+  .admin-block h3{
+    font-family:var(--font-display); font-size:17px; margin:0 0 10px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .admin-block h3 .tag{ font-family:var(--font-mono); font-size:10px; background:var(--gold); color:#231a05; padding:2px 8px; border-radius:999px; letter-spacing:0.06em; }
+  table.admin-table{ width:100%; border-collapse:collapse; font-size:13px; }
+  table.admin-table th{ text-align:left; font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase; color:rgba(241,233,210,0.55); padding:6px; border-bottom:1px solid var(--line); }
+  table.admin-table td{ padding:6px; border-bottom:1px solid rgba(241,233,210,0.08); }
+  table.admin-table input[type="number"]{
+    width:100px; background: rgba(241,233,210,0.08); border:1px solid var(--line); color: var(--paper);
+    padding:6px 8px; border-radius:6px; font-family:var(--font-mono);
+  }
+  .btn{
+    font-family: var(--font-body); font-weight:600; font-size:13.5px;
+    padding: 10px 18px; border-radius:8px; border:1px solid var(--line);
+    background: rgba(201,162,39,0.12); color: var(--paper); cursor:pointer;
+    transition: background .15s ease, transform .15s ease;
+  }
+  .btn:hover{ background: rgba(201,162,39,0.22); transform: translateY(-1px); }
+  .btn.primary{ background: var(--gold); color:#231a05; border-color: var(--gold); }
+  .btn.primary:hover{ background: var(--gold-bright); }
+  .btn.danger{ background: rgba(138,58,50,0.25); border-color: rgba(138,58,50,0.6); }
+  .btn.danger:hover{ background: rgba(138,58,50,0.4); }
+  .btn.small{ padding:7px 12px; font-size:12.5px; }
+
+  .assign-form{
+    display:flex; flex-wrap:wrap; gap:10px; align-items:end;
+  }
+  .assign-form .field{ display:flex; flex-direction:column; gap:4px; }
+  .assign-form label{ font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase; color: rgba(241,233,210,0.55); }
+  .assign-form select, .assign-form input{
+    background: rgba(241,233,210,0.08); border:1px solid var(--line); color:var(--paper);
+    padding:9px 10px; border-radius:8px; font-family:var(--font-body); font-size:13.5px;
+  }
+  .assign-form input[type="number"]{ width:100px; }
+
+  .history-list{ display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto; font-size:12.5px; font-family: var(--font-mono); }
+  .history-list .h-item{ padding:8px 10px; background: rgba(241,233,210,0.04); border-radius:6px; display:flex; justify-content:space-between; gap:10px; }
+  .history-list .h-item span.time{ opacity:0.5; flex-shrink:0; }
+
+  .io-row{ display:flex; gap:10px; flex-wrap:wrap; }
+  #importFile{ display:none; }
+
+  footer{
+    text-align:center; padding: 30px; font-size:12px; color: rgba(241,233,210,0.35);
+    font-family: var(--font-mono);
+  }
+
+  .toast{
+    position:fixed; bottom:22px; left:50%; transform: translateX(-50%) translateY(20px);
+    background: var(--gold); color:#231a05; padding:12px 22px; border-radius:999px;
+    font-family:var(--font-body); font-weight:600; font-size:13.5px;
+    opacity:0; pointer-events:none; transition: all 0.3s ease;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+    z-index:100;
+  }
+  .toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <div class="mark">₣</div>
+    <div>
+      <h1>Bolsa de Comercio Felipesa</h1>
+      <p>Mercado de acciones escolar</p>
+    </div>
+  </div>
+  <button id="adminToggle" type="button">🔒 Modo Profesor</button>
+</header>
+
+<div class="ticker-wrap">
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
+
+<main>
+
+  <section id="buscarSection">
+    <h2 class="section-title"><span class="eyebrow">01</span> Buscar accionista</h2>
+    <p class="hint">Escribe tu nombre, apellido o número de ID para ver tu certificado de acciones.</p>
+    <div class="search-row">
+      <input type="text" id="searchInput" placeholder="Ej: Bastian, Lobos, o 1">
+    </div>
+    <div class="search-results" id="searchResults"></div>
+  </section>
+
+  <section id="portafolioSection">
+    <h2 class="section-title"><span class="eyebrow">02</span> Tu portafolio</h2>
+    <div class="grid-two">
+      <div id="certificateSlot">
+        <div class="certificate empty">Busca tu nombre arriba para ver tu certificado de acciones.</div>
+      </div>
+      <div class="leaderboard">
+        <h3 style="font-family:var(--font-display); font-size:15px; margin:0 0 12px;">🏆 Top Accionistas</h3>
+        <ol id="leaderboardList"></ol>
+      </div>
+    </div>
+  </section>
+
+  <section id="empresasSection">
+    <h2 class="section-title"><span class="eyebrow">03</span> Empresas en la bolsa</h2>
+    <p class="hint">Cada evento del curso es una "empresa". Su valor por acción lo actualiza el profesor.</p>
+    <div class="empresas-grid" id="empresasGrid"></div>
+  </section>
+
+  <section id="adminSection">
+    <div id="adminPanel">
+      <div class="admin-block">
+        <h3>💹 Valor de las empresas <span class="tag">EDITABLE</span></h3>
+        <table class="admin-table" id="empresasAdminTable"></table>
+        <div style="margin-top:12px;"><button class="btn primary" id="guardarValoresBtn">Guardar valores</button></div>
+      </div>
+
+      <div class="admin-block">
+        <h3>📤 Asignar acciones a un estudiante</h3>
+        <div class="assign-form">
+          <div class="field">
+            <label>Estudiante</label>
+            <select id="assignStudent"></select>
+          </div>
+          <div class="field">
+            <label>Empresa</label>
+            <select id="assignEmpresa"></select>
+          </div>
+          <div class="field">
+            <label>Acciones (+/-)</label>
+            <input type="number" id="assignAmount" value="1">
+          </div>
+          <div class="field">
+            <label>Motivo (opcional)</label>
+            <input type="text" id="assignMotivo" placeholder="Ej: ayudó a ordenar la sala">
+          </div>
+          <button class="btn primary" id="assignBtn">Aplicar</button>
+        </div>
+      </div>
+
+      <div class="admin-block">
+        <h3>📜 Historial de movimientos</h3>
+        <div class="history-list" id="historyList"></div>
+      </div>
+
+      <div class="admin-block">
+        <h3>🔗 Sincronizar con Google Sheets <span class="tag">EN VIVO</span></h3>
+        <p class="hint" style="margin-bottom:12px;">Si tu planilla está publicada en la web, la bolsa puede leer los valores y las acciones directamente desde ahí cada vez que alguien abre la página.</p>
+        <div class="io-row" style="align-items:center;">
+          <button class="btn primary" id="syncNowBtn">🔄 Sincronizar ahora</button>
+          <span id="syncStatus" style="font-family:var(--font-mono); font-size:12px; opacity:0.7;"></span>
+        </div>
+      </div>
+
+      <div class="admin-block">
+        <h3>📁 Respaldo de datos</h3>
+        <div class="io-row">
+          <button class="btn" id="exportBtn">⬇️ Descargar Excel (respaldo)</button>
+          <button class="btn" id="importBtn">⬆️ Importar Excel</button>
+          <input type="file" id="importFile" accept=".xlsx">
+          <button class="btn danger" id="resetBtn">↺ Reiniciar datos de fábrica</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>Bolsa de Comercio Felipesa — Colegio San Agustín · <span id="footerSyncNote">datos guardados localmente en este navegador</span></footer>
+<div class="toast" id="toast"></div>
+
+<script>
+const ADMIN_PIN = "PROFE2026";
+
+/* ===== Sincronización con Google Sheets (publicado en la web) =====
+   1. En Google Sheets: Archivo > Compartir > Publicar en la web > selecciona cada hoja > Publicar.
+   2. SHEET_PUBLISH_KEY es el código largo que aparece en la URL publicada (después de /d/e/ y antes de /pub).
+   3. SHEET_GIDS son los gid de CADA pestaña (Empresas y Accionistas). El orden no importa:
+      la bolsa detecta sola cuál es cuál mirando los encabezados de cada hoja.
+   4. Mientras falte un gid, dejalo como está (se ignora) y la bolsa sigue usando los datos guardados/importados. */
+const SHEET_PUBLISH_KEY = "2PACX-1vQm7qOPYrZxTHzwaCtHR_cVW0SdNAhd2ryUuR0sRtuB-1mlmMKaB6sVIY4-Bi7MJg";
+const SHEET_GIDS = ["1791925553", "156105981"];
+const AUTOLOAD_FROM_SHEETS = true; // si es true, sincroniza apenas se abre la página (en segundo plano)
+
+const SEED_DATA = {"empresas": [{"ticker": "COMP", "nombre": "Comportamiento en Sala", "valor": 1000, "desc": "Buena convivencia, respeto y actitud positiva en clases."}, {"ticker": "LIMP", "nombre": "Limpieza de Sala", "valor": 800, "desc": "Orden y limpieza del puesto y la sala de clases."}, {"ticker": "ANOT", "nombre": "Anotaciones Positivas", "valor": 1200, "desc": "Anotaciones positivas registradas en el libro de clases."}, {"ticker": "CAMP26", "nombre": "Campeonato 2026", "valor": 2000, "desc": "Participación y logros en la Copa San Agustín / Mundial 2026."}, {"ticker": "EQUIPO", "nombre": "Trabajo en Equipo", "valor": 900, "desc": "Colaboración y aporte en trabajos grupales."}, {"ticker": "TAREA", "nombre": "Tareas Completadas", "valor": 700, "desc": "Cumplimiento de tareas y trabajos asignados."}], "estudiantes": [{"id": 1, "apellido": "Lobos", "nombre": "Bastian", "curso": "7mo", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 2, "apellido": "Espinoza", "nombre": "Vicente", "curso": "7mo", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 3, "apellido": "Alvarez", "nombre": "Samuel", "curso": "7mo", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 4, "apellido": "Espinoza", "nombre": "Sofia", "curso": "3ro", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 5, "apellido": "Villanueva", "nombre": "Nicolas", "curso": "3ro", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 6, "apellido": "Ramoneda", "nombre": "Santiago", "curso": "3ro", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 7, "apellido": "Herandez", "nombre": "Melanny", "curso": "3ro", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 8, "apellido": "Concha", "nombre": "Matias", "curso": "3ro", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 9, "apellido": "Villarroel", "nombre": "Sofia", "curso": "3ro", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 10, "apellido": "Herrera", "nombre": "Daniel", "curso": "3ro", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 11, "apellido": "Aviles", "nombre": "Sergio", "curso": "3ro", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 12, "apellido": "Rojas", "nombre": "Esteban", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 13, "apellido": "Figueroa", "nombre": "Juaquin", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 14, "apellido": "Espinoza", "nombre": "Felipe", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 15, "apellido": "Vicencio", "nombre": "Elier", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 16, "apellido": "Lobos", "nombre": "Francisca", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 17, "apellido": "Silva", "nombre": "Vicente", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 18, "apellido": "Rios", "nombre": "Nicolas", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 19, "apellido": "Lorca", "nombre": "Jose", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 20, "apellido": "Soto", "nombre": "Nicolás", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 21, "apellido": "Campo", "nombre": "Renato", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 22, "apellido": "Urra", "nombre": "Renato", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 23, "apellido": "Cartagena", "nombre": "Enzo", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 24, "apellido": "Vasquez", "nombre": "Martina", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 25, "apellido": "Herrera", "nombre": "Valentina", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 26, "apellido": "Galaz", "nombre": "Benjamin", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 27, "apellido": "Del Rio", "nombre": "Benjamin", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 28, "apellido": "Lynch", "nombre": "Sarah", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 29, "apellido": "Escobar", "nombre": "Martin", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 30, "apellido": "Peters", "nombre": "Kiara", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 31, "apellido": "Cornejo", "nombre": "Edgardo", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 32, "apellido": "D.", "nombre": "Benjamin", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 33, "apellido": "", "nombre": "Ignacio", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 34, "apellido": "Suarez", "nombre": "Hector", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 35, "apellido": "Carrrasco", "nombre": "Martin", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 36, "apellido": "Fernandez", "nombre": "Isidora", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 37, "apellido": "Oyarce", "nombre": "Gustavo", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 38, "apellido": "Estay", "nombre": "Bastian", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 39, "apellido": "", "nombre": "Gabriel", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 40, "apellido": "", "nombre": "Jomary", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 41, "apellido": "", "nombre": "Fabi", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 42, "apellido": "", "nombre": "Eva", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}]};
+const STORAGE_KEY = "bolsaFelipesaState_v1";
+
+function loadState(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw){
+    try{ return JSON.parse(raw); }catch(e){ /* fall through */ }
+  }
+  const fresh = JSON.parse(JSON.stringify(SEED_DATA));
+  fresh.empresas.forEach(e => e.valorApertura = e.valor);
+  fresh.movimientos = [];
+  return fresh;
+}
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+let state = loadState();
+let selectedStudentId = null;
+let adminOpen = false;
+
+function fmtMoney(n){ return "₣ " + Math.round(n).toLocaleString("es-CL"); }
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(showToast._h);
+  showToast._h = setTimeout(()=> t.classList.remove("show"), 2600);
+}
+
+function studentValue(s){
+  return state.empresas.reduce((sum,e)=> sum + (s.acciones[e.ticker]||0) * e.valor, 0);
+}
+function studentTotalAcciones(s){
+  return state.empresas.reduce((sum,e)=> sum + (s.acciones[e.ticker]||0), 0);
+}
+
+/* ---------- Ticker ---------- */
+function renderTicker(){
+  const track = document.getElementById("tickerTrack");
+  const items = state.empresas.map(e=>{
+    const change = e.valorApertura ? ((e.valor - e.valorApertura) / e.valorApertura * 100) : 0;
+    const dir = change > 0 ? "tk-up" : (change < 0 ? "tk-down" : "");
+    const arrow = change > 0 ? "▲" : (change < 0 ? "▼" : "•");
+    return `<span class="ticker-item"><b>${e.ticker}</b> ${fmtMoney(e.valor)} <span class="${dir}">${arrow} ${Math.abs(change).toFixed(1)}%</span></span>`;
+  }).join("");
+  track.innerHTML = items + items; // duplicate for seamless loop
+}
+
+/* ---------- Search ---------- */
+function matchesQuery(s, q){
+  q = q.toLowerCase();
+  return (s.nombre+" "+s.apellido).toLowerCase().includes(q) ||
+         (s.apellido+" "+s.nombre).toLowerCase().includes(q) ||
+         String(s.id).includes(q) ||
+         s.curso.toLowerCase().includes(q);
+}
+document.getElementById("searchInput").addEventListener("input", e=>{
+  const q = e.target.value.trim();
+  const box = document.getElementById("searchResults");
+  if(!q){ box.innerHTML=""; return; }
+  const matches = state.estudiantes.filter(s=>matchesQuery(s,q)).slice(0,10);
+  box.innerHTML = matches.map(s=>`
+    <div class="search-result-item" data-id="${s.id}">
+      <span>${s.nombre} ${s.apellido}</span>
+      <span class="curso-tag">${s.curso} · ID ${s.id}</span>
+    </div>`).join("") || `<div style="opacity:0.5; font-size:13px; padding:8px;">Sin resultados.</div>`;
+  box.querySelectorAll(".search-result-item").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      selectedStudentId = parseInt(el.dataset.id);
+      renderCertificate();
+      document.getElementById("searchResults").innerHTML="";
+      document.getElementById("searchInput").value = "";
+      document.getElementById("portafolioSection").scrollIntoView({behavior:"smooth", block:"start"});
+    });
+  });
+});
+
+/* ---------- Certificate ---------- */
+function renderCertificate(){
+  const slot = document.getElementById("certificateSlot");
+  const s = state.estudiantes.find(x=>x.id===selectedStudentId);
+  if(!s){
+    slot.innerHTML = `<div class="certificate empty">Busca tu nombre arriba para ver tu certificado de acciones.</div>`;
+    return;
+  }
+  const total = studentValue(s);
+  const initials = ((s.nombre[0]||"")+(s.apellido[0]||"")).toUpperCase();
+  const rows = state.empresas.map(e=>{
+    const acc = s.acciones[e.ticker]||0;
+    const sub = acc * e.valor;
+    const pct = total>0 ? (sub/total*100) : 0;
+    return `<tr>
+      <td><b>${e.ticker}</b><br><span style="color:var(--ink-soft); font-size:11px;">${e.nombre}</span></td>
+      <td>${acc}</td>
+      <td>${fmtMoney(e.valor)}</td>
+      <td class="bar-cell">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div class="bar-track" style="flex:1;"><div class="bar-fill" style="width:${pct}%;"></div></div>
+          <span style="font-family:var(--font-mono); font-size:11px; width:40px; text-align:right;">${fmtMoney(sub)}</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+  slot.innerHTML = `
+    <div class="certificate">
+      <div class="cert-head">
+        <div>
+          <div class="eyebrow">Certificado de Acciones</div>
+          <h3>${s.nombre} ${s.apellido}</h3>
+          <div class="meta">ID ${s.id} · Curso ${s.curso} · ${studentTotalAcciones(s)} acciones en total</div>
+        </div>
+        <div class="seal">${initials}</div>
+      </div>
+      <table class="cert-table">
+        <thead><tr><th>Empresa</th><th>Acciones</th><th>Valor/acción</th><th>Subtotal</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="cert-total">
+        <span class="label">Valor total de la cartera</span>
+        <span class="value">${fmtMoney(total)}</span>
+      </div>
+    </div>`;
+}
+
+/* ---------- Leaderboard ---------- */
+function renderLeaderboard(){
+  const list = document.getElementById("leaderboardList");
+  const ranked = [...state.estudiantes].map(s=>({s, v: studentValue(s)})).sort((a,b)=>b.v-a.v).slice(0,10);
+  list.innerHTML = ranked.map((r,i)=>`
+    <li data-id="${r.s.id}">
+      <span class="lb-rank">${i+1}</span>
+      <span class="lb-name">${r.s.nombre} ${r.s.apellido} <span class="lb-curso">${r.s.curso}</span></span>
+      <span class="lb-value">${fmtMoney(r.v)}</span>
+    </li>`).join("");
+  list.querySelectorAll("li").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      selectedStudentId = parseInt(el.dataset.id);
+      renderCertificate();
+      document.getElementById("portafolioSection").scrollIntoView({behavior:"smooth", block:"start"});
+    });
+  });
+}
+
+/* ---------- Empresas grid ---------- */
+function renderEmpresasGrid(){
+  const grid = document.getElementById("empresasGrid");
+  grid.innerHTML = state.empresas.map(e=>{
+    const change = e.valorApertura ? ((e.valor - e.valorApertura) / e.valorApertura * 100) : 0;
+    const dir = change > 0 ? "tk-up" : (change < 0 ? "tk-down" : "");
+    const arrow = change > 0 ? "▲" : (change < 0 ? "▼" : "•");
+    const circulacion = state.estudiantes.reduce((sum,s)=> sum + (s.acciones[e.ticker]||0), 0);
+    return `<div class="empresa-card">
+      <div class="row1">
+        <div>
+          <div class="ticker">${e.ticker}</div>
+          <div class="nombre">${e.nombre}</div>
+        </div>
+      </div>
+      <div class="valor">${fmtMoney(e.valor)}</div>
+      <div class="change ${dir}">${arrow} ${Math.abs(change).toFixed(1)}% desde la apertura</div>
+      <div class="desc">${e.desc}</div>
+      <div class="circ">${circulacion} acciones en circulación</div>
+    </div>`;
+  }).join("");
+}
+
+/* ---------- Admin: valores ---------- */
+function renderEmpresasAdminTable(){
+  const table = document.getElementById("empresasAdminTable");
+  table.innerHTML = `<tr><th>Ticker</th><th>Empresa</th><th>Valor actual</th><th>Nuevo valor</th></tr>` +
+    state.empresas.map(e=>`
+      <tr>
+        <td><b>${e.ticker}</b></td>
+        <td>${e.nombre}</td>
+        <td>${fmtMoney(e.valor)}</td>
+        <td><input type="number" min="0" step="50" data-ticker="${e.ticker}" value="${e.valor}"></td>
+      </tr>`).join("");
+}
+document.getElementById("guardarValoresBtn").addEventListener("click", ()=>{
+  const inputs = document.querySelectorAll("#empresasAdminTable input[type='number']");
+  let cambios = [];
+  inputs.forEach(inp=>{
+    const ticker = inp.dataset.ticker;
+    const nuevo = parseFloat(inp.value);
+    if(isNaN(nuevo) || nuevo < 0) return;
+    const e = state.empresas.find(x=>x.ticker===ticker);
+    if(e && nuevo !== e.valor){
+      cambios.push(`${ticker}: ${fmtMoney(e.valor)} → ${fmtMoney(nuevo)}`);
+      e.valor = nuevo;
+    }
+  });
+  if(cambios.length){
+    logMovimiento("Cambio de valor — " + cambios.join(" · "));
+    saveState();
+    renderAll();
+    showToast("Valores actualizados.");
+  } else {
+    showToast("No hubo cambios.");
+  }
+});
+
+/* ---------- Admin: asignar acciones ---------- */
+function renderAssignForm(){
+  const studentSelect = document.getElementById("assignStudent");
+  studentSelect.innerHTML = state.estudiantes
+    .slice().sort((a,b)=> (a.apellido+a.nombre).localeCompare(b.apellido+b.nombre))
+    .map(s=>`<option value="${s.id}">${s.apellido}, ${s.nombre} (${s.curso})</option>`).join("");
+  const empresaSelect = document.getElementById("assignEmpresa");
+  empresaSelect.innerHTML = state.empresas.map(e=>`<option value="${e.ticker}">${e.ticker} — ${e.nombre}</option>`).join("");
+}
+document.getElementById("assignBtn").addEventListener("click", ()=>{
+  const id = parseInt(document.getElementById("assignStudent").value);
+  const ticker = document.getElementById("assignEmpresa").value;
+  const amount = parseInt(document.getElementById("assignAmount").value);
+  const motivo = document.getElementById("assignMotivo").value.trim();
+  if(isNaN(amount) || amount === 0){ showToast("Ingresa una cantidad válida."); return; }
+  const s = state.estudiantes.find(x=>x.id===id);
+  if(!s) return;
+  s.acciones[ticker] = (s.acciones[ticker]||0) + amount;
+  if(s.acciones[ticker] < 0) s.acciones[ticker] = 0;
+  const signo = amount > 0 ? "+" : "";
+  logMovimiento(`${s.nombre} ${s.apellido}: ${signo}${amount} acciones de ${ticker}${motivo ? " — " + motivo : ""}`);
+  document.getElementById("assignMotivo").value = "";
+  saveState();
+  renderAll();
+  showToast("Acciones asignadas.");
+});
+
+/* ---------- Historial ---------- */
+function logMovimiento(text){
+  state.movimientos = state.movimientos || [];
+  state.movimientos.unshift({ text, time: new Date().toLocaleString("es-CL") });
+  state.movimientos = state.movimientos.slice(0, 60);
+}
+function renderHistory(){
+  const list = document.getElementById("historyList");
+  if(!state.movimientos || !state.movimientos.length){
+    list.innerHTML = `<div style="opacity:0.5;">Sin movimientos todavía.</div>`;
+    return;
+  }
+  list.innerHTML = state.movimientos.slice(0,20).map(m=>`
+    <div class="h-item"><span>${m.text}</span><span class="time">${m.time}</span></div>`).join("");
+}
+
+/* ---------- Admin toggle / PIN ---------- */
+document.getElementById("adminToggle").addEventListener("click", ()=>{
+  if(adminOpen){
+    adminOpen = false;
+    document.getElementById("adminPanel").classList.remove("open");
+    document.getElementById("adminToggle").classList.remove("active");
+    document.getElementById("adminToggle").textContent = "🔒 Modo Profesor";
+    return;
+  }
+  const pin = prompt("Ingresa el PIN de profesor:");
+  if(pin === null) return;
+  if(pin !== ADMIN_PIN){ showToast("PIN incorrecto."); return; }
+  adminOpen = true;
+  document.getElementById("adminPanel").classList.add("open");
+  document.getElementById("adminToggle").classList.add("active");
+  document.getElementById("adminToggle").textContent = "🔓 Modo Profesor";
+  document.getElementById("adminSection").scrollIntoView({behavior:"smooth", block:"start"});
+});
+
+/* ---------- Reset ---------- */
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  if(!confirm("Esto borrará todos los cambios guardados en este navegador y volverá a los valores de fábrica. ¿Continuar?")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state = loadState();
+  selectedStudentId = null;
+  renderAll();
+  showToast("Datos reiniciados.");
+});
+
+/* ---------- Export a Excel ---------- */
+document.getElementById("exportBtn").addEventListener("click", ()=>{
+  const wb = XLSX.utils.book_new();
+
+  const empresasRows = [["Ticker","Empresa (Evento)","Valor por Acción (₣)","Descripción"]];
+  state.empresas.forEach(e=> empresasRows.push([e.ticker, e.nombre, e.valor, e.desc]));
+  const wsEmpresas = XLSX.utils.aoa_to_sheet(empresasRows);
+  wsEmpresas["!cols"] = [{wch:10},{wch:26},{wch:20},{wch:50}];
+  XLSX.utils.book_append_sheet(wb, wsEmpresas, "Empresas");
+
+  const headers = ["ID","Apellido","Nombre","Curso", ...state.empresas.map(e=>e.ticker), "Total Acciones", "Valor Cartera (₣)"];
+  const estudiantesRows = [headers];
+  state.estudiantes.forEach(s=>{
+    const accVals = state.empresas.map(e=> s.acciones[e.ticker]||0);
+    const totalAcc = accVals.reduce((a,b)=>a+b,0);
+    estudiantesRows.push([s.id, s.apellido, s.nombre, s.curso, ...accVals, totalAcc, studentValue(s)]);
+  });
+  const wsEst = XLSX.utils.aoa_to_sheet(estudiantesRows);
+  wsEst["!cols"] = [{wch:6},{wch:16},{wch:14},{wch:8}, ...state.empresas.map(()=>({wch:9})), {wch:14},{wch:18}];
+  XLSX.utils.book_append_sheet(wb, wsEst, "Accionistas");
+
+  const fecha = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `Bolsa_Felipesa_respaldo_${fecha}.xlsx`);
+  showToast("Excel descargado.");
+});
+
+/* ---------- Parsing compartido (xlsx y CSV de Google Sheets usan la misma lógica) ---------- */
+// Las filas pueden venir precedidas por una fila de título fusionada, así que la fila de
+// encabezado real se busca por contenido en vez de asumir que es la primera fila.
+function findHeaderRow(rows, firstCellMatch){
+  for(let i=0;i<Math.min(rows.length,6);i++){
+    const cell = (rows[i] && rows[i][0]!==undefined) ? String(rows[i][0]).trim().toLowerCase() : "";
+    if(firstCellMatch.test(cell)) return i;
+  }
+  return -1;
+}
+function tryParseEmpresas(rows){
+  const idx = findHeaderRow(rows, /^ticker$/);
+  if(idx === -1) return null;
+  const header = rows[idx].map(h=> (h||"").toString().toLowerCase());
+  const idxNombre = header.findIndex(h=>h.includes("empresa"));
+  const idxValor = header.findIndex(h=>h.includes("valor por acci") || h.includes("valor actual"));
+  const idxDesc = header.findIndex(h=>h.includes("descrip"));
+  const out = rows.slice(idx+1).filter(r=>r[0]).map(r=>({
+    ticker: String(r[0]).trim(),
+    nombre: idxNombre>=0 ? r[idxNombre] : r[1],
+    valor: parseFloat(idxValor>=0 ? r[idxValor] : r[2])||0,
+    desc: idxDesc>=0 ? (r[idxDesc]||"") : (r[3]||""),
+  }));
+  return out.length ? out : null;
+}
+function tryParseEstudiantes(rows){
+  const idx = findHeaderRow(rows, /^id$/);
+  if(idx === -1) return null;
+  const header = rows[idx];
+  const tickerCols = [];
+  header.forEach((h, i)=>{
+    if(i >= 4 && !["Total Acciones","Valor Cartera (₣)"].includes(h)) tickerCols.push({ticker: h, idx: i});
+  });
+  const out = rows.slice(idx+1).filter(r=>r[0]!==undefined && r[0]!=="").map(r=>{
+    const acciones = {};
+    tickerCols.forEach(tc=> acciones[tc.ticker] = parseInt(r[tc.idx])||0);
+    return { id: parseInt(r[0]), apellido: r[1]||"", nombre: r[2]||"", curso: r[3]||"", acciones };
+  });
+  return out.length ? out : null;
+}
+
+/* ---------- Import desde Excel ---------- */
+document.getElementById("importBtn").addEventListener("click", ()=> document.getElementById("importFile").click());
+document.getElementById("importFile").addEventListener("change", (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt)=>{
+    try{
+      const wb = XLSX.read(evt.target.result, {type:"binary"});
+      const empresasSheetName = wb.SheetNames.find(n=>n.toLowerCase().includes("empresa"));
+      const estSheetName = wb.SheetNames.find(n=>n.toLowerCase().includes("accionista") || n.toLowerCase().includes("estudiante"));
+      if(!empresasSheetName || !estSheetName){ showToast("No se encontraron las hojas esperadas."); return; }
+
+      const newEmpresas = tryParseEmpresas(XLSX.utils.sheet_to_json(wb.Sheets[empresasSheetName], {header:1}));
+      const newEstudiantes = tryParseEstudiantes(XLSX.utils.sheet_to_json(wb.Sheets[estSheetName], {header:1}));
+      if(!newEmpresas || !newEstudiantes){ showToast("El archivo no tiene el formato esperado."); return; }
+
+      newEmpresas.forEach(e=> e.valorApertura = e.valor);
+      state.empresas = newEmpresas;
+      state.estudiantes = newEstudiantes;
+      logMovimiento(`Datos importados desde archivo Excel: ${file.name}`);
+      saveState();
+      selectedStudentId = null;
+      renderAll();
+      showToast("Datos importados correctamente.");
+    }catch(err){
+      console.error(err);
+      showToast("Error al leer el archivo.");
+    }
+  };
+  reader.readAsBinaryString(file);
+  e.target.value = "";
+});
+
+/* ---------- Sincronizar con Google Sheets (CSV publicado) ---------- */
+function sheetCsvUrl(gid){
+  return `https://docs.google.com/spreadsheets/d/e/${SHEET_PUBLISH_KEY}/pub?gid=${gid}&single=true&output=csv`;
+}
+function updateSyncStatus(text){
+  const el = document.getElementById("syncStatus");
+  if(el) el.textContent = text;
+  const foot = document.getElementById("footerSyncNote");
+  if(foot && state.lastSync) foot.textContent = `última sincronización con Google Sheets: ${state.lastSync}`;
+}
+async function syncFromGoogleSheets(showToasts){
+  const gids = SHEET_GIDS.filter(g=> g && !g.startsWith("PON_AQUI"));
+  if(!gids.length){
+    updateSyncStatus("Falta configurar los GID de las hojas en el código.");
+    if(showToasts) showToast("Faltan GID por configurar.");
+    return false;
+  }
+  let foundEmpresas = null, foundEstudiantes = null, anyOk = false;
+  for(const gid of gids){
+    try{
+      const res = await fetch(sheetCsvUrl(gid));
+      if(!res.ok) continue;
+      const text = await res.text();
+      const rows = Papa.parse(text, {skipEmptyLines:false}).data;
+      const emp = tryParseEmpresas(rows);
+      if(emp){ foundEmpresas = emp; anyOk = true; continue; }
+      const est = tryParseEstudiantes(rows);
+      if(est){ foundEstudiantes = est; anyOk = true; continue; }
+    }catch(err){ console.error("Error sincronizando gid", gid, err); }
+  }
+  if(!anyOk){
+    updateSyncStatus("No se pudo conectar con Google Sheets (revisa que esté publicado).");
+    if(showToasts) showToast("No se pudo sincronizar con Google Sheets.");
+    return false;
+  }
+  if(foundEmpresas){
+    foundEmpresas.forEach(e=> e.valorApertura = e.valor);
+    state.empresas = foundEmpresas;
+  }
+  if(foundEstudiantes) state.estudiantes = foundEstudiantes;
+  state.lastSync = new Date().toLocaleString("es-CL");
+  logMovimiento(`Sincronizado con Google Sheets${foundEmpresas && foundEstudiantes ? "" : foundEmpresas ? " (solo empresas — falta el gid de accionistas)" : " (solo accionistas — falta el gid de empresas)"}`);
+  saveState();
+  renderAll();
+  updateSyncStatus(`Última sincronización: ${state.lastSync}`);
+  if(showToasts) showToast("Sincronizado con Google Sheets.");
+  return true;
+}
+document.getElementById("syncNowBtn").addEventListener("click", ()=> syncFromGoogleSheets(true));
+
+/* ---------- Render all ---------- */
+function renderAll(){
+  renderTicker();
+  renderCertificate();
+  renderLeaderboard();
+  renderEmpresasGrid();
+  renderEmpresasAdminTable();
+  renderAssignForm();
+  renderHistory();
+  updateSyncStatus(state.lastSync ? `Última sincronización: ${state.lastSync}` : "Aún no sincronizado en este navegador.");
+}
+renderAll();
+if(AUTOLOAD_FROM_SHEETS){ syncFromGoogleSheets(false); }
+</script>
+</body>
+</html>
