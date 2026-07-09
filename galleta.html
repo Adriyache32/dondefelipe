@@ -9,39 +9,71 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --gold:        #c9a84c;
-      --gold-lt:     #e8c870;
-      --gold-bright: #f5d980;
-      --gold-dark:   #8b6914;
-      --ivory:       #fdfbf7;
-      --marble:      #faf8f4;
-      --stone:       #ede5d0;
-      --ink:         #2a1f10;
-      --ink-soft:    #604e35;
-      --bronze:      #7a5820;
-      --bronze-rich: #5c3f0e;
-      --border-g:    rgba(201,168,76,.28);
-      --ff-title:    'Cinzel', Palatino, serif;
-      --ff-body:     'Cormorant Garamond', Georgia, serif;
+      --ink-950:      #0e0a05;
+      --ink-900:      #17110a;
+      --ink-800:      #211809;
+
+      --gold-100:     #f6e7bf;
+      --gold-300:     #e8c870;
+      --gold-500:     #c9a84c;
+      --gold-700:     #a2822f;
+      --gold-900:     #6b4f14;
+
+      --parchment:    #f6ecd4;
+      --parchment-2:  #ecdcb4;
+      --ink-text:      #2a1f10;
+      --ink-text-soft: #5c4a2a;
+
+      --ivory:        #fdf8ec;
+      --border-g:     rgba(232,200,112,.32);
+
+      --ff-title: 'Cinzel', Palatino, serif;
+      --ff-body:  'Cormorant Garamond', Georgia, serif;
     }
 
     html, body {
       height: 100%;
-      background: var(--marble);
+      background:
+        radial-gradient(ellipse 60% 50% at 18% 50%, rgba(139,105,20,.22), transparent 60%),
+        radial-gradient(ellipse 120% 100% at 50% 100%, rgba(0,0,0,.45), transparent 60%),
+        linear-gradient(160deg, var(--ink-900), var(--ink-950) 70%);
       font-family: var(--ff-body);
-      color: var(--ink);
+      color: var(--ivory);
       overflow: hidden;
     }
 
+    /* Resplandor ambiental muy sutil */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background: radial-gradient(ellipse 50% 45% at 20% 55%, rgba(201,168,76,.16), transparent 65%);
+      animation: ambientPulse 8s ease-in-out infinite;
+    }
+    @keyframes ambientPulse {
+      0%,100% { opacity: .55; transform: scale(1); }
+      50%      { opacity: 1;   transform: scale(1.08); }
+    }
+
+    /* Grano sutil sobre todo (textura, sin imágenes externas) */
+    body::after {
+      content: '';
+      position: fixed; inset: 0; z-index: 50; pointer-events: none;
+      opacity: .035;
+      mix-blend-mode: overlay;
+      background-repeat: repeat;
+      background-size: 220px 220px;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='300' height='300' filter='url(%23n)'/></svg>");
+    }
+
     /* Polvo dorado de fondo */
-    .dust { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+    .dust { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
     .dot {
-      position: absolute; border-radius: 50%; background: var(--gold);
+      position: absolute; border-radius: 50%; background: var(--gold-300);
       animation: twinkle var(--d,4s) ease-in-out infinite var(--del,0s);
     }
     @keyframes twinkle {
-      0%,100% { opacity:.03; transform:scale(1); }
-      50%      { opacity:.18; transform:scale(1.6); }
+      0%,100% { opacity:.04; transform:scale(1); }
+      50%      { opacity:.32; transform:scale(1.6); }
     }
 
     /* ── Widget principal ── */
@@ -51,67 +83,114 @@
       align-items: center;
       gap: 0;
       height: 100vh;
-      background: var(--marble);
-      border-top: 3px solid var(--gold);
-      border-bottom: 1px solid var(--border-g);
+      border-top: 2px solid var(--gold-500);
+      box-shadow: inset 0 40px 60px -46px rgba(0,0,0,.7);
       overflow: hidden;
+    }
+    /* Filo dorado superior con brillo recorriéndolo */
+    .widget::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold-300), var(--gold-100), var(--gold-300), transparent);
+      background-size: 200% 100%;
+      animation: edge-shimmer 5s linear infinite;
+    }
+    @keyframes edge-shimmer {
+      0%   { background-position: 0% 0; }
+      100% { background-position: 200% 0; }
     }
 
     /* Separador vertical entre galleta y mensaje */
     .widget::after {
       content: '';
       position: absolute;
-      left: 142px;
+      left: 168px;
       top: 12%; bottom: 12%;
       width: 1px;
       background: linear-gradient(to bottom, transparent, var(--border-g) 30%, var(--border-g) 70%, transparent);
+      box-shadow: 0 0 8px 0 rgba(232,200,112,.15);
     }
 
     /* ── Lado izquierdo: galleta ── */
     .left {
-      flex: 0 0 142px;
+      flex: 0 0 168px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      padding: 10px 14px;
+      gap: 10px;
+      padding: 10px 16px;
       height: 100%;
     }
 
     /* Título pequeño */
     .widget-title {
       font-family: var(--ff-title);
-      font-size: .56rem;
-      letter-spacing: .18em;
+      font-weight: 600;
+      font-size: .64rem;
+      letter-spacing: .16em;
       text-transform: uppercase;
-      background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-bright), var(--gold), var(--gold-dark));
+      text-align: center;
+      line-height: 1.35;
+      max-width: 134px;
+      background: linear-gradient(90deg, var(--gold-500), var(--gold-100), var(--gold-300), var(--gold-100), var(--gold-500));
       background-size: 250%;
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
-      animation: shimmer 6s linear infinite;
-      white-space: nowrap;
+      animation: shimmer 7s linear infinite, enterDown .7s ease both;
     }
     @keyframes shimmer {
       0%   { background-position: 0%; }
       100% { background-position: 250%; }
     }
+    .title-rule {
+      width: 34px; height: 2px; margin: 0 auto;
+      background: linear-gradient(90deg, transparent, var(--gold-500), transparent);
+      opacity: .85;
+    }
 
     /* ── Cookie clicable ── */
     .cookie-btn {
-      width: 88px; height: 88px;
+      width: 96px; height: 96px;
       cursor: pointer;
       position: relative;
       background: none; border: none; padding: 0;
       display: flex; align-items: center; justify-content: center;
       -webkit-tap-highlight-color: transparent;
+      animation: enterScale .6s cubic-bezier(.34,1.56,.64,1) .12s both;
     }
-    .cookie-btn:focus-visible { outline: 2px dashed var(--gold); outline-offset: 4px; border-radius: 50%; }
+    /* Halo dorado detrás de la galleta */
+    .cookie-btn::before {
+      content: '';
+      position: absolute; inset: -28px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(232,200,112,.4), transparent 70%);
+      filter: blur(8px); z-index: -1;
+      animation: halo-pulse 4.2s ease-in-out infinite;
+    }
+    /* Anillo tenue tipo astrolabio girando */
+    .cookie-btn::after {
+      content: '';
+      position: absolute; inset: -16px; border-radius: 50%;
+      border: 1px dashed rgba(232,200,112,.32);
+      z-index: -1;
+      animation: spin 22s linear infinite;
+      transition: opacity .3s;
+    }
+    @keyframes halo-pulse {
+      0%,100% { opacity: .5; transform: scale(.92); }
+      50%      { opacity: 1;  transform: scale(1.1); }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .cookie-btn:focus-visible {
+      outline: 2px dashed var(--gold-300); outline-offset: 6px; border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(232,200,112,.25);
+    }
 
     .cookie-svg {
-      width: 88px; height: 88px;
+      width: 96px; height: 96px;
       transform-style: preserve-3d;
-      filter: drop-shadow(0 3px 8px rgba(0,0,0,.18));
+      filter: drop-shadow(0 3px 8px rgba(0,0,0,.5));
       transition: filter .3s;
     }
     /* Idle float */
@@ -124,12 +203,18 @@
     }
     /* Hover glow */
     .cookie-btn:hover .cookie-svg {
-      filter: drop-shadow(0 0 14px rgba(201,168,76,.65)) drop-shadow(0 3px 8px rgba(0,0,0,.2));
+      filter: drop-shadow(0 0 16px rgba(232,200,112,.75)) drop-shadow(0 3px 8px rgba(0,0,0,.5));
+    }
+    .cookie-btn:hover::before {
+      animation-duration: 1.6s;
+      background: radial-gradient(circle, rgba(232,200,112,.65), transparent 70%);
     }
     /* Shake on crack */
     .cookie-btn.cracking .cookie-svg {
       animation: shake .5s ease-in-out forwards;
     }
+    .cookie-btn.cracking::after,
+    .cookie-btn.opened::after { opacity: 0; }
     @keyframes shake {
       0%   { transform: rotate(0); }
       20%  { transform: rotate(-9deg) scale(1.06); }
@@ -149,9 +234,13 @@
     .cookie-btn.opened .cookie-svg {
       animation: glowpulse 2.4s ease-in-out infinite !important;
     }
+    .cookie-btn.opened::before {
+      animation: halo-pulse 2.2s ease-in-out infinite;
+      background: radial-gradient(circle, rgba(232,200,112,.55), transparent 70%);
+    }
     @keyframes glowpulse {
-      0%,100% { filter: drop-shadow(0 0 8px rgba(201,168,76,.4)); }
-      50%      { filter: drop-shadow(0 0 22px rgba(201,168,76,.8)); }
+      0%,100% { filter: drop-shadow(0 0 8px rgba(232,200,112,.5)); }
+      50%      { filter: drop-shadow(0 0 22px rgba(232,200,112,.9)); }
     }
     /* Crack line */
     .crack-line { opacity: 0; transition: opacity .3s; }
@@ -161,22 +250,26 @@
     .hint {
       font-family: var(--ff-body);
       font-style: italic;
-      font-size: .72rem;
-      color: rgba(201,168,76,.6);
+      font-size: .74rem;
+      color: var(--gold-300);
+      opacity: .85;
       letter-spacing: .04em;
       text-align: center;
-      line-height: 1.2;
+      line-height: 1.25;
       transition: opacity .3s;
+      animation: enterUp .6s ease .32s both;
     }
     .cookie-btn.opened ~ .hint { opacity: 0; pointer-events: none; }
 
     /* Contador */
     .counter {
       font-family: var(--ff-title);
-      font-size: .5rem;
+      font-size: .52rem;
       letter-spacing: .1em;
-      color: rgba(201,168,76,.45);
+      color: var(--gold-300);
+      opacity: .65;
       text-align: center;
+      animation: enterUp .6s ease .4s both;
     }
 
     /* ── Lado derecho: mensaje ── */
@@ -185,68 +278,93 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 14px 18px 14px 16px;
+      padding: 14px 26px 14px 22px;
       height: 100%;
       position: relative;
+      perspective: 800px;
+      animation: fadeIn .8s ease .2s both;
     }
 
     /* Estado vacío */
     .empty-msg {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .empty-glyph {
+      width: 40px; height: 40px;
+      opacity: .45;
+      animation: spin 30s linear infinite;
+    }
+    .empty-text {
       font-family: var(--ff-body);
       font-style: italic;
-      font-size: .88rem;
-      color: rgba(201,168,76,.4);
-      letter-spacing: .06em;
+      font-size: .92rem;
+      color: var(--ivory);
+      opacity: .7;
+      letter-spacing: .03em;
       text-align: center;
-      line-height: 1.5;
+      line-height: 1.55;
     }
 
     /* Pergamino */
     .paper {
       width: 100%;
-      background: var(--stone);
-      border-radius: 8px;
-      border: 1px solid rgba(201,168,76,.3);
-      border-top: 2px solid rgba(201,168,76,.5);
-      padding: 12px 14px 10px;
+      max-width: 460px;
+      background:
+        radial-gradient(ellipse 60% 50% at 18% 15%, var(--parchment-2), transparent 60%),
+        radial-gradient(ellipse 55% 50% at 85% 92%, var(--parchment-2), transparent 55%),
+        var(--parchment);
+      border-radius: 10px;
+      border: 1px solid var(--gold-700);
+      border-top: 2px solid var(--gold-300);
+      padding: 30px 20px 16px;
       position: relative;
       opacity: 0;
-      transform: translateX(12px);
-      transition: opacity .45s ease, transform .45s cubic-bezier(.34,1.56,.64,1);
+      transform: translateY(18px) rotateX(6deg) scale(.97);
+      transform-origin: top center;
+      transition: opacity .5s ease, transform .6s cubic-bezier(.34,1.56,.64,1);
+      box-shadow: 0 16px 34px -10px rgba(0,0,0,.6);
       display: none;
     }
-    .paper::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.7) 50%, transparent);
-    }
-    .paper.visible { opacity: 1; transform: translateX(0); display: block; }
+    .paper.visible { opacity: 1; transform: translateY(0) rotateX(0) scale(1); display: block; }
 
+    /* Sello de cera con el símbolo de la tradición */
     .paper-symbol {
-      font-size: 1rem; text-align: center;
-      margin-bottom: 5px; opacity: .65; color: var(--bronze);
+      position: absolute; top: -26px; left: 50%;
+      width: 54px; height: 54px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.35rem; line-height: 1; color: var(--ink-text);
+      background: radial-gradient(circle at 35% 30%, var(--gold-100), var(--gold-500) 65%, var(--gold-900));
+      border: 2px solid var(--parchment);
+      box-shadow: 0 6px 14px rgba(0,0,0,.5), inset 0 1px 2px rgba(255,255,255,.55);
+      transform: translateX(-50%) scale(0) rotate(-25deg);
+      transition: transform .5s cubic-bezier(.34,1.56,.64,1) .18s;
     }
+    .paper.visible .paper-symbol { transform: translateX(-50%) scale(1) rotate(0deg); }
+
     .paper-text {
       font-family: var(--ff-body); font-style: italic;
-      font-size: clamp(.82rem, 2.2vw, .98rem);
-      color: var(--ink); line-height: 1.55;
+      font-size: clamp(.86rem, 2.2vw, 1.02rem);
+      color: var(--ink-text); line-height: 1.6;
       text-align: center; letter-spacing: .01em;
     }
     .paper-meta {
-      margin-top: 8px;
-      border-top: 1px solid rgba(42,31,16,.1);
-      padding-top: 6px;
-      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      margin-top: 10px;
+      border-top: 1px solid rgba(42,31,16,.15);
+      padding-top: 8px;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
     }
     .paper-source {
       font-family: var(--ff-body); font-style: italic;
-      font-size: .7rem; color: var(--ink-soft); text-align: center;
+      font-size: .72rem; color: var(--ink-text-soft); text-align: center;
     }
     .paper-tradition {
       font-family: var(--ff-title); font-size: .5rem;
       letter-spacing: .14em; text-transform: uppercase;
-      color: var(--ivory); background: var(--bronze-rich);
-      padding: 2px 8px; border-radius: 20px; opacity: .85;
+      color: var(--parchment); background: var(--gold-900);
+      padding: 3px 10px; border-radius: 20px;
     }
 
     /* Partículas burst */
@@ -257,6 +375,31 @@
     @keyframes burst {
       0%   { opacity: 1; transform: translate(0,0) scale(1); }
       100% { opacity: 0; transform: translate(var(--tx),var(--ty)) scale(0); }
+    }
+
+    /* Entradas orquestadas */
+    @keyframes enterDown { from { opacity:0; transform: translateY(-14px); } to { opacity:1; transform: translateY(0); } }
+    @keyframes enterUp   { from { opacity:0; transform: translateY(14px);  } to { opacity:1; transform: translateY(0); } }
+    @keyframes enterScale{ from { opacity:0; transform: scale(.7);        } to { opacity:1; transform: scale(1);    } }
+    @keyframes fadeIn    { from { opacity:0; } to { opacity:1; } }
+
+    /* Responsive: apilar en pantallas angostas */
+    @media (max-width: 560px) {
+      html, body { overflow-y: auto; }
+      .widget { flex-direction: column; height: auto; min-height: 100vh; padding: 22px 18px; }
+      .widget::after { display: none; }
+      .left { flex: 0 0 auto; padding-bottom: 18px; margin-bottom: 6px; border-bottom: 1px solid var(--border-g); }
+      .right { width: 100%; padding: 18px 4px 30px; }
+    }
+
+    /* Respeta la preferencia de menos movimiento */
+    @media (prefers-reduced-motion: reduce) {
+      body::before, body::after, .dot, .widget::before,
+      .widget-title, .cookie-btn::before, .cookie-btn::after,
+      .cookie-btn:not(.cracking):not(.opened) .cookie-svg,
+      .cookie-btn.opened .cookie-svg, .empty-glyph {
+        animation: none !important;
+      }
     }
   </style>
 </head>
@@ -269,17 +412,18 @@
   <!-- LADO IZQUIERDO: galleta = botón -->
   <div class="left">
     <span class="widget-title">Sabiduría del Mundo</span>
+    <span class="title-rule"></span>
 
-    <button class="cookie-btn" id="stage" onclick="openFortune()" title="Haz clic para revelar una sabiduría" aria-label="Abrir galleta de la fortuna">
+    <button class="cookie-btn" id="stage" onclick="openFortune()" title="Haz clic para revelar una enseñanza" aria-label="Abrir galleta y revelar una enseñanza">
       <svg class="cookie-svg" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <radialGradient id="cG" cx="40%" cy="35%">
-            <stop offset="0%"   stop-color="#e8c87a"/>
-            <stop offset="55%"  stop-color="#c9913a"/>
-            <stop offset="100%" stop-color="#8b5a1a"/>
+            <stop offset="0%"   stop-color="#f6dfa0"/>
+            <stop offset="55%"  stop-color="#d9ab4c"/>
+            <stop offset="100%" stop-color="#7a5511"/>
           </radialGradient>
           <radialGradient id="sh" cx="35%" cy="30%">
-            <stop offset="0%"   stop-color="#fff" stop-opacity=".24"/>
+            <stop offset="0%"   stop-color="#fff" stop-opacity=".35"/>
             <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
           </radialGradient>
           <filter id="sf" x="-20%" y="-20%" width="140%" height="140%">
@@ -287,40 +431,50 @@
           </filter>
         </defs>
         <!-- sombra -->
-        <ellipse cx="80" cy="148" rx="46" ry="7" fill="#000" opacity=".28" filter="url(#sf)"/>
+        <ellipse cx="80" cy="148" rx="46" ry="7" fill="#000" opacity=".38" filter="url(#sf)"/>
         <!-- mitad superior -->
         <g class="half-top">
-          <path d="M28 80 C20 60 22 38 40 26 C54 16 70 14 80 14 C90 14 106 16 120 26 C138 38 140 60 132 80 Z" fill="url(#cG)" stroke="#a06820" stroke-width="1"/>
+          <path d="M28 80 C20 60 22 38 40 26 C54 16 70 14 80 14 C90 14 106 16 120 26 C138 38 140 60 132 80 Z" fill="url(#cG)" stroke="#6b4a12" stroke-width="1"/>
           <path d="M28 80 C20 60 22 38 40 26 C54 16 70 14 80 14 C90 14 106 16 120 26 C138 38 140 60 132 80 Z" fill="url(#sh)"/>
-          <circle cx="58" cy="42" r="3.5" fill="#a06820" opacity=".6"/>
-          <circle cx="80" cy="34" r="2.5" fill="#a06820" opacity=".5"/>
-          <circle cx="102" cy="42" r="3"  fill="#a06820" opacity=".6"/>
-          <circle cx="70"  cy="58" r="2"  fill="#a06820" opacity=".4"/>
-          <circle cx="92"  cy="55" r="2.5" fill="#a06820" opacity=".45"/>
+          <circle cx="58" cy="42" r="3.5" fill="#6b4a12" opacity=".6"/>
+          <circle cx="80" cy="34" r="2.5" fill="#6b4a12" opacity=".5"/>
+          <circle cx="102" cy="42" r="3"  fill="#6b4a12" opacity=".6"/>
+          <circle cx="70"  cy="58" r="2"  fill="#6b4a12" opacity=".4"/>
+          <circle cx="92"  cy="55" r="2.5" fill="#6b4a12" opacity=".45"/>
         </g>
         <!-- mitad inferior -->
         <g class="half-bot">
-          <path d="M28 80 C20 100 22 122 40 134 C54 144 70 146 80 146 C90 146 106 144 120 134 C138 122 140 100 132 80 Z" fill="url(#cG)" stroke="#a06820" stroke-width="1"/>
+          <path d="M28 80 C20 100 22 122 40 134 C54 144 70 146 80 146 C90 146 106 144 120 134 C138 122 140 100 132 80 Z" fill="url(#cG)" stroke="#6b4a12" stroke-width="1"/>
           <path d="M28 80 C20 100 22 122 40 134 C54 144 70 146 80 146 C90 146 106 144 120 134 C138 122 140 100 132 80 Z" fill="url(#sh)"/>
-          <circle cx="58"  cy="118" r="3.5" fill="#a06820" opacity=".6"/>
-          <circle cx="80"  cy="126" r="2.5" fill="#a06820" opacity=".5"/>
-          <circle cx="102" cy="118" r="3"   fill="#a06820" opacity=".6"/>
-          <circle cx="70"  cy="104" r="2"   fill="#a06820" opacity=".4"/>
-          <circle cx="92"  cy="106" r="2.5" fill="#a06820" opacity=".45"/>
+          <circle cx="58"  cy="118" r="3.5" fill="#6b4a12" opacity=".6"/>
+          <circle cx="80"  cy="126" r="2.5" fill="#6b4a12" opacity=".5"/>
+          <circle cx="102" cy="118" r="3"   fill="#6b4a12" opacity=".6"/>
+          <circle cx="70"  cy="104" r="2"   fill="#6b4a12" opacity=".4"/>
+          <circle cx="92"  cy="106" r="2.5" fill="#6b4a12" opacity=".45"/>
         </g>
         <!-- línea de quiebre -->
         <line class="crack-line" x1="28" y1="80" x2="132" y2="80"
-              stroke="#7a4410" stroke-width="2" stroke-dasharray="4 3" opacity=".75"/>
+              stroke="#4a3208" stroke-width="2" stroke-dasharray="4 3" opacity=".8"/>
       </svg>
     </button>
 
-    <span class="hint" id="hint">toca para<br>revelar</span>
+    <span class="hint" id="hint">Toca para<br>revelar</span>
     <p class="counter" id="counter"></p>
   </div>
 
   <!-- LADO DERECHO: mensaje -->
   <div class="right" id="right">
-    <p class="empty-msg" id="emptyMsg">~ haz clic en la galleta<br>para recibir sabiduría ~</p>
+    <div class="empty-msg" id="emptyMsg">
+      <svg class="empty-glyph" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="15" stroke="#e8c870" stroke-width="1"/>
+        <circle cx="20" cy="20" r="2" fill="#e8c870"/>
+        <line x1="20" y1="1"  x2="20" y2="7"  stroke="#e8c870" stroke-width="1"/>
+        <line x1="20" y1="33" x2="20" y2="39" stroke="#e8c870" stroke-width="1"/>
+        <line x1="1"  y1="20" x2="7"  y2="20" stroke="#e8c870" stroke-width="1"/>
+        <line x1="33" y1="20" x2="39" y2="20" stroke="#e8c870" stroke-width="1"/>
+      </svg>
+      <p class="empty-text">Cada tradición guarda una enseñanza.<br>Toca la galleta para descubrir la tuya.</p>
+    </div>
     <div class="paper" id="paper">
       <p class="paper-symbol" id="paperSymbol"></p>
       <p class="paper-text"   id="paperText"></p>
@@ -368,7 +522,7 @@ function nextIdx() {
 }
 
 function burst(x, y) {
-  const colors = ['#c9a84c','#f0d080','#e8c87a','#fffde7'];
+  const colors = ['#e8c870','#f6dfa0','#c9a84c','#fdf8ec'];
   for (let i = 0; i < 22; i++) {
     const p = document.createElement('div');
     p.className = 'particle';
