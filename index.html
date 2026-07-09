@@ -33,7 +33,7 @@
   --border-gold: rgba(201,168,76,.25);
   --border-gold-strong: rgba(201,168,76,.55);
   /* Altura de la franja superior (ticker) — controla también el offset del nav */
-  --ticker-h: 32px;
+  --ticker-h: 64px;
   /* Sombras modernas en capas (elevación material) */
   --card-shadow:  0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(20,16,8,.05);
   --shadow-hover: 0 8px 24px rgba(20,16,8,.1), 0 16px 48px rgba(20,16,8,.08);
@@ -118,25 +118,33 @@ body::before {
 ═══════════════════════════════════════════════ */
 .ticker-bar {
   position: sticky; top: 0; z-index: 150; flex-shrink: 0;
-  background: rgba(4, 10, 20, 0.97);
-  border-bottom: 1px solid rgba(201,168,76,.18);
+  background: linear-gradient(180deg, rgba(10,19,34,.98), rgba(4,10,20,.97));
+  border-bottom: 1px solid rgba(201,168,76,.22);
   height: var(--ticker-h); overflow: hidden;
   display: flex; align-items: center;
+  box-shadow: 0 4px 24px rgba(0,0,0,.35), inset 0 -1px 0 rgba(201,168,76,.08);
 }
 
 .ticker-label {
   flex-shrink: 0;
-  background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+  background: linear-gradient(120deg, var(--gold-dark), var(--gold) 45%, var(--gold-light) 85%);
+  background-size: 220% 100%;
+  animation: tickerLabelShine 7s ease-in-out infinite;
   color: #0a0600;
   font-family: var(--ff-title);
-  font-size: 0.6rem; letter-spacing: 2px; font-weight: 700;
-  padding: 0 14px;
-  height: 100%; display: flex; align-items: center; gap: 6px;
+  font-size: 0.78rem; letter-spacing: 2.5px; font-weight: 700;
+  padding: 0 26px;
+  height: 100%; display: flex; align-items: center; gap: 9px;
   white-space: nowrap;
-  box-shadow: 4px 0 16px rgba(201,168,76,.25);
+  box-shadow: 6px 0 28px rgba(201,168,76,.3);
   z-index: 2;
 }
-.ticker-label i { font-size: 0.65rem; }
+.ticker-label i { font-size: 0.9rem; }
+
+@keyframes tickerLabelShine {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
 
 .ticker-track {
   flex: 1; overflow: hidden;
@@ -158,41 +166,43 @@ body::before {
 }
 
 .ticker-item {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 0 28px;
-  font-family: var(--ff-body); font-size: 0.72rem; font-weight: 600;
-  letter-spacing: 0.3px; color: rgba(255,255,255,.88);
+  display: inline-flex; align-items: center; gap: 12px;
+  padding: 0 38px;
+  font-family: var(--ff-body); font-size: 0.88rem; font-weight: 600;
+  letter-spacing: 0.3px; color: rgba(255,255,255,.9);
   white-space: nowrap;
-  border-right: 1px solid rgba(201,168,76,.1);
-  transition: background 0.2s;
+  border-right: 1px solid rgba(201,168,76,.12);
+  transition: background-color 0.25s ease, transform 0.2s ease;
   cursor: default;
   user-select: none;
 }
-.ticker-item:hover { background: rgba(201,168,76,.06); }
+.ticker-item:hover { background: rgba(201,168,76,.08); transform: translateY(-1px); }
 
 .ticker-item .t-name {
   color: rgba(255,255,255,.55);
-  font-size: 0.65rem; letter-spacing: 1.5px; text-transform: uppercase;
-  font-weight: 400;
+  font-size: 0.7rem; letter-spacing: 1.6px; text-transform: uppercase;
+  font-weight: 500;
 }
 
 .ticker-item .t-price {
   color: var(--gold-bright);
-  font-weight: 700;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
-  font-size: 0.75rem;
+  font-size: 0.94rem;
+  text-shadow: 0 0 14px rgba(232,200,112,.35);
 }
 
 .ticker-item .t-icon {
-  font-size: 0.8rem;
-  opacity: .75;
+  font-size: 1.1rem;
+  opacity: .88;
+  filter: drop-shadow(0 0 4px rgba(201,168,76,.35));
 }
 
 .ticker-sep {
   display: inline-flex; align-items: center;
-  padding: 0 6px;
-  color: rgba(201,168,76,.25);
-  font-size: 0.7rem;
+  padding: 0 10px;
+  color: rgba(201,168,76,.3);
+  font-size: 0.85rem;
 }
 
 /* Sticky junto a la nav */
@@ -750,11 +760,11 @@ footer::before {
 
 /* ── Móvil estándar (≤ 680px) ── */
 @media (max-width: 680px) {
-  :root { --ticker-h: 40px; }
-  .ticker-label { font-size: 0.62rem; padding: 0 14px; }
-  .ticker-item { font-size: 0.8rem; padding: 0 22px; }
-  .ticker-item .t-name { font-size: 0.62rem; }
-  .ticker-item .t-price { font-size: 0.84rem; }
+  :root { --ticker-h: 80px; }
+  .ticker-label { font-size: 0.68rem; padding: 0 18px; }
+  .ticker-item { font-size: 0.84rem; padding: 0 26px; }
+  .ticker-item .t-name { font-size: 0.66rem; }
+  .ticker-item .t-price { font-size: 0.88rem; }
   .tablet { padding: 1.4rem 1rem; border-radius: 0; border-left: none; border-right: none; box-shadow: 0 8px 24px rgba(0,0,0,.28); }
   h1 { font-size: clamp(1.1rem, 6vw, 1.35rem); letter-spacing: 1.5px; }
   h2.sh { font-size: 0.75rem; letter-spacing: 2px; padding: 8px 0 8px 12px; margin: 2rem 0 1.2rem; }
@@ -774,11 +784,11 @@ footer::before {
 /* ── Móvil pequeño (≤ 480px) ── */
 @media (max-width: 480px) {
   .frieze { height: 4px; }
-  :root { --ticker-h: 42px; }
-  .ticker-label { font-size: 0.6rem; letter-spacing: 1px; padding: 0 12px; }
-  .ticker-item { font-size: 0.78rem; padding: 0 18px; }
-  .ticker-item .t-name { font-size: 0.6rem; }
-  .ticker-item .t-price { font-size: 0.82rem; }
+  :root { --ticker-h: 84px; }
+  .ticker-label { font-size: 0.66rem; letter-spacing: 1px; padding: 0 16px; }
+  .ticker-item { font-size: 0.82rem; padding: 0 22px; }
+  .ticker-item .t-name { font-size: 0.64rem; }
+  .ticker-item .t-price { font-size: 0.86rem; }
   .nav-inner { height: 54px; }
   .nav-brand { font-size: 0.88rem; letter-spacing: 2px; }
   .tablet { padding: 1.2rem 0.85rem; }
@@ -1434,9 +1444,15 @@ function r8basico(s){
           <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-comment-medical"></i> Abrir Chatbot</button>
         </div>
 
-        <div class="card c-laurel">
-          <h3><i class="fa-solid fa-microscope" style="color:#3d6b4a;"></i> MÓDULO EN CONSTRUCCIÓN</h3>
-          <p>Próximamente más recursos para VIII° Básico: guías, actividades y material de estudio.</p>
+      </div>
+
+      <h2 class="sh">RECURSOS DE ESTUDIO</h2>
+      <div class="grid">
+
+        <div class="card c-laurel" style="cursor:pointer;" onclick="window.open('biologia/historiacelula.html','_blank')">
+          <h3><i class="fa-solid fa-microscope" style="color:#3d6b4a;"></i> HISTORIA DE LA CÉLULA</h3>
+          <p>Recurso interactivo sobre el descubrimiento de la célula y la construcción de la teoría celular a lo largo de la historia de la ciencia.</p>
+          <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
         </div>
 
       </div>
