@@ -223,21 +223,26 @@ nav {
   font-family: var(--ff-title);
   color: var(--gold-light); text-decoration: none;
   font-size: 1.05rem; letter-spacing: 2px; font-weight: 700;
-  transition: all 0.35s;
+  transition: color 0.3s cubic-bezier(.4,0,.2,1), text-shadow 0.3s cubic-bezier(.4,0,.2,1), transform 0.2s cubic-bezier(.4,0,.2,1);
 }
-.nav-brand i { color: var(--gold); filter: drop-shadow(0 0 6px rgba(201,168,76,.5)); }
+.nav-brand i { color: var(--gold); filter: drop-shadow(0 0 6px rgba(201,168,76,.5)); transition: filter .3s ease; }
 .nav-brand:hover { color: #fff; text-shadow: 0 0 16px rgba(232,200,112,.6); }
+.nav-brand:hover i { filter: drop-shadow(0 0 10px rgba(232,200,112,.8)); }
+.nav-brand:active { transform: scale(0.97); }
 
 /* Hamburguesa */
 .hamburger {
   display: none; flex-direction: column; justify-content: center; gap: 5px;
   background: none; border: none; cursor: pointer;
   padding: 0 0.5rem; height: 100%; z-index: 300;
+  transition: transform 0.25s cubic-bezier(.4,0,.2,1), opacity 0.25s ease;
 }
+.hamburger:hover { opacity: .8; }
+.hamburger:active { transform: scale(0.9); }
 .hamburger span {
   display: block; width: 26px; height: 2px;
   background: var(--gold); border-radius: 2px;
-  transition: all 0.3s ease-in-out;
+  transition: transform 0.35s cubic-bezier(.65,0,.35,1), opacity 0.25s ease, background-color .25s ease;
 }
 .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
 .hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
@@ -253,32 +258,34 @@ nav {
   color: rgba(255,255,255,.85);
   display: flex; align-items: center; gap: 6px;
   border-bottom: 2px solid transparent;
-  transition: all 0.25s;
+  transition: color 0.28s cubic-bezier(.4,0,.2,1), background-color 0.28s cubic-bezier(.4,0,.2,1), border-color 0.28s cubic-bezier(.4,0,.2,1), transform 0.15s ease;
   position: relative;
 }
-.drop-btn i.fa-chevron-down { font-size: 0.62rem; color: var(--gold); opacity: .7; transition: transform 0.3s; }
-.dropdown:hover .drop-btn i.fa-chevron-down { transform: rotate(180deg); }
+.drop-btn i.fa-chevron-down { font-size: 0.62rem; color: var(--lnk-color, var(--gold)); opacity: .7; transition: transform 0.35s cubic-bezier(.4,0,.2,1); }
+.dropdown:hover .drop-btn i.fa-chevron-down, .dropdown:focus-within .drop-btn i.fa-chevron-down { transform: rotate(180deg); }
 .drop-btn:hover, .drop-btn.active-menu {
-  color: var(--gold-light);
-  border-bottom-color: var(--gold);
+  color: var(--lnk-color, var(--gold-light));
+  border-bottom-color: var(--lnk-color, var(--gold));
   background: rgba(201,168,76,.04);
 }
+.drop-btn:active { transform: scale(0.97); }
 
 .drop-content {
-  display: none; position: absolute; top: calc(100% + 1px); left: 0;
+  display: block; position: absolute; top: calc(100% + 1px); left: 0;
   min-width: 230px;
   background: rgba(7,16,30,.97);
   border: 1px solid rgba(201,168,76,.2);
-  border-top: 2px solid var(--gold);
+  border-top: 2px solid var(--lnk-color, var(--gold));
   border-radius: 0 0 10px 10px;
   box-shadow: 0 20px 50px rgba(0,0,0,.7), inset 0 0 30px rgba(201,168,76,.02);
   z-index: 300; overflow: hidden;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transform: translateY(-10px);
+  transition: opacity 0.28s cubic-bezier(.4,0,.2,1), transform 0.28s cubic-bezier(.4,0,.2,1), visibility 0.28s;
 }
-.dropdown:hover .drop-content { display: block; animation: dropDown 0.25s cubic-bezier(0.16,1,0.3,1) forwards; }
-
-@keyframes dropDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
+.dropdown:hover .drop-content,
+.dropdown:focus-within .drop-content {
+  opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0);
 }
 
 .drop-content a {
@@ -287,25 +294,39 @@ nav {
   color: rgba(255,255,255,.8); text-decoration: none;
   font-family: var(--ff-body); font-size: 0.82rem; letter-spacing: 0.4px; font-weight: 500;
   border-bottom: 1px solid rgba(201,168,76,.07);
-  transition: all 0.2s;
+  opacity: 0; transform: translateX(-8px);
+  transition: background-color 0.2s ease, color 0.2s ease, padding-left 0.2s ease,
+              opacity 0.3s cubic-bezier(.4,0,.2,1), transform 0.3s cubic-bezier(.4,0,.2,1);
 }
-.drop-content a i { color: var(--gold); opacity: .65; font-size: 0.8rem; width: 14px; }
+.dropdown:hover .drop-content a,
+.dropdown:focus-within .drop-content a { opacity: 1; transform: translateX(0); }
+.drop-content a:nth-child(1) { transition-delay: .03s; }
+.drop-content a:nth-child(2) { transition-delay: .06s; }
+.drop-content a:nth-child(3) { transition-delay: .09s; }
+.drop-content a:nth-child(4) { transition-delay: .12s; }
+.drop-content a:nth-child(5) { transition-delay: .15s; }
+.drop-content a:nth-child(6) { transition-delay: .18s; }
+.drop-content a:nth-child(7) { transition-delay: .21s; }
+.drop-content a i { color: var(--lnk-color, var(--gold)); opacity: .65; font-size: 0.8rem; width: 14px; transition: opacity .2s ease; }
 .drop-content a:last-child { border-bottom: none; }
 .drop-content a:hover {
   background: linear-gradient(90deg, rgba(201,168,76,.12), transparent);
-  color: var(--gold-bright); padding-left: 24px;
+  color: var(--lnk-color, var(--gold-bright)); padding-left: 24px;
 }
+.drop-content a:hover i { opacity: 1; }
+.drop-content a:active { background: rgba(201,168,76,.2); }
 
 .nav-lib {
   background: none; cursor: pointer; height: 100%;
   padding: 0 1.1rem;
   font-family: var(--ff-body); font-size: 0.8rem; letter-spacing: 1px; font-weight: 500;
-  color: rgba(255,255,255,.85); text-decoration: none;
+  color: var(--lnk-color, rgba(255,255,255,.85)); text-decoration: none;
   display: flex; align-items: center; gap: 6px;
   border-bottom: 2px solid transparent;
-  transition: all 0.25s;
+  transition: color 0.28s cubic-bezier(.4,0,.2,1), border-color 0.28s cubic-bezier(.4,0,.2,1), background-color 0.28s cubic-bezier(.4,0,.2,1), transform 0.15s ease;
 }
-.nav-lib:hover { color: var(--gold-light); border-bottom-color: var(--gold); background: rgba(201,168,76,.04); }
+.nav-lib:hover { color: var(--lnk-color, var(--gold-light)); border-bottom-color: var(--lnk-color, var(--gold)); background: rgba(201,168,76,.04); }
+.nav-lib:active { transform: scale(0.97); }
 
 /* ═══════════════════════════════════════════════
    PANEL PRINCIPAL
@@ -692,11 +713,16 @@ footer::before {
     position: static; box-shadow: none; border: none;
     border-left: 2px solid rgba(201,168,76,.3); border-radius: 0;
     margin-left: 22px; background: rgba(0,0,0,.12);
-    display: none; width: auto;
+    width: auto; opacity: 1; visibility: visible; transform: none;
+    max-height: 0; overflow: hidden; pointer-events: none;
+    transition: max-height 0.35s cubic-bezier(0.16,1,0.3,1);
   }
   .dropdown:hover .drop-content,
-  .dropdown:focus-within .drop-content { display: block; }
-  .drop-content a { padding: 12px 18px; font-size: 0.82rem; min-height: 44px; }
+  .dropdown:focus-within .drop-content { max-height: 400px; pointer-events: auto; }
+  .drop-content a {
+    opacity: 1; transform: none; transition-delay: 0s !important;
+    padding: 12px 18px; font-size: 0.82rem; min-height: 44px;
+  }
   .nav-lib {
     width: 100%; padding: 16px 20px; justify-content: flex-start;
     border-bottom: 1px solid rgba(255,255,255,.06); font-size: 0.85rem;
@@ -1053,14 +1079,20 @@ body { overscroll-behavior-y: none; }
           <a href="#" onclick="go('4medio'); closeNav(); return false;"><i class="fa-solid fa-meteor"></i> IV° Medio</a>
         </div>
       </li>
-      <li><a href="campeonato-sa-2026.html" class="nav-lib" style="color:#8fe3b4; border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='#8fe3b4'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-trophy"></i> CAMPEONATO SA 2026</a></li>
-      <li><a href="mundial2026.html" class="nav-lib" style="color:#f2a65a; border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='#f2a65a'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-earth-americas"></i> MUNDIAL 2026</a></li>
-      <li><a href="radio.html" class="nav-lib" style="color:#f59ca6; border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='#f59ca6'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-radio"></i> RADIO</a></li>
-      <li><a href="#" onclick="go('juegos'); closeNav(); return false;" class="nav-lib" style="color:#caa8f0; border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='#caa8f0'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-gamepad"></i> JUEGOS</a></li>
-      <li><a href="banco-felipesos.html" class="nav-lib" style="color:#a8d8e8; border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='#a8d8e8'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-piggy-bank"></i> BANCO FELIPESOS</a></li>
+      <li><a href="campeonato-sa-2026.html" class="nav-lib" style="--lnk-color:#8fe3b4;"><i class="fa-solid fa-trophy"></i> CAMPEONATO SA 2026</a></li>
+      <li><a href="mundial2026.html" class="nav-lib" style="--lnk-color:#f2a65a;"><i class="fa-solid fa-earth-americas"></i> MUNDIAL 2026</a></li>
+      <li><a href="radio.html" class="nav-lib" style="--lnk-color:#f59ca6;"><i class="fa-solid fa-radio"></i> RADIO</a></li>
+      <li><a href="#" onclick="go('juegos'); closeNav(); return false;" class="nav-lib" style="--lnk-color:#caa8f0;"><i class="fa-solid fa-gamepad"></i> JUEGOS</a></li>
+      <li class="dropdown" tabindex="0" style="--lnk-color:#a8d8e8;">
+        <button class="drop-btn"><i class="fa-solid fa-piggy-bank"></i> BANCO FELIPESOS <i class="fa-solid fa-chevron-down"></i></button>
+        <div class="drop-content">
+          <a href="banco-felipesos.html"><i class="fa-solid fa-piggy-bank"></i> Banco Felipesos</a>
+          <a href="puntaje.html"><i class="fa-solid fa-ranking-star"></i> Puntaje</a>
+        </div>
+      </li>
       <li><a href="#" onclick="go('biblioteca'); closeNav(); return false;" class="nav-lib"><i class="fa-solid fa-book-open"></i> BIBLIOTECA</a></li>
-      <li><a href="#" onclick="go('herramientas'); closeNav(); return false;" class="nav-lib" style="color:#a8d8a8; border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='#a8d8a8'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-wrench"></i> HERRAMIENTAS</a></li>
-      <li><a href="#" onclick="go('ensayos-paes'); closeNav(); return false;" class="nav-lib" style="color:var(--gold-light); border-bottom:2px solid transparent;" onmouseover="this.style.borderBottomColor='var(--gold-light)'" onmouseout="this.style.borderBottomColor='transparent'"><i class="fa-solid fa-graduation-cap"></i> ENSAYOS PAES</a></li>
+      <li><a href="#" onclick="go('herramientas'); closeNav(); return false;" class="nav-lib" style="--lnk-color:#a8d8a8;"><i class="fa-solid fa-wrench"></i> HERRAMIENTAS</a></li>
+      <li><a href="#" onclick="go('ensayos-paes'); closeNav(); return false;" class="nav-lib" style="--lnk-color:var(--gold-light);"><i class="fa-solid fa-graduation-cap"></i> ENSAYOS PAES</a></li>
     </ul>
   </div>
 </nav>
@@ -1089,7 +1121,7 @@ function closeNav() {
 
 const ROUTES = {
   home: rHome,
-  '1medio': s => rComing(s, 'I° Medio'),
+  '1medio': r1medio,
   '2medio': s => rComing(s, 'II° Medio'),
   '3medio': r3,
   '4medio': r4,
@@ -1435,7 +1467,7 @@ function r3(s){
   hdr.className = 'tablet-header';
   hdr.innerHTML = `
     <h1><i class="fa-solid fa-gears" style="color:var(--laurel);"></i> III° MEDIO · TECNOLOGÍA</h1>
-    <p class="page-sub">Bitácora de actividades · 2026</p>`;
+    <p class="page-sub">Bitácora de actividades y recursos de estudio · 2026</p>`;
 
   const loader = document.createElement('p');
   loader.id = 'bita-loader';
@@ -1451,9 +1483,23 @@ function r3(s){
   fr.onload  = () => { loader.style.display = 'none'; };
   fr.onerror = () => { loader.innerHTML = '⚠️ No se pudo cargar la bitácora. Verifica que <code>bitacora_tech.html</code> esté en el servidor.'; };
 
+  const resSection = document.createElement('div');
+  resSection.innerHTML = `
+    <h2 class="sh">RECURSOS DE ESTUDIO</h2>
+    <div class="grid">
+
+      <div class="card c-sea" style="cursor:pointer;" onclick="window.open('fisica/ccclimatico.html','_blank')">
+        <h3><i class="fa-solid fa-cloud-sun-rain"></i> CAMBIO CLIMÁTICO</h3>
+        <p>Recurso interactivo sobre el cambio climático: causas, evidencias y consecuencias del calentamiento global.</p>
+        <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
+      </div>
+
+    </div>`;
+
   wrap.appendChild(hdr);
   wrap.appendChild(loader);
   wrap.appendChild(fr);
+  wrap.appendChild(resSection);
   s.appendChild(wrap);
 }
 function r4(s){
@@ -1473,6 +1519,12 @@ function r4(s){
           <h3><i class="fa-solid fa-dna"></i> SIMULADOR DE ADN</h3>
           <p>Juego interactivo para explorar la replicación y transcripción del ADN de forma dinámica.</p>
           <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-gamepad"></i> Jugar</button>
+        </div>
+
+        <div class="card c-sea" style="cursor:pointer;" onclick="window.open('biología/cromatina.html','_blank')">
+          <h3><i class="fa-solid fa-atom"></i> CROMATINA</h3>
+          <p>Recurso interactivo sobre la organización de la cromatina: niveles de empaquetamiento del ADN dentro del núcleo celular.</p>
+          <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
         </div>
 
       </div>
@@ -1495,6 +1547,12 @@ function r7(s){
         <div class="card c-sea" style="cursor:pointer;" onclick="window.open('fisica/tectonicaseptimo.html','_blank')">
           <h3><i class="fa-solid fa-mountain"></i> TECTÓNICA DE PLACAS</h3>
           <p>Recurso interactivo sobre la tectónica de placas: tipos de bordes, movimiento de placas y su relación con sismos y volcanes.</p>
+          <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
+        </div>
+
+        <div class="card c-laurel" style="cursor:pointer;" onclick="window.open('biología/microbios.html','_blank')">
+          <h3><i class="fa-solid fa-bacteria"></i> MICROBIOS</h3>
+          <p>Recurso interactivo sobre microorganismos: bacterias, virus y otros microbios, su estructura y su rol en los ecosistemas.</p>
           <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
         </div>
 
@@ -1539,6 +1597,33 @@ function rGame(s, file, name){
       <h1>${name}</h1>
       <button class="btn-s" onclick="go('juegos')" style="width: auto; margin-bottom:15px;"><i class="fa-solid fa-arrow-left"></i> Volver a Juegos</button>
       <iframe src="${file}" class="embed-frame" style="background:var(--bg-color); padding: 0;"></iframe>
+    </div>`;
+}
+
+function r1medio(s){
+  s.innerHTML = `
+    <div class="fade-in">
+      <div class="tablet-header">
+        <h1><i class="fa-solid fa-dna" style="color:var(--laurel);"></i> I° MEDIO · CIENCIAS</h1>
+        <p class="page-sub">Recursos de estudio · 2026</p>
+      </div>
+
+      <h2 class="sh">RECURSOS DE ESTUDIO</h2>
+      <div class="grid">
+
+        <div class="card c-sea" style="cursor:pointer;" onclick="window.open('fisica/propluz.html','_blank')">
+          <h3><i class="fa-solid fa-lightbulb"></i> PROPAGACIÓN DE LA LUZ</h3>
+          <p>Recurso interactivo sobre la propagación de la luz: rayos, sombras y fenómenos ópticos básicos.</p>
+          <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
+        </div>
+
+        <div class="card c-laurel" style="cursor:pointer;" onclick="window.open('biología/ciclos.html','_blank')">
+          <h3><i class="fa-solid fa-recycle"></i> CICLOS BIOGEOQUÍMICOS</h3>
+          <p>Recurso interactivo sobre los ciclos de la materia en la naturaleza: agua, carbono, nitrógeno y su rol en los ecosistemas.</p>
+          <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
+        </div>
+
+      </div>
     </div>`;
 }
 

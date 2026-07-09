@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Unidad 2 · La Célula — Sesiones 1 y 2</title>
+<style>
+:root{
+  --navy:#1A1F3A;
+  --navy-2:#242a52;
+  --navy-3:#141830;
+  --teal:#0D9488;
+  --coral:#E05252;
+  --blue:#3B82F6;
+  --gold:#D4A017;
+  --amber:#F59E0B;
+  --purple:#7C3AED;
+  --paper:#F5F0E6;
+  --paper-2:#ece3cf;
+  --ink:#1A1F3A;
+  --font-head:'Trebuchet MS','Trebuchet MS','Segoe UI',sans-serif;
+  --font-body:Calibri,'Segoe UI',Tahoma,sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{
+  margin:0;padding:0;height:100%;
+  background:radial-gradient(ellipse at 30% 20%,var(--navy-2) 0%,var(--navy) 55%,var(--navy-3) 100%);
+  font-family:var(--font-body);
+  color:var(--paper);
+  overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+#deck{position:relative;width:100vw;height:100dvh;height:100vh;overflow:hidden;}
+
+/* decorative fixed lens ring, subtle, corner */
+.lens-deco{
+  position:fixed;right:-70px;bottom:-70px;width:260px;height:260px;
+  border-radius:50%;border:2px solid rgba(245,240,230,0.08);
+  pointer-events:none;z-index:0;
+}
+.lens-deco::before{
+  content:"";position:absolute;inset:26px;border-radius:50%;border:1px solid rgba(245,240,230,0.10);
+}
+.lens-deco::after{
+  content:"";position:absolute;inset:52px;border-radius:50%;border:1px solid rgba(245,240,230,0.14);
+}
+
+/* slides */
+.slide{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:clamp(1.1rem,4vw,3rem) clamp(1.2rem,6vw,5rem);
+  opacity:0;pointer-events:none;transform:scale(.965);
+  transition:opacity .45s ease, transform .45s ease;
+  z-index:1;
+}
+.slide.active{opacity:1;pointer-events:auto;transform:scale(1);z-index:2;}
+.slide-inner{width:100%;max-width:980px;margin:0 auto;}
+
+.eyebrow{
+  font-family:var(--font-head);font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  font-size:clamp(.65rem,1.6vw,.8rem);color:var(--gold);margin-bottom:.6rem;
+}
+h1.title{
+  font-family:var(--font-head);font-weight:700;
+  font-size:clamp(1.5rem,4.6vw,2.7rem);line-height:1.15;margin:0 0 .5rem 0;color:var(--paper);
+}
+h2.subtitle{
+  font-family:var(--font-head);font-weight:400;
+  font-size:clamp(.95rem,2.4vw,1.3rem);color:#c9cde0;margin:0 0 1.4rem 0;font-style:italic;
+}
+p{line-height:1.5;}
+
+/* portaobjetos card = "lamina" */
+.lamina{
+  background:var(--paper);color:var(--ink);border-radius:6px;
+  box-shadow:0 18px 40px rgba(0,0,0,.38), 0 2px 0 rgba(255,255,255,.4) inset;
+  position:relative;padding:1.5rem 1.6rem 1.5rem 2.7rem;margin-bottom:1rem;
+}
+.lamina-tag{
+  position:absolute;left:0;top:0;bottom:0;width:15px;border-radius:6px 0 0 6px;
+  background:var(--accent,var(--teal));display:flex;align-items:center;justify-content:center;
+  writing-mode:vertical-rl;text-orientation:mixed;color:#fff;
+  font-family:var(--font-head);font-size:.62rem;letter-spacing:.12em;font-weight:700;
+}
+.lamina h3{font-family:var(--font-head);margin:0 0 .5rem 0;font-size:clamp(1rem,2.6vw,1.25rem);}
+.lamina p{margin:.25rem 0;font-size:clamp(.82rem,2vw,.98rem);}
+.lamina ul{margin:.4rem 0;padding-left:1.2rem;font-size:clamp(.82rem,2vw,.98rem);}
+.lamina-row{display:flex;gap:1rem;flex-wrap:wrap;}
+.lamina-row .lamina{flex:1 1 260px;}
+
+.chip{
+  display:inline-block;background:var(--navy);color:var(--paper);border:1px solid rgba(245,240,230,.25);
+  padding:.25rem .7rem;border-radius:20px;font-size:.72rem;font-family:var(--font-head);
+  letter-spacing:.04em;margin:0 .3rem .3rem 0;
+}
+.chip.on-paper{background:rgba(26,31,58,.08);color:var(--navy);border-color:rgba(26,31,58,.2);}
+.bloom-tag{
+  display:inline-block;font-family:var(--font-head);font-weight:700;font-size:.68rem;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--navy);background:rgba(212,160,23,.35);
+  padding:.2rem .6rem;border-radius:4px;
+}
+
+/* teacher notes */
+.teacher-note{
+  display:none;background:rgba(245,158,11,.14);border:1px dashed var(--amber);
+  color:var(--paper);border-radius:6px;padding:.7rem 1rem;font-size:.82rem;margin-top:.7rem;
+}
+body.show-teacher .teacher-note{display:block;}
+.teacher-note b{color:var(--amber);}
+
+/* nav controls */
+.navbar{
+  position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;
+  padding:.7rem clamp(.8rem,3vw,2rem);z-index:20;pointer-events:none;
+}
+.navbar > *{pointer-events:auto;}
+.session-label{
+  font-family:var(--font-head);font-weight:700;font-size:.72rem;letter-spacing:.08em;
+  text-transform:uppercase;color:#c9cde0;background:rgba(255,255,255,.06);
+  padding:.3rem .7rem;border-radius:20px;
+}
+.progress-wrap{display:flex;align-items:center;gap:.9rem;}
+.counter{font-size:.75rem;color:#9aa0c0;font-family:var(--font-head);}
+.stars{
+  font-family:var(--font-head);font-weight:700;font-size:.8rem;color:var(--gold);
+  background:rgba(212,160,23,.15);border:1px solid rgba(212,160,23,.4);
+  padding:.3rem .7rem;border-radius:20px;
+}
+.dots{display:none;gap:.35rem;}
+@media (min-width:700px){.dots{display:flex;}}
+.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.22);cursor:pointer;transition:background .2s;}
+.dot.active{background:var(--gold);}
+
+.arrowbar{
+  position:fixed;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;
+  padding:.8rem clamp(.8rem,3vw,2rem) 1rem;z-index:20;
+}
+.navbtn{
+  font-family:var(--font-head);font-weight:700;font-size:.85rem;letter-spacing:.02em;
+  background:rgba(255,255,255,.08);color:var(--paper);border:1px solid rgba(255,255,255,.18);
+  padding:.55rem 1.1rem;border-radius:24px;cursor:pointer;transition:background .2s, transform .15s;
+}
+.navbtn:hover{background:rgba(255,255,255,.16);}
+.navbtn:active{transform:scale(.96);}
+.navbtn:disabled{opacity:.25;cursor:default;}
+.navbtn.primary{background:var(--gold);color:var(--navy);border-color:var(--gold);}
+.navbtn.primary:hover{background:#e6b530;}
+
+.teacher-toggle{
+  position:fixed;left:clamp(.8rem,3vw,2rem);bottom:4.6rem;z-index:20;
+  font-family:var(--font-head);font-size:.7rem;font-weight:700;letter-spacing:.04em;
+  background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.5);
+  padding:.4rem .8rem;border-radius:20px;cursor:pointer;
+}
+body.show-teacher .teacher-toggle{background:var(--amber);color:var(--navy);}
+
+/* portada / QR */
+.portada-wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:2.5rem;}
+.portada-text{text-align:center;max-width:520px;}
+.byline{font-size:.85rem;color:#c9cde0;margin-top:.3rem;}
+.desktop-only{display:block;}
+@media (max-width:768px){.desktop-only{display:none !important;}}
+.qr-card{
+  background:var(--paper);color:var(--ink);border-radius:10px;padding:1.1rem 1.3rem;text-align:center;
+  box-shadow:0 18px 40px rgba(0,0,0,.4);width:210px;
+}
+.qr-card img{width:150px;height:150px;display:block;margin:0 auto .5rem;border:6px solid var(--navy);border-radius:6px;}
+.qr-card .qr-label{font-family:var(--font-head);font-weight:700;font-size:.78rem;margin-bottom:.3rem;}
+.qr-card .qr-url{font-size:.62rem;word-break:break-all;color:#555;}
+.start-btn{
+  margin-top:1.5rem;font-family:var(--font-head);font-weight:700;font-size:1rem;
+  background:var(--gold);color:var(--navy);border:none;padding:.85rem 2rem;border-radius:30px;
+  cursor:pointer;box-shadow:0 8px 20px rgba(212,160,23,.35);
+}
+
+/* roadmap slide */
+.road-cards{display:flex;gap:1.4rem;flex-wrap:wrap;justify-content:center;}
+.road-card{
+  background:var(--paper);color:var(--ink);border-radius:8px;width:min(320px,90vw);cursor:pointer;
+  padding:1.3rem 1.4rem;box-shadow:0 14px 30px rgba(0,0,0,.32);border-left:8px solid var(--accent,var(--teal));
+  transition:transform .2s;
+}
+.road-card:hover{transform:translateY(-4px);}
+.road-card .big-icon{font-size:2rem;}
+.road-card h3{font-family:var(--font-head);margin:.4rem 0;}
+.road-card ul{display:none;margin:.5rem 0 0;padding-left:1.1rem;font-size:.85rem;}
+.road-card.open ul{display:block;}
+
+/* flip cards */
+.flip-row{display:flex;gap:1.1rem;flex-wrap:wrap;justify-content:center;}
+.flip-card{width:min(260px,85vw);height:170px;perspective:1000px;cursor:pointer;}
+.flip-inner{position:relative;width:100%;height:100%;transition:transform .6s;transform-style:preserve-3d;}
+.flip-card.flipped .flip-inner{transform:rotateY(180deg);}
+.flip-face{
+  position:absolute;inset:0;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;padding:1rem;text-align:center;backface-visibility:hidden;
+  box-shadow:0 12px 26px rgba(0,0,0,.3);
+}
+.flip-front{background:var(--paper);color:var(--ink);}
+.flip-front .ic{font-size:1.8rem;margin-bottom:.4rem;}
+.flip-front h4{font-family:var(--font-head);margin:0;font-size:.95rem;}
+.flip-back{background:var(--navy-2);color:var(--paper);transform:rotateY(180deg);font-size:.82rem;line-height:1.4;}
+
+/* vote buttons */
+.vote-row{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin:.8rem 0 1rem;}
+.vote-btn{
+  font-family:var(--font-head);font-weight:700;font-size:.92rem;padding:1rem 1.6rem;border-radius:10px;
+  border:2px solid rgba(245,240,230,.25);background:rgba(255,255,255,.05);color:var(--paper);cursor:pointer;
+  min-width:200px;transition:all .2s;
+}
+.vote-btn:hover{background:rgba(255,255,255,.12);}
+.vote-btn.chosen{border-color:var(--gold);background:rgba(212,160,23,.18);}
+.vote-tally{font-size:.72rem;color:#a9aed0;margin-top:.3rem;display:block;}
+.reveal-box{
+  display:none;background:rgba(13,148,136,.15);border:1px solid var(--teal);border-radius:8px;
+  padding:.8rem 1rem;margin-top:.6rem;font-size:.87rem;
+}
+.reveal-box.show{display:block;}
+
+/* tabs (microscope comparison) */
+.tabs{display:flex;gap:.6rem;justify-content:center;margin-bottom:.8rem;}
+.tab-btn{
+  font-family:var(--font-head);font-weight:700;font-size:.8rem;padding:.5rem 1.2rem;border-radius:20px;
+  border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.05);color:var(--paper);cursor:pointer;
+}
+.tab-btn.active{background:var(--gold);color:var(--navy);border-color:var(--gold);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+.cell-diagram{display:block;margin:0 auto;max-width:100%;height:auto;}
+
+/* quiz (diagnostic + trivia) */
+.quiz-q{margin-bottom:1rem;}
+.quiz-opts{display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem;}
+.quiz-opt{
+  text-align:left;font-family:var(--font-body);font-size:.88rem;padding:.6rem .9rem;border-radius:6px;
+  border:1px solid rgba(26,31,58,.2);background:#fff;color:var(--ink);cursor:pointer;
+}
+.quiz-opt.correct{background:#d7f2ea;border-color:var(--teal);font-weight:700;}
+.quiz-opt.wrong{background:#fbdede;border-color:var(--coral);}
+.quiz-opt[disabled]{cursor:default;}
+.score-line{font-family:var(--font-head);font-weight:700;margin-top:.6rem;color:var(--navy);}
+
+/* stations */
+.station-grid{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;}
+.station-card{width:min(190px,42vw);}
+.progress-bar-wrap{width:100%;max-width:520px;margin:0 auto 1.2rem;background:rgba(255,255,255,.12);border-radius:10px;height:10px;overflow:hidden;}
+.progress-bar-fill{height:100%;width:0%;background:var(--gold);transition:width .4s;}
+.progress-text{text-align:center;font-size:.78rem;color:#c9cde0;margin-bottom:1rem;}
+
+/* AER textareas */
+.aer-block{margin-bottom:.7rem;}
+.aer-block label{display:block;font-family:var(--font-head);font-weight:700;font-size:.78rem;margin-bottom:.25rem;color:var(--navy);}
+.aer-block textarea{
+  width:100%;min-height:52px;border-radius:6px;border:1px solid rgba(26,31,58,.25);
+  font-family:var(--font-body);font-size:.85rem;padding:.5rem;resize:vertical;
+}
+
+/* games */
+.game-scientists{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center;margin:.8rem 0;}
+.sci-btn{
+  font-family:var(--font-body);font-size:.85rem;padding:.6rem 1rem;border-radius:8px;
+  border:1px solid rgba(26,31,58,.25);background:#fff;color:var(--ink);cursor:pointer;
+}
+.sci-btn.used{opacity:.35;cursor:default;}
+.order-slots{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;margin:.8rem 0;min-height:46px;}
+.order-slot{
+  min-width:150px;padding:.5rem .7rem;border-radius:8px;background:rgba(255,255,255,.08);
+  border:1px dashed rgba(255,255,255,.3);font-size:.8rem;text-align:center;
+}
+.order-slot.filled{border-style:solid;}
+.order-slot.correct{border-color:var(--teal);background:rgba(13,148,136,.25);}
+.order-slot.wrong{border-color:var(--coral);background:rgba(224,82,82,.25);}
+
+.classify-pool{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;margin-bottom:1rem;}
+.classify-chip{
+  font-family:var(--font-body);font-size:.8rem;padding:.5rem .8rem;border-radius:20px;
+  border:1px solid rgba(26,31,58,.25);background:#fff;color:var(--ink);cursor:pointer;
+}
+.classify-chip.selected{background:var(--gold);border-color:var(--gold);}
+.classify-chip.placed{opacity:.3;cursor:default;}
+.baskets{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;}
+.basket{
+  flex:1 1 240px;min-height:110px;border-radius:8px;padding:.8rem;background:rgba(255,255,255,.05);
+  border:2px solid rgba(255,255,255,.2);cursor:pointer;
+}
+.basket h4{font-family:var(--font-head);margin:0 0 .5rem;font-size:.82rem;color:var(--paper);}
+.basket .items{display:flex;flex-wrap:wrap;gap:.4rem;}
+.basket .items span{background:var(--paper);color:var(--ink);font-size:.72rem;padding:.3rem .6rem;border-radius:14px;}
+.basket .items span.right{background:#d7f2ea;}
+.basket .items span.wrong{background:#fbdede;}
+
+.timerbar-wrap{width:100%;background:rgba(255,255,255,.12);border-radius:8px;height:8px;overflow:hidden;margin-bottom:.6rem;}
+.timerbar-fill{height:100%;background:var(--coral);width:100%;transition:width 1s linear;}
+
+.game-nav{display:flex;gap:.7rem;justify-content:center;margin-top:.9rem;flex-wrap:wrap;}
+.btn-outline{
+  font-family:var(--font-head);font-weight:700;font-size:.82rem;padding:.55rem 1.1rem;border-radius:20px;
+  background:transparent;border:1px solid var(--navy);color:var(--navy);cursor:pointer;
+}
+
+.finale-msg{font-family:var(--font-head);font-weight:700;font-size:1.1rem;margin-top:.6rem;color:var(--navy);}
+
+/* question bank (Bloom) */
+.qb-wrap{width:100%;max-width:760px;margin:0 auto;max-height:60vh;overflow-y:auto;padding-right:.3rem;}
+.qb-level{
+  background:var(--paper);color:var(--ink);border-radius:8px;padding:.7rem .9rem;margin-bottom:.6rem;
+  border-left:8px solid var(--accent,var(--teal));box-shadow:0 8px 18px rgba(0,0,0,.22);
+}
+.qb-level summary{
+  cursor:pointer;font-family:var(--font-head);font-weight:700;font-size:.92rem;
+  list-style:none;display:flex;align-items:center;gap:.5rem;
+}
+.qb-level summary::-webkit-details-marker{display:none;}
+.qb-level summary::before{content:"▸";display:inline-block;transition:transform .2s;font-size:.75rem;}
+.qb-level[open] summary::before{transform:rotate(90deg);}
+.qb-level ol{margin:.5rem 0 0;padding-left:1.3rem;font-size:.8rem;line-height:1.5;}
+.qb-level ol li{margin-bottom:.25rem;}
+
+/* games intro cards */
+.game-intro-cards{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;}
+.game-intro-card{
+  background:var(--paper);color:var(--ink);border-radius:8px;width:min(230px,85vw);padding:1.1rem;
+  text-align:center;cursor:pointer;box-shadow:0 14px 30px rgba(0,0,0,.3);transition:transform .2s;
+}
+.game-intro-card:hover{transform:translateY(-4px);}
+.game-intro-card .ic{font-size:2rem;}
+
+/* confetti */
+.confetti-piece{position:fixed;top:-10px;width:8px;height:14px;z-index:999;pointer-events:none;border-radius:2px;}
+
+@keyframes fall{
+  0%{transform:translateY(0) rotate(0deg);opacity:1;}
+  100%{transform:translateY(105vh) rotate(360deg);opacity:0;}
+}
+
+/* small screens tightening */
+@media (max-width:520px){
+  .lamina{padding:1.1rem 1.1rem 1.1rem 2.2rem;}
+  .lamina-tag{width:12px;font-size:.55rem;}
+  .navbar{padding:.5rem .7rem;}
+  .arrowbar{padding:.6rem .7rem .8rem;}
+}
+</style>
+</head>
+<body>
+
+<div class="lens-deco"></div>
+
+<div class="navbar">
+  <span class="session-label" id="sessionLabel">Inicio</span>
+  <div class="progress-wrap">
+    <span class="stars" id="starsBadge">⭐ 0</span>
+    <span class="counter" id="counterLabel">1 / 17</span>
+    <div class="dots" id="dotsWrap"></div>
+  </div>
+</div>
+
+<button class="teacher-toggle" id="teacherToggle">👁️ Notas docente: OFF</button>
+
+<div id="deck">
+
+  <!-- SLIDE 0 : PORTADA -->
+  <section class="slide" data-session="Inicio" id="slide-0">
+    <div class="slide-inner">
+      <div class="portada-wrap">
+        <div class="portada-text">
+          <div class="eyebrow">Unidad 2 · La Célula</div>
+          <h1 class="title">Historia y evidencia de la vida microscópica</h1>
+          <h2 class="subtitle">Sesiones 1 y 2 — 8° Básico · Ciencias Naturales</h2>
+          <p class="byline">Prof. Felipe Jiménez</p>
+          <button class="start-btn" onclick="goTo(1)">Comenzar ▸</button>
+        </div>
+        <div class="qr-card desktop-only">
+          <div class="qr-label">📱 Súmate desde tu celular</div>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXIAAAFyAQAAAADAX2ykAAADAUlEQVR4nO2cUYrbMBCGv6kF+2hDDrBHkW+29Gb2UXqAgvQYkPn7INnxUkhamk1tmHmJkvkefhhmrBlLMfE3Nn/7Kxycd975L+WzNRuzGfOwGGQzZgswD7D6w2v0OP9EPgBdAcAALKYF6IVFAeRQiBNAvrxAj/Nfwbfk7Aua8puAxTQBxAQ1xccX6nH+S/gcMBvAzN5Uv47/U4/zz+V71dQl6mp19V/1OP/PfABg1yTFaQmCTtYcBegF5Ffocf75/FK3x5ADkN9kYw4QU9dWs5mZDa/S4/zz+NCSE4C8mGqa9te60jx0++w+nH7nH/J1V7WY2XvBxtVjNiwGfcFGltYOH1G/8/f5vgB00gTo+3sBapO02jyAfaQX6XH+iXyAPKB5DMXgFtXF2jIbmsdQK/Xx9Dt/39r8KmoxkS9YTEv9zaArFtOA0f8ML9Lj/NP5/mrMQycbAchv0tQXauGeB9CUw47/aj3OP5FHklRHk0qgqZekBERJUuq2cEuajqbf+QcmqbQxc0ydiAk00alZ6tboy+N7Pp6WqzVNpTXcbTtNvEXf43tCfq3PrGk6AeskGupD2ON7Wv5T/tKJqIKmW0EGdjXb43syfnu/cDViuqyzyDqJHiBqCZqHrrTX/UfT7/x9W+fP+SLm96upVup6pqMrNg9Jtgv80fQ7/8DqDjlKak/Yvq2af9tzeX90Rn7temmR3u2v9uEuq/do+p2/b7U+11kk/dUU06VADkWwBEEdV8rA58/n4+t8o+bvVPujbptqbEWatTv2/D0Z3+ruNqSkxXItyEq033x+dUYe7Sy1JK6OqX62IHt8z8rf7i/ANoTej7NsrD3Ti/Q4/0T+8/2Frhh92rnbIcq8GNVxNP3OP7C2l2Jtgmubuz1/p0o1xOvzqfn6Gn8x+0i0mwwf9cXS1dpNlUPrd/43C3d8farn241+O+l+NP3O/wm/TiBLO4tTz8LSroa245TZz8eek7/dX2ib6Dau/GHW5s8JbOw9f8/Hmx4zO/P/Z3De+QPxvwAzVvgFI2SXlQAAAABJRU5ErkJggg==" alt="Código QR de acceso">
+          <div class="qr-url">fjimenez321-stack.github.io/dondefelipe/</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 1 : RUTA -->
+  <section class="slide" data-session="Inicio" id="slide-1">
+    <div class="slide-inner">
+      <div class="eyebrow">Ruta de hoy</div>
+      <h1 class="title" style="font-size:clamp(1.3rem,3.6vw,2rem);">Dos sesiones, un mismo hilo: ¿qué es la vida y quién lo descubrió?</h1>
+      <div class="road-cards" style="margin-top:1.2rem;">
+        <div class="road-card" style="--accent:var(--teal)" onclick="this.classList.toggle('open')">
+          <div class="big-icon">🔬</div>
+          <h3>Sesión 1 · Diagnóstico</h3>
+          <p style="font-size:.85rem;margin:0;">¿De dónde viene la vida? Observamos células reales por primera vez.</p>
+          <ul>
+            <li>Ideas previas: generación espontánea vs. teoría celular</li>
+            <li>Observación de célula vegetal y animal</li>
+            <li>Dibujo científico a escala</li>
+          </ul>
+        </div>
+        <div class="road-card" style="--accent:var(--gold)" onclick="this.classList.toggle('open')">
+          <div class="big-icon">🧑‍🔬</div>
+          <h3>Sesión 2 · Científicos</h3>
+          <p style="font-size:.85rem;margin:0;">Quiénes descubrieron la célula y cómo su modelo cambió con el tiempo.</p>
+          <ul>
+            <li>5 científicos, 5 aportes</li>
+            <li>Línea de tiempo de la teoría celular</li>
+            <li>Modelan con la tecnología de su época</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2 : S1 OBJETIVO -->
+  <section class="slide" data-session="Sesión 1 · Diagnóstico" id="slide-2">
+    <div class="slide-inner">
+      <div class="eyebrow">Sesión 1 · Inicio</div>
+      <h1 class="title">La célula: unidad estructural de los seres vivos</h1>
+      <div class="lamina" style="--accent:var(--teal)">
+        <span class="lamina-tag">S1</span>
+        <span class="chip on-paper">OA 1 · IE 1</span>
+        <span class="bloom-tag">Recordar / Comprender</span>
+        <p>Caracterizar la célula como el elemento estructural básico de todos los seres vivos.</p>
+        <p style="font-size:.8rem;color:#555;">Diagnóstico transversal — se recoge lo que las y los estudiantes ya saben, sin calificar.</p>
+        <div class="teacher-note"><b>Nota docente:</b> esta sesión es diagnóstica. Usa el resultado para calibrar el ritmo del bloque "Historia y Teoría Celular", no para calificar. ~5 min de encuadre.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3 : S1 ACTIVACION -->
+  <section class="slide" data-session="Sesión 1 · Diagnóstico" id="slide-3">
+    <div class="slide-inner">
+      <div class="eyebrow">Activación de ideas previas</div>
+      <h1 class="title" style="font-size:clamp(1.3rem,3.6vw,2rem);">¿De dónde viene la vida?</h1>
+      <div class="vote-row">
+        <button class="vote-btn" data-vote="ge" onclick="castVote(this,'ge')">Generación espontánea<span class="vote-tally" id="tally-ge">0 votos</span></button>
+        <button class="vote-btn" data-vote="tc" onclick="castVote(this,'tc')">Teoría celular<span class="vote-tally" id="tally-tc">0 votos</span></button>
+      </div>
+      <div class="reveal-box" id="voteReveal">
+        La ciencia actual respalda la <b>teoría celular</b>: todo ser vivo está formado por una o más células, y la vida no surge de la nada, sino de células preexistentes. Durante siglos se creyó en la generación espontánea — la teoría celular la reemplazó gracias a nueva evidencia.
+      </div>
+      <div class="lamina" style="--accent:var(--gold);margin-top:1rem;">
+        <span class="lamina-tag">S1</span>
+        <h3 style="font-size:1rem;">Preguntas para el mini-debate guiado</h3>
+        <ul>
+          <li>¿Todo ser vivo está hecho de lo mismo?</li>
+          <li>¿Qué evidencia necesitaríamos para comprobarlo?</li>
+          <li>¿Por qué durante tanto tiempo se creyó en la generación espontánea?</li>
+        </ul>
+        <div class="teacher-note"><b>Si el debate se estanca:</b> pide ejemplos concretos ("¿un hongo y un perro comparten algo por dentro?"). Cierra retomando que ambas ideas fueron alguna vez "científicas" para su época — puente hacia Sesión 2. ~10 min.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4 : S1 CONCEPTO (flip cards) -->
+  <section class="slide" data-session="Sesión 1 · Diagnóstico" id="slide-4">
+    <div class="slide-inner">
+      <div class="eyebrow">Concepto clave</div>
+      <h1 class="title" style="font-size:clamp(1.3rem,3.6vw,2rem);">Todos los seres vivos comparten esto</h1>
+      <p style="font-size:.82rem;color:#c9cde0;text-align:center;">Toca cada tarjeta para descubrir la idea completa</p>
+      <div class="flip-row">
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <div class="flip-inner">
+            <div class="flip-face flip-front"><div class="ic">🧱</div><h4>Unidad estructural</h4></div>
+            <div class="flip-face flip-back">La célula es la unidad más pequeña que tiene todas las características de la vida.</div>
+          </div>
+        </div>
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <div class="flip-inner">
+            <div class="flip-face flip-front"><div class="ic">⚙️</div><h4>Unidad funcional</h4></div>
+            <div class="flip-face flip-back">En su interior ocurren los procesos que mantienen la vida: nutrición, respiración, reproducción.</div>
+          </div>
+        </div>
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <div class="flip-inner">
+            <div class="flip-face flip-front"><div class="ic">🔭</div><h4>Solo visible con instrumentos</h4></div>
+            <div class="flip-face flip-back">Su tamaño microscópico explica por qué su descubrimiento dependió de la invención del microscopio.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5 : S1 STEAM MICROSCOPIO -->
+  <section class="slide" data-session="Sesión 1 · Diagnóstico" id="slide-5">
+    <div class="slide-inner">
+      <div class="eyebrow">Actividad STEAM</div>
+      <h1 class="title" style="font-size:clamp(1.2rem,3.4vw,1.9rem);">Estación de laboratorio: célula vegetal vs. célula animal</h1>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('veg',this)">🧅 Cebolla (vegetal)</button>
+        <button class="tab-btn" onclick="showTab('ani',this)">👄 Mucosa bucal (animal)</button>
+      </div>
+      <div class="tab-panel active" id="tab-veg">
+        <svg class="cell-diagram" viewBox="0 0 320 160" width="320" height="160" xmlns="http://www.w3.org/2000/svg">
+          <g stroke="#0D9488" stroke-width="2" fill="#eef7f5">
+            <rect x="10" y="10" width="70" height="60"/><rect x="82" y="10" width="70" height="60"/><rect x="154" y="10" width="70" height="60"/><rect x="226" y="10" width="70" height="60"/>
+            <rect x="10" y="72" width="70" height="60"/><rect x="82" y="72" width="70" height="60"/><rect x="154" y="72" width="70" height="60"/><rect x="226" y="72" width="70" height="60"/>
+          </g>
+          <circle cx="45" cy="40" r="10" fill="#0D9488" opacity=".6"/>
+          <circle cx="117" cy="102" r="10" fill="#0D9488" opacity=".6"/>
+          <circle cx="189" cy="40" r="10" fill="#0D9488" opacity=".6"/>
+          <circle cx="261" cy="102" r="10" fill="#0D9488" opacity=".6"/>
+          <rect x="30" y="88" width="30" height="30" fill="#0D9488" opacity=".25"/>
+          <rect x="170" y="20" width="30" height="30" fill="#0D9488" opacity=".25"/>
+        </svg>
+        <p style="text-align:center;font-size:.82rem;color:#c9cde0;">Formas rectangulares y regulares, con pared celular visible (líneas gruesas).</p>
+      </div>
+      <div class="tab-panel" id="tab-ani">
+        <svg class="cell-diagram" viewBox="0 0 320 160" width="320" height="160" xmlns="http://www.w3.org/2000/svg">
+          <g stroke="#E05252" stroke-width="2" fill="#fdecec">
+            <ellipse cx="70" cy="55" rx="55" ry="40"/>
+            <ellipse cx="180" cy="40" rx="45" ry="35"/>
+            <ellipse cx="250" cy="100" rx="50" ry="38"/>
+            <ellipse cx="120" cy="115" rx="48" ry="35"/>
+          </g>
+          <circle cx="70" cy="55" r="10" fill="#E05252" opacity=".6"/>
+          <circle cx="180" cy="40" r="9" fill="#E05252" opacity=".6"/>
+          <circle cx="250" cy="100" r="10" fill="#E05252" opacity=".6"/>
+          <circle cx="120" cy="115" r="9" fill="#E05252" opacity=".6"/>
+        </svg>
+        <p style="text-align:center;font-size:.82rem;color:#c9cde0;">Formas irregulares y redondeadas, sin pared celular ni contorno rígido.</p>
+      </div>
+      <div class="lamina-row" style="margin-top:.6rem;">
+        <div class="lamina" style="--accent:var(--teal)">
+          <span class="lamina-tag">S1</span>
+          <h3 style="font-size:.95rem;">Materiales</h3>
+          <ul><li>Portaobjetos y cubreobjetos</li><li>Palitos planos</li><li>Agua y azul de metileno (opcional)</li><li>Microscopio o video/simulación</li></ul>
+        </div>
+        <div class="lamina" style="--accent:var(--gold)">
+          <span class="lamina-tag">S1</span>
+          <h3 style="font-size:.95rem;">Tu dibujo científico debe tener</h3>
+          <ul><li>Título</li><li>Escala</li><li>Rotulación clara de estructuras</li></ul>
+          <div class="teacher-note"><b>Gestión:</b> si no hay microscopios, usar video/simulación proyectada. Rotar grupos cada 8 min entre estación cebolla y mucosa bucal.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6 : S1 CIERRE DIAGNOSTICO -->
+  <section class="slide" data-session="Sesión 1 · Diagnóstico" id="slide-6">
+    <div class="slide-inner">
+      <div class="eyebrow">Cierre — Sesión 1</div>
+      <h1 class="title" style="font-size:clamp(1.3rem,3.6vw,2rem);">Chequeo rápido (no calificado)</h1>
+      <div class="lamina" style="--accent:var(--teal)" id="diagQuizBox">
+        <span class="lamina-tag">S1</span>
+        <div class="quiz-q" data-correct="1">
+          <p><b>1.</b> La célula es...</p>
+          <div class="quiz-opts">
+            <button class="quiz-opt" onclick="answerQuiz(this,false)">a) Un tipo de tejido</button>
+            <button class="quiz-opt" onclick="answerQuiz(this,true)">b) La unidad estructural y funcional básica de los seres vivos</button>
+            <button class="quiz-opt" onclick="answerQuiz(this,false)">c) Un órgano exclusivo de las plantas</button>
+          </div>
+        </div>
+        <div class="quiz-q" data-correct="1">
+          <p><b>2.</b> ¿Por qué no podemos ver células a simple vista?</p>
+          <div class="quiz-opts">
+            <button class="quiz-opt" onclick="answerQuiz(this,false)">a) Porque son transparentes</button>
+            <button class="quiz-opt" onclick="answerQuiz(this,true)">b) Porque son demasiado pequeñas</button>
+            <button class="quiz-opt" onclick="answerQuiz(this,false)">c) Porque están dentro de los huesos</button>
+          </div>
+        </div>
+        <div class="score-line" id="diagScoreLine"></div>
+        <div class="teacher-note"><b>Uso del resultado:</b> este chequeo es formativo, sin nota. Sirve para decidir si necesitas reforzar el concepto de "unidad" antes de avanzar a Sesión 2.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7 : S2 OBJETIVO -->
+  <section class="slide" data-session="Sesión 2 · Científicos" id="slide-7">
+    <div class="slide-inner">
+      <div class="eyebrow">Sesión 2 · Inicio</div>
+      <h1 class="title" style="font-size:clamp(1.25rem,3.6vw,2.1rem);">Científicos que construyeron (y corrigieron) el modelo celular</h1>
+      <div class="lamina" style="--accent:var(--gold)">
+        <span class="lamina-tag">S2</span>
+        <span class="chip on-paper">OA 1 · IE 2, 3 y 4</span>
+        <span class="bloom-tag">Comprender / Analizar</span>
+        <ul>
+          <li>Aportes de Hooke, Leeuwenhoek, Virchow, Schleiden y Schwann</li>
+          <li>El conocimiento científico se revisa con nueva evidencia</li>
+          <li>Relación entre avances científicos y tecnología disponible en su época</li>
+        </ul>
+        <div class="teacher-note"><b>Encuadre:</b> ~5 min. Recuerda el puente de cierre de Sesión 1: "ideas que fueron científicas para su tiempo".</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8 : S2 ESTACIONES -->
+  <section class="slide" data-session="Sesión 2 · Científicos" id="slide-8">
+    <div class="slide-inner">
+      <div class="eyebrow">Estaciones científicas</div>
+      <h1 class="title" style="font-size:clamp(1.2rem,3.4vw,1.9rem);">5 científicos, 5 piezas del rompecabezas</h1>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="stationProgressFill"></div></div>
+      <div class="progress-text" id="stationProgressText">0 / 5 estaciones visitadas</div>
+      <div class="station-grid" id="stationGrid">
+        <div class="flip-card station-card" onclick="visitStation(this)">
+          <div class="flip-inner">
+            <div class="flip-face flip-front"><h4>Robert Hooke<br><small>1665</small></h4></div>
+            <div class="flip-face flip-back">Observó "celdillas" en el corcho con un microscopio simple y acuñó la palabra <b>"célula"</b>.</div>
+          </div>
+        </div>
+        <div class="flip-card station-card" onclick="visitStation(this)">
+          <div class="flip-inner">
+            <div class="flip-face flip-front"><h4>A. van Leeuwenhoek<br><small>~1674</small></h4></div>
+            <div class="flip-face flip-back">Con lentes muy precisas, observó por primera vez microorganismos vivos ("animálculos").</div>
+          </div>
+        </div>
+        <div class="flip-card station-card" onclick="visitStation(this)">
+          <div class="flip-inner">
+            <div class="flip-face flip-front"><h4>Matthias Schleiden<br><small>1838</small></h4></div>
+            <div class="flip-face flip-back">Botánico: propuso que <b>todas las plantas</b> están formadas por células.</div>
+          </div>
+        </div>
+        <div class="flip-card station-card" onclick="visitStation(this)">
+          <div class="flip-inner">
+            <div class="flip-face flip-front"><h4>Theodor Schwann<br><small>1839</small></h4></div>
+            <div class="flip-face flip-back">Zoólogo: extendió la conclusión a los animales — todo ser vivo está formado por células.</div>
+          </div>
+        </div>
+        <div class="flip-card station-card" onclick="visitStation(this)">
+          <div class="flip-inner">
+            <div class="flip-face flip-front"><h4>Rudolf Virchow<br><small>1855</small></h4></div>
+            <div class="flip-face flip-back">Toda célula proviene de una célula anterior: <i>"Omnis cellula e cellula"</i>.</div>
+          </div>
+        </div>
+      </div>
+      <div class="teacher-note" style="max-width:600px;margin:1rem auto 0;"><b>Gestión:</b> organiza grupos de ~4 estudiantes, una estación por grupo con ficha impresa; roten cada 4-5 min. ~20 min en total.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9 : S2 LINEA DE TIEMPO (instrucciones) -->
+  <section class="slide" data-session="Sesión 2 · Científicos" id="slide-9">
+    <div class="slide-inner">
+      <div class="eyebrow">Actividad clásica</div>
+      <h1 class="title" style="font-size:clamp(1.2rem,3.4vw,1.9rem);">Construyendo la línea de tiempo de la Teoría Celular</h1>
+      <div class="lamina" style="--accent:var(--gold)">
+        <span class="lamina-tag">S2</span>
+        <h3>Pasos</h3>
+        <ul>
+          <li>En grupos, reciben la ficha de su científico asignado.</li>
+          <li>Ubican su tarjeta en la línea de tiempo del curso (cartulina o Chromebook).</li>
+          <li>Explican en una frase el aporte de su científico al modelo celular.</li>
+        </ul>
+        <p style="font-size:.8rem;color:#555;"><b>Materiales:</b> fichas de científicos, cartulina o Chromebooks.</p>
+        <p style="font-size:.85rem;">💡 Al final de la clase pondremos esto a prueba en la Zona de Juegos 🎮</p>
+        <div class="teacher-note"><b>Tiempo sugerido:</b> ~15 min de construcción + 5 min de puesta en común oral.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10 : S2 STEAM MODELO + AER -->
+  <section class="slide" data-session="Sesión 2 · Científicos" id="slide-10">
+    <div class="slide-inner">
+      <div class="eyebrow">Actividad STEAM</div>
+      <h1 class="title" style="font-size:clamp(1.15rem,3.2vw,1.8rem);">Modelen la célula... con la tecnología de su época</h1>
+      <div class="lamina" style="--accent:var(--coral)">
+        <span class="lamina-tag">S2</span>
+        <p>Construyan un modelo de célula usando <b>solo</b> los materiales y conocimientos disponibles en la época del científico asignado (plastilina, cartón, papel).</p>
+        <p style="font-size:.8rem;color:#555;">Luego, argumenten con AER por qué ese modelo era limitado.</p>
+        <div class="aer-block">
+          <label>Afirmación</label>
+          <textarea placeholder="El modelo de [científico] era limitado porque..."></textarea>
+        </div>
+        <div class="aer-block">
+          <label>Evidencia</label>
+          <textarea placeholder="Lo que observamos u otros científicos descubrieron después..."></textarea>
+        </div>
+        <div class="aer-block">
+          <label>Razonamiento</label>
+          <textarea placeholder="Por eso el modelo cambió / se completó..."></textarea>
+        </div>
+        <p style="font-size:.72rem;color:#777;">✏️ Este espacio es solo un borrador personal — no se guarda ni se envía. Traspasa tus ideas a la guía impresa de tu grupo.</p>
+        <div class="teacher-note"><b>Facilitación:</b> si un grupo se traba en el "razonamiento", pregunta "¿qué necesitaba existir para completar ese modelo?" (ej. mejores lentes, más científicos comparando notas).</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 11 : S2 CIERRE KAHOOT -->
+  <section class="slide" data-session="Sesión 2 · Científicos" id="slide-11">
+    <div class="slide-inner">
+      <div class="eyebrow">Cierre de bloque</div>
+      <h1 class="title" style="font-size:clamp(1.2rem,3.4vw,1.9rem);">Cierre Bloque A: Historia y Teoría Celular</h1>
+      <div class="lamina" style="--accent:var(--amber)">
+        <span class="lamina-tag">S2</span>
+        <h3>🎯 Momento del docente</h3>
+        <p>Abran <b>Kahoot</b> en sus celulares con el PIN que compartirá el profesor.</p>
+        <p style="font-size:.8rem;color:#555;">Instrumentos evaluativos usados en esta sesión: rúbrica de línea de tiempo + coevaluación de modelos históricos (AER) + Kahoot de cierre de bloque.</p>
+        <div class="teacher-note"><b>Antes de clase:</b> prepara el Kahoot del Bloque A y ten el PIN listo para proyectar en esta diapositiva.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 12 : JUEGOS INTRO -->
+  <section class="slide" data-session="Zona de juegos" id="slide-12">
+    <div class="slide-inner">
+      <div class="eyebrow">Repaso jugado</div>
+      <h1 class="title">Zona de juegos 🎮</h1>
+      <h2 class="subtitle">Pongamos a prueba lo aprendido en las Sesiones 1 y 2</h2>
+      <div class="game-intro-cards">
+        <div class="game-intro-card" onclick="goTo(13)"><div class="ic">🕰️</div><h3 style="font-family:var(--font-head);font-size:.95rem;">Ordena la historia</h3><p style="font-size:.78rem;">Ubica a los científicos en orden cronológico.</p></div>
+        <div class="game-intro-card" onclick="goTo(14)"><div class="ic">🌱</div><h3 style="font-family:var(--font-head);font-size:.95rem;">¿Común o exclusiva?</h3><p style="font-size:.78rem;">Clasifica estructuras de la célula vegetal.</p></div>
+        <div class="game-intro-card" onclick="goTo(15)"><div class="ic">⏱️</div><h3 style="font-family:var(--font-head);font-size:.95rem;">Trivia rápida</h3><p style="font-size:.78rem;">5 preguntas contra el reloj.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 13 : JUEGO 1 -->
+  <section class="slide" data-session="Zona de juegos" id="slide-13">
+    <div class="slide-inner">
+      <div class="eyebrow">Juego 1</div>
+      <h1 class="title" style="font-size:clamp(1.2rem,3.4vw,1.9rem);">🕰️ Ordena la historia de la Teoría Celular</h1>
+      <div class="lamina" style="--accent:var(--teal)">
+        <span class="lamina-tag">J1</span>
+        <p style="font-size:.85rem;">Toca a los científicos en el orden correcto: del más antiguo al más reciente.</p>
+        <div class="game-scientists" id="g1-pool"></div>
+        <h4 style="font-family:var(--font-head);font-size:.85rem;margin:.7rem 0 .2rem;">Tu orden:</h4>
+        <div class="order-slots" id="g1-slots"></div>
+        <div class="game-nav">
+          <button class="btn-outline" onclick="checkGame1()">✅ Comprobar</button>
+          <button class="btn-outline" onclick="resetGame1()">↺ Reiniciar</button>
+        </div>
+        <div class="finale-msg" id="g1-result"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 14 : JUEGO 2 -->
+  <section class="slide" data-session="Zona de juegos" id="slide-14">
+    <div class="slide-inner">
+      <div class="eyebrow">Juego 2</div>
+      <h1 class="title" style="font-size:clamp(1.2rem,3.4vw,1.9rem);">🌱 ¿Común o exclusiva de la célula vegetal?</h1>
+      <div class="lamina" style="--accent:var(--coral)">
+        <span class="lamina-tag">J2</span>
+        <p style="font-size:.85rem;">Toca una estructura y luego toca la canasta donde crees que pertenece.</p>
+        <div class="classify-pool" id="g2-pool"></div>
+        <div class="baskets">
+          <div class="basket" style="--b:var(--teal)" onclick="placeInBasket('ambas')">
+            <h4>🔁 Común a ambas células</h4>
+            <div class="items" id="basket-ambas"></div>
+          </div>
+          <div class="basket" style="--b:var(--coral)" onclick="placeInBasket('vegetal')">
+            <h4>🌿 Exclusiva de la célula vegetal</h4>
+            <div class="items" id="basket-vegetal"></div>
+          </div>
+        </div>
+        <div class="game-nav">
+          <button class="btn-outline" onclick="checkGame2()">✅ Comprobar</button>
+          <button class="btn-outline" onclick="resetGame2()">↺ Reiniciar</button>
+        </div>
+        <div class="finale-msg" id="g2-result"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 15 : JUEGO 3 TRIVIA -->
+  <section class="slide" data-session="Zona de juegos" id="slide-15">
+    <div class="slide-inner">
+      <div class="eyebrow">Juego 3</div>
+      <h1 class="title" style="font-size:clamp(1.2rem,3.4vw,1.9rem);">⏱️ Trivia rápida: Sesiones 1 y 2</h1>
+      <div class="lamina" style="--accent:var(--purple)" id="triviaBox">
+        <span class="lamina-tag">J3</span>
+        <div class="timerbar-wrap"><div class="timerbar-fill" id="triviaTimerFill"></div></div>
+        <div id="triviaQuestionWrap"></div>
+        <div class="game-nav">
+          <button class="btn-outline" onclick="startTrivia()" id="triviaStartBtn">▶️ Comenzar trivia</button>
+        </div>
+        <div class="finale-msg" id="trivia-result"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 16 : CIERRE GENERAL -->
+  <section class="slide" data-session="Cierre" id="slide-16">
+    <div class="slide-inner" style="text-align:center;">
+      <div class="eyebrow">Cierre</div>
+      <h1 class="title">¡Excelente trabajo! 🔬</h1>
+      <div class="lamina-row">
+        <div class="lamina" style="--accent:var(--teal);text-align:left;">
+          <span class="lamina-tag">S1</span>
+          <h3 style="font-size:.95rem;">Vimos</h3>
+          <p style="font-size:.85rem;">La célula es la unidad estructural y funcional básica de todos los seres vivos.</p>
+        </div>
+        <div class="lamina" style="--accent:var(--gold);text-align:left;">
+          <span class="lamina-tag">S2</span>
+          <h3 style="font-size:.95rem;">Vimos</h3>
+          <p style="font-size:.85rem;">5 científicos construyeron ese modelo paso a paso, corrigiéndolo con nueva evidencia y tecnología.</p>
+        </div>
+      </div>
+      <p style="margin-top:1rem;font-size:.9rem;color:#c9cde0;">Próxima sesión: <b>Célula animal y vegetal — estructuras básicas</b>.</p>
+      <button class="start-btn" onclick="goTo(0)">⟲ Volver al inicio</button>
+    </div>
+  </section>
+
+  <!-- SLIDE 17 : BATERIA DE PREGUNTAS POR BLOOM -->
+  <section class="slide" data-session="Batería de preguntas" id="slide-17">
+    <div class="slide-inner">
+      <div class="eyebrow">Recurso docente · Sesiones 1 y 2</div>
+      <h1 class="title" style="font-size:clamp(1.15rem,3.2vw,1.8rem);">Batería de preguntas graduada por Taxonomía de Bloom</h1>
+      <p style="text-align:center;font-size:.78rem;color:#c9cde0;margin:-.3rem 0 .8rem;">Toca cada nivel para desplegar sus preguntas. Úsalas para preguntas orales, boletos de salida o guías escritas.</p>
+      <div class="qb-wrap">
+        <details class="qb-level" style="--accent:var(--teal)" open>
+          <summary>🧠 Recordar</summary>
+          <ol>
+            <li>¿Qué instrumento permitió observar por primera vez las células?</li>
+            <li>¿Quién acuñó la palabra "célula" y en qué año aproximado?</li>
+            <li>Nombra dos estructuras presentes en la célula vegetal y ausentes en la célula animal.</li>
+          </ol>
+        </details>
+        <details class="qb-level" style="--accent:var(--blue)">
+          <summary>💬 Comprender</summary>
+          <ol>
+            <li>Explica con tus palabras qué significa que la célula sea la "unidad estructural y funcional" de los seres vivos.</li>
+            <li>¿Por qué decimos que el conocimiento científico sobre la célula "evolucionó" con el tiempo?</li>
+            <li>Compara, en una frase, el aporte de Schleiden y el de Schwann al modelo celular.</li>
+          </ol>
+        </details>
+        <details class="qb-level" style="--accent:var(--gold)">
+          <summary>🔧 Aplicar</summary>
+          <ol>
+            <li>Si tuvieras solo un microscopio simple como el de Leeuwenhoek, ¿qué podrías observar de una célula y qué no?</li>
+            <li>A partir de tu dibujo de la célula de cebolla, identifica y rotula sus estructuras principales.</li>
+            <li>Usa el criterio de Virchow ("toda célula proviene de otra célula") para explicar por qué un frasco cerrado con fruta no puede generar vida "de la nada".</li>
+          </ol>
+        </details>
+        <details class="qb-level" style="--accent:var(--coral)">
+          <summary>🔍 Analizar</summary>
+          <ol>
+            <li>¿Por qué la generación espontánea fue aceptada durante siglos antes de ser reemplazada por la teoría celular?</li>
+            <li>Compara las estructuras observadas en la célula de cebolla y en la célula de mucosa bucal, relacionando sus diferencias con su función.</li>
+            <li>¿Qué relación existe entre la calidad de los instrumentos ópticos de cada época y los aportes de Hooke, Leeuwenhoek y Virchow?</li>
+          </ol>
+        </details>
+        <details class="qb-level" style="--accent:var(--amber)">
+          <summary>⚖️ Evaluar</summary>
+          <ol>
+            <li>¿Estás de acuerdo con que "el modelo celular de Hooke fue incorrecto"? Argumenta con evidencia.</li>
+            <li>De los cinco científicos estudiados, ¿cuál aporte consideras más determinante para consolidar la teoría celular? Justifica tu elección.</li>
+            <li>Evalúa las fortalezas y limitaciones de usar video o simulación en vez de un microscopio óptico real en esta unidad.</li>
+          </ol>
+        </details>
+        <details class="qb-level" style="--accent:var(--purple)">
+          <summary>🎨 Crear</summary>
+          <ol>
+            <li>Diseña un experimento simple para comprobar que la fruta en descomposición no genera vida "espontáneamente", sino a partir de microorganismos preexistentes.</li>
+            <li>Crea una línea de tiempo ilustrada con al menos 5 hitos que muestre la evolución del modelo celular y la tecnología disponible en cada momento.</li>
+            <li>Propón un modelo de "célula ideal" con una estructura imaginaria, explicando qué función cumpliría y por qué no existe en las células reales.</li>
+          </ol>
+        </details>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="arrowbar">
+  <button class="navbtn" id="prevBtn" onclick="prevSlide()">◂ Anterior</button>
+  <button class="navbtn primary" id="nextBtn" onclick="nextSlide()">Siguiente ▸</button>
+</div>
+
+<script>
+/* ---------- Deck navigation ---------- */
+const TOTAL = 18;
+let idx = 0;
+let stars = 0;
+
+const slides = [];
+for(let i=0;i<TOTAL;i++){ slides.push(document.getElementById('slide-'+i)); }
+
+const dotsWrap = document.getElementById('dotsWrap');
+for(let i=0;i<TOTAL;i++){
+  const d = document.createElement('div');
+  d.className = 'dot'+(i===0?' active':'');
+  d.onclick = ()=>goTo(i);
+  dotsWrap.appendChild(d);
+}
+
+function updateStars(){ document.getElementById('starsBadge').textContent = '⭐ '+stars; }
+
+function render(){
+  slides.forEach((s,i)=> s.classList.toggle('active', i===idx));
+  document.getElementById('sessionLabel').textContent = slides[idx].dataset.session;
+  document.getElementById('counterLabel').textContent = (idx+1)+' / '+TOTAL;
+  const dots = dotsWrap.children;
+  for(let i=0;i<dots.length;i++){ dots[i].classList.toggle('active', i===idx); }
+  document.getElementById('prevBtn').disabled = (idx===0);
+  document.getElementById('nextBtn').textContent = (idx===TOTAL-1) ? '⟲ Inicio' : 'Siguiente ▸';
+}
+
+function goTo(i){ idx = Math.max(0, Math.min(TOTAL-1, i)); render(); }
+function nextSlide(){ if(idx===TOTAL-1){ goTo(0); } else { goTo(idx+1); } }
+function prevSlide(){ goTo(idx-1); }
+
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='ArrowRight' || e.key===' '){ nextSlide(); }
+  else if(e.key==='ArrowLeft'){ prevSlide(); }
+});
+
+let touchStartX = null;
+document.getElementById('deck').addEventListener('touchstart', e=>{ touchStartX = e.changedTouches[0].clientX; }, {passive:true});
+document.getElementById('deck').addEventListener('touchend', e=>{
+  if(touchStartX===null) return;
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if(dx < -40) nextSlide();
+  else if(dx > 40) prevSlide();
+  touchStartX = null;
+}, {passive:true});
+
+document.getElementById('teacherToggle').addEventListener('click', function(){
+  document.body.classList.toggle('show-teacher');
+  this.textContent = document.body.classList.contains('show-teacher') ? '👁️ Notas docente: ON' : '👁️ Notas docente: OFF';
+});
+
+render();
+
+/* ---------- Confetti ---------- */
+function confetti(){
+  const colors = ['#0D9488','#E05252','#D4A017','#3B82F6','#7C3AED'];
+  for(let i=0;i<28;i++){
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = Math.random()*100+'vw';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.animation = 'fall '+(1.6+Math.random()*1.2)+'s linear forwards';
+    p.style.animationDelay = (Math.random()*0.3)+'s';
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(), 3200);
+  }
+}
+
+/* ---------- Slide 3: vote ---------- */
+let votes = {ge:0, tc:0};
+let voted = false;
+function castVote(btn, which){
+  if(voted) return;
+  voted = true;
+  votes[which]++;
+  document.getElementById('tally-ge').textContent = votes.ge+' voto(s)';
+  document.getElementById('tally-tc').textContent = votes.tc+' voto(s)';
+  document.querySelectorAll('.vote-btn').forEach(b=>b.classList.remove('chosen'));
+  btn.classList.add('chosen');
+  document.getElementById('voteReveal').classList.add('show');
+}
+
+/* ---------- Tabs (slide 5) ---------- */
+function showTab(which, btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+which).classList.add('active');
+}
+
+/* ---------- Diagnostic quiz (slide 6) ---------- */
+let diagScore = 0;
+let diagAnswered = 0;
+const diagTotal = document.querySelectorAll('#diagQuizBox .quiz-q').length;
+function answerQuiz(btn, isCorrect){
+  const group = btn.closest('.quiz-opts');
+  if(group.dataset.locked) return;
+  group.dataset.locked = '1';
+  group.querySelectorAll('.quiz-opt').forEach(b=>b.disabled=true);
+  btn.classList.add(isCorrect?'correct':'wrong');
+  if(isCorrect){ diagScore++; stars++; updateStars(); }
+  diagAnswered++;
+  if(diagAnswered===diagTotal){
+    document.getElementById('diagScoreLine').textContent = 'Puntaje: '+diagScore+' / '+diagTotal+' — ¡seguimos profundizando en la próxima sesión!';
+    if(diagScore===diagTotal) confetti();
+  }
+}
+
+/* ---------- Stations (slide 8) ---------- */
+let visited = new Set();
+const stationTotal = 5;
+function visitStation(card){
+  card.classList.toggle('flipped');
+  visited.add(card);
+  const pct = Math.round((visited.size/stationTotal)*100);
+  document.getElementById('stationProgressFill').style.width = pct+'%';
+  document.getElementById('stationProgressText').textContent = visited.size+' / '+stationTotal+' estaciones visitadas';
+  if(visited.size===stationTotal){
+    document.getElementById('stationProgressText').textContent += '  —  ¡Mapa completo! 🧬';
+    confetti();
+  }
+}
+
+/* ---------- Game 1: order the scientists ---------- */
+const scientists = [
+  {name:'Robert Hooke', year:1665},
+  {name:'Anton van Leeuwenhoek', year:1674},
+  {name:'Matthias Schleiden', year:1838},
+  {name:'Theodor Schwann', year:1839},
+  {name:'Rudolf Virchow', year:1855}
+];
+let g1Order = [];
+let g1Used = new Set();
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function renderGame1(){
+  const pool = document.getElementById('g1-pool');
+  const slotsWrap = document.getElementById('g1-slots');
+  pool.innerHTML = '';
+  slotsWrap.innerHTML = '';
+  g1Order = [];
+  g1Used = new Set();
+  document.getElementById('g1-result').textContent = '';
+  const shuffled = shuffle(scientists);
+  shuffled.forEach(sc=>{
+    const b = document.createElement('button');
+    b.className = 'sci-btn';
+    b.textContent = sc.name;
+    b.onclick = ()=>{
+      if(g1Used.has(sc.name)) return;
+      g1Used.add(sc.name);
+      b.classList.add('used');
+      g1Order.push(sc.name);
+      renderG1Slots();
+    };
+    pool.appendChild(b);
+  });
+  for(let i=0;i<5;i++){
+    const s = document.createElement('div');
+    s.className = 'order-slot';
+    s.textContent = (i+1)+'.';
+    slotsWrap.appendChild(s);
+  }
+}
+function renderG1Slots(){
+  const slotsWrap = document.getElementById('g1-slots');
+  const slots = slotsWrap.children;
+  for(let i=0;i<5;i++){
+    slots[i].textContent = (i+1)+'. '+(g1Order[i]||'');
+    slots[i].classList.toggle('filled', !!g1Order[i]);
+    slots[i].classList.remove('correct','wrong');
+  }
+}
+function checkGame1(){
+  if(g1Order.length<5) return;
+  const correctOrder = scientists.slice().sort((a,b)=>a.year-b.year).map(s=>s.name);
+  const slots = document.getElementById('g1-slots').children;
+  let correctCount = 0;
+  for(let i=0;i<5;i++){
+    if(g1Order[i]===correctOrder[i]){ slots[i].classList.add('correct'); correctCount++; }
+    else { slots[i].classList.add('wrong'); }
+  }
+  stars += correctCount;
+  updateStars();
+  document.getElementById('g1-result').textContent = 'Aciertos: '+correctCount+' / 5';
+  if(correctCount===5) confetti();
+}
+function resetGame1(){ renderGame1(); }
+renderGame1();
+
+/* ---------- Game 2: classify structures ---------- */
+const structures = [
+  {name:'Núcleo', cat:'ambas'},
+  {name:'Membrana plasmática', cat:'ambas'},
+  {name:'Citoplasma', cat:'ambas'},
+  {name:'Mitocondria', cat:'ambas'},
+  {name:'Pared celular', cat:'vegetal'},
+  {name:'Cloroplasto', cat:'vegetal'},
+  {name:'Vacuola grande', cat:'vegetal'}
+];
+let g2Selected = null;
+let g2Placement = {};
+
+function renderGame2(){
+  const pool = document.getElementById('g2-pool');
+  pool.innerHTML = '';
+  document.getElementById('basket-ambas').innerHTML = '';
+  document.getElementById('basket-vegetal').innerHTML = '';
+  document.getElementById('g2-result').textContent = '';
+  g2Selected = null;
+  g2Placement = {};
+  shuffle(structures).forEach(st=>{
+    const chip = document.createElement('button');
+    chip.className = 'classify-chip';
+    chip.textContent = st.name;
+    chip.onclick = ()=>{
+      if(chip.classList.contains('placed')) return;
+      document.querySelectorAll('.classify-chip').forEach(c=>c.classList.remove('selected'));
+      chip.classList.add('selected');
+      g2Selected = {name:st.name, cat:st.cat, chip:chip};
+    };
+    pool.appendChild(chip);
+  });
+}
+function placeInBasket(basketCat){
+  if(!g2Selected) return;
+  const basketId = basketCat==='ambas' ? 'basket-ambas' : 'basket-vegetal';
+  const span = document.createElement('span');
+  span.textContent = g2Selected.name;
+  span.dataset.correctCat = g2Selected.cat;
+  span.dataset.placedCat = basketCat;
+  document.getElementById(basketId).appendChild(span);
+  g2Selected.chip.classList.add('placed');
+  g2Placement[g2Selected.name] = basketCat;
+  g2Selected = null;
+}
+function checkGame2(){
+  let correctCount = 0;
+  document.querySelectorAll('.basket .items span').forEach(span=>{
+    const ok = span.dataset.correctCat === span.dataset.placedCat;
+    span.classList.add(ok?'right':'wrong');
+    if(ok) correctCount++;
+  });
+  stars += correctCount;
+  updateStars();
+  document.getElementById('g2-result').textContent = 'Aciertos: '+correctCount+' / '+structures.length;
+  if(correctCount===structures.length) confetti();
+}
+function resetGame2(){ renderGame2(); }
+renderGame2();
+
+/* ---------- Game 3: timed trivia ---------- */
+const triviaQs = [
+  {q:'¿Qué instrumento fue clave para descubrir la célula?', opts:['El telescopio','El microscopio','La balanza'], correct:1},
+  {q:'¿Quién observó por primera vez "celdillas" en el corcho?', opts:['Virchow','Leeuwenhoek','Hooke'], correct:2},
+  {q:'¿Qué estructura está en la célula vegetal pero NO en la animal?', opts:['Núcleo','Pared celular','Mitocondria'], correct:1},
+  {q:'Según Virchow, ¿de dónde proviene una célula nueva?', opts:['De la nada','De una célula preexistente','Del aire'], correct:1},
+  {q:'¿Por qué decimos que el modelo celular "evolucionó"?', opts:['Porque cambió de nombre','Porque se corrigió con nueva evidencia y tecnología','Porque lo decidió un solo científico'], correct:1}
+];
+let triviaIdx = 0;
+let triviaScore = 0;
+let triviaTimer = null;
+let triviaTimeLeft = 15;
+
+function startTrivia(){
+  triviaIdx = 0;
+  triviaScore = 0;
+  document.getElementById('trivia-result').textContent = '';
+  document.getElementById('triviaStartBtn').style.display = 'none';
+  renderTriviaQ();
+}
+function renderTriviaQ(){
+  clearInterval(triviaTimer);
+  if(triviaIdx >= triviaQs.length){
+    finishTrivia();
+    return;
+  }
+  triviaTimeLeft = 15;
+  const fill = document.getElementById('triviaTimerFill');
+  fill.style.transition = 'none';
+  fill.style.width = '100%';
+  const wrap = document.getElementById('triviaQuestionWrap');
+  const item = triviaQs[triviaIdx];
+  wrap.innerHTML = '<p><b>'+(triviaIdx+1)+'/'+triviaQs.length+'.</b> '+item.q+'</p>';
+  const optsWrap = document.createElement('div');
+  optsWrap.className = 'quiz-opts';
+  item.opts.forEach((opt,i)=>{
+    const b = document.createElement('button');
+    b.className = 'quiz-opt';
+    b.textContent = opt;
+    b.onclick = ()=> answerTrivia(i);
+    optsWrap.appendChild(b);
+  });
+  wrap.appendChild(optsWrap);
+  requestAnimationFrame(()=>{
+    fill.style.transition = 'width 15s linear';
+    fill.style.width = '0%';
+  });
+  triviaTimer = setInterval(()=>{
+    triviaTimeLeft--;
+    if(triviaTimeLeft<=0){ answerTrivia(-1); }
+  },1000);
+}
+function answerTrivia(choice){
+  clearInterval(triviaTimer);
+  const item = triviaQs[triviaIdx];
+  const opts = document.querySelectorAll('#triviaQuestionWrap .quiz-opt');
+  opts.forEach((b,i)=>{
+    b.disabled = true;
+    if(i===item.correct) b.classList.add('correct');
+    else if(i===choice) b.classList.add('wrong');
+  });
+  if(choice===item.correct){ triviaScore++; stars++; updateStars(); }
+  setTimeout(()=>{ triviaIdx++; renderTriviaQ(); }, 900);
+}
+function finishTrivia(){
+  document.getElementById('triviaQuestionWrap').innerHTML = '';
+  document.getElementById('triviaStartBtn').style.display = 'inline-block';
+  document.getElementById('triviaStartBtn').textContent = '↺ Jugar de nuevo';
+  let msg = '';
+  if(triviaScore===5) msg = '¡Nivel Rudolf Virchow! Dominas la teoría celular 🏆';
+  else if(triviaScore>=3) msg = '¡Muy bien! Vas por buen camino 🔬';
+  else msg = 'Sigamos repasando, ¡la próxima será mejor! 💪';
+  document.getElementById('trivia-result').textContent = 'Puntaje: '+triviaScore+' / 5 — '+msg;
+  if(triviaScore===5) confetti();
+}
+</script>
+</body>
+</html>

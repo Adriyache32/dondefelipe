@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Unidad 3 · La Vida Invisible · Sesiones 1 y 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,500;1,9..144,600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a1220;
+  --bg-alt:#0e1a2c;
+  --panel:#142238;
+  --panel-2:#182a45;
+  --paper:#f6f1e3;
+  --paper-ink:#1a1712;
+  --ink:#eef3f8;
+  --muted:#93a6bd;
+  --line:rgba(255,255,255,.12);
+  --teal:#33d6c0;
+  --teal-ink:#06322c;
+  --amber:#f2b344;
+  --amber-ink:#3a2703;
+  --magenta:#ef5da8;
+  --magenta-ink:#3a0e24;
+  --violet:#9a8cf5;
+  --violet-ink:#20164a;
+  --good:#33d6a0;
+  --bad:#ef5d5d;
+  --radius:20px;
+  --shadow: 0 24px 60px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box;}
+html,body{
+  margin:0; padding:0; height:100%;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'IBM Plex Sans', sans-serif;
+  overflow:hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+body{
+  background:
+    radial-gradient(circle at 15% 8%, rgba(51,214,192,.10), transparent 45%),
+    radial-gradient(circle at 85% 92%, rgba(154,140,245,.10), transparent 45%),
+    radial-gradient(circle, rgba(255,255,255,.035) 1px, transparent 1.4px) 0 0/26px 26px,
+    var(--bg);
+}
+h1,h2,h3,.display{
+  font-family:'Fraunces', serif;
+  font-weight:700;
+  letter-spacing:-0.01em;
+  margin:0;
+}
+.mono{ font-family:'IBM Plex Mono', monospace; }
+#app{
+  position:relative;
+  width:100vw; height:100vh; height:100dvh;
+}
+.slide{
+  position:absolute; inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding: clamp(16px, 4vw, 56px);
+  opacity:0;
+  transform: translateY(14px) scale(.99);
+  transition: opacity .45s ease, transform .5s ease;
+}
+.slide.active{
+  display:flex;
+  opacity:1;
+  transform:none;
+}
+.slide-inner{
+  width:100%;
+  max-width:1080px;
+  max-height:100%;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding: 4px 4px 20px 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--panel-2) transparent;
+}
+.slide-inner::-webkit-scrollbar{ width:6px; }
+.slide-inner::-webkit-scrollbar-thumb{ background:var(--panel-2); border-radius:6px; }
+
+.eyebrow{
+  display:inline-flex; align-items:center; gap:8px;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:clamp(11px,1.6vw,13px);
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--teal);
+  margin-bottom:14px;
+}
+.eyebrow::before{
+  content:"";
+  width:7px; height:7px; border-radius:50%;
+  background:var(--teal);
+  box-shadow:0 0 12px var(--teal);
+}
+.title-xl{ font-size:clamp(30px, 5.4vw, 58px); line-height:1.04; }
+.title-lg{ font-size:clamp(24px, 3.6vw, 38px); line-height:1.1; }
+.subtitle{
+  font-size:clamp(14px, 1.9vw, 19px);
+  color:var(--muted);
+  margin-top:10px;
+  max-width:640px;
+  line-height:1.5;
+}
+.chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:22px; }
+.chip{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:clamp(10.5px,1.3vw,12.5px);
+  padding:7px 12px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.03);
+  color:var(--muted);
+  white-space:nowrap;
+}
+.chip.on{ color:var(--ink); border-color:rgba(51,214,192,.4); background:rgba(51,214,192,.08); }
+
+.panel{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:clamp(16px,2.6vw,28px);
+}
+.paper{
+  background:var(--paper);
+  color:var(--paper-ink);
+  border-radius:var(--radius);
+  padding:clamp(16px,2.6vw,26px);
+  box-shadow:var(--shadow);
+}
+
+/* ===== Lens / viewport signature element ===== */
+.viewport{
+  position:relative;
+  width:min(46vw, 300px); height:min(46vw,300px);
+  border-radius:50%;
+  margin:0 auto;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255,255,255,.16), transparent 55%),
+    #0c1729;
+  border:10px solid #0a1626;
+  box-shadow: inset 0 0 50px rgba(0,0,0,.65), 0 0 0 3px rgba(51,214,192,.28), var(--shadow);
+  overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+}
+.viewport::after{
+  content:"";
+  position:absolute; inset:0;
+  background: repeating-radial-gradient(circle, transparent 0 40px, rgba(255,255,255,.02) 41px 42px);
+  pointer-events:none;
+}
+.lens-badge{
+  position:fixed; right:18px; bottom:18px;
+  width:54px; height:54px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.18), transparent 60%), var(--panel);
+  border:2px solid rgba(51,214,192,.4);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--teal);
+  box-shadow:var(--shadow);
+  z-index:40;
+  cursor:pointer;
+  user-select:none;
+}
+
+/* ===== Nav controls ===== */
+.controls{
+  position:fixed; left:0; right:0; bottom:16px;
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  z-index:40; pointer-events:none;
+}
+.controls > *{ pointer-events:all; }
+.navbtn{
+  width:42px; height:42px; border-radius:50%;
+  border:1px solid var(--line);
+  background:rgba(20,34,56,.85);
+  backdrop-filter:blur(6px);
+  color:var(--ink); font-size:18px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:.2s;
+}
+.navbtn:hover{ background:var(--panel-2); border-color:var(--teal); color:var(--teal); }
+.dots{ display:flex; gap:6px; max-width:44vw; overflow-x:auto; padding:4px; }
+.dot{
+  width:7px; height:7px; border-radius:50%;
+  background:rgba(255,255,255,.18);
+  flex:none; cursor:pointer; transition:.2s;
+}
+.dot.active{ background:var(--teal); box-shadow:0 0 8px var(--teal); width:20px; border-radius:5px; }
+
+.topbar{
+  position:fixed; top:14px; left:18px; right:18px;
+  display:flex; justify-content:space-between; align-items:center;
+  z-index:40; font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted);
+}
+.topbar .brand{ letter-spacing:.08em; text-transform:uppercase; }
+.iconbtn{
+  background:rgba(20,34,56,.7); border:1px solid var(--line); color:var(--muted);
+  width:32px;height:32px;border-radius:9px; cursor:pointer; font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+}
+.iconbtn:hover{ color:var(--teal); border-color:var(--teal); }
+
+.menu-panel{
+  position:fixed; inset:0; background:rgba(6,11,20,.86); backdrop-filter:blur(6px);
+  z-index:60; display:none; align-items:center; justify-content:center;
+}
+.menu-panel.open{ display:flex; }
+.menu-list{
+  width:min(560px,92vw); max-height:80vh; overflow-y:auto;
+  background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:10px;
+}
+.menu-item{
+  display:flex; gap:12px; align-items:center;
+  padding:11px 14px; border-radius:12px; cursor:pointer;
+  color:var(--muted); font-size:14px;
+}
+.menu-item:hover{ background:var(--panel-2); color:var(--ink); }
+.menu-item .n{ font-family:'IBM Plex Mono',monospace; color:var(--teal); font-size:12px; width:22px; }
+
+/* ===== QR box (desktop only) ===== */
+.qr-box{
+  display:flex; gap:16px; align-items:center;
+  background:var(--paper); color:var(--paper-ink);
+  border-radius:18px; padding:16px 20px; margin-top:28px;
+  box-shadow:var(--shadow);
+  max-width:480px;
+}
+.qr-box img{ width:92px; height:92px; border-radius:8px; image-rendering:pixelated; }
+.qr-box .txt strong{ display:block; font-family:'Fraunces',serif; font-size:16px; margin-bottom:4px; }
+.qr-box .txt span{ font-size:12.5px; color:#5a5340; }
+.qr-box .url{ font-family:'IBM Plex Mono',monospace; font-size:11px; background:#eae4d2; padding:3px 7px; border-radius:6px; display:inline-block; margin-top:6px; }
+@media (max-width:860px){
+  .qr-box{ display:none !important; }
+}
+
+/* ===== Buttons ===== */
+.btn{
+  font-family:'IBM Plex Sans',sans-serif; font-weight:600; font-size:14px;
+  padding:11px 20px; border-radius:12px; border:1px solid var(--line);
+  background:var(--panel-2); color:var(--ink); cursor:pointer; transition:.2s;
+  display:inline-flex; align-items:center; gap:8px;
+}
+.btn:hover{ transform:translateY(-1px); border-color:var(--teal); }
+.btn.primary{ background:var(--teal); color:var(--teal-ink); border-color:var(--teal); }
+.btn.primary:hover{ filter:brightness(1.08); }
+.btn.ghost{ background:transparent; }
+.btn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+
+/* ===== Grid helpers ===== */
+.grid2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.grid3{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+@media (max-width:720px){ .grid2,.grid3{ grid-template-columns:1fr; } }
+
+/* ===== Flip cards ===== */
+.flip-card{ perspective:1200px; height:170px; cursor:pointer; }
+.flip-inner{
+  position:relative; width:100%; height:100%; transition:transform .5s;
+  transform-style:preserve-3d;
+}
+.flip-card.flipped .flip-inner{ transform:rotateY(180deg); }
+.flip-face{
+  position:absolute; inset:0; backface-visibility:hidden;
+  border-radius:16px; padding:16px; display:flex; flex-direction:column; justify-content:center;
+}
+.flip-front{ background:var(--panel-2); border:1px solid var(--line); text-align:center; }
+.flip-front .ic{ font-size:34px; margin-bottom:8px; }
+.flip-back{ background:var(--teal); color:var(--teal-ink); transform:rotateY(180deg); font-size:13.5px; line-height:1.45; }
+
+/* ===== Sorting game cards ===== */
+.sort-card{
+  background:var(--panel-2); border:1px solid var(--line); border-radius:16px;
+  padding:14px; text-align:center; transition:.2s;
+}
+.sort-card .ic{ font-size:38px; }
+.sort-card .name{ font-weight:600; margin:6px 0 10px; }
+.sort-card .choices{ display:flex; gap:6px; justify-content:center; }
+.sort-card.done{ opacity:.55; }
+.sort-card .choices button{
+  flex:1; font-size:12px; padding:7px 6px; border-radius:8px; border:1px solid var(--line);
+  background:transparent; color:var(--muted); cursor:pointer;
+}
+.sort-card .choices button:hover{ border-color:var(--teal); color:var(--ink); }
+.result-tag{ font-size:11px; font-family:'IBM Plex Mono',monospace; padding:3px 8px; border-radius:6px; display:inline-block; margin-top:6px;}
+.result-tag.ok{ background:rgba(51,214,160,.15); color:var(--good); }
+.result-tag.bad{ background:rgba(239,93,93,.15); color:var(--bad); }
+.result-tag.mid{ background:rgba(154,140,245,.18); color:var(--violet); }
+
+/* ===== Timer ===== */
+.timer{
+  font-family:'IBM Plex Mono',monospace; font-size:clamp(30px,5vw,44px);
+  letter-spacing:.05em; text-align:center;
+}
+.timer-box{ display:flex; flex-direction:column; align-items:center; gap:10px; }
+
+/* ===== Debate columns ===== */
+.debate-col{ border-radius:16px; padding:16px; }
+.debate-col.pro{ background:rgba(51,214,192,.09); border:1px solid rgba(51,214,192,.3); }
+.debate-col.con{ background:rgba(239,93,93,.08); border:1px solid rgba(239,93,93,.28); }
+.debate-col h4{ font-family:'Fraunces',serif; margin-bottom:8px; }
+.debate-col ul{ margin:0; padding-left:18px; font-size:13.5px; color:var(--muted); line-height:1.6; }
+
+/* ===== Hotspot diagram ===== */
+.diagram-wrap{ position:relative; }
+.hotspot{
+  position:absolute; width:22px; height:22px; border-radius:50%;
+  background:var(--amber); border:3px solid #1a1712; cursor:pointer;
+  transform:translate(-50%,-50%);
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(242,179,68,.5);} 50%{ box-shadow:0 0 0 8px rgba(242,179,68,0);} }
+.hotspot.active{ background:var(--magenta); }
+.info-panel{
+  min-height:96px;
+  background:var(--panel-2); border:1px solid var(--line); border-radius:14px; padding:14px; font-size:13.5px; color:var(--muted);
+}
+
+/* ===== Memory game ===== */
+.memo-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+@media (max-width:640px){ .memo-grid{ grid-template-columns:repeat(3,1fr); } }
+.memo-card{
+  aspect-ratio:1/1; border-radius:12px; cursor:pointer;
+  background:var(--panel-2); border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  font-size:11.5px; padding:6px; color:transparent; user-select:none;
+  transition:.2s;
+}
+.memo-card.flip{ background:var(--violet); color:#fff; }
+.memo-card.matched{ background:rgba(51,214,160,.18); border-color:var(--good); color:var(--good); }
+
+/* ===== Checklist / rubric ===== */
+.rubric-item{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 0; border-bottom:1px solid var(--line); }
+.rubric-item:last-child{ border-bottom:none; }
+.stars{ display:flex; gap:4px; }
+.star{ font-size:20px; cursor:pointer; color:rgba(255,255,255,.25); }
+.star.on{ color:var(--amber); }
+
+.check-item{ display:flex; gap:10px; align-items:flex-start; padding:8px 0; font-size:14px; }
+.check-item input{ margin-top:3px; accent-color:var(--teal); width:16px; height:16px; }
+
+.footnote{ font-size:12px; color:var(--muted); margin-top:16px; }
+.small-cap{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+
+/* svg helpers */
+svg text{ font-family:'IBM Plex Sans',sans-serif; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="topbar">
+    <div class="brand">Unidad 3 · La vida invisible</div>
+    <div style="display:flex; gap:8px;">
+      <button class="iconbtn" id="btnFull" title="Pantalla completa">⛶</button>
+      <button class="iconbtn" id="btnMenu" title="Ver índice">≡</button>
+    </div>
+  </div>
+
+  <div class="slides" id="slides">
+
+    <!-- 0 PORTADA GENERAL -->
+    <section class="slide">
+      <div class="slide-inner" style="text-align:center;">
+        <div class="viewport" style="margin-bottom:26px;">
+          <svg width="70%" height="70%" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="8" fill="#33d6c0" opacity=".9"/>
+            <circle cx="30" cy="34" r="4" fill="#f2b344" opacity=".8"/>
+            <circle cx="70" cy="30" r="5" fill="#ef5da8" opacity=".8"/>
+            <circle cx="66" cy="70" r="6" fill="#9a8cf5" opacity=".8"/>
+            <path d="M20 70 Q35 60 50 70 T80 65" stroke="#33d6c0" stroke-width="1.4" fill="none" opacity=".5"/>
+          </svg>
+        </div>
+        <div class="eyebrow" style="justify-content:center;">Unidad 3 · Ciencias Naturales · 7° Básico</div>
+        <h1 class="title-xl">La vida invisible</h1>
+        <p class="subtitle" style="margin-left:auto;margin-right:auto;">Microorganismos, células y las primeras defensas del cuerpo humano</p>
+        <div class="chips" style="justify-content:center;">
+          <span class="chip on">Sesión 1 · Microorganismos y el límite de lo vivo</span>
+          <span class="chip on">Sesión 2 · Procariontes, eucariontes y endosimbiosis</span>
+        </div>
+
+        <div class="qr-box" style="margin-left:auto;margin-right:auto;">
+          <img id="qrImg" alt="Código QR">
+          <div class="txt">
+            <strong>Sigue la clase desde tu celular 📱</strong>
+            <span>Escanea este código con la cámara de tu celular para abrir la página</span>
+            <span class="url">fjimenez321-stack.github.io/dondefelipe</span>
+          </div>
+        </div>
+
+        <p class="footnote">Usa las flechas ← → , desliza, o el botón ≡ para navegar</p>
+      </div>
+    </section>
+
+    <!-- 1 SESIÓN 1 PORTADA -->
+    <section class="slide">
+      <div class="slide-inner" style="text-align:center;">
+        <div class="eyebrow" style="justify-content:center;">Sesión 1 · 90 minutos</div>
+        <h2 class="title-xl">¿Qué es la "vida invisible"?</h2>
+        <p class="subtitle" style="margin-left:auto;margin-right:auto;">Microorganismos y el límite de lo vivo</p>
+        <div class="chips" style="justify-content:center;">
+          <span class="chip">OA5 · IE 3, 6</span>
+          <span class="chip">Indagación: OA a, OA b</span>
+          <span class="chip">Actitud: OA A</span>
+          <span class="chip on">Bloom: Comprender</span>
+        </div>
+        <div class="panel" style="margin-top:26px; max-width:560px; margin-left:auto; margin-right:auto; text-align:left;">
+          <div class="small-cap" style="margin-bottom:8px;">Materiales de la sesión</div>
+          <div style="font-size:14px; color:var(--muted); line-height:1.7;">🖼️ Set de imágenes (bacteria, hongo, virus, célula) &nbsp;·&nbsp; 📽️ Proyector &nbsp;·&nbsp; 📋 Ficha de criterios de ser vivo</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 HOOK: MICROSCOPIO INTERACTIVO -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Antes de empezar · Reto de apertura</div>
+        <h2 class="title-lg">Gira el enfoque y descubre qué se esconde</h2>
+        <p class="subtitle">Ajusta la rueda hasta enfocar la imagen. ¿Sabes qué microorganismo es?</p>
+
+        <div style="display:flex; flex-wrap:wrap; gap:28px; align-items:center; margin-top:20px;">
+          <div class="viewport" id="scopeView">
+            <div id="scopeContent" style="width:78%; height:78%; display:flex; align-items:center; justify-content:center; filter:blur(14px); transition:filter .15s;"></div>
+          </div>
+
+          <div style="flex:1; min-width:240px;">
+            <div class="panel">
+              <div class="small-cap">Espécimen <span id="specNum">1</span>/4</div>
+              <h3 id="specName" style="font-size:22px; margin:6px 0 10px;">???</h3>
+              <input type="range" id="focusRange" min="0" max="100" value="0" style="width:100%; accent-color:#33d6c0;">
+              <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:4px;">
+                <span>Desenfocado</span><span>Enfocado</span>
+              </div>
+              <p id="specFact" style="font-size:13.5px; color:var(--muted); margin-top:12px; min-height:40px;">Gira la rueda para revelar la pista…</p>
+              <div style="display:flex; gap:8px; margin-top:10px;">
+                <button class="btn" id="specPrev">← Anterior</button>
+                <button class="btn" id="specNext">Siguiente →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 CLASIFICA VIVO / NO VIVO -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Lluvia de ideas</div>
+        <h2 class="title-lg">¿Qué es un microorganismo? Clasifica estas imágenes</h2>
+        <p class="subtitle">Para cada imagen, decide: ¿está vivo o no está vivo? Justifica en voz alta.</p>
+        <div class="grid3" id="classifyGrid" style="margin-top:20px;"></div>
+        <div id="classifySummary" class="footnote" style="margin-top:14px;"></div>
+      </div>
+    </section>
+
+    <!-- 4 CRITERIOS DE SER VIVO -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Sistematizando</div>
+        <h2 class="title-lg">3 criterios que usamos para decir "está vivo"</h2>
+        <p class="subtitle">Haz clic en cada tarjeta para dar vuelta y leer la explicación.</p>
+        <div class="grid3" style="margin-top:20px;">
+          <div class="flip-card" data-flip>
+            <div class="flip-inner">
+              <div class="flip-face flip-front"><div class="ic">🍽️</div><div>Alimentación</div></div>
+              <div class="flip-face flip-back">Todo ser vivo obtiene y transforma materia y energía del medio. Las bacterias, por ejemplo, absorben nutrientes directamente del entorno.</div>
+            </div>
+          </div>
+          <div class="flip-card" data-flip>
+            <div class="flip-inner">
+              <div class="flip-face flip-front"><div class="ic">🧬</div><div>Reproducción</div></div>
+              <div class="flip-face flip-back">Todo ser vivo genera copias de sí mismo. Una bacteria puede dividirse en dos cada 20 minutos aproximadamente.</div>
+            </div>
+          </div>
+          <div class="flip-card" data-flip>
+            <div class="flip-inner">
+              <div class="flip-face flip-front"><div class="ic">💨</div><div>Respiración</div></div>
+              <div class="flip-face flip-back">Todo ser vivo libera energía a partir de sus nutrientes mediante procesos metabólicos propios, aunque no siempre use oxígeno.</div>
+            </div>
+          </div>
+        </div>
+        <p class="footnote">Bonus: crecimiento y respuesta a estímulos también son criterios válidos, pero hoy trabajaremos con estos tres.</p>
+      </div>
+    </section>
+
+    <!-- 5 RETO STEAM VIRUS -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Reto STEAM</div>
+        <h2 class="title-lg">¿Es el virus un ser vivo… o una máquina biológica?</h2>
+
+        <div style="display:flex; gap:20px; flex-wrap:wrap; margin-top:16px;">
+          <div class="panel" style="flex:1; min-width:220px; text-align:center;">
+            <svg viewBox="0 0 160 160" width="150" height="150" style="margin:0 auto;">
+              <polygon points="80,15 140,50 140,110 80,145 20,110 20,50" fill="none" stroke="#ef5da8" stroke-width="3"/>
+              <path d="M80 40 q20 20 0 40 q-20 20 0 40" stroke="#f2b344" stroke-width="2.4" fill="none"/>
+              <circle cx="45" cy="45" r="3.5" fill="#ef5da8"/>
+              <circle cx="115" cy="45" r="3.5" fill="#ef5da8"/>
+              <circle cx="45" cy="115" r="3.5" fill="#ef5da8"/>
+              <circle cx="115" cy="115" r="3.5" fill="#ef5da8"/>
+            </svg>
+            <div class="small-cap">Cápside proteica + ácido nucleico</div>
+            <p style="font-size:12.5px; color:var(--muted);">Sin membrana propia · Sin metabolismo propio</p>
+          </div>
+
+          <div style="flex:2; min-width:260px; display:flex; flex-direction:column; gap:12px;">
+            <div class="debate-col pro">
+              <h4>🟢 A favor de "ser vivo"</h4>
+              <ul>
+                <li>Tiene material genético (ácido nucleico) que se transmite</li>
+                <li>Se "reproduce" dentro de una célula huésped</li>
+                <li>Evoluciona y muta con el tiempo</li>
+              </ul>
+            </div>
+            <div class="debate-col con">
+              <h4>🔴 A favor de "máquina biológica"</h4>
+              <ul>
+                <li>No tiene metabolismo propio: no respira ni se alimenta</li>
+                <li>No puede reproducirse sin invadir otra célula</li>
+                <li>Fuera de una célula, es solo una partícula inerte</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;">
+          <div>
+            <div class="small-cap">Debate breve estructurado</div>
+            <div style="font-size:13px; color:var(--muted);">Formen dos posturas y defiéndanlas con evidencia. Usen: "Sostenemos que… porque…"</div>
+          </div>
+          <div class="timer-box">
+            <div class="timer mono" id="debateTime">10:00</div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn primary" id="debateStart">▶ Iniciar</button>
+              <button class="btn" id="debateReset">↺</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 CIERRE SESIÓN 1 -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Cierre · Formativa oral</div>
+        <h2 class="title-lg">Ficha de clasificación: pongamos a prueba lo aprendido</h2>
+        <div id="quiz1" style="margin-top:18px; display:flex; flex-direction:column; gap:14px;"></div>
+      </div>
+    </section>
+
+    <!-- 7 SESIÓN 2 PORTADA -->
+    <section class="slide">
+      <div class="slide-inner" style="text-align:center;">
+        <div class="eyebrow" style="justify-content:center;">Sesión 2 · 90 minutos</div>
+        <h2 class="title-xl">Procariontes, eucariontes y el origen de la célula compleja</h2>
+        <div class="chips" style="justify-content:center;">
+          <span class="chip">OA5 · IE 1, 2</span>
+          <span class="chip">Indagación: OA i</span>
+          <span class="chip">Actitud: OA A, OA D</span>
+          <span class="chip on">Bloom: Comprender / Aplicar</span>
+        </div>
+        <div class="panel" style="margin-top:26px; max-width:560px; margin-left:auto; margin-right:auto; text-align:left;">
+          <div class="small-cap" style="margin-bottom:8px;">Materiales de la sesión</div>
+          <div style="font-size:14px; color:var(--muted); line-height:1.7;">📄 Esquemas celulares impresos &nbsp;·&nbsp; 🧱 Plastilina o cartulina &nbsp;·&nbsp; 📱 Tablet/computador (opcional)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 COMPARACIÓN PROCARIONTE / EUCARIONTE -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Comparación guiada</div>
+        <h2 class="title-lg">Procarionte vs. eucarionte: toca cada estructura</h2>
+        <div style="display:flex; gap:8px; margin:14px 0;">
+          <button class="btn primary" id="btnProca">Procarionte</button>
+          <button class="btn" id="btnEuca">Eucarionte</button>
+        </div>
+        <div style="display:flex; gap:20px; flex-wrap:wrap;">
+          <div class="diagram-wrap panel" style="flex:1; min-width:260px; display:flex; align-items:center; justify-content:center; position:relative;">
+            <svg id="cellSvg" viewBox="0 0 240 200" width="100%" style="max-width:320px;"></svg>
+          </div>
+          <div style="flex:1; min-width:220px;">
+            <div class="info-panel" id="cellInfo">Toca un punto ámbar sobre el diagrama para ver qué estructura es y si está presente en este tipo de célula.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9 TEORÍA ENDOSIMBIÓTICA -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">¿De dónde vino la célula compleja?</div>
+        <h2 class="title-lg">La teoría endosimbiótica de Lynn Margulis</h2>
+        <div style="display:flex; gap:24px; flex-wrap:wrap; align-items:center; margin-top:16px;">
+          <div class="viewport" style="width:min(40vw,240px); height:min(40vw,240px);">
+            <svg id="endoSvg" viewBox="0 0 200 200" width="80%" height="80%"></svg>
+          </div>
+          <div style="flex:1; min-width:240px;">
+            <div class="panel">
+              <div class="small-cap">Paso <span id="endoStepNum">1</span>/5</div>
+              <p id="endoText" style="font-size:15px; line-height:1.6; margin-top:8px; min-height:90px;"></p>
+              <div style="display:flex; gap:8px; margin-top:8px;">
+                <button class="btn" id="endoPrev">← Anterior</button>
+                <button class="btn primary" id="endoNext">Siguiente paso →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 ACTIVIDAD STEAM: CONSTRUYAN SU MODELO -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Actividad STEAM · Trabajo colaborativo</div>
+        <h2 class="title-lg">Construyan su modelo de endosimbiosis</h2>
+        <div class="grid2" style="margin-top:16px;">
+          <div class="panel">
+            <div class="small-cap" style="margin-bottom:8px;">Su modelo debe mostrar</div>
+            <div class="check-item"><input type="checkbox"><span>Una célula grande y una más pequeña incorporada dentro de ella</span></div>
+            <div class="check-item"><input type="checkbox"><span>Qué representa cada parte (etiquetas o explicación)</span></div>
+            <div class="check-item"><input type="checkbox"><span>Una explicación oral de 1 minuto sobre la relación evolutiva</span></div>
+            <p class="footnote">Materiales sugeridos: plastilina, cartón o cartulina, o una app de modelado simple si tienen tablet/computador.</p>
+          </div>
+          <div class="panel" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+            <div class="small-cap">Tiempo de trabajo en grupos</div>
+            <div class="timer mono" id="workTime" style="margin:10px 0;">25:00</div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn primary" id="workStart">▶ Iniciar</button>
+              <button class="btn" id="workReset">↺</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11 CIERRE SESIÓN 2: RÚBRICA -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Cierre · Formativa con pauta</div>
+        <h2 class="title-lg">Autoevalúen su modelo antes de explicarlo</h2>
+        <div class="panel" style="margin-top:16px;">
+          <div class="rubric-item"><span>Calidad y claridad del modelo</span><span class="stars" data-rubric></span></div>
+          <div class="rubric-item"><span>Identifica correctamente las estructuras</span><span class="stars" data-rubric></span></div>
+          <div class="rubric-item"><span>Explican la relación evolutiva con sus palabras</span><span class="stars" data-rubric></span></div>
+        </div>
+        <p class="footnote">Esta pauta evalúa la habilidad de indagación OA i: crear, seleccionar y ajustar modelos.</p>
+      </div>
+    </section>
+
+    <!-- 12 INTRO JUEGOS -->
+    <section class="slide">
+      <div class="slide-inner" style="text-align:center;">
+        <div class="eyebrow" style="justify-content:center;">Para cerrar con energía</div>
+        <h2 class="title-xl">¡Hora de jugar! 🎮</h2>
+        <p class="subtitle" style="margin-left:auto;margin-right:auto;">Dos juegos para repasar lo que aprendimos en las sesiones 1 y 2</p>
+        <div class="grid2" style="margin-top:24px; text-align:left;">
+          <div class="panel">🧫 <strong>Juego 1</strong> · Clasifica la vida contrarreloj</div>
+          <div class="panel">🧠 <strong>Juego 2</strong> · Memorama celular</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13 JUEGO 1: CLASIFICA LA VIDA -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Juego 1</div>
+        <h2 class="title-lg">Clasifica la vida contrarreloj</h2>
+        <p class="subtitle">Antes que se acabe el tiempo, marca cada elemento como vivo o no vivo.</p>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin:14px 0;">
+          <div class="mono" style="font-size:14px;">⏱ <span id="g1Time">60</span>s &nbsp; · &nbsp; ✅ <span id="g1Score">0</span> pts</div>
+          <button class="btn primary" id="g1Start">▶ Comenzar juego</button>
+        </div>
+        <div class="grid3" id="g1Grid"></div>
+        <div id="g1End" class="panel" style="margin-top:14px; display:none; text-align:center;"></div>
+      </div>
+    </section>
+
+    <!-- 14 JUEGO 2: MEMORAMA -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Juego 2</div>
+        <h2 class="title-lg">Memorama celular</h2>
+        <p class="subtitle">Encuentra los pares: término ↔ definición.</p>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin:12px 0;" class="mono">
+          <span>🔄 Movimientos: <span id="memoMoves">0</span></span>
+          <button class="btn" id="memoReset">↺ Reiniciar</button>
+        </div>
+        <div class="memo-grid" id="memoGrid"></div>
+        <div id="memoEnd" class="panel" style="margin-top:14px; display:none; text-align:center;"></div>
+      </div>
+    </section>
+
+    <!-- 15 CIERRE GENERAL -->
+    <section class="slide">
+      <div class="slide-inner" style="text-align:center;">
+        <div class="viewport" style="margin-bottom:20px;">
+          <span style="font-size:54px;">🔬</span>
+        </div>
+        <h2 class="title-xl">¡Excelente trabajo hoy!</h2>
+        <div class="panel" style="max-width:560px; margin:18px auto 0; text-align:left;">
+          <div class="check-item">✅ <span>Definimos qué es un microorganismo y discutimos si los virus están vivos</span></div>
+          <div class="check-item">✅ <span>Comparamos células procariontes y eucariontes</span></div>
+          <div class="check-item">✅ <span>Conocimos la teoría endosimbiótica de Lynn Margulis</span></div>
+        </div>
+        <p class="subtitle" style="margin:18px auto 0;">Próxima sesión: Experimento — cultivando hongos y bacterias en casa 🍞🧪</p>
+        <p class="footnote" style="margin-top:24px;">Ciencias Naturales · 7° Básico · Colegio San Agustín Villa Alemana · Prof. Felipe Jiménez</p>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="lens-badge" id="lensBadge">1/16</div>
+
+  <div class="controls">
+    <button class="navbtn" id="prevBtn">←</button>
+    <div class="dots" id="dotsWrap"></div>
+    <button class="navbtn" id="nextBtn">→</button>
+  </div>
+
+  <div class="menu-panel" id="menuPanel">
+    <div class="menu-list" id="menuList"></div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ QR IMAGE ============ */
+  document.getElementById('qrImg').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAbwAAAG8AQAAAACNyy1yAAAC3klEQVR4nO2cS27rMAxFDx88l3aQ/S+rO5BWwDfQ104GRVrEkHqJoJAVHTgECJa6+pjzluV/73EgUKBAgfuD1i1iZmQjW+knm0X6Yx+2nI8C1wcPgJDKg5W/odYFPrUtpPOwhXwUuBXYsiWe8IQ9HCCbJwB6xLZhK/oocHHwuDxbz67UELWQrGXU33ijQIHv2TVWvURpNkIim1OL1d97o0CB71mN1ZNyFRI5OhDc2rd+HbaQjwI3AnOd3wOlHLWHW8QiBCe09jRsPR8FLg8eXJJq+b8PgLe2Z7sOW8lHgfuAXVY1M0+0mT40iRWo/bkprqv5KHB9cMqrwcmRKZ1aq1erZfPRuZCPAvcAD8DAc7SQbBL/4VQP1DGtHljKR4EbgcEJ7l/m7oA9vOpUwevC68MBi9SlgRt/qsC/Cx6Uf/o5evCu+ZfsOnSqUrLmOJUEC/kocA8Qdy/p1BNzo7QJXtvBy/JrRdJCPgrcAyyB11b8g9cPlM5uvbM+K1YFfhqk58+aOWsojp7y7RzPilWBN2pWVnaoAjl6jtAUqjJqEgR+/EaBAt+0S14dCTZxSrNwqg2UVwV+Ghx7Vzxb2awya6r0zYE5ejZCagLsQj4K3ANsmXOa6c8l65hVeZ12aW4l8CbwFIRt3kRvz8N6MaBYFXhjvdqDcMz94UX0jsZCPgrcAzzJ/vQVgUuaTUNuLSMVqwI/DtKjkXYw8EWl2q1rsIpVgZ8GD8rqfzkGCAxNNXrdBJiG0Eo/07qQjwL3AIcO0IuBnmZh2ljVCgDpAAJvBM8Xqky7AsIpdOvxq1t/qsA/DD7duxLSvBww+ufNgT96o0CBb1qfQw2VdZpwXVSssX1FNYDAu8FaBmSrZwHKQexHE1e/THMrgTeB13tXns3b53yvxUI+CtwDvN674v2synQ1UG9Zu+FqKR8F7gEe8Dosyy7WOZ2Wb4vcupSPAvcAnzdRf890B7tAgQIFvrb/GBgYBU/dUhoAAAAASUVORK5CYII=";
+
+  /* ============ SLIDE NAVIGATION ============ */
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var total = slides.length;
+  var current = 0;
+
+  var titles = [
+    "Portada", "Sesión 1 · Portada", "Hook: Microscopio", "Clasifica vivo/no vivo",
+    "Criterios de ser vivo", "Reto STEAM: virus", "Cierre Sesión 1", "Sesión 2 · Portada",
+    "Procarionte vs Eucarionte", "Teoría endosimbiótica", "Actividad STEAM: modelo",
+    "Cierre Sesión 2: rúbrica", "Intro juegos", "Juego 1: Clasifica la vida",
+    "Juego 2: Memorama", "Cierre general"
+  ];
+
+  var dotsWrap = document.getElementById('dotsWrap');
+  titles.forEach(function(t, i){
+    var d = document.createElement('div');
+    d.className = 'dot' + (i===0 ? ' active' : '');
+    d.addEventListener('click', function(){ goTo(i); });
+    dotsWrap.appendChild(d);
+  });
+
+  var menuList = document.getElementById('menuList');
+  titles.forEach(function(t, i){
+    var item = document.createElement('div');
+    item.className = 'menu-item';
+    item.innerHTML = '<span class="n">' + String(i+1).padStart(2,'0') + '</span><span>' + t + '</span>';
+    item.addEventListener('click', function(){
+      goTo(i);
+      document.getElementById('menuPanel').classList.remove('open');
+    });
+    menuList.appendChild(item);
+  });
+
+  function render(){
+    slides.forEach(function(s, i){ s.classList.toggle('active', i === current); });
+    Array.prototype.forEach.call(dotsWrap.children, function(d, i){ d.classList.toggle('active', i === current); });
+    document.getElementById('lensBadge').textContent = (current+1) + '/' + total;
+    document.getElementById('prevBtn').disabled = current === 0;
+    document.getElementById('nextBtn').disabled = current === total-1;
+  }
+  function goTo(i){ current = Math.max(0, Math.min(total-1, i)); render(); }
+  function next(){ goTo(current+1); }
+  function prev(){ goTo(current-1); }
+
+  document.getElementById('nextBtn').addEventListener('click', next);
+  document.getElementById('prevBtn').addEventListener('click', prev);
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowRight' || e.key === ' ') next();
+    if (e.key === 'ArrowLeft') prev();
+    if (e.key === 'Escape') document.getElementById('menuPanel').classList.remove('open');
+  });
+
+  var touchX = null;
+  document.getElementById('app').addEventListener('touchstart', function(e){ touchX = e.changedTouches[0].clientX; }, {passive:true});
+  document.getElementById('app').addEventListener('touchend', function(e){
+    if (touchX === null) return;
+    var dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 50) { dx < 0 ? next() : prev(); }
+    touchX = null;
+  }, {passive:true});
+
+  document.getElementById('btnMenu').addEventListener('click', function(){
+    document.getElementById('menuPanel').classList.add('open');
+  });
+  document.getElementById('menuPanel').addEventListener('click', function(e){
+    if (e.target === this) this.classList.remove('open');
+  });
+  document.getElementById('btnFull').addEventListener('click', function(){
+    if (!document.fullscreenElement) { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); }
+    else { document.exitFullscreen && document.exitFullscreen(); }
+  });
+
+  render();
+
+  /* ============ SLIDE 2: MICROSCOPE FOCUS ============ */
+  var specimens = [
+    { name:"Bacteria", emoji:"🦠", fact:"Célula procarionte: no tiene núcleo definido, pero cumple los 3 criterios de ser vivo." },
+    { name:"Hongo (moho)", emoji:"🍄", fact:"Organismo eucarionte que se alimenta absorbiendo nutrientes del sustrato donde crece." },
+    { name:"Virus", emoji:"🧪", fact:"No tiene membrana ni metabolismo propio: por eso es un caso discutible entre los científicos." },
+    { name:"Célula", emoji:"🧫", fact:"Unidad básica de todo ser vivo. Puede ser procarionte o eucarionte." }
+  ];
+  var specIdx = 0;
+  var scopeContent = document.getElementById('scopeContent');
+  var focusRange = document.getElementById('focusRange');
+  var specName = document.getElementById('specName');
+  var specFact = document.getElementById('specFact');
+  var specNum = document.getElementById('specNum');
+
+  function loadSpecimen(){
+    var s = specimens[specIdx];
+    scopeContent.innerHTML = '<span style="font-size:64px;">' + s.emoji + '</span>';
+    specName.textContent = "???";
+    specFact.textContent = "Gira la rueda para revelar la pista…";
+    specNum.textContent = specIdx+1;
+    focusRange.value = 0;
+    scopeContent.style.filter = 'blur(14px)';
+  }
+  focusRange.addEventListener('input', function(){
+    var v = focusRange.value;
+    var blur = 14 - (v/100)*14;
+    scopeContent.style.filter = 'blur(' + blur + 'px)';
+    if (v >= 90) {
+      specName.textContent = specimens[specIdx].name;
+      specFact.textContent = specimens[specIdx].fact;
+    } else {
+      specName.textContent = "???";
+      specFact.textContent = "Sigue enfocando…";
+    }
+  });
+  document.getElementById('specNext').addEventListener('click', function(){ specIdx = (specIdx+1) % specimens.length; loadSpecimen(); });
+  document.getElementById('specPrev').addEventListener('click', function(){ specIdx = (specIdx-1+specimens.length) % specimens.length; loadSpecimen(); });
+  loadSpecimen();
+
+  /* ============ SLIDE 3: CLASIFICA VIVO/NO VIVO ============ */
+  var classifyItems = [
+    { name:"Bacteria", emoji:"🦠", answer:"vivo" },
+    { name:"Hongo", emoji:"🍄", answer:"vivo" },
+    { name:"Célula vegetal", emoji:"🧫", answer:"vivo" },
+    { name:"Virus", emoji:"🧪", answer:"discutible" },
+    { name:"Cristal de sal", emoji:"🧂", answer:"no-vivo" },
+    { name:"Roca", emoji:"🪨", answer:"no-vivo" }
+  ];
+  var classifyGrid = document.getElementById('classifyGrid');
+  var classifyCount = 0;
+  classifyItems.forEach(function(item, idx){
+    var card = document.createElement('div');
+    card.className = 'sort-card';
+    card.innerHTML =
+      '<div class="ic">'+item.emoji+'</div>' +
+      '<div class="name">'+item.name+'</div>' +
+      '<div class="choices">' +
+        '<button data-choice="vivo">Vivo</button>' +
+        '<button data-choice="no-vivo">No vivo</button>' +
+      '</div>' +
+      '<div class="tagslot"></div>';
+    card.querySelectorAll('button').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if (card.classList.contains('done')) return;
+        card.classList.add('done');
+        var tagSlot = card.querySelector('.tagslot');
+        var chosen = btn.getAttribute('data-choice');
+        if (item.answer === 'discutible') {
+          tagSlot.innerHTML = '<span class="result-tag mid">Es discutible — ¡lo veremos en el reto STEAM!</span>';
+        } else if (chosen === item.answer) {
+          tagSlot.innerHTML = '<span class="result-tag ok">✓ Correcto</span>';
+        } else {
+          tagSlot.innerHTML = '<span class="result-tag bad">✗ Reflexionemos con el curso</span>';
+        }
+        classifyCount++;
+        if (classifyCount === classifyItems.length) {
+          document.getElementById('classifySummary').textContent = '¡Clasificación completa! Ahora sistematicemos los criterios de ser vivo.';
+        }
+      });
+    });
+    classifyGrid.appendChild(card);
+  });
+
+  /* ============ SLIDE 4: FLIP CARDS ============ */
+  document.querySelectorAll('[data-flip]').forEach(function(card){
+    card.addEventListener('click', function(){ card.classList.toggle('flipped'); });
+  });
+
+  /* ============ SLIDE 5: DEBATE TIMER ============ */
+  (function(){
+    var timeLeft = 600;
+    var interval = null;
+    var display = document.getElementById('debateTime');
+    var startBtn = document.getElementById('debateStart');
+    function update(){
+      var m = Math.floor(timeLeft/60), s = timeLeft%60;
+      display.textContent = (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+    }
+    startBtn.addEventListener('click', function(){
+      if (interval) { clearInterval(interval); interval = null; startBtn.textContent = '▶ Iniciar'; return; }
+      startBtn.textContent = '⏸ Pausar';
+      interval = setInterval(function(){
+        timeLeft--;
+        update();
+        if (timeLeft <= 0) { clearInterval(interval); interval=null; startBtn.textContent='▶ Iniciar'; }
+      }, 1000);
+    });
+    document.getElementById('debateReset').addEventListener('click', function(){
+      clearInterval(interval); interval=null; timeLeft=600; update(); startBtn.textContent='▶ Iniciar';
+    });
+    update();
+  })();
+
+  /* ============ SLIDE 6: QUIZ ============ */
+  var quizData = [
+    { q:"Un hongo se considera un ser vivo principalmente porque…", opts:["Es de color blanco","Se alimenta, se reproduce y respira","Aparece en el pan"], correct:1 },
+    { q:"Lo más discutido hoy sobre los virus fue que…", opts:["No tienen metabolismo ni membrana propios","Son demasiado grandes para verlos","Solo existen en laboratorios"], correct:0 },
+    { q:"De los organismos vistos hoy, ¿cuál es procarionte?", opts:["Célula vegetal","Bacteria","Hongo"], correct:1 }
+  ];
+  var quiz1 = document.getElementById('quiz1');
+  quizData.forEach(function(item, qi){
+    var wrap = document.createElement('div');
+    wrap.className = 'panel';
+    var optsHtml = item.opts.map(function(o,oi){
+      return '<button class="btn" style="display:block; width:100%; text-align:left; margin-top:6px;" data-oi="'+oi+'">'+o+'</button>';
+    }).join('');
+    wrap.innerHTML = '<div style="font-weight:600; margin-bottom:6px;">'+(qi+1)+'. '+item.q+'</div>' + optsHtml + '<div class="fb" style="margin-top:8px; font-size:13px;"></div>';
+    wrap.querySelectorAll('[data-oi]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if (wrap.dataset.answered) return;
+        wrap.dataset.answered = "1";
+        var oi = parseInt(btn.getAttribute('data-oi'),10);
+        var fb = wrap.querySelector('.fb');
+        wrap.querySelectorAll('[data-oi]').forEach(function(b, i){
+          if (i === item.correct) b.style.borderColor = 'var(--good)';
+          if (i === oi && oi !== item.correct) b.style.borderColor = 'var(--bad)';
+        });
+        fb.innerHTML = oi === item.correct ? '<span style="color:var(--good);">✓ ¡Correcto!</span>' : '<span style="color:var(--bad);">✗ La respuesta correcta era: '+item.opts[item.correct]+'</span>';
+      });
+    });
+    quiz1.appendChild(wrap);
+  });
+
+  /* ============ SLIDE 8: CELL DIAGRAM ============ */
+  var cellMode = 'proca';
+  var structureInfo = {
+    nucleo: { label:"Núcleo", proca:false, euca:true, text:"Compartimento delimitado por membrana que guarda el ADN. Presente solo en eucariontes." },
+    pared: { label:"Pared celular", proca:true, euca:true, text:"Capa rígida externa que da forma y protección. Presente en bacterias, hongos y plantas." },
+    endomem: { label:"Endomembranas", proca:false, euca:true, text:"Sistema interno de membranas (retículo, aparato de Golgi, etc). Solo en eucariontes." },
+    membrana: { label:"Membrana plasmática", proca:true, euca:true, text:"Envoltura que regula el paso de sustancias. Presente en toda célula." },
+    citoplasma: { label:"Citoplasma", proca:true, euca:true, text:"Medio interno donde ocurren las reacciones celulares." }
+  };
+  var cellSvg = document.getElementById('cellSvg');
+  var cellInfo = document.getElementById('cellInfo');
+
+  function drawCell(){
+    var isEuca = cellMode === 'euca';
+    var html = '';
+    html += '<rect x="10" y="10" width="220" height="180" rx="90" fill="none" stroke="#33d6c0" stroke-width="3"/>';
+    html += '<rect x="24" y="24" width="192" height="152" rx="76" fill="none" stroke="#93a6bd" stroke-width="1.5" stroke-dasharray="4 4"/>';
+    if (isEuca) {
+      html += '<circle cx="120" cy="100" r="34" fill="#9a8cf5" opacity=".85" data-hs="nucleo"/>';
+      html += '<circle cx="70" cy="60" r="10" fill="#f2b344" opacity=".85" data-hs="endomem"/>';
+      html += '<circle cx="170" cy="140" r="9" fill="#f2b344" opacity=".85" data-hs="endomem"/>';
+    } else {
+      html += '<ellipse cx="120" cy="100" rx="30" ry="16" fill="none" stroke="#9a8cf5" stroke-width="2" stroke-dasharray="3 3"/>';
+      html += '<text x="120" y="104" text-anchor="middle" font-size="9" fill="#9a8cf5">nucleoide</text>';
+    }
+    cellSvg.innerHTML = html +
+      '<circle cx="120" cy="20" r="6" fill="#f2b344" data-hs="pared" style="cursor:pointer;"/>' +
+      '<circle cx="20" cy="100" r="6" fill="#f2b344" data-hs="membrana" style="cursor:pointer;"/>' +
+      '<circle cx="200" cy="160" r="6" fill="#f2b344" data-hs="citoplasma" style="cursor:pointer;"/>' +
+      (isEuca ? '<circle cx="120" cy="100" r="6" fill="#f2b344" data-hs="nucleo" style="cursor:pointer;" opacity="0"/>' : '');
+
+    cellSvg.querySelectorAll('[data-hs]').forEach(function(el){
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', function(){
+        var key = el.getAttribute('data-hs');
+        var info = structureInfo[key];
+        var present = isEuca ? info.euca : info.proca;
+        cellInfo.innerHTML = '<strong>'+info.label+'</strong> — ' + (present ? '<span style="color:var(--good);">presente</span>' : '<span style="color:var(--bad);">ausente</span>') + ' en célula ' + (isEuca?'eucarionte':'procarionte') + '.<br><br>' + info.text;
+      });
+    });
+  }
+  document.getElementById('btnProca').addEventListener('click', function(){
+    cellMode='proca'; this.classList.add('primary'); document.getElementById('btnEuca').classList.remove('primary'); drawCell();
+  });
+  document.getElementById('btnEuca').addEventListener('click', function(){
+    cellMode='euca'; this.classList.add('primary'); document.getElementById('btnProca').classList.remove('primary'); drawCell();
+  });
+  drawCell();
+
+  /* ============ SLIDE 9: ENDOSYMBIOSIS STEPS ============ */
+  var endoSteps = [
+    "Hace más de 1.500 millones de años, solo existían células simples: los procariontes.",
+    "Una célula más grande envolvió a una célula bacteriana pequeña, capaz de usar oxígeno para producir energía.",
+    "En lugar de digerirla, la incorporó: la bacteria se quedó a vivir dentro de ella.",
+    "Con el tiempo esa relación se volvió permanente y beneficiosa para ambas: hoy la conocemos como mitocondria.",
+    "Así explicó Lynn Margulis, en la década de 1960, el posible origen de las células eucariontes complejas."
+  ];
+  var endoIdx = 0;
+  var endoSvg = document.getElementById('endoSvg');
+  var endoText = document.getElementById('endoText');
+  var endoStepNum = document.getElementById('endoStepNum');
+
+  function drawEndo(){
+    var r2 = 14 + endoIdx*4;
+    var insideOpacity = endoIdx >= 1 ? 1 : 0;
+    var html = '<circle cx="100" cy="100" r="70" fill="none" stroke="#33d6c0" stroke-width="3"/>';
+    if (endoIdx >= 2) {
+      html += '<circle cx="100" cy="100" r="'+r2+'" fill="#f2b344" opacity="'+insideOpacity+'"/>';
+    } else if (endoIdx === 1) {
+      html += '<circle cx="150" cy="60" r="16" fill="#f2b344" opacity="1"/>';
+    }
+    if (endoIdx >= 3) {
+      html += '<text x="100" y="104" text-anchor="middle" font-size="9" fill="#3a2703">mitocondria</text>';
+    }
+    endoSvg.innerHTML = html;
+  }
+  function renderEndo(){
+    endoText.textContent = endoSteps[endoIdx];
+    endoStepNum.textContent = endoIdx+1;
+    drawEndo();
+    document.getElementById('endoPrev').disabled = endoIdx===0;
+    document.getElementById('endoNext').disabled = endoIdx===endoSteps.length-1;
+  }
+  document.getElementById('endoNext').addEventListener('click', function(){ if (endoIdx<endoSteps.length-1){ endoIdx++; renderEndo(); } });
+  document.getElementById('endoPrev').addEventListener('click', function(){ if (endoIdx>0){ endoIdx--; renderEndo(); } });
+  renderEndo();
+
+  /* ============ SLIDE 10: WORK TIMER ============ */
+  (function(){
+    var timeLeft = 25*60;
+    var interval = null;
+    var display = document.getElementById('workTime');
+    var startBtn = document.getElementById('workStart');
+    function update(){
+      var m = Math.floor(timeLeft/60), s = timeLeft%60;
+      display.textContent = (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+    }
+    startBtn.addEventListener('click', function(){
+      if (interval) { clearInterval(interval); interval=null; startBtn.textContent='▶ Iniciar'; return; }
+      startBtn.textContent='⏸ Pausar';
+      interval = setInterval(function(){
+        timeLeft--; update();
+        if (timeLeft<=0){ clearInterval(interval); interval=null; startBtn.textContent='▶ Iniciar'; }
+      },1000);
+    });
+    document.getElementById('workReset').addEventListener('click', function(){
+      clearInterval(interval); interval=null; timeLeft=25*60; update(); startBtn.textContent='▶ Iniciar';
+    });
+    update();
+  })();
+
+  /* ============ SLIDE 11: RUBRIC STARS ============ */
+  document.querySelectorAll('[data-rubric]').forEach(function(starsWrap){
+    for (var i=1;i<=3;i++){
+      var s = document.createElement('span');
+      s.className = 'star'; s.textContent = '★'; s.dataset.val = i;
+      s.addEventListener('click', function(){
+        var val = parseInt(this.dataset.val,10);
+        var siblings = this.parentElement.children;
+        Array.prototype.forEach.call(siblings, function(sib,idx){ sib.classList.toggle('on', idx < val); });
+      });
+      starsWrap.appendChild(s);
+    }
+  });
+
+  /* ============ SLIDE 13: GAME 1 — CLASIFICA CONTRARRELOJ ============ */
+  var g1Items = [
+    { name:"Bacteria", emoji:"🦠", answer:"vivo" },
+    { name:"Robot", emoji:"🤖", answer:"no-vivo" },
+    { name:"Semilla", emoji:"🌱", answer:"vivo" },
+    { name:"Roca", emoji:"🪨", answer:"no-vivo" },
+    { name:"Hongo", emoji:"🍄", answer:"vivo" },
+    { name:"Cristal de sal", emoji:"🧂", answer:"no-vivo" },
+    { name:"Célula animal", emoji:"🧫", answer:"vivo" },
+    { name:"Agua", emoji:"💧", answer:"no-vivo" }
+  ];
+  var g1Grid = document.getElementById('g1Grid');
+  var g1Score = 0, g1Time = 60, g1Interval = null, g1Playing = false;
+
+  function buildG1(){
+    g1Grid.innerHTML = '';
+    g1Items.forEach(function(item){
+      var card = document.createElement('div');
+      card.className = 'sort-card';
+      card.innerHTML = '<div class="ic">'+item.emoji+'</div><div class="name">'+item.name+'</div>' +
+        '<div class="choices"><button data-c="vivo">Vivo</button><button data-c="no-vivo">No vivo</button></div>';
+      card.querySelectorAll('button').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          if (!g1Playing || card.classList.contains('done')) return;
+          card.classList.add('done');
+          var ok = btn.getAttribute('data-c') === item.answer;
+          if (ok) { g1Score += 10; document.getElementById('g1Score').textContent = g1Score; }
+          card.style.borderColor = ok ? 'var(--good)' : 'var(--bad)';
+        });
+      });
+      g1Grid.appendChild(card);
+    });
+  }
+  function g1UpdateTime(){ document.getElementById('g1Time').textContent = g1Time; }
+  document.getElementById('g1Start').addEventListener('click', function(){
+    clearInterval(g1Interval);
+    g1Score = 0; g1Time = 60; g1Playing = true;
+    document.getElementById('g1Score').textContent = 0;
+    document.getElementById('g1End').style.display = 'none';
+    g1UpdateTime();
+    buildG1();
+    g1Interval = setInterval(function(){
+      g1Time--; g1UpdateTime();
+      if (g1Time<=0){
+        clearInterval(g1Interval); g1Playing = false;
+        var endBox = document.getElementById('g1End');
+        endBox.style.display = 'block';
+        endBox.innerHTML = '<strong style="font-size:20px;">¡Tiempo! Puntaje final: '+g1Score+' pts</strong><br><span class="footnote">'+(g1Score>=60?'¡Excelente trabajo de bioclasificador/a! 🏆':'¡Buen intento! Repasemos juntos los casos que faltaron.')+'</span>';
+      }
+    }, 1000);
+  });
+  buildG1();
+
+  /* ============ SLIDE 14: GAME 2 — MEMORAMA ============ */
+  var pairs = [
+    ["Procarionte","Célula sin núcleo definido"],
+    ["Eucarionte","Célula con núcleo rodeado de membrana"],
+    ["Pared celular","Capa rígida que da forma y protección"],
+    ["Endosimbiosis","Una célula incorpora a otra y ambas se benefician"],
+    ["Mitocondria","Antigua bacteria que hoy produce energía"],
+    ["Nucleoide","Zona donde está el ADN libre en procariontes"]
+  ];
+  var memoGrid = document.getElementById('memoGrid');
+  var memoMoves = 0, memoFlipped = [], memoMatched = 0, memoLock = false;
+
+  function shuffle(arr){
+    for (var i=arr.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=arr[i]; arr[i]=arr[j]; arr[j]=t; }
+    return arr;
+  }
+  function buildMemo(){
+    var cards = [];
+    pairs.forEach(function(p, idx){
+      cards.push({ text:p[0], pair:idx });
+      cards.push({ text:p[1], pair:idx });
+    });
+    cards = shuffle(cards);
+    memoGrid.innerHTML = '';
+    memoMoves = 0; memoMatched = 0; memoFlipped = []; memoLock = false;
+    document.getElementById('memoMoves').textContent = 0;
+    document.getElementById('memoEnd').style.display = 'none';
+    cards.forEach(function(c){
+      var el = document.createElement('div');
+      el.className = 'memo-card';
+      el.textContent = c.text;
+      el.dataset.pair = c.pair;
+      el.addEventListener('click', function(){
+        if (memoLock || el.classList.contains('matched') || el.classList.contains('flip')) return;
+        el.classList.add('flip');
+        memoFlipped.push(el);
+        if (memoFlipped.length === 2) {
+          memoMoves++; document.getElementById('memoMoves').textContent = memoMoves;
+          memoLock = true;
+          var a = memoFlipped[0], b = memoFlipped[1];
+          if (a.dataset.pair === b.dataset.pair && a !== b) {
+            a.classList.add('matched'); b.classList.add('matched');
+            memoMatched++;
+            memoFlipped = []; memoLock = false;
+            if (memoMatched === pairs.length) {
+              var endBox = document.getElementById('memoEnd');
+              endBox.style.display = 'block';
+              endBox.innerHTML = '<strong style="font-size:20px;">¡Memorama completo! 🎉</strong><br><span class="footnote">Lo lograste en '+memoMoves+' movimientos.</span>';
+            }
+          } else {
+            setTimeout(function(){
+              a.classList.remove('flip'); b.classList.remove('flip');
+              memoFlipped = []; memoLock = false;
+            }, 700);
+          }
+        }
+      });
+      memoGrid.appendChild(el);
+    });
+  }
+  document.getElementById('memoReset').addEventListener('click', buildMemo);
+  buildMemo();
+
+})();
+</script>
+</body>
+</html>

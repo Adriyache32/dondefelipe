@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diapositivas — Del ADN al Cromosoma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F3EFE4;
+    --card:#FBF9F2;
+    --ink:#1E2420;
+    --ink-soft:#2A322B;
+    --sage:#6E8F6C;
+    --sage-dk:#4E6B4E;
+    --amber:#D9924E;
+    --amber-dk:#B8763A;
+    --teal:#3E8B8A;
+    --teal-dk:#2E6968;
+    --purple:#7C5FA6;
+    --purple-dk:#5F4780;
+    --text:#22261F;
+    --muted:#63665A;
+    --line:#DDD6C4;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:#12100EE0, #14161388;
+    background: #13140F;
+    color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+  }
+  h1,h2,h3,h4{font-family:'Fraunces', serif;font-weight:600;margin:0;letter-spacing:-0.01em;}
+  .mono{font-family:'IBM Plex Mono', monospace;}
+
+  /* ===== DECK / STAGE ===== */
+  .deck{
+    height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    padding:18px;
+  }
+  .stage{
+    width:min(94vw, calc(88vh * 16 / 9), 1320px);
+    aspect-ratio:16/9;
+    position:relative;
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 40px 90px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04);
+  }
+  .slide{
+    position:absolute;inset:0;
+    display:none;flex-direction:column;
+    padding:44px 56px 40px;
+  }
+  .slide.active{display:flex;}
+  .slide.dark{background:radial-gradient(120% 140% at 12% 0%, var(--ink-soft) 0%, var(--ink) 55%);color:#F3EFE4;}
+  .slide.light{background:var(--card);color:var(--text);}
+
+  .kicker{
+    font-family:'IBM Plex Mono', monospace;font-size:11.5px;letter-spacing:0.14em;text-transform:uppercase;
+    display:flex;align-items:center;gap:8px;margin-bottom:10px;
+  }
+  .light .kicker{color:var(--sage-dk);}
+  .dark .kicker{color:#B7C9B4;}
+  .kicker .dot{width:5px;height:5px;border-radius:50%;background:var(--amber);}
+
+  .slide h2{font-size:clamp(22px,2.6vw,30px);margin-bottom:4px;}
+  .slide .lead{font-size:14px;color:var(--muted);max-width:640px;}
+  .dark .lead{color:#C7CFC2;}
+
+  .slide-body{flex:1;display:flex;gap:34px;margin-top:20px;min-height:0;}
+  .schema-col{flex:1.15;display:flex;align-items:center;justify-content:center;min-width:0;}
+  .schema-col svg{width:100%;height:100%;max-height:100%;}
+  .schema-col iframe{width:100%;height:100%;border:none;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.1);background:#fff;}
+  .open-sim-link{
+    display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;
+    color:var(--teal-dk);text-decoration:none;border-bottom:1px solid var(--teal-dk);width:fit-content;margin:2px 0 8px;
+  }
+  .open-sim-link:hover{color:var(--sage-dk);border-color:var(--sage-dk);}
+  .legend-col{flex:0.9;display:flex;flex-direction:column;justify-content:center;gap:9px;overflow-y:auto;min-width:0;}
+
+  .legend-list{list-style:none;margin:0;padding:0;}
+  .legend-list li{display:flex;gap:10px;align-items:flex-start;font-size:13px;margin-bottom:10px;color:#3B3E34;}
+  .legend-list li b{color:var(--text);}
+  .num{
+    flex:0 0 auto;width:21px;height:21px;border-radius:50%;
+    background:var(--ink);color:#fff;font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;
+    display:flex;align-items:center;justify-content:center;margin-top:1px;
+  }
+  .fact-note{
+    margin-top:10px;padding:10px 12px;background:rgba(0,0,0,0.03);border-radius:6px;
+    font-size:12.5px;font-style:italic;color:var(--muted);border-left:2px solid var(--sage-dk);
+  }
+
+  .slide-foot{
+    display:flex;justify-content:space-between;align-items:center;
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.04em;
+    color:var(--muted);margin-top:14px;flex:0 0 auto;
+  }
+  .dark .slide-foot{color:#8FA089;}
+
+  /* ===== COVER ===== */
+  .cover-tags{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap;}
+  .htag{font-family:'IBM Plex Mono',monospace;font-size:10.5px;padding:5px 11px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);color:#DDE3D8;}
+  .cover-flex{flex:1;display:flex;flex-direction:column;justify-content:center;}
+  .cover-flex h1{font-size:clamp(30px,4.4vw,52px);max-width:820px;color:#FBF9F2;}
+
+  /* ===== ROADMAP SLIDE ===== */
+  .rm-flow{width:100%;height:100%;}
+  .rm-box{fill:var(--card);stroke:var(--line);stroke-width:1.4;transition:fill .15s ease,stroke .15s ease;}
+  .rm-title{font-family:'IBM Plex Sans',sans-serif;font-weight:600;fill:var(--text);}
+  .rm-sub{font-family:'IBM Plex Mono',monospace;fill:var(--muted);}
+  .rm-link:hover .rm-box{fill:#EFE9D8;stroke:var(--amber-dk);}
+  .rm-link:hover .rm-title{fill:var(--amber-dk);}
+
+  /* ===== INTERACTIVE SCHEMA (click marker <-> legend) ===== */
+  .marker-group{cursor:pointer;}
+  .marker-group circle{transition:r .15s ease, stroke .15s ease;}
+  .marker-group.active circle:first-of-type{stroke:var(--amber);stroke-width:3;r:13;}
+  .legend-list li[data-n]{cursor:pointer;padding:4px 6px;margin:0 -6px 8px;border-radius:5px;transition:background .15s ease;}
+  .legend-list li[data-n]:hover{background:rgba(0,0,0,0.04);}
+  .legend-list li[data-n].active{background:rgba(217,146,78,0.18);}
+  .legend-list li[data-n].active .num{background:var(--amber-dk);}
+
+  /* ===== TABLE (comparison slide) ===== */
+  table.cmp{width:100%;border-collapse:collapse;font-size:13.5px;}
+  table.cmp th{
+    text-align:left;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.05em;
+    text-transform:uppercase;color:var(--muted);padding:8px 14px;border-bottom:2px solid var(--line);
+  }
+  table.cmp td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top;}
+  table.cmp tr td:first-child{font-weight:600;color:var(--text);width:22%;}
+  .tag-repl{color:var(--amber-dk);font-weight:600;}
+  .tag-trans{color:var(--teal-dk);font-weight:600;}
+
+  /* ===== QUESTION CARDS ===== */
+  .qgrid{flex:1;display:flex;flex-direction:column;gap:12px;overflow-y:auto;min-height:0;justify-content:center;}
+  .qcard{background:rgba(0,0,0,0.02);border:1px solid var(--line);border-radius:8px;padding:14px 18px;}
+  .qmeta{display:flex;gap:7px;margin-bottom:7px;flex-wrap:wrap;}
+  .pill{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:0.04em;padding:3px 9px;border-radius:20px;color:#fff;}
+  .pill-oa{background:var(--ink-soft);}
+  .pill-recordar{background:var(--sage-dk);}
+  .pill-comprender{background:var(--teal-dk);}
+  .pill-analizar{background:var(--purple-dk);}
+  .pill-aplicar{background:var(--amber-dk);}
+  .qstem{font-size:13.5px;font-weight:500;margin-bottom:8px;color:var(--text);}
+  .qstem b{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--muted);margin-right:5px;}
+  .options{list-style:none;margin:0 0 6px;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;}
+  .options li{
+    font-size:12px;padding:5px 9px;background:rgba(0,0,0,0.025);border-radius:5px;color:#3B3E34;
+    cursor:pointer;border:1.5px solid transparent;transition:background .15s ease,border-color .15s ease,color .15s ease;
+  }
+  .options li:hover{background:rgba(0,0,0,0.06);}
+  .options li span.letter{font-family:'IBM Plex Mono',monospace;font-weight:600;margin-right:6px;color:var(--muted);}
+  .options li.correct{background:rgba(78,107,78,0.16);border-color:var(--sage-dk);color:var(--sage-dk);font-weight:600;}
+  .options li.correct::after{content:' ✓ Correcta';font-size:10.5px;}
+  .options li.incorrect{background:rgba(184,78,58,0.14);border-color:#B84E3A;color:#963A2B;font-weight:600;}
+  .options li.incorrect::after{content:' ✗ Tu elección';font-size:10.5px;}
+  .qcard.answered .options li{cursor:default;}
+  .justify-note{
+    font-size:11px;color:var(--purple-dk);font-style:italic;margin:2px 0 7px;
+    display:flex;gap:6px;align-items:flex-start;
+  }
+  .hint{
+    font-size:11.5px;font-style:italic;color:var(--muted);border-top:1px dashed var(--line);padding-top:6px;
+    display:none;
+  }
+  .hint.show{display:block;}
+  .hint b{color:var(--sage-dk);font-style:normal;}
+
+  .devcard{background:rgba(0,0,0,0.02);border:1px solid var(--line);border-left:4px solid var(--purple-dk);border-radius:8px;padding:16px 20px;}
+  .aer-tag{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--purple-dk);letter-spacing:0.06em;margin-bottom:7px;}
+  .devcard .qstem{font-size:14px;}
+
+  /* ===== CLOSING SLIDE ===== */
+  .closing-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;}
+  .closing-list li{display:flex;gap:14px;align-items:flex-start;font-size:15px;color:#DDE3D8;}
+  .closing-list .cnum{font-family:'IBM Plex Mono',monospace;color:var(--amber);font-size:13px;flex:0 0 auto;padding-top:2px;}
+
+  /* ===== NAV CONTROLS ===== */
+  .nav-controls{
+    position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+    display:flex;align-items:center;gap:14px;z-index:60;
+  }
+  .nav-btn{
+    width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.18);
+    background:rgba(255,255,255,0.06);color:#EDE7D8;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;transition:background 0.15s ease;
+  }
+  .nav-btn:hover{background:rgba(255,255,255,0.14);}
+  .dots{display:flex;gap:6px;}
+  .dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.25);cursor:pointer;transition:all 0.15s ease;}
+  .dot.active{background:var(--amber);width:16px;border-radius:4px;}
+  .counter{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#B7C9B4;min-width:44px;text-align:center;}
+  .progress{position:fixed;top:0;left:0;height:3px;background:var(--amber);z-index:70;transition:width 0.2s ease;}
+
+  @media (max-width:820px){
+    .slide{padding:26px 24px 22px;}
+    .slide-body{flex-direction:column;gap:14px;overflow-y:auto;}
+    .schema-col{flex:0 0 auto;max-height:42%;}
+    .legend-col{flex:1;}
+    .options{grid-template-columns:1fr;}
+    .dots{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="progressBar" style="width:0%;"></div>
+<div class="deck">
+  <div class="stage" id="stage">
+
+    <!-- 1 · PORTADA -->
+    <section class="slide dark active">
+      <div class="cover-flex">
+        <div class="kicker"><span class="dot"></span>Unidad 3 · Genética y Salud · OA2</div>
+        <h1>Del ADN al cromosoma</h1>
+        <p class="lead" style="margin-top:14px;">Organización y expresión de la información genética: ADN, histonas, nucleosomas, cromatina, replicación y transcripción.</p>
+        <div class="cover-tags">
+          <span class="htag">Ciencias de la Salud</span>
+          <span class="htag">4° Medio</span>
+          <span class="htag">Prof. Felipe Jiménez</span>
+        </div>
+      </div>
+      <div class="slide-foot"><span>01 / 21</span><span>CIENCIAS DE LA SALUD</span></div>
+    </section>
+
+    <!-- 2 · MAPA DE RUTA -->
+    <section class="slide light">
+      <div class="kicker"><span class="dot" style="background:var(--sage-dk);"></span>Índice</div>
+      <h2>Un mismo sistema: empaquetar y leer la información</h2>
+      <p class="lead">El ADN se organiza jerárquicamente para caber en el núcleo, y se copia y se lee mediante dos procesos distintos.</p>
+      <div class="slide-body">
+        <div class="schema-col">
+          <svg viewBox="0 0 620 300">
+            <rect x="255" y="10" width="110" height="42" rx="8" style="fill:var(--ink);"/>
+            <text x="310" y="36" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Sans';font-size:15px;font-weight:600;">ADN</text>
+
+            <path d="M300,52 C240,80 160,80 160,110" style="stroke:var(--sage-dk);stroke-width:2;fill:none;"/>
+            <path d="M320,52 C400,80 480,80 480,110" style="stroke:var(--teal-dk);stroke-width:2;fill:none;"/>
+
+            <text x="160" y="128" text-anchor="middle" style="fill:var(--sage-dk);font-family:'IBM Plex Mono';font-size:11px;letter-spacing:0.05em;">EMPAQUETAMIENTO</text>
+            <text x="480" y="128" text-anchor="middle" style="fill:var(--teal-dk);font-family:'IBM Plex Mono';font-size:11px;letter-spacing:0.05em;">FUNCIÓN</text>
+
+            <g style="font-family:'IBM Plex Sans';font-size:12.5px;">
+              <g class="rm-link" onclick="show(3)" style="cursor:pointer;"><rect x="60" y="150" width="100" height="34" rx="6" class="rm-box"/><text x="110" y="171" text-anchor="middle" class="rm-title">Histonas</text></g>
+              <g class="rm-link" onclick="show(4)" style="cursor:pointer;"><rect x="180" y="150" width="110" height="34" rx="6" class="rm-box"/><text x="235" y="171" text-anchor="middle" class="rm-title">Nucleosoma</text></g>
+              <g class="rm-link" onclick="show(6)" style="cursor:pointer;"><rect x="60" y="200" width="100" height="34" rx="6" class="rm-box"/><text x="110" y="221" text-anchor="middle" class="rm-title">Cromatina</text></g>
+              <g class="rm-link" onclick="show(5)" style="cursor:pointer;"><rect x="180" y="200" width="110" height="34" rx="6" class="rm-box"/><text x="235" y="221" text-anchor="middle" class="rm-title">Cromosoma</text></g>
+
+              <g class="rm-link" onclick="show(7)" style="cursor:pointer;"><rect x="430" y="150" width="110" height="34" rx="6" class="rm-box"/><text x="485" y="171" text-anchor="middle" class="rm-title">Replicación</text></g>
+              <g class="rm-link" onclick="show(9)" style="cursor:pointer;"><rect x="430" y="200" width="110" height="34" rx="6" class="rm-box"/><text x="485" y="221" text-anchor="middle" class="rm-title">Transcripción</text></g>
+            </g>
+            <g class="rm-link" onclick="show(2)" style="cursor:pointer;">
+              <rect x="255" y="10" width="110" height="42" rx="8" style="fill:transparent;"/>
+            </g>
+            <path d="M160,167 L180,167" style="stroke:var(--line);stroke-width:2;"/>
+            <path d="M110,184 L110,200" style="stroke:var(--line);stroke-width:2;"/>
+            <path d="M235,184 L235,200" style="stroke:var(--line);stroke-width:2;"/>
+            <path d="M485,184 L485,200" style="stroke:var(--line);stroke-width:2;"/>
+          </svg>
+        </div>
+        <div class="legend-col">
+          <ul class="legend-list">
+            <li><span class="num" style="background:var(--sage-dk);">1</span><span><b>Empaquetamiento</b> — cómo el ADN se compacta con ayuda de histonas hasta formar cromosomas (diapositivas 3–7).</span></li>
+            <li><span class="num" style="background:var(--teal-dk);">2</span><span><b>Función</b> — cómo el ADN se copia (replicación) y se lee para fabricar proteínas (transcripción), con un laboratorio interactivo (diapositivas 8–12).</span></li>
+            <li><span class="num" style="background:var(--purple-dk);">3</span><span><b>Síntesis y evaluación</b> — comparación final, preguntas de alternativas y de desarrollo (diapositivas 13–21).</span></li>
+          </ul>
+          <div class="fact-note">💡 Haz clic en cualquier recuadro del esquema para ir directo a esa sección.</div>
+        </div>
+      </div>
+      <div class="slide-foot"><span>02 / 21</span><span>ÍNDICE</span></div>
+    </section>
+
+    <!-- 3 · ADN ESTRUCTURA -->
+    <section class="slide light">
+      <div class="kicker"><span class="dot" style="background:var(--sage-dk);"></span>01 · Estructura</div>
+      <h2>ADN: del nucleótido a la doble hélice</h2>
+      <p class="lead">La unidad básica es el nucleótido; miles de ellos forman una hebra, y dos hebras complementarias forman la doble hélice.</p>
+      <div class="slide-body">
+        <div class="schema-col">
+          <svg viewBox="0 0 520 300">
+            <!-- nucleotide anatomy -->
+            <circle cx="55" cy="60" r="17" style="fill:var(--amber-dk);"/>
+            <text x="55" y="65" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:11px;">P</text>
+            <line x1="68" y1="72" x2="95" y2="98" style="stroke:var(--muted);stroke-width:1.6;"/>
+            <polygon points="95,78 118,98 108,124 82,124 72,98" style="fill:#DCE6D8;stroke:var(--sage-dk);stroke-width:1.6;"/>
+            <text x="95" y="104" text-anchor="middle" style="fill:var(--sage-dk);font-family:'IBM Plex Mono';font-size:9px;">desoxi-</text>
+            <text x="95" y="114" text-anchor="middle" style="fill:var(--sage-dk);font-family:'IBM Plex Mono';font-size:9px;">rribosa</text>
+            <line x1="95" y1="124" x2="95" y2="150" style="stroke:var(--muted);stroke-width:1.6;"/>
+            <rect x="62" y="150" width="66" height="40" rx="7" style="fill:#EADAF0;stroke:var(--purple-dk);stroke-width:1.6;"/>
+            <text x="95" y="174" text-anchor="middle" style="fill:var(--purple-dk);font-family:'IBM Plex Mono';font-size:9.5px;">Base</text>
+
+            <circle cx="30" cy="60" r="11" style="fill:var(--ink);"/><text x="30" y="64" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">1</text>
+            <circle cx="128" cy="98" r="11" style="fill:var(--ink);"/><text x="128" y="102" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">2</text>
+            <circle cx="140" cy="170" r="11" style="fill:var(--ink);"/><text x="140" y="174" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">3</text>
+
+            <text x="95" y="230" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:10px;">= 1 NUCLEÓTIDO</text>
+
+            <!-- helix -->
+            <path d="M230,10 C230,45 300,45 300,80 C300,115 230,115 230,150 C230,185 300,185 300,220 C300,255 230,255 230,290" style="stroke:var(--sage-dk);stroke-width:2.2;fill:none;"/>
+            <path d="M300,10 C300,45 230,45 230,80 C230,115 300,115 300,150 C300,185 230,185 230,220 C230,255 300,255 300,290" style="stroke:var(--amber-dk);stroke-width:2.2;fill:none;"/>
+
+            <line x1="230" y1="62" x2="300" y2="62" style="stroke:var(--line);stroke-width:2;"/>
+            <line x1="230" y1="97" x2="300" y2="97" style="stroke:var(--line);stroke-width:2;"/>
+            <line x1="230" y1="132" x2="300" y2="132" style="stroke:var(--line);stroke-width:2;"/>
+            <line x1="230" y1="202" x2="300" y2="202" style="stroke:var(--line);stroke-width:2;"/>
+            <line x1="230" y1="237" x2="300" y2="237" style="stroke:var(--line);stroke-width:2;"/>
+
+            <circle cx="265" cy="97" r="11" style="fill:var(--ink);"/><text x="265" y="101" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">4</text>
+            <circle cx="265" cy="202" r="11" style="fill:var(--ink);"/><text x="265" y="206" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">5</text>
+
+            <text x="222" y="16" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:10px;">5'</text>
+            <text x="303" y="16" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:10px;">3'</text>
+            <text x="222" y="298" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:10px;">3'</text>
+            <text x="303" y="298" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:10px;">5'</text>
+            <circle cx="380" cy="150" r="11" style="fill:var(--ink);"/><text x="380" y="154" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">6</text>
+            <text x="380" y="180" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:9.5px;">antiparalela</text>
+          </svg>
+        </div>
+        <div class="legend-col">
+          <ul class="legend-list">
+            <li><span class="num">1</span><span><b>Grupo fosfato</b> — carga negativa; forma enlaces fosfodiéster con el siguiente nucleótido.</span></li>
+            <li><span class="num">2</span><span><b>Desoxirribosa</b> — azúcar de 5 carbonos; el C3' y C5' quedan libres para unir al siguiente nucleótido.</span></li>
+            <li><span class="num">3</span><span><b>Base nitrogenada</b> — A, T, G o C; define la secuencia de información genética.</span></li>
+            <li><span class="num">4</span><span><b>Par A–T</b> — unidos por 2 puentes de hidrógeno.</span></li>
+            <li><span class="num">5</span><span><b>Par G–C</b> — unidos por 3 puentes de hidrógeno (más estable).</span></li>
+            <li><span class="num">6</span><span><b>Antiparalelidad</b> — una hebra corre 5'→3' y la complementaria 3'→5'. (Regla de Chargaff: %A=%T, %G=%C)</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="slide-foot"><span>03 / 21</span><span>OA2 · GENÉTICA Y SALUD</span></div>
+    </section>
+
+    <!-- 4 · HISTONAS -->
+    <section class="slide light">
+      <div class="kicker"><span class="dot" style="background:var(--amber-dk);"></span>02 · Empaquetamiento</div>
+      <h2>Histonas: las proteínas que empaquetan el ADN</h2>
+      <p class="lead">Proteínas básicas, con carga positiva, que atraen y organizan al ADN cargado negativamente.</p>
+      <div class="slide-body">
+        <div class="schema-col">
+          <svg viewBox="0 0 460 300">
+            <ellipse cx="230" cy="150" rx="95" ry="70" style="fill:none;stroke:var(--sage-dk);stroke-width:2;stroke-dasharray:5 4;"/>
+            <circle cx="185" cy="115" r="24" style="fill:var(--amber);opacity:0.9;"/><text x="185" y="120" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:11px;">H3</text>
+            <circle cx="275" cy="115" r="24" style="fill:var(--amber);opacity:0.75;"/><text x="275" y="120" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:11px;">H4</text>
+            <circle cx="185" cy="185" r="24" style="fill:var(--amber-dk);opacity:0.9;"/><text x="185" y="190" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">H2A</text>
+            <circle cx="275" cy="185" r="24" style="fill:var(--amber-dk);opacity:0.75;"/><text x="275" y="190" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">H2B</text>
+            <circle cx="230" cy="150" r="16" style="fill:var(--ink);"/><text x="230" y="155" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:11px;">×2</text>
+
+            <path d="M100,150 A130 90 0 0 1 360,150" style="stroke:var(--sage-dk);stroke-width:3;fill:none;"/>
+            <text x="230" y="55" text-anchor="middle" style="fill:var(--sage-dk);font-family:'IBM Plex Mono';font-size:10px;">ADN (carga −)</text>
+
+            <circle cx="90" cy="155" r="10" style="fill:var(--teal-dk);"/><text x="90" y="159" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:9px;">H1</text>
+
+            <circle cx="60" cy="230" r="11" style="fill:var(--ink);"/><text x="60" y="234" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">5</text>
+            <circle cx="390" cy="230" r="11" style="fill:var(--ink);"/><text x="390" y="234" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">6</text>
+            <text x="60" y="255" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:9px;">linker</text>
+            <text x="390" y="255" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:9px;">+ + +</text>
+          </svg>
+        </div>
+        <div class="legend-col">
+          <ul class="legend-list">
+            <li><span class="num">1–4</span><span>Cuatro histonas nucleares —<b> H3, H4, H2A, H2B</b> — forman el octámero: 2 copias de cada una.</span></li>
+            <li><span class="num">5</span><span><b>H1</b> — histona "linker"; se ubica fuera del octámero y estabiliza el ADN entre nucleosomas.</span></li>
+            <li><span class="num">6</span><span>Carga <b>positiva</b> (lisina y arginina) — atrae electrostáticamente al ADN, de carga negativa.</span></li>
+          </ul>
+          <div class="fact-note">Las modificaciones químicas de las histonas —acetilación, metilación— regulan qué tan compacto está el ADN y, por tanto, qué genes pueden leerse.</div>
+        </div>
+      </div>
+      <div class="slide-foot"><span>04 / 21</span><span>OA2 · GENÉTICA Y SALUD</span></div>
+    </section>
+
+    <!-- 5 · NUCLEOSOMA -->
+    <section class="slide light">
+      <div class="kicker"><span class="dot" style="background:var(--teal-dk);"></span>02 · Empaquetamiento</div>
+      <h2>Nucleosoma: la unidad básica de empaquetamiento</h2>
+      <p class="lead">ADN enrollado alrededor de un octámero de histonas — la estructura "cuentas en un collar".</p>
+      <div class="slide-body">
+        <div class="schema-col">
+          <svg viewBox="0 0 520 260">
+            <path d="M20,130 Q60,60 100,130 Q140,200 180,130 Q220,60 260,130 Q300,200 340,130 Q380,60 420,130 Q460,200 500,130" style="stroke:var(--sage-dk);stroke-width:2.4;fill:none;"/>
+            <circle cx="100" cy="130" r="26" style="fill:var(--teal-dk);opacity:0.9;"/>
+            <circle cx="260" cy="130" r="26" style="fill:var(--teal-dk);opacity:0.9;"/>
+            <circle cx="420" cy="130" r="26" style="fill:var(--teal-dk);opacity:0.9;"/>
+
+            <circle cx="100" cy="90" r="11" style="fill:var(--ink);"/><text x="100" y="94" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">1</text>
+            <circle cx="180" cy="145" r="11" style="fill:var(--ink);"/><text x="180" y="149" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">2</text>
+            <circle cx="220" cy="70" r="11" style="fill:var(--ink);"/><text x="220" y="74" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">3</text>
+            <circle cx="60" cy="150" r="9" style="fill:var(--purple-dk);"/>
+            <text x="60" y="175" text-anchor="middle" style="fill:var(--purple-dk);font-family:'IBM Plex Mono';font-size:9px;">H1</text>
+            <circle cx="60" cy="150" r="9" style="fill:none;"/>
+            <circle cx="60" cy="150" r="0"/>
+            <circle cx="60" cy="150" r="11" style="fill:var(--ink);opacity:0;"/>
+            <circle cx="30" cy="150" r="11" style="fill:var(--ink);"/><text x="30" y="154" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">4</text>
+
+            <text x="260" y="225" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:10.5px;">"CUENTAS EN UN COLLAR" · ~10 nm</text>
+          </svg>
+        </div>
+        <div class="legend-col">
+          <ul class="legend-list">
+            <li><span class="num">1</span><span><b>Octámero de histonas</b> — el "cordón" de cada cuenta.</span></li>
+            <li><span class="num">2</span><span><b>ADN enrollado</b> — ~147 pares de bases, en ~1,65 vueltas alrededor del octámero.</span></li>
+            <li><span class="num">3</span><span><b>ADN de enlace (linker)</b> — 20 a 80 pares de bases entre un nucleosoma y el siguiente.</span></li>
+            <li><span class="num">4</span><span><b>H1</b> — estabiliza el ADN de enlace, favoreciendo el siguiente nivel de compactación.</span></li>
+          </ul>
+          <div class="fact-note">Este primer nivel de empaquetamiento reduce la longitud efectiva del ADN entre 6 y 7 veces.</div>
+        </div>
+      </div>
+      <div class="slide-foot"><span>05 / 21</span><span>OA2 · GENÉTICA Y SALUD</span></div>
+    </section>
+
+    <!-- 6 · NIVELES DE COMPACTACIÓN -->
+    <section class="slide light" id="slide-compaction">
+      <div class="kicker"><span class="dot" style="background:var(--purple-dk);"></span>02 · Empaquetamiento</div>
+      <h2>Niveles de compactación de la cromatina</h2>
+      <p class="lead">De la doble hélice desnuda al cromosoma metafásico: haz clic en cada nivel o en su descripción.</p>
+      <div class="slide-body">
+        <div class="schema-col">
+          <svg viewBox="0 0 560 280">
+            <line x1="40" y1="240" x2="520" y2="240" style="stroke:var(--line);stroke-width:2;"/>
+            <!-- level icons along an ascending staircase -->
+            <g class="marker-group" data-n="1">
+              <line x1="70" y1="240" x2="70" y2="210" style="stroke:var(--line);stroke-width:1.4;"/>
+              <path d="M55,190 C55,200 85,200 85,210" style="stroke:var(--sage-dk);stroke-width:1.8;fill:none;"/>
+              <circle cx="70" cy="222" r="11" style="fill:var(--ink);"/><text x="70" y="226" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:9.5px;">1</text>
+              <text x="70" y="180" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:9px;">2 nm</text>
+            </g>
+            <g class="marker-group" data-n="2">
+              <line x1="160" y1="240" x2="160" y2="190" style="stroke:var(--line);stroke-width:1.4;"/>
+              <circle cx="160" cy="175" r="14" style="fill:var(--teal-dk);"/>
+              <circle cx="160" cy="200" r="11" style="fill:var(--ink);"/><text x="160" y="204" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:9.5px;">2</text>
+              <text x="160" y="150" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:9px;">11 nm</text>
+            </g>
+            <g class="marker-group" data-n="3">
+              <line x1="250" y1="240" x2="250" y2="160" style="stroke:var(--line);stroke-width:1.4;"/>
+              <ellipse cx="250" cy="140" rx="22" ry="15" style="fill:var(--purple-dk);opacity:0.85;"/>
+              <circle cx="250" cy="175" r="11" style="fill:var(--ink);"/><text x="250" y="179" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:9.5px;">3</text>
+              <text x="250" y="115" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:9px;">30 nm</text>
+            </g>
+            <g class="marker-group" data-n="4">
+              <line x1="345" y1="240" x2="345" y2="125" style="stroke:var(--line);stroke-width:1.4;"/>
+              <path d="M325,110 q20,-25 40,0 q20,25 -0,25 q-40,0 -40,-25" style="fill:var(--amber-dk);opacity:0.85;"/>
+              <circle cx="345" cy="140" r="11" style="fill:var(--ink);"/><text x="345" y="144" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:9.5px;">4</text>
+              <text x="345" y="90" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:9px;">300 nm</text>
+            </g>
+            <g class="marker-group" data-n="5">
+              <line x1="435" y1="240" x2="435" y2="90" style="stroke:var(--line);stroke-width:1.4;"/>
+              <rect x="418" y="60" width="34" height="45" rx="10" style="fill:var(--teal-dk);opacity:0.9;"/>
+              <circle cx="435" cy="100" r="11" style="fill:var(--ink);"/><text x="435" y="104" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:9.5px;">5</text>
+              <text x="435" y="50" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:9px;">700 nm</text>
+            </g>
+            <g class="marker-group" data-n="6">
+              <line x1="500" y1="240" x2="500" y2="55" style="stroke:var(--line);stroke-width:1.4;"/>
+              <path d="M500,20 L500,50 M500,50 L482,30 M500,50 L518,30 M500,50 L482,75 M500,50 L518,75" style="stroke:var(--purple-dk);stroke-width:4;stroke-linecap:round;"/>
+              <circle cx="500" cy="90" r="11" style="fill:var(--ink);"/><text x="500" y="94" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:9.5px;">6</text>
+              <text x="500" y="15" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:9px;">1400 nm</text>
+            </g>
+          </svg>
+        </div>
+        <div class="legend-col">
+          <ul class="legend-list">
+            <li data-n="1"><span class="num">1</span><span><b>ADN desnudo</b> — doble hélice libre (2 nm).</span></li>
+            <li data-n="2"><span class="num">2</span><span><b>Nucleosoma</b> — "collar de cuentas" (11 nm).</span></li>
+            <li data-n="3"><span class="num">3</span><span><b>Fibra de 30 nm</b> — solenoide estabilizado por H1.</span></li>
+            <li data-n="4"><span class="num">4</span><span><b>Asas cromatínicas</b> — ancladas a un andamiaje proteico (300 nm).</span></li>
+            <li data-n="5"><span class="num">5</span><span><b>Cromátida condensada</b> — mediada por condensinas (700 nm).</span></li>
+            <li data-n="6"><span class="num">6</span><span><b>Cromosoma metafásico</b> — máxima compactación, visible al microscopio óptico (1400 nm).</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="slide-foot"><span>06 / 21</span><span>OA2 · GENÉTICA Y SALUD</span></div>
+    </section>
+
+    <!-- 7 · EU/HETEROCROMATINA -->
+    <section class="slide light">
+      <div class="kicker"><span class="dot" style="background:var(--purple-dk);"></span>02 · Empaquetamiento</div>
+      <h2>Eucromatina y heterocromatina</h2>
+      <p class="lead">El mismo ADN, dos estados de compactación — y una vía de regulación epigenética.</p>
+      <div class="slide-body">
+        <div class="schema-col">
+          <svg viewBox="0 0 520 260">
+            <text x="130" y="30" text-anchor="middle" style="fill:var(--sage-dk);font-family:'IBM Plex Mono';font-size:11px;letter-spacing:0.04em;">EUCROMATINA</text>
+            <path d="M40,90 Q70,60 100,90 Q130,120 160,90 Q190,60 220,90" style="stroke:var(--sage-dk);stroke-width:3;fill:none;"/>
+            <circle cx="70" cy="80" r="10" style="fill:var(--sage);"/>
+            <circle cx="130" cy="100" r="10" style="fill:var(--sage);"/>
+            <circle cx="190" cy="80" r="10" style="fill:var(--sage);"/>
+            <circle cx="130" cy="140" r="11" style="fill:var(--ink);"/><text x="130" y="144" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">1</text>
+            <text x="130" y="170" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:9px;">laxa · genes activos</text>
+
+            <line x1="260" y1="20" x2="260" y2="240" style="stroke:var(--line);stroke-width:1.4;stroke-dasharray:4 4;"/>
+
+            <text x="390" y="30" text-anchor="middle" style="fill:var(--purple-dk);font-family:'IBM Plex Mono';font-size:11px;letter-spacing:0.04em;">HETEROCROMATINA</text>
+            <path d="M330,90 q15,-20 30,0 q15,20 30,0 q15,-20 30,0 q15,20 30,0" style="stroke:var(--purple-dk);stroke-width:3;fill:none;"/>
+            <circle cx="345" cy="85" r="9" style="fill:var(--purple);"/>
+            <circle cx="375" cy="95" r="9" style="fill:var(--purple);"/>
+            <circle cx="405" cy="85" r="9" style="fill:var(--purple);"/>
+            <circle cx="435" cy="95" r="9" style="fill:var(--purple);"/>
+            <circle cx="390" cy="140" r="11" style="fill:var(--ink);"/><text x="390" y="144" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">2</text>
+            <text x="390" y="170" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:9px;">compacta · genes silenciados</text>
+
+            <circle cx="260" cy="210" r="11" style="fill:var(--ink);"/><text x="260" y="214" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">3</text>
+            <text x="260" y="235" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:9px;">HAT / HDAC / metiltransferasas</text>
+          </svg>
+        </div>
+        <div class="legend-col">
+          <ul class="legend-list">
+            <li><span class="num">1</span><span><b>Eucromatina</b> — fibra laxa; accesible a la ARN polimerasa; asociada a marcas de acetilación.</span></li>
+            <li><span class="num">2</span><span><b>Heterocromatina</b> — fibra muy compacta; genes silenciados; asociada a metilación de histonas y de ADN.</span></li>
+            <li><span class="num">3</span><span><b>Enzimas reguladoras</b> — HAT añade acetilos (relaja), HDAC los retira (compacta), metiltransferasas añaden metilos.</span></li>
+          </ul>
+          <div class="fact-note">Conexión con nuestros casos: la alimentación de Sofía, el estrés crónico de Matías o el entrenamiento sistemático de Kipchoge pueden inducir marcas epigenéticas que cambian el estado de la cromatina — sin alterar la secuencia del ADN.</div>
+        </div>
+      </div>
+      <div class="slide-foot"><span>07 / 21</span><span>OA2 · GENÉTICA Y SALUD</span></div>
+    </section>
+
+    <!-- 8 · REPLICACIÓN SEMICONSERVATIVA -->
+    <section class="slide light">
+      <div class="kicker"><span class="dot" style="background:var(--amber-dk);"></span>03 · Replicación</div>
+      <h2>Replicación: un modelo semiconservativo</h2>
+      <p class="lead">Cada molécula hija conserva una hebra molde original y sintetiza una hebra nueva.</p>
+      <div class="slide-body">
+        <div class="schema-col">
+          <svg viewBox="0 0 480 260">
+            <line x1="140" y1="20" x2="140" y2="90" style="stroke:var(--ink);stroke-width:5;"/>
+            <line x1="160" y1="20" x2="160" y2="90" style="stroke:var(--ink);stroke-width:5;"/>
+            <circle cx="150" cy="55" r="11" style="fill:var(--ink);"/><text x="150" y="59" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">1</text>
+            <text x="150" y="15" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:9.5px;">ADN parental</text>
+
+            <path d="M150,90 L80,140 M150,90 L220,140" style="stroke:var(--line);stroke-width:1.6;"/>
+
+            <line x1="55" y1="150" x2="55" y2="230" style="stroke:var(--ink);stroke-width:5;"/>
+            <line x1="75" y1="150" x2="75" y2="230" style="stroke:var(--amber-dk);stroke-width:5;"/>
+            <circle cx="65" cy="230" r="11" style="fill:var(--ink);"/><text x="65" y="234" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">3</text>
+
+            <line x1="215" y1="150" x2="215" y2="230" style="stroke:var(--ink);stroke-width:5;"/>
+            <line x1="235" y1="150" x2="235" y2="230" style="stroke:var(--amber-dk);stroke-width:5;"/>
+            <circle cx="225" cy="230" r="11" style="fill:var(--ink);"/><text x="225" y="234" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">4</text>
+
+            <circle cx="75" cy="190" r="10" style="fill:var(--ink);opacity:0;"/>
+            <circle cx="30" cy="190" r="11" style="fill:var(--ink);"/><text x="30" y="194" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">2</text>
+            <text x="30" y="215" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:8.5px;">nueva</text>
+
+            <text x="140" y="255" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:10px;">2 MOLÉCULAS HIJAS, CADA UNA MITAD ORIGINAL + MITAD NUEVA</text>
+          </svg>
+        </div>
+        <div class="legend-col">
+          <ul class="legend-list">
+            <li><span class="num">1</span><span><b>ADN parental</b> — las dos hebras originales se separan.</span></li>
+            <li><span class="num">2</span><span><b>Hebra nueva</b> — sintetizada usando cada hebra original como molde.</span></li>
+            <li><span class="num">3</span><span><b>Molécula hija 1</b> — hebra molde + hebra nueva.</span></li>
+            <li><span class="num">4</span><span><b>Molécula hija 2</b> — hebra molde + hebra nueva.</span></li>
+          </ul>
+          <div class="fact-note">Demostrado por Meselson y Stahl (1958) marcando ADN con isótopos de nitrógeno (¹⁵N/¹⁴N). Ocurre en la fase S del ciclo celular; en eucariontes, a partir de múltiples orígenes de replicación simultáneos.</div>
+        </div>
+      </div>
+      <div class="slide-foot"><span>08 / 21</span><span>OA2 · GENÉTICA Y SALUD</span></div>
+    </section>
+
+    <!-- 9 · MAQUINARIA ENZIMÁTICA -->
+    <section class="slide light" id="slide-enzimas">
+      <div class="kicker"><span class="dot" style="background:var(--amber-dk);"></span>03 · Replicación</div>
+      <h2>La maquinaria enzimática de la horquilla</h2>
+      <p class="lead">Siete actores moleculares trabajan de forma coordinada — haz clic en cada uno o en su descripción.</p>
+      <div class="slide-body">
+        <div class="schema-col">
+          <svg viewBox="0 0 560 260">
+            <line x1="20" y1="130" x2="140" y2="130" style="stroke:var(--ink);stroke-width:5;"/>
+            <line x1="20" y1="145" x2="140" y2="145" style="stroke:var(--ink);stroke-width:5;"/>
+            <g class="marker-group" data-n="1"><circle cx="90" cy="105" r="11" style="fill:var(--ink);"/><text x="90" y="109" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">1</text></g>
+
+            <path d="M140,137 L175,90 M140,137 L175,185" style="stroke:var(--muted);stroke-width:1.4;stroke-dasharray:3 3;"/>
+            <g class="marker-group" data-n="2"><circle cx="150" cy="137" r="11" style="fill:var(--ink);"/><text x="150" y="141" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">2</text></g>
+
+            <line x1="175" y1="90" x2="400" y2="90" style="stroke:var(--amber-dk);stroke-width:5;"/>
+            <g class="marker-group" data-n="5"><circle cx="300" cy="65" r="11" style="fill:var(--ink);"/><text x="300" y="69" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">5</text></g>
+            <text x="300" y="112" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:8.5px;">hebra líder — continua →</text>
+
+            <line x1="175" y1="185" x2="250" y2="185" style="stroke:var(--amber-dk);stroke-width:5;"/>
+            <line x1="270" y1="185" x2="330" y2="185" style="stroke:var(--amber-dk);stroke-width:5;"/>
+            <line x1="350" y1="185" x2="400" y2="185" style="stroke:var(--amber-dk);stroke-width:5;"/>
+            <g class="marker-group" data-n="4"><circle cx="260" cy="205" r="11" style="fill:var(--ink);"/><text x="260" y="209" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">4</text></g>
+            <g class="marker-group" data-n="6"><circle cx="300" cy="160" r="11" style="fill:var(--ink);"/><text x="300" y="164" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">6</text></g>
+            <g class="marker-group" data-n="7"><circle cx="340" cy="205" r="11" style="fill:var(--ink);"/><text x="340" y="209" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">7</text></g>
+            <text x="300" y="228" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:8.5px;">hebra retrasada — fragmentos de Okazaki</text>
+
+            <circle cx="175" cy="137" r="9" style="fill:var(--teal-dk);opacity:0.8;"/>
+            <g class="marker-group" data-n="3"><circle cx="200" cy="137" r="11" style="fill:var(--ink);"/><text x="200" y="141" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">3</text></g>
+          </svg>
+        </div>
+        <div class="legend-col" style="font-size:12px;">
+          <ul class="legend-list">
+            <li data-n="1"><span class="num">1</span><span><b>Topoisomerasa</b> — alivia el superenrollamiento por delante de la horquilla.</span></li>
+            <li data-n="2"><span class="num">2</span><span><b>Helicasa</b> — rompe los puentes de hidrógeno y abre la doble hélice.</span></li>
+            <li data-n="3"><span class="num">3</span><span><b>Proteínas SSB</b> — estabilizan las hebras separadas, evitando que se reasocien.</span></li>
+            <li data-n="4"><span class="num">4</span><span><b>Primasa</b> — sintetiza un cebador de ARN para iniciar la síntesis.</span></li>
+            <li data-n="5"><span class="num">5</span><span><b>ADN polimerasa III</b> — síntesis continua 5'→3' de la hebra líder.</span></li>
+            <li data-n="6"><span class="num">6</span><span><b>ADN polimerasa III</b> — síntesis discontinua de la hebra retrasada (fragmentos de Okazaki).</span></li>
+            <li data-n="7"><span class="num">7</span><span><b>ADN ligasa</b> — sella los cortes entre fragmentos con enlaces fosfodiéster.</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="slide-foot"><span>09 / 21</span><span>OA2 · GENÉTICA Y SALUD</span></div>
+    </section>
+
+    <!-- 10 · TRANSCRIPCIÓN -->
+    <section class="slide light">
+      <div class="kicker"><span class="dot" style="background:var(--teal-dk);"></span>04 · Transcripción</div>
+      <h2>Transcripción: iniciación, elongación y terminación</h2>
+      <p class="lead">La ARN polimerasa lee la hebra molde y sintetiza una molécula de ARNm complementaria.</p>
+      <div class="slide-body">
+        <div class="schema-col">
+          <svg viewBox="0 0 560 240">
+            <line x1="20" y1="140" x2="540" y2="140" style="stroke:var(--sage-dk);stroke-width:4;"/>
+            <line x1="20" y1="120" x2="540" y2="120" style="stroke:var(--amber-dk);stroke-width:4;"/>
+            <rect x="40" y="105" width="70" height="20" rx="4" style="fill:none;stroke:var(--purple-dk);stroke-width:1.6;"/>
+            <circle cx="75" cy="90" r="11" style="fill:var(--ink);"/><text x="75" y="94" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">1</text>
+
+            <ellipse cx="230" cy="130" rx="34" ry="26" style="fill:var(--teal-dk);opacity:0.85;"/>
+            <circle cx="230" cy="100" r="11" style="fill:var(--ink);"/><text x="230" y="104" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">2</text>
+
+            <circle cx="120" cy="160" r="11" style="fill:var(--ink);"/><text x="120" y="164" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">3</text>
+            <text x="120" y="182" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:8.5px;">molde 3'→5'</text>
+            <circle cx="120" cy="105" r="11" style="fill:var(--ink);"/><text x="120" y="109" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">4</text>
+            <text x="120" y="90" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:8.5px;">codificante</text>
+
+            <path d="M264,125 C300,95 340,95 500,95" style="stroke:var(--purple),stroke-width:3;stroke:var(--purple);stroke-width:3;fill:none;stroke-dasharray:6 4;"/>
+            <circle cx="400" cy="95" r="11" style="fill:var(--ink);"/><text x="400" y="99" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">5</text>
+            <text x="400" y="78" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:8.5px;">ARNm naciente 5'→3'</text>
+
+            <rect x="500" y="130" width="30" height="18" rx="4" style="fill:none;stroke:var(--muted);stroke-width:1.4;"/>
+            <circle cx="515" cy="165" r="11" style="fill:var(--ink);"/><text x="515" y="169" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">6</text>
+          </svg>
+        </div>
+        <div class="legend-col" style="font-size:12px;">
+          <ul class="legend-list">
+            <li><span class="num">1</span><span><b>Promotor</b> — sitio de unión de la ARN polimerasa (p. ej., caja TATA).</span></li>
+            <li><span class="num">2</span><span><b>ARN polimerasa</b> — en eucariontes, la ARN pol II transcribe los genes que codifican ARNm.</span></li>
+            <li><span class="num">3</span><span><b>Hebra molde</b> (antisentido) — se lee en sentido 3'→5'.</span></li>
+            <li><span class="num">4</span><span><b>Hebra codificante</b> (sentido) — misma secuencia que el ARNm, salvo T por U.</span></li>
+            <li><span class="num">5</span><span><b>ARNm naciente</b> — sintetizado 5'→3', complementario a la hebra molde.</span></li>
+            <li><span class="num">6</span><span><b>Terminador</b> — señal que libera el ARNm y la ARN polimerasa.</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="slide-foot"><span>10 / 21</span><span>OA2 · GENÉTICA Y SALUD</span></div>
+    </section>
+
+    <!-- 11 · MADURACIÓN ARNm -->
+    <section class="slide light">
+      <div class="kicker"><span class="dot" style="background:var(--teal-dk);"></span>04 · Transcripción</div>
+      <h2>Maduración del ARNm: splicing, caperuza y cola poli-A</h2>
+      <p class="lead">El pre-ARNm se procesa en el núcleo antes de convertirse en ARNm maduro.</p>
+      <div class="slide-body">
+        <div class="schema-col">
+          <svg viewBox="0 0 560 240">
+            <rect x="40" y="40" width="60" height="20" rx="3" style="fill:var(--sage-dk);"/>
+            <line x1="100" y1="50" x2="150" y2="50" style="stroke:var(--muted);stroke-width:3;"/>
+            <rect x="150" y="40" width="70" height="20" rx="3" style="fill:var(--sage-dk);"/>
+            <line x1="220" y1="50" x2="270" y2="50" style="stroke:var(--muted);stroke-width:3;"/>
+            <rect x="270" y="40" width="55" height="20" rx="3" style="fill:var(--sage-dk);"/>
+            <circle cx="70" cy="25" r="11" style="fill:var(--ink);"/><text x="70" y="29" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">1</text>
+            <circle cx="125" cy="65" r="11" style="fill:var(--ink);"/><text x="125" y="69" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">2</text>
+            <text x="180" y="90" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:9px;">pre-ARNm</text>
+
+            <path d="M180,70 L180,110" style="stroke:var(--line);stroke-width:1.6;"/>
+            <ellipse cx="180" cy="130" rx="40" ry="20" style="fill:var(--purple-dk);opacity:0.4;"/>
+            <circle cx="180" cy="130" r="11" style="fill:var(--ink);"/><text x="180" y="134" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">3</text>
+
+            <path d="M180,150 L180,185" style="stroke:var(--line);stroke-width:1.6;"/>
+
+            <polygon points="60,200 75,190 90,200 90,210 60,210" style="fill:var(--amber-dk);"/>
+            <circle cx="75" cy="180" r="11" style="fill:var(--ink);"/><text x="75" y="184" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">4</text>
+
+            <rect x="100" y="200" width="50" height="18" rx="3" style="fill:var(--sage-dk);"/>
+            <rect x="155" y="200" width="45" height="18" rx="3" style="fill:var(--sage-dk);"/>
+            <text x="150" y="230" text-anchor="middle" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:9px;">ARNm maduro</text>
+            <circle cx="150" cy="180" r="11" style="fill:var(--ink);"/><text x="150" y="184" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">6</text>
+
+            <text x="230" y="212" style="fill:var(--muted);font-family:'IBM Plex Mono';font-size:11px;">AAAAA...</text>
+            <circle cx="290" cy="209" r="11" style="fill:var(--ink);"/><text x="290" y="213" text-anchor="middle" style="fill:#fff;font-family:'IBM Plex Mono';font-size:10px;">5</text>
+          </svg>
+        </div>
+        <div class="legend-col" style="font-size:12px;">
+          <ul class="legend-list">
+            <li><span class="num">1</span><span><b>Exones</b> — secuencias codificantes que se conservan en el ARNm maduro.</span></li>
+            <li><span class="num">2</span><span><b>Intrones</b> — secuencias no codificantes que se eliminan.</span></li>
+            <li><span class="num">3</span><span><b>Spliceosoma</b> — complejo de snRNPs que reconoce los bordes GU–AG e corta/empalma.</span></li>
+            <li><span class="num">4</span><span><b>Caperuza 5'</b> (7-metilguanosina) — protege el ARNm y es reconocida por el ribosoma.</span></li>
+            <li><span class="num">5</span><span><b>Cola poli-A</b> (~200 adeninas) — aporta estabilidad y favorece la traducción.</span></li>
+            <li><span class="num">6</span><span><b>ARNm maduro</b> — sale del núcleo y es traducido en el citoplasma.</span></li>
+          </ul>
+          <div class="fact-note">El splicing alternativo permite obtener distintas proteínas a partir de un mismo gen, combinando exones de diferentes formas.</div>
+        </div>
+      </div>
+      <div class="slide-foot"><span>11 / 21</span><span>OA2 · GENÉTICA Y SALUD</span></div>
+    </section>
+
+    <!-- 12 · LABORATORIO PHET -->
+    <section class="slide light">
+      <div class="kicker"><span class="dot" style="background:var(--teal-dk);"></span>04 · Transcripción · Laboratorio interactivo</div>
+      <h2>Simulador: Gene Expression Essentials</h2>
+      <p class="lead">Manipula tú mismo la ARN polimerasa, los factores de transcripción y el ribosoma para ver la expresión génica en acción.</p>
+      <div class="slide-body">
+        <div class="schema-col">
+          <iframe
+            src="https://phet.colorado.edu/sims/html/gene-expression-essentials/latest/gene-expression-essentials_all.html"
+            title="Gene Expression Essentials — PhET Interactive Simulations"
+            allowfullscreen
+            loading="lazy">
+          </iframe>
+        </div>
+        <div class="legend-col">
+          <ul class="legend-list">
+            <li><span class="num" style="background:var(--sage-dk);">1</span><span>En la pestaña <b>Transcripción</b>, arrastra la ARN polimerasa hacia el promotor y observa cómo avanza sintetizando el ARNm.</span></li>
+            <li><span class="num" style="background:var(--amber-dk);">2</span><span>Cambia a <b>Traducción</b>: agrega un ribosoma y mira cómo lee el ARNm para ensamblar la proteína, aminoácido por aminoácido.</span></li>
+            <li><span class="num" style="background:var(--purple-dk);">3</span><span>Explora <b>Expresión génica múltiple</b>: activa o inhibe genes con factores de transcripción y compara la producción de proteínas.</span></li>
+          </ul>
+          <div class="justify-note">✏️ Anota en tu cuaderno: ¿qué ocurre con la producción de proteína si retiras la ARN polimerasa a mitad de la transcripción?</div>
+          <a href="https://phet.colorado.edu/sims/html/gene-expression-essentials/latest/gene-expression-essentials_all.html" target="_blank" rel="noopener noreferrer" class="open-sim-link">Abrir el simulador en una pestaña nueva ↗</a>
+          <div class="fact-note">Simulación desarrollada por PhET Interactive Simulations, Universidad de Colorado Boulder.</div>
+        </div>
+      </div>
+      <div class="slide-foot"><span>12 / 21</span><span>LABORATORIO INTERACTIVO</span></div>
+    </section>
+
+    <!-- 13 · COMPARACIÓN -->
+    <section class="slide light">
+      <div class="kicker"><span class="dot" style="background:var(--ink);"></span>Síntesis</div>
+      <h2>Replicación vs. transcripción</h2>
+      <p class="lead">Dos procesos que usan al ADN como molde, con propósitos muy distintos.</p>
+      <div class="slide-body" style="align-items:center;">
+        <table class="cmp">
+          <thead><tr><th></th><th class="tag-repl">Replicación</th><th class="tag-trans">Transcripción</th></tr></thead>
+          <tbody>
+            <tr><td>Molde</td><td>Ambas hebras de ADN</td><td>Una hebra de ADN (molde)</td></tr>
+            <tr><td>Enzima principal</td><td>ADN polimerasa</td><td>ARN polimerasa</td></tr>
+            <tr><td>Producto</td><td>Dos moléculas de ADN idénticas</td><td>Una molécula de ARNm</td></tr>
+            <tr><td>Momento</td><td>Fase S del ciclo celular</td><td>Continuamente, según necesidad celular</td></tr>
+            <tr><td>Extensión</td><td>Todo el genoma</td><td>Un gen (o unos pocos)</td></tr>
+            <tr><td>Corrección de errores</td><td>Alta (exonucleasa 3'→5')</td><td>Menor que en replicación</td></tr>
+            <tr><td>Propósito</td><td>Perpetuar la información genética</td><td>Expresar la información genética</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="slide-foot"><span>13 / 21</span><span>OA2 · GENÉTICA Y SALUD</span></div>
+    </section>
+
+    <!-- 13 · MC I -->
+    <section class="slide light">
+      <div class="kicker"><span class="dot" style="background:var(--ink);"></span>Evaluación formativa · Haz clic en tu respuesta</div>
+      <h2>Preguntas de alternativas — I</h2>
+      <div class="qgrid">
+        <div class="qcard">
+          <div class="qmeta"><span class="pill pill-oa">OA2</span><span class="pill pill-recordar">Recordar</span></div>
+          <div class="qstem"><b>1.</b>¿Cuál es la unidad básica de empaquetamiento del ADN en la célula eucarionte?</div>
+          <ul class="options">
+            <li data-correct="false"><span class="letter">a)</span>Cromosoma</li>
+            <li data-correct="true"><span class="letter">b)</span>Nucleosoma</li>
+            <li data-correct="false"><span class="letter">c)</span>Histona H1</li>
+            <li data-correct="false"><span class="letter">d)</span>Cromátida</li>
+          </ul>
+          <div class="justify-note">✏️ Justifica tu elección y anótala en tu cuaderno.</div>
+          <div class="hint"><b>Respuesta: b.</b> El nucleosoma es la unidad estructural mínima de empaquetamiento.</div>
+        </div>
+        <div class="qcard">
+          <div class="qmeta"><span class="pill pill-oa">OA2</span><span class="pill pill-comprender">Comprender</span></div>
+          <div class="qstem"><b>2.</b>¿Por qué las histonas se unen fuertemente al ADN?</div>
+          <ul class="options">
+            <li data-correct="false"><span class="letter">a)</span>Ambas moléculas tienen carga negativa</li>
+            <li data-correct="true"><span class="letter">b)</span>Las histonas son básicas y positivas; el ADN es negativo</li>
+            <li data-correct="false"><span class="letter">c)</span>El ADN pierde carga al replicarse</li>
+            <li data-correct="false"><span class="letter">d)</span>Las histonas contienen fosfato</li>
+          </ul>
+          <div class="justify-note">✏️ Justifica tu elección y anótala en tu cuaderno.</div>
+          <div class="hint"><b>Respuesta: b.</b> La lisina y arginina dan carga positiva a las histonas, permitiendo la atracción con el ADN.</div>
+        </div>
+        <div class="qcard">
+          <div class="qmeta"><span class="pill pill-oa">OA2</span><span class="pill pill-analizar">Analizar</span></div>
+          <div class="qstem"><b>3.</b>Una región de cromatina muy compacta no se transcribe. ¿Cómo se llama y por qué?</div>
+          <ul class="options">
+            <li data-correct="false"><span class="letter">a)</span>Eucromatina; accesible a la ARN pol</li>
+            <li data-correct="true"><span class="letter">b)</span>Heterocromatina; su compactación impide el acceso</li>
+            <li data-correct="false"><span class="letter">c)</span>Nucleosoma sin histonas</li>
+            <li data-correct="false"><span class="letter">d)</span>Cromátida en replicación</li>
+          </ul>
+          <div class="justify-note">✏️ Justifica tu elección y anótala en tu cuaderno.</div>
+          <div class="hint"><b>Respuesta: b.</b> La heterocromatina bloquea físicamente el acceso de la maquinaria de transcripción.</div>
+        </div>
+      </div>
+      <div class="slide-foot"><span>14 / 21</span><span>PREGUNTAS DE ALTERNATIVAS</span></div>
+    </section>
+
+    <!-- 14 · MC II -->
+    <section class="slide light">
+      <div class="kicker"><span class="dot" style="background:var(--ink);"></span>Evaluación formativa · Haz clic en tu respuesta</div>
+      <h2>Preguntas de alternativas — II</h2>
+      <div class="qgrid">
+        <div class="qcard">
+          <div class="qmeta"><span class="pill pill-oa">OA2</span><span class="pill pill-comprender">Comprender</span></div>
+          <div class="qstem"><b>4.</b>¿Qué enzima desenrolla la doble hélice durante la replicación?</div>
+          <ul class="options">
+            <li data-correct="false"><span class="letter">a)</span>ADN ligasa</li>
+            <li data-correct="false"><span class="letter">b)</span>ARN polimerasa</li>
+            <li data-correct="true"><span class="letter">c)</span>Helicasa</li>
+            <li data-correct="false"><span class="letter">d)</span>ADN polimerasa</li>
+          </ul>
+          <div class="justify-note">✏️ Justifica tu elección y anótala en tu cuaderno.</div>
+          <div class="hint"><b>Respuesta: c.</b> La helicasa rompe los puentes de hidrógeno y separa las hebras, generando la horquilla.</div>
+        </div>
+        <div class="qcard">
+          <div class="qmeta"><span class="pill pill-oa">OA2</span><span class="pill pill-analizar">Analizar</span></div>
+          <div class="qstem"><b>5.</b>¿Por qué se forma una hebra líder continua y una retrasada discontinua?</div>
+          <ul class="options">
+            <li data-correct="true"><span class="letter">a)</span>La ADN pol solo sintetiza 5'→3' y las hebras molde son antiparalelas</li>
+            <li data-correct="false"><span class="letter">b)</span>La helicasa actúa solo sobre una hebra</li>
+            <li data-correct="false"><span class="letter">c)</span>Los fragmentos de Okazaki solo ocurren en procariontes</li>
+            <li data-correct="false"><span class="letter">d)</span>La hebra líder no requiere cebador</li>
+          </ul>
+          <div class="justify-note">✏️ Justifica tu elección y anótala en tu cuaderno.</div>
+          <div class="hint"><b>Respuesta: a.</b> La antiparalelidad obliga a sintetizar una hebra de forma continua y la otra en fragmentos.</div>
+        </div>
+        <div class="qcard">
+          <div class="qmeta"><span class="pill pill-oa">OA2</span><span class="pill pill-comprender">Comprender</span></div>
+          <div class="qstem"><b>6.</b>¿Qué función cumplen las proteínas SSB durante la replicación?</div>
+          <ul class="options">
+            <li data-correct="false"><span class="letter">a)</span>Sintetizan los cebadores de ARN</li>
+            <li data-correct="true"><span class="letter">b)</span>Estabilizan las hebras separadas evitando que se reasocien</li>
+            <li data-correct="false"><span class="letter">c)</span>Sellan los cortes entre fragmentos de Okazaki</li>
+            <li data-correct="false"><span class="letter">d)</span>Eliminan los intrones del pre-ARNm</li>
+          </ul>
+          <div class="justify-note">✏️ Justifica tu elección y anótala en tu cuaderno.</div>
+          <div class="hint"><b>Respuesta: b.</b> Las SSB cubren el ADN monocatenario para mantenerlo estable y accesible.</div>
+        </div>
+      </div>
+      <div class="slide-foot"><span>15 / 21</span><span>PREGUNTAS DE ALTERNATIVAS</span></div>
+    </section>
+
+    <!-- 15 · MC III -->
+    <section class="slide light">
+      <div class="kicker"><span class="dot" style="background:var(--ink);"></span>Evaluación formativa · Haz clic en tu respuesta</div>
+      <h2>Preguntas de alternativas — III</h2>
+      <div class="qgrid">
+        <div class="qcard">
+          <div class="qmeta"><span class="pill pill-oa">OA2</span><span class="pill pill-analizar">Analizar</span></div>
+          <div class="qstem"><b>7.</b>Ordena los niveles de compactación del ADN, desde el menos al más compacto.</div>
+          <ul class="options">
+            <li data-correct="false"><span class="letter">a)</span>Cromosoma → cromatina → nucleosoma → ADN</li>
+            <li data-correct="true"><span class="letter">b)</span>ADN → nucleosoma → fibra de 30 nm → cromosoma metafásico</li>
+            <li data-correct="false"><span class="letter">c)</span>Nucleosoma → ADN → cromosoma → fibra de 30 nm</li>
+            <li data-correct="false"><span class="letter">d)</span>Fibra de 30 nm → ADN → nucleosoma → cromosoma</li>
+          </ul>
+          <div class="justify-note">✏️ Justifica tu elección y anótala en tu cuaderno.</div>
+          <div class="hint"><b>Respuesta: b.</b> Es la secuencia correcta de niveles crecientes de compactación.</div>
+        </div>
+        <div class="qcard">
+          <div class="qmeta"><span class="pill pill-oa">OA2</span><span class="pill pill-comprender">Comprender</span></div>
+          <div class="qstem"><b>8.</b>¿Qué función cumple la cola poli-A del ARNm maduro?</div>
+          <ul class="options">
+            <li data-correct="false"><span class="letter">a)</span>Cataliza la eliminación de intrones</li>
+            <li data-correct="true"><span class="letter">b)</span>Aporta estabilidad al ARNm y favorece su traducción</li>
+            <li data-correct="false"><span class="letter">c)</span>Une el ARNm al ADN molde</li>
+            <li data-correct="false"><span class="letter">d)</span>Corrige errores de apareamiento de bases</li>
+          </ul>
+          <div class="justify-note">✏️ Justifica tu elección y anótala en tu cuaderno.</div>
+          <div class="hint"><b>Respuesta: b.</b> La cola poli-A protege al ARNm de la degradación y facilita su reconocimiento por el ribosoma.</div>
+        </div>
+        <div class="qcard">
+          <div class="qmeta"><span class="pill pill-oa">OA2</span><span class="pill pill-aplicar">Aplicar</span></div>
+          <div class="qstem"><b>9.</b>Durante la transcripción en eucariontes, ¿qué ocurre con el ARN pre-mensajero antes de salir del núcleo?</div>
+          <ul class="options">
+            <li data-correct="false"><span class="letter">a)</span>Se traduce directamente dentro del núcleo</li>
+            <li data-correct="true"><span class="letter">b)</span>Sufre splicing, y recibe caperuza y cola poli-A</li>
+            <li data-correct="false"><span class="letter">c)</span>Se convierte en ADN por retrotranscripción</li>
+            <li data-correct="false"><span class="letter">d)</span>Es degradado por la ARN polimerasa</li>
+          </ul>
+          <div class="justify-note">✏️ Justifica tu elección y anótala en tu cuaderno.</div>
+          <div class="hint"><b>Respuesta: b.</b> El procesamiento del pre-ARNm genera el ARNm maduro apto para la traducción.</div>
+        </div>
+      </div>
+      <div class="slide-foot"><span>16 / 21</span><span>PREGUNTAS DE ALTERNATIVAS</span></div>
+    </section>
+
+    <!-- 16 · MC IV -->
+    <section class="slide light">
+      <div class="kicker"><span class="dot" style="background:var(--ink);"></span>Evaluación formativa · Haz clic en tu respuesta</div>
+      <h2>Preguntas de alternativas — IV</h2>
+      <div class="qgrid">
+        <div class="qcard">
+          <div class="qmeta"><span class="pill pill-oa">OA2</span><span class="pill pill-aplicar">Aplicar</span></div>
+          <div class="qstem"><b>10.</b>Una mutación afecta la región promotora de un gen. ¿Qué proceso se ve más directamente afectado?</div>
+          <ul class="options">
+            <li data-correct="false"><span class="letter">a)</span>La replicación del ADN en ese gen</li>
+            <li data-correct="true"><span class="letter">b)</span>La unión de la ARN polimerasa y el inicio de la transcripción</li>
+            <li data-correct="false"><span class="letter">c)</span>El splicing del pre-ARNm</li>
+            <li data-correct="false"><span class="letter">d)</span>La traducción de la proteína</li>
+          </ul>
+          <div class="justify-note">✏️ Justifica tu elección y anótala en tu cuaderno.</div>
+          <div class="hint"><b>Respuesta: b.</b> El promotor es el sitio de unión de la ARN polimerasa; sin él no se inicia la transcripción.</div>
+        </div>
+        <div class="qcard">
+          <div class="qmeta"><span class="pill pill-oa">OA2</span><span class="pill pill-comprender">Comprender</span></div>
+          <div class="qstem"><b>11.</b>¿Qué papel cumple la histona H1 en la formación de la fibra de 30 nm?</div>
+          <ul class="options">
+            <li data-correct="false"><span class="letter">a)</span>Corta el ADN en fragmentos de Okazaki</li>
+            <li data-correct="true"><span class="letter">b)</span>Estabiliza el ADN de enlace y favorece el plegamiento de los nucleosomas</li>
+            <li data-correct="false"><span class="letter">c)</span>Cataliza la síntesis de ARNm</li>
+            <li data-correct="false"><span class="letter">d)</span>Elimina los intrones del pre-ARNm</li>
+          </ul>
+          <div class="justify-note">✏️ Justifica tu elección y anótala en tu cuaderno.</div>
+          <div class="hint"><b>Respuesta: b.</b> H1 se une al ADN de enlace entre nucleosomas, permitiendo el plegamiento hacia la fibra de 30 nm.</div>
+        </div>
+        <div class="qcard">
+          <div class="qmeta"><span class="pill pill-oa">OA2</span><span class="pill pill-analizar">Analizar</span></div>
+          <div class="qstem"><b>12.</b>La acetilación de histonas se asocia a la activación transcripcional. ¿Cuál es la explicación más plausible?</div>
+          <ul class="options">
+            <li data-correct="true"><span class="letter">a)</span>Neutraliza la carga positiva de las histonas, relajando su unión al ADN</li>
+            <li data-correct="false"><span class="letter">b)</span>Aumenta la carga positiva, compactando más el ADN</li>
+            <li data-correct="false"><span class="letter">c)</span>Corta el ADN en el sitio acetilado</li>
+            <li data-correct="false"><span class="letter">d)</span>Convierte la eucromatina en heterocromatina</li>
+          </ul>
+          <div class="justify-note">✏️ Justifica tu elección y anótala en tu cuaderno.</div>
+          <div class="hint"><b>Respuesta: a.</b> Al neutralizar la carga positiva, disminuye la atracción histona–ADN y el ADN queda más accesible.</div>
+        </div>
+      </div>
+      <div class="slide-foot"><span>17 / 21</span><span>PREGUNTAS DE ALTERNATIVAS</span></div>
+    </section>
+
+    <!-- 17 · MC V -->
+    <section class="slide light">
+      <div class="kicker"><span class="dot" style="background:var(--ink);"></span>Evaluación formativa · Haz clic en tu respuesta</div>
+      <h2>Preguntas de alternativas — V</h2>
+      <div class="qgrid">
+        <div class="qcard">
+          <div class="qmeta"><span class="pill pill-oa">OA2</span><span class="pill pill-recordar">Recordar</span></div>
+          <div class="qstem"><b>13.</b>¿Qué enzima sintetiza el cebador de ARN necesario para iniciar la replicación?</div>
+          <ul class="options">
+            <li data-correct="false"><span class="letter">a)</span>ADN ligasa</li>
+            <li data-correct="true"><span class="letter">b)</span>Primasa</li>
+            <li data-correct="false"><span class="letter">c)</span>Topoisomerasa</li>
+            <li data-correct="false"><span class="letter">d)</span>ARN polimerasa II</li>
+          </ul>
+          <div class="justify-note">✏️ Justifica tu elección y anótala en tu cuaderno.</div>
+          <div class="hint"><b>Respuesta: b.</b> La primasa sintetiza un cebador de ARN sobre el cual la ADN polimerasa puede comenzar a añadir nucleótidos.</div>
+        </div>
+        <div class="qcard">
+          <div class="qmeta"><span class="pill pill-oa">OA2</span><span class="pill pill-aplicar">Aplicar</span></div>
+          <div class="qstem"><b>14.</b>Una mutación inactiva la enzima ADN ligasa. ¿Qué consecuencia directa tendría sobre la replicación?</div>
+          <ul class="options">
+            <li data-correct="false"><span class="letter">a)</span>No se podría desenrollar la doble hélice</li>
+            <li data-correct="true"><span class="letter">b)</span>Los fragmentos de Okazaki no podrían unirse, dejando cortes en la hebra retrasada</li>
+            <li data-correct="false"><span class="letter">c)</span>No se podría transcribir ningún gen</li>
+            <li data-correct="false"><span class="letter">d)</span>El ARNm no podría madurar</li>
+          </ul>
+          <div class="justify-note">✏️ Justifica tu elección y anótala en tu cuaderno.</div>
+          <div class="hint"><b>Respuesta: b.</b> Sin ligasa, los fragmentos de Okazaki quedan sin sellar, generando cortes en la nueva hebra retrasada.</div>
+        </div>
+        <div class="qcard">
+          <div class="qmeta"><span class="pill pill-oa">OA2</span><span class="pill pill-comprender">Comprender</span></div>
+          <div class="qstem"><b>15.</b>¿Cuál es la diferencia principal entre la hebra molde y la hebra codificante durante la transcripción?</div>
+          <ul class="options">
+            <li data-correct="true"><span class="letter">a)</span>La molde es leída 3'→5' por la ARN pol; la codificante tiene la misma secuencia que el ARNm (T por U)</li>
+            <li data-correct="false"><span class="letter">b)</span>Ambas hebras se transcriben simultáneamente</li>
+            <li data-correct="false"><span class="letter">c)</span>La codificante se degrada después de la transcripción</li>
+            <li data-correct="false"><span class="letter">d)</span>La hebra molde solo existe en procariontes</li>
+          </ul>
+          <div class="justify-note">✏️ Justifica tu elección y anótala en tu cuaderno.</div>
+          <div class="hint"><b>Respuesta: a.</b> Solo la hebra molde es leída por la ARN polimerasa; la codificante comparte secuencia con el ARNm.</div>
+        </div>
+      </div>
+      <div class="slide-foot"><span>18 / 21</span><span>PREGUNTAS DE ALTERNATIVAS</span></div>
+    </section>
+
+    <!-- 18 · DESARROLLO I -->
+    <section class="slide light">
+      <div class="kicker"><span class="dot" style="background:var(--purple-dk);"></span>Pensamiento causal · Modelo AER</div>
+      <h2>Preguntas de desarrollo — I</h2>
+      <p class="lead">Responde de forma escrita en tu cuaderno de Ciencias, usando el modelo Afirmación–Evidencia–Razonamiento.</p>
+      <div class="qgrid">
+        <div class="devcard">
+          <span class="aer-tag">AFIRMACIÓN · EVIDENCIA · RAZONAMIENTO</span>
+          <div class="qstem"><b>1.</b>Un fármaco inhibe la enzima ADN polimerasa en células que se dividen activamente. Explica, usando el modelo AER, qué efecto tendría sobre la replicación del ADN y, por consecuencia, sobre la división celular.</div>
+        </div>
+        <div class="devcard">
+          <span class="aer-tag">AFIRMACIÓN · EVIDENCIA · RAZONAMIENTO</span>
+          <div class="qstem"><b>2.</b>Explica, con evidencia biológica, por qué la acetilación de histonas puede alterar la expresión génica sin cambiar la secuencia de nucleótidos del ADN. ¿Qué relación tiene con el concepto de epigenética?</div>
+        </div>
+        <div class="devcard">
+          <span class="aer-tag">ANÁLISIS COMPARATIVO</span>
+          <div class="qstem"><b>3.</b>Compara replicación y transcripción en términos de molde, enzima principal, producto final y momento del ciclo celular. Argumenta por qué ambos procesos son igualmente esenciales para la célula.</div>
+        </div>
+      </div>
+      <div class="slide-foot"><span>19 / 21</span><span>PREGUNTAS DE DESARROLLO</span></div>
+    </section>
+
+    <!-- 19 · DESARROLLO II -->
+    <section class="slide light">
+      <div class="kicker"><span class="dot" style="background:var(--purple-dk);"></span>Pensamiento causal · Modelo AER</div>
+      <h2>Preguntas de desarrollo — II</h2>
+      <p class="lead">Responde de forma escrita en tu cuaderno de Ciencias, usando el modelo Afirmación–Evidencia–Razonamiento.</p>
+      <div class="qgrid">
+        <div class="devcard">
+          <span class="aer-tag">APLICACIÓN A CASOS · AFIRMACIÓN · EVIDENCIA · RAZONAMIENTO</span>
+          <div class="qstem"><b>4.</b>Kipchoge entrena de forma intensa y sistemática, mientras que Matías vive bajo estrés crónico y falta de sueño. Formula una hipótesis sobre cómo estos estilos de vida podrían influir en la expresión génica de sus células musculares o nerviosas, y qué evidencia a nivel de la cromatina respaldaría tu razonamiento.</div>
+        </div>
+        <div class="devcard">
+          <span class="aer-tag">AFIRMACIÓN · EVIDENCIA · RAZONAMIENTO</span>
+          <div class="qstem"><b>5.</b>Un error en el splicing provoca que un intrón no sea eliminado del ARNm maduro. Plantea una hipótesis sobre las consecuencias para la proteína final, y qué evidencia molecular respaldaría tu razonamiento.</div>
+        </div>
+      </div>
+      <div class="slide-foot"><span>20 / 21</span><span>PREGUNTAS DE DESARROLLO</span></div>
+    </section>
+
+    <!-- 20 · CIERRE -->
+    <section class="slide dark">
+      <div class="kicker"><span class="dot"></span>Síntesis final</div>
+      <h2 style="color:#FBF9F2;">Ideas clave para llevarse</h2>
+      <div class="slide-body" style="align-items:center;">
+        <ul class="closing-list">
+          <li><span class="cnum">01</span>El ADN se organiza jerárquicamente — de la doble hélice al cromosoma — gracias a las histonas.</li>
+          <li><span class="cnum">02</span>El grado de compactación de la cromatina (eu/heterocromatina) regula qué genes se expresan: es la base de la epigenética.</li>
+          <li><span class="cnum">03</span>La replicación copia todo el genoma de forma semiconservativa, antes de la división celular.</li>
+          <li><span class="cnum">04</span>La transcripción lee un gen a la vez, produciendo ARNm que debe madurar antes de traducirse.</li>
+          <li><span class="cnum">05</span>Factores de estilo de vida —alimentación, estrés, ejercicio— pueden modificar la expresión génica sin alterar la secuencia del ADN.</li>
+        </ul>
+      </div>
+      <div class="slide-foot"><span>21 / 21</span><span>CIENCIAS DE LA SALUD · PROF. FELIPE JIMÉNEZ</span></div>
+    </section>
+
+  </div>
+</div>
+
+<div class="nav-controls">
+  <button class="nav-btn" id="prevBtn" aria-label="Anterior">‹</button>
+  <div class="dots" id="dots"></div>
+  <span class="counter" id="counter">1 / 21</span>
+  <button class="nav-btn" id="nextBtn" aria-label="Siguiente">›</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  const dotsWrap = document.getElementById('dots');
+  const counter = document.getElementById('counter');
+  const progressBar = document.getElementById('progressBar');
+  let idx = 0;
+
+  for(let i=0;i<total;i++){
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===0 ? ' active' : '');
+    d.addEventListener('click', () => show(i));
+    dotsWrap.appendChild(d);
+  }
+  const dotEls = dotsWrap.querySelectorAll('.dot');
+
+  function show(i){
+    idx = Math.max(0, Math.min(total-1, i));
+    slides.forEach((s,j)=> s.classList.toggle('active', j===idx));
+    dotEls.forEach((d,j)=> d.classList.toggle('active', j===idx));
+    counter.textContent = (idx+1) + ' / ' + total;
+    progressBar.style.width = (((idx+1)/total)*100) + '%';
+  }
+
+  document.getElementById('prevBtn').addEventListener('click', ()=> show(idx-1));
+  document.getElementById('nextBtn').addEventListener('click', ()=> show(idx+1));
+
+  document.addEventListener('keydown', (e)=>{
+    if(document.activeElement && document.activeElement.closest('.qcard')) return;
+    if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){ show(idx+1); e.preventDefault(); }
+    else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){ show(idx-1); e.preventDefault(); }
+    else if(e.key === 'Home'){ show(0); }
+    else if(e.key === 'End'){ show(total-1); }
+  });
+
+  /* ===== Interactive multiple-choice questions ===== */
+  document.querySelectorAll('.qcard').forEach(card => {
+    const options = Array.from(card.querySelectorAll('.options li'));
+    const hint = card.querySelector('.hint');
+    options.forEach(opt => {
+      opt.setAttribute('tabindex', '0');
+      opt.setAttribute('role', 'button');
+      const choose = () => {
+        options.forEach(o => o.classList.remove('correct','incorrect'));
+        const isCorrect = opt.dataset.correct === 'true';
+        if(isCorrect){
+          opt.classList.add('correct');
+        } else {
+          opt.classList.add('incorrect');
+          const correctOpt = options.find(o => o.dataset.correct === 'true');
+          if(correctOpt) correctOpt.classList.add('correct');
+        }
+        card.classList.add('answered');
+        if(hint) hint.classList.add('show');
+      };
+      opt.addEventListener('click', choose);
+      opt.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); choose(); }
+      });
+    });
+  });
+
+  /* ===== Interactive schema: click a marker or its legend line to link them ===== */
+  ['slide-compaction','slide-enzimas'].forEach(id => {
+    const container = document.getElementById(id);
+    if(!container) return;
+    const markers = container.querySelectorAll('.marker-group');
+    const items = container.querySelectorAll('.legend-list li[data-n]');
+    function clearAll(){
+      markers.forEach(m=>m.classList.remove('active'));
+      items.forEach(li=>li.classList.remove('active'));
+    }
+    function activate(n){
+      const already = container.querySelector('.marker-group[data-n="'+n+'"]').classList.contains('active');
+      clearAll();
+      if(already) return;
+      container.querySelectorAll('[data-n="'+n+'"]').forEach(el=>el.classList.add('active'));
+    }
+    markers.forEach(m => m.addEventListener('click', ()=> activate(m.dataset.n)));
+    items.forEach(li => li.addEventListener('click', ()=> activate(li.dataset.n)));
+  });
+
+  show(0);
+</script>
+
+</body>
+</html>
