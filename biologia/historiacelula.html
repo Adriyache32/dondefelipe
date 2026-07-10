@@ -173,6 +173,65 @@ body.show-teacher .teacher-toggle{background:var(--amber);color:var(--navy);}
   background:var(--gold);color:var(--navy);border:none;padding:.85rem 2rem;border-radius:30px;
   cursor:pointer;box-shadow:0 8px 20px rgba(212,160,23,.35);
 }
+.team-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.6rem;}
+@media (max-width:520px){.team-grid{grid-template-columns:1fr;}}
+.team-input{
+  font-family:var(--font-body);font-size:.85rem;padding:.55rem .7rem;border-radius:6px;
+  border:1px solid rgba(26,31,58,.25);background:#fff;color:var(--ink);
+}
+
+/* open-response question blocks (debate + question bank) */
+.open-q{margin-bottom:.8rem;}
+.open-q .oq-text{font-size:.85rem;margin:0 0 .3rem;}
+.open-q .oq-input{
+  width:100%;min-height:48px;border-radius:6px;border:1px solid rgba(26,31,58,.25);
+  font-family:var(--font-body);font-size:.82rem;padding:.5rem;resize:vertical;
+}
+.qb-q{margin-bottom:.7rem;}
+.qb-q .qb-q-text{font-size:.8rem;margin:0 0 .25rem;}
+.qb-q .qb-q-input{
+  width:100%;min-height:42px;border-radius:6px;border:1px solid rgba(26,31,58,.25);
+  font-family:var(--font-body);font-size:.78rem;padding:.45rem;resize:vertical;
+}
+
+/* export PDF */
+.export-fab{
+  position:fixed;right:clamp(.8rem,3vw,2rem);bottom:4.6rem;z-index:20;
+  font-family:var(--font-head);font-size:.72rem;font-weight:700;letter-spacing:.03em;
+  background:var(--teal);color:#fff;border:none;padding:.55rem 1rem;border-radius:20px;cursor:pointer;
+  box-shadow:0 8px 18px rgba(13,148,136,.4);
+}
+.export-fab:hover{background:#0b7a70;}
+.export-inline-btn{
+  margin-top:1rem;font-family:var(--font-head);font-weight:700;font-size:.95rem;
+  background:var(--teal);color:#fff;border:none;padding:.8rem 1.8rem;border-radius:26px;cursor:pointer;
+  box-shadow:0 8px 20px rgba(13,148,136,.4);
+}
+#printExport{display:none;}
+@media print{
+  body *{visibility:hidden !important;}
+  #printExport, #printExport *{visibility:visible !important;}
+  #printExport{
+    display:block !important;position:absolute;left:0;top:0;width:100%;
+    background:#fff;color:#111;padding:0 1cm;
+  }
+  .lens-deco,.navbar,.arrowbar,.teacher-toggle,.export-fab,.start-btn,.export-inline-btn{display:none !important;}
+}
+#printExport{font-family:Calibri,'Segoe UI',sans-serif;color:#111;}
+#printExport h1{font-family:var(--font-head);font-size:1.4rem;margin-bottom:.1rem;}
+#printExport h2{font-family:var(--font-head);font-size:1rem;color:#555;font-weight:400;margin-top:0;}
+#printExport h3{font-family:var(--font-head);font-size:1.05rem;border-bottom:2px solid #1A1F3A;padding-bottom:.2rem;margin-top:1.4rem;}
+#printExport h4{font-family:var(--font-head);font-size:.9rem;margin-bottom:.2rem;color:#0D9488;}
+#printExport p{font-size:.85rem;line-height:1.5;margin:.2rem 0;}
+#printExport .pe-answer{
+  border:1px solid #999;border-radius:4px;padding:.4rem .6rem;margin:.15rem 0 .6rem;
+  font-size:.82rem;min-height:1.1em;white-space:pre-wrap;background:#fafafa;
+}
+#printExport .pe-meta{font-size:.78rem;color:#555;margin-bottom:.2rem;}
+#printExport table{border-collapse:collapse;width:100%;margin:.3rem 0 .6rem;}
+#printExport table td, #printExport table th{border:1px solid #ccc;padding:.3rem .5rem;font-size:.8rem;text-align:left;}
+#printExport .pe-score{font-weight:700;color:#1A1F3A;}
+#printExport .pe-section{page-break-inside:avoid;}
 
 /* roadmap slide */
 .road-cards{display:flex;gap:1.4rem;flex-wrap:wrap;justify-content:center;}
@@ -357,6 +416,7 @@ body.show-teacher .teacher-toggle{background:var(--amber);color:var(--navy);}
 </div>
 
 <button class="teacher-toggle" id="teacherToggle">👁️ Notas docente: OFF</button>
+<button class="export-fab" id="exportFab" onclick="exportPDF()">📄 Exportar PDF</button>
 
 <div id="deck">
 
@@ -376,6 +436,20 @@ body.show-teacher .teacher-toggle{background:var(--amber);color:var(--navy);}
           <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXIAAAFyAQAAAADAX2ykAAADAUlEQVR4nO2cUYrbMBCGv6kF+2hDDrBHkW+29Gb2UXqAgvQYkPn7INnxUkhamk1tmHmJkvkefhhmrBlLMfE3Nn/7Kxycd975L+WzNRuzGfOwGGQzZgswD7D6w2v0OP9EPgBdAcAALKYF6IVFAeRQiBNAvrxAj/Nfwbfk7Aua8puAxTQBxAQ1xccX6nH+S/gcMBvAzN5Uv47/U4/zz+V71dQl6mp19V/1OP/PfABg1yTFaQmCTtYcBegF5Ffocf75/FK3x5ADkN9kYw4QU9dWs5mZDa/S4/zz+NCSE4C8mGqa9te60jx0++w+nH7nH/J1V7WY2XvBxtVjNiwGfcFGltYOH1G/8/f5vgB00gTo+3sBapO02jyAfaQX6XH+iXyAPKB5DMXgFtXF2jIbmsdQK/Xx9Dt/39r8KmoxkS9YTEv9zaArFtOA0f8ML9Lj/NP5/mrMQycbAchv0tQXauGeB9CUw47/aj3OP5FHklRHk0qgqZekBERJUuq2cEuajqbf+QcmqbQxc0ydiAk00alZ6tboy+N7Pp6WqzVNpTXcbTtNvEXf43tCfq3PrGk6AeskGupD2ON7Wv5T/tKJqIKmW0EGdjXb43syfnu/cDViuqyzyDqJHiBqCZqHrrTX/UfT7/x9W+fP+SLm96upVup6pqMrNg9Jtgv80fQ7/8DqDjlKak/Yvq2af9tzeX90Rn7temmR3u2v9uEuq/do+p2/b7U+11kk/dUU06VADkWwBEEdV8rA58/n4+t8o+bvVPujbptqbEWatTv2/D0Z3+ruNqSkxXItyEq033x+dUYe7Sy1JK6OqX62IHt8z8rf7i/ANoTej7NsrD3Ti/Q4/0T+8/2Frhh92rnbIcq8GNVxNP3OP7C2l2Jtgmubuz1/p0o1xOvzqfn6Gn8x+0i0mwwf9cXS1dpNlUPrd/43C3d8farn241+O+l+NP3O/wm/TiBLO4tTz8LSroa245TZz8eek7/dX2ib6Dau/GHW5s8JbOw9f8/Hmx4zO/P/Z3De+QPxvwAzVvgFI2SXlQAAAABJRU5ErkJggg==" alt="Código QR de acceso">
           <div class="qr-url">fjimenez321-stack.github.io/dondefelipe/</div>
         </div>
+      </div>
+
+      <div class="lamina team-lamina" style="--accent:var(--purple);max-width:640px;margin:1.6rem auto 0;">
+        <span class="lamina-tag">GRUPO</span>
+        <h3 style="font-size:.95rem;">Antes de comenzar: ¿quién trabaja hoy?</h3>
+        <div class="team-grid">
+          <input type="text" class="team-input" id="teamMember1" placeholder="Integrante 1">
+          <input type="text" class="team-input" id="teamMember2" placeholder="Integrante 2 (opcional)">
+          <input type="text" class="team-input" id="teamMember3" placeholder="Integrante 3 (opcional)">
+          <input type="text" class="team-input" id="teamMember4" placeholder="Integrante 4 (opcional)">
+          <input type="text" class="team-input" id="teamCourse" placeholder="Curso (ej: 8°A)">
+          <input type="text" class="team-input" id="teamDate" placeholder="Fecha">
+        </div>
+        <p style="font-size:.7rem;color:#777;margin-top:.5rem;">Estos datos aparecerán en el PDF que exportes al finalizar la clase.</p>
       </div>
     </div>
   </section>
@@ -441,11 +515,18 @@ body.show-teacher .teacher-toggle{background:var(--amber);color:var(--navy);}
       <div class="lamina" style="--accent:var(--gold);margin-top:1rem;">
         <span class="lamina-tag">S1</span>
         <h3 style="font-size:1rem;">Preguntas para el mini-debate guiado</h3>
-        <ul>
-          <li>¿Todo ser vivo está hecho de lo mismo?</li>
-          <li>¿Qué evidencia necesitaríamos para comprobarlo?</li>
-          <li>¿Por qué durante tanto tiempo se creyó en la generación espontánea?</li>
-        </ul>
+        <div class="open-q">
+          <p class="oq-text">1. ¿Todo ser vivo está hecho de lo mismo?</p>
+          <textarea class="oq-input" data-oq="debate1" placeholder="Escribe tu respuesta..."></textarea>
+        </div>
+        <div class="open-q">
+          <p class="oq-text">2. ¿Qué evidencia necesitaríamos para comprobarlo?</p>
+          <textarea class="oq-input" data-oq="debate2" placeholder="Escribe tu respuesta..."></textarea>
+        </div>
+        <div class="open-q">
+          <p class="oq-text">3. ¿Por qué durante tanto tiempo se creyó en la generación espontánea?</p>
+          <textarea class="oq-input" data-oq="debate3" placeholder="Escribe tu respuesta..."></textarea>
+        </div>
         <div class="teacher-note"><b>Si el debate se estanca:</b> pide ejemplos concretos ("¿un hongo y un perro comparten algo por dentro?"). Cierra retomando que ambas ideas fueron alguna vez "científicas" para su época — puente hacia Sesión 2. ~10 min.</div>
       </div>
     </div>
@@ -591,31 +672,31 @@ body.show-teacher .teacher-toggle{background:var(--amber);color:var(--navy);}
       <div class="progress-bar-wrap"><div class="progress-bar-fill" id="stationProgressFill"></div></div>
       <div class="progress-text" id="stationProgressText">0 / 5 estaciones visitadas</div>
       <div class="station-grid" id="stationGrid">
-        <div class="flip-card station-card" onclick="visitStation(this)">
+        <div class="flip-card station-card" data-name="Robert Hooke (1665)" onclick="visitStation(this)">
           <div class="flip-inner">
             <div class="flip-face flip-front"><h4>Robert Hooke<br><small>1665</small></h4></div>
             <div class="flip-face flip-back">Observó "celdillas" en el corcho con un microscopio simple y acuñó la palabra <b>"célula"</b>.</div>
           </div>
         </div>
-        <div class="flip-card station-card" onclick="visitStation(this)">
+        <div class="flip-card station-card" data-name="Anton van Leeuwenhoek (~1674)" onclick="visitStation(this)">
           <div class="flip-inner">
             <div class="flip-face flip-front"><h4>A. van Leeuwenhoek<br><small>~1674</small></h4></div>
             <div class="flip-face flip-back">Con lentes muy precisas, observó por primera vez microorganismos vivos ("animálculos").</div>
           </div>
         </div>
-        <div class="flip-card station-card" onclick="visitStation(this)">
+        <div class="flip-card station-card" data-name="Matthias Schleiden (1838)" onclick="visitStation(this)">
           <div class="flip-inner">
             <div class="flip-face flip-front"><h4>Matthias Schleiden<br><small>1838</small></h4></div>
             <div class="flip-face flip-back">Botánico: propuso que <b>todas las plantas</b> están formadas por células.</div>
           </div>
         </div>
-        <div class="flip-card station-card" onclick="visitStation(this)">
+        <div class="flip-card station-card" data-name="Theodor Schwann (1839)" onclick="visitStation(this)">
           <div class="flip-inner">
             <div class="flip-face flip-front"><h4>Theodor Schwann<br><small>1839</small></h4></div>
             <div class="flip-face flip-back">Zoólogo: extendió la conclusión a los animales — todo ser vivo está formado por células.</div>
           </div>
         </div>
-        <div class="flip-card station-card" onclick="visitStation(this)">
+        <div class="flip-card station-card" data-name="Rudolf Virchow (1855)" onclick="visitStation(this)">
           <div class="flip-inner">
             <div class="flip-face flip-front"><h4>Rudolf Virchow<br><small>1855</small></h4></div>
             <div class="flip-face flip-back">Toda célula proviene de una célula anterior: <i>"Omnis cellula e cellula"</i>.</div>
@@ -796,59 +877,50 @@ body.show-teacher .teacher-toggle{background:var(--amber);color:var(--navy);}
       <h1 class="title" style="font-size:clamp(1.15rem,3.2vw,1.8rem);">Batería de preguntas graduada por Taxonomía de Bloom</h1>
       <p style="text-align:center;font-size:.78rem;color:#c9cde0;margin:-.3rem 0 .8rem;">Toca cada nivel para desplegar sus preguntas. Úsalas para preguntas orales, boletos de salida o guías escritas.</p>
       <div class="qb-wrap">
-        <details class="qb-level" style="--accent:var(--teal)" open>
+        <details class="qb-level" data-level="Recordar" style="--accent:var(--teal)" open>
           <summary>🧠 Recordar</summary>
-          <ol>
-            <li>¿Qué instrumento permitió observar por primera vez las células?</li>
-            <li>¿Quién acuñó la palabra "célula" y en qué año aproximado?</li>
-            <li>Nombra dos estructuras presentes en la célula vegetal y ausentes en la célula animal.</li>
-          </ol>
+          <div class="qb-q"><p class="qb-q-text">1. ¿Qué instrumento permitió observar por primera vez las células?</p><textarea class="qb-q-input" placeholder="Tu respuesta..."></textarea></div>
+          <div class="qb-q"><p class="qb-q-text">2. ¿Quién acuñó la palabra "célula" y en qué año aproximado?</p><textarea class="qb-q-input" placeholder="Tu respuesta..."></textarea></div>
+          <div class="qb-q"><p class="qb-q-text">3. Nombra dos estructuras presentes en la célula vegetal y ausentes en la célula animal.</p><textarea class="qb-q-input" placeholder="Tu respuesta..."></textarea></div>
         </details>
-        <details class="qb-level" style="--accent:var(--blue)">
+        <details class="qb-level" data-level="Comprender" style="--accent:var(--blue)">
           <summary>💬 Comprender</summary>
-          <ol>
-            <li>Explica con tus palabras qué significa que la célula sea la "unidad estructural y funcional" de los seres vivos.</li>
-            <li>¿Por qué decimos que el conocimiento científico sobre la célula "evolucionó" con el tiempo?</li>
-            <li>Compara, en una frase, el aporte de Schleiden y el de Schwann al modelo celular.</li>
-          </ol>
+          <div class="qb-q"><p class="qb-q-text">1. Explica con tus palabras qué significa que la célula sea la "unidad estructural y funcional" de los seres vivos.</p><textarea class="qb-q-input" placeholder="Tu respuesta..."></textarea></div>
+          <div class="qb-q"><p class="qb-q-text">2. ¿Por qué decimos que el conocimiento científico sobre la célula "evolucionó" con el tiempo?</p><textarea class="qb-q-input" placeholder="Tu respuesta..."></textarea></div>
+          <div class="qb-q"><p class="qb-q-text">3. Compara, en una frase, el aporte de Schleiden y el de Schwann al modelo celular.</p><textarea class="qb-q-input" placeholder="Tu respuesta..."></textarea></div>
         </details>
-        <details class="qb-level" style="--accent:var(--gold)">
+        <details class="qb-level" data-level="Aplicar" style="--accent:var(--gold)">
           <summary>🔧 Aplicar</summary>
-          <ol>
-            <li>Si tuvieras solo un microscopio simple como el de Leeuwenhoek, ¿qué podrías observar de una célula y qué no?</li>
-            <li>A partir de tu dibujo de la célula de cebolla, identifica y rotula sus estructuras principales.</li>
-            <li>Usa el criterio de Virchow ("toda célula proviene de otra célula") para explicar por qué un frasco cerrado con fruta no puede generar vida "de la nada".</li>
-          </ol>
+          <div class="qb-q"><p class="qb-q-text">1. Si tuvieras solo un microscopio simple como el de Leeuwenhoek, ¿qué podrías observar de una célula y qué no?</p><textarea class="qb-q-input" placeholder="Tu respuesta..."></textarea></div>
+          <div class="qb-q"><p class="qb-q-text">2. A partir de tu dibujo de la célula de cebolla, identifica y rotula sus estructuras principales.</p><textarea class="qb-q-input" placeholder="Tu respuesta..."></textarea></div>
+          <div class="qb-q"><p class="qb-q-text">3. Usa el criterio de Virchow ("toda célula proviene de otra célula") para explicar por qué un frasco cerrado con fruta no puede generar vida "de la nada".</p><textarea class="qb-q-input" placeholder="Tu respuesta..."></textarea></div>
         </details>
-        <details class="qb-level" style="--accent:var(--coral)">
+        <details class="qb-level" data-level="Analizar" style="--accent:var(--coral)">
           <summary>🔍 Analizar</summary>
-          <ol>
-            <li>¿Por qué la generación espontánea fue aceptada durante siglos antes de ser reemplazada por la teoría celular?</li>
-            <li>Compara las estructuras observadas en la célula de cebolla y en la célula de mucosa bucal, relacionando sus diferencias con su función.</li>
-            <li>¿Qué relación existe entre la calidad de los instrumentos ópticos de cada época y los aportes de Hooke, Leeuwenhoek y Virchow?</li>
-          </ol>
+          <div class="qb-q"><p class="qb-q-text">1. ¿Por qué la generación espontánea fue aceptada durante siglos antes de ser reemplazada por la teoría celular?</p><textarea class="qb-q-input" placeholder="Tu respuesta..."></textarea></div>
+          <div class="qb-q"><p class="qb-q-text">2. Compara las estructuras observadas en la célula de cebolla y en la célula de mucosa bucal, relacionando sus diferencias con su función.</p><textarea class="qb-q-input" placeholder="Tu respuesta..."></textarea></div>
+          <div class="qb-q"><p class="qb-q-text">3. ¿Qué relación existe entre la calidad de los instrumentos ópticos de cada época y los aportes de Hooke, Leeuwenhoek y Virchow?</p><textarea class="qb-q-input" placeholder="Tu respuesta..."></textarea></div>
         </details>
-        <details class="qb-level" style="--accent:var(--amber)">
+        <details class="qb-level" data-level="Evaluar" style="--accent:var(--amber)">
           <summary>⚖️ Evaluar</summary>
-          <ol>
-            <li>¿Estás de acuerdo con que "el modelo celular de Hooke fue incorrecto"? Argumenta con evidencia.</li>
-            <li>De los cinco científicos estudiados, ¿cuál aporte consideras más determinante para consolidar la teoría celular? Justifica tu elección.</li>
-            <li>Evalúa las fortalezas y limitaciones de usar video o simulación en vez de un microscopio óptico real en esta unidad.</li>
-          </ol>
+          <div class="qb-q"><p class="qb-q-text">1. ¿Estás de acuerdo con que "el modelo celular de Hooke fue incorrecto"? Argumenta con evidencia.</p><textarea class="qb-q-input" placeholder="Tu respuesta..."></textarea></div>
+          <div class="qb-q"><p class="qb-q-text">2. De los cinco científicos estudiados, ¿cuál aporte consideras más determinante para consolidar la teoría celular? Justifica tu elección.</p><textarea class="qb-q-input" placeholder="Tu respuesta..."></textarea></div>
+          <div class="qb-q"><p class="qb-q-text">3. Evalúa las fortalezas y limitaciones de usar video o simulación en vez de un microscopio óptico real en esta unidad.</p><textarea class="qb-q-input" placeholder="Tu respuesta..."></textarea></div>
         </details>
-        <details class="qb-level" style="--accent:var(--purple)">
+        <details class="qb-level" data-level="Crear" style="--accent:var(--purple)">
           <summary>🎨 Crear</summary>
-          <ol>
-            <li>Diseña un experimento simple para comprobar que la fruta en descomposición no genera vida "espontáneamente", sino a partir de microorganismos preexistentes.</li>
-            <li>Crea una línea de tiempo ilustrada con al menos 5 hitos que muestre la evolución del modelo celular y la tecnología disponible en cada momento.</li>
-            <li>Propón un modelo de "célula ideal" con una estructura imaginaria, explicando qué función cumpliría y por qué no existe en las células reales.</li>
-          </ol>
+          <div class="qb-q"><p class="qb-q-text">1. Diseña un experimento simple para comprobar que la fruta en descomposición no genera vida "espontáneamente", sino a partir de microorganismos preexistentes.</p><textarea class="qb-q-input" placeholder="Tu respuesta..."></textarea></div>
+          <div class="qb-q"><p class="qb-q-text">2. Crea una línea de tiempo ilustrada con al menos 5 hitos que muestre la evolución del modelo celular y la tecnología disponible en cada momento.</p><textarea class="qb-q-input" placeholder="Tu respuesta..."></textarea></div>
+          <div class="qb-q"><p class="qb-q-text">3. Propón un modelo de "célula ideal" con una estructura imaginaria, explicando qué función cumpliría y por qué no existe en las células reales.</p><textarea class="qb-q-input" placeholder="Tu respuesta..."></textarea></div>
         </details>
       </div>
+      <button class="export-inline-btn" onclick="exportPDF()">📄 Exportar mi trabajo completo (PDF)</button>
     </div>
   </section>
 
 </div>
+
+<div id="printExport"></div>
 
 <div class="arrowbar">
   <button class="navbtn" id="prevBtn" onclick="prevSlide()">◂ Anterior</button>
@@ -928,10 +1000,12 @@ function confetti(){
 /* ---------- Slide 3: vote ---------- */
 let votes = {ge:0, tc:0};
 let voted = false;
+let voteChoiceText = null;
 function castVote(btn, which){
   if(voted) return;
   voted = true;
   votes[which]++;
+  voteChoiceText = which==='ge' ? 'Generación espontánea' : 'Teoría celular';
   document.getElementById('tally-ge').textContent = votes.ge+' voto(s)';
   document.getElementById('tally-tc').textContent = votes.tc+' voto(s)';
   document.querySelectorAll('.vote-btn').forEach(b=>b.classList.remove('chosen'));
@@ -950,6 +1024,7 @@ function showTab(which, btn){
 /* ---------- Diagnostic quiz (slide 6) ---------- */
 let diagScore = 0;
 let diagAnswered = 0;
+let diagAnswers = [];
 const diagTotal = document.querySelectorAll('#diagQuizBox .quiz-q').length;
 function answerQuiz(btn, isCorrect){
   const group = btn.closest('.quiz-opts');
@@ -959,6 +1034,8 @@ function answerQuiz(btn, isCorrect){
   btn.classList.add(isCorrect?'correct':'wrong');
   if(isCorrect){ diagScore++; stars++; updateStars(); }
   diagAnswered++;
+  const qText = btn.closest('.quiz-q').querySelector('p').textContent;
+  diagAnswers.push({question:qText, chosen:btn.textContent, correct:isCorrect});
   if(diagAnswered===diagTotal){
     document.getElementById('diagScoreLine').textContent = 'Puntaje: '+diagScore+' / '+diagTotal+' — ¡seguimos profundizando en la próxima sesión!';
     if(diagScore===diagTotal) confetti();
@@ -1128,10 +1205,14 @@ let triviaIdx = 0;
 let triviaScore = 0;
 let triviaTimer = null;
 let triviaTimeLeft = 15;
+let triviaAnswers = [];
+let triviaPlayed = false;
 
 function startTrivia(){
   triviaIdx = 0;
   triviaScore = 0;
+  triviaAnswers = [];
+  triviaPlayed = true;
   document.getElementById('trivia-result').textContent = '';
   document.getElementById('triviaStartBtn').style.display = 'none';
   renderTriviaQ();
@@ -1177,7 +1258,14 @@ function answerTrivia(choice){
     if(i===item.correct) b.classList.add('correct');
     else if(i===choice) b.classList.add('wrong');
   });
-  if(choice===item.correct){ triviaScore++; stars++; updateStars(); }
+  const isCorrect = (choice===item.correct);
+  if(isCorrect){ triviaScore++; stars++; updateStars(); }
+  triviaAnswers.push({
+    question:item.q,
+    chosen: choice>=0 ? item.opts[choice] : '(sin responder / tiempo agotado)',
+    correctText:item.opts[item.correct],
+    isCorrect:isCorrect
+  });
   setTimeout(()=>{ triviaIdx++; renderTriviaQ(); }, 900);
 }
 function finishTrivia(){
@@ -1190,6 +1278,137 @@ function finishTrivia(){
   else msg = 'Sigamos repasando, ¡la próxima será mejor! 💪';
   document.getElementById('trivia-result').textContent = 'Puntaje: '+triviaScore+' / 5 — '+msg;
   if(triviaScore===5) confetti();
+}
+
+/* ---------- Export to PDF (print) ---------- */
+function esc(s){
+  if(s===undefined || s===null || s==='') return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function answerBlock(text){
+  const t = (text||'').trim();
+  return t ? esc(t) : '<span style="color:#999;">(sin responder)</span>';
+}
+
+function exportPDF(){
+  const m1 = document.getElementById('teamMember1').value.trim();
+  const m2 = document.getElementById('teamMember2').value.trim();
+  const m3 = document.getElementById('teamMember3').value.trim();
+  const m4 = document.getElementById('teamMember4').value.trim();
+  const course = document.getElementById('teamCourse').value.trim();
+  const dateField = document.getElementById('teamDate').value.trim();
+  const members = [m1,m2,m3,m4].filter(Boolean);
+
+  let html = '';
+  html += '<h1>Unidad 2 · La Célula — Registro de trabajo</h1>';
+  html += '<h2>Sesiones 1 y 2 · 8° Básico · Ciencias Naturales</h2>';
+  html += '<p class="pe-meta">Generado el '+esc(new Date().toLocaleDateString('es-CL'))+'</p>';
+
+  html += '<div class="pe-section"><h3>Integrantes</h3>';
+  html += members.length ? '<p>'+members.map(esc).join(' · ')+'</p>' : '<p style="color:#999;">(sin registrar)</p>';
+  html += '<p class="pe-meta">Curso: '+(course?esc(course):'—')+' &nbsp;|&nbsp; Fecha: '+(dateField?esc(dateField):'—')+'</p></div>';
+
+  /* Sesión 1 */
+  html += '<div class="pe-section"><h3>Sesión 1 · Diagnóstico</h3>';
+  html += '<h4>Activación: ¿de dónde viene la vida?</h4>';
+  html += '<p>Voto inicial: <b>'+(voteChoiceText?esc(voteChoiceText):'(no registrado)')+'</b></p>';
+  const debateTexts = document.querySelectorAll('#slide-3 .oq-text');
+  const debateInputs = document.querySelectorAll('#slide-3 .oq-input');
+  debateTexts.forEach((p,i)=>{
+    html += '<p class="pe-meta">'+esc(p.textContent)+'</p>';
+    html += '<div class="pe-answer">'+answerBlock(debateInputs[i] ? debateInputs[i].value : '')+'</div>';
+  });
+  html += '<h4>Chequeo diagnóstico (no calificado)</h4>';
+  if(diagAnswers.length){
+    diagAnswers.forEach(a=>{
+      html += '<p class="pe-meta">'+esc(a.question)+'</p>';
+      html += '<div class="pe-answer">Tu respuesta: '+esc(a.chosen)+' — '+(a.correct?'✅ correcta':'❌ incorrecta')+'</div>';
+    });
+    html += '<p class="pe-score">Puntaje: '+diagScore+' / '+diagTotal+'</p>';
+  } else {
+    html += '<p style="color:#999;">(sin responder)</p>';
+  }
+  html += '</div>';
+
+  /* Sesión 2 */
+  html += '<div class="pe-section"><h3>Sesión 2 · Científicos</h3>';
+  html += '<h4>Estaciones científicas visitadas</h4>';
+  if(visited.size){
+    const names = Array.from(visited).map(c=>c.dataset.name || (c.querySelector('h4') ? c.querySelector('h4').textContent : ''));
+    html += '<p>'+names.map(esc).join(' · ')+' ('+visited.size+' / 5)</p>';
+  } else {
+    html += '<p style="color:#999;">(ninguna estación revisada)</p>';
+  }
+  html += '<h4>Actividad STEAM — Modelo según la época (AER)</h4>';
+  const aerLabels = document.querySelectorAll('#slide-10 .aer-block label');
+  const aerInputs = document.querySelectorAll('#slide-10 .aer-block textarea');
+  aerLabels.forEach((lab,i)=>{
+    html += '<p class="pe-meta">'+esc(lab.textContent)+'</p>';
+    html += '<div class="pe-answer">'+answerBlock(aerInputs[i] ? aerInputs[i].value : '')+'</div>';
+  });
+  html += '</div>';
+
+  /* Juegos */
+  html += '<div class="pe-section"><h3>Zona de juegos</h3>';
+  html += '<h4>Juego 1 · Ordena la historia</h4>';
+  const g1slots = document.querySelectorAll('#g1-slots .order-slot');
+  if(g1slots.length && Array.from(g1slots).some(s=>s.classList.contains('filled'))){
+    let g1html = '<table><tr><th>#</th><th>Tu respuesta</th><th>Resultado</th></tr>';
+    g1slots.forEach((s,i)=>{
+      const result = s.classList.contains('correct') ? '✅' : (s.classList.contains('wrong') ? '❌' : '—');
+      g1html += '<tr><td>'+(i+1)+'</td><td>'+esc(s.textContent.replace(/^\d+\.\s*/,''))+'</td><td>'+result+'</td></tr>';
+    });
+    g1html += '</table>';
+    html += g1html;
+  } else {
+    html += '<p style="color:#999;">(sin jugar)</p>';
+  }
+  html += '<h4>Juego 2 · ¿Común o exclusiva de la célula vegetal?</h4>';
+  const g2items = document.querySelectorAll('.basket .items span');
+  if(g2items.length){
+    let g2html = '<table><tr><th>Estructura</th><th>Tu clasificación</th><th>Resultado</th></tr>';
+    g2items.forEach(span=>{
+      const placedLabel = span.dataset.placedCat==='ambas' ? 'Común a ambas' : 'Exclusiva vegetal';
+      const result = span.classList.contains('right') ? '✅' : (span.classList.contains('wrong') ? '❌' : '—');
+      g2html += '<tr><td>'+esc(span.textContent)+'</td><td>'+placedLabel+'</td><td>'+result+'</td></tr>';
+    });
+    g2html += '</table>';
+    html += g2html;
+  } else {
+    html += '<p style="color:#999;">(sin jugar)</p>';
+  }
+  html += '<h4>Juego 3 · Trivia rápida</h4>';
+  if(triviaPlayed && triviaAnswers.length){
+    let g3html = '<table><tr><th>Pregunta</th><th>Tu respuesta</th><th>Resultado</th></tr>';
+    triviaAnswers.forEach(a=>{
+      g3html += '<tr><td>'+esc(a.question)+'</td><td>'+esc(a.chosen)+'</td><td>'+(a.isCorrect?'✅':'❌')+'</td></tr>';
+    });
+    g3html += '</table>';
+    html += g3html;
+    html += '<p class="pe-score">Puntaje: '+triviaScore+' / '+triviaQs.length+'</p>';
+  } else {
+    html += '<p style="color:#999;">(sin jugar)</p>';
+  }
+  html += '</div>';
+
+  /* Bloom bank */
+  html += '<div class="pe-section"><h3>Batería de preguntas — Taxonomía de Bloom</h3>';
+  document.querySelectorAll('.qb-level').forEach(level=>{
+    const levelName = level.dataset.level;
+    html += '<h4>'+esc(levelName)+'</h4>';
+    level.querySelectorAll('.qb-q').forEach(q=>{
+      const qt = q.querySelector('.qb-q-text').textContent;
+      const qv = q.querySelector('.qb-q-input').value;
+      html += '<p class="pe-meta">'+esc(qt)+'</p>';
+      html += '<div class="pe-answer">'+answerBlock(qv)+'</div>';
+    });
+  });
+  html += '</div>';
+
+  html += '<p class="pe-meta" style="margin-top:1rem;">⭐ Puntaje total acumulado en la actividad: '+stars+'</p>';
+
+  document.getElementById('printExport').innerHTML = html;
+  setTimeout(function(){ window.print(); }, 80);
 }
 </script>
 </body>
