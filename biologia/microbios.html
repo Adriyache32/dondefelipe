@@ -350,6 +350,58 @@ h1,h2,h3,.display{
 
 /* svg helpers */
 svg text{ font-family:'IBM Plex Sans',sans-serif; }
+
+/* ===== Form fields (open questions, team members) ===== */
+.field{
+  width:100%; background:var(--panel-2); border:1px solid var(--line); border-radius:10px;
+  padding:10px 12px; color:var(--ink); font-family:'IBM Plex Sans',sans-serif; font-size:14px;
+}
+.field::placeholder{ color:var(--muted); }
+.field:focus{ outline:none; border-color:var(--teal); }
+textarea.field{ resize:vertical; min-height:78px; line-height:1.5; }
+label.field-label{ display:block; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+
+.toggle-group{ display:flex; gap:8px; flex-wrap:wrap; }
+.toggle-opt{
+  font-family:'IBM Plex Sans',sans-serif; font-weight:600; font-size:13px;
+  padding:10px 16px; border-radius:12px; border:1px solid var(--line);
+  background:transparent; color:var(--muted); cursor:pointer; transition:.2s;
+}
+.toggle-opt:hover{ border-color:var(--teal); }
+.toggle-opt.selected{ background:var(--teal); color:var(--teal-ink); border-color:var(--teal); }
+
+.export-btn{
+  background:var(--amber); color:var(--amber-ink); border-color:var(--amber);
+  font-size:16px; padding:16px 28px;
+}
+.export-btn:hover{ filter:brightness(1.06); }
+.export-hint{ font-size:12px; color:var(--muted); margin-top:10px; }
+
+/* ===== Printable report (hidden on screen, shown only when printing) ===== */
+#printReport{ display:none; }
+@media print{
+  #app{ display:none !important; }
+  html, body{ background:#fff !important; color:#111 !important; height:auto !important; overflow:visible !important; }
+  #printReport{
+    display:block !important;
+    font-family:'IBM Plex Sans',sans-serif; color:#171310; max-width:760px; margin:0 auto; padding:10px;
+  }
+  #printReport h1{ font-family:'Fraunces',serif; font-size:24px; margin:0 0 4px; }
+  #printReport h2{ font-family:'Fraunces',serif; font-size:17px; margin:26px 0 10px; border-bottom:2px solid #171310; padding-bottom:5px; page-break-after:avoid; }
+  #printReport .meta{ font-size:12.5px; color:#4a463f; margin-bottom:6px; }
+  #printReport .qa{ margin-bottom:12px; page-break-inside:avoid; }
+  #printReport .qa .q{ font-weight:600; font-size:13px; }
+  #printReport .qa .a{ margin-top:4px; padding:8px 10px; background:#f2efe6; border-left:3px solid #b8ac8a; font-size:13px; min-height:16px; white-space:pre-wrap; }
+  #printReport table{ width:100%; border-collapse:collapse; font-size:12px; margin-top:4px; page-break-inside:avoid; }
+  #printReport th, #printReport td{ border:1px solid #ccc4ae; padding:5px 8px; text-align:left; }
+  #printReport th{ background:#efe9d8; }
+  #printReport .tag-ok{ color:#0a7a4a; font-weight:700; }
+  #printReport .tag-bad{ color:#b3261e; font-weight:700; }
+  #printReport .tag-mid{ color:#6a4fd6; font-weight:700; }
+  #printReport .stars-print{ letter-spacing:2px; color:#b8860b; }
+  #printReport .rep-footer{ margin-top:26px; font-size:10.5px; color:#7a7466; border-top:1px solid #ccc4ae; padding-top:8px; }
+  #printReport .section-block{ page-break-inside:avoid; margin-bottom:8px; }
+}
 </style>
 </head>
 <body>
@@ -358,6 +410,7 @@ svg text{ font-family:'IBM Plex Sans',sans-serif; }
   <div class="topbar">
     <div class="brand">Unidad 3 · La vida invisible</div>
     <div style="display:flex; gap:8px;">
+      <button class="iconbtn" id="btnExportTop" title="Exportar mi trabajo a PDF">📄</button>
       <button class="iconbtn" id="btnFull" title="Pantalla completa">⛶</button>
       <button class="iconbtn" id="btnMenu" title="Ver índice">≡</button>
     </div>
@@ -385,6 +438,12 @@ svg text{ font-family:'IBM Plex Sans',sans-serif; }
           <span class="chip on">Sesión 2 · Procariontes, eucariontes y endosimbiosis</span>
         </div>
 
+        <div class="panel" style="margin-top:24px; max-width:520px; margin-left:auto; margin-right:auto; text-align:left;">
+          <label class="field-label" for="teamMembers">Integrantes del grupo</label>
+          <input type="text" class="field" id="teamMembers" placeholder="Ej: Ana Pérez, Diego Soto, Martina Rojas">
+          <p class="footnote" style="margin-top:8px; margin-bottom:0;">Completa esto antes de empezar: tu registro en PDF llevará estos nombres.</p>
+        </div>
+
         <div class="qr-box" style="margin-left:auto;margin-right:auto;">
           <img id="qrImg" alt="Código QR">
           <div class="txt">
@@ -398,7 +457,31 @@ svg text{ font-family:'IBM Plex Sans',sans-serif; }
       </div>
     </section>
 
-    <!-- 1 SESIÓN 1 PORTADA -->
+    <!-- 1 CRITERIOS DE EVALUACIÓN -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Antes de comenzar</div>
+        <h2 class="title-lg">¿Cómo te evaluarán en estas dos sesiones?</h2>
+        <p class="subtitle">Evaluación formativa: tu profesor circulará observando estos criterios mientras trabajas, para ayudarte a mejorar.</p>
+        <div class="grid2" style="margin-top:20px;">
+          <div class="panel">
+            <div class="small-cap" style="margin-bottom:10px;">Sesión 1 · Vida invisible</div>
+            <div class="check-item">🔍 <span>Clasificas y describes organismos con criterio</span></div>
+            <div class="check-item">🗣️ <span>Justificas oralmente tu clasificación</span></div>
+            <div class="check-item">💬 <span>Participas activamente en el debate del virus</span></div>
+          </div>
+          <div class="panel">
+            <div class="small-cap" style="margin-bottom:10px;">Sesión 2 · Endosimbiosis</div>
+            <div class="check-item">🧬 <span>Tu modelo muestra una célula grande y una pequeña incorporada</span></div>
+            <div class="check-item">🔬 <span>Identificas correctamente las estructuras</span></div>
+            <div class="check-item">📢 <span>Explicas la relación evolutiva con claridad</span></div>
+          </div>
+        </div>
+        <p class="footnote" style="margin-top:16px;">Estos criterios no reemplazan tu nota: son para que sepas en qué enfocarte hoy.</p>
+      </div>
+    </section>
+
+    <!-- 2 SESIÓN 1 PORTADA -->
     <section class="slide">
       <div class="slide-inner" style="text-align:center;">
         <div class="eyebrow" style="justify-content:center;">Sesión 1 · 90 minutos</div>
@@ -456,6 +539,10 @@ svg text{ font-family:'IBM Plex Sans',sans-serif; }
         <p class="subtitle">Para cada imagen, decide: ¿está vivo o no está vivo? Justifica en voz alta.</p>
         <div class="grid3" id="classifyGrid" style="margin-top:20px;"></div>
         <div id="classifySummary" class="footnote" style="margin-top:14px;"></div>
+        <div class="panel" style="margin-top:14px;">
+          <label class="field-label" for="reflect1">En tus palabras</label>
+          <textarea class="field" id="reflect1" placeholder="¿Qué hace que un ser vivo sea considerado 'vivo'? Explica con tus propias palabras..."></textarea>
+        </div>
       </div>
     </section>
 
@@ -542,6 +629,17 @@ svg text{ font-family:'IBM Plex Sans',sans-serif; }
             </div>
           </div>
         </div>
+
+        <div class="panel" style="margin-top:14px;">
+          <label class="field-label">Nuestra postura final</label>
+          <div class="toggle-group" id="posturaGroup">
+            <button class="toggle-opt" data-postura="Ser vivo">Ser vivo</button>
+            <button class="toggle-opt" data-postura="Máquina biológica">Máquina biológica</button>
+            <button class="toggle-opt" data-postura="Es un caso especial, ambas cosas">Es un caso especial</button>
+          </div>
+          <label class="field-label" for="debateArg" style="margin-top:14px;">Nuestro argumento principal</label>
+          <textarea class="field" id="debateArg" placeholder="Sostenemos que... porque..."></textarea>
+        </div>
       </div>
     </section>
 
@@ -551,6 +649,10 @@ svg text{ font-family:'IBM Plex Sans',sans-serif; }
         <div class="eyebrow">Cierre · Formativa oral</div>
         <h2 class="title-lg">Ficha de clasificación: pongamos a prueba lo aprendido</h2>
         <div id="quiz1" style="margin-top:18px; display:flex; flex-direction:column; gap:14px;"></div>
+        <div class="panel" style="margin-top:14px;">
+          <label class="field-label" for="bitacora1">Bitácora de aprendizaje científico — Sesión 1</label>
+          <textarea class="field" id="bitacora1" placeholder="¿Qué aprendiste hoy sobre el límite entre lo vivo y lo no vivo?"></textarea>
+        </div>
       </div>
     </section>
 
@@ -612,6 +714,10 @@ svg text{ font-family:'IBM Plex Sans',sans-serif; }
             </div>
           </div>
         </div>
+        <div class="panel" style="margin-top:14px;">
+          <label class="field-label" for="reflect2">Para pensar</label>
+          <textarea class="field" id="reflect2" placeholder="¿Por qué crees que esta teoría fue difícil de aceptar para otros científicos al principio?"></textarea>
+        </div>
       </div>
     </section>
 
@@ -623,10 +729,12 @@ svg text{ font-family:'IBM Plex Sans',sans-serif; }
         <div class="grid2" style="margin-top:16px;">
           <div class="panel">
             <div class="small-cap" style="margin-bottom:8px;">Su modelo debe mostrar</div>
-            <div class="check-item"><input type="checkbox"><span>Una célula grande y una más pequeña incorporada dentro de ella</span></div>
-            <div class="check-item"><input type="checkbox"><span>Qué representa cada parte (etiquetas o explicación)</span></div>
-            <div class="check-item"><input type="checkbox"><span>Una explicación oral de 1 minuto sobre la relación evolutiva</span></div>
+            <div class="check-item"><input type="checkbox" id="check1"><span>Una célula grande y una más pequeña incorporada dentro de ella</span></div>
+            <div class="check-item"><input type="checkbox" id="check2"><span>Qué representa cada parte (etiquetas o explicación)</span></div>
+            <div class="check-item"><input type="checkbox" id="check3"><span>Una explicación oral de 1 minuto sobre la relación evolutiva</span></div>
             <p class="footnote">Materiales sugeridos: plastilina, cartón o cartulina, o una app de modelado simple si tienen tablet/computador.</p>
+            <label class="field-label" for="modelDesc" style="margin-top:10px;">Describan su modelo</label>
+            <textarea class="field" id="modelDesc" placeholder="¿Qué representa cada parte de su modelo? Expliquen brevemente..."></textarea>
           </div>
           <div class="panel" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
             <div class="small-cap">Tiempo de trabajo en grupos</div>
@@ -651,6 +759,10 @@ svg text{ font-family:'IBM Plex Sans',sans-serif; }
           <div class="rubric-item"><span>Explican la relación evolutiva con sus palabras</span><span class="stars" data-rubric></span></div>
         </div>
         <p class="footnote">Esta pauta evalúa la habilidad de indagación OA i: crear, seleccionar y ajustar modelos.</p>
+        <div class="panel" style="margin-top:14px;">
+          <label class="field-label" for="bitacora2">Bitácora de aprendizaje científico — Sesión 2</label>
+          <textarea class="field" id="bitacora2" placeholder="¿Cómo cambia tu manera de ver una célula después de conocer la endosimbiosis?"></textarea>
+        </div>
       </div>
     </section>
 
@@ -710,6 +822,10 @@ svg text{ font-family:'IBM Plex Sans',sans-serif; }
           <div class="check-item">✅ <span>Conocimos la teoría endosimbiótica de Lynn Margulis</span></div>
         </div>
         <p class="subtitle" style="margin:18px auto 0;">Próxima sesión: Experimento — cultivando hongos y bacterias en casa 🍞🧪</p>
+
+        <button class="btn export-btn" id="btnExportBottom" style="margin-top:26px;">📄 Exportar mi trabajo a PDF</button>
+        <p class="export-hint">Se abrirá la ventana de impresión: elige "Guardar como PDF" como destino.</p>
+
         <p class="footnote" style="margin-top:24px;">Ciencias Naturales · 7° Básico · Colegio San Agustín Villa Alemana · Prof. Felipe Jiménez</p>
       </div>
     </section>
@@ -730,6 +846,8 @@ svg text{ font-family:'IBM Plex Sans',sans-serif; }
 
 </div>
 
+<div id="printReport"></div>
+
 <script>
 (function(){
   "use strict";
@@ -743,7 +861,7 @@ svg text{ font-family:'IBM Plex Sans',sans-serif; }
   var current = 0;
 
   var titles = [
-    "Portada", "Sesión 1 · Portada", "Hook: Microscopio", "Clasifica vivo/no vivo",
+    "Portada", "Criterios de evaluación", "Sesión 1 · Portada", "Hook: Microscopio", "Clasifica vivo/no vivo",
     "Criterios de ser vivo", "Reto STEAM: virus", "Cierre Sesión 1", "Sesión 2 · Portada",
     "Procarionte vs Eucarionte", "Teoría endosimbiótica", "Actividad STEAM: modelo",
     "Cierre Sesión 2: rúbrica", "Intro juegos", "Juego 1: Clasifica la vida",
@@ -879,12 +997,16 @@ svg text{ font-family:'IBM Plex Sans',sans-serif; }
         card.classList.add('done');
         var tagSlot = card.querySelector('.tagslot');
         var chosen = btn.getAttribute('data-choice');
+        card.dataset.chosen = chosen === 'vivo' ? 'Vivo' : 'No vivo';
         if (item.answer === 'discutible') {
           tagSlot.innerHTML = '<span class="result-tag mid">Es discutible — ¡lo veremos en el reto STEAM!</span>';
+          card.dataset.result = 'Discutible';
         } else if (chosen === item.answer) {
           tagSlot.innerHTML = '<span class="result-tag ok">✓ Correcto</span>';
+          card.dataset.result = 'Correcto';
         } else {
           tagSlot.innerHTML = '<span class="result-tag bad">✗ Reflexionemos con el curso</span>';
+          card.dataset.result = 'Incorrecto';
         }
         classifyCount++;
         if (classifyCount === classifyItems.length) {
@@ -925,6 +1047,16 @@ svg text{ font-family:'IBM Plex Sans',sans-serif; }
     update();
   })();
 
+  /* ============ SLIDE 5b: POSTURA TOGGLE ============ */
+  var posturaGroup = document.getElementById('posturaGroup');
+  posturaGroup.querySelectorAll('.toggle-opt').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      posturaGroup.querySelectorAll('.toggle-opt').forEach(function(b){ b.classList.remove('selected'); });
+      btn.classList.add('selected');
+      posturaGroup.dataset.selected = btn.getAttribute('data-postura');
+    });
+  });
+
   /* ============ SLIDE 6: QUIZ ============ */
   var quizData = [
     { q:"Un hongo se considera un ser vivo principalmente porque…", opts:["Es de color blanco","Se alimenta, se reproduce y respira","Aparece en el pan"], correct:1 },
@@ -944,6 +1076,7 @@ svg text{ font-family:'IBM Plex Sans',sans-serif; }
         if (wrap.dataset.answered) return;
         wrap.dataset.answered = "1";
         var oi = parseInt(btn.getAttribute('data-oi'),10);
+        wrap.dataset.chosen = oi;
         var fb = wrap.querySelector('.fb');
         wrap.querySelectorAll('[data-oi]').forEach(function(b, i){
           if (i === item.correct) b.style.borderColor = 'var(--good)';
@@ -1075,6 +1208,7 @@ svg text{ font-family:'IBM Plex Sans',sans-serif; }
         var val = parseInt(this.dataset.val,10);
         var siblings = this.parentElement.children;
         Array.prototype.forEach.call(siblings, function(sib,idx){ sib.classList.toggle('on', idx < val); });
+        this.parentElement.dataset.rating = val;
       });
       starsWrap.appendChild(s);
     }
@@ -1092,7 +1226,7 @@ svg text{ font-family:'IBM Plex Sans',sans-serif; }
     { name:"Agua", emoji:"💧", answer:"no-vivo" }
   ];
   var g1Grid = document.getElementById('g1Grid');
-  var g1Score = 0, g1Time = 60, g1Interval = null, g1Playing = false;
+  var g1Score = 0, g1Time = 60, g1Interval = null, g1Playing = false, g1Played = false;
 
   function buildG1(){
     g1Grid.innerHTML = '';
@@ -1116,7 +1250,7 @@ svg text{ font-family:'IBM Plex Sans',sans-serif; }
   function g1UpdateTime(){ document.getElementById('g1Time').textContent = g1Time; }
   document.getElementById('g1Start').addEventListener('click', function(){
     clearInterval(g1Interval);
-    g1Score = 0; g1Time = 60; g1Playing = true;
+    g1Score = 0; g1Time = 60; g1Playing = true; g1Played = true;
     document.getElementById('g1Score').textContent = 0;
     document.getElementById('g1End').style.display = 'none';
     g1UpdateTime();
@@ -1195,6 +1329,123 @@ svg text{ font-family:'IBM Plex Sans',sans-serif; }
   }
   document.getElementById('memoReset').addEventListener('click', buildMemo);
   buildMemo();
+
+  /* ============ EXPORT TO PDF (print-based) ============ */
+  function esc(str){
+    var d = document.createElement('div');
+    d.textContent = str == null ? '' : str;
+    return d.innerHTML;
+  }
+  function answerBlock(question, value, placeholderNote){
+    var v = (value || '').trim();
+    return '<div class="qa"><div class="q">'+esc(question)+'</div>' +
+      '<div class="a">'+(v ? esc(v) : '<em>'+(placeholderNote||'(sin responder)')+'</em>')+'</div></div>';
+  }
+
+  function buildReport(){
+    var members = document.getElementById('teamMembers').value.trim();
+    var dateStr = new Date().toLocaleDateString('es-CL', { year:'numeric', month:'long', day:'numeric' });
+
+    var html = '';
+    html += '<h1>La vida invisible — Registro del estudiante</h1>';
+    html += '<div class="meta"><strong>Unidad 3 · Ciencias Naturales · 7° Básico</strong> — Sesiones 1 y 2</div>';
+    html += '<div class="meta">Integrantes: <strong>'+esc(members || '(sin registrar)')+'</strong></div>';
+    html += '<div class="meta">Fecha de exportación: '+esc(dateStr)+'</div>';
+
+    /* ---- SESIÓN 1 ---- */
+    html += '<h2>Sesión 1 — ¿Qué es la "vida invisible"?</h2>';
+
+    html += '<div class="section-block"><div class="q" style="margin-bottom:6px;">Clasificación: ¿vivo o no vivo?</div><table><tr><th>Elemento</th><th>Tu elección</th><th>Resultado</th></tr>';
+    document.querySelectorAll('#classifyGrid .sort-card').forEach(function(card){
+      var name = card.querySelector('.name').textContent;
+      var chosen = card.dataset.chosen || '—';
+      var result = card.dataset.result || 'Sin responder';
+      var tagClass = result === 'Correcto' ? 'tag-ok' : (result === 'Discutible' ? 'tag-mid' : (result === 'Incorrecto' ? 'tag-bad' : ''));
+      html += '<tr><td>'+esc(name)+'</td><td>'+esc(chosen)+'</td><td class="'+tagClass+'">'+esc(result)+'</td></tr>';
+    });
+    html += '</table></div>';
+
+    html += answerBlock('En tus palabras: ¿qué hace que un ser vivo sea considerado "vivo"?', document.getElementById('reflect1').value);
+
+    var postura = posturaGroup.dataset.selected || '';
+    html += answerBlock('Reto STEAM — Nuestra postura sobre el virus', postura, '(sin elegir)');
+    html += answerBlock('Nuestro argumento principal', document.getElementById('debateArg').value);
+
+    html += '<div class="section-block"><div class="q" style="margin-bottom:6px;">Ficha de clasificación (quiz de cierre)</div><table><tr><th>Pregunta</th><th>Tu respuesta</th><th>Resultado</th></tr>';
+    document.querySelectorAll('#quiz1 > .panel').forEach(function(wrap, qi){
+      var qd = quizData[qi];
+      var chosenIdx = wrap.dataset.chosen;
+      var chosenText = chosenIdx !== undefined ? qd.opts[parseInt(chosenIdx,10)] : 'Sin responder';
+      var correct = chosenIdx !== undefined && parseInt(chosenIdx,10) === qd.correct;
+      var tagClass = chosenIdx === undefined ? '' : (correct ? 'tag-ok' : 'tag-bad');
+      var resultText = chosenIdx === undefined ? '—' : (correct ? 'Correcto' : 'Incorrecto');
+      html += '<tr><td>'+esc(qd.q)+'</td><td>'+esc(chosenText)+'</td><td class="'+tagClass+'">'+esc(resultText)+'</td></tr>';
+    });
+    html += '</table></div>';
+
+    html += answerBlock('Bitácora de aprendizaje científico — Sesión 1', document.getElementById('bitacora1').value);
+
+    /* ---- SESIÓN 2 ---- */
+    html += '<h2>Sesión 2 — Procariontes, eucariontes y endosimbiosis</h2>';
+
+    html += answerBlock('Para pensar: ¿por qué fue difícil aceptar la teoría de Margulis al principio?', document.getElementById('reflect2').value);
+
+    var c1 = document.getElementById('check1').checked;
+    var c2 = document.getElementById('check2').checked;
+    var c3 = document.getElementById('check3').checked;
+    html += '<div class="section-block"><div class="q" style="margin-bottom:6px;">Checklist del modelo STEAM</div><table><tr><th>Requisito</th><th>¿Cumplido?</th></tr>';
+    html += '<tr><td>Célula grande con una más pequeña incorporada</td><td>'+(c1?'<span class="tag-ok">Sí</span>':'No')+'</td></tr>';
+    html += '<tr><td>Explica qué representa cada parte</td><td>'+(c2?'<span class="tag-ok">Sí</span>':'No')+'</td></tr>';
+    html += '<tr><td>Explicación oral de 1 minuto preparada</td><td>'+(c3?'<span class="tag-ok">Sí</span>':'No')+'</td></tr>';
+    html += '</table></div>';
+    html += answerBlock('Descripción de su modelo', document.getElementById('modelDesc').value);
+
+    html += '<div class="section-block"><div class="q" style="margin-bottom:6px;">Autoevaluación (rúbrica)</div><table><tr><th>Criterio</th><th>Puntaje</th></tr>';
+    document.querySelectorAll('[data-rubric]').forEach(function(starsWrap){
+      var label = starsWrap.parentElement.querySelector('span:first-child').textContent;
+      var rating = starsWrap.dataset.rating ? starsWrap.dataset.rating + ' / 3' : 'Sin evaluar';
+      html += '<tr><td>'+esc(label)+'</td><td class="stars-print">'+esc(rating)+'</td></tr>';
+    });
+    html += '</table></div>';
+
+    html += answerBlock('Bitácora de aprendizaje científico — Sesión 2', document.getElementById('bitacora2').value);
+
+    /* ---- JUEGOS ---- */
+    html += '<h2>Juegos de repaso</h2>';
+    html += '<div class="section-block"><div class="q">Juego 1 · Clasifica la vida contrarreloj</div>';
+    html += '<div class="a">'+(g1Played ? 'Puntaje obtenido: '+g1Score+' pts' : 'No jugado')+'</div></div>';
+    html += '<div class="section-block"><div class="q">Juego 2 · Memorama celular</div>';
+    var memoDone = memoMatched === pairs.length;
+    html += '<div class="a">'+(memoMoves > 0 ? (memoDone ? 'Completado en '+memoMoves+' movimientos' : memoMoves+' movimientos (en curso)') : 'No jugado')+'</div></div>';
+
+    html += '<div class="rep-footer">Ciencias Naturales · 7° Básico · Colegio San Agustín Villa Alemana · Prof. Felipe Jiménez</div>';
+
+    document.getElementById('printReport').innerHTML = html;
+  }
+
+  var originalTitle = document.title;
+  function slugify(str){
+    return str.trim()
+      .replace(/,/g, '_')
+      .replace(/\s+/g, '_')
+      .replace(/[^a-zA-Z0-9À-ÿ_]/g, '')
+      .slice(0, 70);
+  }
+
+  function exportPDF(){
+    var members = document.getElementById('teamMembers').value.trim();
+    if (!members) {
+      goTo(0);
+      alert('Antes de exportar, escribe los nombres de tu grupo en "Integrantes del grupo" (portada).');
+      return;
+    }
+    buildReport();
+    document.title = 'U3_Sesion1y2_' + slugify(members);
+    window.print();
+  }
+  window.addEventListener('afterprint', function(){ document.title = originalTitle; });
+  document.getElementById('btnExportTop').addEventListener('click', exportPDF);
+  document.getElementById('btnExportBottom').addEventListener('click', exportPDF);
 
 })();
 </script>

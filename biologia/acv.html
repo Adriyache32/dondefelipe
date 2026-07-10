@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unidad II · Sesiones 1 y 2 — Ciencias para la Ciudadanía</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --bg:#F7F8F4; --ink:#16261C; --ink-soft:#4A5A50;
+  --green:#2E7D4F; --green-deep:#1E5A38; --green-pale:#DCEAD8;
+  --amber:#C98A2B; --amber-pale:#F6ECD9;
+  --slate:#1C4E6B; --slate-pale:#DCE8F0;
+  --red:#C0392B; --red-pale:#F9E3E0;
+  --card:#FFFFFF; --line:#D8DED4;
+  --radius:18px; --shadow:0 10px 28px rgba(22,38,28,.10);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:'Inter',system-ui,sans-serif;color:var(--ink);
+  background:
+    radial-gradient(circle at 1px 1px, rgba(22,38,28,.06) 1px, transparent 0) 0 0/24px 24px,
+    var(--bg);
+}
+h1,h2,h3,.display{font-family:'Sora',system-ui,sans-serif}
+:focus-visible{outline:3px solid var(--green);outline-offset:2px;border-radius:4px}
+
+/* ===== deck ===== */
+#deck{height:100%;width:100%;position:relative}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:clamp(16px,4vw,64px);opacity:0;visibility:hidden;transform:translateX(40px);
+  transition:opacity .45s ease,transform .45s ease,visibility .45s;overflow-y:auto}
+.slide.active{opacity:1;visibility:visible;transform:translateX(0)}
+.slide.prev{transform:translateX(-40px)}
+.inner{width:100%;max-width:1020px;margin:auto}
+.slide.active .inner{animation:riseIn .55s cubic-bezier(.2,.8,.2,1)}
+@keyframes riseIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== chrome ===== */
+#bar{position:fixed;top:0;left:0;height:4px;background:linear-gradient(90deg,var(--green),var(--slate));width:0;z-index:50;transition:width .3s}
+#counter{position:fixed;top:14px;right:18px;font-size:.78rem;font-weight:600;color:var(--ink-soft);
+  background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 13px;z-index:50}
+.nav-btn{position:fixed;top:50%;transform:translateY(-50%);z-index:50;width:46px;height:46px;border-radius:50%;
+  border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:1.2rem;cursor:pointer;
+  box-shadow:var(--shadow);transition:.2s;display:flex;align-items:center;justify-content:center}
+.nav-btn:hover{background:var(--green);color:#fff;border-color:var(--green)}
+#prevB{left:14px}#nextB{right:14px}
+#dots{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:7px;z-index:50}
+#dots span{width:8px;height:8px;border-radius:50%;background:var(--line);cursor:pointer;transition:.25s}
+#dots span.on{background:var(--green);transform:scale(1.35)}
+
+/* ===== HUD Felipesos ===== */
+#hud{position:fixed;left:14px;bottom:14px;z-index:55;display:flex;align-items:center;gap:9px;
+  background:var(--ink);color:#fff;padding:9px 18px 9px 14px;border-radius:999px;
+  font-family:'Sora';font-weight:700;font-size:.82rem;box-shadow:0 10px 24px rgba(22,38,28,.32);
+  transition:transform .15s}
+#hud .ico{font-size:1rem}
+#hudName{opacity:.85;font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#hudBal{color:#8FE3B0;transition:color .25s}
+#hud.flash-up{animation:pulseHud .45s ease}
+#hud.flash-down #hudBal{color:#FF9A86}
+#hud.flash-down{animation:pulseHud .45s ease}
+@keyframes pulseHud{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
+@media(max-width:560px){#hud{left:8px;bottom:8px;padding:7px 14px 7px 10px;font-size:.72rem}#hudName{max-width:70px}}
+
+/* ===== milestone toast ===== */
+#milestone{position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-14px);z-index:60;
+  background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:13px 22px;box-shadow:var(--shadow);
+  font-weight:600;font-size:.86rem;opacity:0;pointer-events:none;transition:.4s;max-width:88vw;text-align:center}
+#milestone.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#milestone.good{border-color:var(--green);color:var(--green-deep);background:var(--green-pale)}
+#milestone.warn{border-color:var(--amber);color:#8a5c15;background:var(--amber-pale)}
+
+/* ===== atoms ===== */
+.eyebrow{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--green);background:var(--green-pale);padding:6px 14px;border-radius:999px;margin-bottom:18px}
+.eyebrow.s2{color:var(--slate);background:var(--slate-pale)}
+.eyebrow.warm{color:var(--amber);background:var(--amber-pale)}
+h1{font-size:clamp(1.9rem,5.5vw,3.6rem);font-weight:800;line-height:1.08;letter-spacing:-.02em}
+h2{font-size:clamp(1.5rem,4vw,2.5rem);font-weight:700;line-height:1.12;letter-spacing:-.015em;margin-bottom:16px}
+h3{font-size:clamp(1.05rem,2.5vw,1.3rem);font-weight:700}
+p.lead{font-size:clamp(.98rem,2.2vw,1.18rem);color:var(--ink-soft);line-height:1.6;max-width:62ch}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:clamp(16px,3vw,26px);box-shadow:var(--shadow)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.btn{font-family:'Sora';font-weight:700;font-size:.92rem;border:none;border-radius:12px;padding:12px 22px;
+  cursor:pointer;background:var(--green);color:#fff;transition:.2s}
+.btn:hover{background:var(--green-deep);transform:translateY(-1px)}
+.btn.ghost{background:transparent;color:var(--green);border:2px solid var(--green)}
+.btn.ghost:hover{background:var(--green-pale);transform:none}
+.btn:disabled{opacity:.55;cursor:default;transform:none}
+.tag{font-size:.72rem;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--green-pale);color:var(--green-deep)}
+.reveal{cursor:pointer;user-select:none}
+.hidden-ans{max-height:0;overflow:hidden;opacity:0;transition:.4s}
+.hidden-ans.open{max-height:400px;opacity:1;margin-top:12px}
+
+/* ===== portada / QR ===== */
+.cover-grid{display:grid;grid-template-columns:1fr;gap:32px;align-items:center}
+#qrbox{display:none}
+@media(min-width:900px){
+  .cover-grid{grid-template-columns:1.25fr 1fr}
+  #qrbox{display:flex;flex-direction:column;align-items:center;gap:14px;background:var(--card);
+    border:2.5px dashed var(--green);border-radius:24px;padding:30px 28px;box-shadow:var(--shadow);position:relative}
+  #qrbox .scan-label{font-family:'Sora';font-weight:800;font-size:.98rem;color:var(--green-deep);
+    display:flex;align-items:center;gap:7px}
+  #qrbox svg{width:270px;height:270px}
+  #qrbox .url{font-family:'Sora';font-weight:700;font-size:.82rem;color:var(--green-deep);
+    background:var(--green-pale);padding:6px 14px;border-radius:999px}
+  #qrbox small{font-size:.76rem;color:var(--ink-soft);text-align:center;line-height:1.4;max-width:230px}
+}
+
+/* ===== founder slide ===== */
+.founder-setup{margin-top:22px}
+.founder-setup label{font-family:'Sora';font-weight:700;font-size:.78rem;color:var(--ink-soft);
+  text-transform:uppercase;letter-spacing:.07em}
+.founder-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.founder-row input{flex:1;min-width:200px;padding:13px 16px;border-radius:12px;border:2px solid var(--line);
+  font-family:'Inter';font-size:.95rem;background:#fff}
+.founder-row input:focus{border-color:var(--green);outline:none}
+.rules-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
+.rule-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;
+  border-top:4px solid var(--green)}
+.rule-card:nth-child(2){border-top-color:var(--slate)}
+.rule-card:nth-child(3){border-top-color:var(--amber)}
+.rule-card:nth-child(4){border-top-color:var(--red)}
+.rule-card h3{margin-bottom:6px;font-size:1rem}
+.rule-card p{font-size:.86rem;color:var(--ink-soft);line-height:1.55}
+@media(max-width:820px){.rules-grid{grid-template-columns:1fr}}
+
+/* ===== student answer fields ===== */
+.ans-field{margin-top:14px}
+.ans-field label{display:block;font-family:'Sora';font-weight:700;font-size:.8rem;color:var(--ink-soft);margin-bottom:6px}
+.ans-field input,.ans-field textarea,.ans-field select{
+  width:100%;padding:11px 14px;border-radius:12px;border:2px solid var(--line);
+  font-family:'Inter';font-size:.9rem;background:#fff;resize:vertical}
+.ans-field textarea{min-height:68px}
+.ans-field input:focus,.ans-field textarea:focus,.ans-field select:focus{border-color:var(--green);outline:none}
+.ans-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:820px){.ans-grid{grid-template-columns:1fr}}
+
+/* ===== invest widgets ===== */
+.invest-box{margin-top:18px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.invest-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.invest-out{margin-top:12px;font-size:.88rem;color:var(--ink-soft);min-height:20px;line-height:1.5}
+
+/* ===== CIE cycle ===== */
+.cie{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px}
+.cie .step{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 14px;
+  text-align:center;cursor:pointer;transition:.25s;position:relative}
+.cie .step:hover,.cie .step.sel{border-color:var(--green);box-shadow:var(--shadow);transform:translateY(-3px)}
+.cie .num{font-family:'Sora';font-size:1.6rem;font-weight:800;color:var(--green)}
+.cie .t{font-weight:600;font-size:.9rem;margin:6px 0 3px}
+.cie .m{font-size:.75rem;color:var(--amber);font-weight:700}
+#cieDetail{margin-top:16px;min-height:56px;font-size:.95rem;color:var(--ink-soft);line-height:1.55;
+  background:var(--green-pale);border-radius:12px;padding:14px 18px;transition:.3s}
+#timerWrap{margin-top:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+#timerDisp{font-family:'Sora';font-size:2rem;font-weight:800;color:var(--green-deep);min-width:110px}
+
+/* ===== ACV circle ===== */
+.acv-wrap{display:grid;grid-template-columns:minmax(260px,420px) 1fr;gap:28px;align-items:center;margin-top:10px}
+#acvSVG{width:100%;height:auto}
+.acv-seg{cursor:pointer;transition:.25s;transform-origin:center}
+.acv-seg circle{transition:.25s}
+.acv-seg:hover circle,.acv-seg.sel circle{fill:var(--green);}
+.acv-seg:hover text,.acv-seg.sel text{fill:#fff}
+#acvInfo{min-height:180px}
+#acvInfo h3{color:var(--green-deep);margin-bottom:8px}
+#acvInfo p{color:var(--ink-soft);line-height:1.6;font-size:.95rem}
+#acvInfo .ej{margin-top:10px;font-size:.88rem;background:var(--amber-pale);border-left:3px solid var(--amber);
+  padding:10px 14px;border-radius:0 10px 10px 0}
+
+/* ===== flip cards (exit ticket) ===== */
+.flip{perspective:900px;height:150px;cursor:pointer}
+.flip .in{position:relative;width:100%;height:100%;transition:transform .55s;transform-style:preserve-3d}
+.flip.f .in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:var(--radius);display:flex;
+  align-items:center;justify-content:center;padding:16px;text-align:center;font-weight:600}
+.face.front{background:var(--green);color:#fff;font-family:'Sora';font-size:1.05rem}
+.face.back{background:var(--card);border:1px solid var(--line);transform:rotateY(180deg);font-size:.86rem;
+  font-weight:500;color:var(--ink-soft);line-height:1.5}
+
+/* ===== UF toggle ===== */
+.uf-toggle{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+.uf-toggle button{flex:1;min-width:130px;padding:12px;border-radius:12px;border:2px solid var(--line);
+  background:var(--card);font-family:'Sora';font-weight:700;font-size:.88rem;cursor:pointer;transition:.2s}
+.uf-toggle button.on{border-color:var(--slate);background:var(--slate-pale);color:var(--slate)}
+#ufOut{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;line-height:1.6;font-size:.95rem;color:var(--ink-soft)}
+#ufOut strong{color:var(--slate)}
+
+/* ===== games ===== */
+.game-head{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.score{font-family:'Sora';font-weight:800;color:var(--green-deep);background:var(--green-pale);
+  padding:6px 16px;border-radius:999px;font-size:.9rem}
+#pool,#seq{display:flex;flex-wrap:wrap;gap:10px;min-height:56px;padding:12px;border-radius:14px}
+#pool{background:var(--card);border:1px dashed var(--line)}
+#seq{background:var(--green-pale);border:1px solid var(--green);margin-top:12px}
+.chip{font-family:'Sora';font-weight:700;font-size:.85rem;padding:10px 16px;border-radius:999px;cursor:pointer;
+  background:#fff;border:2px solid var(--green);color:var(--green-deep);transition:.2s;user-select:none}
+.chip:hover{background:var(--green);color:#fff}
+.chip.ok{background:var(--green);color:#fff;cursor:default}
+.chip.bad{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.q-opt{display:block;width:100%;text-align:left;margin-top:10px;padding:13px 16px;border-radius:12px;
+  border:2px solid var(--line);background:var(--card);cursor:pointer;font-size:.93rem;font-weight:500;transition:.2s}
+.q-opt:hover{border-color:var(--green)}
+.q-opt.right{border-color:var(--green);background:var(--green-pale)}
+.q-opt.wrong{border-color:var(--red);background:var(--red-pale)}
+#qFeed{margin-top:12px;font-size:.9rem;font-weight:600;min-height:24px}
+#claCard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:26px;
+  text-align:center;font-family:'Sora';font-weight:700;font-size:clamp(1rem,2.6vw,1.25rem);min-height:110px;
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow)}
+.cla-btns{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap}
+.cla-btns .btn{flex:1;min-width:140px}
+.cla-btns .no{background:var(--slate)}
+.cla-btns .no:hover{background:#153B52}
+#claFeed{margin-top:12px;font-weight:600;min-height:24px;font-size:.92rem}
+
+/* ===== session dividers ===== */
+.divider{text-align:center}
+.divider .big-n{font-family:'Sora';font-size:clamp(4rem,14vw,9rem);font-weight:800;line-height:1;
+  color:var(--green-pale);-webkit-text-stroke:2px var(--green)}
+.divider.s2 .big-n{color:var(--slate-pale);-webkit-text-stroke:2px var(--slate)}
+
+ul.clean{list-style:none;margin-top:10px}
+ul.clean li{padding:8px 0 8px 26px;position:relative;color:var(--ink-soft);line-height:1.5;font-size:.95rem}
+ul.clean li::before{content:"";position:absolute;left:4px;top:15px;width:9px;height:9px;border-radius:50%;background:var(--green)}
+.s2 ul.clean li::before{background:var(--slate)}
+
+/* ===== recap / pdf ===== */
+.recap-card{margin-top:22px;text-align:left;display:inline-block}
+.recap-card p{color:var(--ink-soft);font-size:.95rem;margin-top:4px}
+.recap-card strong{color:var(--green-deep)}
+
+/* ===== responsive ===== */
+@media(max-width:820px){
+  .grid2,.grid3,.acv-wrap{grid-template-columns:1fr}
+  .cie{grid-template-columns:1fr 1fr}
+  .nav-btn{width:40px;height:40px}
+  #prevB{left:8px}#nextB{right:8px}
+  .slide{padding:56px 18px 70px}
+}
+@media (prefers-reduced-motion: reduce){
+  *{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+
+<div id="bar"></div>
+<div id="counter">1 / 19</div>
+<button class="nav-btn" id="prevB" aria-label="Anterior">←</button>
+<button class="nav-btn" id="nextB" aria-label="Siguiente">→</button>
+<div id="dots"></div>
+<div id="hud"><span class="ico">🏦</span><span id="hudName">Tu Startup</span><span id="hudBal">500 F$</span></div>
+<div id="milestone"></div>
+
+<div id="deck">
+
+<!-- 1 · PORTADA -->
+<section class="slide active">
+  <div class="inner cover-grid">
+    <div>
+      <span class="eyebrow">Ciencias para la Ciudadanía · 3° Medio · Colegio San Agustín, Villa Alemana</span>
+      <h1>Unidad II<br><span style="color:var(--green)">Ambiente y Sostenibilidad</span></h1>
+      <p class="lead" style="margin-top:18px">Sesiones 1 y 2 · Consumo sostenible y ciclo de vida de los productos que usamos todos los días.</p>
+      <p style="margin-top:14px;font-size:.9rem;color:var(--ink-soft)">Prof. Felipe Jiménez · OA 1 · Segundo semestre</p>
+      <button class="btn" style="margin-top:26px" onclick="go(1)">Comenzar →</button>
+    </div>
+    <div id="qrbox">
+      <span class="scan-label">📱 Escanea con tu celular</span>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 35 35" shape-rendering="crispEdges"><path stroke="#14281D" d="M1 1.5h7m1 0h2m1 0h1m1 0h1m2 0h2m1 0h2m2 0h1m2 0h7M1 2.5h1m5 0h1m1 0h3m2 0h1m4 0h1m4 0h2m1 0h1m5 0h1M1 3.5h1m1 0h3m1 0h1m2 0h1m2 0h1m4 0h1m6 0h1m1 0h1m1 0h3m1 0h1M1 4.5h1m1 0h3m1 0h1m1 0h5m1 0h3m3 0h1m1 0h1m1 0h1m1 0h1m1 0h3m1 0h1M1 5.5h1m1 0h3m1 0h1m3 0h5m2 0h1m2 0h3m1 0h1m1 0h1m1 0h3m1 0h1M1 6.5h1m5 0h1m3 0h1m2 0h1m4 0h4m4 0h1m5 0h1M1 7.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M9 8.5h2m2 0h1m1 0h1m2 0h1m2 0h1m2 0h2M1 9.5h1m1 0h2m1 0h3m1 0h2m1 0h1m1 0h1m2 0h5m1 0h1m2 0h1m2 0h1m1 0h2M3 10.5h2m3 0h1m1 0h1m1 0h1m2 0h1m1 0h1m1 0h4m1 0h1m2 0h2m1 0h2m1 0h1M1 11.5h2m1 0h2m1 0h3m2 0h1m2 0h1m1 0h2m5 0h3m1 0h3m1 0h2M1 12.5h1m4 0h1m2 0h1m1 0h1m2 0h2m1 0h1m1 0h3m1 0h1m1 0h4m1 0h1m1 0h2M2 13.5h1m1 0h1m2 0h1m1 0h1m1 0h1m1 0h1m5 0h2m2 0h4m1 0h3m1 0h2M3 14.5h2m1 0h1m2 0h2m1 0h1m4 0h3m5 0h1m2 0h1m1 0h3M2 15.5h2m1 0h3m1 0h1m1 0h1m1 0h2m1 0h2m7 0h1m1 0h2m1 0h1M1 16.5h3m1 0h1m2 0h1m5 0h2m1 0h1m2 0h4m2 0h2m1 0h3M3 17.5h3m1 0h2m1 0h1m1 0h5m2 0h6m1 0h2m1 0h3M1 18.5h3m1 0h1m2 0h2m1 0h1m2 0h1m1 0h1m1 0h1m5 0h4m1 0h2m1 0h2M1 19.5h2m3 0h2m1 0h1m4 0h1m1 0h3m2 0h3m2 0h1m1 0h2m1 0h1M5 20.5h1m2 0h1m1 0h1m5 0h2m3 0h1m1 0h2m2 0h1m1 0h1M1 21.5h1m1 0h1m3 0h1m4 0h1m2 0h1m3 0h6m5 0h3M1 22.5h2m1 0h3m2 0h1m2 0h5m2 0h1m4 0h1m2 0h1m2 0h1m2 0h1M3 23.5h3m1 0h2m1 0h1m2 0h1m3 0h1m4 0h1m1 0h1m1 0h2m3 0h3M2 24.5h1m1 0h3m1 0h1m1 0h1m1 0h2m3 0h1m1 0h2m2 0h7m2 0h1M1 25.5h1m5 0h2m1 0h4m2 0h1m1 0h1m2 0h1m3 0h5M9 26.5h2m1 0h1m1 0h5m1 0h6m3 0h2M1 27.5h7m1 0h2m4 0h1m1 0h1m2 0h1m1 0h1m1 0h2m1 0h1m1 0h1M1 28.5h1m5 0h1m1 0h1m1 0h2m2 0h1m1 0h1m2 0h1m1 0h4m3 0h4M1 29.5h1m1 0h3m1 0h1m3 0h2m3 0h1m1 0h1m2 0h1m2 0h6m1 0h3M1 30.5h1m1 0h3m1 0h1m1 0h1m1 0h2m1 0h2m2 0h4m1 0h1m1 0h1m2 0h1m1 0h2m1 0h1M1 31.5h1m1 0h3m1 0h1m1 0h1m1 0h2m1 0h2m2 0h3m6 0h2m1 0h1M1 32.5h1m5 0h1m4 0h9m2 0h7m3 0h1M1 33.5h7m1 0h6m1 0h3m2 0h4m4 0h1m1 0h1"/></svg>
+
+      <span class="url">fjimenez321-stack.github.io/dondefelipe</span>
+      <small>Sigue la clase, tu bitácora y el estado de tu empresa desde tu propio dispositivo.</small>
+    </div>
+  </div>
+</section>
+
+<!-- 2 · FUNDA TU STARTUP -->
+<section class="slide">
+  <div class="inner">
+    <span class="eyebrow warm">💼 Antes de empezar</span>
+    <h2>Funda tu startup</h2>
+    <p class="lead">En esta unidad cada grupo es una empresa emergente. Investigan, invierten y compiten con evidencia científica — no con suerte.</p>
+
+    <div class="founder-setup card">
+      <label for="companyInput">Nombre de tu startup</label>
+      <div class="founder-row">
+        <input id="companyInput" type="text" placeholder="Ej. EcoVerde Villa Alemana" maxlength="26">
+        <button class="btn" onclick="setCompany()">Fundar · recibir 500 F$ 🚀</button>
+      </div>
+      <p id="founderConfirm" style="margin-top:10px;font-size:.85rem;color:var(--green-deep);font-weight:600"></p>
+    </div>
+
+    <div class="rules-grid">
+      <div class="rule-card"><h3>💰 Inversión</h3>
+        <p>Cada decisión tiene costo: fuentes confiables, asesoría y materiales se pagan con Felipesos (F$). Gastar bien es tan importante como investigar bien.</p></div>
+      <div class="rule-card"><h3>📈 Retorno</h3>
+        <p>Los entregables logrados, las respuestas correctas y los pitch convincentes generan F$ para tu empresa a lo largo de la unidad.</p></div>
+      <div class="rule-card"><h3>🦄 Éxito</h3>
+        <p>Al llegar a <strong>1.000 F$</strong> tu empresa se vuelve <strong>unicornio</strong>: presentas primero en la feria y eliges el próximo formato de indagación.</p></div>
+      <div class="rule-card"><h3>🏦 Fracaso</h3>
+        <p>Si tu saldo llega a <strong>0 F$</strong>, el <strong>Banco Felipe</strong> te presta 200 F$ a cambio de compartir una lección aprendida con el curso.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · PREGUNTAS GUÍA -->
+<section class="slide">
+  <div class="inner">
+    <span class="eyebrow">La unidad en 4 preguntas</span>
+    <h2>¿Por dónde partimos?</h2>
+    <div class="grid2">
+      <div class="card reveal" onclick="this.classList.toggle('sel');this.querySelector('.hidden-ans').classList.toggle('open')">
+        <h3>🛒 ¿Necesitamos todo lo que consumimos?</h3>
+        <div class="hidden-ans"><p style="color:var(--ink-soft);font-size:.9rem;line-height:1.55">Piensa en lo último que compraste en Av. Valparaíso o en la feria libre. ¿Cuánto de eso terminará en la basura este mes?</p></div>
+      </div>
+      <div class="card reveal" onclick="this.classList.toggle('sel');this.querySelector('.hidden-ans').classList.toggle('open')">
+        <h3>♻️ ¿Qué es consumo sostenible?</h3>
+        <div class="hidden-ans"><p style="color:var(--ink-soft);font-size:.9rem;line-height:1.55">Elegir, usar y desechar productos considerando su impacto ambiental completo, no solo su precio o comodidad.</p></div>
+      </div>
+      <div class="card reveal" onclick="this.classList.toggle('sel');this.querySelector('.hidden-ans').classList.toggle('open')">
+        <h3>🌿 ¿Cómo proteger los recursos naturales?</h3>
+        <div class="hidden-ans"><p style="color:var(--ink-soft);font-size:.9rem;line-height:1.55">Con evidencia científica: primero medimos el impacto, luego diseñamos soluciones. Eso haremos toda la unidad.</p></div>
+      </div>
+      <div class="card reveal" onclick="this.classList.toggle('sel');this.querySelector('.hidden-ans').classList.toggle('open')">
+        <h3>📍 ¿Qué problemas hay en Villa Alemana?</h3>
+        <div class="hidden-ans"><p style="color:var(--ink-soft);font-size:.9rem;line-height:1.55">Estero Marga Marga, residuos del comercio, áreas verdes, agua… Tu proyecto nacerá de un problema real de nuestra comuna.</p></div>
+      </div>
+    </div>
+    <p style="margin-top:14px;font-size:.82rem;color:var(--ink-soft)">💡 Toca cada tarjeta para ver la pista.</p>
+  </div>
+</section>
+
+<!-- 4 · CIE -->
+<section class="slide">
+  <div class="inner">
+    <span class="eyebrow">Nuestra metodología de trabajo</span>
+    <h2>Ciclo de Indagación Exprés (CIE)</h2>
+    <p class="lead">Cada clase investigaremos en un ciclo corto de 15 a 18 minutos. Toca cada paso:</p>
+    <div class="cie">
+      <div class="step" data-d="Una pregunta gatillante ligada a Villa Alemana o a la Mini-Pregunta del día. Enciende la curiosidad en 2 minutos."><div class="num">1</div><div class="t">Chispa</div><div class="m">2 min</div></div>
+      <div class="step" data-d="Búsqueda dirigida y cronometrada: máximo 2 fuentes o 1 dato/medición rápida. ¡El reloj corre!"><div class="num">2</div><div class="t">Indagación acotada</div><div class="m">8–10 min</div></div>
+      <div class="step" data-d="Anotas en tu bitácora: el hallazgo, la fuente consultada y tu nivel de confianza en ella (OA h)."><div class="num">3</div><div class="t">Registro en bitácora</div><div class="m">3 min</div></div>
+      <div class="step" data-d="2 o 3 grupos comparten en 30 segundos cada uno y contrastamos con la Mini-Pregunta de la sesión."><div class="num">4</div><div class="t">Puesta en común</div><div class="m">3–5 min</div></div>
+    </div>
+    <div id="cieDetail">👆 Selecciona un paso del ciclo para ver el detalle.</div>
+    <div id="timerWrap">
+      <span id="timerDisp">10:00</span>
+      <button class="btn" onclick="timerStart()">▶ Iniciar indagación</button>
+      <button class="btn ghost" onclick="timerReset()">Reiniciar</button>
+    </div>
+
+    <div class="invest-box">
+      <p><strong>💰 Decisión de fundador:</strong> ¿en qué fuente invierte tu empresa durante la indagación acotada?</p>
+      <div class="invest-btns">
+        <button class="btn" onclick="invest(-30,'✅ Inversión inteligente: fuente verificada. Tu bitácora sube su nivel de confianza (OA h).','investOut')">🔎 Fuente verificada · −30 F$</button>
+        <button class="btn ghost" onclick="invest(0,'⚠️ Ahorras Felipesos, pero una fuente sin revisar puede costarte credibilidad en la puesta en común.','investOut')">🎲 Primer resultado gratis · 0 F$</button>
+      </div>
+      <div id="investOut" class="invest-out"></div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h3>📝 Registro rápido de bitácora</h3>
+      <div class="ans-grid">
+        <div class="ans-field">
+          <label for="ans_hallazgo">Hallazgo de tu indagación de hoy</label>
+          <textarea id="ans_hallazgo" placeholder="Escribe lo que descubriste…"></textarea>
+        </div>
+        <div>
+          <div class="ans-field">
+            <label for="ans_fuente">Fuente consultada</label>
+            <input id="ans_fuente" type="text" placeholder="Ej. sitio web, envase, entrevista…">
+          </div>
+          <div class="ans-field">
+            <label for="ans_confianza">Nivel de confianza de la fuente</label>
+            <select id="ans_confianza">
+              <option value="">Selecciona…</option>
+              <option value="Alto">Alto</option>
+              <option value="Medio">Medio</option>
+              <option value="Bajo">Bajo</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · DIVISOR S1 -->
+<section class="slide">
+  <div class="inner divider">
+    <div class="big-n">01</div>
+    <span class="eyebrow warm">Sesión 1 · Formato CIE: dato exprés</span>
+    <h2>Ciudadanía científica y el ciclo de vida (ACV)</h2>
+    <p class="lead" style="margin:0 auto">Tu empresa ya tiene 500 F$ de capital semilla. Hoy invierte su primer estudio: elegir el producto correcto.</p>
+  </div>
+</section>
+
+<!-- 6 · CHISPA S1 -->
+<section class="slide">
+  <div class="inner">
+    <span class="eyebrow warm">⚡ Chispa · 2 minutos</span>
+    <h2>Una Coca Cola en Av. Valparaíso</h2>
+    <p class="lead">Compras una Coca Cola en botella plástica en un negocio de Av. Valparaíso. La tomas en 10 minutos.</p>
+    <div class="card" style="margin-top:20px">
+      <h3 style="color:var(--amber)">🤔 ¿Cuánto tiempo "vivió" esa botella antes y después de esos 10 minutos?</h3>
+      <div class="ans-field">
+        <label for="ans_chispa">✍️ Escribe tu hipótesis antes de revelar la respuesta</label>
+        <textarea id="ans_chispa" placeholder="Tu estimación y por qué…"></textarea>
+      </div>
+      <div class="hidden-ans" id="chispaAns">
+        <p style="color:var(--ink-soft);line-height:1.6;font-size:.95rem">El petróleo del plástico se formó hace millones de años. La botella de Coca Cola se fabricó quizás en Quilpué o Santiago, viajó en camión, estuvo semanas en bodega… y después de tus 10 minutos puede tardar <strong>hasta 450 años</strong> en degradarse. Los 10 minutos de uso son casi nada en su ciclo de vida.</p>
+      </div>
+      <button class="btn ghost" style="margin-top:14px" onclick="document.getElementById('chispaAns').classList.toggle('open')">Revelar respuesta</button>
+    </div>
+  </div>
+</section>
+
+<!-- 7 · MODELO CIENTÍFICO -->
+<section class="slide">
+  <div class="inner">
+    <span class="eyebrow">Concepto clave 1</span>
+    <h2>¿Qué es un modelo científico?</h2>
+    <div class="grid2">
+      <div class="card">
+        <h3>📐 Definición</h3>
+        <p style="color:var(--ink-soft);line-height:1.6;margin-top:8px;font-size:.95rem">Una <strong>representación simplificada</strong> de un fenómeno real que nos permite <strong>explicarlo y predecirlo</strong>. No es la realidad: es un mapa útil de ella.</p>
+        <ul class="clean">
+          <li>Un plano de Villa Alemana es un modelo de la comuna.</li>
+          <li>Un diagrama del ciclo del agua es un modelo del Estero Marga Marga.</li>
+          <li>El ACV es un modelo de la vida completa de un producto.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>🎯 ¿Para qué lo usaremos?</h3>
+        <ul class="clean">
+          <li><strong>Explicar:</strong> por qué un producto contamina.</li>
+          <li><strong>Predecir:</strong> qué pasa si cambiamos algo (¿y si la botella fuera retornable?).</li>
+          <li><strong>Comparar:</strong> qué opción tiene menor impacto ambiental.</li>
+          <li><strong>Decidir con evidencia</strong>, no con intuición (OA f).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 · ACV INTERACTIVO -->
+<section class="slide">
+  <div class="inner">
+    <span class="eyebrow">Concepto clave 2 · el corazón de la unidad</span>
+    <h2>Análisis de Ciclo de Vida (ACV)</h2>
+    <div class="acv-wrap">
+      <svg id="acvSVG" viewBox="0 0 400 400" role="img" aria-label="Diagrama circular del ciclo de vida"></svg>
+      <div id="acvInfo" class="card">
+        <h3>Toca una etapa del círculo</h3>
+        <p>El ACV evalúa los impactos ambientales de un producto <strong>"de la cuna a la tumba"</strong>: desde la extracción de materias primas hasta su disposición final (norma ISO 14040).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 · MINI-P + ACTIVIDAD S1 -->
+<section class="slide">
+  <div class="inner">
+    <span class="eyebrow warm">🎯 Mini-Pregunta de la Sesión 1</span>
+    <h2>¿En qué etapa del ciclo de vida de <em>mi</em> producto se concentra el mayor impacto?</h2>
+    <p class="lead">Por ahora es una <strong>suposición inicial</strong>: la iremos poniendo a prueba con datos las próximas semanas.</p>
+    <div class="grid2" style="margin-top:20px">
+      <div class="card">
+        <h3>📋 Actividad de hoy (en grupos)</h3>
+        <ul class="clean">
+          <li>Elijan <strong>un producto cotidiano</strong> del comercio de Av. Valparaíso, Av. Villaseca o la feria libre.</li>
+          <li>Dibujen su <strong>mapa de ciclo de vida preliminar</strong> (las 5 etapas).</li>
+          <li>Escriban una <strong>lista de preguntas investigables</strong> sobre él.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>📦 Entregable · Sesión 1</h3>
+        <ul class="clean">
+          <li>Mapa de ciclo de vida preliminar.</li>
+          <li>Lista de preguntas investigables.</li>
+          <li>Registro en bitácora con fuente y nivel de confianza.</li>
+        </ul>
+        <span class="tag" style="margin-top:10px;display:inline-block">Pizarra / Padlet</span>
+        <p style="margin-top:10px;font-size:.82rem;color:var(--ink-soft)">💡 Un entregable completo y bien logrado según la rúbrica = Felipesos para tu empresa.</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>✍️ Registra tu entregable</h3>
+      <div class="ans-field">
+        <label for="ans_producto">Producto elegido</label>
+        <input id="ans_producto" type="text" placeholder="Ej. bolsa de papas fritas, botella de Coca Cola…">
+      </div>
+      <div class="ans-grid">
+        <div class="ans-field">
+          <label for="ans_mapa">Notas de tu mapa de ciclo de vida preliminar</label>
+          <textarea id="ans_mapa" placeholder="Resume las 5 etapas para tu producto…"></textarea>
+        </div>
+        <div class="ans-field">
+          <label for="ans_preguntas">Tus preguntas investigables</label>
+          <textarea id="ans_preguntas" placeholder="Escribe 2 o 3 preguntas…"></textarea>
+        </div>
+      </div>
+      <div class="ans-field">
+        <label for="ans_minip1">Tu respuesta a la Mini-Pregunta de la Sesión 1: ¿en qué etapa se concentra el mayor impacto?</label>
+        <textarea id="ans_minip1" placeholder="Tu suposición inicial…"></textarea>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 · EXIT TICKET S1 -->
+<section class="slide">
+  <div class="inner">
+    <span class="eyebrow">🎟️ Ticket de salida · Sesión 1</span>
+    <h2>Antes de irte, responde en tu bitácora:</h2>
+    <div class="grid3" style="margin-top:8px">
+      <div>
+        <div class="flip" onclick="this.classList.toggle('f')"><div class="in">
+          <div class="face front">✅ ¿Qué sé?</div>
+          <div class="face back">Escribe una idea que hoy entendiste bien (ej.: qué es un ACV, qué significa "cuna a tumba").</div>
+        </div></div>
+        <div class="ans-field"><textarea id="ans_se" placeholder="Tu respuesta…"></textarea></div>
+      </div>
+      <div>
+        <div class="flip" onclick="this.classList.toggle('f')"><div class="in">
+          <div class="face front">❓ ¿Qué dudo?</div>
+          <div class="face back">Anota una duda honesta. Las dudas y errores son oportunidades de aprendizaje.</div>
+        </div></div>
+        <div class="ans-field"><textarea id="ans_dudo" placeholder="Tu respuesta…"></textarea></div>
+      </div>
+      <div>
+        <div class="flip" onclick="this.classList.toggle('f')"><div class="in">
+          <div class="face front">🚀 ¿Qué haré?</div>
+          <div class="face back">Un compromiso concreto para la próxima sesión (ej.: traer la etiqueta o boleta de mi producto).</div>
+        </div></div>
+        <div class="ans-field"><textarea id="ans_hare" placeholder="Tu respuesta…"></textarea></div>
+      </div>
+    </div>
+    <p style="margin-top:16px;font-size:.82rem;color:var(--ink-soft)">💡 Toca cada tarjeta para voltearla y escribe tu respuesta debajo.</p>
+    <button class="btn" id="rewardBtn" style="margin-top:16px" onclick="claimReward()">💰 Cobrar recompensa por reflexionar · +30 F$</button>
+  </div>
+</section>
+
+<!-- 11 · DIVISOR S2 -->
+<section class="slide s2">
+  <div class="inner divider s2">
+    <div class="big-n">02</div>
+    <span class="eyebrow s2">Sesión 2 · Formato CIE: fuente rival</span>
+    <h2>Límites del sistema y unidad funcional</h2>
+    <p class="lead" style="margin:0 auto">Todo buen modelo necesita reglas claras: hoy definimos <strong>hasta dónde</strong> llega tu inversión y <strong>con qué vara</strong> mides el retorno.</p>
+  </div>
+</section>
+
+<!-- 12 · LÍMITES DEL SISTEMA -->
+<section class="slide s2">
+  <div class="inner">
+    <span class="eyebrow s2">Concepto clave 3</span>
+    <h2>Límites del sistema: ¿cuna a tumba?</h2>
+    <p class="lead">Los límites definen <strong>qué etapas incluimos</strong> en el análisis. Compara:</p>
+    <div class="uf-toggle" id="limToggle">
+      <button class="on" data-k="tumba" onclick="setLim(this)">🪦 Cuna a tumba</button>
+      <button data-k="puerta" onclick="setLim(this)">🚪 Cuna a puerta</button>
+      <button data-k="cuna" onclick="setLim(this)">🔄 Cuna a cuna</button>
+    </div>
+    <div id="ufOut">
+      <strong>Cuna a tumba:</strong> desde la extracción de materias primas hasta la disposición final del residuo. Es el análisis completo — el que usaremos como referencia en nuestros proyectos. Ejemplo: la botella desde el pozo petrolero hasta el relleno sanitario o el punto limpio de Villa Alemana.
+    </div>
+  </div>
+</section>
+
+<!-- 13 · UNIDAD FUNCIONAL -->
+<section class="slide s2">
+  <div class="inner">
+    <span class="eyebrow s2">Concepto clave 4</span>
+    <h2>Unidad funcional: la vara de medir</h2>
+    <p class="lead">Es la <strong>cantidad de función</strong> que comparamos. Cambiarla puede cambiar la conclusión — igual que cambiar el indicador con que mides el éxito de tu empresa. Prueba:</p>
+    <div class="uf-toggle" id="ufToggle">
+      <button class="on" onclick="setUF(this,0)">1 uso</button>
+      <button onclick="setUF(this,1)">1 año de hidratación</button>
+      <button onclick="setUF(this,2)">1 litro transportado</button>
+    </div>
+    <div id="ufOut2" class="card" style="line-height:1.6;font-size:.95rem;color:var(--ink-soft)">
+      <strong style="color:var(--slate)">UF = 1 uso:</strong> la botella desechable parece "ganar": es liviana y barata de producir. La botella reutilizable pierde, porque fabricarla costó mucho más material y energía… para un solo uso.
+    </div>
+    <div class="card" style="margin-top:14px;background:var(--amber-pale);border-color:var(--amber)">
+      <strong>🎯 Mini-Pregunta de la Sesión 2:</strong> ¿Cambian mis conclusiones si ajusto la unidad funcional?
+      <div class="ans-field">
+        <textarea id="ans_minip2" placeholder="Tu respuesta…" style="background:#fff"></textarea>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 14 · FICHA + HIPÓTESIS S2 -->
+<section class="slide s2">
+  <div class="inner">
+    <span class="eyebrow s2">📋 Actividad y entregable · Sesión 2</span>
+    <h2>Ficha de proyecto ACV</h2>
+    <div class="grid2">
+      <div class="card">
+        <h3>Tu ficha debe definir:</h3>
+        <ul class="clean">
+          <li><strong>Producto</strong> elegido (Sesión 1) y su función.</li>
+          <li><strong>Límite del sistema:</strong> cuna a tumba.</li>
+          <li><strong>Unidad funcional:</strong> ej. "1 uso", "1 kg", "1 año".</li>
+          <li><strong>Variables</strong> a investigar: masa, energía, distancia de transporte, residuos.</li>
+        </ul>
+        <div class="ans-field">
+          <label for="ans_uf">Tu unidad funcional elegida</label>
+          <input id="ans_uf" type="text" placeholder="Ej. 1 uso, 1 año de hidratación…">
+        </div>
+        <div class="ans-field">
+          <label for="ans_variables">Variables que investigarás</label>
+          <textarea id="ans_variables" placeholder="Ej. masa del envase, distancia de transporte…"></textarea>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Y tu hipótesis, con el formato:</h3>
+        <p style="margin-top:10px;font-family:'Sora';font-weight:700;color:var(--slate);font-size:1.05rem;line-height:1.5">Si … entonces … porque …</p>
+        <div class="hidden-ans" id="hipEj">
+          <p style="font-size:.9rem;color:var(--ink-soft);line-height:1.6;background:var(--slate-pale);padding:12px 16px;border-radius:12px"><em>"Si analizamos el ciclo de vida de la Coca Cola en botella plástica, <strong>entonces</strong> la etapa de mayor impacto será la producción del envase, <strong>porque</strong> fabricar plástico requiere petróleo y alta energía."</em></p>
+        </div>
+        <button class="btn ghost" style="margin-top:12px;border-color:var(--slate);color:var(--slate)" onclick="document.getElementById('hipEj').classList.toggle('open')">Ver ejemplo</button>
+        <div class="ans-field">
+          <label for="ans_hipotesis">✍️ Tu hipótesis</label>
+          <textarea id="ans_hipotesis" placeholder="Si… entonces… porque…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="invest-box">
+      <p><strong>🙋 Asesoría express (opcional):</strong> pedirle una pista a tu profesor cuesta Felipesos, igual que contratar un consultor.</p>
+      <div class="invest-btns">
+        <button class="btn ghost" onclick="invest(-20,'','')">Pedir asesoría · −20 F$</button>
+      </div>
+    </div>
+    <p style="margin-top:14px;font-size:.86rem;color:var(--ink-soft)">🧰 Herramientas: plantilla en hoja de cálculo + checklist de calidad de preguntas.</p>
+  </div>
+</section>
+
+<!-- 15 · DIVISOR JUEGOS -->
+<section class="slide">
+  <div class="inner divider">
+    <div class="big-n">🎮</div>
+    <span class="eyebrow warm">Zona de juegos</span>
+    <h2>¡A poner a prueba lo aprendido!</h2>
+    <p class="lead" style="margin:0 auto">Tres desafíos rápidos sobre las sesiones 1 y 2. Cada acierto se convierte en Felipesos para tu empresa.</p>
+  </div>
+</section>
+
+<!-- 16 · JUEGO 1: ORDENA EL CICLO -->
+<section class="slide">
+  <div class="inner">
+    <div class="game-head">
+      <span class="eyebrow warm">Juego 1</span>
+      <h2 style="margin:0">Ordena el ciclo de vida</h2>
+      <span class="score" id="g1Score">⏱ —</span>
+    </div>
+    <p class="lead" style="font-size:.95rem">Toca las etapas en el orden correcto, desde la cuna hasta la tumba. Mientras más rápido, más F$ ganas:</p>
+    <div id="pool"></div>
+    <div id="seq"><span style="font-size:.8rem;color:var(--green-deep);font-weight:600;align-self:center">Tu secuencia aparecerá aquí →</span></div>
+    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn ghost" onclick="g1Init()">🔄 Reiniciar</button>
+    </div>
+    <div id="g1Feed" style="margin-top:12px;font-weight:600;min-height:24px"></div>
+  </div>
+</section>
+
+<!-- 17 · JUEGO 2: QUIZ -->
+<section class="slide">
+  <div class="inner">
+    <div class="game-head">
+      <span class="eyebrow warm">Juego 2</span>
+      <h2 style="margin:0">Quiz relámpago</h2>
+      <span class="score" id="g2Score">0 / 6</span>
+    </div>
+    <p class="lead" style="font-size:.9rem">Cada acierto: +40 F$. Cada error: −10 F$. Invierte con cuidado.</p>
+    <div class="card">
+      <h3 id="qText">Cargando…</h3>
+      <div id="qOpts"></div>
+      <div id="qFeed"></div>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:10px">
+      <button class="btn" id="qNext" onclick="g2Next()" style="display:none">Siguiente →</button>
+      <button class="btn ghost" onclick="g2Init()">🔄 Jugar de nuevo</button>
+    </div>
+  </div>
+</section>
+
+<!-- 18 · JUEGO 3: ¿INVESTIGABLE? -->
+<section class="slide">
+  <div class="inner">
+    <div class="game-head">
+      <span class="eyebrow warm">Juego 3</span>
+      <h2 style="margin:0">¿Pregunta investigable?</h2>
+      <span class="score" id="g3Score">0 aciertos</span>
+    </div>
+    <p class="lead" style="font-size:.95rem">Una pregunta investigable se puede responder con <strong>datos y evidencia</strong>. Cada acierto: +10 F$. Clasifica:</p>
+    <div id="claCard">Presiona "Comenzar"</div>
+    <div class="cla-btns">
+      <button class="btn" onclick="g3Ans(true)">🔬 Investigable</button>
+      <button class="btn no" onclick="g3Ans(false)">💭 No investigable</button>
+    </div>
+    <div id="claFeed"></div>
+    <button class="btn ghost" style="margin-top:12px" onclick="g3Init()">▶ Comenzar / Reiniciar</button>
+  </div>
+</section>
+
+<!-- 19 · CIERRE -->
+<section class="slide">
+  <div class="inner divider">
+    <span class="eyebrow">Próxima sesión</span>
+    <h2>Sesión 3: Inventario de ciclo de vida (LCI)</h2>
+    <p class="lead" style="margin:14px auto 0">Trae la <strong>etiqueta o boleta de tu producto</strong>: levantaremos datos reales de masa, energía y distancias de transporte.</p>
+
+    <div class="card recap-card">
+      <h3>🏦 Estado de tu empresa</h3>
+      <p><strong id="recapName">Tu Startup</strong> — Capital acumulado: <strong id="recapBal">500 F$</strong></p>
+      <p style="font-size:.85rem;margin-top:8px">Recuerda: la Semana 12 es el <strong>Demo Day</strong> — la feria ciudadana donde la comunidad de Villa Alemana "invierte" en tu proyecto final.</p>
+    </div>
+
+    <div style="margin-top:20px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn" onclick="downloadPDF()">⬇️ Descargar mi guía con mis respuestas (PDF)</button>
+      <button class="btn ghost" onclick="go(0)">↺ Volver al inicio</button>
+    </div>
+    <p style="margin-top:10px;font-size:.8rem;color:var(--ink-soft)">El PDF incluye todo lo que escribiste en esta sesión, más espacio en blanco para lo que quede pendiente.</p>
+
+    <div class="card" style="margin-top:24px;display:inline-block;text-align:left;max-width:520px">
+      <h3>📌 Recuerda</h3>
+      <ul class="clean">
+        <li>Bitácora al día: hallazgo + fuente + nivel de confianza.</li>
+        <li>Ficha de proyecto ACV completa con hipótesis.</li>
+        <li>Sitio del curso: <strong>fjimenez321-stack.github.io/dondefelipe</strong></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+/* ================= NAVEGACIÓN ================= */
+const slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+const dots=document.getElementById('dots');
+slides.forEach((_,i)=>{const d=document.createElement('span');d.onclick=()=>go(i);dots.appendChild(d)});
+function render(){
+  slides.forEach((s,i)=>{s.classList.toggle('active',i===cur);s.classList.toggle('prev',i<cur)});
+  document.getElementById('bar').style.width=((cur+1)/slides.length*100)+'%';
+  document.getElementById('counter').textContent=(cur+1)+' / '+slides.length;
+  [...dots.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+}
+function go(i){cur=Math.max(0,Math.min(slides.length-1,i));render()}
+document.getElementById('nextB').onclick=()=>go(cur+1);
+document.getElementById('prevB').onclick=()=>go(cur-1);
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' ')go(cur+1);
+  if(e.key==='ArrowLeft'||e.key==='PageUp')go(cur-1);
+  if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+});
+let tx=null,ty=null;
+document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY},{passive:true});
+document.addEventListener('touchend',e=>{
+  if(tx===null)return;
+  const dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+  if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){dx<0?go(cur+1):go(cur-1)}
+  tx=null;
+},{passive:true});
+render();
+
+/* ================= FELIPESOS · ESTADO GLOBAL ================= */
+let treasury=500, companyName='Tu Startup';
+let unicornFired=false, bankruptFired=false;
+function renderHUD(delta){
+  const hud=document.getElementById('hud');
+  document.getElementById('hudName').textContent=companyName;
+  document.getElementById('hudBal').textContent=treasury+' F$';
+  const rn=document.getElementById('recapName'); if(rn)rn.textContent=companyName;
+  const rb=document.getElementById('recapBal'); if(rb)rb.textContent=treasury+' F$';
+  hud.classList.remove('flash-up','flash-down');
+  void hud.offsetWidth;
+  if(delta>0)hud.classList.add('flash-up');
+  if(delta<0)hud.classList.add('flash-down');
+  checkMilestones();
+}
+function invest(amount,msg,targetId){
+  treasury+=amount;
+  renderHUD(amount);
+  if(targetId&&document.getElementById(targetId))document.getElementById(targetId).innerHTML=msg;
+}
+function showBanner(msg,type){
+  const b=document.getElementById('milestone');
+  b.textContent=msg;b.className='show '+type;
+  clearTimeout(window._bt);
+  window._bt=setTimeout(()=>{b.classList.remove('show')},5400);
+}
+function checkMilestones(){
+  if(treasury>=1000&&!unicornFired){
+    unicornFired=true;
+    showBanner('🦄 ¡'+companyName+' alcanzó el estatus UNICORNIO con '+treasury+' F$!','good');
+  }else if(treasury<=0&&!bankruptFired){
+    bankruptFired=true;
+    treasury+=200;
+    setTimeout(()=>renderHUD(200),50);
+    showBanner('🏦 Banco Felipe otorgó un préstamo puente de 200 F$ a '+companyName+'. Cuenta tu lección aprendida al curso.','warn');
+  }
+}
+function setCompany(){
+  const v=document.getElementById('companyInput').value.trim();
+  if(v)companyName=v;
+  renderHUD(0);
+  document.getElementById('founderConfirm').textContent='✅ '+companyName+' fue fundada con 500 F$ de capital semilla.';
+}
+let rewardClaimed=false;
+function claimReward(){
+  if(rewardClaimed)return;
+  rewardClaimed=true;
+  invest(30,'','');
+  const b=document.getElementById('rewardBtn');
+  b.textContent='✅ Recompensa cobrada · +30 F$';
+  b.disabled=true;
+}
+renderHUD(0);
+
+/* ================= CIE ================= */
+document.querySelectorAll('.cie .step').forEach(st=>{
+  st.onclick=()=>{
+    document.querySelectorAll('.cie .step').forEach(x=>x.classList.remove('sel'));
+    st.classList.add('sel');
+    document.getElementById('cieDetail').textContent=st.dataset.d;
+  };
+});
+let tSecs=600,tInt=null;
+function tShow(){const m=String(Math.floor(tSecs/60)).padStart(2,'0'),s=String(tSecs%60).padStart(2,'0');
+  const el=document.getElementById('timerDisp');el.textContent=m+':'+s;
+  el.style.color=tSecs<=60?'var(--red)':'var(--green-deep)';}
+function timerStart(){if(tInt)return;tInt=setInterval(()=>{if(tSecs>0){tSecs--;tShow()}else{clearInterval(tInt);tInt=null;
+  document.getElementById('timerDisp').textContent='¡Tiempo!'}},1000)}
+function timerReset(){clearInterval(tInt);tInt=null;tSecs=600;tShow()}
+tShow();
+
+/* ================= ACV SVG ================= */
+const stages=[
+ {n:'Extracción',e:'⛏️',d:'Se obtienen las materias primas de la naturaleza: petróleo, minerales, madera, agua.',ej:'El plástico de tu botella nació como petróleo crudo extraído del subsuelo.'},
+ {n:'Producción',e:'🏭',d:'Las materias primas se transforman en el producto: fábricas, energía, agua, emisiones.',ej:'La botella se moldea en una planta; suele ser la etapa de mayor gasto energético.'},
+ {n:'Distribución',e:'🚚',d:'El producto viaja: transporte, combustible, embalajes, bodegas.',ej:'¿Cuántos kilómetros recorrió tu producto para llegar a Av. Valparaíso? ¿20 km o 2.000 km?'},
+ {n:'Uso',e:'🧑‍🤝‍🧑',d:'El consumidor utiliza el producto. Puede durar minutos… o años.',ej:'La Coca Cola se toma en 10 minutos. Un polerón puede usarse 5 años: ¡gran diferencia de impacto por uso!'},
+ {n:'Fin de vida',e:'🗑️',d:'El producto se desecha, recicla, reutiliza o va a un relleno sanitario.',ej:'¿Termina en el punto limpio de Villa Alemana, en el relleno… o en el Estero Marga Marga?'}
+];
+const svg=document.getElementById('acvSVG'), NS='http://www.w3.org/2000/svg';
+const cx=200,cy=200,R=140;
+const ring=document.createElementNS(NS,'circle');
+ring.setAttribute('cx',cx);ring.setAttribute('cy',cy);ring.setAttribute('r',R);
+ring.setAttribute('fill','none');ring.setAttribute('stroke','#D8DED4');ring.setAttribute('stroke-width','2');
+ring.setAttribute('stroke-dasharray','6 6');svg.appendChild(ring);
+const center=document.createElementNS(NS,'text');
+center.setAttribute('x',cx);center.setAttribute('y',cy-6);center.setAttribute('text-anchor','middle');
+center.setAttribute('font-family','Sora');center.setAttribute('font-weight','800');center.setAttribute('font-size','22');
+center.setAttribute('fill','#16261C');center.textContent='ACV';svg.appendChild(center);
+const center2=document.createElementNS(NS,'text');
+center2.setAttribute('x',cx);center2.setAttribute('y',cy+16);center2.setAttribute('text-anchor','middle');
+center2.setAttribute('font-family','Inter');center2.setAttribute('font-size','11');
+center2.setAttribute('fill','#4A5A50');center2.textContent='cuna → tumba';svg.appendChild(center2);
+stages.forEach((s,i)=>{
+  const a=-Math.PI/2+i*2*Math.PI/5, x=cx+R*Math.cos(a), y=cy+R*Math.sin(a);
+  const g=document.createElementNS(NS,'g');g.classList.add('acv-seg');g.setAttribute('tabindex','0');
+  const c=document.createElementNS(NS,'circle');
+  c.setAttribute('cx',x);c.setAttribute('cy',y);c.setAttribute('r','44');
+  c.setAttribute('fill','#FFFFFF');c.setAttribute('stroke','#2E7D4F');c.setAttribute('stroke-width','2.5');
+  const em=document.createElementNS(NS,'text');
+  em.setAttribute('x',x);em.setAttribute('y',y-4);em.setAttribute('text-anchor','middle');em.setAttribute('font-size','22');
+  em.textContent=s.e;
+  const tx2=document.createElementNS(NS,'text');
+  tx2.setAttribute('x',x);tx2.setAttribute('y',y+20);tx2.setAttribute('text-anchor','middle');
+  tx2.setAttribute('font-family','Sora');tx2.setAttribute('font-weight','700');tx2.setAttribute('font-size','10.5');
+  tx2.setAttribute('fill','#16261C');tx2.textContent=s.n;
+  g.append(c,em,tx2);
+  const sel=()=>{
+    document.querySelectorAll('.acv-seg').forEach(x=>x.classList.remove('sel'));
+    g.classList.add('sel');
+    document.getElementById('acvInfo').innerHTML=
+      '<h3>'+s.e+' '+(i+1)+'. '+s.n+'</h3><p>'+s.d+'</p><div class="ej">📍 '+s.ej+'</div>';
+  };
+  g.onclick=sel; g.onkeydown=e=>{if(e.key==='Enter')sel()};
+  svg.appendChild(g);
+});
+
+/* ================= LÍMITES ================= */
+const limTxt={
+ tumba:'<strong>Cuna a tumba:</strong> desde la extracción de materias primas hasta la disposición final del residuo. Es el análisis completo — el que usaremos como referencia en nuestros proyectos. Ejemplo: la botella desde el pozo petrolero hasta el relleno sanitario o el punto limpio de Villa Alemana.',
+ puerta:'<strong>Cuna a puerta:</strong> desde la extracción hasta que el producto sale de la fábrica. Ignora la distribución, el uso y el desecho. Útil para comparar procesos productivos, pero deja fuera lo que pasa en Villa Alemana.',
+ cuna:'<strong>Cuna a cuna:</strong> el residuo se convierte en materia prima de un nuevo producto (economía circular). Es el escenario ideal: nada se pierde, todo se transforma. ¿Podría tu producto lograrlo?'};
+function setLim(b){
+  document.querySelectorAll('#limToggle button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  document.getElementById('ufOut').innerHTML=limTxt[b.dataset.k];
+}
+/* ================= UF ================= */
+const ufTxt=[
+ '<strong style="color:var(--slate)">UF = 1 uso:</strong> la botella desechable parece "ganar": es liviana y barata de producir. La botella reutilizable pierde, porque fabricarla costó mucho más material y energía… para un solo uso.',
+ '<strong style="color:var(--slate)">UF = 1 año de hidratación:</strong> ¡la conclusión se invierte! Necesitas ~365 botellas desechables vs. 1 reutilizable. La reutilizable reparte su impacto de fabricación entre cientos de usos y gana con claridad.',
+ '<strong style="color:var(--slate)">UF = 1 litro transportado:</strong> ahora importa la logística: peso del envase, distancia del proveedor, retorno de envases. Un envase retornable local puede superar a ambos.'];
+function setUF(b,i){
+  document.querySelectorAll('#ufToggle button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  document.getElementById('ufOut2').innerHTML=ufTxt[i];
+}
+
+/* ================= JUEGO 1 ================= */
+const g1Order=['Extracción','Producción','Distribución','Uso','Fin de vida'];
+let g1Pos=0,g1T0=0,g1Timer=null;
+function g1Init(){
+  g1Pos=0;g1T0=Date.now();
+  clearInterval(g1Timer);
+  g1Timer=setInterval(()=>{document.getElementById('g1Score').textContent='⏱ '+((Date.now()-g1T0)/1000).toFixed(1)+' s'},100);
+  const pool=document.getElementById('pool'),seq=document.getElementById('seq');
+  seq.innerHTML='<span style="font-size:.8rem;color:var(--green-deep);font-weight:600;align-self:center">Tu secuencia aparecerá aquí →</span>';
+  pool.innerHTML='';
+  document.getElementById('g1Feed').textContent='';
+  [...g1Order].sort(()=>Math.random()-.5).forEach(n=>{
+    const c=document.createElement('div');c.className='chip';c.textContent=n;
+    c.onclick=()=>{
+      if(n===g1Order[g1Pos]){
+        g1Pos++;c.classList.add('ok');c.onclick=null;
+        const s=document.createElement('div');s.className='chip ok';s.textContent=g1Pos+'. '+n;
+        if(g1Pos===1)document.getElementById('seq').innerHTML='';
+        document.getElementById('seq').appendChild(s);
+        c.remove();
+        if(g1Pos===g1Order.length){
+          clearInterval(g1Timer);
+          const t=(Date.now()-g1T0)/1000;
+          const reward=t<=15?80:(t<=30?50:25);
+          invest(reward,'','');
+          document.getElementById('g1Feed').innerHTML='🎉 <span style="color:var(--green-deep)">¡Ciclo completo en '+t.toFixed(1)+' s! Ganaste +'+reward+' F$ para '+companyName+'.</span>';
+        }
+      }else{
+        c.classList.add('bad');setTimeout(()=>c.classList.remove('bad'),400);
+        document.getElementById('g1Feed').innerHTML='<span style="color:var(--red)">Esa etapa no va todavía. Piensa: ¿qué pasa primero?</span>';
+      }
+    };
+    pool.appendChild(c);
+  });
+}
+g1Init();
+
+/* ================= JUEGO 2 ================= */
+const quiz=[
+ {q:'Un modelo científico es…',o:['Una copia exacta de la realidad','Una representación simplificada que explica y predice','Una opinión de un experto','Un experimento de laboratorio'],a:1,f:'El modelo simplifica la realidad para explicarla y predecirla (OA f).'},
+ {q:'"De la cuna a la tumba" significa analizar el producto…',o:['Solo cuando lo usamos','Desde la fábrica hasta la tienda','Desde la extracción de materias primas hasta su disposición final','Solo cuando se convierte en basura'],a:2,f:'El ACV completo cubre todas las etapas, según la norma ISO 14040.'},
+ {q:'¿Cuál es la primera etapa del ciclo de vida?',o:['Producción','Distribución','Uso','Extracción de materias primas'],a:3,f:'Todo parte en la naturaleza: petróleo, minerales, madera, agua.'},
+ {q:'La unidad funcional es…',o:['La fábrica donde se produce','La cantidad de función que usamos para comparar','El precio del producto','El envase del producto'],a:1,f:'Ej.: "1 uso", "1 litro", "1 año". Cambiarla puede cambiar la conclusión.'},
+ {q:'Si comparamos botella desechable vs. reutilizable con UF = "1 año de hidratación"…',o:['Gana la desechable','Gana la reutilizable','Empatan siempre','No se puede comparar'],a:1,f:'La reutilizable reparte su impacto de fabricación entre cientos de usos.'},
+ {q:'En el CIE, al registrar en la bitácora debes anotar…',o:['Solo el resultado','Hallazgo, fuente y nivel de confianza','La opinión del grupo','Un dibujo del producto'],a:1,f:'Evaluar la confiabilidad de las fuentes es el OA h.'}
+];
+let g2i=0,g2s=0;
+function g2Init(){g2i=0;g2s=0;document.getElementById('g2Score').textContent='0 / 6';g2Show()}
+function g2Show(){
+  const q=quiz[g2i];
+  document.getElementById('qText').textContent=(g2i+1)+'. '+q.q;
+  document.getElementById('qFeed').textContent='';
+  document.getElementById('qNext').style.display='none';
+  const box=document.getElementById('qOpts');box.innerHTML='';
+  q.o.forEach((o,i)=>{
+    const b=document.createElement('button');b.className='q-opt';b.textContent=o;
+    b.onclick=()=>{
+      [...box.children].forEach(x=>x.onclick=null);
+      if(i===q.a){
+        b.classList.add('right');g2s++;invest(40,'','');
+        document.getElementById('qFeed').innerHTML='<span style="color:var(--green-deep)">✅ +40 F$ · '+q.f+'</span>';
+      }else{
+        b.classList.add('wrong');box.children[q.a].classList.add('right');invest(-10,'','');
+        document.getElementById('qFeed').innerHTML='<span style="color:var(--red)">❌ −10 F$ · '+q.f+'</span>';
+      }
+      document.getElementById('g2Score').textContent=g2s+' / 6';
+      document.getElementById('qNext').style.display= g2i<quiz.length-1?'inline-block':'none';
+      if(g2i===quiz.length-1){
+        const msg=g2s>=5?'🏆 ¡Nivel experto en ACV!':g2s>=3?'💪 ¡Bien! Repasa las diapositivas y vuelve a intentarlo.':'📖 Vuelve a las diapositivas anteriores y reintenta.';
+        document.getElementById('qFeed').innerHTML+='<br><strong>'+msg+' Puntaje final: '+g2s+'/6</strong>';
+      }
+    };
+    box.appendChild(b);
+  });
+}
+function g2Next(){g2i++;g2Show()}
+g2Init();
+
+/* ================= JUEGO 3 ================= */
+const claItems=[
+ {t:'¿Cuántos kilómetros recorre una Coca Cola desde su planta hasta Av. Valparaíso?',inv:true,f:'Se puede medir con datos de origen y mapas: ¡investigable!'},
+ {t:'¿Es bonito el envase de mi producto?',inv:false,f:'Es una opinión estética: no se responde con evidencia.'},
+ {t:'¿Qué masa de plástico tiene el envase de mi producto?',inv:true,f:'Se mide con una balanza: dato directo.'},
+ {t:'¿Deberían prohibirse todas las bolsas del mundo?',inv:false,f:'Es demasiado amplia y valórica; habría que acotarla para investigarla.'},
+ {t:'¿Cuántos envases desechables se venden en un recreo en el kiosco del colegio?',inv:true,f:'Una mini-encuesta u observación directa lo responde: investigable y local.'},
+ {t:'¿Extender la vida útil de un producto un 50% reduce más su impacto que reciclarlo?',inv:true,f:'Se puede modelar y calcular: es la Mini-P de la semana 4.'},
+ {t:'¿El reciclaje es aburrido?',inv:false,f:'Percepción subjetiva: no es una pregunta científica.'},
+ {t:'¿Qué porcentaje de hogares de mi villa separa sus residuos?',inv:true,f:'Una encuesta bien diseñada entrega evidencia: investigable.'}
+];
+let g3i=0,g3correct=0,g3deck=[];
+function g3Init(){
+  g3i=0;g3correct=0;g3deck=[...claItems].sort(()=>Math.random()-.5);
+  document.getElementById('g3Score').textContent='0 aciertos';
+  document.getElementById('claFeed').textContent='';
+  document.getElementById('claCard').textContent=g3deck[0].t;
+}
+function g3Ans(v){
+  if(!g3deck.length||g3i>=g3deck.length){document.getElementById('claFeed').textContent='Presiona "Comenzar" para jugar.';return}
+  const it=g3deck[g3i];
+  if(v===it.inv){
+    g3correct++;invest(10,'','');
+    document.getElementById('claFeed').innerHTML='<span style="color:var(--green-deep)">✅ +10 F$ · '+it.f+'</span>';
+  }else{
+    document.getElementById('claFeed').innerHTML='<span style="color:var(--red)">❌ '+it.f+'</span>';
+  }
+  document.getElementById('g3Score').textContent=g3correct+' aciertos';
+  g3i++;
+  if(g3i<g3deck.length){setTimeout(()=>{document.getElementById('claCard').textContent=g3deck[g3i].t},900)}
+  else{setTimeout(()=>{
+    document.getElementById('claCard').innerHTML='🏁 Juego terminado: <span style="color:var(--green)">'+g3correct+' / '+g3deck.length+' aciertos</span>';
+  },900)}
+}
+
+/* ================= PDF DE DESCARGA ================= */
+function fv(id){const el=document.getElementById(id);return el?el.value:'';}
+function downloadPDF(){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'pt',format:'a4'});
+  const M=54,PW=595,PH=842,W=PW-2*M;
+  let y=64;
+  function checkPage(need){if(y+need>PH-50){doc.addPage();y=64;}}
+  function h1(t){
+    checkPage(40);
+    doc.setFont('helvetica','bold');doc.setFontSize(19);doc.setTextColor(22,38,28);doc.text(t,M,y);y+=12;
+    doc.setDrawColor(46,125,79);doc.setLineWidth(1.3);doc.line(M,y,M+W,y);y+=22;
+  }
+  function h2(t){checkPage(30);doc.setFont('helvetica','bold');doc.setFontSize(12.5);doc.setTextColor(30,90,56);doc.text(t,M,y);y+=16;}
+  function h3(t){checkPage(24);doc.setFont('helvetica','bold');doc.setFontSize(10.8);doc.setTextColor(22,38,28);doc.text(t,M,y);y+=6;
+    doc.setDrawColor(216,222,212);doc.setLineWidth(.6);doc.line(M,y,M+W,y);y+=14;}
+  function p(t){
+    doc.setFont('helvetica','normal');doc.setFontSize(10.3);doc.setTextColor(60,70,64);
+    const lines=doc.splitTextToSize(t,W);
+    lines.forEach(l=>{checkPage(14);doc.text(l,M,y);y+=14;});
+    y+=6;
+  }
+  function li(items){
+    items.forEach(t=>{
+      doc.setFont('helvetica','normal');doc.setFontSize(10.3);doc.setTextColor(60,70,64);
+      const lines=doc.splitTextToSize('•  '+t,W-10);
+      lines.forEach((l)=>{checkPage(14);doc.text(l,M,y);y+=14;});
+    });
+    y+=6;
+  }
+  /* Pregunta abierta / ejercicio: si el estudiante escribió algo, se imprime su respuesta;
+     si quedó en blanco, se dejan líneas para escribir a mano. */
+  function qBlock(label,value){
+    checkPage(30);
+    doc.setFont('helvetica','bold');doc.setFontSize(10.2);doc.setTextColor(28,78,107);
+    const qlines=doc.splitTextToSize(label,W);
+    qlines.forEach(l=>{checkPage(13);doc.text(l,M,y);y+=13;});
+    y+=3;
+    const v=(value||'').trim();
+    if(v){
+      doc.setFont('helvetica','italic');doc.setFontSize(10);doc.setTextColor(50,60,55);
+      const vlines=doc.splitTextToSize(v,W-10);
+      vlines.forEach(l=>{checkPage(13);doc.text(l,M+8,y);y+=13;});
+      y+=8;
+    }else{
+      doc.setDrawColor(206,212,202);doc.setLineWidth(.7);
+      for(let i=0;i<2;i++){checkPage(16);doc.line(M,y,M+W,y);y+=16;}
+      y+=4;
+    }
+  }
+
+  h1('Unidad II · Sesiones 1 y 2');
+  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(90,100,94);
+  doc.text('Ciencias para la Ciudadanía · 3° Medio · Colegio San Agustín, Villa Alemana',M,y);y+=24;
+
+  h2('Tu empresa');
+  p('Startup: '+companyName+'    ·    Capital acumulado en esta sesión: '+treasury+' F$');
+
+  h2('Ciclo de Indagación Exprés (CIE)');
+  li(['Chispa (2 min): pregunta gatillante ligada al contexto local.',
+      'Indagación acotada (8-10 min): máximo 2 fuentes o 1 dato/medición rápida.',
+      'Registro en bitácora (3 min): hallazgo, fuente consultada y nivel de confianza (OA h).',
+      'Puesta en común relámpago (3-5 min): 2-3 grupos comparten y se contrasta con la Mini-Pregunta.']);
+
+  h2('Etapas del Análisis de Ciclo de Vida (ACV)');
+  li(['1. Extracción de materias primas','2. Producción','3. Distribución','4. Uso','5. Fin de vida']);
+
+  h2('Sesión 1 · Ciudadanía científica y ACV');
+  p('Mini-pregunta: ¿En qué etapa del ciclo de vida de mi producto se concentra el mayor impacto? (suposición inicial). Entregable: mapa de ciclo de vida preliminar + lista de preguntas investigables + registro en bitácora.');
+
+  h3('✍️ Tus respuestas — Sesión 1');
+  qBlock('Producto elegido',fv('ans_producto'));
+  qBlock('Chispa · tu hipótesis sobre el tiempo de vida de la botella',fv('ans_chispa'));
+  qBlock('Notas de tu mapa de ciclo de vida preliminar',fv('ans_mapa'));
+  qBlock('Tus preguntas investigables',fv('ans_preguntas'));
+  qBlock('Registro de bitácora · hallazgo de tu indagación',fv('ans_hallazgo'));
+  const fte=fv('ans_fuente'), conf=fv('ans_confianza');
+  qBlock('Fuente consultada y nivel de confianza',(fte||conf)?(fte+(conf?'  ·  Confianza: '+conf:'')):'');
+  qBlock('Mini-Pregunta S1 · ¿en qué etapa se concentra el mayor impacto?',fv('ans_minip1'));
+  qBlock('Ticket de salida · ¿Qué sé?',fv('ans_se'));
+  qBlock('Ticket de salida · ¿Qué dudo?',fv('ans_dudo'));
+  qBlock('Ticket de salida · ¿Qué haré?',fv('ans_hare'));
+
+  h2('Sesión 2 · Límites del sistema y unidad funcional');
+  p('Mini-pregunta: ¿Cambian mis conclusiones si ajusto la unidad funcional? Entregable: ficha de proyecto ACV (límite del sistema, unidad funcional, variables) + hipótesis con formato Si.../entonces.../porque...');
+
+  h3('✍️ Tus respuestas — Sesión 2');
+  qBlock('Mini-Pregunta S2 · ¿cambian tus conclusiones al ajustar la UF?',fv('ans_minip2'));
+  qBlock('Tu unidad funcional elegida',fv('ans_uf'));
+  qBlock('Variables que investigarás',fv('ans_variables'));
+  qBlock('Tu hipótesis (Si… entonces… porque…)',fv('ans_hipotesis'));
+
+  h2('Dinámica Startup · Reglas de Felipesos (F$)');
+  li(['Capital semilla: 500 F$ al fundar tu empresa.',
+      'Inversión: fuentes confiables, asesoría y materiales tienen costo en F$.',
+      'Retorno: entregables logrados, respuestas correctas y pitch convincentes generan F$.',
+      'Éxito: alcanzar 1.000 F$ otorga el estatus de empresa unicornio.',
+      'Fracaso: llegar a 0 F$ activa un préstamo puente del Banco Felipe (+200 F$) a cambio de compartir una lección aprendida con el curso.',
+      'Semana 12 · Demo Day: la feria ciudadana funciona como ronda de inversión final ante la comunidad de Villa Alemana.']);
+
+  h2('Glosario breve');
+  li(['Modelo científico: representación simplificada de un fenómeno real que permite explicarlo y predecirlo.',
+      'ACV (Análisis de Ciclo de Vida): impactos ambientales de un producto "de la cuna a la tumba" (norma ISO 14040).',
+      'Límites del sistema: etapas del ciclo de vida incluidas en el análisis.',
+      'Unidad funcional: cantidad de función usada como base de comparación entre productos.']);
+
+  const safeName=(companyName||'startup').replace(/[^a-z0-9áéíóúñ]+/gi,'_');
+  doc.save(safeName+'_Unidad2_Guia.pdf');
+}
+</script>
+</body>
+</html>
