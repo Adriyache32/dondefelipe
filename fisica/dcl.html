@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Unidad 2 · Diagrama de Cuerpo Libre y Sumatoria de Fuerzas en X</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papel:#F7F8F6;
+  --tinta:#12263F;
+  --tinta-suave:#4A5D74;
+  --linea:#C9D3DE;
+  --ambar:#E0912F;
+  --verde:#2E8B6B;
+  --rojo:#C4453A;
+  --azul:#1F6FB2;
+  --blanco:#FFFFFF;
+  --grid: 24px;
+  --radio:4px;
+  --sombra:0 1px 0 var(--linea), 0 12px 32px -20px rgba(18,38,63,.45);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'IBM Plex Sans',system-ui,sans-serif;
+  color:var(--tinta);
+  background:var(--papel);
+  background-image:
+    linear-gradient(var(--linea) 1px, transparent 1px),
+    linear-gradient(90deg, var(--linea) 1px, transparent 1px);
+  background-size:var(--grid) var(--grid);
+  background-position:-1px -1px;
+  overflow:hidden;
+  -webkit-text-size-adjust:100%;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 50% 40%, rgba(247,248,246,.35), var(--papel) 78%);
+}
+
+/* ---------- Barra superior ---------- */
+.topbar{
+  position:fixed;top:0;left:0;right:0;height:46px;z-index:40;
+  display:flex;align-items:center;gap:12px;padding:0 14px;
+  background:rgba(247,248,246,.92);backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--linea);
+}
+.marca{font-family:'Archivo',sans-serif;font-weight:900;font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+.marca span{color:var(--ambar)}
+.progreso{flex:1;height:3px;background:var(--linea);border-radius:2px;overflow:hidden}
+.progreso i{display:block;height:100%;width:0;background:var(--tinta);transition:width .35s ease}
+.contador{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--tinta-suave);min-width:52px;text-align:right}
+
+/* ---------- Diapositivas ---------- */
+.deck{position:fixed;inset:46px 0 64px;overflow:hidden}
+.slide{
+  position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;
+  padding:26px 20px 40px;opacity:0;visibility:hidden;transform:translateY(12px);
+  transition:opacity .35s ease, transform .35s ease, visibility .35s;
+}
+.slide.activa{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:980px;margin:0 auto}
+
+.eyebrow{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--tinta-suave);
+  display:flex;align-items:center;gap:10px;margin-bottom:10px;
+}
+.eyebrow::after{content:"";flex:1;height:1px;background:var(--linea)}
+h1{font-family:'Archivo',sans-serif;font-weight:900;font-size:clamp(28px,5.4vw,52px);line-height:1.02;letter-spacing:-.02em}
+h2{font-family:'Archivo',sans-serif;font-weight:800;font-size:clamp(22px,3.6vw,34px);line-height:1.08;letter-spacing:-.01em;margin-bottom:14px}
+h3{font-family:'Archivo',sans-serif;font-weight:700;font-size:17px;margin-bottom:6px}
+p{line-height:1.6;color:var(--tinta-suave);font-size:clamp(14px,1.6vw,16.5px)}
+strong{color:var(--tinta)}
+.lead{font-size:clamp(15px,1.9vw,18px)}
+
+.tarjeta{
+  background:var(--blanco);border:1px solid var(--linea);border-radius:var(--radio);
+  padding:18px;box-shadow:var(--sombra);
+}
+.rejilla{display:grid;gap:14px}
+@media(min-width:760px){.rejilla.dos{grid-template-columns:1fr 1fr}.rejilla.tres{grid-template-columns:repeat(3,1fr)}}
+
+.formula{
+  font-family:'IBM Plex Mono',monospace;font-weight:600;
+  background:var(--tinta);color:var(--papel);border-radius:var(--radio);
+  padding:12px 16px;display:inline-block;font-size:clamp(15px,2.4vw,20px);letter-spacing:.02em;
+}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;
+  font-size:11px;text-transform:uppercase;letter-spacing:.1em;
+  border:1px solid var(--linea);border-radius:99px;padding:4px 10px;color:var(--tinta-suave);background:var(--blanco);
+}
+.chip b{width:8px;height:8px;border-radius:99px;display:block}
+
+ul.lista{list-style:none;display:grid;gap:8px;margin-top:10px}
+ul.lista li{position:relative;padding-left:26px;line-height:1.55;color:var(--tinta-suave);font-size:15px}
+ul.lista li::before{
+  content:counter(paso,decimal-leading-zero);counter-increment:paso;
+  position:absolute;left:0;top:1px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ambar);font-weight:600;
+}
+ul.lista{counter-reset:paso}
+
+/* ---------- Portada + QR ---------- */
+.portada{display:grid;gap:26px;align-items:center}
+@media(min-width:820px){.portada{grid-template-columns:1.15fr .85fr}}
+.qr-caja{
+  background:var(--blanco);border:1px solid var(--linea);border-radius:var(--radio);
+  padding:18px;text-align:center;box-shadow:var(--sombra);
+}
+#qr{display:flex;justify-content:center;align-items:center;min-height:190px}
+#qr img,#qr canvas{width:min(58vw,240px)!important;height:min(58vw,240px)!important;image-rendering:pixelated}
+.qr-caja input{
+  width:100%;margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:12px;
+  border:1px solid var(--linea);border-radius:var(--radio);padding:8px;color:var(--tinta);background:var(--papel);
+}
+.qr-caja small{display:block;margin-top:8px;color:var(--tinta-suave);font-size:11.5px;line-height:1.4}
+
+.identidad{display:grid;gap:10px;margin-top:18px}
+.identidad input{
+  border:1px solid var(--linea);border-radius:var(--radio);padding:10px 12px;font:inherit;font-size:14px;background:var(--blanco);color:var(--tinta);
+}
+@media(min-width:520px){.identidad{grid-template-columns:1fr 1fr}}
+
+/* ---------- Simulador ---------- */
+.sim{background:var(--blanco);border:1px solid var(--linea);border-radius:var(--radio);overflow:hidden;box-shadow:var(--sombra)}
+.escena{width:100%;display:block;background:
+  linear-gradient(180deg,#FBFCFB,#F1F4F7);border-bottom:1px solid var(--linea)}
+.transporte{
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 16px;
+  border-bottom:1px solid var(--linea);background:#FBFCFD;
+}
+.tbtn{
+  display:inline-flex;align-items:center;gap:7px;background:var(--blanco);border:1px solid var(--linea);
+  color:var(--tinta);padding:9px 13px;font-size:13.5px;font-weight:500;border-radius:var(--radio);
+  transition:border-color .15s, background .15s;
+}
+.tbtn:hover{border-color:var(--tinta-suave);background:#F4F6F8}
+.tbtn.primario{background:var(--tinta);color:var(--papel);border-color:var(--tinta);min-width:132px;justify-content:center}
+.tbtn.primario:hover{background:#0B1B2E}
+.tbtn.primario.corriendo{background:var(--ambar);color:#1a1200;border-color:var(--ambar)}
+.reloj{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--tinta-suave)}
+.reloj b{color:var(--tinta);font-weight:600}
+@media(max-width:520px){.reloj{margin-left:0;width:100%;text-align:right}.tbtn{flex:1;justify-content:center}}
+
+.controles{display:grid;gap:14px;padding:16px}
+@media(min-width:700px){.controles{grid-template-columns:repeat(3,1fr)}}
+.ctrl .fila{display:flex;align-items:center;gap:10px}
+.ctrl .fila input[type=range]{flex:1;min-width:0}
+.ctrl .fila input[type=number]{
+  width:74px;flex:none;border:1px solid var(--linea);border-radius:var(--radio);
+  padding:8px 6px;text-align:center;background:var(--papel);color:var(--tinta);
+  font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;
+}
+.ctrl .fila input[type=number]:focus{background:var(--blanco);border-color:var(--tinta)}
+.ctrl label b{color:var(--tinta-suave);font-weight:400;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.ctrl label{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--tinta-suave);margin-bottom:6px}
+.ctrl label b{color:var(--tinta)}
+input[type=range]{width:100%;-webkit-appearance:none;height:22px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--linea)}
+input[type=range]::-moz-range-track{height:2px;background:var(--linea)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:99px;background:var(--tinta);margin-top:-8px;border:3px solid var(--blanco);box-shadow:0 0 0 1px var(--linea)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border:3px solid var(--blanco);border-radius:99px;background:var(--tinta)}
+.lectura{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;background:var(--linea);border-top:1px solid var(--linea);
+}
+.lectura div{background:var(--blanco);padding:12px 14px}
+.lectura span{display:block;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--tinta-suave)}
+.lectura b{font-family:'Archivo',sans-serif;font-size:22px;font-weight:800;display:block;margin-top:2px}
+.pill{padding:4px 10px;border-radius:99px;font-size:12px;font-family:'IBM Plex Mono',monospace;display:inline-block;margin-top:6px}
+
+/* ---------- Ejercicios ---------- */
+.nivel{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.nivel em{font-style:normal;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+.basico{color:var(--verde)} .inter{color:var(--azul)} .desafio{color:var(--rojo)}
+.enunciado{border-left:2px solid var(--ambar);padding-left:12px;margin:10px 0 14px}
+.respuesta{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.respuesta input[type=text]{
+  flex:1;min-width:120px;border:1px solid var(--linea);border-radius:var(--radio);padding:10px 12px;
+  font-family:'IBM Plex Mono',monospace;font-size:15px;background:var(--papel);color:var(--tinta);
+}
+button{font:inherit;cursor:pointer;border:none;border-radius:var(--radio)}
+.btn{
+  background:var(--tinta);color:var(--papel);padding:10px 16px;font-weight:600;font-size:14px;
+  transition:transform .12s ease, background .2s;
+}
+.btn:hover{background:#0B1B2E} .btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--tinta);border:1px solid var(--linea)}
+.btn.ambar{background:var(--ambar);color:#1a1200}
+.feedback{width:100%;font-size:14px;margin-top:8px;line-height:1.5;display:none}
+.feedback.ok{display:block;color:var(--verde)}
+.feedback.no{display:block;color:var(--rojo)}
+.pasos{display:none;margin-top:10px;background:var(--papel);border:1px dashed var(--linea);border-radius:var(--radio);padding:12px;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.8;color:var(--tinta-suave)}
+.pasos.ver{display:block}
+
+/* ---------- Conceptuales ---------- */
+.opcion{
+  display:flex;gap:10px;align-items:flex-start;border:1px solid var(--linea);background:var(--blanco);
+  border-radius:var(--radio);padding:11px 13px;cursor:pointer;transition:border-color .15s, background .15s;font-size:15px;
+}
+.opcion:hover{border-color:var(--tinta-suave)}
+.opcion input{margin-top:4px;accent-color:var(--tinta)}
+.opcion.sel{border-color:var(--tinta);background:#FBFCFD}
+.opciones{display:grid;gap:8px;margin-top:10px}
+textarea{
+  width:100%;min-height:110px;border:1px solid var(--linea);border-radius:var(--radio);padding:12px;
+  font:inherit;font-size:15px;background:var(--blanco);color:var(--tinta);resize:vertical;line-height:1.55;
+}
+
+/* ---------- Semáforo ---------- */
+.semaforo{display:grid;gap:10px;grid-template-columns:repeat(3,1fr);margin-top:12px}
+.luz{border:1px solid var(--linea);background:var(--blanco);border-radius:var(--radio);padding:16px 12px;text-align:center;cursor:pointer;transition:transform .12s}
+.luz:hover{transform:translateY(-2px)}
+.luz i{display:block;width:30px;height:30px;border-radius:99px;margin:0 auto 8px}
+.luz.sel{border-color:var(--tinta);box-shadow:inset 0 0 0 1px var(--tinta)}
+.luz small{display:block;color:var(--tinta-suave);font-size:12px;margin-top:4px;line-height:1.35}
+
+/* ---------- Navegación inferior ---------- */
+.nav{
+  position:fixed;bottom:0;left:0;right:0;height:64px;z-index:40;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px;
+  background:rgba(247,248,246,.94);backdrop-filter:blur(6px);border-top:1px solid var(--linea);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.puntos{display:flex;gap:6px;flex:1;justify-content:center;flex-wrap:wrap;max-width:60%}
+.punto{width:7px;height:7px;border-radius:99px;background:var(--linea);border:none;padding:0;cursor:pointer}
+.punto.on{background:var(--tinta);transform:scale(1.35)}
+.nav .btn{padding:10px 14px}
+
+/* ---------- Calculadora flotante ---------- */
+.calc-fab{
+  position:fixed;right:14px;bottom:78px;z-index:50;width:52px;height:52px;border-radius:99px;
+  background:var(--ambar);color:#1a1200;font-size:20px;box-shadow:0 8px 24px -8px rgba(18,38,63,.6);
+  display:grid;place-items:center;
+}
+.calc{
+  position:fixed;right:14px;bottom:140px;z-index:51;width:min(300px,calc(100vw - 28px));
+  background:var(--blanco);border:1px solid var(--linea);border-radius:8px;box-shadow:0 24px 60px -24px rgba(18,38,63,.6);
+  padding:12px;display:none;
+}
+.calc.abierta{display:block}
+.calc .visor{
+  background:var(--tinta);color:var(--papel);border-radius:var(--radio);padding:10px 12px;text-align:right;
+  font-family:'IBM Plex Mono',monospace;font-size:22px;min-height:46px;word-break:break-all;margin-bottom:10px;
+}
+.calc .teclas{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.calc .teclas button{
+  padding:12px 0;background:var(--papel);border:1px solid var(--linea);font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--tinta);
+}
+.calc .teclas button:hover{background:#EEF1F4}
+.calc .teclas .op{background:var(--blanco);color:var(--azul);font-weight:600}
+.calc .teclas .eq{background:var(--tinta);color:var(--papel);border-color:var(--tinta)}
+.calc .teclas .cl{color:var(--rojo)}
+.calc .memo{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tinta-suave);margin-top:8px;text-align:center}
+
+.aviso{font-size:12.5px;color:var(--tinta-suave);margin-top:12px;line-height:1.5}
+.tps{border:1px dashed var(--ambar);border-radius:var(--radio);padding:14px;background:#FFFBF4}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
+
+@media print{
+  .topbar,.nav,.calc,.calc-fab{display:none}
+  .slide{position:static;opacity:1;visibility:visible;transform:none;page-break-after:always}
+  .deck{position:static;inset:auto;overflow:visible}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="marca">FÍSICA 2°M · <span>UNIDAD 2</span></div>
+  <div class="progreso"><i id="barra"></i></div>
+  <div class="contador"><span id="num">1</span>/<span id="total">10</span></div>
+</header>
+
+<main class="deck" id="deck">
+
+  <!-- 1. PORTADA -->
+  <section class="slide activa">
+    <div class="wrap portada">
+      <div>
+        <div class="eyebrow">OA 10 · Fuerza neta</div>
+        <h1>Diagrama de cuerpo libre<br>y sumatoria de fuerzas en X</h1>
+        <p class="lead" style="margin-top:14px">De los dibujos a los números: aprenderemos a representar todas las fuerzas que actúan sobre un cuerpo y a calcular su aceleración con la segunda ley de Newton.</p>
+        <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap">
+          <span class="chip"><b style="background:var(--verde)"></b> Básico</span>
+          <span class="chip"><b style="background:var(--azul)"></b> Intermedio</span>
+          <span class="chip"><b style="background:var(--rojo)"></b> Desafío</span>
+        </div>
+        <div class="identidad">
+          <input id="nombre" type="text" placeholder="Nombre y apellido" autocomplete="name">
+          <input id="curso" type="text" placeholder="Curso (ej: 2° Medio A)">
+        </div>
+        <p class="aviso">Escribe tu nombre antes de comenzar. Todo lo que respondas quedará guardado en este dispositivo y podrás exportarlo en PDF al final.</p>
+      </div>
+
+      <div class="qr-caja">
+        <div class="eyebrow" style="justify-content:center">Escanea y sigue la clase</div>
+        <div id="qr">Generando código…</div>
+        <input id="qrTexto" type="text" value="https://bit.ly/fisica2m-u2-dcl" aria-label="Enlace del código QR">
+        <small>Profesor: edita el enlace y el QR se actualiza al instante.</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. SIEMBRA -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">SIEMBRA · Activación</div>
+      <h2>Piensa · Comparte · Discute</h2>
+      <div class="tps">
+        <h3>La caja que no se mueve</h3>
+        <p>Empujas una caja pesada con toda tu fuerza y la caja <strong>no se mueve</strong>. Tu compañero empuja una caja idéntica con la misma fuerza sobre un piso encerado y esta <strong>acelera</strong>.</p>
+        <p style="margin-top:10px"><strong>Piensa (1 min):</strong> ¿la fuerza que aplicas es la única que actúa sobre la caja? · <strong>Comparte (2 min):</strong> con tu compañero de banco. · <strong>Discute (3 min):</strong> con el curso.</p>
+      </div>
+      <div class="rejilla dos" style="margin-top:14px">
+        <div class="tarjeta">
+          <h3>Registra tu hipótesis</h3>
+          <textarea id="r_tps" placeholder="¿Por qué una caja se mueve y la otra no, si la fuerza aplicada es igual?"></textarea>
+        </div>
+        <div class="tarjeta">
+          <h3>Lo que descubriremos</h3>
+          <ul class="lista">
+            <li>Sobre un cuerpo casi nunca actúa una sola fuerza.</li>
+            <li>Lo que decide el movimiento es la <strong>fuerza neta</strong>, no la fuerza más grande.</li>
+            <li>Un dibujo ordenado (el DCL) evita el 90% de los errores de cálculo.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. LAS FUERZAS -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">RIEGO · Marco conceptual</div>
+      <h2>Las cuatro fuerzas de nuestro repertorio</h2>
+      <div class="rejilla dos">
+        <div class="tarjeta">
+          <h3 style="color:var(--rojo)">Peso (P = m · g)</h3>
+          <p>Atracción de la Tierra. Siempre <strong>vertical hacia abajo</strong>. Con g = 10 m/s², una masa de 5 kg pesa 50 N.</p>
+        </div>
+        <div class="tarjeta">
+          <h3 style="color:var(--azul)">Normal (N)</h3>
+          <p>La superficie empuja al cuerpo <strong>perpendicular</strong> a ella. En un piso horizontal sin fuerzas verticales extra, N = P.</p>
+        </div>
+        <div class="tarjeta">
+          <h3 style="color:var(--ambar)">Aplicada (F)</h3>
+          <p>La que ejerce una persona, un motor o una cuerda. Su dirección la define quien la aplica.</p>
+        </div>
+        <div class="tarjeta">
+          <h3 style="color:var(--verde)">Roce (f<sub>r</sub>)</h3>
+          <p>Se opone <strong>siempre</strong> al movimiento o a la tendencia a moverse. Si desliza: f<sub>r</sub> = μ · N.</p>
+        </div>
+      </div>
+      <p style="margin-top:16px"><strong>Regla de oro:</strong> una fuerza no se posee, se aplica. Siempre hay dos cuerpos interactuando.</p>
+    </div>
+  </section>
+
+  <!-- 4. CÓMO SE DIBUJA UN DCL -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">RIEGO · Procedimiento</div>
+      <h2>Cómo se construye un DCL</h2>
+      <div class="rejilla dos">
+        <div class="tarjeta">
+          <ul class="lista">
+            <li>Aísla el cuerpo: bórralo todo y déjalo como un punto o un cuadrado.</li>
+            <li>Dibuja solo las fuerzas que actúan <strong>sobre</strong> él (no las que él ejerce).</li>
+            <li>Cada flecha nace en el cuerpo y apunta hacia afuera.</li>
+            <li>El largo de la flecha es proporcional a la magnitud.</li>
+            <li>Define ejes: X positivo hacia la derecha, Y positivo hacia arriba.</li>
+            <li>Recién ahora, suma algebraicamente en cada eje.</li>
+          </ul>
+        </div>
+        <div class="tarjeta" style="display:flex;flex-direction:column;justify-content:center;gap:14px">
+          <div>
+            <span class="chip">Eje X</span>
+            <div class="formula" style="margin-top:8px">ΣF<sub>x</sub> = m · a<sub>x</sub></div>
+          </div>
+          <div>
+            <span class="chip">Eje Y · cuerpo sobre el piso</span>
+            <div class="formula" style="margin-top:8px">ΣF<sub>y</sub> = 0 → N = m · g</div>
+          </div>
+          <p>Si la fuerza neta en X es cero, el cuerpo está en reposo o con MRU. Si no es cero, hay MRUA.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. SIMULADOR -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">Simulador 01 · Signature</div>
+      <h2>Mesa de fuerzas: mueve y observa</h2>
+      <p style="margin-bottom:14px">Escribe los valores o mueve los deslizadores: las cuatro flechas del DCL cambian de largo al instante, incluso con la simulación en pausa. Pulsa <strong>Reproducir</strong> para dejar correr el tiempo, <strong>Paso</strong> para avanzar de a 0,1 s y <strong>Rebobinar</strong> para volver al reposo. La barra espaciadora también reproduce y pausa.</p>
+
+      <div class="sim">
+        <svg class="escena" id="escena" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Diagrama de cuerpo libre interactivo">
+          <defs>
+            <marker id="mAmbar" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#E0912F"/></marker>
+            <marker id="mVerde" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#2E8B6B"/></marker>
+            <marker id="mAzul"  markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#1F6FB2"/></marker>
+            <marker id="mRojo"  markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#C4453A"/></marker>
+            <marker id="mTinta" markerWidth="10" markerHeight="8" refX="9.5" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#12263F"/></marker>
+            <marker id="mGris"  markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#4A5D74"/></marker>
+          </defs>
+
+          <!-- ejes de referencia -->
+          <line x1="640" y1="330" x2="700" y2="330" stroke="#C9D3DE" stroke-width="1.5" marker-end="url(#mGris)"/>
+          <line x1="640" y1="330" x2="640" y2="272" stroke="#C9D3DE" stroke-width="1.5" marker-end="url(#mGris)"/>
+          <text x="706" y="334" fill="#4A5D74" font-family="IBM Plex Mono, monospace" font-size="12">+x</text>
+          <text x="632" y="266" fill="#4A5D74" font-family="IBM Plex Mono, monospace" font-size="12">+y</text>
+
+          <line x1="0" y1="210" x2="800" y2="210" stroke="#12263F" stroke-width="2"/>
+          <g id="hatch"></g>
+
+          <rect id="bloque" x="372" y="154" width="56" height="56" rx="3" fill="#12263F"/>
+          <text id="etMasa" x="400" y="186" text-anchor="middle" fill="#F7F8F6" font-family="IBM Plex Mono, monospace" font-size="13">4 kg</text>
+
+          <line id="vP"  stroke="#C4453A" stroke-width="4" marker-end="url(#mRojo)"/>
+          <line id="vN"  stroke="#1F6FB2" stroke-width="4" marker-end="url(#mAzul)"/>
+          <line id="vF"  stroke="#E0912F" stroke-width="4" marker-end="url(#mAmbar)"/>
+          <line id="vFr" stroke="#2E8B6B" stroke-width="4" marker-end="url(#mVerde)"/>
+          <line id="vNeta" stroke="#12263F" stroke-width="5" marker-end="url(#mTinta)" stroke-dasharray="8 5"/>
+          <line id="vVel" stroke="#4A5D74" stroke-width="3" marker-end="url(#mGris)"/>
+
+          <text id="tF"    fill="#E0912F" font-family="IBM Plex Mono, monospace" font-size="13"></text>
+          <text id="tFr"   fill="#2E8B6B" font-family="IBM Plex Mono, monospace" font-size="13"></text>
+          <text id="tN"    fill="#1F6FB2" font-family="IBM Plex Mono, monospace" font-size="13"></text>
+          <text id="tP"    fill="#C4453A" font-family="IBM Plex Mono, monospace" font-size="13"></text>
+          <text id="tNeta" fill="#12263F" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600"></text>
+          <text id="tVel"  fill="#4A5D74" font-family="IBM Plex Mono, monospace" font-size="12"></text>
+        </svg>
+
+        <div class="transporte">
+          <button class="tbtn primario" id="btnPlay" aria-label="Reproducir o pausar">
+            <span id="icPlay">▶</span><span id="txtPlay">Reproducir</span>
+          </button>
+          <button class="tbtn" id="btnRebobinar" aria-label="Rebobinar al reposo">↺ Rebobinar</button>
+          <button class="tbtn" id="btnPaso" aria-label="Avanzar un paso">⏭ Paso (0,1 s)</button>
+          <button class="tbtn" id="btnValores" aria-label="Restaurar valores iniciales">Valores iniciales</button>
+          <span class="reloj">t = <b id="oT">0.0</b> s</span>
+        </div>
+
+        <div class="controles">
+          <div class="ctrl">
+            <label for="sF">Fuerza aplicada F <b>newton</b></label>
+            <div class="fila">
+              <input id="sF" type="range" min="0" max="60" step="1" value="20">
+              <input id="nF" type="number" min="0" max="60" step="1" value="20" inputmode="decimal" aria-label="Valor de la fuerza aplicada en newton">
+            </div>
+          </div>
+          <div class="ctrl">
+            <label for="sFr">Fuerza de roce f<sub>r</sub> <b>newton</b></label>
+            <div class="fila">
+              <input id="sFr" type="range" min="0" max="40" step="1" value="4">
+              <input id="nFr" type="number" min="0" max="40" step="1" value="4" inputmode="decimal" aria-label="Valor de la fuerza de roce en newton">
+            </div>
+          </div>
+          <div class="ctrl">
+            <label for="sM">Masa m <b>kilogramo</b></label>
+            <div class="fila">
+              <input id="sM" type="range" min="1" max="20" step="1" value="4">
+              <input id="nM" type="number" min="1" max="20" step="1" value="4" inputmode="decimal" aria-label="Valor de la masa en kilogramo">
+            </div>
+          </div>
+        </div>
+
+        <div class="lectura">
+          <div><span>ΣFx</span><b id="oSum">16 N</b></div>
+          <div><span>Aceleración</span><b id="oA">4.00 m/s²</b></div>
+          <div><span>Velocidad</span><b id="oV">0.0 m/s</b></div>
+          <div><span>Peso · Normal</span><b id="oPN">40 N</b></div>
+          <div><span>Estado</span><b style="font-size:15px" id="oEstado">Reposo</b><span class="pill" id="oPill" style="background:#EDF1F5;color:var(--tinta-suave)">equilibrio</span></div>
+        </div>
+      </div>
+
+      <div class="tarjeta" style="margin-top:14px">
+        <h3>Pregunta guiada</h3>
+        <p style="margin-bottom:8px">Deja F = 20 N y sube el roce hasta que el bloque deje de acelerar. ¿Qué valor de f<sub>r</sub> lo logra y cómo se llama esa condición?</p>
+        <textarea id="r_sim" placeholder="Escribe tu respuesta…"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. EJEMPLO RESUELTO -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">RIEGO · Modelamiento</div>
+      <h2>Un ejemplo, paso a paso</h2>
+      <div class="tarjeta">
+        <p class="lead"><strong>Situación.</strong> Sobre un carro de 5 kg apoyado en el piso se aplica una fuerza horizontal de 30 N hacia la derecha. El roce con el piso es de 10 N. Determina la aceleración.</p>
+      </div>
+      <div class="rejilla dos" style="margin-top:14px">
+        <div class="tarjeta">
+          <h3>1 · DCL</h3>
+          <p>Cuatro fuerzas: <strong>F</strong> (→ 30 N), <strong>f<sub>r</sub></strong> (← 10 N), <strong>N</strong> (↑ 50 N), <strong>P</strong> (↓ 50 N).</p>
+          <h3 style="margin-top:14px">2 · Eje Y</h3>
+          <p>ΣF<sub>y</sub> = N − P = 0, entonces N = 50 N. No hay movimiento vertical.</p>
+        </div>
+        <div class="tarjeta">
+          <h3>3 · Eje X</h3>
+          <div class="formula" style="margin-top:6px;font-size:15px">ΣFx = F − f<sub>r</sub> = 30 − 10 = 20 N</div>
+          <h3 style="margin-top:14px">4 · Segunda ley</h3>
+          <div class="formula" style="margin-top:6px;font-size:15px">a = ΣFx / m = 20 / 5 = 4 m/s²</div>
+          <p style="margin-top:12px"><strong>Interpretación:</strong> cada segundo, la rapidez del carro aumenta 4 m/s hacia la derecha.</p>
+        </div>
+      </div>
+      <p class="aviso"><strong>Error frecuente:</strong> sumar N y P al eje X. La normal y el peso son verticales: no participan en ΣFx.</p>
+    </div>
+  </section>
+
+  <!-- 7. EJERCICIOS -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">COSECHA · Práctica diferenciada</div>
+      <h2>Calcula la aceleración</h2>
+      <p style="margin-bottom:16px">Usa g = 10 m/s². Escribe solo el número (en m/s²). La calculadora está en el botón naranjo, abajo a la derecha.</p>
+
+      <div class="tarjeta" style="margin-bottom:14px">
+        <div class="nivel"><span class="chip"><b style="background:var(--verde)"></b> Básico</span><em class="basico">Aplicar</em></div>
+        <div class="enunciado"><p>Un bloque de <strong>4 kg</strong> es empujado con una fuerza horizontal de <strong>20 N</strong> hacia la derecha. La fuerza de roce es de <strong>4 N</strong>. ¿Cuál es su aceleración?</p></div>
+        <div class="respuesta">
+          <input id="e1" type="text" inputmode="decimal" placeholder="a = ? m/s²">
+          <button class="btn" data-check="1">Revisar</button>
+          <button class="btn ghost" data-pasos="1">Ver desarrollo</button>
+          <div class="feedback" id="f1"></div>
+        </div>
+        <div class="pasos" id="p1">ΣFx = 20 − 4 = 16 N<br>a = ΣFx / m = 16 / 4<br>a = 4 m/s² hacia la derecha</div>
+      </div>
+
+      <div class="tarjeta" style="margin-bottom:14px">
+        <div class="nivel"><span class="chip"><b style="background:var(--azul)"></b> Intermedio</span><em class="inter">Analizar</em></div>
+        <div class="enunciado"><p>Sobre un carro de <strong>6 kg</strong> actúan dos fuerzas horizontales: <strong>30 N</strong> hacia la derecha y <strong>12 N</strong> hacia la izquierda. Además, el roce es de <strong>6 N</strong>. Calcula la aceleración.</p></div>
+        <div class="respuesta">
+          <input id="e2" type="text" inputmode="decimal" placeholder="a = ? m/s²">
+          <button class="btn" data-check="2">Revisar</button>
+          <button class="btn ghost" data-pasos="2">Ver desarrollo</button>
+          <div class="feedback" id="f2"></div>
+        </div>
+        <div class="pasos" id="p2">El carro tiende a moverse a la derecha → el roce apunta a la izquierda.<br>ΣFx = 30 − 12 − 6 = 12 N<br>a = 12 / 6 = 2 m/s² hacia la derecha</div>
+      </div>
+
+      <div class="tarjeta">
+        <div class="nivel"><span class="chip"><b style="background:var(--rojo)"></b> Desafío</span><em class="desafio">Evaluar</em></div>
+        <div class="enunciado"><p>Un cajón de <strong>10 kg</strong> descansa en el piso. Se le aplican <strong>40 N</strong> hacia la derecha y <strong>15 N</strong> hacia la izquierda. El coeficiente de roce cinético es <strong>μ = 0,2</strong>. Determina la aceleración (usa N = m·g).</p></div>
+        <div class="respuesta">
+          <input id="e3" type="text" inputmode="decimal" placeholder="a = ? m/s²">
+          <button class="btn" data-check="3">Revisar</button>
+          <button class="btn ghost" data-pasos="3">Ver desarrollo</button>
+          <div class="feedback" id="f3"></div>
+        </div>
+        <div class="pasos" id="p3">Eje Y: N = m·g = 10 · 10 = 100 N<br>Roce: fr = μ·N = 0,2 · 100 = 20 N<br>ΣFx = 40 − 15 − 20 = 5 N<br>a = 5 / 10 = 0,5 m/s² hacia la derecha</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. STEAM -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">Conexión STEAM</div>
+      <h2>Dónde vive esta física</h2>
+      <div class="rejilla tres">
+        <div class="tarjeta">
+          <h3>Ingeniería</h3>
+          <p>El sistema ABS de un auto administra el roce entre neumático y asfalto para maximizar la fuerza neta de frenado sin bloquear la rueda.</p>
+        </div>
+        <div class="tarjeta">
+          <h3>Tecnología</h3>
+          <p>Un cohete de SpaceX despega solo cuando el empuje supera al peso: ΣF<sub>y</sub> &gt; 0. Antes de eso, ninguna cámara lenta lo ayuda.</p>
+        </div>
+        <div class="tarjeta">
+          <h3>Arte y deporte</h3>
+          <p>En curling, el barrido derrite una capa microscópica de hielo: baja μ, baja f<sub>r</sub>, y la piedra recorre más distancia.</p>
+        </div>
+      </div>
+      <div class="tarjeta" style="margin-top:14px">
+        <h3>Tu turno</h3>
+        <p style="margin-bottom:8px">Nombra una situación de tu vida diaria en Villa Alemana donde la fuerza neta en X no sea cero. Identifica las fuerzas presentes.</p>
+        <textarea id="r_steam" placeholder="Ejemplo: cuando frena la micro en la subida…"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. PREGUNTAS CONCEPTUALES -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">COSECHA · Comprensión conceptual</div>
+      <h2>Preguntas conceptuales</h2>
+      <p style="margin-bottom:16px">Sin calculadora. Aquí importa el razonamiento, no el número.</p>
+      <div id="conceptuales"></div>
+      <div class="tarjeta" style="margin-top:14px">
+        <h3>Pregunta abierta</h3>
+        <p style="margin-bottom:8px">Un camión y una bicicleta reciben exactamente la misma fuerza neta de 100 N. Explica, usando ΣFx = m·a, por qué no adquieren la misma aceleración.</p>
+        <textarea id="r_abierta" placeholder="Desarrolla tu argumento…"></textarea>
+      </div>
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="revisarConceptos">Revisar respuestas conceptuales</button>
+        <span id="puntaje" style="align-self:center;font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--tinta-suave)"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. CIERRE -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">Cierre metacognitivo</div>
+      <h2>Semáforo de aprendizaje</h2>
+      <p>¿Cómo te sientes al construir un DCL y calcular la aceleración con ΣFx = m·a?</p>
+      <div class="semaforo" id="semaforo">
+        <button class="luz" data-luz="Verde: lo domino"><i style="background:var(--verde)"></i><strong>Verde</strong><small>Puedo resolverlo solo y explicárselo a otro</small></button>
+        <button class="luz" data-luz="Amarillo: con ayuda"><i style="background:var(--ambar)"></i><strong>Amarillo</strong><small>Lo entiendo, pero necesito ver un ejemplo</small></button>
+        <button class="luz" data-luz="Rojo: necesito apoyo"><i style="background:var(--rojo)"></i><strong>Rojo</strong><small>Todavía me pierdo al ubicar las fuerzas</small></button>
+      </div>
+      <div class="tarjeta" style="margin-top:16px">
+        <h3>Una idea que me llevo</h3>
+        <textarea id="r_cierre" placeholder="Escribe en una frase lo más importante de la clase de hoy."></textarea>
+      </div>
+      <div class="tarjeta" style="margin-top:16px;text-align:center">
+        <h3>Entrega tu trabajo</h3>
+        <p style="margin-bottom:12px">Se generará un PDF con tus respuestas, tu puntaje y tu semáforo. Envíalo al profesor.</p>
+        <button class="btn ambar" id="exportar" style="padding:14px 24px;font-size:16px">Exportar mis respuestas en PDF</button>
+        <p class="aviso" id="estadoPdf"></p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<nav class="nav">
+  <button class="btn ghost" id="prev">← Atrás</button>
+  <div class="puntos" id="puntos"></div>
+  <button class="btn" id="next">Siguiente →</button>
+</nav>
+
+<button class="calc-fab" id="calcFab" aria-label="Abrir calculadora" title="Calculadora">÷</button>
+<div class="calc" id="calc" role="dialog" aria-label="Calculadora">
+  <div class="visor" id="visor">0</div>
+  <div class="teclas">
+    <button class="cl" data-k="C">C</button><button class="cl" data-k="←">←</button><button class="op" data-k="(">(</button><button class="op" data-k=")">)</button>
+    <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button class="op" data-k="/">÷</button>
+    <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button class="op" data-k="*">×</button>
+    <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button class="op" data-k="-">−</button>
+    <button data-k="0">0</button><button data-k=".">.</button><button class="eq" data-k="=">=</button><button class="op" data-k="+">+</button>
+  </div>
+  <div class="memo">g = 10 m/s² · a = ΣFx / m</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ============ NAVEGACIÓN ============ */
+const slides = Array.from(document.querySelectorAll('.slide'));
+const puntos = document.getElementById('puntos');
+let i = 0;
+document.getElementById('total').textContent = slides.length;
+
+slides.forEach((_, k) => {
+  const b = document.createElement('button');
+  b.className = 'punto'; b.type = 'button';
+  b.setAttribute('aria-label', 'Ir a la diapositiva ' + (k+1));
+  b.addEventListener('click', () => ir(k));
+  puntos.appendChild(b);
+});
+
+function ir(k){
+  i = Math.max(0, Math.min(slides.length - 1, k));
+  slides.forEach((s, n) => s.classList.toggle('activa', n === i));
+  Array.from(puntos.children).forEach((p, n) => p.classList.toggle('on', n === i));
+  document.getElementById('num').textContent = i + 1;
+  document.getElementById('barra').style.width = ((i + 1) / slides.length * 100) + '%';
+  slides[i].scrollTop = 0;
+}
+document.getElementById('next').addEventListener('click', () => ir(i + 1));
+document.getElementById('prev').addEventListener('click', () => ir(i - 1));
+document.addEventListener('keydown', e => {
+  const t = e.target.tagName;
+  if (t === 'INPUT' || t === 'TEXTAREA') return;
+  if (e.key === 'ArrowRight') ir(i + 1);
+  if (e.key === 'ArrowLeft') ir(i - 1);
+});
+let x0 = null;
+document.getElementById('deck').addEventListener('touchstart', e => x0 = e.touches[0].clientX, {passive:true});
+document.getElementById('deck').addEventListener('touchend', e => {
+  if (x0 === null) return;
+  const d = e.changedTouches[0].clientX - x0;
+  if (Math.abs(d) > 70) ir(d < 0 ? i + 1 : i - 1);
+  x0 = null;
+}, {passive:true});
+ir(0);
+
+/* ============ QR ============ */
+const qrDiv = document.getElementById('qr');
+const qrTexto = document.getElementById('qrTexto');
+let qr = null;
+function pintarQR(){
+  qrDiv.innerHTML = '';
+  const txt = qrTexto.value.trim() || 'https://claude.ai';
+  if (typeof QRCode === 'undefined'){
+    qrDiv.innerHTML = '<p style="font-size:13px">No se pudo cargar el generador de QR. Enlace de la clase:<br><strong style="word-break:break-all">' + txt + '</strong></p>';
+    return;
+  }
+  qr = new QRCode(qrDiv, {text: txt, width: 240, height: 240, colorDark:'#12263F', colorLight:'#FFFFFF', correctLevel: QRCode.CorrectLevel.M});
+}
+window.addEventListener('load', pintarQR);
+qrTexto.addEventListener('input', () => { clearTimeout(qrTexto._t); qrTexto._t = setTimeout(pintarQR, 350); });
+
+/* ============ SIMULADOR ============ */
+const g = 10;
+const el = id => document.getElementById(id);
+const SUELO = 210, CX = 400;
+const bloque = el('bloque'), etMasa = el('etMasa');
+let v = 0, t = 0, corriendo = false, ultimo = performance.now();
+
+// suelo rayado
+(function(){
+  let d = '';
+  for (let k = -10; k < 820; k += 18) d += 'M' + k + ',' + SUELO + ' L' + (k - 12) + ',' + (SUELO + 14) + ' ';
+  const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('d', d); p.setAttribute('stroke','#C9D3DE'); p.setAttribute('stroke-width','1.5');
+  el('hatch').appendChild(p);
+})();
+
+// Dibuja una flecha con su etiqueta. Si la fuerza es 0, la oculta por completo.
+function flecha(id, tid, x1, y1, x2, y2, texto, tx, ty, anchor, mostrar){
+  const l = el(id), t = el(tid);
+  const on = mostrar !== false && Math.hypot(x2 - x1, y2 - y1) > 6;
+  l.style.display = on ? '' : 'none';
+  t.style.display = on ? '' : 'none';
+  if (!on) return;
+  l.setAttribute('x1', x1); l.setAttribute('y1', y1);
+  l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+  t.setAttribute('x', tx); t.setAttribute('y', ty);
+  t.setAttribute('text-anchor', anchor || 'start');
+  t.textContent = texto;
+}
+
+function calcular(){
+  const F = +el('sF').value, Fr = +el('sFr').value, m = +el('sM').value;
+
+  const enReposo = Math.abs(v) < 0.03;
+  let sum, frDir; // frDir: +1 el roce apunta a la derecha, -1 a la izquierda
+
+  if (enReposo){
+    if (F <= Fr){ sum = 0; v = 0; frDir = F > 0 ? -1 : 0; }   // roce estático equilibra
+    else { sum = F - Fr; frDir = -1; }
+  } else if (v > 0){ sum = F - Fr; frDir = -1; }               // se mueve a la derecha
+  else { sum = F + Fr; frDir = 1; }                            // se mueve a la izquierda
+
+  return { F, Fr, m, sum, frDir, a: sum / m, P: m * g, enReposo };
+}
+
+function pintarLecturas(s){
+  el('oSum').textContent = s.sum.toFixed(0) + ' N';
+  el('oA').textContent = s.a.toFixed(2) + ' m/s²';
+  el('oV').textContent = v.toFixed(1) + ' m/s';
+  el('oT').textContent = t.toFixed(1);
+  el('oPN').textContent = s.P + ' N';
+  const pill = el('oPill');
+  if (Math.abs(s.sum) < 0.01 && Math.abs(v) < 0.03){
+    el('oEstado').textContent = 'Reposo';
+    pill.textContent = 'equilibrio'; pill.style.background = '#EDF1F5'; pill.style.color = '#4A5D74';
+  } else if (Math.abs(s.sum) < 0.01){
+    el('oEstado').textContent = 'MRU ' + (v > 0 ? '→' : '←');
+    pill.textContent = 'velocidad constante'; pill.style.background = '#EAF2FA'; pill.style.color = '#1F6FB2';
+  } else {
+    el('oEstado').textContent = 'MRUA ' + (s.a > 0 ? '→' : '←');
+    pill.textContent = 'acelera'; pill.style.background = '#EAF4EF'; pill.style.color = '#2E8B6B';
+  }
+}
+
+function dibujar(now){
+  const dt = Math.min((now - ultimo) / 1000, 0.04); ultimo = now;
+  if (corriendo) avanzar(dt);
+  else { const s = calcular(); pintarLecturas(s); pintarEscena(s); }
+  requestAnimationFrame(dibujar);
+}
+
+function avanzar(dt){
+  const s = calcular();
+  v += s.a * dt;
+  if (v > 12) v = 12; if (v < -12) v = -12;
+  t += dt;
+  const s2 = calcular();          // el roce puede haber cambiado de sentido al moverse
+  pintarLecturas(s2); pintarEscena(s2);
+}
+
+function pintarEscena(s){
+  // geometría del bloque (fijo, solo cambia de tamaño con la masa)
+  const lado = 44 + s.m * 1.4;
+  const topY = SUELO - lado, cy = SUELO - lado / 2;
+  bloque.setAttribute('x', CX - lado / 2); bloque.setAttribute('y', topY);
+  bloque.setAttribute('width', lado); bloque.setAttribute('height', lado);
+  etMasa.setAttribute('x', CX); etMasa.setAttribute('y', cy + 5); etMasa.textContent = s.m + ' kg';
+
+  // escalas acotadas: nada sale del viewBox 800x400
+  const H = 3;                                   // px por newton en el eje x  (60 N -> 180 px)
+  const V = 0.5;                                 // px por newton en el eje y  (200 N -> 100 px)
+  const largoV = Math.max(s.P * V, 26);
+
+  // Normal: arriba desde la cara superior. Peso: abajo desde el suelo.
+  flecha('vN','tN', CX, topY, CX, topY - largoV, 'N = ' + s.P + ' N', CX + 10, topY - largoV / 2, 'start');
+  flecha('vP','tP', CX, SUELO, CX, SUELO + largoV, 'P = ' + s.P + ' N', CX + 10, SUELO + largoV / 2 + 4, 'start');
+
+  // Fuerza aplicada y roce, ambas horizontales, en carriles separados
+  const yF = cy - 9, yFr = cy + 13;
+  flecha('vF','tF', CX, yF, CX + s.F * H, yF, 'F = ' + s.F + ' N', CX + s.F * H + 10, yF - 7, 'start', s.F > 0);
+  const xFr = CX + s.frDir * s.Fr * H;
+  flecha('vFr','tFr', CX, yFr, xFr, yFr,
+         'fr = ' + s.Fr + ' N', xFr + (s.frDir > 0 ? 10 : -10), yFr + 20,
+         s.frDir > 0 ? 'start' : 'end', s.Fr > 0 && s.frDir !== 0);
+
+  // Resultante en x y velocidad, bajo el suelo (no ensucian el DCL)
+  flecha('vNeta','tNeta', CX, 262, CX + s.sum * H, 262, '', 0, 0, 'start', Math.abs(s.sum) > 0.01);
+  const tN2 = el('tNeta');
+  tN2.style.display = ''; tN2.setAttribute('x', 40); tN2.setAttribute('y', 266);
+  tN2.setAttribute('text-anchor','start');
+  tN2.textContent = 'Resultante  ΣFx = ' + s.sum.toFixed(0) + ' N';
+
+  const largoVel = Math.min(Math.abs(v) * 16, 190) * (v < 0 ? -1 : 1);
+  flecha('vVel','tVel', CX, 310, CX + largoVel, 310, '', 0, 0, 'start', Math.abs(v) > 0.05);
+  const tV = el('tVel');
+  tV.style.display = ''; tV.setAttribute('x', 40); tV.setAttribute('y', 314);
+  tV.setAttribute('text-anchor','start');
+  tV.textContent = 'Velocidad  v = ' + v.toFixed(1) + ' m/s';
+}
+
+/* --- Transporte: reproducir, pausar, rebobinar, avanzar un paso --- */
+const btnPlay = el('btnPlay'), icPlay = el('icPlay'), txtPlay = el('txtPlay');
+function play(estado){
+  corriendo = estado;
+  ultimo = performance.now();
+  btnPlay.classList.toggle('corriendo', corriendo);
+  icPlay.textContent = corriendo ? '❚❚' : '▶';
+  txtPlay.textContent = corriendo ? 'Pausar' : 'Reproducir';
+}
+btnPlay.addEventListener('click', () => play(!corriendo));
+el('btnRebobinar').addEventListener('click', () => { v = 0; t = 0; play(false); });
+el('btnPaso').addEventListener('click', () => { play(false); avanzar(0.1); });
+el('btnValores').addEventListener('click', () => {
+  fijar('F', 20); fijar('Fr', 4); fijar('M', 4);
+  v = 0; t = 0; play(false);
+});
+document.addEventListener('keydown', e => {
+  const tg = e.target.tagName;
+  if (tg === 'INPUT' || tg === 'TEXTAREA') return;
+  if (e.code === 'Space' && el('escena').closest('.slide').classList.contains('activa')){
+    e.preventDefault(); play(!corriendo);
+  }
+});
+
+/* --- Valores editables: el deslizador y el campo numérico se espejan --- */
+function fijar(clave, valor){
+  const r = el('s' + clave), n = el('n' + clave);
+  const min = +r.min, max = +r.max;
+  let x = parseFloat(String(valor).replace(',', '.'));
+  if (isNaN(x)) x = +r.value;
+  x = Math.min(max, Math.max(min, x));
+  r.value = x; n.value = x;
+  return x;
+}
+['F','Fr','M'].forEach(clave => {
+  const r = el('s' + clave), n = el('n' + clave);
+  r.addEventListener('input', () => { n.value = r.value; v = 0; t = 0; });
+  n.addEventListener('input', () => { const x = parseFloat(n.value.replace(',', '.')); if (!isNaN(x)) { r.value = Math.min(+r.max, Math.max(+r.min, x)); } v = 0; t = 0; });
+  n.addEventListener('change', () => { fijar(clave, n.value); v = 0; t = 0; });
+  n.addEventListener('keydown', e => { if (e.key === 'Enter') n.blur(); });
+});
+
+el('escena').addEventListener('dblclick', () => { v = 0; t = 0; play(false); });
+requestAnimationFrame(dibujar);
+
+/* ============ EJERCICIOS ============ */
+const ejercicios = {
+  1:{r:4,  u:'m/s²', dato:'Bloque 4 kg, F=20 N, fr=4 N'},
+  2:{r:2,  u:'m/s²', dato:'Carro 6 kg, F1=30 N, F2=12 N, fr=6 N'},
+  3:{r:0.5,u:'m/s²', dato:'Cajón 10 kg, F1=40 N, F2=15 N, μ=0,2'}
+};
+const respEj = {};
+document.querySelectorAll('[data-check]').forEach(b => b.addEventListener('click', () => {
+  const k = b.dataset.check, val = document.getElementById('e'+k).value.replace(',', '.').trim();
+  const f = document.getElementById('f'+k), num = parseFloat(val);
+  respEj[k] = val;
+  if (isNaN(num)){ f.className='feedback no'; f.textContent='Escribe un número, por ejemplo 4 o 0,5.'; return; }
+  if (Math.abs(num - ejercicios[k].r) < 0.06){
+    f.className='feedback ok'; f.textContent='Correcto: a = ' + ejercicios[k].r + ' m/s². Ahora explica en voz alta hacia dónde apunta.';
+  } else {
+    f.className='feedback no'; f.textContent='Todavía no. Revisa el signo del roce y divide la fuerza neta por la masa.';
+  }
+}));
+document.querySelectorAll('[data-pasos]').forEach(b => b.addEventListener('click', () => {
+  document.getElementById('p'+b.dataset.pasos).classList.toggle('ver');
+}));
+
+/* ============ PREGUNTAS CONCEPTUALES ============ */
+const conceptos = [
+  { q:'Un cuerpo se mueve con velocidad constante en línea recta sobre una mesa. ¿Qué se puede afirmar?',
+    o:['La fuerza neta sobre él es cero','No actúa ninguna fuerza sobre él','La fuerza aplicada es mayor que el roce','Su aceleración es constante y distinta de cero'], c:0,
+    exp:'Velocidad constante implica a = 0, y por ΣF = m·a la fuerza neta es cero. Puede haber muchas fuerzas, pero se cancelan.' },
+  { q:'En un DCL de un libro apoyado en una mesa horizontal, ¿cuál de estas fuerzas NO debe dibujarse?',
+    o:['El peso del libro','La normal de la mesa','La fuerza que el libro ejerce sobre la mesa','Ninguna, todas se dibujan'], c:2,
+    exp:'El DCL solo muestra fuerzas que actúan SOBRE el cuerpo aislado. La fuerza del libro sobre la mesa actúa sobre otro cuerpo.' },
+  { q:'Si duplicas la fuerza neta sobre un cuerpo y mantienes su masa, la aceleración:',
+    o:['Se mantiene igual','Se duplica','Se reduce a la mitad','Se cuadruplica'], c:1,
+    exp:'a = ΣF/m. Con m constante, a es directamente proporcional a la fuerza neta.' },
+  { q:'Empujas una caja hacia la derecha y esta desliza. ¿Hacia dónde apunta el roce cinético?',
+    o:['Hacia la derecha, igual que el movimiento','Hacia arriba','Hacia la izquierda, opuesto al movimiento','Depende de la masa de la caja'], c:2,
+    exp:'El roce cinético siempre se opone al deslizamiento, sin importar la masa.' },
+  { q:'Sobre un cuerpo de 8 kg actúan 30 N a la derecha y 30 N a la izquierda. ¿Qué ocurre en el eje X?',
+    o:['Acelera a 7,5 m/s² a la derecha','Está en equilibrio: ΣFx = 0','Acelera a 3,75 m/s²','Se detiene bruscamente'], c:1,
+    exp:'ΣFx = 30 − 30 = 0. Si estaba en reposo sigue en reposo; si se movía, sigue con MRU.' }
+];
+const cont = document.getElementById('conceptuales');
+const respCon = {};
+conceptos.forEach((c, n) => {
+  const card = document.createElement('div');
+  card.className = 'tarjeta'; card.style.marginBottom = '12px';
+  card.innerHTML = '<h3>' + (n+1) + '. ' + c.q + '</h3><div class="opciones" id="op'+n+'"></div><div class="feedback" id="fc'+n+'"></div>';
+  cont.appendChild(card);
+  const cajaOp = card.querySelector('#op'+n);
+  c.o.forEach((txt, j) => {
+    const lab = document.createElement('label');
+    lab.className = 'opcion';
+    lab.innerHTML = '<input type="radio" name="c'+n+'" value="'+j+'"><span>'+txt+'</span>';
+    lab.addEventListener('click', () => {
+      respCon[n] = j;
+      cajaOp.querySelectorAll('.opcion').forEach(o => o.classList.remove('sel'));
+      lab.classList.add('sel');
+    });
+    cajaOp.appendChild(lab);
+  });
+});
+document.getElementById('revisarConceptos').addEventListener('click', () => {
+  let ok = 0;
+  conceptos.forEach((c, n) => {
+    const f = document.getElementById('fc'+n);
+    if (respCon[n] === undefined){ f.className='feedback no'; f.textContent='Sin responder.'; return; }
+    if (respCon[n] === c.c){ ok++; f.className='feedback ok'; f.textContent='Correcto. ' + c.exp; }
+    else { f.className='feedback no'; f.textContent='Revisa: ' + c.exp; }
+  });
+  document.getElementById('puntaje').textContent = ok + ' de ' + conceptos.length + ' correctas';
+});
+
+/* ============ SEMÁFORO ============ */
+let semaforo = '';
+document.querySelectorAll('.luz').forEach(l => l.addEventListener('click', () => {
+  document.querySelectorAll('.luz').forEach(o => o.classList.remove('sel'));
+  l.classList.add('sel'); semaforo = l.dataset.luz;
+}));
+
+/* ============ CALCULADORA ============ */
+const calc = document.getElementById('calc'), visor = document.getElementById('visor');
+let expr = '';
+document.getElementById('calcFab').addEventListener('click', () => calc.classList.toggle('abierta'));
+calc.querySelectorAll('.teclas button').forEach(b => b.addEventListener('click', () => {
+  const k = b.dataset.k;
+  if (k === 'C'){ expr = ''; }
+  else if (k === '←'){ expr = expr.slice(0, -1); }
+  else if (k === '='){
+    try {
+      if (!/^[0-9+\-*/(). ]+$/.test(expr)) throw 0;
+      const r = Function('"use strict";return (' + expr + ')')();
+      expr = (Math.round(r * 1e6) / 1e6).toString();
+    } catch(e){ expr = ''; visor.textContent = 'Error'; return; }
+  }
+  else expr += k;
+  visor.textContent = expr || '0';
+}));
+
+/* ============ EXPORTAR PDF ============ */
+function recolectar(){
+  return {
+    nombre: document.getElementById('nombre').value.trim() || 'Sin nombre',
+    curso: document.getElementById('curso').value.trim() || 'Sin curso',
+    tps: document.getElementById('r_tps').value.trim(),
+    sim: document.getElementById('r_sim').value.trim(),
+    steam: document.getElementById('r_steam').value.trim(),
+    abierta: document.getElementById('r_abierta').value.trim(),
+    cierre: document.getElementById('r_cierre').value.trim(),
+    semaforo: semaforo || 'No seleccionado'
+  };
+}
+
+document.getElementById('exportar').addEventListener('click', () => {
+  const d = recolectar(), estado = document.getElementById('estadoPdf');
+  if (!window.jspdf || !window.jspdf.jsPDF){ estado.textContent = 'No se pudo cargar el generador de PDF. Se abrirá la vista de impresión: elige "Guardar como PDF".'; window.print(); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'letter'});
+  const M = 54, W = 612 - M*2;
+  let y = M;
+
+  const salto = h => { if (y + h > 730){ doc.addPage(); y = M; } };
+  const titulo = t => { salto(30); doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(18,38,63); doc.text(t, M, y); y += 6; doc.setDrawColor(201,211,222); doc.line(M, y, M + W, y); y += 14; };
+  const parrafo = (t, gris) => {
+    doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
+    doc.setTextColor(gris ? 120 : 40, gris ? 130 : 50, gris ? 145 : 65);
+    const ls = doc.splitTextToSize(t && t.length ? t : '(sin respuesta)', W);
+    ls.forEach(l => { salto(15); doc.text(l, M, y); y += 15; });
+    y += 6;
+  };
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(17); doc.setTextColor(18,38,63);
+  doc.text('Unidad 2 · Diagrama de cuerpo libre y ΣFx', M, y); y += 20;
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(100,110,125);
+  doc.text('Física · 2° Medio · Colegio San Agustín de Villa Alemana · OA 10', M, y); y += 24;
+  doc.setDrawColor(224,145,47); doc.setLineWidth(2); doc.line(M, y, M + W, y); doc.setLineWidth(1); y += 22;
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(18,38,63);
+  doc.text('Estudiante: ' + d.nombre + '     Curso: ' + d.curso, M, y); y += 16;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(110,120,135);
+  doc.text('Fecha de entrega: ' + new Date().toLocaleString('es-CL'), M, y); y += 26;
+
+  titulo('1. Activación · Piensa, comparte, discute');
+  parrafo(d.tps);
+
+  titulo('2. Simulador · Pregunta guiada');
+  parrafo(d.sim);
+
+  titulo('3. Ejercicios de aceleración');
+  let ejOk = 0;
+  Object.keys(ejercicios).forEach(k => {
+    const dado = respEj[k] !== undefined ? respEj[k] : '';
+    const num = parseFloat(String(dado).replace(',', '.'));
+    const correcto = !isNaN(num) && Math.abs(num - ejercicios[k].r) < 0.06;
+    if (correcto) ejOk++;
+    const niv = k === '1' ? 'Básico' : (k === '2' ? 'Intermedio' : 'Desafío');
+    salto(34);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(18,38,63);
+    doc.text(niv + ' — ' + ejercicios[k].dato, M, y); y += 14;
+    doc.setFont('helvetica','normal'); doc.setTextColor(correcto ? 46 : 196, correcto ? 139 : 69, correcto ? 107 : 58);
+    doc.text('Respuesta del estudiante: ' + (dado || '(sin responder)') + '   ·   ' + (correcto ? 'Correcta' : 'Incorrecta') + '   ·   Esperada: ' + ejercicios[k].r + ' m/s²', M, y);
+    y += 20;
+  });
+
+  titulo('4. Conexión STEAM');
+  parrafo(d.steam);
+
+  titulo('5. Preguntas conceptuales');
+  let ok = 0;
+  conceptos.forEach((c, n) => {
+    const sel = respCon[n], acierto = sel === c.c;
+    if (acierto) ok++;
+    salto(50);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(18,38,63);
+    doc.splitTextToSize((n+1) + '. ' + c.q, W).forEach(l => { salto(14); doc.text(l, M, y); y += 14; });
+    doc.setFont('helvetica','normal'); doc.setTextColor(acierto ? 46 : 196, acierto ? 139 : 69, acierto ? 107 : 58);
+    const marca = sel === undefined ? '(sin responder)' : c.o[sel];
+    doc.splitTextToSize('Marcó: ' + marca + '  ·  ' + (sel === undefined ? '' : (acierto ? 'Correcta' : 'Incorrecta · Correcta: ' + c.o[c.c])), W).forEach(l => { salto(14); doc.text(l, M, y); y += 14; });
+    y += 6;
+  });
+  salto(20);
+  doc.setFont('helvetica','bold'); doc.setTextColor(18,38,63);
+  doc.text('Puntaje conceptual: ' + ok + '/' + conceptos.length + '   ·   Ejercicios correctos: ' + ejOk + '/3', M, y); y += 24;
+
+  titulo('6. Pregunta abierta · Camión y bicicleta');
+  parrafo(d.abierta);
+
+  titulo('7. Cierre metacognitivo');
+  doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(18,38,63);
+  salto(16); doc.text('Semáforo: ' + d.semaforo, M, y); y += 18;
+  doc.setFont('helvetica','normal');
+  parrafo(d.cierre);
+
+  const total = doc.internal.getNumberOfPages();
+  for (let p = 1; p <= total; p++){
+    doc.setPage(p);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(150,158,170);
+    doc.text('Física 2° Medio · Unidad 2 · Prof. Felipe Jiménez', M, 762);
+    doc.text(p + ' / ' + total, 612 - M, 762, {align:'right'});
+  }
+
+  const limpio = d.nombre.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_');
+  doc.save('U2_DCL_' + limpio + '.pdf');
+  estado.textContent = 'PDF generado. Revisa tu carpeta de descargas.';
+});
+
+})();
+</script>
+</body>
+</html>

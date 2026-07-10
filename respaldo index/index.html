@@ -14,9 +14,9 @@
    TOKENS — Paleta Mediterránea Moderna
 ═══════════════════════════════════════════════ */
 :root {
-  --sea-deep:    #060f1e;
-  --sea-mid:     #0c1f38;
-  --sea-light:   #163356;
+  --sea-deep:    #0a1a2e;
+  --sea-mid:     #162942;
+  --sea-light:   #203d60;
   --gold:        #c9a84c;
   --gold-light:  #e8c870;
   --gold-bright: #f5d980;
@@ -75,7 +75,7 @@ body::after {
   background:
     radial-gradient(ellipse 80% 60% at 20% 0%,   rgba(26,64,104,.55) 0%, transparent 60%),
     radial-gradient(ellipse 60% 50% at 85% 100%,  rgba(12,31,56,.7)  0%, transparent 55%),
-    radial-gradient(ellipse 100% 40% at 50% 50%,  rgba(6,15,30,.4)   0%, transparent 70%);
+    radial-gradient(ellipse 100% 40% at 50% 50%,  rgba(10,26,46,.4)   0%, transparent 70%);
   animation: auroraShift 22s ease-in-out infinite alternate;
 }
 @keyframes auroraShift {
@@ -452,6 +452,36 @@ h2.sh::before { content: '⬧'; color: var(--gold); font-size: 0.75rem; opacity:
   border-color: rgba(201,168,76,.4);
 }
 .tool-desc-card:active { transform: translateY(-1px); }
+
+/* Insignia circular de ícono + etiqueta, para tarjetas de recursos más vistosas */
+.res-icon-badge {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+  margin-bottom: 14px;
+  transition: transform 0.4s var(--ease-spring);
+}
+.card:hover .res-icon-badge { transform: scale(1.1) rotate(-6deg); }
+
+.card.c-sea .res-icon-badge {
+  background: radial-gradient(circle at 30% 30%, #e0f0ff, #bcdcfb);
+  color: #1a4e7a;
+  box-shadow: 0 6px 16px rgba(45,106,159,.28);
+}
+.card.c-laurel .res-icon-badge {
+  background: radial-gradient(circle at 30% 30%, #e2f5e4, #bfe6c8);
+  color: #2e5e38;
+  box-shadow: 0 6px 16px rgba(61,110,74,.28);
+}
+
+.res-tag {
+  display: inline-block; width: fit-content;
+  font-family: var(--ff-body); font-size: 0.62rem; font-weight: 700; letter-spacing: 1.4px;
+  text-transform: uppercase;
+  padding: 4px 11px; border-radius: 20px;
+  background: rgba(201,168,76,.12); color: var(--gold-dark);
+  margin-bottom: 12px;
+}
 
 /* Stagger: cada tarjeta entra con leve retraso */
 .grid .card:nth-child(1) { animation-delay: 0.02s; }
@@ -1133,7 +1163,7 @@ function closeNav() {
 const ROUTES = {
   home: rHome,
   '1medio': r1medio,
-  '2medio': s => rComing(s, 'II° Medio'),
+  '2medio': r2medio,
   '3medio': r3,
   '4medio': r4,
   '6basico': r6,
@@ -1480,56 +1510,42 @@ function rCesfam(s){
 function rGoleadores(s){ s.innerHTML = '<h1><i class="fa-solid fa-shoe-prints"></i> GOLEADORES</h1><iframe src="goleadores.html" class="embed-frame"></iframe>'; }
 function rGoleadoras(s){ s.innerHTML = '<h1><i class="fa-solid fa-shoe-prints" style="color:#ff4d94;"></i> GOLEADORAS</h1><iframe src="goleadoras.html" class="embed-frame"></iframe>'; }
 function r3(s){
-  // Crear por DOM (no innerHTML) para que scripts del iframe se ejecuten correctamente
-  s.innerHTML = '';
-
-  const wrap = document.createElement('div');
-  wrap.className = 'fade-in';
-
-  const hdr = document.createElement('div');
-  hdr.className = 'tablet-header';
-  hdr.innerHTML = `
-    <h1><i class="fa-solid fa-gears" style="color:var(--laurel);"></i> III° MEDIO · TECNOLOGÍA</h1>
-    <p class="page-sub">Bitácora de actividades y recursos de estudio · 2026</p>`;
-
-  const loader = document.createElement('p');
-  loader.id = 'bita-loader';
-  loader.style.cssText = 'text-align:center;color:var(--text-soft);font-style:italic;padding:1rem;';
-  loader.textContent = 'Cargando bitácora…';
-
-  const fr = document.createElement('iframe');
-  fr.src = 'bitacora_tech.html';
-  fr.className = 'embed-frame';
-  fr.style.cssText = 'min-height:600px;';
-  fr.setAttribute('allowfullscreen','');
-  fr.setAttribute('loading','eager');
-  fr.onload  = () => { loader.style.display = 'none'; };
-  fr.onerror = () => { loader.innerHTML = '⚠️ No se pudo cargar la bitácora. Verifica que <code>bitacora_tech.html</code> esté en el servidor.'; };
-
-  const resSection = document.createElement('div');
-  resSection.innerHTML = `
-    <h2 class="sh">RECURSOS DE ESTUDIO</h2>
-    <div class="grid">
-
-      <div class="card c-sea" style="cursor:pointer;" onclick="window.open('fisica/ccclimatico.html','_blank')">
-        <h3><i class="fa-solid fa-cloud-sun-rain"></i> CAMBIO CLIMÁTICO</h3>
-        <p>Recurso interactivo sobre el cambio climático: causas, evidencias y consecuencias del calentamiento global.</p>
-        <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
+  s.innerHTML = `
+    <div class="fade-in">
+      <div class="tablet-header">
+        <h1><i class="fa-solid fa-gears" style="color:var(--laurel);"></i> III° MEDIO · TECNOLOGÍA</h1>
+        <p class="page-sub">Recursos de estudio · 2026</p>
       </div>
 
-      <div class="card c-laurel" style="cursor:pointer;" onclick="window.open('biologia/ciclos.html','_blank')">
-        <h3><i class="fa-solid fa-recycle"></i> CICLOS BIOGEOQUÍMICOS</h3>
-        <p>Recurso interactivo sobre los ciclos de la materia en la naturaleza: agua, carbono, nitrógeno y su rol en los ecosistemas.</p>
-        <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
-      </div>
+      <h2 class="sh">RECURSOS DE ESTUDIO</h2>
+      <div class="grid">
 
+        <div class="card c-sea" style="cursor:pointer;" onclick="window.open('fisica/ccclimatico.html','_blank')">
+          <div class="res-icon-badge"><i class="fa-solid fa-cloud-sun-rain"></i></div>
+          <span class="res-tag">Recurso interactivo</span>
+          <h3>CAMBIO CLIMÁTICO</h3>
+          <p>Recurso interactivo sobre el cambio climático: causas, evidencias y consecuencias del calentamiento global.</p>
+          <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
+        </div>
+
+        <div class="card c-laurel" style="cursor:pointer;" onclick="window.open('biologia/ciclos.html','_blank')">
+          <div class="res-icon-badge"><i class="fa-solid fa-recycle"></i></div>
+          <span class="res-tag">Recurso interactivo</span>
+          <h3>CICLOS BIOGEOQUÍMICOS</h3>
+          <p>Recurso interactivo sobre los ciclos de la materia en la naturaleza: agua, carbono, nitrógeno y su rol en los ecosistemas.</p>
+          <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
+        </div>
+
+        <div class="card c-sea" style="cursor:pointer;" onclick="window.open('biologia/acv.html','_blank')">
+          <div class="res-icon-badge"><i class="fa-solid fa-industry"></i></div>
+          <span class="res-tag">Recurso interactivo</span>
+          <h3>ACV · ANÁLISIS DE CICLO DE VIDA</h3>
+          <p>Recurso interactivo sobre el análisis de ciclo de vida (ACV) de un producto: extracción de materias primas, fabricación, uso y disposición final, y su impacto ambiental en cada etapa.</p>
+          <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
+        </div>
+
+      </div>
     </div>`;
-
-  wrap.appendChild(hdr);
-  wrap.appendChild(loader);
-  wrap.appendChild(fr);
-  wrap.appendChild(resSection);
-  s.appendChild(wrap);
 }
 function r4(s){
   s.innerHTML = `
@@ -1668,6 +1684,29 @@ function r1medio(s){
         <div class="card c-laurel" style="cursor:pointer;" onclick="window.open('biologia/ciclos.html','_blank')">
           <h3><i class="fa-solid fa-recycle"></i> CICLOS BIOGEOQUÍMICOS</h3>
           <p>Recurso interactivo sobre los ciclos de la materia en la naturaleza: agua, carbono, nitrógeno y su rol en los ecosistemas.</p>
+          <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
+        </div>
+
+      </div>
+    </div>`;
+}
+
+function r2medio(s){
+  s.innerHTML = `
+    <div class="fade-in">
+      <div class="tablet-header">
+        <h1><i class="fa-solid fa-bolt" style="color:var(--laurel);"></i> II° MEDIO · FÍSICA</h1>
+        <p class="page-sub">Recursos de estudio · 2026</p>
+      </div>
+
+      <h2 class="sh">RECURSOS DE ESTUDIO</h2>
+      <div class="grid">
+
+        <div class="card c-sea" style="cursor:pointer;" onclick="window.open('fisica/dcl.html','_blank')">
+          <div class="res-icon-badge"><i class="fa-solid fa-arrows-up-down-left-right"></i></div>
+          <span class="res-tag">Recurso interactivo</span>
+          <h3>DIAGRAMA DE CUERPO LIBRE</h3>
+          <p>Recurso interactivo para construir y analizar diagramas de cuerpo libre: identificación de fuerzas actuando sobre un objeto y su representación vectorial.</p>
           <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
         </div>
 
