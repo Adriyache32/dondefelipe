@@ -67,6 +67,10 @@
   .tile[data-type="accion"] .ic{color:#b45309}
   .tile[data-type="atajo"][data-kind="up"]{border-color:#10b981;background:linear-gradient(160deg,#c3f0da,#98e2bf)}
   .tile[data-type="atajo"][data-kind="down"]{border-color:#f43f5e;background:linear-gradient(160deg,#fbd2da,#f5b1bf)}
+  .tile[data-type="enroque"]{border-color:#3b82f6;background:linear-gradient(160deg,#d3e4fd,#b6d0fb)}
+  .tile[data-type="enroque"] .ic{color:#1d4ed8}
+  .tile[data-type="cero"]{border-color:#e11d48;background:linear-gradient(160deg,#fccdd6,#f7a6b6)}
+  .tile[data-type="cero"] .ic{color:#9f1239}
   .tile.active{box-shadow:0 0 0 2px var(--helix),0 0 24px -2px var(--helix)}
 
   #tokens{position:absolute;inset:0;pointer-events:none;z-index:5}
@@ -93,6 +97,9 @@
   .whoseTurn strong{display:block;font-size:1.15rem;color:var(--ink);margin-top:2px}
   .dice{width:60px;height:60px;border-radius:14px;flex:none;background:linear-gradient(160deg,#fdfcff,#d9d3f0);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:9px;box-shadow:inset 0 -4px 8px rgba(0,0,0,.15),0 8px 18px -6px rgba(0,0,0,.6)}
   .dice i{display:block;align-self:center;justify-self:center;width:10px;height:10px;border-radius:50%;background:#241a42;visibility:hidden}
+  #diceArea.many{gap:6px;flex-wrap:wrap;max-width:210px}
+  #diceArea.many .dice{width:44px;height:44px;padding:6px;border-radius:11px}
+  #diceArea.many .dice i{width:7px;height:7px}
   .dice.rolling{animation:shake .5s ease}
   @keyframes shake{0%,100%{transform:none}25%{transform:rotate(-9deg) translateY(-3px)}75%{transform:rotate(9deg) translateY(2px)}}
   .realBox{display:flex;flex-direction:column;gap:5px}
@@ -161,7 +168,7 @@
 <header class="top">
   <p class="eyebrow">Biología · Genética molecular</p>
   <h1><span class="A">Ruta</span> del <span class="R">ARN</span><br><span class="flow">del gen a la proteína →</span> <span class="P">🧬</span></h1>
-  <p class="sub">Lanza el dado y viaja por la molécula: del gen en el núcleo hasta que el ARN mensajero madura y sale. Hay preguntas, premios, castigos, desafíos… y atajos moleculares que te teletransportan.</p>
+  <p class="sub">Lanza el dado y recorre el camino del gen a la proteína: transcripción, maduración del ARN y traducción. Hay preguntas, premios, castigos, desafíos y atajos moleculares. Con 2 o más dados, si <b style="color:var(--helix)">todos caen en el mismo número</b>, ¡lanzas de nuevo!</p>
 </header>
 
 <div class="stage">
@@ -178,6 +185,8 @@
       <span><b style="background:var(--t-accion)"></b> Desafío</span>
       <span><b style="background:var(--t-up)"></b> Atajo ↑</span>
       <span><b style="background:var(--t-down)"></b> Túnel ↓</span>
+      <span><b style="background:#3b82f6"></b> Enroque</span>
+      <span><b style="background:#e11d48"></b> Pierde puntos</span>
       <span><b style="background:var(--t-meta)"></b> Meta</span>
     </div>
   </section>
@@ -209,7 +218,7 @@
   <div class="modal">
     <span class="tag" style="background:rgba(45,212,191,.16);color:var(--helix)">Preparar partida</span>
     <h3>¿Quiénes van a transcribir?</h3>
-    <p>Cada jugador es una pieza de la molécula. Elige cantidad, nombres y tipo de dado.</p>
+    <p>Escribe el nombre de cada jugador: en el tablero se identifican por su color y la inicial de su nombre. Elige la cantidad y el tipo de dado.</p>
     <div class="setLabel">Jugadores</div>
     <div class="pcount" id="pcount">
       <button data-n="1">1</button><button data-n="2" class="sel">2</button>
@@ -219,7 +228,9 @@
     <div class="setLabel">Dados</div>
     <div class="pcount" id="diceModeSel">
       <button data-m="one" class="sel">🎲 1 dado</button>
-      <button data-m="two">🎲🎲 2 dados</button>
+      <button data-m="two">🎲 2 dados</button>
+      <button data-m="three">🎲 3 dados</button>
+      <button data-m="four">🎲 4 dados</button>
       <button data-m="real">✋ Dados reales</button>
     </div>
     <div id="nameInputs"></div>
@@ -293,57 +304,114 @@ const TOKENS = [
 
 /* Tablero (40 casillas, 0–39) */
 const BOARD = [
-  {type:'inicio', cap:'El Gen', ic:'🧬'},
-  {type:'normal', cap:'Nucleótido', ic:'•'},
-  {type:'pregunta'},
-  {type:'premioMove', cap:'ARN polimerasa', ic:'⏩', move:2, pts:25, msg:'La ARN polimerasa se une al promotor y te impulsa. Avanza 2 y suma 25 puntos.'},
-  {type:'normal', cap:'Hebra molde', ic:'•'},
-  {type:'pregunta'},
-  {type:'castigoMove', cap:'Error de lectura', ic:'⏪', move:-2, msg:'La polimerasa cometió un error de lectura. Retrocede 2 casillas.'},
-  {type:'accion', cap:'Explica', ic:'🗣️', move:3, pts:50, msg:'Explica con tus palabras qué es la transcripción. Si el curso lo aprueba, avanza 3 y suma 50 puntos.'},
-  {type:'normal', cap:'Fosfato', ic:'•'},
-  {type:'pregunta'},
-  {type:'premioPts', cap:'Transcripción veloz', ic:'⭐', pts:75, msg:'¡Transcripción veloz! Ganas 75 puntos.'},
-  {type:'normal', cap:'Desoxirribosa', ic:'•'},
-  {type:'pregunta'},
-  {type:'accion', cap:'Nombra', ic:'✍️', move:2, pts:40, msg:'Nombra las 4 bases nitrogenadas del ADN. Si aciertas, avanza 2 y suma 40 puntos.'},
-  {type:'castigoMove', cap:'Mutación', ic:'⏪', move:-3, msg:'Mutación puntual en el gen. Retrocede 3 casillas.'},
-  {type:'normal', cap:'Enlace', ic:'•'},
-  {type:'pregunta'},
-  {type:'premioMove', cap:'Promotor hallado', ic:'⏩', move:3, pts:25, msg:'Encontraste el promotor. Avanza 3 y suma 25 puntos.'},
-  {type:'normal', cap:"Hebra 5'→3'", ic:'•'},
-  {type:'pregunta'},
-  {type:'accion', cap:'Resume', ic:'🗣️', move:4, pts:60, msg:'Resume la clase de hoy en una sola frase. Si convence al curso, avanza 4 y suma 60 puntos.'},
-  {type:'castigoPts', cap:'T por U', ic:'⚠️', pts:-50, msg:'Confundiste la timina con el uracilo. Pierdes 50 puntos.'},
-  {type:'normal', cap:'Antiparalelo', ic:'•'},
-  {type:'pregunta'},
-  {type:'premioPts', cap:'Apareamiento correcto', ic:'⭐', pts:75, msg:'Apareamiento de bases perfecto. Suma 75 puntos.'},
-  {type:'normal', cap:'Burbuja de transcripción', ic:'•'},
-  {type:'pregunta'},
-  {type:'castigoMove', cap:'ARNm degradado', ic:'⏪', move:-2, msg:'Parte del ARNm se degradó. Retrocede 2 casillas.'},
-  {type:'accion', cap:'Dibuja', ic:'✍️', move:2, pts:40, msg:'Dibuja o describe el apareamiento A-T y G-C. Si es correcto, avanza 2 y suma 40 puntos.'},
-  {type:'pregunta'},
-  {type:'normal', cap:'Elongación', ic:'•'},
-  {type:'premioMove', cap:'Elongación fluida', ic:'⏩', move:2, pts:25, msg:'La elongación fluye sin errores. Avanza 2 y suma 25 puntos.'},
-  {type:'pregunta'},
-  {type:'castigoMove', cap:'Terminador prematuro', ic:'⏪', move:-3, msg:'Señal de terminación prematura. Retrocede 3 casillas.'},
-  {type:'accion', cap:'Diferencia', ic:'🗣️', move:3, pts:50, msg:'Explica una diferencia entre el ADN y el ARN. Si aciertas, avanza 3 y suma 50 puntos.'},
-  {type:'pregunta'},
-  {type:'normal', cap:'Cola poli-A', ic:'•'},
-  {type:'premioPts', cap:'ARNm maduro', ic:'⭐', pts:100, msg:'El ARNm madura correctamente. Suma 100 puntos.'},
-  {type:'pregunta'},
-  {type:'meta', cap:'ARNm sale del núcleo', ic:'🏁'},
+  /* 0  */ {type:'inicio', cap:'El Gen', ic:'🧬'},
+  /* 1  */ {type:'normal', cap:'Nucleótido', ic:'•'},
+  /* 2  */ {type:'pregunta'},
+  /* 3  */ {type:'premioMove', cap:'Promotor hallado', ic:'⏩', move:2, pts:25, msg:'Encuentras el promotor: la ARN polimerasa se ancla. Avanza 2 y suma 25 puntos.'},
+  /* 4  */ {type:'normal', cap:'Hebra molde', ic:'•'},
+  /* 5  */ {type:'pregunta'},
+  /* 6  */ {type:'accion', cap:'Resume', ic:'🎤', move:3, pts:50, msg:'En vivo: resume en 15 segundos un concepto visto en la clase de hoy. Si el curso lo aprueba, avanza 3 y suma 50 puntos.'},
+  /* 7  */ {type:'castigoMove', cap:'Error de lectura', ic:'⏪', move:-2, msg:'La polimerasa cometió un error de lectura. Retrocede 2 casillas.'},
+  /* 8  */ {type:'normal', cap:'Fosfato', ic:'•'},
+  /* 9  */ {type:'pregunta'},
+  /* 10 */ {type:'social', cap:'Abrazo', ic:'🤝', move:2, pts:30, msg:'Convivencia: dale un abrazo (o chócala) a {otro}.'},
+  /* 11 */ {type:'premioPts', cap:'Transcripción veloz', ic:'⭐', pts:75, msg:'¡Transcripción veloz! Ganas 75 puntos.'},
+  /* 12 */ {type:'pregunta'},
+  /* 13 */ {type:'enroque', cap:'Enroque', ic:'🔀'},
+  /* 14 */ {type:'normal', cap:'Desoxirribosa', ic:'•'},
+  /* 15 */ {type:'pregunta'},
+  /* 16 */ {type:'accion', cap:'Nombra bases', ic:'✍️', move:2, pts:40, msg:'Nombra las 4 bases nitrogenadas del ADN. Si aciertas, avanza 2 y suma 40 puntos.'},
+  /* 17 */ {type:'castigoMove', cap:'Mutación', ic:'⏪', move:-3, msg:'Mutación puntual en el gen. Retrocede 3 casillas.'},
+  /* 18 */ {type:'pregunta'},
+  /* 19 */ {type:'normal', cap:'Antiparalelo', ic:'•'},
+  /* 20 */ {type:'social', cap:'Cualidad', ic:'🤝', move:2, pts:40, msg:'Convivencia: indica una característica positiva de {otro}.'},
+  /* 21 */ {type:'pregunta'},
+  /* 22 */ {type:'accion', cap:'Chiste', ic:'🎤', move:2, pts:30, msg:'En vivo: cuenta un chiste al curso. Si logras que alguien se ría, avanza 2 y suma 30 puntos.'},
+  /* 23 */ {type:'premioMove', cap:'Elongación fluida', ic:'⏩', move:2, pts:25, msg:'La elongación fluye sin errores. Avanza 2 y suma 25 puntos.'},
+  /* 24 */ {type:'pregunta'},
+  /* 25 */ {type:'normal', cap:'Enlace', ic:'•'},
+  /* 26 */ {type:'castigoPts', cap:'T por U', ic:'⚠️', pts:-50, msg:'Confundiste la timina con el uracilo. Pierdes 50 puntos.'},
+  /* 27 */ {type:'pregunta'},
+  /* 28 */ {type:'accion', cap:'Diferencia', ic:'🗣️', move:3, pts:50, msg:'Explica una diferencia entre el ADN y el ARN. Si aciertas, avanza 3 y suma 50 puntos.'},
+  /* 29 */ {type:'cero', cap:'Pierde puntos', ic:'💥'},
+  /* 30 */ {type:'pregunta'},
+  /* 31 */ {type:'premioPts', cap:'Apareamiento correcto', ic:'⭐', pts:75, msg:'Apareamiento de bases perfecto. Suma 75 puntos.'},
+  /* 32 */ {type:'social', cap:'Anécdota', ic:'🤝', move:3, pts:50, msg:'Convivencia: cuéntale al curso una anécdota tuya de este mes.'},
+  /* 33 */ {type:'pregunta'},
+  /* 34 */ {type:'normal', cap:'Burbuja de transcripción', ic:'•'},
+  /* 35 */ {type:'accion', cap:'Dogma central', ic:'🎤', move:3, pts:50, msg:'En vivo: explica el dogma central (ADN→ARN→proteína) con mímica o un dibujo. Si el curso lo aprueba, avanza 3 y suma 50 puntos.'},
+  /* 36 */ {type:'pregunta'},
+  /* 37 */ {type:'enroque', cap:'Enroque', ic:'🔀'},
+  /* 38 */ {type:'castigoMove', cap:'ARNm degradado', ic:'⏪', move:-2, msg:'Parte del ARNm se degradó. Retrocede 2 casillas.'},
+  /* 39 */ {type:'pregunta'},
+  /* 40 */ {type:'accion', cap:'Dibuja', ic:'✍️', move:2, pts:40, msg:'Dibuja o describe el apareamiento A-T y G-C. Si es correcto, avanza 2 y suma 40 puntos.'},
+  /* 41 */ {type:'normal', cap:'Caperuza 5′', ic:'•'},
+  /* 42 */ {type:'pregunta'},
+  /* 43 */ {type:'premioMove', cap:'Caperuza añadida', ic:'⏩', move:2, pts:25, msg:'Se añade la caperuza 5′ que protege al ARNm. Avanza 2 y suma 25 puntos.'},
+  /* 44 */ {type:'social', cap:'Admiración', ic:'🤝', move:2, pts:40, msg:'Convivencia: dile a {otro} algo que admiras de él o ella.'},
+  /* 45 */ {type:'pregunta'},
+  /* 46 */ {type:'normal', cap:'Cola poli-A', ic:'•'},
+  /* 47 */ {type:'castigoMove', cap:'Splicing fallido', ic:'⏪', move:-3, msg:'El splicing falló y quedó un intrón. Retrocede 3 casillas.'},
+  /* 48 */ {type:'pregunta'},
+  /* 49 */ {type:'accion', cap:'3 conceptos', ic:'🎤', move:3, pts:50, msg:'En vivo: menciona 3 conceptos de genética que aprendiste. Si el curso lo aprueba, avanza 3 y suma 50 puntos.'},
+  /* 50 */ {type:'pregunta'},
+  /* 51 */ {type:'normal', cap:'Poro nuclear', ic:'•'},
+  /* 52 */ {type:'premioPts', cap:'ARNm maduro', ic:'⭐', pts:100, msg:'El ARNm madura y sale del núcleo. Suma 100 puntos.'},
+  /* 53 */ {type:'pregunta'},
+  /* 54 */ {type:'social', cap:'Gratitud', ic:'🤝', move:2, pts:30, msg:'Convivencia: agradécele a {otro} por algo, de verdad.'},
+  /* 55 */ {type:'normal', cap:'Citoplasma', ic:'•'},
+  /* 56 */ {type:'pregunta'},
+  /* 57 */ {type:'accion', cap:'Pregunta al curso', ic:'🎤', move:2, pts:40, msg:'En vivo: formula una buena pregunta sobre el tema al curso. Si el curso la aprueba, avanza 2 y suma 40 puntos.'},
+  /* 58 */ {type:'castigoMove', cap:'Codón mal leído', ic:'⏪', move:-2, msg:'El ribosoma leyó mal un codón. Retrocede 2 casillas.'},
+  /* 59 */ {type:'pregunta'},
+  /* 60 */ {type:'premioMove', cap:'Ribosoma se une', ic:'⏩', move:2, pts:25, msg:'El ribosoma se une al ARNm y comienza a leerlo. Avanza 2 y suma 25 puntos.'},
+  /* 61 */ {type:'enroque', cap:'Enroque', ic:'🔀'},
+  /* 62 */ {type:'pregunta'},
+  /* 63 */ {type:'normal', cap:'Codón AUG', ic:'•'},
+  /* 64 */ {type:'accion', cap:'Explica traducción', ic:'🗣️', move:3, pts:50, msg:'Explica qué es la traducción. Si el curso lo aprueba, avanza 3 y suma 50 puntos.'},
+  /* 65 */ {type:'pregunta'},
+  /* 66 */ {type:'cero', cap:'Pierde puntos', ic:'💥'},
+  /* 67 */ {type:'premioPts', cap:'ARNt correcto', ic:'⭐', pts:75, msg:'El ARNt trae el aminoácido correcto. Suma 75 puntos.'},
+  /* 68 */ {type:'pregunta'},
+  /* 69 */ {type:'social', cap:'Chócala', ic:'🤝', move:2, pts:40, msg:'Convivencia: choca los cinco con {otro} y dile su mejor cualidad.'},
+  /* 70 */ {type:'castigoPts', cap:'Término prematuro', ic:'⚠️', pts:-50, msg:'Apareció un codón de término prematuro. Pierdes 50 puntos.'},
+  /* 71 */ {type:'pregunta'},
+  /* 72 */ {type:'accion', cap:'Resume la clase', ic:'🎤', move:4, pts:60, msg:'En vivo: resume toda la clase de hoy en una sola frase. Si convence al curso, avanza 4 y suma 60 puntos.'},
+  /* 73 */ {type:'normal', cap:'Anticodón', ic:'•'},
+  /* 74 */ {type:'pregunta'},
+  /* 75 */ {type:'premioMove', cap:'Cadena crece', ic:'⏩', move:2, pts:25, msg:'La cadena polipeptídica se alarga. Avanza 2 y suma 25 puntos.'},
+  /* 76 */ {type:'pregunta'},
+  /* 77 */ {type:'accion', cap:'Enseña a un par', ic:'🎤', move:3, pts:50, msg:'En vivo: explícale un concepto de la clase a un compañero. Si lo logra repetir, avanza 3 y suma 50 puntos.'},
+  /* 78 */ {type:'normal', cap:'Elongación', ic:'•'},
+  /* 79 */ {type:'pregunta'},
+  /* 80 */ {type:'social', cap:'Algo bueno', ic:'🤝', move:2, pts:30, msg:'Convivencia: cuéntale al curso algo bueno que te pasó esta semana.'},
+  /* 81 */ {type:'castigoMove', cap:'Ribosoma se detiene', ic:'⏪', move:-2, msg:'El ribosoma se detiene un instante. Retrocede 2 casillas.'},
+  /* 82 */ {type:'pregunta'},
+  /* 83 */ {type:'premioPts', cap:'Plegamiento correcto', ic:'⭐', pts:100, msg:'La proteína se pliega correctamente. Suma 100 puntos.'},
+  /* 84 */ {type:'pregunta'},
+  /* 85 */ {type:'accion', cap:'Qué te gustó', ic:'🎤', move:2, pts:30, msg:'En vivo: cuenta qué fue lo que más te gustó de la clase. Avanza 2 y suma 30 puntos.'},
+  /* 86 */ {type:'normal', cap:'Túnel del ribosoma', ic:'•'},
+  /* 87 */ {type:'pregunta'},
+  /* 88 */ {type:'social', cap:'Inspiración', ic:'🤝', move:2, pts:40, msg:'Convivencia: dile a {otro} en qué te gustaría parecerte a él o ella.'},
+  /* 89 */ {type:'premioMove', cap:'Toque final', ic:'⏩', move:2, pts:25, msg:'Último impulso hacia la meta. Avanza 2 y suma 25 puntos.'},
+  /* 90 */ {type:'pregunta'},
+  /* 91 */ {type:'accion', cap:'Un aprendizaje', ic:'🎤', move:3, pts:50, msg:'En vivo: comparte un aprendizaje que te llevas de esta clase. Avanza 3 y suma 50 puntos.'},
+  /* 92 */ {type:'normal', cap:'Chaperona', ic:'•'},
+  /* 93 */ {type:'pregunta'},
+  /* 94 */ {type:'premioPts', cap:'Proteína activa', ic:'⭐', pts:100, msg:'La proteína alcanza su forma activa. Suma 100 puntos.'},
+  /* 95 */ {type:'meta', cap:'¡Proteína funcional!', ic:'🏁'},
 ];
 const LAST = BOARD.length - 1;
 
 /* Atajos y túneles. from → to. Edítalos libremente. */
 const SHORTCUTS = {
-  4:  {to:16, kind:'up',   msg:'La caperuza 5′ (5′-cap) protege al ARN y lo acelera. ¡Saltas de la 4 a la 16!'},
-  10: {to:33, kind:'up',   msg:'Splicing perfecto: se eliminan los intrones sin errores. ¡Saltas de la 10 a la 33!'},
-  20: {to:29, kind:'up',   msg:'Poliadenilación exitosa: el ARNm gana estabilidad. Avanzas de la 20 a la 29.'},
-  8:  {to:2,  kind:'down', msg:'Fallo en el promotor: la ARN polimerasa no se ancla. Retrocedes de la 8 a la 2.'},
-  27: {to:12, kind:'down', msg:'Intrón no eliminado: el ARNm queda defectuoso. Vuelves de la 27 a la 12.'},
-  35: {to:22, kind:'down', msg:'Codón de término prematuro: la transcripción se trunca. Retrocedes de la 35 a la 22.'},
+  8:  {to:21, kind:'up',   msg:'La caperuza 5′ protege al ARN y lo acelera. ¡Saltas de la 8 a la 21!'},
+  19: {to:33, kind:'up',   msg:'Splicing perfecto: se eliminan los intrones sin errores. ¡Saltas de la 19 a la 33!'},
+  46: {to:59, kind:'up',   msg:'Exportación exprés: el ARNm cruza el poro nuclear. Avanzas de la 46 a la 59.'},
+  86: {to:90, kind:'up',   msg:'Impulso final del ribosoma. Avanzas de la 86 a la 90.'},
+  25: {to:12, kind:'down', msg:'Intrón no eliminado: el ARNm queda defectuoso. Vuelves de la 25 a la 12.'},
+  51: {to:34, kind:'down', msg:'Fallo en la exportación: el ARNm vuelve al núcleo. Retrocedes de la 51 a la 34.'},
+  73: {to:60, kind:'down', msg:'El ribosoma se desacopla del ARNm. Retrocedes de la 73 a la 60.'},
 };
 
 /* Banco de preguntas */
@@ -366,6 +434,22 @@ const QUESTIONS = [
   {q:'¿Cuál de estas bases es una PIRIMIDINA?', o:['Citosina','Adenina','Guanina','Ninguna'], c:0, e:'Pirimidinas (anillo simple): C, T y U. Purinas (doble anillo): A y G.'},
   {q:'Completa la hebra de ADN opuesta a 5′-ATGC-3′.', o:['3′-TACG-5′','3′-UACG-5′','3′-ATGC-5′','3′-GCAT-5′'], c:0, e:'A–T, T–A, G–C, C–G. En el ADN se usa timina, nunca uracilo.'},
   {q:'Durante la transcripción, ¿qué le ocurre a la doble hélice?', o:['Se separa localmente en la zona a transcribir','Se rompe por completo','Se duplica entera','No cambia'], c:0, e:'La ARN polimerasa abre una pequeña "burbuja" de transcripción para leer la hebra molde.'},
+  {q:'¿Cómo se llama el proceso de copiar la información del ADN a ARN?', o:['Transcripción','Traducción','Replicación','Mutación'], c:0, e:'La transcripción copia un gen del ADN a una molécula de ARN.'},
+  {q:'¿Cómo se llama el proceso de leer el ARN para fabricar una proteína?', o:['Traducción','Transcripción','Replicación','Duplicación'], c:0, e:'En la traducción, el ribosoma lee el ARNm y ensambla la proteína.'},
+  {q:'¿Dónde ocurre la traducción?', o:['En el ribosoma','En el núcleo','En la membrana','En el nucléolo'], c:0, e:'La traducción ocurre en los ribosomas, en el citoplasma.'},
+  {q:'¿Cuántos nucleótidos forman un codón?', o:['Tres','Uno','Dos','Cuatro'], c:0, e:'Cada codón está formado por 3 nucleótidos que codifican un aminoácido.'},
+  {q:'¿Qué molécula transporta los aminoácidos hasta el ribosoma?', o:['El ARN de transferencia (ARNt)','El ARN mensajero (ARNm)','El ADN','El ARN ribosómico'], c:0, e:'El ARNt lleva cada aminoácido y reconoce el codón mediante su anticodón.'},
+  {q:'¿Qué tipo de ARN forma parte de la estructura de los ribosomas?', o:['El ARN ribosómico (ARNr)','El ARN mensajero','El ARN de transferencia','El ADN'], c:0, e:'El ARNr, junto con proteínas, constituye los ribosomas.'},
+  {q:'¿Cuál es el codón de inicio de la traducción?', o:['AUG','UAA','GGG','TAC'], c:0, e:'AUG marca el inicio de la traducción y codifica metionina.'},
+  {q:'¿Qué aminoácido codifica normalmente el codón AUG?', o:['Metionina','Glicina','Lisina','Alanina'], c:0, e:'AUG codifica metionina, que suele ser el primer aminoácido de la cadena.'},
+  {q:'En un gen eucariota, ¿cómo se llaman las secuencias que se eliminan del ARN?', o:['Intrones','Exones','Codones','Promotores'], c:0, e:'Los intrones se eliminan por splicing; los exones se conservan.'},
+  {q:'¿Cómo se llaman las secuencias que permanecen en el ARNm maduro?', o:['Exones','Intrones','Terminadores','Anticodones'], c:0, e:'Los exones son las regiones que quedan tras eliminar los intrones.'},
+  {q:'Las dos hebras del ADN corren en sentidos opuestos; se dice que son:', o:['Antiparalelas','Paralelas','Idénticas','Perpendiculares'], c:0, e:'Una va 5′→3′ y la otra 3′→5′: son antiparalelas.'},
+  {q:'¿Quiénes propusieron el modelo de doble hélice del ADN en 1953?', o:['Watson y Crick','Mendel y Darwin','Pasteur y Koch','Hershey y Chase'], c:0, e:'James Watson y Francis Crick, apoyados en los datos de Rosalind Franklin.'},
+  {q:'¿Qué modificación estabiliza el extremo 3′ del ARNm en eucariotas?', o:['La cola poli-A','La caperuza 5′','Un intrón','Un codón de término'], c:0, e:'Se añade una cola de muchas adeninas (poli-A) que da estabilidad al ARNm.'},
+  {q:'¿Cuántos anillos tiene una base púrica como la adenina?', o:['Dos','Uno','Tres','Cuatro'], c:0, e:'Las purinas (A, G) tienen doble anillo; las pirimidinas (C, T, U) uno solo.'},
+  {q:'¿Qué secuencia del gen indica a la ARN polimerasa dónde detenerse?', o:['El terminador','El promotor','El codón AUG','El exón'], c:0, e:'El terminador marca el fin de la transcripción.'},
+  {q:'Un gen es, en esencia:', o:['Un segmento de ADN con la información de un producto','Una proteína completa','Un ribosoma','Un tipo de azúcar'], c:0, e:'Un gen es un fragmento de ADN que codifica un ARN o una proteína.'},
 ];
 
 /* Estado */
@@ -444,15 +528,16 @@ function refreshBoard(){
   placeTiles(COLS); applyWave();
   requestAnimationFrame(()=>{ drawPath(); layoutTokens(); });
 }
-function iconFor(type){return {pregunta:'❓',premioMove:'⏩',premioPts:'⭐',castigoMove:'⏪',castigoPts:'⚠️',accion:'🗣️',normal:'•'}[type]||'•';}
-function defaultCap(type){return {pregunta:'Pregunta',accion:'Desafío'}[type]||'';}
+function iconFor(type){return {pregunta:'❓',premioMove:'⏩',premioPts:'⭐',castigoMove:'⏪',castigoPts:'⚠️',accion:'🗣️',enroque:'🔀',cero:'💥',normal:'•'}[type]||'•';}
+function defaultCap(type){return {pregunta:'Pregunta',accion:'Desafío',enroque:'Enroque',cero:'Pierde puntos'}[type]||'';}
 
 /* Tokens */
+function initial(name){return ((name||'').trim()[0]||'?').toUpperCase();}
 function buildTokens(){
   tokensEl.innerHTML=''; tokenEls=[]; tokenInnerEls=[];
   players.forEach((p,i)=>{
     const tk=document.createElement('div'); tk.className='token'; tk.style.background=TOKENS[p.tokenIdx].color;
-    const inner=document.createElement('span'); inner.className='tk-in'; inner.textContent=TOKENS[p.tokenIdx].letter;
+    const inner=document.createElement('span'); inner.className='tk-in'; inner.textContent=initial(p.name);
     tk.appendChild(inner); tokensEl.appendChild(tk);
     tokenEls[i]=tk; tokenInnerEls[i]=inner;
   });
@@ -493,18 +578,22 @@ function showDiceOn(el,v){el.querySelectorAll('i').forEach((dt,idx)=>dt.style.vi
 function renderDiceArea(){
   diceArea.innerHTML='';
   if(diceMode==='real'){
-    diceArea.innerHTML='<div class="realBox"><input id="realVal" type="number" min="1" max="12" value="6"><span class="realHint">Tira tus dados y escribe el total</span></div>';
+    diceArea.innerHTML='<div class="realBox"><input id="realVal" type="number" min="1" max="24" value="6"><span class="realHint">Tira tus dados y escribe el total</span></div>';
+    diceArea.classList.remove('many');
     rollBtn.textContent='➡️ Avanzar';
   }else{
-    const n=diceMode==='two'?2:1;
+    const n=diceCount();
+    diceArea.classList.toggle('many', n>=3);
     for(let i=0;i<n;i++){const d=makeDiceEl();diceArea.appendChild(d);showDiceOn(d,1);}
     rollBtn.textContent=n>1?'🎲 Lanzar los dados':'🎲 Lanzar el dado';
   }
 }
+function diceCount(){return {one:1,two:2,three:3,four:4}[diceMode]||1;}
 async function rollValue(){
   if(diceMode==='real'){
     let v=parseInt(document.getElementById('realVal').value,10);
-    if(isNaN(v))v=1; return Math.max(1,Math.min(12,v));
+    if(isNaN(v))v=1; v=Math.max(1,Math.min(24,v));
+    return {total:v, allEqual:false, count:1};
   }
   Sound.dice();
   const dice=[...diceArea.querySelectorAll('.dice')];
@@ -513,7 +602,21 @@ async function rollValue(){
   const frames=reduce?1:10;
   for(let f=0;f<frames;f++){dice.forEach(d=>showDiceOn(d,1+Math.floor(Math.random()*6)));await wait(60);}
   dice.forEach((d,i)=>{showDiceOn(d,finals[i]);d.classList.remove('rolling');});
-  return finals.reduce((a,b)=>a+b,0);
+  const total=finals.reduce((a,b)=>a+b,0);
+  const allEqual=finals.length>=2 && finals.every(f=>f===finals[0]);
+  return {total, allEqual, count:finals.length, face:finals[0]};
+}
+
+/* Cámara: mantiene visible la casilla indicada (por defecto, el primer lugar) */
+function leaderPos(){return players.length?Math.max(...players.map(p=>p.pos)):0;}
+function cameraTo(index){
+  const tile=tileEls[index]; if(!tile)return;
+  const r=tile.getBoundingClientRect();
+  const vh=window.innerHeight;
+  const center=r.top+r.height/2;
+  if(Math.abs(center-vh/2) < vh*0.30) return;      /* ya está en zona cómoda */
+  const target=window.scrollY+center-vh/2;
+  window.scrollTo({top:Math.max(0,target),behavior:reduce?'auto':'smooth'});
 }
 
 /* Movimiento */
@@ -523,7 +626,7 @@ async function moveTo(pi,target){
   target=Math.max(0,Math.min(LAST,target));
   const dir=target>p.pos?1:-1;
   while(p.pos!==target){
-    p.pos+=dir; setActiveTile(p.pos); layoutTokens(); hop(pi); Sound.step();
+    p.pos+=dir; setActiveTile(p.pos); layoutTokens(); hop(pi); Sound.step(); cameraTo(p.pos);
     await wait(210);
   }
 }
@@ -531,7 +634,7 @@ async function jumpTo(pi,to){
   const p=players[pi];
   p.pos=Math.max(0,Math.min(LAST,to));
   tokenEls[pi].style.transition='transform .6s cubic-bezier(.5,-0.2,.3,1.4)';
-  setActiveTile(p.pos); layoutTokens();
+  setActiveTile(p.pos); layoutTokens(); cameraTo(p.pos);
   await wait(660);
   tokenEls[pi].style.transition='';
 }
@@ -542,7 +645,8 @@ async function roll(){
   busy=true; rollBtn.disabled=true;
   Sound.init();
   rollResult.textContent='';
-  const val=await rollValue();
+  const rd=await rollValue();
+  const val=rd.total;
   const p=players[current];
   rollResult.textContent=`🎲 ${p.name} sacó ${val}`;
   log(`<b>${p.name}</b> obtiene <b>${val}</b>.`);
@@ -561,7 +665,16 @@ async function roll(){
     await handleTile(current);
     if(p.pos===LAST)return win(p);
   }
-  updateScore(); nextTurn();
+  updateScore();
+  cameraTo(leaderPos());                         /* la cámara descansa en el primer lugar */
+  /* Único caso de repetir turno: 2+ dados que caen todos en el mismo número */
+  if(rd.allEqual){
+    rollResult.textContent=`🎲 ¡Los ${rd.count} dados iguales (${rd.face})! ${p.name} lanza de nuevo`;
+    log(`<b>${p.name}</b> sacó todos los dados iguales y repite turno.`);
+    Sound.correct();
+  } else {
+    nextTurn();
+  }
   busy=false; rollBtn.disabled=false;
 }
 function nextTurn(){
@@ -592,6 +705,43 @@ async function handleTile(pi){
       else log(`<b>${p.name}</b> no supera el desafío.`);
       break;
     }
+    case 'cero':{
+      await simpleModal('cero','Pierde todos tus puntos','💥 ¡Reacción catastrófica! Se pierden todos los puntos acumulados. Tu posición en el tablero no cambia.','Continuar');
+      Sound.penalty();
+      p.score=0;
+      log(`<b>${p.name}</b> pierde todos sus puntos.`);
+      break;
+    }
+    case 'enroque':{
+      const others=players.map((_,idx)=>idx).filter(idx=>idx!==pi);
+      if(others.length===0){
+        await simpleModal('enroque','Enroque','No hay otros jugadores para enrocar. Te quedas en tu lugar.','Continuar');
+        break;
+      }
+      const oIdx=others.length===1?others[0]:others[Math.floor(Math.random()*others.length)];
+      const o=players[oIdx];
+      await simpleModal('enroque','Enroque de jugadores',`🔀 ${p.name} intercambia su posición con <b>${o.name}</b>.`,'¡Cambio!');
+      const a=p.pos, b=o.pos;
+      p.pos=b; o.pos=a;
+      [pi,oIdx].forEach(idx=>{ if(tokenEls[idx]) tokenEls[idx].style.transition='transform .6s cubic-bezier(.5,-0.2,.3,1.4)'; });
+      layoutTokens(); Sound.shortcut(); cameraTo(leaderPos());
+      await wait(680);
+      [pi,oIdx].forEach(idx=>{ if(tokenEls[idx]) tokenEls[idx].style.transition=''; });
+      log(`<b>${p.name}</b> hace enroque con <b>${o.name}</b>.`);
+      break;
+    }
+    case 'social':{
+      let msg=t.msg;
+      if(msg.includes('{otro}')){
+        const others=players.filter((_,idx)=>idx!==pi);
+        if(others.length){const o=others[Math.floor(Math.random()*others.length)];msg=msg.replace(/\{otro\}/g,`<b>${o.name}</b>`);}
+        else msg=msg.replace(/\{otro\}/g,'un compañero del curso');
+      }
+      const ok=await socialModal(msg);
+      if(ok){Sound.reward();if(t.pts)p.score+=t.pts;log(`<b>${p.name}</b> cumple el reto de convivencia${t.pts?` (+${t.pts})`:''}.`);if(t.move)await moveTo(pi,p.pos+t.move);}
+      else log(`<b>${p.name}</b> no realiza el reto de convivencia.`);
+      break;
+    }
     default:break;
   }
 }
@@ -601,8 +751,8 @@ const eventOverlay=document.getElementById('eventOverlay');
 const eventModal=document.getElementById('eventModal');
 function openModal(html){eventModal.innerHTML=html;eventOverlay.hidden=false;}
 function closeModal(){eventOverlay.hidden=true;}
-const TAGSTYLE={pregunta:'background:rgba(167,139,250,.18);color:var(--t-q)',premio:'background:rgba(52,211,153,.18);color:var(--t-premio)',castigo:'background:rgba(251,113,133,.18);color:var(--t-castigo)'};
-function kindIcon(k){return {premio:'⭐',castigo:'⚠️'}[k]||'';}
+const TAGSTYLE={pregunta:'background:rgba(167,139,250,.18);color:var(--t-q)',premio:'background:rgba(52,211,153,.18);color:var(--t-premio)',castigo:'background:rgba(251,113,133,.18);color:var(--t-castigo)',enroque:'background:rgba(96,165,250,.20);color:#60a5fa',cero:'background:rgba(251,113,133,.22);color:var(--t-castigo)'};
+function kindIcon(k){return {premio:'⭐',castigo:'⚠️',enroque:'🔀',cero:'💥'}[k]||'';}
 function simpleModal(kind,title,body,btn){
   return new Promise(res=>{
     openModal(`<span class="tag" style="${TAGSTYLE[kind]}">${title}</span><h3>${kindIcon(kind)} ${title}</h3><p>${body}</p><div class="modalBtns"><button class="btn-go" id="mOk">${btn}</button></div>`);
@@ -623,18 +773,21 @@ function actionModal(body){
     document.getElementById('aNo').onclick=()=>{closeModal();res(false);};
   });
 }
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function askQuestion(){
   return new Promise(res=>{
     const q=QUESTIONS[Math.floor(Math.random()*QUESTIONS.length)], L=['A','B','C','D'];
-    const opts=q.o.map((o,i)=>`<button class="opt" data-i="${i}"><span class="k">${L[i]}</span><span>${o}</span></button>`).join('');
-    openModal(`<span class="tag" style="${TAGSTYLE.pregunta}">Pregunta de genética</span><h3>❓ ${q.q}</h3><div class="opts">${opts}</div><div id="qExp"></div><div class="modalBtns" id="qBtns" style="display:none"><button class="btn-go" id="qCont">Continuar →</button></div>`);
+    /* barajamos las alternativas: la correcta ya no queda siempre en A */
+    const opts=shuffle(q.o.map((text,idx)=>({text,correct:idx===q.c})));
+    const optsHtml=opts.map((o,i)=>`<button class="opt" data-i="${i}"><span class="k">${L[i]}</span><span>${o.text}</span></button>`).join('');
+    openModal(`<span class="tag" style="${TAGSTYLE.pregunta}">Pregunta de genética</span><h3>❓ ${q.q}</h3><div class="opts">${optsHtml}</div><div id="qExp"></div><div class="modalBtns" id="qBtns" style="display:none"><button class="btn-go" id="qCont">Continuar →</button></div>`);
     let answered=false;
     eventModal.querySelectorAll('.opt').forEach(btn=>{
       btn.onclick=()=>{
         if(answered)return; answered=true;
-        const i=+btn.dataset.i, correct=i===q.c;
+        const i=+btn.dataset.i, correct=opts[i].correct;
         correct?Sound.correct():Sound.wrong();
-        eventModal.querySelectorAll('.opt').forEach((b,bi)=>{b.disabled=true;if(bi===q.c)b.classList.add('correct');else if(bi===i)b.classList.add('wrong');});
+        eventModal.querySelectorAll('.opt').forEach((b,bi)=>{b.disabled=true;if(opts[bi].correct)b.classList.add('correct');else if(bi===i)b.classList.add('wrong');});
         document.getElementById('qExp').innerHTML=`<div class="exp"><b>${correct?'¡Correcto! (+100)':'Incorrecto.'}</b> ${q.e}</div>`;
         document.getElementById('qBtns').style.display='flex';
         document.getElementById('qCont').onclick=()=>{closeModal();res(correct);};
@@ -647,15 +800,15 @@ function askQuestion(){
 function win(p){
   finished=true; setActiveTile(-1); updateScore(); Sound.win();
   const ranking=[...players].sort((a,b)=>b.pos-a.pos||b.score-a.score);
-  const rows=ranking.map((r,i)=>`<div class="scoreItem${r===p?' cur':''}"><span class="chip" style="background:${TOKENS[r.tokenIdx].color}">${TOKENS[r.tokenIdx].letter}</span><span class="nm">${i+1}. ${r.name}</span><span class="pts">${r.score} pts</span></div>`).join('');
-  openModal(`<span class="tag" style="background:rgba(250,204,21,.18);color:var(--t-meta)">¡Meta!</span><h3>🏁 El ARNm salió del núcleo</h3><div class="winName" style="color:${TOKENS[p.tokenIdx].color}">🏆 ${p.name}</div><p>completó la transcripción y llegó primero a la meta.</p><div style="margin-top:16px">${rows}</div><div class="modalBtns"><button class="btn-go" id="again">Jugar otra vez</button></div>`);
+  const rows=ranking.map((r,i)=>`<div class="scoreItem${r===p?' cur':''}"><span class="chip" style="background:${TOKENS[r.tokenIdx].color}">${initial(r.name)}</span><span class="nm">${i+1}. ${r.name}</span><span class="pts">${r.score} pts</span></div>`).join('');
+  openModal(`<span class="tag" style="background:rgba(250,204,21,.18);color:var(--t-meta)">¡Meta!</span><h3>🏁 ¡Proteína sintetizada!</h3><div class="winName" style="color:${TOKENS[p.tokenIdx].color}">🏆 ${p.name}</div><p>completó el camino del gen a la proteína y llegó primero a la meta.</p><div style="margin-top:16px">${rows}</div><div class="modalBtns"><button class="btn-go" id="again">Jugar otra vez</button></div>`);
   document.getElementById('again').onclick=()=>{closeModal();openSetup();};
   busy=false;
 }
 
 /* Marcador */
 function updateScore(){
-  scoreboard.innerHTML=players.map((p,i)=>`<div class="scoreItem${i===current&&!finished?' cur':''}"><span class="chip" style="background:${TOKENS[p.tokenIdx].color}">${TOKENS[p.tokenIdx].letter}</span><span class="nm">${p.name}</span><span class="cell">${p.pos===LAST?'META':'#'+p.pos}</span><span class="pts">${p.score}</span></div>`).join('');
+  scoreboard.innerHTML=players.map((p,i)=>`<div class="scoreItem${i===current&&!finished?' cur':''}"><span class="chip" style="background:${TOKENS[p.tokenIdx].color}">${initial(p.name)}</span><span class="nm">${p.name}</span><span class="cell">${p.pos===LAST?'META':'#'+p.pos}</span><span class="pts">${p.score}</span></div>`).join('');
 }
 
 /* Setup */
@@ -665,7 +818,7 @@ const diceModeSel=document.getElementById('diceModeSel');
 const nameInputs=document.getElementById('nameInputs');
 function renderNameInputs(){
   let html='';
-  for(let i=0;i<numPlayers;i++){const b=TOKENS[i];html+=`<div class="row"><label><span style="color:${b.color}">●</span> ${b.name}</label><input type="text" id="pn${i}" value="${b.name}" maxlength="16"></div>`;}
+  for(let i=0;i<numPlayers;i++){const b=TOKENS[i];html+=`<div class="row"><label><span style="color:${b.color}">●</span> Jugador ${i+1}</label><input type="text" id="pn${i}" placeholder="Escribe el nombre…" maxlength="16"></div>`;}
   nameInputs.innerHTML=html;
 }
 pcount.querySelectorAll('button').forEach(b=>{b.onclick=()=>{pcount.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');numPlayers=+b.dataset.n;renderNameInputs();};});
@@ -674,7 +827,7 @@ function openSetup(){finished=false;busy=false;setupOverlay.hidden=false;renderN
 document.getElementById('startBtn').onclick=()=>{
   Sound.init();
   players=[];
-  for(let i=0;i<numPlayers;i++){const nm=(document.getElementById('pn'+i).value||TOKENS[i].name).trim();players.push({name:nm,tokenIdx:i,pos:0,score:0});}
+  for(let i=0;i<numPlayers;i++){const nm=(document.getElementById('pn'+i).value||'').trim()||('Jugador '+(i+1));players.push({name:nm,tokenIdx:i,pos:0,score:0});}
   current=0;finished=false;busy=false;
   setupOverlay.hidden=true;
   logEl.innerHTML='<div>Comienza la transcripción. ¡Suerte!</div>';
@@ -684,7 +837,7 @@ document.getElementById('startBtn').onclick=()=>{
   turnName.textContent=players[0].name;
   turnName.style.color=TOKENS[players[0].tokenIdx].color;
   updateScore(); rollBtn.disabled=false;
-  requestAnimationFrame(layoutTokens);
+  requestAnimationFrame(()=>{layoutTokens();cameraTo(0);});
 };
 
 /* Mute */
