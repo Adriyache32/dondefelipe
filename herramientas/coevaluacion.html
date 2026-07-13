@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Cartel de Coevaluación</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Zona del cartel: el número ocupa todo el espacio disponible */
+  #cartel {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    min-height: 0;
+  }
+
+  #numero {
+    color: #000000;
+    font-weight: 800;
+    line-height: 1;
+    /* Se adapta al alto o ancho de la pantalla, lo que sea menor */
+    font-size: min(70vh, 55vw);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Barra de selección abajo */
+  #controles {
+    flex-shrink: 0;
+    padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
+    background: #f2f2f2;
+    border-top: 1px solid #d9d9d9;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+
+  #controles.oculto {
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #botones {
+    display: grid;
+    grid-template-columns: repeat(11, 1fr);
+    gap: 5px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .btn {
+    aspect-ratio: 1 / 1;
+    border: 1px solid #cfcfcf;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #333333;
+    font-size: clamp(15px, 4.5vw, 24px);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .btn:active { background: #e6e6e6; }
+
+  .btn.activo {
+    background: #000000;
+    color: #ffffff;
+    border-color: #000000;
+  }
+
+  #pista {
+    text-align: center;
+    font-size: 12px;
+    color: #999999;
+    margin-top: 8px;
+  }
+
+  /* Aviso pequeño para volver a mostrar controles */
+  #volver {
+    position: fixed;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: #bbbbbb;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+  }
+
+  #volver.visible { opacity: 1; }
+</style>
+</head>
+<body>
+
+  <div id="cartel">
+    <span id="numero">0</span>
+  </div>
+
+  <div id="controles">
+    <div id="botones"></div>
+    <div id="pista">Toca el número para ocultar esta barra</div>
+  </div>
+
+  <div id="volver">Toca la pantalla para elegir otro número</div>
+
+<script>
+  const numeroEl = document.getElementById('numero');
+  const botonesEl = document.getElementById('botones');
+  const controlesEl = document.getElementById('controles');
+  const cartelEl = document.getElementById('cartel');
+  const volverEl = document.getElementById('volver');
+
+  let seleccionActual = 0;
+
+  // Crear los botones del 0 al 10
+  const botones = [];
+  for (let i = 0; i <= 10; i++) {
+    const b = document.createElement('button');
+    b.className = 'btn';
+    b.textContent = i;
+    b.addEventListener('click', () => seleccionar(i));
+    botonesEl.appendChild(b);
+    botones.push(b);
+  }
+
+  function seleccionar(n) {
+    seleccionActual = n;
+    numeroEl.textContent = n;
+    botones.forEach((b, idx) => b.classList.toggle('activo', idx === n));
+  }
+
+  // Tocar el número: alternar visibilidad de la barra
+  cartelEl.addEventListener('click', () => {
+    const oculto = controlesEl.classList.toggle('oculto');
+    volverEl.classList.toggle('visible', oculto);
+  });
+
+  // Marcar el 0 como seleccionado al inicio
+  seleccionar(0);
+
+  // Mantener la pantalla encendida mientras se usa como cartel
+  let wakeLock = null;
+  async function mantenerPantalla() {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock = await navigator.wakeLock.request('screen');
+      }
+    } catch (e) { /* algunos navegadores no lo permiten, no pasa nada */ }
+  }
+  mantenerPantalla();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') mantenerPantalla();
+  });
+</script>
+
+</body>
+</html>
