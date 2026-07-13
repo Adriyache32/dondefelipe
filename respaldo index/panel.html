@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel del profesor — Coevaluación</title>
+<style>
+  :root{
+    --azul:#1F3A5F; --oro:#C8A15A; --fondo:#f6f5f1; --tinta:#222;
+    --linea:#e3e0d8; --alerta:#c0392b; --ok:#1a7f37;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--fondo); color:var(--tinta); padding:16px; max-width:900px; margin:0 auto;
+  }
+  header{
+    background:var(--azul); color:#fff; border-radius:14px; padding:18px 20px;
+    display:flex; flex-wrap:wrap; align-items:center; gap:12px; justify-content:space-between;
+    border-bottom:3px solid var(--oro);
+  }
+  header h1{font-size:20px; letter-spacing:.5px}
+  header .sub{font-size:13px; color:#cdd6e0}
+  .controles{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  button{
+    background:var(--oro); color:#3a2c10; border:none; border-radius:9px;
+    padding:9px 14px; font-weight:700; cursor:pointer; font-size:14px;
+  }
+  button:active{filter:brightness(.95)}
+  label.toggle{font-size:13px; color:#cdd6e0; display:flex; align-items:center; gap:6px; cursor:pointer}
+  .meta{font-size:12px; color:#777; margin:10px 2px}
+
+  h2{font-size:15px; color:var(--azul); margin:22px 4px 8px; letter-spacing:.3px}
+  table{width:100%; border-collapse:collapse; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  th,td{padding:11px 12px; text-align:center; border-bottom:1px solid var(--linea); font-size:14px}
+  th{background:#eef1f5; color:var(--azul); font-weight:700; font-size:13px}
+  td.grupo{text-align:left; font-weight:700}
+  tr:last-child td{border-bottom:none}
+  .prom{font-weight:800; font-size:16px}
+  .barra{height:6px; border-radius:3px; background:var(--oro); display:inline-block; vertical-align:middle}
+
+  .alerta-row td{background:#fdf3f2}
+  .pill{display:inline-block; padding:2px 8px; border-radius:20px; font-size:12px; font-weight:700}
+  .pill.baja{background:#fdecea; color:var(--alerta)}
+  .pill.alta{background:#eaf6ec; color:var(--ok)}
+
+  #aviso{background:#fff8e6; border:1px solid #f0e0a8; color:#7a5c00; padding:12px 14px; border-radius:10px; margin-top:14px; font-size:14px; display:none}
+  .vacio{color:#999; font-style:italic; padding:14px 4px}
+</style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>Coevaluación — Panel del profesor</h1>
+      <div class="sub">Promedios en vivo y votos atípicos</div>
+    </div>
+    <div class="controles">
+      <label class="toggle"><input type="checkbox" id="auto" checked> Auto</label>
+      <button id="refrescar">Actualizar</button>
+    </div>
+  </header>
+
+  <div class="meta" id="meta">Cargando…</div>
+  <div id="aviso"></div>
+
+  <h2>Promedio por grupo</h2>
+  <div id="tablaGrupos"></div>
+
+  <h2>Votos alejados del grupo <span style="font-weight:400;color:#888">(posible falta de atención)</span></h2>
+  <div id="tablaAtipicos"></div>
+
+  <h2>Evaluadores a revisar <span style="font-weight:400;color:#888">(más votos atípicos)</span></h2>
+  <div id="tablaEvaluadores"></div>
+
+<script>
+  // ============= CONFIGURACION =============
+  const CSV_URL = "https://docs.google.com/spreadsheets/d/188ErEj4OfYs-JWSlFfJVgo4B8wSHNZHmx-umLGoxsX4/gviz/tq?tqx=out:csv&gid=737584975";
+  const UMBRAL = 3;          // distancia respecto a la mediana para marcar un voto como atipico
+  const REFRESCO_SEG = 60;   // cada cuantos segundos recarga en modo Auto
+  // =========================================
+
+  const metaEl = document.getElementById('meta');
+  const avisoEl = document.getElementById('aviso');
+  const gruposEl = document.getElementById('tablaGrupos');
+  const atipicosEl = document.getElementById('tablaAtipicos');
+  const evalsEl = document.getElementById('tablaEvaluadores');
+  const autoEl = document.getElementById('auto');
+  let timer = null;
+
+  // --- Parser CSV robusto (maneja comillas y comas internas) ---
+  function parseCSV(texto){
+    const filas=[]; let campo='', fila=[], enComillas=false;
+    for(let i=0;i<texto.length;i++){
+      const c=texto[i];
+      if(enComillas){
+        if(c==='"'){ if(texto[i+1]==='"'){campo+='"';i++;} else enComillas=false; }
+        else campo+=c;
+      } else {
+        if(c==='"') enComillas=true;
+        else if(c===','){ fila.push(campo); campo=''; }
+        else if(c==='\n'){ fila.push(campo); filas.push(fila); fila=[]; campo=''; }
+        else if(c==='\r'){ /* ignorar */ }
+        else campo+=c;
+      }
+    }
+    if(campo!=='' || fila.length){ fila.push(campo); filas.push(fila); }
+    return filas;
+  }
+
+  function mediana(arr){
+    if(!arr.length) return null;
+    const s=[...arr].sort((a,b)=>a-b), m=Math.floor(s.length/2);
+    return s.length%2 ? s[m] : (s[m-1]+s[m])/2;
+  }
+
+  function mostrarAviso(msg){ avisoEl.textContent=msg; avisoEl.style.display='block'; }
+  function ocultarAviso(){ avisoEl.style.display='none'; }
+
+  async function cargar(){
+    metaEl.textContent='Actualizando…';
+    try{
+      const resp = await fetch(CSV_URL + '&_=' + Date.now()); // cache-buster
+      const texto = await resp.text();
+      const filas = parseCSV(texto).filter(f=>f.some(c=>c.trim()!==''));
+      if(!filas.length){ mostrarAviso('El CSV llegó vacío.'); return; }
+
+      // Detectar encabezados
+      const cab = filas[0].map(h=>h.toLowerCase().trim());
+      const iGrupo = cab.findIndex(h=>h.includes('grupo'));
+      const iNota  = cab.findIndex(h=>h.includes('nota'));
+      const iEval  = cab.findIndex(h=>h.includes('evaluador'));
+      if(iGrupo<0 || iNota<0){
+        mostrarAviso('No encuentro las columnas "Grupo" y "Nota". Revisa que estés publicando la hoja "Coevaluaciones" (no "Instrucciones").');
+        gruposEl.innerHTML=''; atipicosEl.innerHTML=''; evalsEl.innerHTML='';
+        metaEl.textContent='';
+        return;
+      }
+      ocultarAviso();
+
+      // Agrupar votos
+      const grupos={}, votos=[];
+      for(let r=1;r<filas.length;r++){
+        const f=filas[r];
+        const g=(f[iGrupo]||'').trim();
+        const n=parseFloat((f[iNota]||'').toString().replace(',','.'));
+        const ev=iEval>=0 ? (f[iEval]||'').trim() : '';
+        if(!g || isNaN(n)) continue;
+        (grupos[g]=grupos[g]||[]).push(n);
+        votos.push({grupo:g, nota:n, evaluador:ev||'(anónimo)'});
+      }
+
+      // Tabla de grupos
+      const nombresGrupo=Object.keys(grupos).sort((a,b)=>a.localeCompare(b,'es',{numeric:true}));
+      const medianas={};
+      let html='<table><tr><th>Grupo</th><th>Promedio</th><th>Mediana</th><th>N° votos</th></tr>';
+      if(!nombresGrupo.length){
+        html='<div class="vacio">Aún no hay votos registrados.</div>';
+      } else {
+        for(const g of nombresGrupo){
+          const arr=grupos[g];
+          const prom=arr.reduce((a,b)=>a+b,0)/arr.length;
+          const med=mediana(arr); medianas[g]=med;
+          const ancho=Math.max(6, prom*14);
+          html+=`<tr><td class="grupo">${g}</td>`+
+                `<td><span class="prom">${prom.toFixed(2)}</span> <span class="barra" style="width:${ancho}px"></span></td>`+
+                `<td>${med}</td><td>${arr.length}</td></tr>`;
+        }
+        html+='</table>';
+      }
+      gruposEl.innerHTML=html;
+
+      // Votos atípicos
+      const atipicos=votos.filter(v=>Math.abs(v.nota-medianas[v.grupo])>=UMBRAL);
+      atipicos.sort((a,b)=>Math.abs(b.nota-medianas[b.grupo])-Math.abs(a.nota-medianas[a.grupo]));
+      if(!atipicos.length){
+        atipicosEl.innerHTML='<div class="vacio">Sin votos alejados por ahora.</div>';
+      } else {
+        let h='<table><tr><th>Evaluador</th><th>Grupo</th><th>Su nota</th><th>Mediana grupo</th></tr>';
+        for(const v of atipicos){
+          const clase = v.nota < medianas[v.grupo] ? 'baja' : 'alta';
+          h+=`<tr class="alerta-row"><td class="grupo">${v.evaluador}</td><td>${v.grupo}</td>`+
+             `<td><span class="pill ${clase}">${v.nota}</span></td><td>${medianas[v.grupo]}</td></tr>`;
+        }
+        h+='</table>'; atipicosEl.innerHTML=h;
+      }
+
+      // Evaluadores con más atípicos
+      const cont={};
+      atipicos.forEach(v=>{ cont[v.evaluador]=(cont[v.evaluador]||0)+1; });
+      const rank=Object.entries(cont).sort((a,b)=>b[1]-a[1]);
+      if(!rank.length){
+        evalsEl.innerHTML='<div class="vacio">Nadie destaca por votos atípicos.</div>';
+      } else {
+        let h='<table><tr><th>Evaluador</th><th>Votos atípicos</th></tr>';
+        for(const [ev,c] of rank){ h+=`<tr><td class="grupo">${ev}</td><td>${c}</td></tr>`; }
+        h+='</table>'; evalsEl.innerHTML=h;
+      }
+
+      const ahora=new Date();
+      metaEl.textContent='Última actualización: '+ahora.toLocaleTimeString('es-CL')+
+        ' · '+votos.length+' votos · '+nombresGrupo.length+' grupos';
+    }catch(e){
+      mostrarAviso('No se pudo leer el CSV. Verifica que la hoja esté publicada en la web.');
+      metaEl.textContent='';
+    }
+  }
+
+  function programar(){
+    if(timer) clearInterval(timer);
+    if(autoEl.checked) timer=setInterval(cargar, REFRESCO_SEG*1000);
+  }
+  document.getElementById('refrescar').addEventListener('click', cargar);
+  autoEl.addEventListener('change', programar);
+
+  cargar();
+  programar();
+</script>
+
+</body>
+</html>

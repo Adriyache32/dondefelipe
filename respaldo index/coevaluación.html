@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Coevaluacion</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%; overflow: hidden; background: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-user-select: none; user-select: none; touch-action: manipulation;
+  }
+  body { display: flex; flex-direction: column; }
+
+  #cabecera {
+    flex-shrink: 0; display: flex; flex-direction: column; gap: 6px;
+    padding: calc(8px + env(safe-area-inset-top)) 10px 8px;
+    background: #f2f2f2; border-bottom: 1px solid #d9d9d9;
+  }
+  .fila { display: flex; gap: 8px; align-items: center; }
+  .fila label { font-size: 14px; color: #555; font-weight: 600; white-space: nowrap; }
+  #evaluador, #grupo {
+    flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid #cfcfcf;
+    border-radius: 10px; font-size: 16px; background: #ffffff; color: #222;
+  }
+  #evaluador { -webkit-user-select: text; user-select: text; }
+
+  #cartel { flex: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; min-height: 0; }
+  #numero { color: #000; font-weight: 800; line-height: 1; font-size: min(55vh, 55vw); font-variant-numeric: tabular-nums; }
+
+  #controles {
+    flex-shrink: 0; padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
+    background: #f2f2f2; border-top: 1px solid #d9d9d9;
+  }
+  #botones { display: grid; grid-template-columns: repeat(11, 1fr); gap: 5px; max-width: 900px; margin: 0 auto 8px; }
+  .btn {
+    aspect-ratio: 1 / 1; border: 1px solid #cfcfcf; border-radius: 10px; background: #fff;
+    color: #333; font-size: clamp(14px, 4.2vw, 22px); font-weight: 700;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .btn:active { background: #e6e6e6; }
+  .btn.activo { background: #000; color: #fff; border-color: #000; }
+
+  #enviar {
+    display: block; width: 100%; max-width: 900px; margin: 0 auto; padding: 15px;
+    border: none; border-radius: 12px; background: #000; color: #fff;
+    font-size: 18px; font-weight: 700; cursor: pointer;
+  }
+  #enviar:active { background: #333; }
+  #enviar:disabled { background: #bbb; }
+
+  #estado { text-align: center; font-size: 14px; margin-top: 8px; min-height: 18px; color: #666; }
+  #estado.ok { color: #1a7f37; font-weight: 700; }
+  #estado.error { color: #c0392b; font-weight: 700; }
+</style>
+</head>
+<body>
+
+  <div id="cabecera">
+    <div class="fila" id="filaNombre">
+      <input id="evaluador" type="text" placeholder="Tu nombre y curso" autocomplete="off">
+    </div>
+    <div class="fila">
+      <label>Grupo:</label>
+      <select id="grupo"></select>
+    </div>
+  </div>
+
+  <div id="cartel"><span id="numero">0</span></div>
+
+  <div id="controles">
+    <div id="botones"></div>
+    <button id="enviar">Enviar nota</button>
+    <div id="estado"></div>
+  </div>
+
+<script>
+  // ================= CONFIGURACION =================
+  const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxJgx4pf934u5tZ0Zl3itOgjQL1lM8n07f4uDdrDGZGyzV01ZNRs5gKqOIQyTs1TvHP/exec";
+  const N_GRUPOS = 8;             // cuantos grupos presentan (Grupo 1 ... Grupo N)
+  const PEDIR_NOMBRE = true;      // pide nombre: privado, SOLO tu lo ves en la hoja
+  const UN_VOTO_POR_GRUPO = true; // impide votar dos veces al mismo grupo desde el mismo telefono
+  // ================================================
+
+  const numeroEl  = document.getElementById('numero');
+  const botonesEl = document.getElementById('botones');
+  const grupoEl   = document.getElementById('grupo');
+  const evaluadorEl = document.getElementById('evaluador');
+  const filaNombre = document.getElementById('filaNombre');
+  const enviarEl  = document.getElementById('enviar');
+  const estadoEl  = document.getElementById('estado');
+
+  let seleccionActual = 0;
+  const botones = [];
+
+  if (!PEDIR_NOMBRE) filaNombre.style.display = 'none';
+
+  // Lista de grupos
+  const ph = document.createElement('option');
+  ph.value = ''; ph.textContent = 'Elige un grupo'; ph.disabled = true; ph.selected = true;
+  grupoEl.appendChild(ph);
+  for (let g = 1; g <= N_GRUPOS; g++) {
+    const o = document.createElement('option');
+    o.value = 'Grupo ' + g; o.textContent = 'Grupo ' + g;
+    grupoEl.appendChild(o);
+  }
+
+  // Botones 0-10
+  for (let i = 0; i <= 10; i++) {
+    const b = document.createElement('button');
+    b.className = 'btn'; b.textContent = i;
+    b.addEventListener('click', () => seleccionar(i));
+    botonesEl.appendChild(b); botones.push(b);
+  }
+  function seleccionar(n) {
+    seleccionActual = n; numeroEl.textContent = n;
+    botones.forEach((b, idx) => b.classList.toggle('activo', idx === n));
+  }
+  seleccionar(0);
+
+  // Recordar el nombre entre presentaciones
+  if (PEDIR_NOMBRE) {
+    try { const g = localStorage.getItem('coev_evaluador'); if (g) evaluadorEl.value = g; } catch(e){}
+    evaluadorEl.addEventListener('input', () => { try { localStorage.setItem('coev_evaluador', evaluadorEl.value.trim()); } catch(e){} });
+  }
+
+  function yaVoto(grupo) { try { return localStorage.getItem('coev_voto_' + grupo) === '1'; } catch(e){ return false; } }
+  function marcarVoto(grupo) { try { localStorage.setItem('coev_voto_' + grupo, '1'); } catch(e){} }
+  function mostrarEstado(msg, tipo) { estadoEl.textContent = msg; estadoEl.className = tipo || ''; }
+
+  grupoEl.addEventListener('change', () => {
+    const g = grupoEl.value;
+    if (UN_VOTO_POR_GRUPO && g && yaVoto(g)) {
+      mostrarEstado('Ya enviaste tu nota para ' + g, 'error');
+      enviarEl.disabled = true;
+    } else {
+      mostrarEstado('', ''); enviarEl.disabled = false;
+    }
+  });
+
+  async function enviar() {
+    if (!URL_SCRIPT || URL_SCRIPT.includes('PEGA_AQUI')) { mostrarEstado('Falta configurar la URL del script', 'error'); return; }
+    const evaluador = PEDIR_NOMBRE ? evaluadorEl.value.trim() : '';
+    if (PEDIR_NOMBRE && !evaluador) { mostrarEstado('Escribe tu nombre y curso', 'error'); evaluadorEl.focus(); return; }
+    const grupo = grupoEl.value;
+    if (!grupo) { mostrarEstado('Elige el grupo que evaluas', 'error'); return; }
+    if (UN_VOTO_POR_GRUPO && yaVoto(grupo)) { mostrarEstado('Ya enviaste tu nota para ' + grupo, 'error'); return; }
+
+    enviarEl.disabled = true;
+    mostrarEstado('Enviando...', '');
+    try {
+      const resp = await fetch(URL_SCRIPT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ evaluador, grupo, nota: seleccionActual })
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        marcarVoto(grupo);
+        mostrarEstado('\u2713 Nota enviada para ' + grupo, 'ok');
+        seleccionar(0);
+        grupoEl.value = '';
+      } else {
+        mostrarEstado('Error: ' + (data.error || 'desconocido'), 'error');
+        enviarEl.disabled = false;
+      }
+    } catch (e) {
+      mostrarEstado('No se pudo enviar. Revisa la conexion o la URL.', 'error');
+      enviarEl.disabled = false;
+    }
+  }
+  enviarEl.addEventListener('click', enviar);
+
+  // Mantener pantalla encendida
+  let wakeLock = null;
+  async function mantenerPantalla() {
+    try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
+  }
+  mantenerPantalla();
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') mantenerPantalla(); });
+</script>
+
+</body>
+</html>
