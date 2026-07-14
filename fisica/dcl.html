@@ -54,6 +54,96 @@ body::before{
 .progreso i{display:block;height:100%;width:0;background:var(--tinta);transition:width .35s ease}
 .contador{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--tinta-suave);min-width:52px;text-align:right}
 
+/* ---------- Felipesos ---------- */
+.banco{
+  display:inline-flex;align-items:center;gap:6px;background:#FFF6E6;border:1px solid var(--ambar);
+  border-radius:99px;padding:4px 12px 4px 8px;cursor:default;
+}
+.banco .moneda{
+  width:20px;height:20px;border-radius:99px;background:var(--ambar);color:#1a1200;
+  display:grid;place-items:center;font-size:13px;font-weight:900;font-family:'Archivo',sans-serif;
+}
+.banco b{font-family:'IBM Plex Mono',monospace;font-size:14px;color:#8a5a10;font-weight:600;min-width:20px;text-align:right}
+.banco.late{animation:late .5s ease}
+@keyframes late{0%,100%{transform:scale(1)}40%{transform:scale(1.18)}}
+
+.toast{
+  position:fixed;top:56px;left:50%;transform:translateX(-50%) translateY(-14px);z-index:60;
+  background:var(--tinta);color:var(--papel);padding:10px 16px;border-radius:99px;
+  font-size:14px;font-weight:600;box-shadow:0 12px 30px -12px rgba(18,38,63,.6);
+  opacity:0;pointer-events:none;transition:opacity .3s, transform .3s;display:flex;align-items:center;gap:8px;
+}
+.toast.ver{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast .moneda{width:18px;height:18px;border-radius:99px;background:var(--ambar);color:#1a1200;display:grid;place-items:center;font-size:12px;font-weight:900}
+
+/* ---------- Juego de tablero ---------- */
+.juego{background:var(--blanco);border:1px solid var(--linea);border-radius:var(--radio);box-shadow:var(--sombra);overflow:hidden}
+.juego-cab{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--linea);background:#FBFCFD}
+.juego-cab .estado{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--tinta-suave)}
+.juego-cab .estado b{color:var(--tinta)}
+.setup{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:16px;border-bottom:1px solid var(--linea);background:#FBFCFD}
+.setup-lbl{font-size:14px;color:var(--tinta-suave)}
+.seg{display:inline-flex;border:1px solid var(--linea);border-radius:var(--radio);overflow:hidden}
+.seg button{background:var(--blanco);border:none;padding:9px 16px;font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--tinta);border-right:1px solid var(--linea)}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--tinta);color:var(--papel)}
+.dados{display:flex;gap:8px}
+.marcador{display:grid;gap:8px;grid-template-columns:repeat(2,1fr);padding:14px 16px;border-bottom:1px solid var(--linea)}
+@media(min-width:640px){.marcador{grid-template-columns:repeat(4,1fr)}}
+.jugador{
+  display:flex;align-items:center;gap:9px;border:1px solid var(--linea);border-radius:var(--radio);
+  padding:8px 10px;background:var(--blanco);transition:box-shadow .15s, border-color .15s;
+}
+.jugador.turno{border-color:var(--ambar);box-shadow:0 0 0 2px rgba(224,145,47,.25)}
+.jugador .tk{width:26px;height:26px;border-radius:99px;display:grid;place-items:center;font-size:15px;color:#fff;flex:none}
+.jugador .info{min-width:0;flex:1}
+.jugador .info input{width:100%;border:none;background:transparent;font:inherit;font-size:13.5px;font-weight:600;color:var(--tinta);padding:0}
+.jugador .info input:focus{outline:none;border-bottom:1px solid var(--ambar)}
+.jugador .fp{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8a5a10}
+.tablero{
+  display:grid;gap:8px;padding:16px;
+  grid-template-columns:repeat(4,1fr);
+}
+@media(min-width:620px){.tablero{grid-template-columns:repeat(6,1fr)}}
+@media(min-width:820px){.tablero{grid-template-columns:repeat(8,1fr)}}
+.casilla{
+  position:relative;aspect-ratio:1;border:1px solid var(--linea);border-radius:6px;background:var(--papel);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px;
+  font-size:11px;text-align:center;color:var(--tinta-suave);transition:transform .15s, box-shadow .15s;
+}
+.casilla .n{position:absolute;top:3px;left:5px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--linea)}
+.casilla .ico{font-size:18px;line-height:1}
+.casilla.tipo-pregunta{background:#EAF2FA;border-color:#BCDCF0}
+.casilla.tipo-viento{background:#EAF4EF;border-color:#B8DFCD}
+.casilla.tipo-roce{background:#FBEBEA;border-color:#F0C7C3}
+.casilla.tipo-meta{background:var(--tinta);border-color:var(--tinta);color:var(--papel)}
+.casilla.tipo-salida{background:#FFF6E6;border-color:var(--ambar)}
+.casilla.activa{box-shadow:0 0 0 2px var(--ambar), 0 8px 18px -8px rgba(224,145,47,.7);transform:translateY(-2px);z-index:2}
+.ficha{
+  position:absolute;width:18px;height:18px;border-radius:99px;
+  color:#fff;display:grid;place-items:center;font-size:10px;font-weight:700;
+  box-shadow:0 3px 8px -3px rgba(0,0,0,.5);transition:transform .2s;
+}
+.ficha.salta{animation:salta .3s ease}
+@keyframes salta{50%{transform:translateY(-8px) scale(1.12)}}
+.dado{
+  width:52px;height:52px;border:1px solid var(--linea);border-radius:10px;background:var(--blanco);
+  display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:7px;gap:2px;box-shadow:var(--sombra);
+}
+.dado i{width:9px;height:9px;border-radius:99px;background:var(--tinta);align-self:center;justify-self:center;visibility:hidden}
+.dado.rueda{animation:rueda .5s linear}
+@keyframes rueda{0%{transform:rotate(0) scale(1)}50%{transform:rotate(180deg) scale(.85)}100%{transform:rotate(360deg) scale(1)}}
+.juego-log{max-height:120px;overflow-y:auto;padding:10px 16px;border-top:1px solid var(--linea);font-size:13px;line-height:1.7;color:var(--tinta-suave)}
+.juego-log b{color:var(--tinta)}
+
+/* modal genérico */
+.modal-fondo{position:fixed;inset:0;z-index:70;background:rgba(18,38,63,.5);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:20px}
+.modal-fondo.ver{display:flex}
+.modal{background:var(--blanco);border:1px solid var(--linea);border-radius:8px;max-width:460px;width:100%;padding:22px;box-shadow:0 30px 70px -30px rgba(18,38,63,.7)}
+.modal h3{margin-bottom:10px}
+.modal .opciones{margin:14px 0}
+.modal .cierre{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+
 /* ---------- Diapositivas ---------- */
 .deck{position:fixed;inset:46px 0 64px;overflow:hidden}
 .slide{
@@ -274,8 +364,12 @@ textarea{
 <header class="topbar">
   <div class="marca">FÍSICA 2°M · <span>UNIDAD 2</span></div>
   <div class="progreso"><i id="barra"></i></div>
+  <button class="banco" id="banco" title="Tus felipesos ganados">
+    <span class="moneda">Ⓕ</span><b id="saldoFelipesos">0</b>
+  </button>
   <div class="contador"><span id="num">1</span>/<span id="total">10</span></div>
 </header>
+<div class="toast" id="toast"></div>
 
 <main class="deck" id="deck">
 
@@ -307,7 +401,43 @@ textarea{
     </div>
   </section>
 
-  <!-- 2. SIEMBRA -->
+  <!-- 2. JUEGO -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">Calentamiento · Gánate tus felipesos</div>
+      <h2>Ruta de las fuerzas</h2>
+      <p style="margin-bottom:14px">Juego para <strong>2 a 4 jugadores</strong>. Por turnos, cada uno lanza <strong>los dos dados</strong> y avanza la suma. Caerás en casillas de <strong>pregunta</strong> (respóndela bien y ganas felipesos), de <strong>viento a favor</strong> (te empuja) o de <strong>zona de mucho roce</strong> (te frena). El primero en llegar a la meta gana el bono. Cada jugador acumula sus felipesos en el marcador.</p>
+
+      <div class="juego">
+        <div class="setup" id="setup">
+          <span class="setup-lbl">¿Cuántos jugadores?</span>
+          <div class="seg" id="segJugadores">
+            <button data-n="2">2</button>
+            <button data-n="3">3</button>
+            <button class="on" data-n="4">4</button>
+          </div>
+          <button class="btn ambar" id="comenzarJuego">Comenzar partida</button>
+        </div>
+
+        <div class="juego-cab" id="juegoCab" style="display:none">
+          <button class="btn ambar" id="lanzar">Lanzar dados</button>
+          <div class="dados">
+            <div class="dado" id="dadoA"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="dado" id="dadoB"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+          <div class="estado">Turno de <b id="turnoNombre">Jugador 1</b></div>
+          <button class="btn ghost" id="reiniciarJuego" style="margin-left:auto">Reiniciar</button>
+        </div>
+
+        <div class="marcador" id="marcador" style="display:none"></div>
+        <div class="tablero" id="tablero"></div>
+        <div class="juego-log" id="juegoLog">Elige cuántos jugadores y pulsa <strong>Comenzar partida</strong>.</div>
+      </div>
+      <p class="aviso">Las preguntas de este tablero son de repaso rápido: fuerzas, DCL y segunda ley. No necesitas calculadora.</p>
+    </div>
+  </section>
+
+  <!-- 3. SIEMBRA -->
   <section class="slide">
     <div class="wrap">
       <div class="eyebrow">SIEMBRA · Activación</div>
@@ -520,7 +650,7 @@ textarea{
     <div class="wrap">
       <div class="eyebrow">COSECHA · Práctica diferenciada</div>
       <h2>Calcula la aceleración</h2>
-      <p style="margin-bottom:16px">Usa g = 10 m/s². Escribe solo el número (en m/s²). La calculadora está en el botón naranjo, abajo a la derecha.</p>
+      <p style="margin-bottom:16px">Usa g = 10 m/s². Escribe solo el número (en m/s²). Cada respuesta correcta te da <strong>felipesos</strong>. La calculadora está en el botón naranjo, abajo a la derecha.</p>
 
       <div class="tarjeta" style="margin-bottom:14px">
         <div class="nivel"><span class="chip"><b style="background:var(--verde)"></b> Básico</span><em class="basico">Aplicar</em></div>
@@ -556,6 +686,30 @@ textarea{
           <div class="feedback" id="f3"></div>
         </div>
         <div class="pasos" id="p3">Eje Y: N = m·g = 10 · 10 = 100 N<br>Roce: fr = μ·N = 0,2 · 100 = 20 N<br>ΣFx = 40 − 15 − 20 = 5 N<br>a = 5 / 10 = 0,5 m/s² hacia la derecha</div>
+      </div>
+
+      <div class="tarjeta" style="margin-top:14px">
+        <div class="nivel"><span class="chip"><b style="background:var(--verde)"></b> Básico</span><em class="basico">Aplicar</em></div>
+        <div class="enunciado"><p>Una fuerza neta de <strong>18 N</strong> actúa sobre un objeto de <strong>3 kg</strong> sobre una superficie sin roce. ¿Cuál es su aceleración?</p></div>
+        <div class="respuesta">
+          <input id="e4" type="text" inputmode="decimal" placeholder="a = ? m/s²">
+          <button class="btn" data-check="4">Revisar</button>
+          <button class="btn ghost" data-pasos="4">Ver desarrollo</button>
+          <div class="feedback" id="f4"></div>
+        </div>
+        <div class="pasos" id="p4">Sin roce, la fuerza neta ya está dada.<br>a = ΣFx / m = 18 / 3<br>a = 6 m/s² hacia la derecha</div>
+      </div>
+
+      <div class="tarjeta" style="margin-top:14px">
+        <div class="nivel"><span class="chip"><b style="background:var(--azul)"></b> Intermedio</span><em class="inter">Analizar</em></div>
+        <div class="enunciado"><p>Dos estudiantes empujan una caja de <strong>8 kg</strong> hacia la derecha, cada uno con <strong>25 N</strong>. El roce con el piso es de <strong>10 N</strong>. ¿Con qué aceleración se mueve la caja?</p></div>
+        <div class="respuesta">
+          <input id="e5" type="text" inputmode="decimal" placeholder="a = ? m/s²">
+          <button class="btn" data-check="5">Revisar</button>
+          <button class="btn ghost" data-pasos="5">Ver desarrollo</button>
+          <div class="feedback" id="f5"></div>
+        </div>
+        <div class="pasos" id="p5">Fuerza aplicada total = 25 + 25 = 50 N hacia la derecha.<br>ΣFx = 50 − 10 = 40 N<br>a = 40 / 8 = 5 m/s² hacia la derecha</div>
       </div>
     </div>
   </section>
@@ -606,7 +760,45 @@ textarea{
     </div>
   </section>
 
-  <!-- 10. CIERRE -->
+  <!-- 10. PREGUNTAS DE DESARROLLO -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">COSECHA · Argumentación</div>
+      <h2>Preguntas de desarrollo</h2>
+      <p style="margin-bottom:16px">Responde con tus palabras, en frases completas. No hay una única forma correcta de redactar: se evalúa que tu razonamiento físico sea correcto. Todas se incluyen en tu PDF de entrega.</p>
+
+      <div class="tarjeta" style="margin-bottom:14px">
+        <h3>1 · El orden del método</h3>
+        <p style="margin-bottom:8px">Explica por qué conviene dibujar el DCL <strong>antes</strong> de escribir cualquier ecuación. ¿Qué errores evita ese paso?</p>
+        <textarea id="d1" placeholder="Tu respuesta…"></textarea>
+      </div>
+
+      <div class="tarjeta" style="margin-bottom:14px">
+        <h3>2 · Roce que ayuda y roce que estorba</h3>
+        <p style="margin-bottom:8px">Describe una situación donde el roce sea <strong>indispensable</strong> y otra donde sea un <strong>obstáculo</strong>. En cada caso, indica hacia dónde apunta la fuerza de roce respecto del movimiento.</p>
+        <textarea id="d2" placeholder="Tu respuesta…"></textarea>
+      </div>
+
+      <div class="tarjeta" style="margin-bottom:14px">
+        <h3>3 · Misma fuerza, distinto resultado</h3>
+        <p style="margin-bottom:8px">Empujas una caja vacía y luego la misma caja llena, aplicando la misma fuerza en ambos casos. Explica con ΣFx = m·a qué le pasa a la aceleración y por qué.</p>
+        <textarea id="d3" placeholder="Tu respuesta…"></textarea>
+      </div>
+
+      <div class="tarjeta">
+        <h3>4 · El cuerpo que no acelera</h3>
+        <p style="margin-bottom:8px">Un cuerpo se desliza a velocidad constante. ¿Significa eso que no hay fuerzas actuando sobre él? Argumenta usando el concepto de fuerza neta.</p>
+        <textarea id="d4" placeholder="Tu respuesta…"></textarea>
+      </div>
+
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn" id="registrarDesarrollo">Registrar mis respuestas</button>
+        <span id="avisoDesarrollo" style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--tinta-suave)"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. CIERRE -->
   <section class="slide">
     <div class="wrap">
       <div class="eyebrow">Cierre metacognitivo</div>
@@ -651,11 +843,187 @@ textarea{
   <div class="memo">g = 10 m/s² · a = ΣFx / m</div>
 </div>
 
+<div class="modal-fondo" id="modalFondo">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3 id="modalTitulo">Pregunta</h3>
+    <p id="modalTexto"></p>
+    <div class="opciones" id="modalOpciones"></div>
+    <div class="cierre" id="modalCierre"></div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 (function(){
 "use strict";
+
+/* ============ FELIPESOS (gamificación global) ============ */
+let felipesos = 0;
+const yaPremiado = {};                 // evita pagar dos veces la misma tarea
+const saldoEl = document.getElementById('saldoFelipesos');
+const bancoEl = document.getElementById('banco');
+const toastEl = document.getElementById('toast');
+let toastT = null;
+
+function ganarFelipesos(n, motivo, clave){
+  if (clave){ if (yaPremiado[clave]) return; yaPremiado[clave] = true; }
+  felipesos += n;
+  saldoEl.textContent = felipesos;
+  bancoEl.classList.remove('late'); void bancoEl.offsetWidth; bancoEl.classList.add('late');
+  toastEl.innerHTML = '<span class="moneda">Ⓕ</span> +' + n + ' felipesos · ' + motivo;
+  toastEl.classList.add('ver');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => toastEl.classList.remove('ver'), 2200);
+}
+
+/* ============ JUEGO: RUTA DE LAS FUERZAS ============ */
+(function juego(){
+  const N = 24;
+  const preguntas = [
+    {q:'¿Qué fuerza apunta siempre hacia el centro de la Tierra?', o:['El peso','La normal','El roce'], c:0},
+    {q:'La fuerza normal es siempre…', o:['Perpendicular a la superficie','Paralela al movimiento','Vertical hacia abajo'], c:0},
+    {q:'El roce cinético se opone…', o:['Al movimiento del cuerpo','A la fuerza normal','Al peso'], c:0},
+    {q:'Si ΣFx = 0, el cuerpo…', o:['Está en reposo o con MRU','Siempre acelera','Siempre se detiene'], c:0},
+    {q:'En ΣFx = m·a, si aumenta la masa con la misma fuerza neta, la aceleración…', o:['Disminuye','Aumenta','No cambia'], c:0},
+    {q:'En un DCL se dibujan las fuerzas que actúan…', o:['Sobre el cuerpo','Desde el cuerpo hacia otros','Solo las horizontales'], c:0},
+    {q:'La unidad de la fuerza en el Sistema Internacional es…', o:['El newton (N)','El kilogramo','El m/s²'], c:0},
+    {q:'Sobre un cuerpo en el piso sin fuerzas verticales extra, la normal es igual…', o:['Al peso','Al roce','A la fuerza aplicada'], c:0},
+    {q:'Si empujas una caja a la derecha y desliza, el roce apunta hacia…', o:['La izquierda','La derecha','Arriba'], c:0},
+    {q:'La aceleración se calcula como…', o:['a = ΣFx / m','a = m / ΣFx','a = ΣFx · m'], c:0},
+  ];
+  const especiales = { 4:'viento', 9:'roce', 13:'viento', 18:'roce' };  // 0-indexado
+
+  function tipo(idx){
+    if (idx === 0) return 'salida';
+    if (idx === N - 1) return 'meta';
+    if (especiales[idx]) return especiales[idx];
+    if (idx % 3 === 0) return 'pregunta';
+    return 'normal';
+  }
+  const ICO = {salida:'🚩', meta:'🏁', pregunta:'❓', viento:'💨', roce:'🧱', normal:'·'};
+  const CAP = {salida:'Salida', meta:'Meta', pregunta:'Pregunta', viento:'Viento a favor', roce:'Mucho roce', normal:''};
+
+  const tablero = document.getElementById('tablero');
+  const dado = document.getElementById('dado');
+  const log = document.getElementById('juegoLog');
+  const DOT = {1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+  let pos = 0, ocupado = false, terminado = false, ganadoAqui = 0;
+  const casillas = [];
+
+  for (let k = 0; k < N; k++){
+    const t = tipo(k);
+    const c = document.createElement('div');
+    c.className = 'casilla tipo-' + t;
+    c.innerHTML = '<span class="n">' + (k+1) + '</span><span class="ico">' + ICO[t] + '</span>' +
+                  (CAP[t] ? '<span>' + CAP[t] + '</span>' : '');
+    tablero.appendChild(c); casillas.push(c);
+  }
+  const ficha = document.createElement('div');
+  ficha.className = 'ficha'; ficha.textContent = '🧊';
+  casillas[0].appendChild(ficha);
+
+  function mostrarDado(v){ dado.querySelectorAll('i').forEach((d,idx)=> d.style.visibility = DOT[v].includes(idx) ? 'visible' : 'hidden'); }
+  function situar(){
+    casillas.forEach(c => c.classList.remove('activa'));
+    casillas[pos].appendChild(ficha);
+    casillas[pos].classList.add('activa');
+    document.getElementById('posFicha').textContent = pos + 1;
+    ficha.classList.remove('salta'); void ficha.offsetWidth; ficha.classList.add('salta');
+  }
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  function anota(html){ const d = document.createElement('div'); d.innerHTML = html; log.prepend(d); }
+
+  async function avanzar(pasos){
+    const destino = Math.min(N - 1, pos + pasos);
+    while (pos < destino){ pos++; situar(); await wait(200); }
+  }
+
+  document.getElementById('lanzar').addEventListener('click', async () => {
+    if (ocupado || terminado) return;
+    ocupado = true;
+    dado.classList.add('rueda');
+    const v = 1 + Math.floor(Math.random() * 6);
+    for (let f = 0; f < 8; f++){ mostrarDado(1 + Math.floor(Math.random()*6)); await wait(55); }
+    mostrarDado(v); dado.classList.remove('rueda');
+    anota('Sacaste un <b>' + v + '</b>.');
+    await avanzar(v);
+    await resolverCasilla();
+    if (pos >= N - 1) ganar();
+    ocupado = false;
+  });
+
+  async function resolverCasilla(){
+    const t = tipo(pos);
+    if (t === 'pregunta'){
+      const p = preguntas[pos % preguntas.length];
+      const ok = await preguntar(p);
+      if (ok){ ganadoAqui += 15; document.getElementById('ganadoJuego').textContent = ganadoAqui; ganarFelipesos(15, 'respuesta en el tablero'); anota('¡Correcto! <b>+15 Ⓕ</b>'); }
+      else { anota('Respuesta incorrecta, no ganas felipesos esta vez.'); }
+    } else if (t === 'viento'){
+      await simple('💨 Viento a favor', 'Una ráfaga te empuja: avanzas 2 casillas.');
+      anota('<b>Viento a favor:</b> avanzas 2 casillas.');
+      await avanzar(2);
+      await resolverCasilla();
+    } else if (t === 'roce'){
+      await simple('🧱 Zona de mucho roce', 'El roce te frena: retrocedes 2 casillas.');
+      anota('<b>Mucho roce:</b> retrocedes 2 casillas.');
+      pos = Math.max(0, pos - 2); situar(); await wait(200);
+    }
+  }
+
+  function ganar(){
+    terminado = true;
+    ganarFelipesos(30, 'llegaste a la meta', 'juego-meta');
+    anota('🏁 <b>¡Llegaste a la meta!</b> Bono de <b>+30 Ⓕ</b>.');
+    simple('🏁 ¡Meta!', 'Completaste la Ruta de las fuerzas y ganaste un bono de 30 felipesos. Puedes reiniciar para volver a jugar (el bono solo se paga una vez).');
+  }
+
+  document.getElementById('reiniciarJuego').addEventListener('click', () => {
+    pos = 0; terminado = false; ganadoAqui = 0;
+    document.getElementById('ganadoJuego').textContent = '0';
+    situar(); log.innerHTML = 'Tablero reiniciado. Pulsa <strong>Lanzar dado</strong>.';
+  });
+
+  /* --- modal --- */
+  const fondo = document.getElementById('modalFondo');
+  const mTit = document.getElementById('modalTitulo');
+  const mTxt = document.getElementById('modalTexto');
+  const mOp = document.getElementById('modalOpciones');
+  const mCi = document.getElementById('modalCierre');
+
+  function simple(titulo, texto){
+    return new Promise(res => {
+      mTit.textContent = titulo; mTxt.textContent = texto; mOp.innerHTML = '';
+      mCi.innerHTML = '';
+      const b = document.createElement('button'); b.className = 'btn'; b.textContent = 'Continuar';
+      b.onclick = () => { fondo.classList.remove('ver'); res(); };
+      mCi.appendChild(b); fondo.classList.add('ver'); b.focus();
+    });
+  }
+  function preguntar(p){
+    return new Promise(res => {
+      mTit.textContent = '❓ Pregunta'; mTxt.textContent = p.q; mCi.innerHTML = '';
+      mOp.innerHTML = '';
+      p.o.forEach((txt, j) => {
+        const b = document.createElement('button');
+        b.className = 'opcion'; b.style.width = '100%'; b.style.marginBottom = '8px'; b.style.textAlign = 'left';
+        b.innerHTML = '<span>' + txt + '</span>';
+        b.onclick = () => {
+          mOp.querySelectorAll('.opcion').forEach(o => o.style.pointerEvents = 'none');
+          const ok = j === p.c;
+          b.style.borderColor = ok ? 'var(--verde)' : 'var(--rojo)';
+          if (!ok) mOp.children[p.c].style.borderColor = 'var(--verde)';
+          setTimeout(() => { fondo.classList.remove('ver'); res(ok); }, 850);
+        };
+        mOp.appendChild(b);
+      });
+      fondo.classList.add('ver');
+    });
+  }
+
+  mostrarDado(1); situar();
+})();
 
 /* ============ NAVEGACIÓN ============ */
 const slides = Array.from(document.querySelectorAll('.slide'));
@@ -882,8 +1250,11 @@ requestAnimationFrame(dibujar);
 const ejercicios = {
   1:{r:4,  u:'m/s²', dato:'Bloque 4 kg, F=20 N, fr=4 N'},
   2:{r:2,  u:'m/s²', dato:'Carro 6 kg, F1=30 N, F2=12 N, fr=6 N'},
-  3:{r:0.5,u:'m/s²', dato:'Cajón 10 kg, F1=40 N, F2=15 N, μ=0,2'}
+  3:{r:0.5,u:'m/s²', dato:'Cajón 10 kg, F1=40 N, F2=15 N, μ=0,2'},
+  4:{r:6,  u:'m/s²', dato:'Objeto 3 kg, fuerza neta 18 N, sin roce'},
+  5:{r:5,  u:'m/s²', dato:'Caja 8 kg, dos empujes de 25 N, fr=10 N'}
 };
+const premioEj = {1:10, 2:15, 3:20, 4:10, 5:15};
 const respEj = {};
 document.querySelectorAll('[data-check]').forEach(b => b.addEventListener('click', () => {
   const k = b.dataset.check, val = document.getElementById('e'+k).value.replace(',', '.').trim();
@@ -892,6 +1263,7 @@ document.querySelectorAll('[data-check]').forEach(b => b.addEventListener('click
   if (isNaN(num)){ f.className='feedback no'; f.textContent='Escribe un número, por ejemplo 4 o 0,5.'; return; }
   if (Math.abs(num - ejercicios[k].r) < 0.06){
     f.className='feedback ok'; f.textContent='Correcto: a = ' + ejercicios[k].r + ' m/s². Ahora explica en voz alta hacia dónde apunta.';
+    ganarFelipesos(premioEj[k], 'ejercicio ' + k + ' correcto', 'ej-' + k);
   } else {
     f.className='feedback no'; f.textContent='Todavía no. Revisa el signo del roce y divide la fuerza neta por la masa.';
   }
@@ -943,10 +1315,21 @@ document.getElementById('revisarConceptos').addEventListener('click', () => {
   conceptos.forEach((c, n) => {
     const f = document.getElementById('fc'+n);
     if (respCon[n] === undefined){ f.className='feedback no'; f.textContent='Sin responder.'; return; }
-    if (respCon[n] === c.c){ ok++; f.className='feedback ok'; f.textContent='Correcto. ' + c.exp; }
+    if (respCon[n] === c.c){ ok++; f.className='feedback ok'; f.textContent='Correcto. ' + c.exp; ganarFelipesos(8, 'concepto ' + (n+1), 'con-' + n); }
     else { f.className='feedback no'; f.textContent='Revisa: ' + c.exp; }
   });
   document.getElementById('puntaje').textContent = ok + ' de ' + conceptos.length + ' correctas';
+});
+
+/* ============ PREGUNTAS DE DESARROLLO ============ */
+document.getElementById('registrarDesarrollo').addEventListener('click', () => {
+  const campos = ['d1','d2','d3','d4'];
+  const escritas = campos.filter(id => document.getElementById(id).value.trim().length >= 15).length;
+  const aviso = document.getElementById('avisoDesarrollo');
+  if (escritas === 0){ aviso.textContent = 'Escribe al menos una respuesta antes de registrar.'; return; }
+  aviso.textContent = escritas + ' de 4 respuestas registradas. Se incluirán en tu PDF.';
+  if (escritas === 4) ganarFelipesos(20, 'completaste el desarrollo', 'desarrollo-full');
+  else ganarFelipesos(escritas * 4, 'esfuerzo en desarrollo', 'desarrollo-parcial-' + escritas);
 });
 
 /* ============ SEMÁFORO ============ */
@@ -985,7 +1368,11 @@ function recolectar(){
     steam: document.getElementById('r_steam').value.trim(),
     abierta: document.getElementById('r_abierta').value.trim(),
     cierre: document.getElementById('r_cierre').value.trim(),
-    semaforo: semaforo || 'No seleccionado'
+    semaforo: semaforo || 'No seleccionado',
+    d1: document.getElementById('d1').value.trim(),
+    d2: document.getElementById('d2').value.trim(),
+    d3: document.getElementById('d3').value.trim(),
+    d4: document.getElementById('d4').value.trim()
   };
 }
 
@@ -1016,7 +1403,9 @@ document.getElementById('exportar').addEventListener('click', () => {
   doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(18,38,63);
   doc.text('Estudiante: ' + d.nombre + '     Curso: ' + d.curso, M, y); y += 16;
   doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(110,120,135);
-  doc.text('Fecha de entrega: ' + new Date().toLocaleString('es-CL'), M, y); y += 26;
+  doc.text('Fecha de entrega: ' + new Date().toLocaleString('es-CL'), M, y); y += 16;
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(180,120,20);
+  doc.text('Felipesos ganados en la clase: ' + felipesos, M, y); y += 26;
 
   titulo('1. Activación · Piensa, comparte, discute');
   parrafo(d.tps);
@@ -1026,15 +1415,15 @@ document.getElementById('exportar').addEventListener('click', () => {
 
   titulo('3. Ejercicios de aceleración');
   let ejOk = 0;
+  const nivEj = {1:'Básico', 2:'Intermedio', 3:'Desafío', 4:'Básico', 5:'Intermedio'};
   Object.keys(ejercicios).forEach(k => {
     const dado = respEj[k] !== undefined ? respEj[k] : '';
     const num = parseFloat(String(dado).replace(',', '.'));
     const correcto = !isNaN(num) && Math.abs(num - ejercicios[k].r) < 0.06;
     if (correcto) ejOk++;
-    const niv = k === '1' ? 'Básico' : (k === '2' ? 'Intermedio' : 'Desafío');
     salto(34);
     doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(18,38,63);
-    doc.text(niv + ' — ' + ejercicios[k].dato, M, y); y += 14;
+    doc.text(nivEj[k] + ' — ' + ejercicios[k].dato, M, y); y += 14;
     doc.setFont('helvetica','normal'); doc.setTextColor(correcto ? 46 : 196, correcto ? 139 : 69, correcto ? 107 : 58);
     doc.text('Respuesta del estudiante: ' + (dado || '(sin responder)') + '   ·   ' + (correcto ? 'Correcta' : 'Incorrecta') + '   ·   Esperada: ' + ejercicios[k].r + ' m/s²', M, y);
     y += 20;
@@ -1058,12 +1447,26 @@ document.getElementById('exportar').addEventListener('click', () => {
   });
   salto(20);
   doc.setFont('helvetica','bold'); doc.setTextColor(18,38,63);
-  doc.text('Puntaje conceptual: ' + ok + '/' + conceptos.length + '   ·   Ejercicios correctos: ' + ejOk + '/3', M, y); y += 24;
+  doc.text('Puntaje conceptual: ' + ok + '/' + conceptos.length + '   ·   Ejercicios correctos: ' + ejOk + '/5', M, y); y += 24;
 
-  titulo('6. Pregunta abierta · Camión y bicicleta');
+  titulo('6. Preguntas de desarrollo');
+  const desarrollo = [
+    ['El orden del método', d.d1],
+    ['Roce que ayuda y roce que estorba', d.d2],
+    ['Misma fuerza, distinto resultado', d.d3],
+    ['El cuerpo que no acelera', d.d4]
+  ];
+  desarrollo.forEach((par, n) => {
+    salto(20);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(18,38,63);
+    doc.text((n+1) + '. ' + par[0], M, y); y += 15;
+    parrafo(par[1]);
+  });
+
+  titulo('7. Pregunta abierta · Camión y bicicleta');
   parrafo(d.abierta);
 
-  titulo('7. Cierre metacognitivo');
+  titulo('8. Cierre metacognitivo');
   doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(18,38,63);
   salto(16); doc.text('Semáforo: ' + d.semaforo, M, y); y += 18;
   doc.setFont('helvetica','normal');
