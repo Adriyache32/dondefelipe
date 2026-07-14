@@ -81,8 +81,17 @@ body::before{
 .juego-cab{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--linea);background:#FBFCFD}
 .juego-cab .estado{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--tinta-suave)}
 .juego-cab .estado b{color:var(--tinta)}
-.setup{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:16px;border-bottom:1px solid var(--linea);background:#FBFCFD}
+.setup{display:flex;flex-direction:column;gap:14px;padding:16px;border-bottom:1px solid var(--linea);background:#FBFCFD}
+.setup-fila{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
 .setup-lbl{font-size:14px;color:var(--tinta-suave)}
+.nombres{display:grid;gap:10px;grid-template-columns:repeat(2,1fr)}
+@media(min-width:640px){.nombres{grid-template-columns:repeat(4,1fr)}}
+.nombres .campo{display:flex;flex-direction:column;gap:4px}
+.nombres .campo label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--tinta-suave);display:flex;align-items:center;gap:6px}
+.nombres .campo label i{width:14px;height:14px;border-radius:99px;display:inline-block;flex:none}
+.nombres .campo input{border:1px solid var(--linea);border-radius:var(--radio);padding:8px 10px;font:inherit;font-size:14px;background:var(--blanco);color:var(--tinta)}
+.nombres .campo input:disabled{background:#EFF2F5;color:var(--tinta-suave)}
+.nombres .campo input:focus{border-color:var(--ambar);outline:none}
 .seg{display:inline-flex;border:1px solid var(--linea);border-radius:var(--radio);overflow:hidden}
 .seg button{background:var(--blanco);border:none;padding:9px 16px;font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--tinta);border-right:1px solid var(--linea)}
 .seg button:last-child{border-right:none}
@@ -116,6 +125,9 @@ body::before{
 .casilla.tipo-pregunta{background:#EAF2FA;border-color:#BCDCF0}
 .casilla.tipo-viento{background:#EAF4EF;border-color:#B8DFCD}
 .casilla.tipo-roce{background:#FBEBEA;border-color:#F0C7C3}
+.casilla.tipo-social{background:#F3EEFB;border-color:#D9C9F0}
+.casilla.tipo-atajo{background:#E7F6F1;border-color:#A9E0CF}
+.casilla.tipo-contra{background:#FBEEE6;border-color:#F2CBAF}
 .casilla.tipo-meta{background:var(--tinta);border-color:var(--tinta);color:var(--papel)}
 .casilla.tipo-salida{background:#FFF6E6;border-color:var(--ambar)}
 .casilla.activa{box-shadow:0 0 0 2px var(--ambar), 0 8px 18px -8px rgba(224,145,47,.7);transform:translateY(-2px);z-index:2}
@@ -201,8 +213,9 @@ ul.lista{counter-reset:paso}
   background:var(--blanco);border:1px solid var(--linea);border-radius:var(--radio);
   padding:18px;text-align:center;box-shadow:var(--sombra);
 }
-#qr{display:flex;justify-content:center;align-items:center;min-height:190px}
+#qr{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:190px}
 #qr img,#qr canvas{width:min(58vw,240px)!important;height:min(58vw,240px)!important;image-rendering:pixelated}
+#qr a{max-width:240px}
 .qr-caja input{
   width:100%;margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:12px;
   border:1px solid var(--linea);border-radius:var(--radio);padding:8px;color:var(--tinta);background:var(--papel);
@@ -395,7 +408,7 @@ textarea{
       <div class="qr-caja">
         <div class="eyebrow" style="justify-content:center">Escanea y sigue la clase</div>
         <div id="qr">Generando código…</div>
-        <input id="qrTexto" type="text" value="https://bit.ly/fisica2m-u2-dcl" aria-label="Enlace del código QR">
+        <input id="qrTexto" type="text" value="https://fjimenez321-stack.github.io/dondefelipe/fisica/dcl.html" aria-label="Enlace del código QR">
         <small>Profesor: edita el enlace y el QR se actualiza al instante.</small>
       </div>
     </div>
@@ -406,16 +419,19 @@ textarea{
     <div class="wrap">
       <div class="eyebrow">Calentamiento · Gánate tus felipesos</div>
       <h2>Ruta de las fuerzas</h2>
-      <p style="margin-bottom:14px">Juego para <strong>2 a 4 jugadores</strong>. Por turnos, cada uno lanza <strong>los dos dados</strong> y avanza la suma. Caerás en casillas de <strong>pregunta</strong> (respóndela bien y ganas felipesos), de <strong>viento a favor</strong> (te empuja) o de <strong>zona de mucho roce</strong> (te frena). El primero en llegar a la meta gana el bono. Cada jugador acumula sus felipesos en el marcador.</p>
+      <p style="margin-bottom:14px">Juego para <strong>2 a 4 jugadores</strong> en un tablero de 30 casillas. Por turnos, cada uno lanza <strong>los dos dados</strong> y avanza la suma. Caerás en casillas de <strong>pregunta</strong> (+felipesos), <strong>convivencia</strong> 🤝 (un reto social: abrazar a un compañero, resumir la clase anterior…), <strong>viento a favor</strong> 💨, <strong>zona de mucho roce</strong> 🧱, <strong>atajos</strong> 🪜 que te impulsan adelante y <strong>contraatajos</strong> 🐍 que te devuelven atrás. El primero en llegar a la meta gana el bono.</p>
 
       <div class="juego">
         <div class="setup" id="setup">
-          <span class="setup-lbl">¿Cuántos jugadores?</span>
-          <div class="seg" id="segJugadores">
-            <button data-n="2">2</button>
-            <button data-n="3">3</button>
-            <button class="on" data-n="4">4</button>
+          <div class="setup-fila">
+            <span class="setup-lbl">¿Cuántos jugadores?</span>
+            <div class="seg" id="segJugadores">
+              <button data-n="2">2</button>
+              <button data-n="3">3</button>
+              <button class="on" data-n="4">4</button>
+            </div>
           </div>
+          <div class="nombres" id="nombresSetup"></div>
           <button class="btn ambar" id="comenzarJuego">Comenzar partida</button>
         </div>
 
@@ -877,9 +893,9 @@ function ganarFelipesos(n, motivo, clave){
   toastT = setTimeout(() => toastEl.classList.remove('ver'), 2200);
 }
 
-/* ============ JUEGO: RUTA DE LAS FUERZAS ============ */
+/* ============ JUEGO: RUTA DE LAS FUERZAS (2-4 jugadores, 2 dados) ============ */
 (function juego(){
-  const N = 24;
+  const N = 30;
   const preguntas = [
     {q:'¿Qué fuerza apunta siempre hacia el centro de la Tierra?', o:['El peso','La normal','El roce'], c:0},
     {q:'La fuerza normal es siempre…', o:['Perpendicular a la superficie','Paralela al movimiento','Vertical hacia abajo'], c:0},
@@ -891,8 +907,34 @@ function ganarFelipesos(n, motivo, clave){
     {q:'Sobre un cuerpo en el piso sin fuerzas verticales extra, la normal es igual…', o:['Al peso','Al roce','A la fuerza aplicada'], c:0},
     {q:'Si empujas una caja a la derecha y desliza, el roce apunta hacia…', o:['La izquierda','La derecha','Arriba'], c:0},
     {q:'La aceleración se calcula como…', o:['a = ΣFx / m','a = m / ΣFx','a = ΣFx · m'], c:0},
+    {q:'El peso de un cuerpo depende de…', o:['Su masa y la gravedad','Solo su tamaño','El roce del piso'], c:0},
+    {q:'Dos fuerzas iguales y opuestas sobre un cuerpo producen una fuerza neta…', o:['Igual a cero','Del doble','Hacia arriba'], c:0},
+    {q:'¿Con qué unidad se mide la masa en el SI?', o:['El kilogramo','El newton','El metro'], c:0},
+    {q:'Si no hay roce y aplicas una fuerza, el cuerpo…', o:['Acelera','Queda en reposo','Se calienta'], c:0},
+    {q:'La 2ª ley de Newton relaciona fuerza neta, masa y…', o:['Aceleración','Temperatura','Volumen'], c:0},
   ];
-  const especiales = { 4:'viento', 9:'roce', 13:'viento', 18:'roce' };  // 0-indexado
+
+  // Eventos sociales / de convivencia (se elige uno al azar)
+  const sociales = [
+    'Dale un abrazo a un compañero o compañera.',
+    'Resume en una frase la clase anterior para el grupo.',
+    'Choca los cinco con quien tengas al lado.',
+    'Dile algo positivo al jugador que va en último lugar.',
+    'Nombra a un compañero que te haya ayudado esta semana y agradécele.',
+    'Cuenta al grupo una cosa que aprendiste hoy.',
+    'Explica con tus palabras qué es un diagrama de cuerpo libre.',
+    'Menciona una fuerza que estés sintiendo ahora mismo (peso, normal, roce…).',
+    'Pídele a alguien que te recuerde la fórmula ΣFx = m·a en voz alta.',
+    'Felicita al jugador que va primero por su avance.'
+  ];
+
+  // Casillas especiales (0-indexado)
+  const especiales = {
+    3:'social', 4:'atajo', 6:'viento', 8:'social', 11:'contra', 12:'roce',
+    15:'atajo', 18:'social', 21:'viento', 22:'contra', 24:'social', 26:'contra', 27:'roce'
+  };
+  // Destinos de atajos (adelante) y contraatajos (atrás)
+  const destino = { 4:10, 15:21, 11:5, 22:15, 26:19 };
 
   function tipo(idx){
     if (idx === 0) return 'salida';
@@ -901,16 +943,55 @@ function ganarFelipesos(n, motivo, clave){
     if (idx % 3 === 0) return 'pregunta';
     return 'normal';
   }
-  const ICO = {salida:'🚩', meta:'🏁', pregunta:'❓', viento:'💨', roce:'🧱', normal:'·'};
-  const CAP = {salida:'Salida', meta:'Meta', pregunta:'Pregunta', viento:'Viento a favor', roce:'Mucho roce', normal:''};
+  const ICO = {salida:'🚩', meta:'🏁', pregunta:'❓', viento:'💨', roce:'🧱', social:'🤝', atajo:'🪜', contra:'🐍', normal:'·'};
+  const CAP = {salida:'Salida', meta:'Meta', pregunta:'Pregunta', viento:'Viento a favor', roce:'Mucho roce', social:'Convivencia', atajo:'Atajo', contra:'Contraatajo', normal:''};
+
+  // Paleta de jugadores: emoji + color
+  const PERFILES = [
+    {tk:'🧊', color:'#1F6FB2'},
+    {tk:'🔧', color:'#E0912F'},
+    {tk:'🚀', color:'#2E8B6B'},
+    {tk:'⚙️', color:'#C4453A'}
+  ];
 
   const tablero = document.getElementById('tablero');
-  const dado = document.getElementById('dado');
+  const dadoA = document.getElementById('dadoA'), dadoB = document.getElementById('dadoB');
   const log = document.getElementById('juegoLog');
+  const marcador = document.getElementById('marcador');
   const DOT = {1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
-  let pos = 0, ocupado = false, terminado = false, ganadoAqui = 0;
-  const casillas = [];
 
+  let numJug = 4, jugadores = [], turno = 0, ocupado = false, terminado = false, iniciado = false;
+  const casillas = [];
+  const nombresSetup = document.getElementById('nombresSetup');
+  let nombreCampos = [];             // inputs actuales del setup
+  const nombresGuardados = [];       // valores escritos, para no perderlos al cambiar cantidad
+
+  function nombrePortada(){
+    const v = (document.getElementById('nombre').value || '').trim();
+    return v || 'Jugador 1';
+  }
+
+  // Dibuja los campos de nombre según el número de jugadores elegido
+  function pintarNombres(){
+    nombresSetup.innerHTML = ''; nombreCampos = [];
+    for (let k = 0; k < numJug; k++){
+      const campo = document.createElement('div');
+      campo.className = 'campo';
+      const esUno = k === 0;
+      const val = esUno ? nombrePortada() : (nombresGuardados[k] || '');
+      campo.innerHTML =
+        '<label><i style="background:' + PERFILES[k].color + '"></i>' + PERFILES[k].tk +
+        ' Jugador ' + (k+1) + (esUno ? ' · tú' : '') + '</label>' +
+        '<input type="text" ' + (esUno ? 'disabled' : 'placeholder="Nombre del jugador ' + (k+1) + '"') +
+        ' value="' + val.replace(/"/g,'&quot;') + '" data-k="' + k + '">';
+      nombresSetup.appendChild(campo);
+      const inp = campo.querySelector('input');
+      if (!esUno) inp.addEventListener('input', e => { nombresGuardados[+e.target.dataset.k] = e.target.value; });
+      nombreCampos[k] = inp;
+    }
+  }
+
+  // Construir tablero una sola vez
   for (let k = 0; k < N; k++){
     const t = tipo(k);
     const c = document.createElement('div');
@@ -919,70 +1000,161 @@ function ganarFelipesos(n, motivo, clave){
                   (CAP[t] ? '<span>' + CAP[t] + '</span>' : '');
     tablero.appendChild(c); casillas.push(c);
   }
-  const ficha = document.createElement('div');
-  ficha.className = 'ficha'; ficha.textContent = '🧊';
-  casillas[0].appendChild(ficha);
 
-  function mostrarDado(v){ dado.querySelectorAll('i').forEach((d,idx)=> d.style.visibility = DOT[v].includes(idx) ? 'visible' : 'hidden'); }
-  function situar(){
-    casillas.forEach(c => c.classList.remove('activa'));
-    casillas[pos].appendChild(ficha);
-    casillas[pos].classList.add('activa');
-    document.getElementById('posFicha').textContent = pos + 1;
-    ficha.classList.remove('salta'); void ficha.offsetWidth; ficha.classList.add('salta');
-  }
+  function mostrarDado(dado, v){ dado.querySelectorAll('i').forEach((d,idx)=> d.style.visibility = DOT[v].includes(idx) ? 'visible' : 'hidden'); }
   const wait = ms => new Promise(r => setTimeout(r, ms));
   function anota(html){ const d = document.createElement('div'); d.innerHTML = html; log.prepend(d); }
 
-  async function avanzar(pasos){
-    const destino = Math.min(N - 1, pos + pasos);
-    while (pos < destino){ pos++; situar(); await wait(200); }
+  // Coloca todas las fichas, apilando las que comparten casilla
+  function situar(saltando){
+    document.querySelectorAll('.ficha').forEach(f => f.remove());
+    casillas.forEach(c => c.classList.remove('activa'));
+    const porCasilla = {};
+    jugadores.forEach(j => { (porCasilla[j.pos] = porCasilla[j.pos] || []).push(j); });
+    Object.keys(porCasilla).forEach(pos => {
+      porCasilla[pos].forEach((j, idx) => {
+        const f = document.createElement('div');
+        f.className = 'ficha' + (saltando === j ? ' salta' : '');
+        f.style.background = j.perfil.color; f.textContent = j.perfil.tk;
+        // apilar en rejilla 2x2 dentro de la casilla
+        f.style.left = (4 + (idx % 2) * 20) + 'px';
+        f.style.bottom = (2 + Math.floor(idx / 2) * 20) + 'px';
+        casillas[j.pos].appendChild(f);
+      });
+    });
+    if (jugadores[turno]) casillas[jugadores[turno].pos].classList.add('activa');
   }
 
+  function pintarMarcador(){
+    marcador.innerHTML = '';
+    jugadores.forEach((j, idx) => {
+      const d = document.createElement('div');
+      d.className = 'jugador' + (idx === turno ? ' turno' : '');
+      d.innerHTML = '<div class="tk" style="background:' + j.perfil.color + '">' + j.perfil.tk + '</div>' +
+        '<div class="info"><input value="' + j.nombre.replace(/"/g,'&quot;') + '" data-j="' + idx + '" aria-label="Nombre jugador ' + (idx+1) + '"></div>' +
+        '<div class="fp">' + j.score + ' Ⓕ</div>';
+      marcador.appendChild(d);
+    });
+    marcador.querySelectorAll('input').forEach(inp => inp.addEventListener('input', e => {
+      const j = jugadores[+e.target.dataset.j];
+      j.nombre = e.target.value.trim() || ('Jugador ' + (+e.target.dataset.j + 1));
+      if (jugadores[turno] === j) document.getElementById('turnoNombre').textContent = j.nombre;
+    }));
+  }
+
+  async function avanzar(j, pasos){
+    const destino = Math.min(N - 1, Math.max(0, j.pos + pasos));
+    const dir = destino > j.pos ? 1 : -1;
+    while (j.pos !== destino){ j.pos += dir; situar(j); await wait(190); }
+  }
+
+  document.getElementById('comenzarJuego').addEventListener('click', () => {
+    jugadores = [];
+    for (let k = 0; k < numJug; k++){
+      let nombre;
+      if (k === 0) nombre = nombrePortada();
+      else nombre = (nombresGuardados[k] || '').trim() || ('Jugador ' + (k+1));
+      jugadores.push({ nombre, perfil: PERFILES[k], pos: 0, score: 0 });
+    }
+    turno = 0; terminado = false; iniciado = true;
+    document.getElementById('setup').style.display = 'none';
+    document.getElementById('juegoCab').style.display = 'flex';
+    marcador.style.display = 'grid';
+    document.getElementById('turnoNombre').textContent = jugadores[0].nombre;
+    mostrarDado(dadoA, 1); mostrarDado(dadoB, 1);
+    pintarMarcador(); situar();
+    log.innerHTML = 'Partida iniciada con ' + numJug + ' jugadores. Empieza <strong>' + jugadores[0].nombre + '</strong>.';
+  });
+
+  document.getElementById('segJugadores').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    if (iniciado) return;
+    document.querySelectorAll('#segJugadores button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on'); numJug = +b.dataset.n;
+    pintarNombres();
+  }));
+
+  // Si el estudiante escribe su nombre en la portada después, se refleja en el campo del jugador 1
+  document.getElementById('nombre').addEventListener('input', () => {
+    if (!iniciado && nombreCampos[0]) nombreCampos[0].value = nombrePortada();
+  });
+
   document.getElementById('lanzar').addEventListener('click', async () => {
-    if (ocupado || terminado) return;
+    if (ocupado || terminado || !iniciado) return;
     ocupado = true;
-    dado.classList.add('rueda');
-    const v = 1 + Math.floor(Math.random() * 6);
-    for (let f = 0; f < 8; f++){ mostrarDado(1 + Math.floor(Math.random()*6)); await wait(55); }
-    mostrarDado(v); dado.classList.remove('rueda');
-    anota('Sacaste un <b>' + v + '</b>.');
-    await avanzar(v);
-    await resolverCasilla();
-    if (pos >= N - 1) ganar();
+    const j = jugadores[turno];
+    dadoA.classList.add('rueda'); dadoB.classList.add('rueda');
+    const a = 1 + Math.floor(Math.random() * 6), b = 1 + Math.floor(Math.random() * 6);
+    for (let f = 0; f < 8; f++){ mostrarDado(dadoA, 1 + Math.floor(Math.random()*6)); mostrarDado(dadoB, 1 + Math.floor(Math.random()*6)); await wait(55); }
+    mostrarDado(dadoA, a); mostrarDado(dadoB, b);
+    dadoA.classList.remove('rueda'); dadoB.classList.remove('rueda');
+    const suma = a + b;
+    anota('<b>' + j.nombre + '</b> sacó ' + a + ' + ' + b + ' = <b>' + suma + '</b>.');
+    await avanzar(j, suma);
+    await resolverCasilla(j);
+    pintarMarcador();
+    if (j.pos >= N - 1){ ganar(j); ocupado = false; return; }
+    // siguiente turno
+    turno = (turno + 1) % jugadores.length;
+    document.getElementById('turnoNombre').textContent = jugadores[turno].nombre;
+    pintarMarcador(); situar();
     ocupado = false;
   });
 
-  async function resolverCasilla(){
-    const t = tipo(pos);
+  async function resolverCasilla(j){
+    const t = tipo(j.pos);
     if (t === 'pregunta'){
-      const p = preguntas[pos % preguntas.length];
-      const ok = await preguntar(p);
-      if (ok){ ganadoAqui += 15; document.getElementById('ganadoJuego').textContent = ganadoAqui; ganarFelipesos(15, 'respuesta en el tablero'); anota('¡Correcto! <b>+15 Ⓕ</b>'); }
-      else { anota('Respuesta incorrecta, no ganas felipesos esta vez.'); }
+      const p = preguntas[j.pos % preguntas.length];
+      const ok = await preguntar(p, j);
+      if (ok){ j.score += 15; ganarFelipesos(15, j.nombre + ' acertó en el tablero'); anota('<b>' + j.nombre + '</b> responde bien: <b>+15 Ⓕ</b>.'); }
+      else { anota('<b>' + j.nombre + '</b> falla la pregunta, sin felipesos.'); }
+    } else if (t === 'social'){
+      const reto = sociales[Math.floor(Math.random() * sociales.length)];
+      await simple('🤝 Casilla de convivencia', j.nombre + ': ' + reto + '\n\nAl completarlo, ganas 10 felipesos.');
+      j.score += 10; ganarFelipesos(10, j.nombre + ' participó en convivencia');
+      anota('<b>' + j.nombre + '</b>: convivencia — ' + reto + ' <b>+10 Ⓕ</b>.');
+    } else if (t === 'atajo'){
+      const to = destino[j.pos];
+      await simple('🪜 ¡Atajo!', j.nombre + ', hallaste un buen impulso y saltas de la casilla ' + (j.pos+1) + ' a la ' + (to+1) + '.');
+      anota('<b>' + j.nombre + '</b>: atajo, salta a la casilla ' + (to+1) + '.');
+      const salto = to - j.pos; await avanzar(j, salto);
+      await resolverCasilla(j);
+    } else if (t === 'contra'){
+      const to = destino[j.pos];
+      await simple('🐍 Contraatajo', j.nombre + ', un exceso de roce te devuelve de la casilla ' + (j.pos+1) + ' a la ' + (to+1) + '.');
+      anota('<b>' + j.nombre + '</b>: contraatajo, retrocede a la casilla ' + (to+1) + '.');
+      const salto = to - j.pos; await avanzar(j, salto);
+      await resolverCasilla(j);
     } else if (t === 'viento'){
-      await simple('💨 Viento a favor', 'Una ráfaga te empuja: avanzas 2 casillas.');
-      anota('<b>Viento a favor:</b> avanzas 2 casillas.');
-      await avanzar(2);
-      await resolverCasilla();
+      await simple('💨 Viento a favor', j.nombre + ', una ráfaga te empuja: avanzas 2 casillas.');
+      anota('<b>' + j.nombre + '</b>: viento a favor, avanza 2.');
+      await avanzar(j, 2);
+      await resolverCasilla(j);
     } else if (t === 'roce'){
-      await simple('🧱 Zona de mucho roce', 'El roce te frena: retrocedes 2 casillas.');
-      anota('<b>Mucho roce:</b> retrocedes 2 casillas.');
-      pos = Math.max(0, pos - 2); situar(); await wait(200);
+      await simple('🧱 Zona de mucho roce', j.nombre + ', el roce te frena: retrocedes 2 casillas.');
+      anota('<b>' + j.nombre + '</b>: mucho roce, retrocede 2.');
+      await avanzar(j, -2);
     }
   }
 
-  function ganar(){
+  function ganar(ganador){
     terminado = true;
-    ganarFelipesos(30, 'llegaste a la meta', 'juego-meta');
-    anota('🏁 <b>¡Llegaste a la meta!</b> Bono de <b>+30 Ⓕ</b>.');
-    simple('🏁 ¡Meta!', 'Completaste la Ruta de las fuerzas y ganaste un bono de 30 felipesos. Puedes reiniciar para volver a jugar (el bono solo se paga una vez).');
+    ganador.score += 30; ganarFelipesos(30, ganador.nombre + ' llegó a la meta', 'juego-meta');
+    pintarMarcador();
+    const orden = [...jugadores].sort((x,y) => y.score - x.score);
+    const tabla = orden.map((j,i) => (i+1) + '. ' + j.nombre + ' — ' + j.score + ' Ⓕ').join('\n');
+    anota('🏁 <b>' + ganador.nombre + '</b> llega a la meta y gana <b>+30 Ⓕ</b>.');
+    simple('🏁 ¡Fin de la partida!', ganador.nombre + ' llegó primero a la meta.\n\nMarcador final:\n' + tabla);
   }
 
   document.getElementById('reiniciarJuego').addEventListener('click', () => {
-    pos = 0; terminado = false; ganadoAqui = 0;
-    document.getElementById('ganadoJuego').textContent = '0';
-    situar(); log.innerHTML = 'Tablero reiniciado. Pulsa <strong>Lanzar dado</strong>.';
+    iniciado = false; terminado = false; ocupado = false; jugadores = []; turno = 0;
+    document.querySelectorAll('.ficha').forEach(f => f.remove());
+    casillas.forEach(c => c.classList.remove('activa'));
+    document.getElementById('setup').style.display = 'flex';
+    document.getElementById('juegoCab').style.display = 'none';
+    marcador.style.display = 'none'; marcador.innerHTML = '';
+    pintarNombres();
+    log.innerHTML = 'Elige cuántos jugadores y pulsa <strong>Comenzar partida</strong>.';
   });
 
   /* --- modal --- */
@@ -994,24 +1166,24 @@ function ganarFelipesos(n, motivo, clave){
 
   function simple(titulo, texto){
     return new Promise(res => {
-      mTit.textContent = titulo; mTxt.textContent = texto; mOp.innerHTML = '';
+      mTit.textContent = titulo; mTxt.textContent = texto; mTxt.style.whiteSpace = 'pre-line'; mOp.innerHTML = '';
       mCi.innerHTML = '';
       const b = document.createElement('button'); b.className = 'btn'; b.textContent = 'Continuar';
       b.onclick = () => { fondo.classList.remove('ver'); res(); };
       mCi.appendChild(b); fondo.classList.add('ver'); b.focus();
     });
   }
-  function preguntar(p){
+  function preguntar(p, j){
     return new Promise(res => {
-      mTit.textContent = '❓ Pregunta'; mTxt.textContent = p.q; mCi.innerHTML = '';
+      mTit.textContent = '❓ Pregunta para ' + j.nombre; mTxt.textContent = p.q; mTxt.style.whiteSpace = 'normal'; mCi.innerHTML = '';
       mOp.innerHTML = '';
-      p.o.forEach((txt, j) => {
+      p.o.forEach((txt, idx) => {
         const b = document.createElement('button');
         b.className = 'opcion'; b.style.width = '100%'; b.style.marginBottom = '8px'; b.style.textAlign = 'left';
         b.innerHTML = '<span>' + txt + '</span>';
         b.onclick = () => {
           mOp.querySelectorAll('.opcion').forEach(o => o.style.pointerEvents = 'none');
-          const ok = j === p.c;
+          const ok = idx === p.c;
           b.style.borderColor = ok ? 'var(--verde)' : 'var(--rojo)';
           if (!ok) mOp.children[p.c].style.borderColor = 'var(--verde)';
           setTimeout(() => { fondo.classList.remove('ver'); res(ok); }, 850);
@@ -1022,7 +1194,8 @@ function ganarFelipesos(n, motivo, clave){
     });
   }
 
-  mostrarDado(1); situar();
+  mostrarDado(dadoA, 1); mostrarDado(dadoB, 1);
+  pintarNombres();
 })();
 
 /* ============ NAVEGACIÓN ============ */
@@ -1065,21 +1238,41 @@ document.getElementById('deck').addEventListener('touchend', e => {
 }, {passive:true});
 ir(0);
 
-/* ============ QR ============ */
+/* ============ QR (con respaldos) ============ */
 const qrDiv = document.getElementById('qr');
 const qrTexto = document.getElementById('qrTexto');
-let qr = null;
+
+function enlaceVisible(txt){
+  return '<a href="' + txt + '" target="_blank" rel="noopener" style="display:block;margin-top:8px;font-size:12px;word-break:break-all;color:var(--azul)">' + txt + '</a>';
+}
+
 function pintarQR(){
   qrDiv.innerHTML = '';
   const txt = qrTexto.value.trim() || 'https://claude.ai';
-  if (typeof QRCode === 'undefined'){
-    qrDiv.innerHTML = '<p style="font-size:13px">No se pudo cargar el generador de QR. Enlace de la clase:<br><strong style="word-break:break-all">' + txt + '</strong></p>';
-    return;
+
+  // 1) Librería local (cdnjs) si cargó
+  if (typeof QRCode !== 'undefined'){
+    try {
+      new QRCode(qrDiv, {text: txt, width: 240, height: 240, colorDark:'#12263F', colorLight:'#FFFFFF', correctLevel: QRCode.CorrectLevel.M});
+      qrDiv.insertAdjacentHTML('beforeend', enlaceVisible(txt));
+      return;
+    } catch(e){ qrDiv.innerHTML = ''; }
   }
-  qr = new QRCode(qrDiv, {text: txt, width: 240, height: 240, colorDark:'#12263F', colorLight:'#FFFFFF', correctLevel: QRCode.CorrectLevel.M});
+
+  // 2) Respaldo: servicio de imagen (necesita internet, pero no la librería)
+  const img = new Image();
+  img.width = 240; img.height = 240; img.alt = 'Código QR de la clase';
+  img.style.imageRendering = 'pixelated';
+  img.onload = () => { qrDiv.innerHTML = ''; qrDiv.appendChild(img); qrDiv.insertAdjacentHTML('beforeend', enlaceVisible(txt)); };
+  img.onerror = () => {
+    // 3) Sin red: solo enlace, bien visible
+    qrDiv.innerHTML = '<p style="font-size:13px;line-height:1.5">No se pudo generar la imagen del QR en este dispositivo. Abre o comparte este enlace:</p>' + enlaceVisible(txt);
+  };
+  img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=0&data=' + encodeURIComponent(txt);
 }
+
 window.addEventListener('load', pintarQR);
-qrTexto.addEventListener('input', () => { clearTimeout(qrTexto._t); qrTexto._t = setTimeout(pintarQR, 350); });
+qrTexto.addEventListener('input', () => { clearTimeout(qrTexto._t); qrTexto._t = setTimeout(pintarQR, 400); });
 
 /* ============ SIMULADOR ============ */
 const g = 10;
