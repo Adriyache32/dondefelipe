@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Odisea Cósmica · De Mercurio a la Nube de Oort</title>
+<style>
+  :root{
+    /* Códice / pergamino */
+    --papiro:#e7d6ac;
+    --papiro-sombra:#d8c495;
+    --tinta:#3a2a16;
+    --tinta-suave:#6a5334;
+    --oro:#c8a24b;
+    --lacre:#8f2f22;
+    /* Espacio / CRT */
+    --void:#05060e;
+    --void2:#0a0d1c;
+    --fosforo:#4de0e8;
+    --ambar:#f2a93b;
+    --peligro:#ff4d57;
+    --nave:#7cff6b;
+    --oro-cristal:#ffd76b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#000;overflow:hidden;font-family:"Courier New",monospace;color:#fff}
+  #app{
+    position:relative;width:100vw;height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at 50% 30%, #0a1030 0%, #05060e 60%, #000 100%);
+  }
+  /* Marco del juego, proporción vertical tipo arcade */
+  #stage{
+    position:relative;
+    width:min(96vw, calc(96vh*0.62));
+    height:min(96vh, calc(96vw/0.62));
+    max-width:760px;
+    background:var(--void);
+    border:3px solid var(--oro);
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 0 40px rgba(200,162,75,.25), inset 0 0 60px rgba(0,0,0,.6);
+  }
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated}
+  /* Barrido CRT */
+  .crt::after{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+    background:repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,.16) 3px, rgba(0,0,0,0) 4px);
+    mix-blend-mode:multiply;
+  }
+  .crt::before{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:7;
+    background:radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(0,0,0,.45) 100%);
+  }
+
+  /* Capas de pantalla (overlay) */
+  .screen{
+    position:absolute;inset:0;z-index:10;display:none;
+    flex-direction:column;align-items:center;justify-content:center;
+    padding:5% 7%;text-align:center;
+  }
+  .screen.on{display:flex}
+
+  /* ---------- PERGAMINO / CÓDICE ---------- */
+  .papiro{
+    position:relative;width:100%;max-height:100%;overflow-y:auto;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(0,0,0,.05), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(0,0,0,.06), transparent 45%),
+      linear-gradient(180deg,var(--papiro),var(--papiro-sombra));
+    color:var(--tinta);
+    border-radius:6px;
+    padding:26px 24px 30px;
+    box-shadow:0 10px 40px rgba(0,0,0,.6), inset 0 0 60px rgba(120,90,40,.25);
+    font-family:Georgia,"Times New Roman",serif;
+  }
+  .papiro::before,.papiro::after{
+    content:"";position:absolute;left:0;right:0;height:22px;
+    background:linear-gradient(180deg,rgba(90,60,20,.35),transparent);
+  }
+  .papiro::before{top:0;border-radius:6px 6px 0 0}
+  .papiro::after{bottom:0;transform:scaleY(-1);border-radius:0 0 6px 6px}
+  .sello{
+    width:56px;height:56px;margin:0 auto 6px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #b8483a, var(--lacre));
+    box-shadow:0 3px 8px rgba(0,0,0,.4), inset 0 0 10px rgba(0,0,0,.4);
+    display:flex;align-items:center;justify-content:center;
+    color:#f0d9a0;font-size:24px;font-family:Georgia,serif;font-style:italic;
+  }
+  .papiro h1{
+    font-size:clamp(20px,5vw,30px);letter-spacing:.5px;color:var(--tinta);
+    margin-bottom:4px;line-height:1.15;
+  }
+  .papiro .sub{font-style:italic;color:var(--tinta-suave);margin-bottom:14px;font-size:clamp(12px,3vw,15px)}
+  .papiro p{font-size:clamp(13px,3.3vw,16px);line-height:1.55;margin:0 auto 12px;max-width:52ch;text-align:justify}
+  .papiro p .firma{display:block;text-align:right;font-style:italic;margin-top:8px;color:var(--tinta)}
+  .divisor{width:60%;height:1px;margin:14px auto;background:linear-gradient(90deg,transparent,var(--oro),transparent)}
+
+  /* Botones */
+  .btn{
+    font-family:"Courier New",monospace;font-weight:bold;letter-spacing:1px;
+    text-transform:uppercase;cursor:pointer;user-select:none;
+    background:var(--oro);color:#2a1e0c;border:none;
+    padding:12px 22px;border-radius:4px;font-size:clamp(13px,3.4vw,16px);
+    box-shadow:0 4px 0 #8f6f22;transition:transform .05s, box-shadow .05s;
+    margin-top:8px;
+  }
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #8f6f22}
+  .btn.fosforo{background:transparent;color:var(--fosforo);border:2px solid var(--fosforo);box-shadow:0 0 12px rgba(77,224,232,.4)}
+  .btn.fosforo:active{transform:translateY(2px)}
+
+  /* ---------- PANTALLAS CRT (título, game over, victoria) ---------- */
+  .crt-title{font-family:"Courier New",monospace;color:var(--fosforo);text-shadow:0 0 12px rgba(77,224,232,.6)}
+  .crt-title h1{font-size:clamp(22px,6vw,40px);letter-spacing:2px;line-height:1.1;margin-bottom:6px}
+  .crt-title h1 .a{color:var(--ambar);text-shadow:0 0 12px rgba(242,169,59,.6)}
+  .crt-title .tag{color:#cfe;letter-spacing:1px;margin-bottom:18px;font-size:clamp(11px,3vw,15px);opacity:.9}
+  .parpadeo{animation:blink 1.1s steps(2,start) infinite}
+  @keyframes blink{50%{opacity:.15}}
+  .controles-min{margin-top:16px;color:#89a;font-size:clamp(10px,2.6vw,13px);line-height:1.7}
+  .controles-min b{color:var(--ambar)}
+
+  /* ---------- PREGUNTA ---------- */
+  #q-screen{background:rgba(3,4,10,.92);z-index:20}
+  .q-card{
+    width:100%;max-width:560px;background:var(--void2);
+    border:2px solid var(--oro-cristal);border-radius:10px;padding:22px 20px;
+    box-shadow:0 0 40px rgba(255,215,107,.25);
+  }
+  .q-card .marca{color:var(--oro-cristal);font-weight:bold;letter-spacing:2px;font-size:12px;margin-bottom:8px;text-transform:uppercase}
+  .q-card h2{color:#fff;font-size:clamp(15px,3.8vw,19px);line-height:1.35;margin-bottom:16px;font-family:"Courier New",monospace}
+  .opciones{display:grid;gap:10px}
+  .opcion{
+    text-align:left;background:#12162b;color:#dfe6ff;border:1px solid #2a3358;
+    padding:12px 14px;border-radius:6px;cursor:pointer;font-size:clamp(13px,3.3vw,15px);
+    font-family:"Courier New",monospace;transition:.12s;
+  }
+  .opcion:hover{border-color:var(--fosforo);background:#182046}
+  .opcion.correcta{background:#123d22;border-color:var(--nave);color:#c7ffbc}
+  .opcion.incorrecta{background:#3d1218;border-color:var(--peligro);color:#ffc7cc}
+  .opcion .k{display:inline-block;width:22px;color:var(--oro-cristal);font-weight:bold}
+  .q-feedback{margin-top:14px;font-size:clamp(12px,3.1vw,14px);line-height:1.5;color:#bcd;min-height:1em;font-family:"Courier New",monospace}
+
+  /* HUD */
+  #hud{
+    position:absolute;top:0;left:0;right:0;z-index:5;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:8px 12px;font-family:"Courier New",monospace;font-weight:bold;
+    color:var(--fosforo);font-size:clamp(11px,2.8vw,14px);letter-spacing:1px;
+    text-shadow:0 0 8px rgba(77,224,232,.5);pointer-events:none;
+  }
+  #hud .vidas{color:var(--peligro);letter-spacing:2px;text-shadow:0 0 8px rgba(255,77,87,.6)}
+  #hud .mision{color:var(--ambar);text-shadow:0 0 8px rgba(242,169,59,.5)}
+
+  /* Controles táctiles */
+  #touch{position:absolute;inset:0;z-index:8;display:none}
+  #touch.on{display:block}
+  .tzone{position:absolute;bottom:0;height:38%;opacity:0}
+  #t-left{left:0;width:33%}
+  #t-right{left:33%;width:33%}
+  #t-fire{right:0;width:34%;height:100%;bottom:0}
+
+  .hint{position:absolute;bottom:8px;left:0;right:0;text-align:center;color:#567;font-size:11px;z-index:5;font-family:"Courier New",monospace;pointer-events:none}
+
+  ::-webkit-scrollbar{width:8px}
+  ::-webkit-scrollbar-thumb{background:var(--oro);border-radius:4px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage" class="crt">
+    <canvas id="game"></canvas>
+
+    <!-- HUD -->
+    <div id="hud" style="display:none">
+      <div class="mision" id="hud-mision">MISIÓN 1</div>
+      <div class="puntos" id="hud-puntos">PTS 0</div>
+      <div class="vidas" id="hud-vidas">♥ ♥ ♥</div>
+    </div>
+
+    <!-- Controles táctiles invisibles -->
+    <div id="touch">
+      <div class="tzone" id="t-left"></div>
+      <div class="tzone" id="t-right"></div>
+      <div class="tzone" id="t-fire"></div>
+    </div>
+
+    <!-- BIENVENIDA (papiro de Galileo) -->
+    <div class="screen on" id="welcome">
+      <div class="papiro">
+        <div class="sello">G</div>
+        <h1>Códice del Cielo</h1>
+        <div class="sub">Anno Domini 1610 · escrito de puño y letra por Galileo Galilei</div>
+        <p>
+          Hola, soy Galileo. Escribo para las futuras generaciones que exploren lo que yo apenas comencé.
+          Una noche del invierno de 1609 alcé mi anteojo hacia el firmamento y el universo dejó de ser una pintura fija:
+          la Luna tenía montañas y valles, la Vía Láctea era un océano de estrellas, y alrededor de Júpiter vi danzar cuatro pequeñas lunas
+          que hoy llevan mi nombre.
+        </p>
+        <p>
+          Me enseñaron que la Tierra era el centro inmóvil de todo. Pero mis ojos, mis cálculos y el coraje de Copérnico
+          me susurraron otra verdad: somos <em>nosotros</em> quienes giramos en torno al Sol. Por decirlo en voz alta pagué un precio;
+          por eso te confío a ti lo que a mí me negaron: la libertad de mirar y comprender.
+        </p>
+        <p>
+          Te entrego mi nave. Viajarás desde Mercurio, el más veloz, hasta la lejana Nube de Oort, la frontera del reino del Sol.
+          Cráteres, meteoritos y sombras intentarán detenerte. Defiéndete con tu rayo. Y cuando el conocimiento lo exija, responde:
+          el verdadero explorador no solo navega, <strong>comprende</strong>.
+          <span class="firma">— Galileo Galilei</span>
+        </p>
+        <div class="divisor"></div>
+        <button class="btn" id="btn-comenzar">Emprender el viaje ▸</button>
+      </div>
+    </div>
+
+    <!-- BRIEFING DE MISIÓN (papiro por planeta) -->
+    <div class="screen" id="briefing">
+      <div class="papiro">
+        <div class="sello" id="brief-num">1</div>
+        <h1 id="brief-titulo">Misión 1 · Mercurio</h1>
+        <div class="sub" id="brief-sub">Bitácora de Galileo</div>
+        <p id="brief-texto"></p>
+        <div class="divisor"></div>
+        <p style="text-align:center;font-family:'Courier New',monospace;font-size:13px;color:var(--tinta-suave)">
+          ◂ ▸ mover  ·  ESPACIO disparar  ·  destruye amenazas y avanza
+        </p>
+        <button class="btn" id="btn-lanzar">Iniciar misión ▸</button>
+      </div>
+    </div>
+
+    <!-- MISIÓN CUMPLIDA -->
+    <div class="screen" id="levelup">
+      <div class="crt-title">
+        <h1>MISIÓN <span class="a">CUMPLIDA</span></h1>
+        <div class="tag" id="lu-planeta">Mercurio explorado</div>
+        <p class="controles-min" id="lu-dato" style="max-width:44ch;margin:0 auto 6px"></p>
+        <button class="btn" id="btn-siguiente">Siguiente destino ▸</button>
+      </div>
+    </div>
+
+    <!-- PREGUNTA (vida extra) -->
+    <div class="screen" id="q-screen">
+      <div class="q-card">
+        <div class="marca">✦ Prueba de conocimiento · vida extra</div>
+        <h2 id="q-text">Pregunta</h2>
+        <div class="opciones" id="q-opciones"></div>
+        <div class="q-feedback" id="q-feedback"></div>
+      </div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div class="screen" id="gameover">
+      <div class="crt-title">
+        <h1 style="color:var(--peligro);text-shadow:0 0 14px rgba(255,77,87,.6)">FIN DEL VIAJE</h1>
+        <div class="tag" id="go-msg">La nave se ha perdido en el vacío.</div>
+        <div class="tag" id="go-score" style="color:var(--fosforo)"></div>
+        <button class="btn" id="btn-reintentar">Volver a intentarlo ▸</button>
+      </div>
+    </div>
+
+    <!-- VICTORIA -->
+    <div class="screen" id="victoria">
+      <div class="papiro">
+        <div class="sello">★</div>
+        <h1>Has llegado al confín</h1>
+        <div class="sub">Nube de Oort · el borde del reino del Sol</div>
+        <p>
+          Lo lograste. Cruzaste los ocho mundos, el Cinturón de Kuiper y alcanzaste la Nube de Oort,
+          donde nacen los cometas y termina la influencia de nuestra estrella. Yo solo pude imaginarlo;
+          tú lo has recorrido. El cielo ya no es un techo, sino un camino.
+          <span class="firma">— Galileo</span>
+        </p>
+        <div class="tag" id="vic-score" style="color:var(--lacre);font-family:'Courier New',monospace;font-weight:bold"></div>
+        <button class="btn" id="btn-otravez">Explorar de nuevo ▸</button>
+      </div>
+    </div>
+
+    <div class="hint" id="hint" style="display:none">◂ ▸ mover · ESPACIO disparar</div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   ODISEA CÓSMICA — De Mercurio a la Nube de Oort
+   Juego arcade 2D estilo Atari · Unidad de Cosmología
+   ============================================================ */
+
+/* ---------- SONIDO (Web Audio, sin archivos externos) ---------- */
+const Audio = (() => {
+  let ctx = null;
+  const ensure = () => { if(!ctx) ctx = new (window.AudioContext||window.webkitAudioContext)(); return ctx; };
+  function tone(freq, dur, type='square', vol=0.12, slideTo=null){
+    try{
+      const c = ensure();
+      const o = c.createOscillator(), g = c.createGain();
+      o.type = type; o.frequency.setValueAtTime(freq, c.currentTime);
+      if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, c.currentTime + dur);
+      g.gain.setValueAtTime(vol, c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + dur);
+      o.connect(g); g.connect(c.destination);
+      o.start(); o.stop(c.currentTime + dur);
+    }catch(e){}
+  }
+  return {
+    unlock(){ ensure(); },
+    shoot(){ tone(880, 0.10, 'square', 0.08, 220); },
+    explosion(){ tone(160, 0.28, 'sawtooth', 0.16, 40); },
+    hit(){ tone(90, 0.4, 'sawtooth', 0.18, 30); },
+    correct(){ tone(523,0.12,'square',0.12); setTimeout(()=>tone(659,0.12,'square',0.12),110); setTimeout(()=>tone(784,0.2,'square',0.12),230); },
+    wrong(){ tone(200,0.25,'square',0.14,120); },
+    levelup(){ [392,523,659,784].forEach((f,i)=>setTimeout(()=>tone(f,0.16,'triangle',0.12),i*130)); },
+    life(){ tone(659,0.12,'triangle',0.13); setTimeout(()=>tone(988,0.2,'triangle',0.13),120); }
+  };
+})();
+
+/* ---------- DATOS DE PLANETAS / MISIONES ---------- */
+const PLANETAS = [
+  {
+    nombre:"Mercurio", color:"#b8b0a0", num:1,
+    contexto:"Misión 1 · Mercurio. El mensajero de los dioses y el más veloz de todos: completa una vuelta al Sol en apenas 88 días terrestres. No posee una atmósfera que lo abrigue, de modo que su superficie es un desierto de cráteres golpeado por meteoritos y por el fuego del Sol cercano. Recuerda, explorador: mirar de cerca al Sol siempre ha sido peligroso… yo lo sé bien. Despeja el camino y observa este mundo tostado.",
+    dato:"Mercurio no tiene atmósfera y su año dura solo 88 días.",
+    meta:14, spd:1.15, spawn:1300
+  },
+  {
+    nombre:"Venus", color:"#e6c07a", num:2,
+    contexto:"Misión 2 · Venus. El lucero del alba, tan brillante que muchos lo confundieron con una estrella. Bajo su velo de nubes esconde un infierno: un efecto invernadero desbocado eleva su temperatura sobre los 460 °C, más caliente incluso que Mercurio. Y gira al revés, tan lento que un día venusiano dura más que su año. La belleza engaña, joven navegante.",
+    dato:"En Venus el efecto invernadero supera los 460 °C, más que en Mercurio.",
+    meta:16, spd:1.25, spawn:1200
+  },
+  {
+    nombre:"Tierra", color:"#4d9de0", num:3,
+    contexto:"Misión 3 · Tierra. Nuestro hogar, el punto azul pálido suspendido en un rayo de sol. El único mundo conocido con océanos líquidos y vida. Desde aquí desafié la idea de que fuéramos el centro inmóvil del cosmos; desde aquí tú continúas el viaje. Protégela mientras cruzas su órbita.",
+    dato:"La Tierra es, hasta hoy, el único mundo conocido con vida y agua líquida.",
+    meta:18, spd:1.35, spawn:1100
+  },
+  {
+    nombre:"Marte", color:"#d1603a", num:4,
+    contexto:"Misión 4 · Marte. El planeta rojo, teñido por el óxido de hierro de su suelo. Alberga a Olympus Mons, el volcán más alto del sistema solar, y guarda huellas de antiguos cauces de agua. Muchos soñarán algún día con caminar sobre su polvo herrumbroso. Ábrete paso entre sus tormentas.",
+    dato:"El color rojo de Marte proviene del óxido de hierro (herrumbre) de su superficie.",
+    meta:20, spd:1.45, spawn:1000
+  },
+  {
+    nombre:"Júpiter", color:"#d8a16b", num:5,
+    contexto:"Misión 5 · Júpiter. El gigante entre los planetas, una esfera de gas donde cabría más de mil Tierras. Su Gran Mancha Roja es una tormenta más ancha que nuestro mundo. Aquí, con mi anteojo, vi por primera vez cuatro lunas girando a su alrededor —Ío, Europa, Ganímedes y Calisto—: la prueba de que no todo giraba en torno a la Tierra.",
+    dato:"Galileo descubrió las 4 lunas mayores de Júpiter, hoy llamadas galileanas.",
+    meta:22, spd:1.55, spawn:950
+  },
+  {
+    nombre:"Saturno", color:"#e8d59a", num:6,
+    contexto:"Misión 6 · Saturno. El señor de los anillos, formados por miles de millones de fragmentos de hielo y roca. Es tan poco denso que, si existiera un océano suficientemente grande, flotaría en él. Yo lo vi con 'orejas' extrañas; hicieron falta mejores telescopios para revelar sus anillos. Navega con cuidado entre los escombros.",
+    dato:"Saturno es tan poco denso que flotaría en el agua; sus anillos son hielo y roca.",
+    meta:24, spd:1.65, spawn:900
+  },
+  {
+    nombre:"Urano", color:"#8fd3d8", num:7,
+    contexto:"Misión 7 · Urano. Un gigante de hielo de tono verde-azulado por el metano de su atmósfera. Lo más extraño: gira acostado, con su eje inclinado casi 98°, como si rodara de lado por su órbita. Fue el primer planeta descubierto con telescopio, mucho después de mi tiempo. El frío aquí es implacable.",
+    dato:"Urano gira 'acostado', con su eje inclinado unos 98°.",
+    meta:26, spd:1.75, spawn:860
+  },
+  {
+    nombre:"Neptuno", color:"#3f5cd8", num:8,
+    contexto:"Misión 8 · Neptuno. El más ventoso de todos, con vendavales que superan los 2.000 km/h. Su hallazgo fue un triunfo de las matemáticas: primero se predijo su posición con lápiz y papel a partir de las irregularidades de Urano, y solo después el telescopio lo confirmó. La razón, ves, también es un telescopio.",
+    dato:"Neptuno fue predicho matemáticamente antes de ser observado con telescopio.",
+    meta:28, spd:1.85, spawn:820
+  },
+  {
+    nombre:"Cinturón de Kuiper", color:"#9a86c4", num:9,
+    contexto:"Misión 9 · Cinturón de Kuiper. Más allá de Neptuno se abre un anillo helado de mundos pequeños y planetas enanos, entre ellos Plutón. Es una reliquia congelada de la formación del sistema solar, donde nacen muchos cometas de corto periodo. Estás dejando atrás los planetas conocidos.",
+    dato:"El Cinturón de Kuiper, más allá de Neptuno, alberga a Plutón y otros planetas enanos.",
+    meta:30, spd:1.95, spawn:780
+  },
+  {
+    nombre:"Nube de Oort", color:"#c9d6ff", num:10,
+    contexto:"Misión 10 · Nube de Oort. La frontera final: una inmensa cáscara esférica de cuerpos helados que envuelve todo el sistema solar y de donde llegan los cometas de largo periodo. Aquí la influencia del Sol se desvanece y comienza el espacio entre las estrellas. Un último esfuerzo, explorador: alcanza el confín.",
+    dato:"La Nube de Oort es la frontera del sistema solar y origen de cometas de largo periodo.",
+    meta:32, spd:2.05, spawn:760
+  }
+];
+
+/* ---------- BANCO DE PREGUNTAS (Unidad de Cosmología) ---------- */
+const PREGUNTAS = [
+  {q:"En el modelo heliocéntrico que defendió Galileo, ¿qué ocupa el centro?",
+   o:["La Tierra","El Sol","La Luna","Júpiter"], c:1,
+   e:"El heliocentrismo (Copérnico, defendido por Galileo) sitúa al Sol en el centro."},
+  {q:"Galileo descubrió con su telescopio cuatro lunas girando en torno a…",
+   o:["Marte","Saturno","Júpiter","Venus"], c:2,
+   e:"Las 4 lunas galileanas orbitan Júpiter: prueba contra el geocentrismo."},
+  {q:"El efecto Doppler en la luz de galaxias lejanas muestra un 'corrimiento al rojo' que indica que…",
+   o:["se acercan a nosotros","están inmóviles","se alejan de nosotros","emiten sonido"], c:2,
+   e:"El corrimiento al rojo (redshift) indica alejamiento: base de la expansión del universo."},
+  {q:"¿Qué astrónomo propuso el modelo geocéntrico que dominó por siglos?",
+   o:["Copérnico","Ptolomeo","Newton","Kepler"], c:1,
+   e:"Ptolomeo formalizó el modelo geocéntrico, con la Tierra al centro."},
+  {q:"La ley de gravitación universal, que explica las órbitas planetarias, fue formulada por…",
+   o:["Newton","Galileo","Aristóteles","Hubble"], c:0,
+   e:"Isaac Newton unificó la caída de los cuerpos y las órbitas con una sola ley."},
+  {q:"El planeta más cercano al Sol, con un año de solo 88 días, es…",
+   o:["Venus","Mercurio","Marte","La Tierra"], c:1,
+   e:"Mercurio: el más cercano y veloz, año de 88 días terrestres."},
+  {q:"¿Por qué Venus es más caliente que Mercurio pese a estar más lejos del Sol?",
+   o:["Por su núcleo de fuego","Por su intenso efecto invernadero","Porque gira más rápido","Por sus anillos"], c:1,
+   e:"Su densa atmósfera de CO₂ atrapa el calor: efecto invernadero desbocado (>460°C)."},
+  {q:"El color rojizo de Marte se debe principalmente a…",
+   o:["Lava activa","Óxido de hierro (herrumbre)","Vegetación roja","Hielo teñido"], c:1,
+   e:"El óxido de hierro del suelo marciano le da su tono rojo característico."},
+  {q:"La expansión del universo se describe mejor como…",
+   o:["Los planetas alejándose del Sol","El espacio mismo que se expande","La Luna alejándose","Una ilusión óptica"], c:1,
+   e:"Es la expansión del espacio: las galaxias se alejan porque el espacio entre ellas crece."},
+  {q:"Neptuno se destaca en la historia de la astronomía porque…",
+   o:["Fue el primer planeta visto a simple vista","Fue predicho con cálculos antes de observarlo","Tiene vida","Es el más cercano al Sol"], c:1,
+   e:"Su posición se predijo matemáticamente (por las anomalías de Urano) antes de verlo."},
+  {q:"Los anillos de Saturno están compuestos principalmente de…",
+   o:["Gas caliente","Fragmentos de hielo y roca","Metal fundido","Nubes de tormenta"], c:1,
+   e:"Miles de millones de partículas de hielo y roca forman sus anillos."},
+  {q:"La Nube de Oort, en el confín del sistema solar, es el origen de…",
+   o:["Los asteroides del cinturón principal","Los cometas de largo periodo","Las auroras","Los eclipses"], c:1,
+   e:"Es una cáscara helada que rodea el sistema solar; de ahí vienen cometas de largo periodo."}
+];
+
+/* ---------- CANVAS Y ESTADO ---------- */
+const cv = document.getElementById('game');
+const cx = cv.getContext('2d');
+let W=0,H=0,DPR=Math.min(window.devicePixelRatio||1,2);
+
+function resize(){
+  const r = cv.getBoundingClientRect();
+  W = r.width; H = r.height;
+  cv.width = Math.floor(W*DPR); cv.height = Math.floor(H*DPR);
+  cx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize', resize);
+
+const state = {
+  scene:'welcome',   // welcome|briefing|playing|question|levelup|gameover|victoria
+  level:0,
+  score:0,
+  lives:3,
+  maxLives:5,
+  ship:{x:0,y:0,w:34,h:24,speed:5,cd:0},
+  bullets:[],
+  enemies:[],
+  powerups:[],
+  particles:[],
+  stars:[],
+  spawnT:0,
+  destroyed:0,        // amenazas destruidas en la misión actual
+  pending:false,      // esperando respuesta de pregunta
+  msgKilledBy:'',
+};
+
+const keys = {left:false,right:false,fire:false};
+
+/* ---------- ESTRELLAS DE FONDO ---------- */
+function initStars(){
+  state.stars = [];
+  for(let i=0;i<70;i++){
+    state.stars.push({x:Math.random(),y:Math.random(),s:Math.random()*1.6+0.4,v:0.15+Math.random()*0.5});
+  }
+}
+
+/* ---------- CONTROL DE PANTALLAS ---------- */
+const screens = ['welcome','briefing','levelup','q-screen','gameover','victoria'];
+function show(id){
+  screens.forEach(s=>{const el=document.getElementById(s); if(el) el.classList.toggle('on', s===id);});
+  document.getElementById('hud').style.display = (state.scene==='playing') ? 'flex' : 'none';
+  document.getElementById('hint').style.display = (state.scene==='playing') ? 'block' : 'none';
+  document.getElementById('touch').classList.toggle('on', state.scene==='playing' && isTouch);
+}
+
+/* ---------- HUD ---------- */
+function drawHUD(){
+  const p = PLANETAS[state.level];
+  document.getElementById('hud-mision').textContent = 'MISIÓN '+p.num+' · '+p.nombre.toUpperCase();
+  document.getElementById('hud-puntos').textContent = 'PTS '+state.score;
+  document.getElementById('hud-vidas').textContent = '♥ '.repeat(state.lives).trim() || '—';
+}
+
+/* ---------- INICIAR MISIÓN ---------- */
+function startBriefing(){
+  const p = PLANETAS[state.level];
+  document.getElementById('brief-num').textContent = p.num;
+  document.getElementById('brief-titulo').textContent = 'Misión '+p.num+' · '+p.nombre;
+  document.getElementById('brief-texto').textContent = p.contexto;
+  state.scene='briefing'; show('briefing');
+}
+
+function startLevel(){
+  const p = PLANETAS[state.level];
+  resize();
+  state.scene='playing';
+  state.bullets=[]; state.enemies=[]; state.powerups=[]; state.particles=[];
+  state.destroyed=0; state.spawnT=0; state.pending=false;
+  state.ship.x = W/2 - state.ship.w/2;
+  state.ship.y = H - state.ship.h - 14;
+  initStars();
+  drawHUD(); show('playing');
+}
+
+/* ---------- SPAWN DE AMENAZAS ---------- */
+function spawnEnemy(){
+  const p = PLANETAS[state.level];
+  const meteor = Math.random() < 0.62;
+  const size = meteor ? 20+Math.random()*16 : 22;
+  state.enemies.push({
+    x: 20+Math.random()*(W-40-size),
+    y: -size,
+    w:size, h:size,
+    vy: (p.spd)*(0.7+Math.random()*0.6),
+    vx: (Math.random()-0.5)*1.2,
+    type: meteor?'meteor':'alien',
+    rot: 0, vr:(Math.random()-0.5)*0.1,
+    hp: meteor?1:1,
+    seed: Math.random()*6.28
+  });
+}
+function spawnPowerup(){
+  if(state.lives>=state.maxLives) return;
+  state.powerups.push({x:20+Math.random()*(W-56), y:-24, w:26, h:26, vy:1.4, t:0});
+}
+
+/* ---------- DISPARO ---------- */
+function fire(){
+  if(state.ship.cd>0) return;
+  state.ship.cd = 12;
+  state.bullets.push({x:state.ship.x+state.ship.w/2-2, y:state.ship.y-6, w:4, h:12, vy:-9});
+  Audio.shoot();
+}
+
+/* ---------- PARTÍCULAS ---------- */
+function boom(x,y,color){
+  for(let i=0;i<12;i++){
+    const a=Math.random()*6.28, s=1+Math.random()*3.5;
+    state.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,color});
+  }
+}
+
+/* ---------- COLISIÓN ---------- */
+function hit(a,b){
+  return a.x<b.x+b.w && a.x+a.w>b.x && a.y<b.y+b.h && a.y+a.h>b.y;
+}
+
+/* ---------- BUCLE ---------- */
+let last=performance.now();
+function loop(now){
+  const dt = Math.min(40, now-last); last=now;
+  if(state.scene==='playing') update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+
+function update(dt){
+  const p = PLANETAS[state.level];
+  const sh = state.ship;
+
+  // nave
+  if(keys.left) sh.x -= sh.speed;
+  if(keys.right) sh.x += sh.speed;
+  sh.x = Math.max(6, Math.min(W-sh.w-6, sh.x));
+  if(keys.fire) fire();
+  if(sh.cd>0) sh.cd--;
+
+  // estrellas
+  state.stars.forEach(s=>{ s.y += s.v*0.004; if(s.y>1){s.y=0;s.x=Math.random();} });
+
+  // spawn
+  state.spawnT += dt;
+  if(state.spawnT > p.spawn){ state.spawnT=0; spawnEnemy(); if(Math.random()<0.35) setTimeout(spawnEnemy,300); }
+  // powerup ocasional (vida extra)
+  if(Math.random() < 0.0016 && state.powerups.length===0) spawnPowerup();
+
+  // balas
+  state.bullets.forEach(b=> b.y += b.vy);
+  state.bullets = state.bullets.filter(b=>b.y+b.h>0);
+
+  // enemigos
+  state.enemies.forEach(e=>{
+    e.y += e.vy; e.x += e.vx; e.rot += e.vr;
+    if(e.type==='alien'){ e.x += Math.sin((e.y+e.seed)*0.04)*0.8; }
+    if(e.x<6){e.x=6;e.vx*=-1;} if(e.x>W-e.w-6){e.x=W-e.w-6;e.vx*=-1;}
+  });
+
+  // powerups
+  state.powerups.forEach(pu=>{ pu.y+=pu.vy; pu.t+=dt; });
+
+  // colisión bala-enemigo
+  for(let i=state.bullets.length-1;i>=0;i--){
+    for(let j=state.enemies.length-1;j>=0;j--){
+      if(hit(state.bullets[i], state.enemies[j])){
+        const e=state.enemies[j];
+        boom(e.x+e.w/2, e.y+e.h/2, e.type==='meteor'?'#f2a93b':'#ff8bd0');
+        Audio.explosion();
+        state.enemies.splice(j,1); state.bullets.splice(i,1);
+        state.score += 10; state.destroyed++;
+        drawHUD();
+        break;
+      }
+    }
+  }
+
+  // colisión bala-powerup (dispararle abre pregunta)
+  for(let i=state.bullets.length-1;i>=0;i--){
+    for(let j=state.powerups.length-1;j>=0;j--){
+      if(hit(state.bullets[i], state.powerups[j])){
+        state.powerups.splice(j,1); state.bullets.splice(i,1);
+        openQuestion();
+        return;
+      }
+    }
+  }
+
+  // colisión nave-enemigo
+  for(let j=state.enemies.length-1;j>=0;j--){
+    if(hit(sh, state.enemies[j])){
+      const e=state.enemies[j];
+      state.enemies.splice(j,1);
+      boom(sh.x+sh.w/2, sh.y, '#7cff6b');
+      loseLife(e.type==='meteor'?'un meteorito':'un alienígena');
+      return;
+    }
+  }
+  // enemigo llega al fondo (escapa) — leve penalización, no muerte
+  state.enemies = state.enemies.filter(e=>{
+    if(e.y>H){ return false; }
+    return true;
+  });
+  // powerup se va
+  state.powerups = state.powerups.filter(pu=>pu.y<H+30);
+
+  // partículas
+  state.particles.forEach(pt=>{ pt.x+=pt.vx; pt.y+=pt.vy; pt.vy+=0.05; pt.life-=0.03; });
+  state.particles = state.particles.filter(pt=>pt.life>0);
+
+  // ¿misión cumplida?
+  if(state.destroyed >= p.meta){ completeLevel(); }
+}
+
+/* ---------- PERDER VIDA ---------- */
+function loseLife(causa){
+  state.lives--; Audio.hit(); drawHUD();
+  // sacudida
+  document.getElementById('stage').animate(
+    [{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}],
+    {duration:180}
+  );
+  if(state.lives<=0){
+    state.msgKilledBy = causa;
+    gameOver();
+  }
+}
+
+/* ---------- PREGUNTA / VIDA EXTRA ---------- */
+let qIndexShown = -1;
+function openQuestion(){
+  state.scene='question'; state.pending=true;
+  const pool = PREGUNTAS.slice();
+  const q = pool[Math.floor(Math.random()*pool.length)];
+  state.currentQ = q;
+  document.getElementById('q-text').textContent = q.q;
+  const cont = document.getElementById('q-opciones');
+  cont.innerHTML='';
+  const letras=['A','B','C','D'];
+  q.o.forEach((opt,idx)=>{
+    const b=document.createElement('button');
+    b.className='opcion';
+    b.innerHTML='<span class="k">'+letras[idx]+'</span>'+opt;
+    b.onclick=()=>answer(idx,b);
+    cont.appendChild(b);
+  });
+  document.getElementById('q-feedback').textContent='';
+  show('q-screen');
+}
+function answer(idx, btn){
+  if(!state.pending) return;
+  state.pending=false;
+  const q=state.currentQ;
+  const opciones=[...document.querySelectorAll('#q-opciones .opcion')];
+  opciones.forEach(o=>o.style.pointerEvents='none');
+  const fb=document.getElementById('q-feedback');
+  if(idx===q.c){
+    btn.classList.add('correcta');
+    if(state.lives<state.maxLives){ state.lives++; Audio.life(); }
+    else Audio.correct();
+    fb.innerHTML='✔ ¡Correcto! +1 vida. '+q.e;
+  }else{
+    btn.classList.add('incorrecta');
+    opciones[q.c].classList.add('correcta');
+    Audio.wrong();
+    fb.innerHTML='✘ No es correcta. '+q.e;
+  }
+  setTimeout(()=>{ state.scene='playing'; drawHUD(); show('playing'); }, 2200);
+}
+
+/* ---------- COMPLETAR NIVEL ---------- */
+function completeLevel(){
+  state.scene='levelup';
+  const p=PLANETAS[state.level];
+  document.getElementById('lu-planeta').textContent = p.nombre+' explorado';
+  document.getElementById('lu-dato').textContent = '“'+p.dato+'”';
+  Audio.levelup();
+  show('levelup');
+}
+
+/* ---------- GAME OVER / VICTORIA ---------- */
+function gameOver(){
+  state.scene='gameover';
+  document.getElementById('go-msg').textContent =
+    'La nave fue alcanzada por '+state.msgKilledBy+' cerca de '+PLANETAS[state.level].nombre+'.';
+  document.getElementById('go-score').textContent = 'Puntaje final: '+state.score+' pts';
+  show('gameover');
+}
+function victoria(){
+  state.scene='victoria';
+  document.getElementById('vic-score').textContent = 'Puntaje final: '+state.score+' pts · 10/10 misiones';
+  show('victoria');
+}
+
+/* ---------- RENDER ---------- */
+function render(){
+  cx.clearRect(0,0,W,H);
+  const p = PLANETAS[Math.min(state.level, PLANETAS.length-1)];
+
+  // fondo
+  cx.fillStyle = '#05060e';
+  cx.fillRect(0,0,W,H);
+
+  // estrellas
+  cx.fillStyle='#cddaff';
+  state.stars.forEach(s=>{
+    cx.globalAlpha = 0.4+s.s*0.35;
+    cx.fillRect(s.x*W, s.y*H, s.s, s.s);
+  });
+  cx.globalAlpha=1;
+
+  if(state.scene==='playing' || state.scene==='question'){
+    // planeta destino en la parte superior
+    const pr = Math.min(W,H)*0.16;
+    const px = W*0.5, py = H*0.16;
+    const g = cx.createRadialGradient(px-pr*0.3, py-pr*0.3, pr*0.1, px, py, pr);
+    g.addColorStop(0, lighten(p.color, 40));
+    g.addColorStop(1, p.color);
+    cx.fillStyle=g;
+    cx.beginPath(); cx.arc(px,py,pr,0,6.2832); cx.fill();
+    if(p.nombre==='Saturno'){
+      cx.strokeStyle='rgba(232,213,154,.7)'; cx.lineWidth=3;
+      cx.save(); cx.translate(px,py); cx.scale(1,0.32); cx.beginPath(); cx.arc(0,0,pr*1.5,0,6.2832); cx.stroke(); cx.restore();
+    }
+
+    // powerups (vida extra)
+    state.powerups.forEach(pu=>{
+      const cxp=pu.x+pu.w/2, cyp=pu.y+pu.h/2;
+      const pulse = 0.7+Math.sin(pu.t*0.01)*0.3;
+      cx.save(); cx.globalAlpha=pulse;
+      cx.fillStyle='#ffd76b'; cx.font='bold 22px Courier New'; cx.textAlign='center'; cx.textBaseline='middle';
+      cx.shadowColor='#ffd76b'; cx.shadowBlur=14;
+      cx.fillText('?', cxp, cyp);
+      cx.restore();
+      cx.shadowBlur=0;
+      cx.strokeStyle='rgba(255,215,107,.6)'; cx.lineWidth=1.5;
+      cx.strokeRect(pu.x,pu.y,pu.w,pu.h);
+    });
+
+    // balas
+    cx.fillStyle='#7cff6b';
+    state.bullets.forEach(b=>{ cx.fillStyle='#baffb0'; cx.fillRect(b.x,b.y,b.w,b.h); cx.fillStyle='rgba(124,255,107,.4)'; cx.fillRect(b.x-1,b.y,b.w+2,b.h); });
+
+    // enemigos
+    state.enemies.forEach(e=>{
+      if(e.type==='meteor'){ drawMeteor(e); }
+      else { drawAlien(e); }
+    });
+
+    // partículas
+    state.particles.forEach(pt=>{
+      cx.globalAlpha=Math.max(0,pt.life);
+      cx.fillStyle=pt.color;
+      cx.fillRect(pt.x, pt.y, 3,3);
+    });
+    cx.globalAlpha=1;
+
+    // nave
+    drawShip(state.ship);
+  }
+}
+
+function drawShip(s){
+  const x=s.x, y=s.y, w=s.w, h=s.h;
+  // llama del motor
+  cx.fillStyle='#ff8b3b';
+  cx.beginPath();
+  cx.moveTo(x+w*0.5-4, y+h);
+  cx.lineTo(x+w*0.5, y+h+8+Math.random()*4);
+  cx.lineTo(x+w*0.5+4, y+h);
+  cx.closePath(); cx.fill();
+  // cuerpo (vector estilo Atari)
+  cx.fillStyle='#7cff6b';
+  cx.beginPath();
+  cx.moveTo(x+w/2, y);        // punta
+  cx.lineTo(x+w, y+h);        // ala der
+  cx.lineTo(x+w*0.68, y+h*0.78);
+  cx.lineTo(x+w*0.32, y+h*0.78);
+  cx.lineTo(x, y+h);          // ala izq
+  cx.closePath(); cx.fill();
+  // cabina
+  cx.fillStyle='#0a1a08';
+  cx.fillRect(x+w/2-3, y+h*0.35, 6, 7);
+}
+
+function drawMeteor(e){
+  cx.save();
+  cx.translate(e.x+e.w/2, e.y+e.h/2); cx.rotate(e.rot);
+  const r=e.w/2;
+  cx.fillStyle='#8a7a63';
+  cx.beginPath();
+  for(let i=0;i<7;i++){
+    const a=i/7*6.2832; const rr = r*(0.75+((i*e.seed)%3)*0.12);
+    cx.lineTo(Math.cos(a)*rr, Math.sin(a)*rr);
+  }
+  cx.closePath(); cx.fill();
+  cx.fillStyle='#5c4f3e';
+  cx.beginPath(); cx.arc(-r*0.25,-r*0.15,r*0.22,0,6.28); cx.fill();
+  cx.beginPath(); cx.arc(r*0.25,r*0.2,r*0.16,0,6.28); cx.fill();
+  cx.restore();
+}
+function drawAlien(e){
+  const x=e.x,y=e.y,w=e.w,h=e.h;
+  cx.fillStyle='#ff6bd0';
+  // cúpula
+  cx.beginPath(); cx.arc(x+w/2, y+h*0.45, w*0.34, Math.PI, 0); cx.fill();
+  // platillo
+  cx.fillStyle='#c94ba8';
+  cx.beginPath();
+  cx.ellipse(x+w/2, y+h*0.55, w*0.5, h*0.22, 0, 0, 6.2832);
+  cx.fill();
+  // luces
+  cx.fillStyle='#ffe66b';
+  for(let i=-1;i<=1;i++){ cx.fillRect(x+w/2+i*7-1.5, y+h*0.55-1.5, 3,3); }
+}
+
+/* ---------- utilidades color ---------- */
+function lighten(hex, amt){
+  const n=parseInt(hex.slice(1),16);
+  let r=(n>>16)+amt, g=((n>>8)&255)+amt, b=(n&255)+amt;
+  r=Math.min(255,r);g=Math.min(255,g);b=Math.min(255,b);
+  return 'rgb('+r+','+g+','+b+')';
+}
+
+/* ---------- ENTRADA (teclado) ---------- */
+window.addEventListener('keydown', e=>{
+  if(['ArrowLeft','ArrowRight','ArrowUp',' ','Spacebar'].includes(e.key)) e.preventDefault();
+  if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A') keys.left=true;
+  if(e.key==='ArrowRight'||e.key==='d'||e.key==='D') keys.right=true;
+  if(e.key===' '||e.key==='Spacebar'||e.key==='ArrowUp') keys.fire=true;
+});
+window.addEventListener('keyup', e=>{
+  if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A') keys.left=false;
+  if(e.key==='ArrowRight'||e.key==='d'||e.key==='D') keys.right=false;
+  if(e.key===' '||e.key==='Spacebar'||e.key==='ArrowUp') keys.fire=false;
+});
+
+/* ---------- ENTRADA (táctil) ---------- */
+const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints>0;
+function bindTouch(id, on, off){
+  const el=document.getElementById(id);
+  const start=e=>{e.preventDefault();on();};
+  const end=e=>{e.preventDefault();off();};
+  el.addEventListener('touchstart',start,{passive:false});
+  el.addEventListener('touchend',end,{passive:false});
+  el.addEventListener('touchcancel',end,{passive:false});
+}
+bindTouch('t-left', ()=>keys.left=true, ()=>keys.left=false);
+bindTouch('t-right', ()=>keys.right=true, ()=>keys.right=false);
+bindTouch('t-fire', ()=>keys.fire=true, ()=>keys.fire=false);
+
+/* ---------- BOTONES DE UI ---------- */
+document.getElementById('btn-comenzar').onclick = ()=>{ Audio.unlock(); state.level=0; state.score=0; state.lives=3; startBriefing(); };
+document.getElementById('btn-lanzar').onclick = ()=>{ Audio.unlock(); startLevel(); };
+document.getElementById('btn-siguiente').onclick = ()=>{
+  state.level++;
+  if(state.level>=PLANETAS.length){ victoria(); }
+  else { startBriefing(); }
+};
+document.getElementById('btn-reintentar').onclick = ()=>{ state.level=0; state.score=0; state.lives=3; startBriefing(); };
+document.getElementById('btn-otravez').onclick = ()=>{ state.level=0; state.score=0; state.lives=3; state.scene='welcome'; show('welcome'); };
+
+/* ---------- ARRANQUE ---------- */
+resize(); initStars();
+state.scene='welcome'; show('welcome');
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
