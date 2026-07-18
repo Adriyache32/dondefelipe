@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Unidad 3 · Energía · Sesiones 3 y 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================= TOKENS ============================= */
+:root{
+  --bg:#0a1728;
+  --bg-soft:#0e2038;
+  --card:#132c49;
+  --card-hi:#1a3a5e;
+  --line:rgba(244,185,66,.16);
+  --gold:#f4b942;
+  --gold-soft:#ffd873;
+  --teal:#2ed3bd;
+  --ember:#ff8a5c;
+  --boss:#b98bff;
+  --bad:#ff5d6c;
+  --good:#3ddc84;
+  --ink:#eef3f9;
+  --muted:#87a0bd;
+  --muted-2:#5c7292;
+  --radius:18px;
+  --disp:'Space Grotesk',sans-serif;
+  --body:'Inter',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  background:
+    radial-gradient(1100px 620px at 12% -8%, rgba(244,185,66,.10), transparent 60%),
+    radial-gradient(900px 700px at 105% 10%, rgba(46,211,189,.10), transparent 55%),
+    var(--bg);
+  color:var(--ink);
+  font-family:var(--body);
+  overflow:hidden;
+  height:100dvh;
+}
+h1,h2,h3,.disp{font-family:var(--disp);}
+::selection{background:var(--gold);color:#0a1728;}
+button{font-family:var(--body);}
+a{color:var(--teal);}
+
+/* scrollbar for slide bodies */
+.slide-body::-webkit-scrollbar{width:8px;}
+.slide-body::-webkit-scrollbar-thumb{background:var(--card-hi);border-radius:8px;}
+
+/* ============================= APP SHELL ============================= */
+#app{
+  display:flex;
+  flex-direction:column;
+  height:100dvh;
+  width:100vw;
+}
+
+/* ---- topbar ---- */
+#topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px clamp(14px,3vw,28px);
+  padding-top:max(10px, env(safe-area-inset-top));
+  padding-left:max(14px, env(safe-area-inset-left));
+  padding-right:max(14px, env(safe-area-inset-right));
+  border-bottom:1px solid var(--line);
+  background:rgba(10,23,40,.75);
+  backdrop-filter:blur(6px);
+  z-index:30;
+  flex-shrink:0;
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;}
+.brand-badge{
+  width:34px;height:34px;border-radius:10px;
+  background:linear-gradient(135deg,var(--gold),var(--ember));
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+  box-shadow:0 4px 14px rgba(244,138,92,.35);
+  animation:sunPulse 4s ease-in-out infinite;
+}
+@keyframes sunPulse{
+  0%,100%{box-shadow:0 4px 14px rgba(244,138,92,.35);}
+  50%{box-shadow:0 4px 20px rgba(244,138,92,.55);}
+}
+.brand-text{line-height:1.15;min-width:0;}
+.brand-text b{font-family:var(--disp);font-size:14px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.brand-text span{font-size:11px;color:var(--muted);white-space:nowrap;}
+
+#progress-dots{
+  display:flex;gap:5px;flex:1;justify-content:center;
+  overflow-x:auto;padding:0 6px;
+  -webkit-overflow-scrolling:touch;
+}
+#progress-dots::-webkit-scrollbar{display:none;}
+.dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--card-hi);
+  border:1px solid transparent;
+  cursor:pointer;flex-shrink:0;
+  transition:transform .2s, width .25s, background .25s;
+}
+.dot:hover{transform:scale(1.35);}
+.dot.done{background:var(--teal);}
+.dot.active{background:var(--gold);width:22px;border-radius:6px;}
+.dot.section-start{margin-left:8px;}
+
+#xp-wrap{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+#pdf-btn{padding:8px 14px;font-size:13px;}
+#sound-btn{padding:8px 11px;font-size:15px;}
+#pdf-btn:active{transform:scale(.96);}
+#xp-badge{
+  display:flex;align-items:center;gap:6px;
+  background:var(--card);border:1px solid var(--line);
+  padding:6px 12px;border-radius:999px;
+  font-family:var(--mono);font-weight:700;font-size:13px;
+  color:var(--gold-soft);position:relative;
+  box-shadow:0 2px 10px rgba(244,185,66,.08);
+  transition:box-shadow .3s, transform .3s;
+}
+#xp-badge.bump{animation:xpBump .4s ease;}
+@keyframes xpBump{
+  0%{transform:scale(1);}
+  35%{transform:scale(1.14);box-shadow:0 4px 18px rgba(244,185,66,.35);}
+  100%{transform:scale(1);}
+}
+#xp-toast{
+  position:absolute;top:-6px;right:8px;
+  font-family:var(--mono);font-weight:700;color:var(--good);
+  font-size:12px;opacity:0;pointer-events:none;
+}
+#xp-toast.show{animation:floatUp 1s ease-out forwards;}
+@keyframes floatUp{
+  0%{opacity:0;transform:translateY(0);}
+  15%{opacity:1;}
+  100%{opacity:0;transform:translateY(-22px);}
+}
+
+/* ============================= DECK ============================= */
+#deck{
+  position:relative;
+  flex:1;
+  min-height:0;
+}
+.slide{
+  position:absolute;inset:0;
+  display:none;
+  flex-direction:column;
+  padding:clamp(16px,3vw,40px) clamp(18px,5vw,80px);
+  overflow:hidden;
+}
+.slide.active{
+  display:flex;
+  animation:slideIn .5s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes slideIn{
+  from{opacity:0;transform:translateY(18px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.slide-body{
+  flex:1;min-height:0;overflow-y:auto;
+  padding-right:4px;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+}
+.eyebrow{
+  font-family:var(--mono);font-size:12px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--teal);font-weight:700;
+  margin:0 0 6px;
+}
+.slide h2.title{
+  font-size:clamp(22px,3.6vw,38px);
+  margin:0 0 6px;line-height:1.08;
+}
+.subtitle{color:var(--muted);font-size:clamp(13px,1.6vw,16px);margin:0 0 18px;max-width:70ch;}
+
+/* ============================= COVER ============================= */
+#slide-cover{justify-content:center;}
+.cover-grid{
+  display:grid;grid-template-columns:1.3fr .8fr;gap:36px;align-items:center;
+  max-width:1180px;margin:0 auto;width:100%;
+}
+.cover-kicker{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:12.5px;letter-spacing:.12em;
+  color:var(--gold-soft);background:rgba(244,185,66,.1);
+  border:1px solid var(--line);padding:6px 12px;border-radius:999px;
+  margin-bottom:18px;text-transform:uppercase;
+}
+.cover-title{
+  font-size:clamp(30px,5.4vw,58px);line-height:1.03;margin:0 0 14px;
+  background:linear-gradient(100deg,#fff 10%,var(--gold-soft) 55%,var(--ember) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.cover-sub{color:var(--muted);font-size:clamp(14px,1.8vw,18px);max-width:52ch;margin:0 0 22px;}
+.cover-chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px;}
+.chip{
+  font-family:var(--mono);font-size:12.5px;padding:6px 12px;border-radius:999px;
+  border:1px solid var(--line);color:var(--ink);background:var(--card);
+  display:inline-flex;align-items:center;gap:6px;
+}
+.chip b{color:var(--gold-soft);}
+.cover-hint{font-size:12.5px;color:var(--muted-2);}
+
+/* ============================= HOOK / GANCHO SLIDE ============================= */
+.gancho-wrap{max-width:760px;margin:0 auto;text-align:center;}
+.gancho-title{
+  font-size:clamp(24px,4.2vw,42px);line-height:1.15;margin:18px 0 14px;
+  background:linear-gradient(100deg,#fff 10%,var(--ember) 60%,var(--gold-soft) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.gancho-sub{color:var(--muted);font-size:clamp(14px,1.8vw,17px);max-width:60ch;margin:0 auto 18px;}
+.gancho-question{
+  font-family:var(--disp);font-weight:600;font-size:clamp(15px,2vw,19px);
+  color:var(--gold-soft);margin:0 0 18px;
+}
+.gancho-opts{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;}
+.gancho-btn{
+  font-family:var(--disp);font-weight:600;font-size:14.5px;
+  background:var(--card);border:1px solid var(--line);color:var(--ink);
+  padding:14px 22px;border-radius:14px;cursor:pointer;
+  box-shadow:0 6px 18px rgba(0,0,0,.18);
+  transition:transform .2s, box-shadow .2s, border-color .2s;
+  position:relative;overflow:hidden;
+}
+.gancho-btn:active:not(:disabled){transform:translateY(0) scale(.96);}
+.gancho-btn:hover{transform:translateY(-3px);border-color:var(--gold);box-shadow:0 12px 26px rgba(0,0,0,.3);}
+.gancho-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.gancho-btn.chosen{border-color:var(--gold);background:var(--card-hi);}
+.gancho-feedback{
+  margin-top:20px;font-size:15px;min-height:24px;color:var(--good);
+  opacity:0;transition:opacity .4s;
+}
+.gancho-feedback.show{opacity:1;}
+.qr-box{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px;text-align:center;
+  box-shadow:0 20px 50px rgba(0,0,0,.35);
+}
+.qr-box img{width:150px;height:150px;border-radius:10px;background:#fff;padding:8px;display:block;margin:0 auto 10px;}
+.qr-box p{margin:0;font-size:12.5px;color:var(--muted);}
+.qr-box a{word-break:break-all;font-size:11.5px;}
+.qr-label{font-family:var(--mono);font-size:12px;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:block;}
+@media (max-width:900px){
+  .desktop-only{display:none !important;}
+  .cover-grid{grid-template-columns:1fr;}
+}
+
+/* ============================= GENERIC BLOCKS ============================= */
+.card-grid{display:grid;gap:14px;}
+.g2{grid-template-columns:repeat(2,1fr);}
+.g3{grid-template-columns:repeat(3,1fr);}
+.g4{grid-template-columns:repeat(4,1fr);}
+@media (max-width:760px){ .g2,.g3{grid-template-columns:1fr;} .g4{grid-template-columns:repeat(2,1fr);} }
+@media (max-width:420px){ .g4{grid-template-columns:1fr;} }
+
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px 18px;
+  box-shadow:0 6px 18px rgba(0,0,0,.18);
+  transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);border-color:rgba(244,185,66,.35);box-shadow:0 10px 26px rgba(0,0,0,.28);}
+.card:active{transform:translateY(0) scale(.985);}
+.card h4{margin:0 0 8px;font-family:var(--disp);font-size:15.5px;}
+.card p, .card li{color:var(--muted);font-size:13.6px;line-height:1.5;}
+.card .ico{font-size:22px;margin-bottom:8px;display:block;}
+
+/* timeline / agenda */
+.timeline{display:flex;flex-direction:column;gap:10px;}
+.tl-row{display:flex;align-items:stretch;gap:14px;}
+.tl-time{
+  font-family:var(--mono);font-size:12.5px;color:var(--gold-soft);
+  width:74px;flex-shrink:0;padding-top:12px;
+}
+.tl-body{
+  flex:1;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--teal);
+  border-radius:12px;padding:12px 16px;
+}
+.tl-body.ember{border-left-color:var(--ember);}
+.tl-body.boss{border-left-color:var(--boss);}
+.tl-body h4{margin:0 0 4px;font-size:14.5px;}
+.tl-body p{margin:0;color:var(--muted);font-size:13px;}
+.session-divider{
+  display:flex;align-items:center;gap:12px;margin:18px 0 8px;
+  color:var(--muted-2);font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.1em;
+}
+.session-divider::before,.session-divider::after{content:"";flex:1;height:1px;background:var(--line);}
+
+/* OA / objective */
+.oa-box{
+  background:linear-gradient(135deg,rgba(244,185,66,.12),rgba(46,211,189,.06));
+  border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px 22px;margin-bottom:16px;
+}
+.oa-box .tag{font-family:var(--mono);font-size:12px;color:var(--gold-soft);letter-spacing:.08em;}
+.oa-box p{font-size:clamp(14px,1.8vw,17px);margin:8px 0 0;line-height:1.5;}
+.question-box{
+  background:var(--card-hi);border-radius:14px;padding:16px 20px;
+  display:flex;align-items:center;gap:14px;
+}
+.question-box .qmark{font-size:26px;flex-shrink:0;}
+.question-box p{margin:0;font-size:clamp(15px,2vw,19px);font-family:var(--disp);}
+
+/* pill / skill tags OA a-f */
+.skills-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.skill-pill{
+  font-family:var(--mono);font-size:11.5px;background:rgba(46,211,189,.12);
+  border:1px solid rgba(46,211,189,.3);color:var(--teal);
+  padding:4px 10px;border-radius:999px;cursor:default;
+}
+
+/* buttons */
+.btn{
+  font-family:var(--disp);font-weight:600;font-size:14px;
+  border:none;border-radius:12px;padding:11px 20px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:8px;transition:transform .18s, box-shadow .18s, background .18s;
+  position:relative;overflow:hidden;
+}
+.btn-primary{background:linear-gradient(135deg,var(--gold),var(--ember));color:#12233b;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(244,138,92,.3);}
+.btn-primary:active{transform:translateY(0) scale(.98);}
+.btn-ghost{background:var(--card);color:var(--ink);border:1px solid var(--line);}
+.btn-ghost:hover{background:var(--card-hi);border-color:var(--gold);}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none !important;box-shadow:none !important;}
+button:focus-visible, .quiz-opt:focus-visible, .dot:focus-visible, .game-card:focus-visible, .mem-card:focus-visible, .classify-chip:focus-visible{
+  outline:2px solid var(--teal);outline-offset:2px;
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}
+}
+
+/* ============================= RIPPLE INTERACTION ============================= */
+.ripple-el{
+  position:absolute;border-radius:50%;
+  background:rgba(255,255,255,.45);
+  transform:scale(0);
+  animation:rippleAnim .55s ease-out forwards;
+  pointer-events:none;
+}
+@keyframes rippleAnim{
+  to{transform:scale(2.8);opacity:0;}
+}
+
+/* ============================= SIGNATURE FLOW DIAGRAM ============================= */
+.flow-wrap{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 18px 10px;margin:6px 0 18px;}
+.flow-svg{width:100%;height:auto;display:block;}
+.flow-dash{stroke-dasharray:10 8;animation:flowmove 1.6s linear infinite;}
+@keyframes flowmove{to{stroke-dashoffset:-36;}}
+.flow-node-label{font-size:11px;fill:var(--muted);font-family:'Inter',sans-serif;}
+.flow-node-title{font-size:12.5px;fill:var(--ink);font-family:'Space Grotesk',sans-serif;font-weight:600;}
+
+/* mobile flow: compact vertical version, swapped in below 620px where the horizontal SVG gets too small to read */
+.flow-mobile{display:none;flex-direction:column;align-items:stretch;gap:2px;margin:6px 0 18px;}
+.fm-node{
+  display:flex;align-items:center;gap:12px;
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:12px 14px;
+}
+.fm-ico{
+  width:44px;height:44px;border-radius:50%;flex-shrink:0;
+  background:var(--bg-soft);border:2px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.fm-node h4{margin:0 0 2px;font-family:var(--disp);font-size:13.5px;}
+.fm-node span{font-size:11px;color:var(--muted);}
+.fm-arrow{text-align:center;color:var(--gold);font-size:16px;line-height:1;padding:1px 0;}
+@media (max-width:620px){
+  .flow-desktop{display:none;}
+  .flow-mobile{display:flex;}
+}
+
+/* ============================= ACCORDION (BLOOM BANK) ============================= */
+.acc-item{
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  margin-bottom:10px;overflow:hidden;
+}
+.acc-item.boss{border-color:rgba(185,139,255,.4);}
+.acc-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 16px;cursor:pointer;gap:10px;
+}
+.acc-head .lvl{display:flex;align-items:center;gap:10px;}
+.acc-num{
+  font-family:var(--mono);font-weight:700;font-size:12.5px;
+  background:var(--card-hi);color:var(--gold-soft);
+  padding:3px 9px;border-radius:8px;
+}
+.boss .acc-num{background:rgba(185,139,255,.18);color:var(--boss);}
+.acc-head h4{margin:0;font-size:14.5px;}
+.acc-head .boss-tag{
+  font-family:var(--mono);font-size:10.5px;color:var(--boss);
+  border:1px solid rgba(185,139,255,.4);padding:2px 8px;border-radius:999px;
+}
+.acc-chevron{transition:.25s;color:var(--muted);}
+.acc-item.open .acc-chevron{transform:rotate(180deg);}
+.acc-panel{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+.acc-item.open .acc-panel{max-height:400px;}
+.acc-panel-inner{padding:0 16px 16px;}
+.acc-panel-inner ul{margin:0;padding-left:18px;}
+.acc-panel-inner li{margin-bottom:6px;font-size:13.5px;color:var(--ink);opacity:.9;}
+
+/* ============================= QUIZ COMPONENT ============================= */
+.quiz-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px;}
+.quiz-q{font-family:var(--disp);font-size:15.5px;margin:0 0 12px;}
+.quiz-opts{display:grid;gap:9px;}
+.quiz-opt{
+  text-align:left;background:var(--bg-soft);border:1px solid var(--line);
+  color:var(--ink);border-radius:10px;padding:10px 14px;cursor:pointer;font-size:13.6px;
+  transition:transform .15s, border-color .15s, background .15s;
+  position:relative;overflow:hidden;
+}
+.quiz-opt:hover:not(:disabled){border-color:var(--teal);transform:translateX(3px);}
+.quiz-opt:active:not(:disabled){transform:translateX(3px) scale(.98);}
+.quiz-opt.correct{background:rgba(61,220,132,.16);border-color:var(--good);}
+.quiz-opt.wrong{background:rgba(255,93,108,.14);border-color:var(--bad);}
+.quiz-feedback{margin-top:10px;font-size:13px;color:var(--muted);display:none;}
+.quiz-feedback.show{display:block;}
+.timer-bar-wrap{height:5px;background:var(--bg-soft);border-radius:4px;overflow:hidden;margin-bottom:12px;}
+.timer-bar{height:100%;background:linear-gradient(90deg,var(--good),var(--gold));width:100%;transform-origin:left;}
+
+/* ============================= GAMES HUB ============================= */
+.game-card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px;display:flex;flex-direction:column;gap:10px;cursor:pointer;
+  transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+  box-shadow:0 6px 18px rgba(0,0,0,.18);
+  position:relative;overflow:hidden;
+}
+.game-card:hover{transform:translateY(-4px);border-color:var(--gold);box-shadow:0 14px 30px rgba(0,0,0,.32);}
+.game-card:active{transform:translateY(-1px) scale(.98);}
+.game-card .ico{font-size:30px;}
+.game-card h4{margin:0;font-family:var(--disp);}
+.game-card p{margin:0;color:var(--muted);font-size:13px;}
+.game-card .reward{font-family:var(--mono);font-size:11.5px;color:var(--gold-soft);}
+
+/* memory game */
+#memory-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:640px;perspective:1000px;}
+@media (max-width:600px){ #memory-grid{grid-template-columns:repeat(3,1fr);} }
+.mem-card{
+  aspect-ratio:1/1;border-radius:12px;background:var(--card);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;
+  user-select:none;transition:transform .2s, border-color .2s, box-shadow .2s;position:relative;overflow:hidden;
+}
+.mem-card:not(.flipped):not(.matched):hover{transform:translateY(-2px);border-color:var(--teal);box-shadow:0 8px 18px rgba(0,0,0,.25);}
+.mem-card:not(.flipped):not(.matched):active{transform:translateY(0) scale(.95);}
+.mem-card .face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:12px;backface-visibility:hidden;transition:.3s;}
+.mem-card .back{background:linear-gradient(135deg,var(--card-hi),var(--card));font-size:20px;color:var(--muted);}
+.mem-card .front{background:var(--bg-soft);transform:rotateY(180deg);flex-direction:column;gap:2px;padding:4px;}
+.mem-card .front span.lbl{font-size:9.5px;font-family:var(--mono);color:var(--muted);text-align:center;}
+.mem-card.flipped .back{transform:rotateY(180deg);}
+.mem-card.flipped .front{transform:rotateY(0deg);}
+.mem-card.matched{border-color:var(--good);opacity:.55;}
+.mem-card{transform-style:preserve-3d;}
+
+/* classify game */
+.classify-pool{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.classify-chip{
+  font-family:var(--mono);font-size:12.5px;background:var(--card-hi);border:1px solid var(--line);
+  padding:7px 13px;border-radius:999px;cursor:pointer;transition:transform .15s, border-color .15s, background .15s;
+  position:relative;overflow:hidden;
+}
+.classify-chip:hover:not(.placed){border-color:var(--gold);transform:translateY(-2px);}
+.classify-chip:active:not(.placed){transform:translateY(0) scale(.95);}
+.classify-chip.selected{background:var(--gold);color:#12233b;font-weight:700;}
+.classify-chip.placed{opacity:.35;pointer-events:none;}
+.classify-zones{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media (max-width:600px){ .classify-zones{grid-template-columns:1fr;} }
+.zone-list{display:flex;flex-direction:column;gap:10px;}
+.zone{min-height:64px;border:2px dashed var(--line);border-left:4px solid var(--teal);border-radius:14px;padding:12px 14px;cursor:pointer;transition:background .2s, border-color .2s;}
+.zone:hover{background:var(--card);}
+.zone h4{margin:0 0 8px;font-size:13.5px;display:flex;align-items:center;gap:6px;}
+.zone.renovable{border-color:rgba(61,220,132,.4);}
+.zone.no-renovable{border-color:rgba(255,93,108,.4);}
+.zone-chip{
+  display:inline-block;font-family:var(--mono);font-size:12px;margin:3px;padding:5px 10px;border-radius:8px;
+}
+.zone-chip.ok{background:rgba(61,220,132,.18);color:var(--good);}
+.zone-chip.bad{background:rgba(255,93,108,.18);color:var(--bad);}
+
+/* badges */
+.badge-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+.badge-pill{
+  display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line);
+  padding:8px 14px;border-radius:999px;font-size:12.8px;opacity:.35;transition:.3s;
+}
+.badge-pill.earned{opacity:1;border-color:var(--gold);background:rgba(244,185,66,.1);}
+
+/* exit ticket */
+.exit-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+@media (max-width:760px){ .exit-grid{grid-template-columns:1fr;} }
+textarea.exit-input{
+  width:100%;min-height:70px;resize:vertical;background:var(--bg-soft);
+  border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:10px;font-family:var(--body);font-size:13px;
+}
+
+/* ============================= FOOTER NAV ============================= */
+#controls{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px clamp(14px,3vw,28px);
+  padding-bottom:max(10px, env(safe-area-inset-bottom));
+  padding-left:max(14px, env(safe-area-inset-left));
+  padding-right:max(14px, env(safe-area-inset-right));
+  border-top:1px solid var(--line);
+  background:rgba(10,23,40,.75);backdrop-filter:blur(6px);
+  flex-shrink:0;
+}
+.nav-btn{
+  width:44px;height:44px;border-radius:50%;border:1px solid var(--line);
+  background:var(--card);color:var(--ink);font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:.2s;
+  flex-shrink:0;position:relative;overflow:hidden;
+}
+.nav-btn:hover:not(:disabled){background:var(--card-hi);border-color:var(--gold);}
+.nav-btn:active:not(:disabled){transform:scale(.9);}
+.nav-btn:disabled{opacity:.3;cursor:not-allowed;}
+#slide-counter{font-family:var(--mono);font-size:12.5px;color:var(--muted);}
+
+@media (max-width:600px){
+  .slide{padding:14px 16px;}
+  .brand-text span{display:none;}
+  .pdf-btn-label{display:none;}
+  #pdf-btn{padding:8px 10px;}
+  .quiz-opt{padding:12px 14px;font-size:14px;}
+  .classify-chip{padding:9px 15px;font-size:13px;}
+  .zone{min-height:56px;padding:10px;}
+  .card{padding:14px 15px;}
+  .oa-box{padding:16px 16px;}
+  .question-box{padding:14px 16px;gap:10px;}
+  .cover-chips{gap:8px;}
+  .acc-head{flex-wrap:wrap;row-gap:6px;padding:12px 14px;}
+  .acc-head .lvl{flex-wrap:wrap;row-gap:4px;}
+  .tl-row{gap:10px;}
+  #xp-badge{font-size:12px;padding:6px 10px;}
+}
+@media (max-width:480px){
+  .tl-row{flex-direction:column;gap:3px;}
+  .tl-time{width:auto;padding-top:0;font-size:11.5px;}
+  .tl-body{border-left-width:3px;padding:10px 13px;}
+  .dot{width:9px;height:9px;}
+  .dot.active{width:24px;}
+  .exit-grid, .classify-zones{gap:10px;}
+  .badge-pill{font-size:11.5px;padding:7px 11px;}
+}
+/* ============================= HYDRO SIMULATOR ============================= */
+.hydro-sim{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;max-width:760px;margin:0 auto;}
+.hydro-visual{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:start;
+  background:linear-gradient(180deg,#0d1c30,#0a1626);
+  border-radius:14px;padding:24px 12px 18px;margin-bottom:22px;
+}
+.hydro-stage{display:flex;flex-direction:column;align-items:center;gap:12px;}
+.stage-visual{
+  width:100%;height:130px;
+  display:flex;align-items:flex-end;justify-content:center;
+}
+.stage-label{font-size:11px;color:var(--muted);text-align:center;line-height:1.4;min-height:28px;}
+.stage-label small{font-family:var(--mono);color:var(--teal);display:block;}
+
+.reservoir{
+  width:64px;height:110px;border:2px solid var(--line);border-top:none;border-radius:0 0 8px 8px;
+  position:relative;overflow:hidden;background:rgba(255,255,255,.02);flex-shrink:0;
+}
+.reservoir-water{
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(180deg,#2ed3bd,#1a7a6d);
+  transition:height .35s ease;
+  height:50%;
+}
+.reservoir-water::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:6px;
+  background:rgba(255,255,255,.25);
+}
+.reservoir-mark{position:absolute;top:0;left:0;right:0;bottom:0;border:1px solid rgba(255,255,255,.06);border-radius:0 0 8px 8px;pointer-events:none;}
+
+.waterfall{
+  width:14px;height:110px;position:relative;overflow:hidden;
+  background:linear-gradient(180deg,rgba(46,211,189,.15),rgba(46,211,189,.02));
+  border-radius:6px;flex-shrink:0;
+}
+.drop{
+  position:absolute;left:2px;width:10px;height:16px;border-radius:6px;
+  background:linear-gradient(180deg,#2ed3bd,#8ff2e4);
+  animation:dropfall 1s linear infinite;
+}
+.d1{animation-delay:0s;}
+.d2{animation-delay:.33s;}
+.d3{animation-delay:.66s;}
+@keyframes dropfall{
+  0%{transform:translateY(-20px);opacity:0;}
+  15%{opacity:1;}
+  100%{transform:translateY(120px);opacity:0;}
+}
+
+.turbine-wrap{
+  width:80px;height:80px;border-radius:50%;background:var(--bg-soft);
+  border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 6px rgba(244,185,66,.08);flex-shrink:0;
+}
+.turbine{font-size:34px;animation:spin 3s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.generator{
+  width:70px;height:70px;border-radius:16px;background:var(--bg-soft);
+  border:2px solid var(--ember);display:flex;align-items:center;justify-content:center;
+  font-size:30px;flex-shrink:0;
+}
+.generator.pulse{animation:genPulse .5s ease;}
+@keyframes genPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(255,138,92,.4);}
+  50%{box-shadow:0 0 0 10px rgba(255,138,92,0);}
+}
+
+.hydro-controls{display:flex;flex-direction:column;gap:16px;margin-bottom:18px;}
+.hydro-control label{font-family:var(--mono);font-size:12.5px;color:var(--ink);display:block;margin-bottom:6px;}
+.hydro-control input[type=range]{
+  width:100%;height:6px;border-radius:4px;appearance:none;-webkit-appearance:none;
+  background:linear-gradient(90deg,var(--teal),var(--gold));outline:none;cursor:pointer;
+}
+.hydro-control input[type=range]::-webkit-slider-thumb{
+  appearance:none;-webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+  background:#fff;border:3px solid var(--gold);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3);
+}
+.hydro-control input[type=range]::-moz-range-thumb{
+  width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--gold);cursor:pointer;
+}
+.hydro-readouts{margin-top:4px;}
+.hydro-readout{font-family:var(--mono);font-size:22px;color:var(--gold-soft);margin:0;}
+.hydro-feedback{
+  margin-top:14px;font-size:13.5px;color:var(--good);min-height:20px;opacity:0;transition:opacity .4s;
+}
+.hydro-feedback.show{opacity:1;}
+@media (max-width:700px){
+  .hydro-visual{grid-template-columns:repeat(2,1fr);row-gap:20px;}
+}
+
+/* ============================= PRINT / PDF EXPORT ============================= */
+#print-sheet{display:none;}
+@media print{
+  @page{ margin:16mm; }
+  html,body{height:auto;overflow:visible;background:#fff !important;}
+  #app{display:none !important;}
+  #print-sheet{
+    display:block !important;
+    background:#fff;color:#1a2230;
+    font-family:var(--body);
+    max-width:100%;
+  }
+  #print-sheet *{box-shadow:none !important;}
+  .p-header{border-bottom:3px solid #12233b;padding-bottom:10px;margin-bottom:14px;}
+  .p-header h1{font-family:var(--disp);font-size:22px;margin:0 0 4px;color:#12233b;}
+  .p-header .p-meta{font-size:11.5px;color:#4a5a72;display:flex;gap:18px;flex-wrap:wrap;margin-top:6px;}
+  .p-felipesos{
+    display:inline-block;margin-top:8px;font-family:var(--mono);font-weight:700;
+    background:#fdf1d6;border:1px solid #e8b93d;color:#8a5a00;
+    padding:5px 12px;border-radius:8px;font-size:12.5px;
+  }
+  .p-section{margin:16px 0;break-inside:avoid;}
+  .p-section h2{font-family:var(--disp);font-size:15px;color:#12233b;border-left:4px solid #f4b942;padding-left:8px;margin:0 0 8px;}
+  .p-section p, .p-section li{font-size:11.8px;line-height:1.55;color:#222;}
+  .p-oa{background:#f4f6f9;border:1px solid #d8e0ea;border-radius:8px;padding:10px 12px;font-size:11.8px;margin-bottom:8px;}
+  .p-bloom-lvl{margin-bottom:8px;}
+  .p-bloom-lvl b{font-family:var(--mono);font-size:11px;color:#8a5a00;}
+  .p-bloom-lvl.boss b{color:#6a3fb5;}
+  .p-qa{border:1px solid #dfe6ee;border-radius:8px;padding:8px 10px;margin-bottom:7px;break-inside:avoid;}
+  .p-qa .pq{font-weight:600;font-size:12px;margin:0 0 4px;}
+  .p-qa .pa{font-size:11.5px;color:#1a7a3d;margin:0;}
+  .p-qa .po{font-size:11px;color:#555;margin:0 0 4px;}
+  .p-table{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:6px;}
+  .p-table th,.p-table td{border:1px solid #d8e0ea;padding:5px 8px;text-align:left;}
+  .p-table th{background:#f4f6f9;}
+  .p-footer{margin-top:18px;padding-top:10px;border-top:1px solid #d8e0ea;font-size:10.5px;color:#6a7a90;}
+  .p-page-break{break-before:page;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header id="topbar">
+    <div class="brand">
+      <div class="brand-badge">☀️</div>
+      <div class="brand-text">
+        <b>Unidad 3 · Energía</b>
+        <span>Sesiones 3 y 4 · 6° Básico · Villa Alemana</span>
+      </div>
+    </div>
+    <div id="progress-dots"></div>
+    <div id="xp-wrap">
+      <button id="sound-btn" class="btn btn-ghost" title="Activar o silenciar sonidos">🔊</button>
+      <button id="pdf-btn" class="btn btn-ghost" title="Exportar guía compilada en PDF">📄 <span class="pdf-btn-label">Exportar PDF</span></button>
+      <div id="xp-badge">🪙 <span id="xp-count">0</span> Felipesos<span id="xp-toast">+10</span></div>
+    </div>
+  </header>
+
+  <main id="deck">
+    <!-- 1. COVER -->
+    <section class="slide" id="slide-cover" data-title="Portada">
+      <div class="slide-body" style="display:flex;align-items:center;">
+        <div class="cover-grid">
+          <div>
+            <span class="cover-kicker">🔬 Ciencias Naturales · 6° Básico</span>
+            <h1 class="cover-title">La energía se transforma<br>en el Valle del Aconcagua</h1>
+            <p class="cover-sub">Unidad 3: Energía — Sesiones 3 y 4. Investigamos experimentalmente cómo la energía cambia de una forma a otra, inspirados en la Central Chacabuquito.</p>
+            <div class="cover-chips">
+              <span class="chip">OA <b>9</b></span>
+              <span class="chip">Bloom <b>N1→N6</b></span>
+              <span class="chip">Prof. <b>Felipe Jiménez</b></span>
+              <span class="chip">📍 <b>Villa Alemana</b></span>
+            </div>
+            <p class="cover-hint">Avanza y retrocede con las flechas ← → o tocando los puntos de arriba.</p>
+          </div>
+          <div class="qr-box desktop-only">
+            <span class="qr-label">Ábrelo en tu celular</span>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=https%3A%2F%2Ffjimenez321-stack.github.io%2Fdondefelipe%2Ffisica%2Fenergia.html" alt="Código QR de acceso" loading="lazy">
+            <p>Escanea con la cámara de tu celular para seguir la clase y jugar desde tu propio dispositivo.</p>
+            <a href="https://fjimenez321-stack.github.io/dondefelipe/fisica/energia.html" target="_blank" rel="noopener">fjimenez321-stack.github.io/dondefelipe/fisica/energia.html</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1B. GANCHO EMOCIONANTE -->
+    <section class="slide" id="slide-gancho" data-title="Pregunta inicial">
+      <div class="slide-body" style="display:flex;align-items:center;justify-content:center;">
+        <div class="gancho-wrap">
+          <span class="cover-kicker" style="background:rgba(255,138,92,.14);border-color:rgba(255,138,92,.3);color:var(--ember);">⚡ El gran desafío de hoy</span>
+          <h2 class="gancho-title">¿Te atreverías a encender una ampolleta LED usando solo agua en movimiento?</h2>
+          <p class="gancho-sub">Eso es exactamente lo que hace, a gran escala, la Central Hidroeléctrica Chacabuquito con el agua del río Aconcagua. Hoy vamos a descubrir cómo funciona… y a construir nuestra propia versión en miniatura.</p>
+          <p class="gancho-question">¿Qué crees tú: se puede transformar el simple movimiento del agua en electricidad de verdad?</p>
+          <div class="gancho-opts" id="gancho-opts">
+            <button class="gancho-btn" data-r="si">💪 Sí, estoy seguro</button>
+            <button class="gancho-btn" data-r="creo">🤔 Creo que sí</button>
+            <button class="gancho-btn" data-r="no">😅 No tengo idea</button>
+          </div>
+          <p class="gancho-feedback" id="gancho-feedback"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. AGENDA -->
+
+    <section class="slide" id="slide-agenda" data-title="Agenda">
+      <p class="eyebrow">Cómo se organiza esta clase</p>
+      <h2 class="title">Dos sesiones, un mismo hilo conductor</h2>
+      <p class="subtitle">Sesión 3 desarrolla el contenido y el experimento (90 min). Sesión 4 refuerza, retroalimenta y conecta con la próxima clase (30 min).</p>
+      <div class="slide-body">
+        <div class="session-divider">Sesión 3 · Clase 3 · 90 minutos</div>
+        <div class="timeline">
+          <div class="tl-row"><div class="tl-time">0–10 min</div><div class="tl-body"><h4>⚡ Gancho + Activación</h4><p>El gran desafío: ¿se puede encender un LED solo con agua en movimiento? Predicciones del curso.</p></div></div>
+          <div class="tl-row"><div class="tl-time">10–28 min</div><div class="tl-body"><h4>📚 Desarrollo de contenido</h4><p>Las 5 transformaciones de energía del programa, con ejemplos cotidianos.</p></div></div>
+          <div class="tl-row"><div class="tl-time">28–45 min</div><div class="tl-body"><h4>📍 Contexto local</h4><p>Cómo el agua del río Aconcagua se transforma en electricidad en la Central Chacabuquito.</p></div></div>
+          <div class="tl-row"><div class="tl-time">45–78 min</div><div class="tl-body ember"><h4>🧪 Investigación experimental (OA a–f)</h4><p>Diseñan y realizan un experimento que demuestre una transformación de energía.</p></div></div>
+          <div class="tl-row"><div class="tl-time">78–90 min</div><div class="tl-body"><h4>🎟️ Cierre + Exit Ticket</h4><p>Síntesis y banco de preguntas Bloom N1–N6.</p></div></div>
+        </div>
+        <div class="session-divider">Sesión 4 · Clase 4 · 30 minutos</div>
+        <div class="timeline">
+          <div class="tl-row"><div class="tl-time">0–10 min</div><div class="tl-body"><h4>🎮 Retroalimentación gamificada</h4><p>Quiz relámpago con lo aprendido en la Clase 3.</p></div></div>
+          <div class="tl-row"><div class="tl-time">10–22 min</div><div class="tl-body"><h4>🔁 Refuerzo</h4><p>Repaso de las transformaciones de energía + Desafío Boss individual.</p></div></div>
+          <div class="tl-row"><div class="tl-time">22–30 min</div><div class="tl-body boss"><h4>🎟️ Exit Ticket + puente</h4><p>3-2-1 y conexión con el flujo de calor (OA10).</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. OBJETIVO -->
+
+    <section class="slide" id="slide-objetivo" data-title="Objetivo">
+      <p class="eyebrow">Objetivo de aprendizaje · OA9</p>
+      <h2 class="title">Investigando cómo se transforma la energía</h2>
+      <div class="slide-body">
+        <div class="oa-box">
+          <span class="tag">OA 9 — Eje: Ciencias Físicas y Químicas</span>
+          <p>Investigar en forma experimental la transformación de la energía de una forma a otra, dando ejemplos y comunicando sus conclusiones.</p>
+          <div class="skills-row">
+            <span class="skill-pill">OA a · Predicción e investigación</span>
+            <span class="skill-pill">OA b · Identificar variables</span>
+            <span class="skill-pill">OA c · Medir y registrar datos</span>
+            <span class="skill-pill">OA d · Uso seguro de materiales</span>
+            <span class="skill-pill">OA e · Formular conclusiones</span>
+            <span class="skill-pill">OA f · Comunicar resultados</span>
+          </div>
+        </div>
+        <div class="question-box">
+          <span class="qmark">💭</span>
+          <p>Pregunta de inicio: si el agua del río Aconcagua se mueve todo el día, ¿cómo logra una central convertir ese movimiento en la electricidad que llega a tu casa?</p>
+        </div>
+        <div class="card-grid g3" style="margin-top:16px;">
+          <div class="card"><span class="ico">🎯</span><h4>Meta de la clase</h4><p>Diseñar y realizar un experimento propio que demuestre una transformación de energía.</p></div>
+          <div class="card"><span class="ico">🧠</span><h4>Lo que ya sabes</h4><p>El Sol como fuente de energía y las formas de energía: lumínica, calórica, eléctrica, cinética.</p></div>
+          <div class="card"><span class="ico">🏆</span><h4>Actitudes a desarrollar</h4><p>Espíritu investigador, además de rigor y seguridad al manipular materiales e instrumentos.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. CONTENIDO -->
+
+    <section class="slide" id="slide-contenido" data-title="Contenido">
+      <p class="eyebrow">Desarrollo · Transformaciones de energía</p>
+      <h2 class="title">La energía cambia de forma</h2>
+      <div class="slide-body">
+        <div class="card-grid g4">
+          <div class="card"><span class="ico">🔍🔥</span><h4>Luminosa → Calórica</h4><p>Una lupa concentrando el sol calienta un papel.</p></div>
+          <div class="card"><span class="ico">🚲⚡</span><h4>Mecánica → Eléctrica</h4><p>La dinamo de una bicicleta o la turbina de Chacabuquito.</p></div>
+          <div class="card"><span class="ico">🔌🌀</span><h4>Eléctrica → Mecánica</h4><p>El motor de un ventilador o una licuadora.</p></div>
+          <div class="card"><span class="ico">🔌🔥</span><h4>Eléctrica → Calórica</h4><p>Una plancha de ropa o una estufa eléctrica.</p></div>
+        </div>
+        <div class="oa-box" style="margin-top:16px;">
+          <span class="tag">Idea clave</span>
+          <p>Estas 4 transformaciones, más la <b>luminosa → eléctrica</b> de los paneles solares que vimos en la Sesión 1, son las 5 transformaciones que investigaremos con experimentos propios.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. CONTEXTO LOCAL / SIGNATURE FLOW -->
+
+    <section class="slide" id="slide-contexto" data-title="Contexto local">
+      <p class="eyebrow">Anclaje territorial</p>
+      <h2 class="title">Del agua del Aconcagua a la luz de tu casa</h2>
+      <div class="slide-body">
+        <div class="flow-wrap flow-desktop">
+          <svg class="flow-svg" viewBox="0 0 900 190" xmlns="http://www.w3.org/2000/svg">
+            <path d="M80,95 H820" stroke="#24476b" stroke-width="3" fill="none"/>
+            <path class="flow-dash" d="M80,95 H820" stroke="#f4b942" stroke-width="3" fill="none"/>
+            <g>
+              <circle cx="80" cy="95" r="34" fill="#1a3a5e" stroke="#2ed3bd" stroke-width="2"/>
+              <text x="80" y="102" text-anchor="middle" font-size="26">🌊</text>
+              <text x="80" y="145" text-anchor="middle" class="flow-node-title">Río Aconcagua</text>
+              <text x="80" y="160" text-anchor="middle" class="flow-node-label">energía mecánica</text>
+            </g>
+            <g>
+              <circle cx="300" cy="95" r="34" fill="#1a3a5e" stroke="#2ed3bd" stroke-width="2"/>
+              <text x="300" y="102" text-anchor="middle" font-size="26">🏭</text>
+              <text x="300" y="145" text-anchor="middle" class="flow-node-title">C. Chacabuquito</text>
+              <text x="300" y="160" text-anchor="middle" class="flow-node-label">la turbina gira</text>
+            </g>
+            <g>
+              <circle cx="520" cy="95" r="34" fill="#1a3a5e" stroke="#f4b942" stroke-width="2"/>
+              <text x="520" y="102" text-anchor="middle" font-size="26">⚡</text>
+              <text x="520" y="145" text-anchor="middle" class="flow-node-title">Energía eléctrica</text>
+              <text x="520" y="160" text-anchor="middle" class="flow-node-label">se genera</text>
+            </g>
+            <g>
+              <circle cx="740" cy="95" r="34" fill="#1a3a5e" stroke="#ff8a5c" stroke-width="2"/>
+              <text x="740" y="102" text-anchor="middle" font-size="26">🏠</text>
+              <text x="740" y="145" text-anchor="middle" class="flow-node-title">Villa Alemana</text>
+              <text x="740" y="160" text-anchor="middle" class="flow-node-label">llega a los hogares</text>
+            </g>
+          </svg>
+        </div>
+        <div class="flow-mobile">
+          <div class="fm-node"><span class="fm-ico" style="border-color:var(--teal);">🌊</span><div><h4>Río Aconcagua</h4><span>energía mecánica</span></div></div>
+          <div class="fm-arrow">↓</div>
+          <div class="fm-node"><span class="fm-ico" style="border-color:var(--teal);">🏭</span><div><h4>C. Chacabuquito</h4><span>la turbina gira</span></div></div>
+          <div class="fm-arrow">↓</div>
+          <div class="fm-node"><span class="fm-ico" style="border-color:var(--gold);">⚡</span><div><h4>Energía eléctrica</h4><span>se genera</span></div></div>
+          <div class="fm-arrow">↓</div>
+          <div class="fm-node"><span class="fm-ico" style="border-color:var(--ember);">🏠</span><div><h4>Villa Alemana</h4><span>llega a los hogares</span></div></div>
+        </div>
+        <div class="card-grid g3">
+          <div class="card"><span class="ico">🏭</span><h4>Central Chacabuquito</h4><p>Es una central de paso: el agua del río Aconcagua hace girar una turbina que transforma energía mecánica en eléctrica, sin necesitar una gran represa.</p></div>
+          <div class="card"><span class="ico">🏔️</span><h4>Glaciar Juncal</h4><p>Alimenta con su deshielo el caudal del río que llega hasta la central, dándole a esa agua la energía mecánica que se transformará en electricidad.</p></div>
+          <div class="card"><span class="ico">⛏️</span><h4>Mina El Soldado</h4><p>Allí, la energía eléctrica se transforma de vuelta en mecánica: motores y maquinaria pesada funcionan gracias a esa electricidad.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5B. SIMULADOR HIDROELÉCTRICA -->
+    <section class="slide" id="slide-simulador" data-title="Simulador">
+      <p class="eyebrow">Simulador interactivo</p>
+      <h2 class="title">🎮 Construye tu propia central hidroeléctrica</h2>
+      <p class="subtitle">Mueve los controles y observa cómo cambian la velocidad de caída del agua y la energía generada.</p>
+      <div class="slide-body">
+        <div class="hydro-sim">
+          <div class="hydro-visual">
+            <div class="hydro-stage">
+              <div class="stage-visual">
+                <div class="reservoir">
+                  <div class="reservoir-water" id="reservoir-water"></div>
+                  <div class="reservoir-mark"></div>
+                </div>
+              </div>
+              <span class="stage-label">💧 Embalse<br><small>Energía potencial</small></span>
+            </div>
+            <div class="hydro-stage">
+              <div class="stage-visual">
+                <div class="waterfall" id="waterfall">
+                  <span class="drop d1"></span><span class="drop d2"></span><span class="drop d3"></span>
+                </div>
+              </div>
+              <span class="stage-label">⬇️ Caída<br><small>Energía cinética</small></span>
+            </div>
+            <div class="hydro-stage">
+              <div class="stage-visual">
+                <div class="turbine-wrap">
+                  <div class="turbine" id="turbine">⚙️</div>
+                </div>
+              </div>
+              <span class="stage-label">🌀 Turbina<br><small>Energía mecánica</small></span>
+            </div>
+            <div class="hydro-stage">
+              <div class="stage-visual">
+                <div class="generator" id="generator">⚡</div>
+              </div>
+              <span class="stage-label">🏭 Generador<br><small>Energía eléctrica</small></span>
+            </div>
+          </div>
+
+          <div class="hydro-controls">
+            <div class="hydro-control">
+              <label>💧 Altura del embalse: <b id="height-val">30</b> m</label>
+              <input type="range" id="height-slider" min="5" max="60" value="30" step="1">
+            </div>
+            <div class="hydro-control">
+              <label>🌊 Caudal (cantidad de agua): <b id="flow-val">5</b> m³/s</label>
+              <input type="range" id="flow-slider" min="1" max="10" value="5" step="1">
+            </div>
+          </div>
+
+          <div class="card-grid g3 hydro-readouts">
+            <div class="card"><span class="ico">🏃</span><h4>Velocidad de caída</h4><p class="hydro-readout" id="velocity-out">—</p></div>
+            <div class="card"><span class="ico">⚡</span><h4>Energía generada</h4><p class="hydro-readout" id="power-out">—</p></div>
+            <div class="card"><span class="ico">🏆</span><h4>Meta del desafío</h4><p style="color:var(--muted);font-size:13px;">Llega a <b style="color:var(--gold-soft);">1.000 kW</b> moviendo los controles</p></div>
+          </div>
+          <p class="hydro-feedback" id="hydro-feedback"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. ACTIVIDAD INVESTIGACION -->
+
+    <section class="slide" id="slide-actividad" data-title="Investigación">
+      <p class="eyebrow">Actividad STEAM · Investigación experimental</p>
+      <h2 class="title">Diseñen su propio experimento</h2>
+      <div class="slide-body">
+        <div class="oa-box">
+          <span class="tag">OA a, OA b, OA c, OA d, OA e, OA f</span>
+          <p>En grupos, seleccionan una transformación de energía, diseñan un experimento sencillo para demostrarla —inspirados en el aprovechamiento del río Aconcagua para generar electricidad— y comunican sus conclusiones al curso mediante un informe y una demostración.</p>
+        </div>
+        <div class="card-grid g2">
+          <div class="card">
+            <span class="ico">✅</span><h4>Una buena predicción...</h4>
+            <ul>
+              <li>Se basa en lo que ya sabemos, no en adivinar al azar.</li>
+              <li>Explica el "por qué" esperado, no solo el "qué".</li>
+              <li>Identifica qué variable se cambia y cuál se mide.</li>
+              <li>Se puede comprobar con el experimento diseñado.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="ico">⚖️</span><h4>Débil vs. fuerte</h4>
+            <p><b style="color:var(--bad);">Débil:</b> "Algo va a pasar con el agua."</p>
+            <p><b style="color:var(--good);">Fuerte:</b> "Si hacemos girar la rueda con más fuerza de agua, el LED brillará más, porque habrá más energía mecánica para transformar en eléctrica."</p>
+          </div>
+        </div>
+        <p class="eyebrow" style="margin-top:18px;">Elige un experimento para tu grupo</p>
+        <div class="card-grid g3">
+          <div class="card"><span class="ico">🌊</span><h4>Rueda hidráulica casera</h4><p>Conectan una rueda de agua a una dinamo o LED, inspirados en la Central Chacabuquito (mecánica → eléctrica).</p></div>
+          <div class="card"><span class="ico">🌀</span><h4>Motor y ventilador</h4><p>Arman un circuito simple con un motor pequeño y observan cómo la electricidad se transforma en movimiento (eléctrica → mecánica).</p></div>
+          <div class="card"><span class="ico">🔍</span><h4>Lupa y calor</h4><p>Usan una lupa para concentrar la luz solar sobre un papel oscuro y miden el aumento de temperatura (luminosa → calórica).</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. BANCO BLOOM -->
+
+    <section class="slide" id="slide-bloom" data-title="Banco de preguntas">
+      <p class="eyebrow">Banco de preguntas · Taxonomía de Bloom</p>
+      <h2 class="title">De Recordar a Crear: sube de nivel</h2>
+      <p class="subtitle">Toca cada nivel para ver sus preguntas. Los niveles 5 y 6 son <b style="color:var(--boss);">Desafío Boss</b>.</p>
+      <div class="slide-body" id="bloom-accordion"></div>
+    </section>
+
+    <!-- 8. EXIT CLASE 1 -->
+    <section class="slide" id="slide-exit1" data-title="Exit Ticket 1">
+      <p class="eyebrow">Cierre · Sesión 3</p>
+      <h2 class="title">Antes de irnos... 🎟️</h2>
+      <div class="slide-body">
+        <div class="exit-grid">
+          <div class="card"><h4>1. Una idea nueva</h4><textarea class="exit-input" placeholder="Escribe algo que aprendiste hoy..."></textarea></div>
+          <div class="card"><h4>2. Una duda</h4><textarea class="exit-input" placeholder="¿Qué te gustaría entender mejor?"></textarea></div>
+          <div class="card"><h4>3. Una conexión local</h4><textarea class="exit-input" placeholder="¿Dónde ves esto en Villa Alemana?"></textarea></div>
+        </div>
+        <div class="oa-box" style="margin-top:16px;">
+          <span class="tag">Para la próxima sesión</span>
+          <p>En la Sesión 4 revisaremos lo aprendido con un juego relámpago y prepararemos el salto al flujo de calor (OA10).</p>
+        </div>
+        <button class="btn btn-primary" id="btn-complete-exit1" style="margin-top:10px;">Marcar cierre completado 🪙 +10 Felipesos</button>
+      </div>
+    </section>
+
+    <!-- 9. RETRO CLASE 2 -->
+    <section class="slide" id="slide-retro" data-title="Retroalimentación">
+      <p class="eyebrow">Sesión 4 · Clase 4 (30 min)</p>
+      <h2 class="title">🎮 Retroalimentación gamificada</h2>
+      <p class="subtitle">Responde para repasar lo visto en la Sesión 3. Cada acierto suma Felipesos.</p>
+      <div class="slide-body" id="retro-quiz-container"></div>
+    </section>
+
+    <!-- 10. REFUERZO -->
+    <section class="slide" id="slide-refuerzo" data-title="Refuerzo">
+      <p class="eyebrow">Refuerzo</p>
+      <h2 class="title">Las transformaciones de energía, otra vez</h2>
+      <div class="slide-body">
+        <div class="oa-box">
+          <span class="tag">Recapitulando</span>
+          <p>El agua del río Aconcagua (energía mecánica) hace girar la turbina de la Central Chacabuquito, que la transforma en energía eléctrica. Esa misma electricidad puede volver a transformarse en calor, luz o movimiento en nuestros aparatos cotidianos.</p>
+        </div>
+        <div class="card-grid g2">
+          <div class="card boss" style="border-color:rgba(185,139,255,.4);">
+            <span class="ico">👑</span><h4 style="color:var(--boss);">Desafío Boss (individual)</h4>
+            <p>Evalúa la eficiencia de la transformación energética de tu experimento (por ejemplo, cuánta energía mecánica del agua se disipa como calor) y fundamenta tu análisis con los datos que registraste.</p>
+          </div>
+          <div class="card">
+            <span class="ico">✅</span><h4>Repaso rápido</h4>
+            <ul>
+              <li>Mecánica → eléctrica: dinamo, Central Chacabuquito.</li>
+              <li>Eléctrica → mecánica: motores, ventiladores.</li>
+              <li>Luminosa → calórica: lupa concentrando el sol.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. EXIT CLASE 2 -->
+
+    <section class="slide" id="slide-exit2" data-title="Exit Ticket 2">
+      <p class="eyebrow">Cierre · Sesión 4</p>
+      <h2 class="title">3-2-1 y puente a la próxima clase</h2>
+      <div class="slide-body">
+        <div class="card-grid g3">
+          <div class="card"><h4>3 cosas que aprendiste</h4><textarea class="exit-input" placeholder="1. ...&#10;2. ...&#10;3. ..."></textarea></div>
+          <div class="card"><h4>2 preguntas que tienes</h4><textarea class="exit-input" placeholder="1. ...&#10;2. ..."></textarea></div>
+          <div class="card"><h4>1 conexión con tu vida</h4><textarea class="exit-input" placeholder="..."></textarea></div>
+        </div>
+        <button class="btn btn-primary" id="btn-complete-exit2" style="margin-top:14px;">Marcar cierre completado 🪙 +10 Felipesos</button>
+      </div>
+    </section>
+
+    <!-- 12. JUEGOS HUB -->
+    <section class="slide" id="slide-juegos" data-title="Juegos">
+      <p class="eyebrow">Zona de juegos</p>
+      <h2 class="title">🎮 Pon a prueba lo que aprendiste</h2>
+      <p class="subtitle">Elige un juego. Cada uno entrega Felipesos y una insignia al completarlo.</p>
+      <div class="slide-body">
+        <div class="card-grid g3">
+          <div class="game-card" data-goto="slide-memorama"><span class="ico">🧠</span><h4>Memorama energético</h4><p>Encuentra los pares entre aparatos y su transformación de energía.</p><span class="reward">Insignia: Memoria de Energía</span></div>
+          <div class="game-card" data-goto="slide-relampago"><span class="ico">⚡</span><h4>Quiz relámpago</h4><p>6 preguntas contra el reloj sobre las Sesiones 3 y 4.</p><span class="reward">Insignia: Rayo Veloz</span></div>
+          <div class="game-card" data-goto="slide-clasifica"><span class="ico">🔀</span><h4>Clasifica y gana</h4><p>Ordena ejemplos cotidianos según su transformación de energía.</p><span class="reward">Insignia: Clasificador Experto</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13. MEMORAMA -->
+    <section class="slide" id="slide-memorama" data-title="Memorama">
+      <p class="eyebrow">Juego 1 · Memorama</p>
+      <h2 class="title">🧠 Encuentra los pares</h2>
+      <p class="subtitle">Toca dos cartas para revelarlas. Empareja cada aparato con su transformación de energía.</p>
+      <div class="slide-body">
+        <div id="memory-grid"></div>
+        <p style="font-family:var(--mono);font-size:13px;color:var(--muted);margin-top:12px;" id="memory-status">Pares encontrados: 0 / 6</p>
+      </div>
+    </section>
+
+    <!-- 14. RELAMPAGO -->
+    <section class="slide" id="slide-relampago" data-title="Quiz relámpago">
+      <p class="eyebrow">Juego 2 · Quiz relámpago</p>
+      <h2 class="title">⚡ Responde antes que se acabe el tiempo</h2>
+      <div class="slide-body" id="lightning-container"></div>
+    </section>
+
+    <!-- 15. CLASIFICA -->
+    <section class="slide" id="slide-clasifica" data-title="Clasifica y gana">
+      <p class="eyebrow">Juego 3 · Clasifica y gana</p>
+      <h2 class="title">🔀 ¿Qué transformación es?</h2>
+      <p class="subtitle">Toca un ejemplo y luego toca la transformación de energía a la que corresponde.</p>
+      <div class="slide-body">
+        <div class="classify-pool" id="classify-pool"></div>
+        <div class="zone-list" id="classify-zones-container"></div>
+        <p style="font-family:var(--mono);font-size:13px;color:var(--muted);margin-top:12px;" id="classify-status">Clasificados: 0 / 10</p>
+      </div>
+    </section>
+
+
+    <!-- 16. CIERRE -->
+    <section class="slide" id="slide-cierre" data-title="Cierre">
+      <p class="eyebrow">Cierre general</p>
+      <h2 class="title">🏆 ¡Buen trabajo, científicos del Valle!</h2>
+      <div class="slide-body">
+        <div class="oa-box">
+          <p>Hoy investigamos experimentalmente cómo la energía se transforma de una forma a otra, inspirados en cómo el agua del río Aconcagua se convierte en electricidad en la Central Chacabuquito.</p>
+        </div>
+        <p class="eyebrow">Tus insignias</p>
+        <div class="badge-row" id="badge-row"></div>
+        <div class="card-grid g2" style="margin-top:18px;">
+          <div class="card"><span class="ico">⚡</span><h4>Felipesos ganados</h4><p style="font-family:var(--mono);font-size:22px;color:var(--gold-soft);" id="final-xp">0 Felipesos</p></div>
+          <div class="card"><span class="ico">🔭</span><h4>Próxima clase</h4><p>OA10 — Demostrar, mediante investigación experimental, que el calor fluye de un objeto caliente a uno frío hasta igualar su temperatura.</p></div>
+        </div>
+        <button class="btn btn-primary" id="btn-pdf-cierre" style="margin-top:18px;">📄 Descargar guía compilada en PDF</button>
+      </div>
+    </section>
+
+  </main>
+
+
+  <nav id="controls">
+    <button class="nav-btn" id="btn-prev" aria-label="Anterior">←</button>
+    <span id="slide-counter">1 / 18</span>
+    <button class="nav-btn" id="btn-next" aria-label="Siguiente">→</button>
+  </nav>
+</div>
+
+<!-- Printable compiled guide, populated by JS just before export. Hidden on screen, shown only when printing. -->
+<div id="print-sheet"></div>
+
+<script>
+/* ===================== DATA ===================== */
+const bloomData = [
+  { lvl:'N1', label:'Recordar', boss:false, items:[
+    'Identifica tipos de transformación de energía: luminosa a calórica, mecánica a eléctrica, eléctrica a mecánica, eléctrica a calórica y luminosa a eléctrica.',
+    'Reconoce ejemplos de transformación de energía en aparatos de uso cotidiano del hogar y la escuela.'
+  ]},
+  { lvl:'N2', label:'Comprender', boss:false, items:[
+    'Explica cómo la energía mecánica del agua del río Aconcagua se transforma en energía eléctrica en una central hidroeléctrica de paso, como Chacabuquito.',
+    'Describe, con sus propias palabras, la transformación de energía que ocurre en un aparato eléctrico seleccionado por el grupo.'
+  ]},
+  { lvl:'N3', label:'Aplicar', boss:false, items:[
+    'Formula una pregunta de investigación y una predicción fundamentada (OA a) sobre una transformación de energía a experimentar.',
+    'Planifica y conduce un experimento sencillo (OA b, OA c, OA d) que demuestre una transformación de energía, midiendo y registrando datos de forma segura.'
+  ]},
+  { lvl:'N4', label:'Analizar', boss:false, items:[
+    'Analiza los datos obtenidos e identifica patrones que evidencien la transformación de energía estudiada (OA e).',
+    'Compara las transformaciones de energía investigadas por los distintos grupos del curso, estableciendo semejanzas y diferencias.'
+  ]},
+  { lvl:'N5', label:'Evaluar', boss:true, items:[
+    'Evalúa la eficiencia de la transformación energética estudiada (por ejemplo, cuánta energía mecánica del agua se disipa como calor en una turbina), fundamentando su análisis en los datos recogidos.',
+    'Emite un juicio fundamentado sobre las ventajas de aprovechar el caudal del río Aconcagua para transformar energía mecánica en eléctrica en la zona.'
+  ]},
+  { lvl:'N6', label:'Crear', boss:true, items:[
+    'Diseña y construye un dispositivo simple (turbina de agua casera o circuito con dinamo) que demuestre una transformación de energía, comunicando sus conclusiones (OA f).',
+    'Crea un modelo o maqueta que represente el funcionamiento de una central hidroeléctrica de paso inspirada en el río Aconcagua.'
+  ]}
+];
+
+const retroQuestions = [
+  { q:'¿Qué transformación de energía ocurre en la Central Chacabuquito?', opts:['Calórica a eléctrica','Mecánica a eléctrica','Eléctrica a luminosa','Química a mecánica'], correct:1 },
+  { q:'Cuando enciendes una estufa eléctrica, ¿qué transformación de energía ocurre?', opts:['Eléctrica a calórica','Calórica a mecánica','Luminosa a química','Mecánica a luminosa'], correct:0 },
+  { q:'Verdadero o falso: un panel solar transforma energía eléctrica en luminosa.', opts:['Verdadero','Falso'], correct:1 },
+  { q:'Antes de experimentar, ¿qué parte de la investigación te permite anticipar qué pasará?', opts:['El informe final','La predicción','El título','La conclusión'], correct:1 },
+  { q:'¿Por qué es importante medir y registrar datos con instrumentos durante un experimento?', opts:['Para decorar la bitácora','Para tener resultados precisos y comparables','Porque lo pide el profesor','No es realmente importante'], correct:1 }
+];
+
+const lightningQuestions = [
+  { q:'La transformación de energía en el motor de una licuadora es:', opts:['Eléctrica a mecánica','Mecánica a eléctrica','Calórica a luminosa','Luminosa a calórica'], correct:0 },
+  { q:'La dinamo de una bicicleta transforma energía:', opts:['Eléctrica a mecánica','Mecánica a eléctrica','Química a calórica','Luminosa a eléctrica'], correct:1 },
+  { q:'Antes de experimentar, ¿qué debes formular junto a tu pregunta de investigación?', opts:['Una predicción fundamentada','Un dibujo cualquiera','Solo el título','Nada más'], correct:0 },
+  { q:'Para que un experimento sea justo, ¿qué debes identificar con claridad?', opts:['El clima del día','Las variables que se mantienen y las que cambian','El color de los materiales','El nombre del grupo'], correct:1 },
+  { q:'Un panel solar transforma energía:', opts:['Luminosa a eléctrica','Eléctrica a luminosa','Calórica a mecánica','Mecánica a calórica'], correct:0 },
+  { q:'¿Qué río mueve la turbina de la Central Chacabuquito?', opts:['Río Maipo','Río Aconcagua','Río Mapocho','Río Bío-Bío'], correct:1 }
+];
+
+const memoryPairs = [
+  { id:'dinamo', icon:'🚲', label:'Dinamo de bicicleta' },
+  { id:'central', icon:'🏭', label:'C. Chacabuquito' },
+  { id:'estufa', icon:'🔥', label:'Estufa eléctrica' },
+  { id:'motor', icon:'🌀', label:'Motor de ventilador' },
+  { id:'lupa', icon:'🔍', label:'Lupa al sol' },
+  { id:'panel', icon:'☀️', label:'Panel solar' }
+];
+
+const classifyZones = [
+  { id:'lum-cal', label:'🔍→🔥 Luminosa → Calórica' },
+  { id:'mec-ele', label:'🚲→⚡ Mecánica → Eléctrica' },
+  { id:'ele-mec', label:'⚡→🌀 Eléctrica → Mecánica' },
+  { id:'ele-cal', label:'⚡→🔥 Eléctrica → Calórica' },
+  { id:'lum-ele', label:'☀️→⚡ Luminosa → Eléctrica' }
+];
+const classifyItems = [
+  { name:'Invernadero de vidrio bajo el sol', zone:'lum-cal' },
+  { name:'Lupa concentrando los rayos solares', zone:'lum-cal' },
+  { name:'Dinamo de una bicicleta', zone:'mec-ele' },
+  { name:'Turbina de la Central Chacabuquito', zone:'mec-ele' },
+  { name:'Motor de una licuadora', zone:'ele-mec' },
+  { name:'Ventilador eléctrico', zone:'ele-mec' },
+  { name:'Plancha de ropa', zone:'ele-cal' },
+  { name:'Estufa eléctrica', zone:'ele-cal' },
+  { name:'Panel solar fotovoltaico', zone:'lum-ele' },
+  { name:'Calculadora solar', zone:'lum-ele' }
+];
+
+const badgeDefs = [
+  { id:'exit1', label:'🎟️ Cierre Sesión 3' },
+  { id:'exit2', label:'🎟️ Cierre Sesión 4' },
+  { id:'hidro', label:'💧 Ingeniero Hidroeléctrico' },
+  { id:'memorama', label:'🧠 Memoria de Energía' },
+  { id:'relampago', label:'⚡ Rayo Veloz' },
+  { id:'clasifica', label:'🔀 Clasificador Experto' }
+];
+
+/* ===================== STATE ===================== */
+const state = { xp:0, badges:new Set(), current:0 };
+const slideEls = Array.from(document.querySelectorAll('#deck .slide'));
+const slideIds = slideEls.map(s=>s.id);
+
+/* ===================== SOUND EFFECTS (synthesized, no external files) ===================== */
+let soundEnabled = true;
+const AudioFX = (function(){
+  let ctx = null;
+  function getCtx(){
+    if(!ctx){ ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+    if(ctx.state === 'suspended'){ ctx.resume(); }
+    return ctx;
+  }
+  function tone(freq, startOffset, dur, type, gainPeak){
+    const ac = getCtx();
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    osc.type = type || 'sine';
+    const t0 = ac.currentTime + startOffset;
+    osc.frequency.setValueAtTime(freq, t0);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.linearRampToValueAtTime(gainPeak, t0 + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(gain); gain.connect(ac.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.02);
+  }
+  return {
+    premio(){ if(!soundEnabled) return; tone(523.25,0,.13,'sine',.16); tone(659.25,.09,.13,'sine',.16); tone(783.99,.18,.24,'sine',.18); },
+    castigo(){ if(!soundEnabled) return; tone(220,0,.16,'sawtooth',.12); tone(164,.1,.24,'sawtooth',.12); },
+    slide(){ if(!soundEnabled) return; tone(520,0,.06,'sine',.05); },
+    pregunta(){ if(!soundEnabled) return; tone(659,0,.08,'triangle',.09); tone(880,.07,.11,'triangle',.08); }
+  };
+})();
+document.getElementById('sound-btn').addEventListener('click', (e)=>{
+  soundEnabled = !soundEnabled;
+  e.target.textContent = soundEnabled ? '🔊' : '🔇';
+});
+
+/* ===================== XP / BADGES ===================== */
+function addXP(n){
+  state.xp += n;
+  document.getElementById('xp-count').textContent = state.xp;
+  const toast = document.getElementById('xp-toast');
+  toast.textContent = '+' + n;
+  toast.classList.remove('show'); void toast.offsetWidth; toast.classList.add('show');
+  const badge = document.getElementById('xp-badge');
+  badge.classList.remove('bump'); void badge.offsetWidth; badge.classList.add('bump');
+  AudioFX.premio();
+}
+function earnBadge(id){
+  if(state.badges.has(id)) return;
+  state.badges.add(id);
+  renderBadges();
+}
+function renderBadges(){
+  const row = document.getElementById('badge-row');
+  if(!row) return;
+  row.innerHTML = badgeDefs.map(b=>
+    `<span class="badge-pill ${state.badges.has(b.id)?'earned':''}">${b.label}</span>`
+  ).join('');
+  const finalXp = document.getElementById('final-xp');
+  if(finalXp) finalXp.textContent = state.xp + ' Felipesos';
+}
+
+/* ===================== NAVIGATION ===================== */
+function buildDots(){
+  const wrap = document.getElementById('progress-dots');
+  const sectionStarts = new Set(['slide-cover','slide-retro','slide-juegos']);
+  wrap.innerHTML = slideIds.map((id,i)=>
+    `<span class="dot ${sectionStarts.has(id)?'section-start':''}" data-idx="${i}" title="${slideEls[i].dataset.title||''}"></span>`
+  ).join('');
+  wrap.querySelectorAll('.dot').forEach(d=>{
+    d.addEventListener('click', ()=>goTo(parseInt(d.dataset.idx,10)));
+  });
+}
+function goTo(idx){
+  if(idx<0 || idx>=slideEls.length) return;
+  const questionSlides = ['slide-gancho','slide-objetivo','slide-retro','slide-relampago'];
+  slideEls[state.current].classList.remove('active');
+  state.current = idx;
+  slideEls[idx].classList.add('active');
+  document.getElementById('slide-counter').textContent = (idx+1)+' / '+slideEls.length;
+  document.getElementById('btn-prev').disabled = idx===0;
+  document.getElementById('btn-next').disabled = idx===slideEls.length-1;
+  document.querySelectorAll('#progress-dots .dot').forEach((d,i)=>{
+    d.classList.toggle('active', i===idx);
+    d.classList.toggle('done', i<idx);
+  });
+  slideEls[idx].querySelector('.slide-body')?.scrollTo(0,0);
+  if(questionSlides.includes(slideIds[idx])){ AudioFX.pregunta(); } else { AudioFX.slide(); }
+}
+document.getElementById('btn-prev').addEventListener('click', ()=>goTo(state.current-1));
+document.getElementById('btn-next').addEventListener('click', ()=>goTo(state.current+1));
+// Navigation is intentionally limited to the ← → buttons and the progress bubbles below.
+// Keyboard arrow keys and touch-swipe are disabled so that scrolling through card content,
+// sliders, or quiz options can never accidentally change the slide.
+document.querySelectorAll('.game-card[data-goto]').forEach(card=>{
+  card.addEventListener('click', ()=> goTo(slideIds.indexOf(card.dataset.goto)));
+});
+
+/* ===================== BLOOM ACCORDION ===================== */
+function renderBloom(){
+  const wrap = document.getElementById('bloom-accordion');
+  wrap.innerHTML = bloomData.map((lvl,i)=>`
+    <div class="acc-item ${lvl.boss?'boss':''}" data-idx="${i}">
+      <div class="acc-head">
+        <div class="lvl">
+          <span class="acc-num">${lvl.lvl}</span>
+          <h4>${lvl.label}</h4>
+          ${lvl.boss?'<span class="boss-tag">👑 Desafío Boss</span>':''}
+        </div>
+        <span class="acc-chevron">▾</span>
+      </div>
+      <div class="acc-panel"><div class="acc-panel-inner"><ul>
+        ${lvl.items.map(it=>`<li>${it}</li>`).join('')}
+      </ul></div></div>
+    </div>
+  `).join('');
+  wrap.querySelectorAll('.acc-item').forEach(item=>{
+    item.querySelector('.acc-head').addEventListener('click', ()=>{
+      const wasOpen = item.classList.contains('open');
+      wrap.querySelectorAll('.acc-item').forEach(x=>x.classList.remove('open'));
+      if(!wasOpen) item.classList.add('open');
+    });
+  });
+}
+
+/* ===================== GENERIC QUIZ RENDERER ===================== */
+function renderQuiz(containerId, questions, opts){
+  opts = opts || {};
+  const container = document.getElementById(containerId);
+  container.innerHTML = questions.map((q,qi)=>`
+    <div class="quiz-card" data-qi="${qi}">
+      ${opts.timed?'<div class="timer-bar-wrap"><div class="timer-bar" data-timer></div></div>':''}
+      <p class="quiz-q">${qi+1}. ${q.q}</p>
+      <div class="quiz-opts">
+        ${q.opts.map((o,oi)=>`<button class="quiz-opt" data-oi="${oi}">${o}</button>`).join('')}
+      </div>
+      <p class="quiz-feedback"></p>
+    </div>
+  `).join('');
+
+  container.querySelectorAll('.quiz-card').forEach(card=>{
+    const qi = parseInt(card.dataset.qi,10);
+    const q = questions[qi];
+    const buttons = card.querySelectorAll('.quiz-opt');
+    let answered = false;
+    let timerInterval = null;
+
+    function lockAndScore(chosenIdx, viaTimeout){
+      if(answered) return;
+      answered = true;
+      if(timerInterval) clearInterval(timerInterval);
+      buttons.forEach((b,oi)=>{
+        b.disabled = true;
+        if(oi===q.correct) b.classList.add('correct');
+        else if(oi===chosenIdx) b.classList.add('wrong');
+      });
+      const fb = card.querySelector('.quiz-feedback');
+      fb.classList.add('show');
+      if(!viaTimeout && chosenIdx===q.correct){
+        fb.textContent = '¡Correcto! ' + (opts.timed ? '+15 Felipesos' : '+10 Felipesos');
+        addXP(opts.timed?15:10);
+      } else {
+        fb.textContent = viaTimeout ? '⏱️ Se acabó el tiempo. La respuesta correcta era: "'+q.opts[q.correct]+'".' : 'Casi. La respuesta correcta era: "'+q.opts[q.correct]+'".';
+        AudioFX.castigo();
+      }
+      if(opts.onAnswered) opts.onAnswered(qi, chosenIdx===q.correct);
+    }
+    buttons.forEach((b,oi)=>{
+      b.addEventListener('click', ()=> lockAndScore(oi, false));
+    });
+    if(opts.timed){
+      const bar = card.querySelector('[data-timer]');
+      let duration = 15, elapsed = 0;
+      bar.style.transition = 'none';
+      timerInterval = setInterval(()=>{
+        elapsed += 0.2;
+        const pct = Math.max(0, 100 - (elapsed/duration*100));
+        bar.style.width = pct+'%';
+        if(elapsed>=duration){ clearInterval(timerInterval); lockAndScore(-1, true); }
+      }, 200);
+    }
+  });
+}
+
+/* ===================== MEMORY GAME ===================== */
+function renderMemory(){
+  const grid = document.getElementById('memory-grid');
+  const cards = [];
+  memoryPairs.forEach((p,i)=>{
+    cards.push({pairId:i, icon:p.icon, label:p.label});
+    cards.push({pairId:i, icon:p.icon, label:p.label});
+  });
+  // shuffle
+  for(let i=cards.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [cards[i],cards[j]] = [cards[j],cards[i]];
+  }
+  grid.innerHTML = cards.map((c,i)=>`
+    <div class="mem-card" data-idx="${i}" data-pair="${c.pairId}">
+      <div class="face back">❓</div>
+      <div class="face front"><span>${c.icon}</span><span class="lbl">${c.label}</span></div>
+    </div>
+  `).join('');
+
+  let first = null, lock = false, matched = 0;
+  const statusEl = document.getElementById('memory-status');
+  grid.querySelectorAll('.mem-card').forEach(cardEl=>{
+    cardEl.addEventListener('click', ()=>{
+      if(lock || cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
+      cardEl.classList.add('flipped');
+      if(first===null){ first = cardEl; return; }
+      lock = true;
+      const same = first.dataset.pair === cardEl.dataset.pair;
+      if(same){
+        first.classList.add('matched'); cardEl.classList.add('matched');
+        matched++;
+        statusEl.textContent = 'Pares encontrados: '+matched+' / '+memoryPairs.length;
+        addXP(8);
+        first = null; lock = false;
+        if(matched===memoryPairs.length){
+          earnBadge('memorama');
+          statusEl.textContent = '¡Completado! Todos los pares encontrados. +25 Felipesos bono';
+          addXP(25);
+        }
+      } else {
+        setTimeout(()=>{
+          first.classList.remove('flipped'); cardEl.classList.remove('flipped');
+          first = null; lock = false;
+        }, 800);
+      }
+    });
+  });
+}
+
+/* ===================== CLASSIFY GAME ===================== */
+function renderClassify(){
+  const pool = document.getElementById('classify-pool');
+  const zonesContainer = document.getElementById('classify-zones-container');
+  const statusEl = document.getElementById('classify-status');
+  let selected = null, placed = 0;
+
+  pool.innerHTML = classifyItems.map((it,i)=>
+    `<span class="classify-chip" data-idx="${i}">${it.name}</span>`
+  ).join('');
+
+  zonesContainer.innerHTML = classifyZones.map(z=>
+    `<div class="zone" data-zone="${z.id}"><h4>${z.label}</h4><div class="zone-contents"></div></div>`
+  ).join('');
+
+  function selectChip(chip){
+    pool.querySelectorAll('.classify-chip').forEach(c=>c.classList.remove('selected'));
+    if(chip.classList.contains('placed')) return;
+    chip.classList.add('selected');
+    selected = chip;
+  }
+  function placeInZone(zoneId, zoneEl){
+    if(!selected) return;
+    const idx = parseInt(selected.dataset.idx,10);
+    const item = classifyItems[idx];
+    const correct = item.zone === zoneId;
+    const correctLabel = classifyZones.find(z=>z.id===item.zone).label;
+    const tag = document.createElement('span');
+    tag.className = 'zone-chip ' + (correct?'ok':'bad');
+    tag.textContent = item.name + (correct?' ✓':' ✕ (era: '+correctLabel+')');
+    zoneEl.querySelector('.zone-contents').appendChild(tag);
+    selected.classList.add('placed');
+    selected.classList.remove('selected');
+    selected = null;
+    placed++;
+    if(correct) addXP(6); else AudioFX.castigo();
+    statusEl.textContent = 'Clasificados: '+placed+' / '+classifyItems.length;
+    if(placed===classifyItems.length){
+      earnBadge('clasifica');
+      statusEl.textContent += ' · ¡Completado! +20 Felipesos bono';
+      addXP(20);
+    }
+  }
+  pool.querySelectorAll('.classify-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>selectChip(chip));
+  });
+  zonesContainer.querySelectorAll('.zone').forEach(zoneEl=>{
+    zoneEl.addEventListener('click', ()=> placeInZone(zoneEl.dataset.zone, zoneEl));
+  });
+}
+
+/* ===================== GANCHO / HOOK POLL ===================== */
+const gsFeedback = {
+  si: '💪 ¡Así es! Como verás hoy, el movimiento del agua realmente puede transformarse en electricidad.',
+  creo: '🤔 ¡Buena intuición! Hoy vamos a comprobarlo con nuestras propias manos.',
+  no: '😅 ¡Perfecto punto de partida! Hoy vas a descubrir exactamente cómo ocurre.'
+};
+document.querySelectorAll('.gancho-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.gancho-btn').forEach(b=>{ b.disabled = true; });
+    btn.classList.add('chosen');
+    const fb = document.getElementById('gancho-feedback');
+    fb.textContent = gsFeedback[btn.dataset.r] + ' 🪙 +5 Felipesos por participar.';
+    fb.classList.add('show');
+    addXP(5);
+  });
+});
+
+/* ===================== EXIT TICKET BUTTONS ===================== */
+document.getElementById('btn-complete-exit1').addEventListener('click', (e)=>{
+  earnBadge('exit1'); addXP(10);
+  e.target.disabled = true; e.target.textContent = '✔ Completado';
+});
+document.getElementById('btn-complete-exit2').addEventListener('click', (e)=>{
+  earnBadge('exit2'); addXP(10);
+  e.target.disabled = true; e.target.textContent = '✔ Completado';
+});
+
+/* ===================== PDF EXPORT (compiled guide via print) ===================== */
+function buildPrintSheet(){
+  const today = new Date().toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit', year:'numeric' });
+
+  const bloomHtml = bloomData.map(lvl => `
+    <div class="p-bloom-lvl ${lvl.boss?'boss':''}">
+      <b>${lvl.lvl} · ${lvl.label}${lvl.boss?' — Desafío Boss':''}</b>
+      <ul>${lvl.items.map(it=>`<li>${it}</li>`).join('')}</ul>
+    </div>
+  `).join('');
+
+  function qaBlock(list){
+    return list.map((q,i)=>`
+      <div class="p-qa">
+        <p class="pq">${i+1}. ${q.q}</p>
+        <p class="po">Opciones: ${q.opts.join(' · ')}</p>
+        <p class="pa">Respuesta correcta: ${q.opts[q.correct]}</p>
+      </div>
+    `).join('');
+  }
+
+  const classifyRows = classifyItems.map(it=>`
+    <tr><td>${it.name}</td><td>${classifyZones.find(z=>z.id===it.zone).label}</td></tr>
+  `).join('');
+
+  const memoryRows = memoryPairs.map(p=>`<tr><td>${p.icon} ${p.label}</td></tr>`).join('');
+
+  document.getElementById('print-sheet').innerHTML = `
+    <div class="p-header">
+      <h1>Unidad 3 · Energía — Guía compilada (Sesiones 3 y 4)</h1>
+      <div class="p-meta">
+        <span>Profesor: Felipe Jiménez</span>
+        <span>Curso: 6° Básico</span>
+        <span>Fecha: ${today}</span>
+        <span>Nombre estudiante: _______________________</span>
+      </div>
+      <span class="p-felipesos">🪙 Felipesos acumulados en esta sesión: ${state.xp}</span>
+    </div>
+
+    <div class="p-section">
+      <h2>Objetivo de aprendizaje · OA9</h2>
+      <div class="p-oa">Investigar en forma experimental la transformación de la energía de una forma a otra, dando ejemplos y comunicando sus conclusiones.</div>
+      <p><b>Habilidades de investigación:</b> OA a (predicción) · OA b (variables) · OA c (medir y registrar) · OA d (uso seguro de materiales) · OA e (conclusiones) · OA f (comunicar resultados)</p>
+    </div>
+
+    <div class="p-section">
+      <h2>Contenido: transformaciones de energía</h2>
+      <p>Luminosa → Calórica (lupa concentrando el sol) · Mecánica → Eléctrica (dinamo, Central Chacabuquito) · Eléctrica → Mecánica (motor, ventilador) · Eléctrica → Calórica (plancha, estufa) · Luminosa → Eléctrica (panel solar).</p>
+    </div>
+
+    <div class="p-section">
+      <h2>Contexto local: del agua del Aconcagua a la luz de tu casa</h2>
+      <p>Río Aconcagua (energía mecánica) → Central Hidroeléctrica Chacabuquito (la turbina gira) → Energía eléctrica (se genera) → Villa Alemana (llega a los hogares). El Glaciar Juncal alimenta con su deshielo el caudal del río.</p>
+    </div>
+
+    <div class="p-section">
+      <h2>Simulador: la central hidroeléctrica paso a paso</h2>
+      <p><b>Embalse</b> (energía potencial: el agua almacenada en altura) → <b>Caída</b> (energía cinética: el agua gana velocidad al caer) → <b>Turbina</b> (energía mecánica: el agua en movimiento la hace girar) → <b>Generador</b> (energía eléctrica: el giro se transforma en electricidad).</p>
+      <p>A mayor altura del embalse y mayor caudal de agua, mayor la energía eléctrica generada — así funciona, a gran escala, la Central Chacabuquito.</p>
+    </div>
+
+    <div class="p-section">
+      <h2>Actividad de investigación experimental (OA a–f)</h2>
+      <p>En grupos, seleccionan una transformación de energía, diseñan un experimento sencillo para demostrarla —inspirados en el aprovechamiento del río Aconcagua para generar electricidad— y comunican sus conclusiones mediante un informe y una demostración.</p>
+      <p><b>Débil:</b> "Algo va a pasar con el agua." &nbsp;·&nbsp; <b>Fuerte:</b> "Si hacemos girar la rueda con más fuerza de agua, el LED brillará más, porque habrá más energía mecánica para transformar en eléctrica."</p>
+    </div>
+
+    <div class="p-section p-page-break">
+      <h2>Banco de preguntas · Taxonomía de Bloom (N1–N6)</h2>
+      ${bloomHtml}
+    </div>
+
+    <div class="p-section p-page-break">
+      <h2>Preguntas y respuestas · Retroalimentación (Sesión 4)</h2>
+      ${qaBlock(retroQuestions)}
+    </div>
+
+    <div class="p-section">
+      <h2>Preguntas y respuestas · Quiz relámpago</h2>
+      ${qaBlock(lightningQuestions)}
+    </div>
+
+    <div class="p-section p-page-break">
+      <h2>Juego Clasifica y gana · Pauta de respuestas</h2>
+      <table class="p-table"><tr><th>Ejemplo</th><th>Transformación correcta</th></tr>${classifyRows}</table>
+    </div>
+
+    <div class="p-section">
+      <h2>Juego Memorama · Pares (referencia docente)</h2>
+      <table class="p-table"><tr><th>Elemento</th></tr>${memoryRows}</table>
+    </div>
+
+    <div class="p-footer">Unidad 3: Energía — 6° Básico · Prof. Felipe Jiménez · Villa Alemana. Próxima clase: OA10, el flujo de calor entre objetos de distinta temperatura.</div>
+  `;
+}
+function exportPDF(){
+  buildPrintSheet();
+  window.print();
+}
+document.getElementById('pdf-btn').addEventListener('click', exportPDF);
+document.getElementById('btn-pdf-cierre').addEventListener('click', exportPDF);
+
+/* ===================== HYDRO SIMULATOR ===================== */
+let hydroChallengeMet = false;
+function initHydroSim(){
+  const heightSlider = document.getElementById('height-slider');
+  const flowSlider = document.getElementById('flow-slider');
+  const heightVal = document.getElementById('height-val');
+  const flowVal = document.getElementById('flow-val');
+  const water = document.getElementById('reservoir-water');
+  const turbine = document.getElementById('turbine');
+  const drops = document.querySelectorAll('#waterfall .drop');
+  const generator = document.getElementById('generator');
+  const velocityOut = document.getElementById('velocity-out');
+  const powerOut = document.getElementById('power-out');
+  const feedback = document.getElementById('hydro-feedback');
+
+  function update(){
+    const h = parseFloat(heightSlider.value);   // metros de altura del embalse
+    const q = parseFloat(flowSlider.value);      // caudal m3/s
+    heightVal.textContent = h;
+    flowVal.textContent = q;
+
+    // Física real simplificada: v = raíz(2 * g * h)
+    const v = Math.sqrt(2 * 9.8 * h);
+    // Potencia hidráulica: P = densidad * g * Q * h * eficiencia (kW, modelo simplificado para la sala de clases)
+    const powerKW = (1000 * 9.8 * q * h * 0.8) / 1000;
+
+    velocityOut.textContent = v.toFixed(1) + ' m/s';
+    powerOut.textContent = powerKW >= 1000 ? (powerKW/1000).toFixed(2) + ' MW' : powerKW.toFixed(0) + ' kW';
+
+    // Nivel visual del embalse (5-60 m -> 10%-100%)
+    const pct = 10 + ((h - 5) / (60 - 5)) * 90;
+    water.style.height = pct + '%';
+
+    // Velocidad visual de la turbina y de las gotas de agua (más rápido = menor duración)
+    const turbineDuration = Math.max(0.25, 2.6 - (v / 12));
+    turbine.style.animationDuration = turbineDuration + 's';
+    drops.forEach(d=>{ d.style.animationDuration = Math.max(0.3, 1.3 - (v/40)) + 's'; });
+
+    generator.classList.remove('pulse'); void generator.offsetWidth; generator.classList.add('pulse');
+
+    if(powerKW >= 1000 && !hydroChallengeMet){
+      hydroChallengeMet = true;
+      feedback.textContent = '⚡ ¡Lograste superar los 1.000 kW! Así de importante es la altura y el caudal en una central real. +15 Felipesos';
+      feedback.classList.add('show');
+      addXP(15);
+      earnBadge('hidro');
+    }
+  }
+
+  heightSlider.addEventListener('input', update);
+  flowSlider.addEventListener('input', update);
+  update();
+}
+
+/* ===================== RIPPLE INTERACTION ===================== */
+const RIPPLE_SELECTOR = '.btn, .game-card, .quiz-opt, .classify-chip, .gancho-btn, .mem-card, .nav-btn';
+document.addEventListener('click', (e)=>{
+  const el = e.target.closest(RIPPLE_SELECTOR);
+  if(!el || el.disabled) return;
+  const rect = el.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height) * 1.4;
+  const ripple = document.createElement('span');
+  ripple.className = 'ripple-el';
+  ripple.style.width = ripple.style.height = size + 'px';
+  ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
+  ripple.style.top = (e.clientY - rect.top - size/2) + 'px';
+  el.appendChild(ripple);
+  setTimeout(()=> ripple.remove(), 600);
+});
+
+/* ===================== INIT ===================== */
+buildDots();
+goTo(0);
+renderBloom();
+renderQuiz('retro-quiz-container', retroQuestions, {timed:false});
+renderQuiz('lightning-container', lightningQuestions, {timed:true, onAnswered:(qi, ok)=>{
+  const allCards = document.querySelectorAll('#lightning-container .quiz-card');
+  const allAnswered = Array.from(allCards).every(c=>c.querySelectorAll('.quiz-opt:disabled').length>0);
+  if(allAnswered){ earnBadge('relampago'); }
+}});
+renderMemory();
+renderClassify();
+initHydroSim();
+renderBadges();
+</script>
+</body>
+</html>
