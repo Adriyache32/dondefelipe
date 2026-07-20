@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Unidad 3 · Energía · Sesiones 1 y 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================= TOKENS ============================= */
+:root{
+  --bg:#0a1728;
+  --bg-soft:#0e2038;
+  --card:#132c49;
+  --card-hi:#1a3a5e;
+  --line:rgba(244,185,66,.16);
+  --gold:#f4b942;
+  --gold-soft:#ffd873;
+  --teal:#2ed3bd;
+  --ember:#ff8a5c;
+  --boss:#b98bff;
+  --bad:#ff5d6c;
+  --good:#3ddc84;
+  --ink:#eef3f9;
+  --muted:#87a0bd;
+  --muted-2:#5c7292;
+  --radius:18px;
+  --disp:'Space Grotesk',sans-serif;
+  --body:'Inter',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  background:
+    radial-gradient(1100px 620px at 12% -8%, rgba(244,185,66,.10), transparent 60%),
+    radial-gradient(900px 700px at 105% 10%, rgba(46,211,189,.10), transparent 55%),
+    var(--bg);
+  color:var(--ink);
+  font-family:var(--body);
+  overflow:hidden;
+  height:100dvh;
+}
+h1,h2,h3,.disp{font-family:var(--disp);}
+::selection{background:var(--gold);color:#0a1728;}
+button{font-family:var(--body);}
+a{color:var(--teal);}
+
+/* scrollbar for slide bodies */
+.slide-body::-webkit-scrollbar{width:8px;}
+.slide-body::-webkit-scrollbar-thumb{background:var(--card-hi);border-radius:8px;}
+
+/* ============================= APP SHELL ============================= */
+#app{
+  display:flex;
+  flex-direction:column;
+  height:100dvh;
+  width:100vw;
+}
+
+/* ---- topbar ---- */
+#topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px clamp(14px,3vw,28px);
+  padding-top:max(10px, env(safe-area-inset-top));
+  padding-left:max(14px, env(safe-area-inset-left));
+  padding-right:max(14px, env(safe-area-inset-right));
+  border-bottom:1px solid var(--line);
+  background:rgba(10,23,40,.75);
+  backdrop-filter:blur(6px);
+  z-index:30;
+  flex-shrink:0;
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;}
+.brand-badge{
+  width:34px;height:34px;border-radius:10px;
+  background:linear-gradient(135deg,var(--gold),var(--ember));
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+  box-shadow:0 4px 14px rgba(244,138,92,.35);
+  animation:sunPulse 4s ease-in-out infinite;
+}
+@keyframes sunPulse{
+  0%,100%{box-shadow:0 4px 14px rgba(244,138,92,.35);}
+  50%{box-shadow:0 4px 20px rgba(244,138,92,.55);}
+}
+.brand-text{line-height:1.15;min-width:0;}
+.brand-text b{font-family:var(--disp);font-size:14px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.brand-text span{font-size:11px;color:var(--muted);white-space:nowrap;}
+
+#progress-dots{
+  display:flex;gap:5px;flex:1;justify-content:center;
+  overflow-x:auto;padding:0 6px;
+  -webkit-overflow-scrolling:touch;
+}
+#progress-dots::-webkit-scrollbar{display:none;}
+.dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--card-hi);
+  border:1px solid transparent;
+  cursor:pointer;flex-shrink:0;
+  transition:transform .2s, width .25s, background .25s;
+}
+.dot:hover{transform:scale(1.35);}
+.dot.done{background:var(--teal);}
+.dot.active{background:var(--gold);width:22px;border-radius:6px;}
+.dot.section-start{margin-left:8px;}
+
+#xp-wrap{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+#pdf-btn{padding:8px 14px;font-size:13px;}
+#pdf-btn:active{transform:scale(.96);}
+#xp-badge{
+  display:flex;align-items:center;gap:6px;
+  background:var(--card);border:1px solid var(--line);
+  padding:6px 12px;border-radius:999px;
+  font-family:var(--mono);font-weight:700;font-size:13px;
+  color:var(--gold-soft);position:relative;
+  box-shadow:0 2px 10px rgba(244,185,66,.08);
+  transition:box-shadow .3s, transform .3s;
+}
+#xp-badge.bump{animation:xpBump .4s ease;}
+@keyframes xpBump{
+  0%{transform:scale(1);}
+  35%{transform:scale(1.14);box-shadow:0 4px 18px rgba(244,185,66,.35);}
+  100%{transform:scale(1);}
+}
+#xp-toast{
+  position:absolute;top:-6px;right:8px;
+  font-family:var(--mono);font-weight:700;color:var(--good);
+  font-size:12px;opacity:0;pointer-events:none;
+}
+#xp-toast.show{animation:floatUp 1s ease-out forwards;}
+@keyframes floatUp{
+  0%{opacity:0;transform:translateY(0);}
+  15%{opacity:1;}
+  100%{opacity:0;transform:translateY(-22px);}
+}
+
+/* ============================= DECK ============================= */
+#deck{
+  position:relative;
+  flex:1;
+  min-height:0;
+}
+.slide{
+  position:absolute;inset:0;
+  display:none;
+  flex-direction:column;
+  padding:clamp(16px,3vw,40px) clamp(18px,5vw,80px);
+  overflow:hidden;
+}
+.slide.active{
+  display:flex;
+  animation:slideIn .5s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes slideIn{
+  from{opacity:0;transform:translateY(18px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.slide-body{
+  flex:1;min-height:0;overflow-y:auto;
+  padding-right:4px;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+}
+.eyebrow{
+  font-family:var(--mono);font-size:12px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--teal);font-weight:700;
+  margin:0 0 6px;
+}
+.slide h2.title{
+  font-size:clamp(22px,3.6vw,38px);
+  margin:0 0 6px;line-height:1.08;
+}
+.subtitle{color:var(--muted);font-size:clamp(13px,1.6vw,16px);margin:0 0 18px;max-width:70ch;}
+
+/* ============================= COVER ============================= */
+#slide-cover{justify-content:center;}
+.cover-grid{
+  display:grid;grid-template-columns:1.3fr .8fr;gap:36px;align-items:center;
+  max-width:1180px;margin:0 auto;width:100%;
+}
+.cover-kicker{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:12.5px;letter-spacing:.12em;
+  color:var(--gold-soft);background:rgba(244,185,66,.1);
+  border:1px solid var(--line);padding:6px 12px;border-radius:999px;
+  margin-bottom:18px;text-transform:uppercase;
+}
+.cover-title{
+  font-size:clamp(30px,5.4vw,58px);line-height:1.03;margin:0 0 14px;
+  background:linear-gradient(100deg,#fff 10%,var(--gold-soft) 55%,var(--ember) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.cover-sub{color:var(--muted);font-size:clamp(14px,1.8vw,18px);max-width:52ch;margin:0 0 22px;}
+.cover-chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px;}
+.chip{
+  font-family:var(--mono);font-size:12.5px;padding:6px 12px;border-radius:999px;
+  border:1px solid var(--line);color:var(--ink);background:var(--card);
+  display:inline-flex;align-items:center;gap:6px;
+}
+.chip b{color:var(--gold-soft);}
+.cover-hint{font-size:12.5px;color:var(--muted-2);}
+.qr-box{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px;text-align:center;
+  box-shadow:0 20px 50px rgba(0,0,0,.35);
+}
+.qr-box img{width:150px;height:150px;border-radius:10px;background:#fff;padding:8px;display:block;margin:0 auto 10px;}
+.qr-box p{margin:0;font-size:12.5px;color:var(--muted);}
+.qr-box a{word-break:break-all;font-size:11.5px;}
+.qr-label{font-family:var(--mono);font-size:12px;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:block;}
+@media (max-width:900px){
+  .desktop-only{display:none !important;}
+  .cover-grid{grid-template-columns:1fr;}
+}
+
+/* ============================= GENERIC BLOCKS ============================= */
+.card-grid{display:grid;gap:14px;}
+.g2{grid-template-columns:repeat(2,1fr);}
+.g3{grid-template-columns:repeat(3,1fr);}
+.g4{grid-template-columns:repeat(4,1fr);}
+@media (max-width:760px){ .g2,.g3{grid-template-columns:1fr;} .g4{grid-template-columns:repeat(2,1fr);} }
+@media (max-width:420px){ .g4{grid-template-columns:1fr;} }
+
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px 18px;
+  box-shadow:0 6px 18px rgba(0,0,0,.18);
+  transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);border-color:rgba(244,185,66,.35);box-shadow:0 10px 26px rgba(0,0,0,.28);}
+.card h4{margin:0 0 8px;font-family:var(--disp);font-size:15.5px;}
+.card p, .card li{color:var(--muted);font-size:13.6px;line-height:1.5;}
+.card .ico{font-size:22px;margin-bottom:8px;display:block;}
+
+/* timeline / agenda */
+.timeline{display:flex;flex-direction:column;gap:10px;}
+.tl-row{display:flex;align-items:stretch;gap:14px;}
+.tl-time{
+  font-family:var(--mono);font-size:12.5px;color:var(--gold-soft);
+  width:74px;flex-shrink:0;padding-top:12px;
+}
+.tl-body{
+  flex:1;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--teal);
+  border-radius:12px;padding:12px 16px;
+}
+.tl-body.ember{border-left-color:var(--ember);}
+.tl-body.boss{border-left-color:var(--boss);}
+.tl-body h4{margin:0 0 4px;font-size:14.5px;}
+.tl-body p{margin:0;color:var(--muted);font-size:13px;}
+.session-divider{
+  display:flex;align-items:center;gap:12px;margin:18px 0 8px;
+  color:var(--muted-2);font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.1em;
+}
+.session-divider::before,.session-divider::after{content:"";flex:1;height:1px;background:var(--line);}
+
+/* OA / objective */
+.oa-box{
+  background:linear-gradient(135deg,rgba(244,185,66,.12),rgba(46,211,189,.06));
+  border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px 22px;margin-bottom:16px;
+}
+.oa-box .tag{font-family:var(--mono);font-size:12px;color:var(--gold-soft);letter-spacing:.08em;}
+.oa-box p{font-size:clamp(14px,1.8vw,17px);margin:8px 0 0;line-height:1.5;}
+.question-box{
+  background:var(--card-hi);border-radius:14px;padding:16px 20px;
+  display:flex;align-items:center;gap:14px;
+}
+.question-box .qmark{font-size:26px;flex-shrink:0;}
+.question-box p{margin:0;font-size:clamp(15px,2vw,19px);font-family:var(--disp);}
+
+/* pill / skill tags OA a-f */
+.skills-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.skill-pill{
+  font-family:var(--mono);font-size:11.5px;background:rgba(46,211,189,.12);
+  border:1px solid rgba(46,211,189,.3);color:var(--teal);
+  padding:4px 10px;border-radius:999px;cursor:default;
+}
+
+/* buttons */
+.btn{
+  font-family:var(--disp);font-weight:600;font-size:14px;
+  border:none;border-radius:12px;padding:11px 20px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:8px;transition:transform .18s, box-shadow .18s, background .18s;
+}
+.btn-primary{background:linear-gradient(135deg,var(--gold),var(--ember));color:#12233b;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(244,138,92,.3);}
+.btn-primary:active{transform:translateY(0) scale(.98);}
+.btn-ghost{background:var(--card);color:var(--ink);border:1px solid var(--line);}
+.btn-ghost:hover{background:var(--card-hi);border-color:var(--gold);}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none !important;box-shadow:none !important;}
+button:focus-visible, .quiz-opt:focus-visible, .dot:focus-visible, .game-card:focus-visible, .mem-card:focus-visible, .classify-chip:focus-visible{
+  outline:2px solid var(--teal);outline-offset:2px;
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}
+}
+
+/* ============================= SIGNATURE FLOW DIAGRAM ============================= */
+.flow-wrap{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 18px 10px;margin:6px 0 18px;}
+.flow-svg{width:100%;height:auto;display:block;}
+.flow-dash{stroke-dasharray:10 8;animation:flowmove 1.6s linear infinite;}
+@keyframes flowmove{to{stroke-dashoffset:-36;}}
+.flow-node-label{font-size:11px;fill:var(--muted);font-family:'Inter',sans-serif;}
+.flow-node-title{font-size:12.5px;fill:var(--ink);font-family:'Space Grotesk',sans-serif;font-weight:600;}
+
+/* mobile flow: compact vertical version, swapped in below 620px where the horizontal SVG gets too small to read */
+.flow-mobile{display:none;flex-direction:column;align-items:stretch;gap:2px;margin:6px 0 18px;}
+.fm-node{
+  display:flex;align-items:center;gap:12px;
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:12px 14px;
+}
+.fm-ico{
+  width:44px;height:44px;border-radius:50%;flex-shrink:0;
+  background:var(--bg-soft);border:2px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.fm-node h4{margin:0 0 2px;font-family:var(--disp);font-size:13.5px;}
+.fm-node span{font-size:11px;color:var(--muted);}
+.fm-arrow{text-align:center;color:var(--gold);font-size:16px;line-height:1;padding:1px 0;}
+@media (max-width:620px){
+  .flow-desktop{display:none;}
+  .flow-mobile{display:flex;}
+}
+
+/* ============================= ACCORDION (BLOOM BANK) ============================= */
+.acc-item{
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  margin-bottom:10px;overflow:hidden;
+}
+.acc-item.boss{border-color:rgba(185,139,255,.4);}
+.acc-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 16px;cursor:pointer;gap:10px;
+}
+.acc-head .lvl{display:flex;align-items:center;gap:10px;}
+.acc-num{
+  font-family:var(--mono);font-weight:700;font-size:12.5px;
+  background:var(--card-hi);color:var(--gold-soft);
+  padding:3px 9px;border-radius:8px;
+}
+.boss .acc-num{background:rgba(185,139,255,.18);color:var(--boss);}
+.acc-head h4{margin:0;font-size:14.5px;}
+.acc-head .boss-tag{
+  font-family:var(--mono);font-size:10.5px;color:var(--boss);
+  border:1px solid rgba(185,139,255,.4);padding:2px 8px;border-radius:999px;
+}
+.acc-chevron{transition:.25s;color:var(--muted);}
+.acc-item.open .acc-chevron{transform:rotate(180deg);}
+.acc-panel{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+.acc-item.open .acc-panel{max-height:400px;}
+.acc-panel-inner{padding:0 16px 16px;}
+.acc-panel-inner ul{margin:0;padding-left:18px;}
+.acc-panel-inner li{margin-bottom:6px;font-size:13.5px;color:var(--ink);opacity:.9;}
+
+/* ============================= QUIZ COMPONENT ============================= */
+.quiz-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px;}
+.quiz-q{font-family:var(--disp);font-size:15.5px;margin:0 0 12px;}
+.quiz-opts{display:grid;gap:9px;}
+.quiz-opt{
+  text-align:left;background:var(--bg-soft);border:1px solid var(--line);
+  color:var(--ink);border-radius:10px;padding:10px 14px;cursor:pointer;font-size:13.6px;
+  transition:.15s;
+}
+.quiz-opt:hover:not(:disabled){border-color:var(--teal);}
+.quiz-opt.correct{background:rgba(61,220,132,.16);border-color:var(--good);}
+.quiz-opt.wrong{background:rgba(255,93,108,.14);border-color:var(--bad);}
+.quiz-feedback{margin-top:10px;font-size:13px;color:var(--muted);display:none;}
+.quiz-feedback.show{display:block;}
+.timer-bar-wrap{height:5px;background:var(--bg-soft);border-radius:4px;overflow:hidden;margin-bottom:12px;}
+.timer-bar{height:100%;background:linear-gradient(90deg,var(--good),var(--gold));width:100%;transform-origin:left;}
+
+/* ============================= GAMES HUB ============================= */
+.game-card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px;display:flex;flex-direction:column;gap:10px;cursor:pointer;
+  transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+  box-shadow:0 6px 18px rgba(0,0,0,.18);
+}
+.game-card:hover{transform:translateY(-4px);border-color:var(--gold);box-shadow:0 14px 30px rgba(0,0,0,.32);}
+.game-card .ico{font-size:30px;}
+.game-card h4{margin:0;font-family:var(--disp);}
+.game-card p{margin:0;color:var(--muted);font-size:13px;}
+.game-card .reward{font-family:var(--mono);font-size:11.5px;color:var(--gold-soft);}
+
+/* memory game */
+#memory-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:640px;perspective:1000px;}
+@media (max-width:600px){ #memory-grid{grid-template-columns:repeat(3,1fr);} }
+.mem-card{
+  aspect-ratio:1/1;border-radius:12px;background:var(--card);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;
+  user-select:none;transition:.2s;position:relative;
+}
+.mem-card .face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:12px;backface-visibility:hidden;transition:.3s;}
+.mem-card .back{background:linear-gradient(135deg,var(--card-hi),var(--card));font-size:20px;color:var(--muted);}
+.mem-card .front{background:var(--bg-soft);transform:rotateY(180deg);flex-direction:column;gap:2px;padding:4px;}
+.mem-card .front span.lbl{font-size:9.5px;font-family:var(--mono);color:var(--muted);text-align:center;}
+.mem-card.flipped .back{transform:rotateY(180deg);}
+.mem-card.flipped .front{transform:rotateY(0deg);}
+.mem-card.matched{border-color:var(--good);opacity:.55;}
+.mem-card{transform-style:preserve-3d;}
+
+/* classify game */
+.classify-pool{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.classify-chip{
+  font-family:var(--mono);font-size:12.5px;background:var(--card-hi);border:1px solid var(--line);
+  padding:7px 13px;border-radius:999px;cursor:pointer;transition:.15s;
+}
+.classify-chip.selected{background:var(--gold);color:#12233b;font-weight:700;}
+.classify-chip.placed{opacity:.35;pointer-events:none;}
+.classify-zones{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media (max-width:600px){ .classify-zones{grid-template-columns:1fr;} }
+.zone{min-height:120px;border:2px dashed var(--line);border-radius:14px;padding:12px;}
+.zone h4{margin:0 0 8px;font-size:13.5px;}
+.zone.renovable{border-color:rgba(61,220,132,.4);}
+.zone.no-renovable{border-color:rgba(255,93,108,.4);}
+.zone-chip{
+  display:inline-block;font-family:var(--mono);font-size:12px;margin:3px;padding:5px 10px;border-radius:8px;
+}
+.zone-chip.ok{background:rgba(61,220,132,.18);color:var(--good);}
+.zone-chip.bad{background:rgba(255,93,108,.18);color:var(--bad);}
+
+/* badges */
+.badge-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+.badge-pill{
+  display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line);
+  padding:8px 14px;border-radius:999px;font-size:12.8px;opacity:.35;transition:.3s;
+}
+.badge-pill.earned{opacity:1;border-color:var(--gold);background:rgba(244,185,66,.1);}
+
+/* exit ticket */
+.exit-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+@media (max-width:760px){ .exit-grid{grid-template-columns:1fr;} }
+textarea.exit-input{
+  width:100%;min-height:70px;resize:vertical;background:var(--bg-soft);
+  border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:10px;font-family:var(--body);font-size:13px;
+}
+
+/* ============================= FOOTER NAV ============================= */
+#controls{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px clamp(14px,3vw,28px);
+  padding-bottom:max(10px, env(safe-area-inset-bottom));
+  padding-left:max(14px, env(safe-area-inset-left));
+  padding-right:max(14px, env(safe-area-inset-right));
+  border-top:1px solid var(--line);
+  background:rgba(10,23,40,.75);backdrop-filter:blur(6px);
+  flex-shrink:0;
+}
+.nav-btn{
+  width:44px;height:44px;border-radius:50%;border:1px solid var(--line);
+  background:var(--card);color:var(--ink);font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:.2s;
+  flex-shrink:0;
+}
+.nav-btn:hover:not(:disabled){background:var(--card-hi);border-color:var(--gold);}
+.nav-btn:disabled{opacity:.3;cursor:not-allowed;}
+#slide-counter{font-family:var(--mono);font-size:12.5px;color:var(--muted);}
+
+@media (max-width:600px){
+  .slide{padding:14px 16px;}
+  .brand-text span{display:none;}
+  .pdf-btn-label{display:none;}
+  #pdf-btn{padding:8px 10px;}
+  .quiz-opt{padding:12px 14px;font-size:14px;}
+  .classify-chip{padding:9px 15px;font-size:13px;}
+  .zone{min-height:100px;padding:10px;}
+  .card{padding:14px 15px;}
+  .oa-box{padding:16px 16px;}
+  .question-box{padding:14px 16px;gap:10px;}
+  .cover-chips{gap:8px;}
+  .acc-head{flex-wrap:wrap;row-gap:6px;padding:12px 14px;}
+  .acc-head .lvl{flex-wrap:wrap;row-gap:4px;}
+  .tl-row{gap:10px;}
+  #xp-badge{font-size:12px;padding:6px 10px;}
+}
+@media (max-width:480px){
+  .tl-row{flex-direction:column;gap:3px;}
+  .tl-time{width:auto;padding-top:0;font-size:11.5px;}
+  .tl-body{border-left-width:3px;padding:10px 13px;}
+  .dot{width:9px;height:9px;}
+  .dot.active{width:24px;}
+  .exit-grid, .classify-zones{gap:10px;}
+  .badge-pill{font-size:11.5px;padding:7px 11px;}
+}
+/* ============================= PRINT / PDF EXPORT ============================= */
+#print-sheet{display:none;}
+@media print{
+  @page{ margin:16mm; }
+  html,body{height:auto;overflow:visible;background:#fff !important;}
+  #app{display:none !important;}
+  #print-sheet{
+    display:block !important;
+    background:#fff;color:#1a2230;
+    font-family:var(--body);
+    max-width:100%;
+  }
+  #print-sheet *{box-shadow:none !important;}
+  .p-header{border-bottom:3px solid #12233b;padding-bottom:10px;margin-bottom:14px;}
+  .p-header h1{font-family:var(--disp);font-size:22px;margin:0 0 4px;color:#12233b;}
+  .p-header .p-meta{font-size:11.5px;color:#4a5a72;display:flex;gap:18px;flex-wrap:wrap;margin-top:6px;}
+  .p-felipesos{
+    display:inline-block;margin-top:8px;font-family:var(--mono);font-weight:700;
+    background:#fdf1d6;border:1px solid #e8b93d;color:#8a5a00;
+    padding:5px 12px;border-radius:8px;font-size:12.5px;
+  }
+  .p-section{margin:16px 0;break-inside:avoid;}
+  .p-section h2{font-family:var(--disp);font-size:15px;color:#12233b;border-left:4px solid #f4b942;padding-left:8px;margin:0 0 8px;}
+  .p-section p, .p-section li{font-size:11.8px;line-height:1.55;color:#222;}
+  .p-oa{background:#f4f6f9;border:1px solid #d8e0ea;border-radius:8px;padding:10px 12px;font-size:11.8px;margin-bottom:8px;}
+  .p-bloom-lvl{margin-bottom:8px;}
+  .p-bloom-lvl b{font-family:var(--mono);font-size:11px;color:#8a5a00;}
+  .p-bloom-lvl.boss b{color:#6a3fb5;}
+  .p-qa{border:1px solid #dfe6ee;border-radius:8px;padding:8px 10px;margin-bottom:7px;break-inside:avoid;}
+  .p-qa .pq{font-weight:600;font-size:12px;margin:0 0 4px;}
+  .p-qa .pa{font-size:11.5px;color:#1a7a3d;margin:0;}
+  .p-qa .po{font-size:11px;color:#555;margin:0 0 4px;}
+  .p-table{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:6px;}
+  .p-table th,.p-table td{border:1px solid #d8e0ea;padding:5px 8px;text-align:left;}
+  .p-table th{background:#f4f6f9;}
+  .p-footer{margin-top:18px;padding-top:10px;border-top:1px solid #d8e0ea;font-size:10.5px;color:#6a7a90;}
+  .p-page-break{break-before:page;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header id="topbar">
+    <div class="brand">
+      <div class="brand-badge">☀️</div>
+      <div class="brand-text">
+        <b>Unidad 3 · Energía</b>
+        <span>Sesiones 1 y 2 · 6° Básico · Villa Alemana</span>
+      </div>
+    </div>
+    <div id="progress-dots"></div>
+    <div id="xp-wrap">
+      <button id="pdf-btn" class="btn btn-ghost" title="Exportar guía compilada en PDF">📄 <span class="pdf-btn-label">Exportar PDF</span></button>
+      <div id="xp-badge">🪙 <span id="xp-count">0</span> Felipesos<span id="xp-toast">+10</span></div>
+    </div>
+  </header>
+
+  <main id="deck">
+    <!-- 1. COVER -->
+    <section class="slide" id="slide-cover" data-title="Portada">
+      <div class="slide-body" style="display:flex;align-items:center;">
+        <div class="cover-grid">
+          <div>
+            <span class="cover-kicker">🔬 Ciencias Naturales · 6° Básico</span>
+            <h1 class="cover-title">La energía que mueve<br>el Valle del Aconcagua</h1>
+            <p class="cover-sub">Unidad 3: Energía — Sesiones 1 y 2. Investigamos de dónde viene la energía que usamos cada día en Villa Alemana, con el Sol como punto de partida.</p>
+            <div class="cover-chips">
+              <span class="chip">OA <b>8</b></span>
+              <span class="chip">Bloom <b>N1→N6</b></span>
+              <span class="chip">Prof. <b>Felipe Jiménez</b></span>
+              <span class="chip">📍 <b>Villa Alemana</b></span>
+            </div>
+            <p class="cover-hint">Usa las flechas ← → , los puntos de arriba, o desliza en tu celular para avanzar.</p>
+          </div>
+          <div class="qr-box desktop-only">
+            <span class="qr-label">Ábrelo en tu celular</span>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=https%3A%2F%2Ffjimenez321-stack.github.io%2Fdondefelipe%2Ffisica%2Fenergia.html" alt="Código QR de acceso" loading="lazy">
+            <p>Escanea con la cámara de tu celular para seguir la clase y jugar desde tu propio dispositivo.</p>
+            <a href="https://fjimenez321-stack.github.io/dondefelipe/fisica/energia.html" target="_blank" rel="noopener">fjimenez321-stack.github.io/dondefelipe/fisica/energia.html</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. AGENDA -->
+    <section class="slide" id="slide-agenda" data-title="Agenda">
+      <p class="eyebrow">Cómo se organiza esta clase</p>
+      <h2 class="title">Dos sesiones, un mismo hilo conductor</h2>
+      <p class="subtitle">Sesión 1 desarrolla el contenido y la investigación (90 min). Sesión 2 refuerza, retroalimenta y conecta con la próxima clase (30 min).</p>
+      <div class="slide-body">
+        <div class="session-divider">Sesión 1 · Clase 1 · 90 minutos</div>
+        <div class="timeline">
+          <div class="tl-row"><div class="tl-time">0–10 min</div><div class="tl-body"><h4>🚀 Activación</h4><p>Pregunta detonante: ¿de dónde viene toda la energía que usamos hoy? Lluvia de ideas rápida.</p></div></div>
+          <div class="tl-row"><div class="tl-time">10–30 min</div><div class="tl-body"><h4>📚 Desarrollo de contenido</h4><p>Formas de energía y el Sol como fuente principal, directa e indirecta.</p></div></div>
+          <div class="tl-row"><div class="tl-time">30–45 min</div><div class="tl-body"><h4>📍 Contexto local</h4><p>Ejemplos del Valle del Aconcagua: viñedos, paneles solares, Central Chacabuquito.</p></div></div>
+          <div class="tl-row"><div class="tl-time">45–75 min</div><div class="tl-body ember"><h4>🧪 Investigación STEAM (OA a, b, f)</h4><p>Formulan una pregunta de investigación en grupos y planifican cómo indagarla.</p></div></div>
+          <div class="tl-row"><div class="tl-time">75–90 min</div><div class="tl-body"><h4>🎟️ Cierre + Exit Ticket</h4><p>Síntesis y banco de preguntas Bloom N1–N6.</p></div></div>
+        </div>
+        <div class="session-divider">Sesión 2 · Clase 2 · 30 minutos</div>
+        <div class="timeline">
+          <div class="tl-row"><div class="tl-time">0–10 min</div><div class="tl-body"><h4>🎮 Retroalimentación gamificada</h4><p>Quiz relámpago con lo aprendido en la Clase 1.</p></div></div>
+          <div class="tl-row"><div class="tl-time">10–22 min</div><div class="tl-body"><h4>🔁 Refuerzo</h4><p>Repaso del recorrido de la energía + Desafío Boss individual.</p></div></div>
+          <div class="tl-row"><div class="tl-time">22–30 min</div><div class="tl-body boss"><h4>🎟️ Exit Ticket + puente</h4><p>3-2-1 y conexión con la próxima investigación experimental (OA9).</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. OBJETIVO -->
+    <section class="slide" id="slide-objetivo" data-title="Objetivo">
+      <p class="eyebrow">Objetivo de aprendizaje · OA8</p>
+      <h2 class="title">¿Por qué necesitamos energía?</h2>
+      <div class="slide-body">
+        <div class="oa-box">
+          <span class="tag">OA 8 — Eje: Ciencias Físicas y Químicas</span>
+          <p>Explicar que la energía es necesaria para que los objetos cambien y los seres vivos realicen sus procesos vitales, y que la mayoría de los recursos energéticos proviene directa o indirectamente del Sol, dando ejemplos de ello.</p>
+          <div class="skills-row">
+            <span class="skill-pill">OA a · Formular preguntas de investigación</span>
+            <span class="skill-pill">OA b · Planificar una investigación</span>
+            <span class="skill-pill">OA f · Comunicar conclusiones con TIC</span>
+          </div>
+        </div>
+        <div class="question-box">
+          <span class="qmark">💭</span>
+          <p>Pregunta de inicio: si apagáramos el Sol por un día completo, ¿qué le pasaría a Villa Alemana y al Valle del Aconcagua?</p>
+        </div>
+        <div class="card-grid g3" style="margin-top:16px;">
+          <div class="card"><span class="ico">🎯</span><h4>Meta de la clase</h4><p>Explicar con ejemplos propios por qué el Sol es la fuente de casi toda la energía que usamos.</p></div>
+          <div class="card"><span class="ico">🧠</span><h4>Lo que ya sabes</h4><p>Uso de la energía eléctrica en la casa y el concepto de temperatura.</p></div>
+          <div class="card"><span class="ico">🏆</span><h4>Actitud a desarrollar</h4><p>Curiosidad científica por los fenómenos energéticos del entorno cercano.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. CONTENIDO -->
+    <section class="slide" id="slide-contenido" data-title="Contenido">
+      <p class="eyebrow">Desarrollo · ¿Qué es la energía?</p>
+      <h2 class="title">Una misma energía, muchas formas</h2>
+      <div class="slide-body">
+        <div class="card-grid g4">
+          <div class="card"><span class="ico">💡</span><h4>Lumínica</h4><p>La luz del Sol o de una ampolleta.</p></div>
+          <div class="card"><span class="ico">🔥</span><h4>Calórica</h4><p>El calor que sentimos al cocinar o al sol del mediodía.</p></div>
+          <div class="card"><span class="ico">⚡</span><h4>Eléctrica</h4><p>La que llega por los cables a nuestros hogares.</p></div>
+          <div class="card"><span class="ico">🏃</span><h4>Cinética</h4><p>La del movimiento: un auto, el viento, el agua del río.</p></div>
+        </div>
+        <div class="oa-box" style="margin-top:16px;">
+          <span class="tag">Idea clave</span>
+          <p>La energía no se crea ni se pierde: se <b>transforma</b> de una forma a otra. Casi todo el camino comienza en el Sol, de forma directa (luz y calor) o indirecta (viento, agua, alimentos).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. CONTEXTO LOCAL / SIGNATURE FLOW -->
+    <section class="slide" id="slide-contexto" data-title="Contexto local">
+      <p class="eyebrow">Anclaje territorial</p>
+      <h2 class="title">El recorrido del Sol en nuestro valle</h2>
+      <div class="slide-body">
+        <div class="flow-wrap flow-desktop">
+          <svg class="flow-svg" viewBox="0 0 900 190" xmlns="http://www.w3.org/2000/svg">
+            <path d="M80,95 H820" stroke="#24476b" stroke-width="3" fill="none"/>
+            <path class="flow-dash" d="M80,95 H820" stroke="#f4b942" stroke-width="3" fill="none"/>
+            <g>
+              <circle cx="80" cy="95" r="34" fill="#1a3a5e" stroke="#f4b942" stroke-width="2"/>
+              <text x="80" y="102" text-anchor="middle" font-size="26">☀️</text>
+              <text x="80" y="145" text-anchor="middle" class="flow-node-title">Sol</text>
+              <text x="80" y="160" text-anchor="middle" class="flow-node-label">fuente primaria</text>
+            </g>
+            <g>
+              <circle cx="300" cy="95" r="34" fill="#1a3a5e" stroke="#2ed3bd" stroke-width="2"/>
+              <text x="300" y="102" text-anchor="middle" font-size="26">🍇</text>
+              <text x="300" y="145" text-anchor="middle" class="flow-node-title">Viñedos del valle</text>
+              <text x="300" y="160" text-anchor="middle" class="flow-node-label">fotosíntesis</text>
+            </g>
+            <g>
+              <circle cx="520" cy="95" r="34" fill="#1a3a5e" stroke="#2ed3bd" stroke-width="2"/>
+              <text x="520" y="102" text-anchor="middle" font-size="26">🏭</text>
+              <text x="520" y="145" text-anchor="middle" class="flow-node-title">C. Chacabuquito</text>
+              <text x="520" y="160" text-anchor="middle" class="flow-node-label">agua del Aconcagua</text>
+            </g>
+            <g>
+              <circle cx="740" cy="95" r="34" fill="#1a3a5e" stroke="#ff8a5c" stroke-width="2"/>
+              <text x="740" y="102" text-anchor="middle" font-size="26">🏠</text>
+              <text x="740" y="145" text-anchor="middle" class="flow-node-title">Tu hogar</text>
+              <text x="740" y="160" text-anchor="middle" class="flow-node-label">uso cotidiano</text>
+            </g>
+          </svg>
+        </div>
+        <div class="flow-mobile">
+          <div class="fm-node"><span class="fm-ico" style="border-color:var(--gold);">☀️</span><div><h4>Sol</h4><span>fuente primaria</span></div></div>
+          <div class="fm-arrow">↓</div>
+          <div class="fm-node"><span class="fm-ico" style="border-color:var(--teal);">🍇</span><div><h4>Viñedos del valle</h4><span>fotosíntesis</span></div></div>
+          <div class="fm-arrow">↓</div>
+          <div class="fm-node"><span class="fm-ico" style="border-color:var(--teal);">🏭</span><div><h4>C. Chacabuquito</h4><span>agua del Aconcagua</span></div></div>
+          <div class="fm-arrow">↓</div>
+          <div class="fm-node"><span class="fm-ico" style="border-color:var(--ember);">🏠</span><div><h4>Tu hogar</h4><span>uso cotidiano</span></div></div>
+        </div>
+        <div class="card-grid g3">
+          <div class="card"><span class="ico">🍇</span><h4>Agricultura del valle</h4><p>Los viñedos y huertos del Valle del Aconcagua transforman luz solar en energía química mediante fotosíntesis.</p></div>
+          <div class="card"><span class="ico">💧</span><h4>Central Chacabuquito</h4><p>El agua del río Aconcagua mueve turbinas: energía hidráulica que depende del ciclo del agua impulsado por el Sol.</p></div>
+          <div class="card"><span class="ico">🏔️</span><h4>Glaciar Juncal</h4><p>El calor solar derrite parte del hielo, alimentando el río que usamos aguas abajo.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. ACTIVIDAD INVESTIGACION -->
+    <section class="slide" id="slide-actividad" data-title="Investigación">
+      <p class="eyebrow">Actividad STEAM · Investigación científica</p>
+      <h2 class="title">Formulen su propia pregunta de investigación</h2>
+      <div class="slide-body">
+        <div class="oa-box">
+          <span class="tag">OA a, OA b, OA f</span>
+          <p>En grupos, formulan una pregunta de investigación sobre el uso de la energía solar en el Valle del Aconcagua, indagan en fuentes impresas y digitales, organizan la información y comunican el recorrido de la energía desde el Sol hasta un recurso de uso cotidiano en la comuna.</p>
+        </div>
+        <div class="card-grid g2">
+          <div class="card">
+            <span class="ico">✅</span><h4>Una buena pregunta...</h4>
+            <ul>
+              <li>Es específica, no demasiado amplia.</li>
+              <li>Se puede investigar con fuentes o experimentos.</li>
+              <li>Empieza con "¿Cómo...?", "¿Por qué...?", "¿Cuánto...?".</li>
+              <li>Se conecta con nuestro entorno cercano.</li>
+              <li>Permite hacer una predicción.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="ico">⚖️</span><h4>Débil vs. fuerte</h4>
+            <p><b style="color:var(--bad);">Débil:</b> "¿Qué es la energía solar?"</p>
+            <p><b style="color:var(--good);">Fuerte:</b> "¿Cómo aprovechan los agricultores del Valle del Aconcagua la energía solar para el cultivo de la vid?"</p>
+          </div>
+        </div>
+        <p class="eyebrow" style="margin-top:18px;">Elige un recurso para tu grupo</p>
+        <div class="card-grid g3">
+          <div class="card"><span class="ico">☀️</span><h4>Energía solar</h4><p>¿Cómo usan los paneles solares los agricultores de Villa Alemana para regar sus cultivos?</p></div>
+          <div class="card"><span class="ico">💧</span><h4>Energía hidráulica</h4><p>¿Cómo transforma la Central Chacabuquito el agua del río Aconcagua en electricidad?</p></div>
+          <div class="card"><span class="ico">🪵</span><h4>Biomasa</h4><p>¿Qué uso le dan las familias de Villa Alemana a la leña como fuente de energía calórica?</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. BANCO BLOOM -->
+    <section class="slide" id="slide-bloom" data-title="Banco de preguntas">
+      <p class="eyebrow">Banco de preguntas · Taxonomía de Bloom</p>
+      <h2 class="title">De Recordar a Crear: sube de nivel</h2>
+      <p class="subtitle">Toca cada nivel para ver sus preguntas. Los niveles 5 y 6 son <b style="color:var(--boss);">Desafío Boss</b>.</p>
+      <div class="slide-body" id="bloom-accordion"></div>
+    </section>
+
+    <!-- 8. EXIT CLASE 1 -->
+    <section class="slide" id="slide-exit1" data-title="Exit Ticket 1">
+      <p class="eyebrow">Cierre · Sesión 1</p>
+      <h2 class="title">Antes de irnos... 🎟️</h2>
+      <div class="slide-body">
+        <div class="exit-grid">
+          <div class="card"><h4>1. Una idea nueva</h4><textarea class="exit-input" placeholder="Escribe algo que aprendiste hoy..."></textarea></div>
+          <div class="card"><h4>2. Una duda</h4><textarea class="exit-input" placeholder="¿Qué te gustaría entender mejor?"></textarea></div>
+          <div class="card"><h4>3. Una conexión local</h4><textarea class="exit-input" placeholder="¿Dónde ves esto en Villa Alemana?"></textarea></div>
+        </div>
+        <div class="oa-box" style="margin-top:16px;">
+          <span class="tag">Para la próxima sesión</span>
+          <p>En la Sesión 2 revisaremos lo aprendido con un juego relámpago y prepararemos el salto a la investigación experimental (OA9).</p>
+        </div>
+        <button class="btn btn-primary" id="btn-complete-exit1" style="margin-top:10px;">Marcar cierre completado 🪙 +10 Felipesos</button>
+      </div>
+    </section>
+
+    <!-- 9. RETRO CLASE 2 -->
+    <section class="slide" id="slide-retro" data-title="Retroalimentación">
+      <p class="eyebrow">Sesión 2 · Clase 2 (30 min)</p>
+      <h2 class="title">🎮 Retroalimentación gamificada</h2>
+      <p class="subtitle">Responde para repasar lo visto en la Sesión 1. Cada acierto suma Felipesos.</p>
+      <div class="slide-body" id="retro-quiz-container"></div>
+    </section>
+
+    <!-- 10. REFUERZO -->
+    <section class="slide" id="slide-refuerzo" data-title="Refuerzo">
+      <p class="eyebrow">Refuerzo</p>
+      <h2 class="title">El recorrido de la energía, otra vez</h2>
+      <div class="slide-body">
+        <div class="oa-box">
+          <span class="tag">Recapitulando</span>
+          <p>Sol → luz y calor → fotosíntesis, agua que se evapora y cae como lluvia, calor que sentimos. La mayoría de los recursos que usamos en Villa Alemana provienen, directa o indirectamente, del Sol.</p>
+        </div>
+        <div class="card-grid g2">
+          <div class="card boss" style="border-color:rgba(185,139,255,.4);">
+            <span class="ico">👑</span><h4 style="color:var(--boss);">Desafío Boss (individual)</h4>
+            <p>Evalúa con datos la eficiencia de dos fuentes de energía usadas en la comuna (por ejemplo, calefón solar versus calefón a gas) y argumenta tu respuesta.</p>
+          </div>
+          <div class="card">
+            <span class="ico">✅</span><h4>Repaso rápido</h4>
+            <ul>
+              <li>El Sol es la fuente primaria de casi toda la energía.</li>
+              <li>Los viñedos transforman luz en energía química (fotosíntesis).</li>
+              <li>La Central Chacabuquito usa el agua del Aconcagua para generar electricidad.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. EXIT CLASE 2 -->
+    <section class="slide" id="slide-exit2" data-title="Exit Ticket 2">
+      <p class="eyebrow">Cierre · Sesión 2</p>
+      <h2 class="title">3-2-1 y puente a la próxima clase</h2>
+      <div class="slide-body">
+        <div class="card-grid g3">
+          <div class="card"><h4>3 cosas que aprendiste</h4><textarea class="exit-input" placeholder="1. ...&#10;2. ...&#10;3. ..."></textarea></div>
+          <div class="card"><h4>2 preguntas que tienes</h4><textarea class="exit-input" placeholder="1. ...&#10;2. ..."></textarea></div>
+          <div class="card"><h4>1 conexión con tu vida</h4><textarea class="exit-input" placeholder="..."></textarea></div>
+        </div>
+        <button class="btn btn-primary" id="btn-complete-exit2" style="margin-top:14px;">Marcar cierre completado 🪙 +10 Felipesos</button>
+      </div>
+    </section>
+
+    <!-- 12. JUEGOS HUB -->
+    <section class="slide" id="slide-juegos" data-title="Juegos">
+      <p class="eyebrow">Zona de juegos</p>
+      <h2 class="title">🎮 Pon a prueba lo que aprendiste</h2>
+      <p class="subtitle">Elige un juego. Cada uno entrega Felipesos y una insignia al completarlo.</p>
+      <div class="slide-body">
+        <div class="card-grid g3">
+          <div class="game-card" data-goto="slide-memorama"><span class="ico">🧠</span><h4>Memorama energético</h4><p>Encuentra los pares entre fuentes y usos de energía.</p><span class="reward">Insignia: Memoria de Energía</span></div>
+          <div class="game-card" data-goto="slide-relampago"><span class="ico">⚡</span><h4>Quiz relámpago</h4><p>6 preguntas contra el reloj sobre las Sesiones 1 y 2.</p><span class="reward">Insignia: Rayo Veloz</span></div>
+          <div class="game-card" data-goto="slide-clasifica"><span class="ico">♻️</span><h4>Clasifica y gana</h4><p>Ordena recursos energéticos en renovables y no renovables.</p><span class="reward">Insignia: Clasificador Experto</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13. MEMORAMA -->
+    <section class="slide" id="slide-memorama" data-title="Memorama">
+      <p class="eyebrow">Juego 1 · Memorama</p>
+      <h2 class="title">🧠 Encuentra los pares</h2>
+      <p class="subtitle">Toca dos cartas para revelarlas. Empareja la fuente de energía con su uso en el Valle del Aconcagua.</p>
+      <div class="slide-body">
+        <div id="memory-grid"></div>
+        <p style="font-family:var(--mono);font-size:13px;color:var(--muted);margin-top:12px;" id="memory-status">Pares encontrados: 0 / 6</p>
+      </div>
+    </section>
+
+    <!-- 14. RELAMPAGO -->
+    <section class="slide" id="slide-relampago" data-title="Quiz relámpago">
+      <p class="eyebrow">Juego 2 · Quiz relámpago</p>
+      <h2 class="title">⚡ Responde antes que se acabe el tiempo</h2>
+      <div class="slide-body" id="lightning-container"></div>
+    </section>
+
+    <!-- 15. CLASIFICA -->
+    <section class="slide" id="slide-clasifica" data-title="Clasifica y gana">
+      <p class="eyebrow">Juego 3 · Clasifica y gana</p>
+      <h2 class="title">♻️ Renovable o no renovable</h2>
+      <p class="subtitle">Toca un recurso y luego toca la zona donde crees que corresponde.</p>
+      <div class="slide-body">
+        <div class="classify-pool" id="classify-pool"></div>
+        <div class="classify-zones">
+          <div class="zone renovable"><h4>🌱 Renovable</h4><div id="zone-renovable"></div></div>
+          <div class="zone no-renovable"><h4>🛢️ No renovable</h4><div id="zone-no-renovable"></div></div>
+        </div>
+        <p style="font-family:var(--mono);font-size:13px;color:var(--muted);margin-top:12px;" id="classify-status">Clasificados: 0 / 8</p>
+      </div>
+    </section>
+
+    <!-- 16. CIERRE -->
+    <section class="slide" id="slide-cierre" data-title="Cierre">
+      <p class="eyebrow">Cierre general</p>
+      <h2 class="title">🏆 ¡Buen trabajo, científicos del Valle!</h2>
+      <div class="slide-body">
+        <div class="oa-box">
+          <p>Hoy explicamos por qué el Sol es la fuente principal de casi toda la energía que usamos en Villa Alemana y el Valle del Aconcagua, y formulamos nuestras primeras preguntas de investigación.</p>
+        </div>
+        <p class="eyebrow">Tus insignias</p>
+        <div class="badge-row" id="badge-row"></div>
+        <div class="card-grid g2" style="margin-top:18px;">
+          <div class="card"><span class="ico">⚡</span><h4>Felipesos ganados</h4><p style="font-family:var(--mono);font-size:22px;color:var(--gold-soft);" id="final-xp">0 Felipesos</p></div>
+          <div class="card"><span class="ico">🔭</span><h4>Próxima clase</h4><p>OA9 — Investigar en forma experimental la transformación de la energía de una forma a otra.</p></div>
+        </div>
+        <button class="btn btn-primary" id="btn-pdf-cierre" style="margin-top:18px;">📄 Descargar guía compilada en PDF</button>
+      </div>
+    </section>
+
+  </main>
+
+  <nav id="controls">
+    <button class="nav-btn" id="btn-prev" aria-label="Anterior">←</button>
+    <span id="slide-counter">1 / 16</span>
+    <button class="nav-btn" id="btn-next" aria-label="Siguiente">→</button>
+  </nav>
+</div>
+
+<!-- Printable compiled guide, populated by JS just before export. Hidden on screen, shown only when printing. -->
+<div id="print-sheet"></div>
+
+<script>
+/* ===================== DATA ===================== */
+const bloomData = [
+  { lvl:'N1', label:'Recordar', boss:false, items:[
+    'Identifica y define el concepto de energía y sus principales manifestaciones (lumínica, calórica, eléctrica, cinética).',
+    'Reconoce al Sol como fuente primaria de energía en la Tierra, nombrando ejemplos del Valle del Aconcagua y de Villa Alemana (huertos, viñedos, colectores solares).'
+  ]},
+  { lvl:'N2', label:'Comprender', boss:false, items:[
+    'Explica cómo la energía solar se transforma en energía química mediante la fotosíntesis en los cultivos y viñedos del Valle del Aconcagua.',
+    'Describe el rol de la energía en los procesos vitales de los seres vivos y en el funcionamiento de máquinas y aparatos de uso cotidiano.'
+  ]},
+  { lvl:'N3', label:'Aplicar', boss:false, items:[
+    'Clasifica recursos energéticos de uso local (leña, gas, electricidad, sol) según su origen directo o indirecto del Sol.',
+    'Elabora en tu cuaderno un diagrama que muestre la transformación de la energía solar en otros tipos de energía, usando un ejemplo cercano.'
+  ]},
+  { lvl:'N4', label:'Analizar', boss:false, items:[
+    'Analiza críticamente ejemplos de recursos energéticos usados en la agricultura del Valle del Aconcagua, relacionándolos con la energía solar.',
+    'Compara el aporte energético del Sol en distintos procesos (fotosíntesis, calentamiento de agua, generación eléctrica).'
+  ]},
+  { lvl:'N5', label:'Evaluar', boss:true, items:[
+    'Evalúa, con criterios científicos y datos, la eficiencia de dos fuentes de energía usadas en la comuna (por ejemplo, calefón solar versus calefón a gas).',
+    'Formula una pregunta de investigación propia (OA a) y argumenta por qué la mayoría de los recursos energéticos del planeta dependen del Sol.'
+  ]},
+  { lvl:'N6', label:'Crear', boss:true, items:[
+    'Diseña una infografía que explique, para la comunidad escolar, el recorrido de la energía solar hasta un aparato de uso cotidiano en tu hogar.',
+    'Propone una indagación bibliográfica sobre una fuente energética usada en Villa Alemana y comunica tus conclusiones con apoyo de TIC (OA f).'
+  ]}
+];
+
+const retroQuestions = [
+  { q:'¿Cuál es la principal fuente de energía de la Tierra?', opts:['El Sol','El viento','El agua del río Aconcagua','Las pilas'], correct:0 },
+  { q:'¿Qué tipo de energía usa una planta directamente del Sol para hacer fotosíntesis?', opts:['Energía eléctrica','Energía lumínica','Energía cinética','Energía nuclear'], correct:1 },
+  { q:'Verdadero o falso: la Central Chacabuquito no tiene ninguna relación con el Sol.', opts:['Verdadero','Falso'], correct:1 },
+  { q:'¿Cuál de estos ejemplos NO proviene, ni directa ni indirectamente, del Sol?', opts:['La leña de un fogón','El agua que mueve una turbina','La luz de la Luna','El calor de un colector solar'], correct:2 },
+  { q:'Cuando quemamos leña para calentar la casa, la energía química se transforma principalmente en...', opts:['Energía calórica','Energía nuclear','Energía eólica','Energía magnética'], correct:0 }
+];
+
+const lightningQuestions = [
+  { q:'¿Qué forma de energía es la luz de una ampolleta?', opts:['Calórica','Lumínica','Cinética','Química'], correct:1 },
+  { q:'Los viñedos del Valle del Aconcagua transforman la luz solar en energía...', opts:['Eléctrica','Química (fotosíntesis)','Nuclear','Sonora'], correct:1 },
+  { q:'¿Qué mueve las turbinas de la Central Chacabuquito?', opts:['El viento','El agua del río Aconcagua','El sol directo','El carbón'], correct:1 },
+  { q:'¿Qué le pasa al hielo del Glaciar Juncal cuando recibe calor del Sol?', opts:['Se congela más','Se derrite y alimenta el río','Desaparece sin dejar agua','Se convierte en carbón'], correct:1 },
+  { q:'Una buena pregunta de investigación debería ser...', opts:['Muy amplia y general','Específica e investigable','Imposible de responder','Solo de sí o no'], correct:1 },
+  { q:'¿Cuál de estas fuentes de energía es renovable?', opts:['Petróleo','Carbón','Energía solar','Gas natural'], correct:2 }
+];
+
+const memoryPairs = [
+  { id:'sol', icon:'☀️', label:'Sol' },
+  { id:'foto', icon:'🍇', label:'Fotosíntesis' },
+  { id:'agua', icon:'💧', label:'Agua del Aconcagua' },
+  { id:'central', icon:'🏭', label:'C. Chacabuquito' },
+  { id:'leña', icon:'🪵', label:'Leña' },
+  { id:'calor', icon:'🔥', label:'Calor del hogar' },
+  { id:'panel', icon:'🔆', label:'Panel solar' },
+  { id:'riego', icon:'🌱', label:'Riego de cultivos' },
+  { id:'viento', icon:'🌬️', label:'Viento' },
+  { id:'molino', icon:'🍃', label:'Energía eólica' },
+  { id:'bencina', icon:'⛽', label:'Bencina' },
+  { id:'auto', icon:'🚗', label:'Auto en movimiento' }
+];
+
+const classifyItems = [
+  { name:'Sol', type:'renovable' },
+  { name:'Agua del río Aconcagua', type:'renovable' },
+  { name:'Viento', type:'renovable' },
+  { name:'Paneles solares', type:'renovable' },
+  { name:'Petróleo', type:'no-renovable' },
+  { name:'Carbón (Mina El Soldado)', type:'no-renovable' },
+  { name:'Gas natural', type:'no-renovable' },
+  { name:'Bencina', type:'no-renovable' }
+];
+
+const badgeDefs = [
+  { id:'exit1', label:'🎟️ Cierre Sesión 1' },
+  { id:'exit2', label:'🎟️ Cierre Sesión 2' },
+  { id:'memorama', label:'🧠 Memoria de Energía' },
+  { id:'relampago', label:'⚡ Rayo Veloz' },
+  { id:'clasifica', label:'♻️ Clasificador Experto' }
+];
+
+/* ===================== STATE ===================== */
+const state = { xp:0, badges:new Set(), current:0 };
+const slideEls = Array.from(document.querySelectorAll('#deck .slide'));
+const slideIds = slideEls.map(s=>s.id);
+
+/* ===================== XP / BADGES ===================== */
+function addXP(n){
+  state.xp += n;
+  document.getElementById('xp-count').textContent = state.xp;
+  const toast = document.getElementById('xp-toast');
+  toast.textContent = '+' + n;
+  toast.classList.remove('show'); void toast.offsetWidth; toast.classList.add('show');
+  const badge = document.getElementById('xp-badge');
+  badge.classList.remove('bump'); void badge.offsetWidth; badge.classList.add('bump');
+}
+function earnBadge(id){
+  if(state.badges.has(id)) return;
+  state.badges.add(id);
+  renderBadges();
+}
+function renderBadges(){
+  const row = document.getElementById('badge-row');
+  if(!row) return;
+  row.innerHTML = badgeDefs.map(b=>
+    `<span class="badge-pill ${state.badges.has(b.id)?'earned':''}">${b.label}</span>`
+  ).join('');
+  const finalXp = document.getElementById('final-xp');
+  if(finalXp) finalXp.textContent = state.xp + ' Felipesos';
+}
+
+/* ===================== NAVIGATION ===================== */
+function buildDots(){
+  const wrap = document.getElementById('progress-dots');
+  const sectionStarts = new Set(['slide-cover','slide-retro','slide-juegos']);
+  wrap.innerHTML = slideIds.map((id,i)=>
+    `<span class="dot ${sectionStarts.has(id)?'section-start':''}" data-idx="${i}" title="${slideEls[i].dataset.title||''}"></span>`
+  ).join('');
+  wrap.querySelectorAll('.dot').forEach(d=>{
+    d.addEventListener('click', ()=>goTo(parseInt(d.dataset.idx,10)));
+  });
+}
+function goTo(idx){
+  if(idx<0 || idx>=slideEls.length) return;
+  slideEls[state.current].classList.remove('active');
+  state.current = idx;
+  slideEls[idx].classList.add('active');
+  document.getElementById('slide-counter').textContent = (idx+1)+' / '+slideEls.length;
+  document.getElementById('btn-prev').disabled = idx===0;
+  document.getElementById('btn-next').disabled = idx===slideEls.length-1;
+  document.querySelectorAll('#progress-dots .dot').forEach((d,i)=>{
+    d.classList.toggle('active', i===idx);
+    d.classList.toggle('done', i<idx);
+  });
+  slideEls[idx].querySelector('.slide-body')?.scrollTo(0,0);
+}
+document.getElementById('btn-prev').addEventListener('click', ()=>goTo(state.current-1));
+document.getElementById('btn-next').addEventListener('click', ()=>goTo(state.current+1));
+document.addEventListener('keydown', e=>{
+  if(e.key==='ArrowRight') goTo(state.current+1);
+  if(e.key==='ArrowLeft') goTo(state.current-1);
+});
+let touchX = null;
+document.getElementById('deck').addEventListener('touchstart', e=>{ touchX = e.touches[0].clientX; }, {passive:true});
+document.getElementById('deck').addEventListener('touchend', e=>{
+  if(touchX===null) return;
+  const dx = e.changedTouches[0].clientX - touchX;
+  if(Math.abs(dx) > 50) goTo(state.current + (dx<0 ? 1 : -1));
+  touchX = null;
+}, {passive:true});
+document.querySelectorAll('.game-card[data-goto]').forEach(card=>{
+  card.addEventListener('click', ()=> goTo(slideIds.indexOf(card.dataset.goto)));
+});
+
+/* ===================== BLOOM ACCORDION ===================== */
+function renderBloom(){
+  const wrap = document.getElementById('bloom-accordion');
+  wrap.innerHTML = bloomData.map((lvl,i)=>`
+    <div class="acc-item ${lvl.boss?'boss':''}" data-idx="${i}">
+      <div class="acc-head">
+        <div class="lvl">
+          <span class="acc-num">${lvl.lvl}</span>
+          <h4>${lvl.label}</h4>
+          ${lvl.boss?'<span class="boss-tag">👑 Desafío Boss</span>':''}
+        </div>
+        <span class="acc-chevron">▾</span>
+      </div>
+      <div class="acc-panel"><div class="acc-panel-inner"><ul>
+        ${lvl.items.map(it=>`<li>${it}</li>`).join('')}
+      </ul></div></div>
+    </div>
+  `).join('');
+  wrap.querySelectorAll('.acc-item').forEach(item=>{
+    item.querySelector('.acc-head').addEventListener('click', ()=>{
+      const wasOpen = item.classList.contains('open');
+      wrap.querySelectorAll('.acc-item').forEach(x=>x.classList.remove('open'));
+      if(!wasOpen) item.classList.add('open');
+    });
+  });
+}
+
+/* ===================== GENERIC QUIZ RENDERER ===================== */
+function renderQuiz(containerId, questions, opts){
+  opts = opts || {};
+  const container = document.getElementById(containerId);
+  container.innerHTML = questions.map((q,qi)=>`
+    <div class="quiz-card" data-qi="${qi}">
+      ${opts.timed?'<div class="timer-bar-wrap"><div class="timer-bar" data-timer></div></div>':''}
+      <p class="quiz-q">${qi+1}. ${q.q}</p>
+      <div class="quiz-opts">
+        ${q.opts.map((o,oi)=>`<button class="quiz-opt" data-oi="${oi}">${o}</button>`).join('')}
+      </div>
+      <p class="quiz-feedback"></p>
+    </div>
+  `).join('');
+
+  container.querySelectorAll('.quiz-card').forEach(card=>{
+    const qi = parseInt(card.dataset.qi,10);
+    const q = questions[qi];
+    const buttons = card.querySelectorAll('.quiz-opt');
+    let answered = false;
+    let timerInterval = null;
+
+    function lockAndScore(chosenIdx, viaTimeout){
+      if(answered) return;
+      answered = true;
+      if(timerInterval) clearInterval(timerInterval);
+      buttons.forEach((b,oi)=>{
+        b.disabled = true;
+        if(oi===q.correct) b.classList.add('correct');
+        else if(oi===chosenIdx) b.classList.add('wrong');
+      });
+      const fb = card.querySelector('.quiz-feedback');
+      fb.classList.add('show');
+      if(!viaTimeout && chosenIdx===q.correct){
+        fb.textContent = '¡Correcto! ' + (opts.timed ? '+15 Felipesos' : '+10 Felipesos');
+        addXP(opts.timed?15:10);
+      } else {
+        fb.textContent = viaTimeout ? '⏱️ Se acabó el tiempo. La respuesta correcta era: "'+q.opts[q.correct]+'".' : 'Casi. La respuesta correcta era: "'+q.opts[q.correct]+'".';
+      }
+      if(opts.onAnswered) opts.onAnswered(qi, chosenIdx===q.correct);
+    }
+    buttons.forEach((b,oi)=>{
+      b.addEventListener('click', ()=> lockAndScore(oi, false));
+    });
+    if(opts.timed){
+      const bar = card.querySelector('[data-timer]');
+      let duration = 15, elapsed = 0;
+      bar.style.transition = 'none';
+      timerInterval = setInterval(()=>{
+        elapsed += 0.2;
+        const pct = Math.max(0, 100 - (elapsed/duration*100));
+        bar.style.width = pct+'%';
+        if(elapsed>=duration){ clearInterval(timerInterval); lockAndScore(-1, true); }
+      }, 200);
+    }
+  });
+}
+
+/* ===================== MEMORY GAME ===================== */
+function renderMemory(){
+  const grid = document.getElementById('memory-grid');
+  const cards = [];
+  memoryPairs.forEach((p,i)=>{
+    cards.push({pairId:i, icon:p.icon, label:p.label});
+    cards.push({pairId:i, icon:p.icon, label:p.label});
+  });
+  // shuffle
+  for(let i=cards.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [cards[i],cards[j]] = [cards[j],cards[i]];
+  }
+  grid.innerHTML = cards.map((c,i)=>`
+    <div class="mem-card" data-idx="${i}" data-pair="${c.pairId}">
+      <div class="face back">❓</div>
+      <div class="face front"><span>${c.icon}</span><span class="lbl">${c.label}</span></div>
+    </div>
+  `).join('');
+
+  let first = null, lock = false, matched = 0;
+  const statusEl = document.getElementById('memory-status');
+  grid.querySelectorAll('.mem-card').forEach(cardEl=>{
+    cardEl.addEventListener('click', ()=>{
+      if(lock || cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
+      cardEl.classList.add('flipped');
+      if(first===null){ first = cardEl; return; }
+      lock = true;
+      const same = first.dataset.pair === cardEl.dataset.pair;
+      if(same){
+        first.classList.add('matched'); cardEl.classList.add('matched');
+        matched++;
+        statusEl.textContent = 'Pares encontrados: '+matched+' / '+memoryPairs.length;
+        addXP(8);
+        first = null; lock = false;
+        if(matched===memoryPairs.length){
+          earnBadge('memorama');
+          statusEl.textContent = '¡Completado! Todos los pares encontrados. +25 Felipesos bono';
+          addXP(25);
+        }
+      } else {
+        setTimeout(()=>{
+          first.classList.remove('flipped'); cardEl.classList.remove('flipped');
+          first = null; lock = false;
+        }, 800);
+      }
+    });
+  });
+}
+
+/* ===================== CLASSIFY GAME ===================== */
+function renderClassify(){
+  const pool = document.getElementById('classify-pool');
+  const zoneR = document.getElementById('zone-renovable');
+  const zoneNR = document.getElementById('zone-no-renovable');
+  const statusEl = document.getElementById('classify-status');
+  let selected = null, placed = 0;
+
+  pool.innerHTML = classifyItems.map((it,i)=>
+    `<span class="classify-chip" data-idx="${i}">${it.name}</span>`
+  ).join('');
+
+  function selectChip(chip){
+    pool.querySelectorAll('.classify-chip').forEach(c=>c.classList.remove('selected'));
+    if(chip.classList.contains('placed')) return;
+    chip.classList.add('selected');
+    selected = chip;
+  }
+  function placeInZone(zoneType, zoneEl){
+    if(!selected) return;
+    const idx = parseInt(selected.dataset.idx,10);
+    const correct = classifyItems[idx].type === zoneType;
+    const tag = document.createElement('span');
+    tag.className = 'zone-chip ' + (correct?'ok':'bad');
+    tag.textContent = classifyItems[idx].name + (correct?' ✓':' ✕ ('+ (classifyItems[idx].type==='renovable'?'es renovable':'es no renovable') +')');
+    zoneEl.appendChild(tag);
+    selected.classList.add('placed');
+    selected.classList.remove('selected');
+    selected = null;
+    placed++;
+    if(correct) addXP(6);
+    statusEl.textContent = 'Clasificados: '+placed+' / '+classifyItems.length;
+    if(placed===classifyItems.length){
+      earnBadge('clasifica');
+      statusEl.textContent += ' · ¡Completado! +20 Felipesos bono';
+      addXP(20);
+    }
+  }
+  pool.querySelectorAll('.classify-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>selectChip(chip));
+  });
+  zoneR.parentElement.addEventListener('click', (e)=>{ if(e.target===zoneR.parentElement || e.target===zoneR || e.target.tagName==='H4') placeInZone('renovable', zoneR); });
+  zoneNR.parentElement.addEventListener('click', (e)=>{ if(e.target===zoneNR.parentElement || e.target===zoneNR || e.target.tagName==='H4') placeInZone('no-renovable', zoneNR); });
+}
+
+/* ===================== EXIT TICKET BUTTONS ===================== */
+document.getElementById('btn-complete-exit1').addEventListener('click', (e)=>{
+  earnBadge('exit1'); addXP(10);
+  e.target.disabled = true; e.target.textContent = '✔ Completado';
+});
+document.getElementById('btn-complete-exit2').addEventListener('click', (e)=>{
+  earnBadge('exit2'); addXP(10);
+  e.target.disabled = true; e.target.textContent = '✔ Completado';
+});
+
+/* ===================== PDF EXPORT (compiled guide via print) ===================== */
+function buildPrintSheet(){
+  const today = new Date().toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit', year:'numeric' });
+
+  const bloomHtml = bloomData.map(lvl => `
+    <div class="p-bloom-lvl ${lvl.boss?'boss':''}">
+      <b>${lvl.lvl} · ${lvl.label}${lvl.boss?' — Desafío Boss':''}</b>
+      <ul>${lvl.items.map(it=>`<li>${it}</li>`).join('')}</ul>
+    </div>
+  `).join('');
+
+  function qaBlock(list){
+    return list.map((q,i)=>`
+      <div class="p-qa">
+        <p class="pq">${i+1}. ${q.q}</p>
+        <p class="po">Opciones: ${q.opts.join(' · ')}</p>
+        <p class="pa">Respuesta correcta: ${q.opts[q.correct]}</p>
+      </div>
+    `).join('');
+  }
+
+  const classifyRows = classifyItems.map(it=>`
+    <tr><td>${it.name}</td><td>${it.type==='renovable' ? 'Renovable' : 'No renovable'}</td></tr>
+  `).join('');
+
+  const memoryRows = memoryPairs.map(p=>`<tr><td>${p.icon} ${p.label}</td></tr>`).join('');
+
+  document.getElementById('print-sheet').innerHTML = `
+    <div class="p-header">
+      <h1>Unidad 3 · Energía — Guía compilada (Sesiones 1 y 2)</h1>
+      <div class="p-meta">
+        <span>Profesor: Felipe Jiménez</span>
+        <span>Curso: 6° Básico</span>
+        <span>Fecha: ${today}</span>
+        <span>Nombre estudiante: _______________________</span>
+      </div>
+      <span class="p-felipesos">🪙 Felipesos acumulados en esta sesión: ${state.xp}</span>
+    </div>
+
+    <div class="p-section">
+      <h2>Objetivo de aprendizaje · OA8</h2>
+      <div class="p-oa">Explicar que la energía es necesaria para que los objetos cambien y los seres vivos realicen sus procesos vitales, y que la mayoría de los recursos energéticos proviene directa o indirectamente del Sol, dando ejemplos de ello.</div>
+      <p><b>Habilidades de investigación:</b> OA a (formular preguntas de investigación) · OA b (planificar una investigación) · OA f (comunicar conclusiones con TIC)</p>
+    </div>
+
+    <div class="p-section">
+      <h2>Contenido: formas de energía</h2>
+      <p>Lumínica (la luz del Sol o de una ampolleta) · Calórica (el calor al cocinar o del sol de mediodía) · Eléctrica (la que llega por los cables) · Cinética (la del movimiento: auto, viento, agua).</p>
+      <p>La energía no se crea ni se pierde: se transforma de una forma a otra. Casi todo el camino comienza en el Sol, directa o indirectamente.</p>
+    </div>
+
+    <div class="p-section">
+      <h2>Contexto local: el recorrido del Sol en el Valle del Aconcagua</h2>
+      <p>Sol → Viñedos del valle (fotosíntesis) → Central Hidroeléctrica Chacabuquito (agua del río Aconcagua) → Hogar (uso cotidiano). El calor solar también derrite parte del hielo del Glaciar Juncal, alimentando el río aguas abajo.</p>
+    </div>
+
+    <div class="p-section">
+      <h2>Actividad de investigación (OA a, OA b, OA f)</h2>
+      <p>En grupos, formulan una pregunta de investigación sobre el uso de la energía solar en el Valle del Aconcagua, indagan en fuentes impresas y digitales, organizan la información y comunican el recorrido de la energía desde el Sol hasta un recurso de uso cotidiano en la comuna.</p>
+      <p><b>Débil:</b> "¿Qué es la energía solar?" &nbsp;·&nbsp; <b>Fuerte:</b> "¿Cómo aprovechan los agricultores del Valle del Aconcagua la energía solar para el cultivo de la vid?"</p>
+    </div>
+
+    <div class="p-section p-page-break">
+      <h2>Banco de preguntas · Taxonomía de Bloom (N1–N6)</h2>
+      ${bloomHtml}
+    </div>
+
+    <div class="p-section p-page-break">
+      <h2>Preguntas y respuestas · Retroalimentación (Sesión 2)</h2>
+      ${qaBlock(retroQuestions)}
+    </div>
+
+    <div class="p-section">
+      <h2>Preguntas y respuestas · Quiz relámpago</h2>
+      ${qaBlock(lightningQuestions)}
+    </div>
+
+    <div class="p-section p-page-break">
+      <h2>Juego Clasifica y gana · Pauta de respuestas</h2>
+      <table class="p-table"><tr><th>Recurso</th><th>Clasificación correcta</th></tr>${classifyRows}</table>
+    </div>
+
+    <div class="p-section">
+      <h2>Juego Memorama · Pares (referencia docente)</h2>
+      <table class="p-table"><tr><th>Elemento</th></tr>${memoryRows}</table>
+    </div>
+
+    <div class="p-footer">Unidad 3: Energía — 6° Básico · Prof. Felipe Jiménez · Villa Alemana. Próxima clase: OA9, investigación experimental de la transformación de la energía.</div>
+  `;
+}
+function exportPDF(){
+  buildPrintSheet();
+  window.print();
+}
+document.getElementById('pdf-btn').addEventListener('click', exportPDF);
+document.getElementById('btn-pdf-cierre').addEventListener('click', exportPDF);
+
+/* ===================== INIT ===================== */
+buildDots();
+goTo(0);
+renderBloom();
+renderQuiz('retro-quiz-container', retroQuestions, {timed:false});
+renderQuiz('lightning-container', lightningQuestions, {timed:true, onAnswered:(qi, ok)=>{
+  const allCards = document.querySelectorAll('#lightning-container .quiz-card');
+  const allAnswered = Array.from(allCards).every(c=>c.querySelectorAll('.quiz-opt:disabled').length>0);
+  if(allAnswered){ earnBadge('relampago'); }
+}});
+renderMemory();
+renderClassify();
+renderBadges();
+</script>
+</body>
+</html>
