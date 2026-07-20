@@ -699,15 +699,11 @@ h2.sh::before { content: '⬧'; color: var(--gold); font-size: 0.75rem; opacity:
 }
 .mc-status-frame {
   width: 100%;
-  height: 220px;
+  height: 560px;      /* alto de respaldo mientras se mide el contenido real del iframe */
+  min-height: 340px;
   border: none;
   display: block;
-}
-@media (min-width: 681px) {
-  .mc-status-frame { height: 130px; }
-}
-@media (min-width: 1280px) {
-  .mc-status-frame { height: 110px; }
+  transition: height 0.35s cubic-bezier(.4,0,.2,1);
 }
 
 .fade-in { animation: fadeIn 0.45s cubic-bezier(0.16,1,0.3,1); }
@@ -1269,7 +1265,7 @@ function rHome(stage){
 
       <!-- ⛏️ ESTADO DEL SERVIDOR DE MINECRAFT -->
       <div class="mc-status-wrap">
-        <iframe src="herramientas/servidormc.html" class="mc-status-frame" title="Estado del servidor de Minecraft" loading="eager"></iframe>
+        <iframe id="mc-status-frame" src="herramientas/servidormc.html" class="mc-status-frame" title="Estado del servidor de Minecraft" loading="eager"></iframe>
       </div>
 
       <!-- 🧰 DESCRIPCIÓN DE HERRAMIENTAS -->
@@ -1420,6 +1416,7 @@ function rHome(stage){
     </div>`;
   updateRadioBadge();
   startCountdown18();
+  setupMcStatusResize();
 }
 
 /* ── 🇨🇱 Cuenta regresiva 18 de Septiembre ── */
@@ -1444,6 +1441,35 @@ function startCountdown18(){
   }
   tick();
   _countdown18Interval = setInterval(tick, 1000);
+}
+
+/* ── ⛏️ Auto-ajuste de altura del mostrador de estado del servidor (mismo origen) ── */
+function setupMcStatusResize(){
+  const frame = document.getElementById('mc-status-frame');
+  if (!frame) return;
+
+  const ajustar = () => {
+    try {
+      const doc = frame.contentDocument;
+      if (doc && doc.body) {
+        const alto = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight);
+        if (alto > 0) frame.style.height = alto + 'px';
+      }
+    } catch (e) {
+      /* Origen cruzado: se mantiene el alto de respaldo definido en CSS */
+    }
+  };
+
+  frame.addEventListener('load', () => {
+    ajustar();
+    try {
+      const ro = new ResizeObserver(ajustar);
+      ro.observe(frame.contentDocument.body);
+    } catch (e) { /* no disponible: sin problema, ya se ajustó una vez */ }
+  });
+
+  // Por si el iframe ya estaba cargado (ej. al volver a home desde caché)
+  if (frame.contentDocument && frame.contentDocument.readyState === 'complete') ajustar();
 }
 
 /* ── 📻 Estado de la radio en la portada (misma hoja que radio.html) ── */
