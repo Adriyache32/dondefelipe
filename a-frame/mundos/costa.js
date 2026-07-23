@@ -61,6 +61,11 @@ window.MUNDOS.costa = {
         'Espino (<i>Vachellia caven</i>), indicador de suelo degradado',
         'Quisco (<i>Echinopsis chiloensis</i>) y chagual (<i>Puya chilensis</i>) en lo más seco'
       ],
+      detalle: [
+        'Es un bosque bajo y abierto, de tres a ocho metros, que nunca cierra del todo el dosel. Esa apertura no es pobreza: es la forma que toma un bosque cuando llueve solo en invierno y hay que atravesar cinco o seis meses secos. La hoja dura, pequeña y con cutícula gruesa es la respuesta compartida por especies que no son parientes entre sí, un caso clásico de convergencia evolutiva.',
+        'El agua manda la distribución. En las quebradas de umbría, donde la ladera mira al sur y el suelo retiene humedad, aparecen peumo y quillay de buen porte. En la ladera de solana, expuesta al sol de la tarde, el bosque se abre en matorral con litre, quisco y chagual. El mismo cerro sostiene dos comunidades distintas separadas por unos pocos metros.',
+        'La camanchaca completa el balance hídrico. La niebla costera se condensa sobre las hojas y gotea al suelo, aportando agua en meses sin una sola lluvia. Es un ecosistema endémico de Chile central y uno de los cinco climas mediterráneos del planeta, todos ellos puntos calientes de biodiversidad y todos ellos muy transformados por el ser humano.'
+      ],
       reto: 'Toma una hoja de peumo y una de la duna. ¿Qué tienen en común las plantas que viven donde el agua escasea, aunque sean de familias distintas?',
       especies: [
         { forma: 'quillay',  n: 46, color: '#6f8256', nombre: 'Quillay' },
@@ -81,6 +86,11 @@ window.MUNDOS.costa = {
         'Macha y taquilla, enterradas en la zona de lavado',
         'Gaviotas y pilpilenes alimentándose en la marca de marea'
       ],
+      detalle: [
+        'La playa no es un ecosistema pobre: es un ecosistema donde casi toda la vida está enterrada. El sustrato se mueve con cada ola y cada temporal, así que no hay dónde fijarse. La estrategia dominante es excavar, y sincronizar la posición en la arena con la marea que sube y baja.',
+        'La zona de lavado, esa franja donde el agua sube y se retira, es la más productiva. Ahí se concentran los filtradores: la macha y la taquilla se entierran, extienden sus sifones cuando el agua los cubre y se retraen cuando queda seco. Sobre ellos comen los pilpilenes y las gaviotas, y en la arena seca las pulgas de mar salen de noche a procesar las algas varadas.',
+        'La duna de atrás depende de las plantas que la fijan. La doca extiende sus tallos suculentos sobre la arena suelta y la amarra; sin esa cubierta, el viento mueve la duna tierra adentro. Es el ecosistema más frágil de la costa y el más fácil de destruir: pisar la vegetación de duna basta para reactivar el arenal.'
+      ],
       reto: 'La arena guarda una línea de restos: algas, conchas, plumas. ¿Qué momento de la marea registra esa línea y por qué queda justo ahí?',
       especies: [
         { forma: 'flor',   n: 40, color: '#4f7a4a', nombre: 'Doca' },
@@ -97,6 +107,11 @@ window.MUNDOS.costa = {
         'Caracolitos <i>Echinolittorina peruviana</i>, sellados a la roca con mucus',
         'Chitones pequeños refugiados en grietas húmedas'
       ],
+      detalle: [
+        'Esta franja es tierra y mar al mismo tiempo, y no es cómoda para ninguno de los dos. La marea no la cubre, pero el rocío salado la alcanza a diario. Entre una salpicadura y la siguiente, el agua atrapada en las grietas se evapora y la sal se concentra hasta valores muy por encima del agua de mar.',
+        'A eso se suma el golpe térmico. Una roca oscura al sol de la tarde puede superar los 40 °C, y bajar de golpe cuando llega una ola. Los organismos de acá tienen que tolerar desecación, calor y salinidad variable, todo en el mismo día.',
+        'El resultado es un ecosistema de baja diversidad y alta densidad: pocas especies, pero muchísimos individuos. Cuando el ambiente físico es tan duro, el límite lo pone la tolerancia fisiológica y no la competencia. Quien resiste, tiene la roca para sí.'
+      ],
       reto: 'Aquí viven muy pocas especies, pero en gran número. ¿Qué limita quién puede vivir acá: la competencia o el ambiente físico?',
       especies: [
         { forma: 'caracol', n: 90, color: '#3b3730', nombre: 'Litorina' },
@@ -111,6 +126,11 @@ window.MUNDOS.costa = {
         'Picoroco chico (<i>Jehlius cirratus</i>), en densas costras blancas',
         'Litorinas que pastorean la película de microalgas',
         'Algas verdes efímeras después de las lluvias'
+      ],
+      detalle: [
+        'Acá empieza el intermareal propiamente tal: dos veces al día esta franja queda al aire y dos veces vuelve a sumergirse. Los organismos viven con reloj lunar, no solar.',
+        'El picoroco chico resuelve el problema con una caja. Al quedar expuesto cierra sus placas calcáreas y guarda agua adentro, y con eso atraviesa horas de sol. Su larva es planctónica y se asienta sobre la roca donde ya hay adultos, lo que produce esas costras blancas continuas.',
+        'El borde superior de la banda lo dicta la desecación: más arriba, el picoroco no aguanta. El borde inferior lo dictan los vecinos: más abajo, el chorito y las algas lo desplazan por competencia. Ese es el principio general de toda la zonación, y es visible a simple vista.'
       ],
       reto: 'Los picorocos forman una banda con un borde superior muy nítido. ¿Qué determina ese límite de arriba y qué determina el de abajo? No son la misma causa.',
       especies: [
@@ -127,6 +147,11 @@ window.MUNDOS.costa = {
         'Lapas (<i>Fissurella</i>) y chitones que raspan algas',
         'Sol de mar (<i>Heliaster helianthus</i>), depredador que sube con la marea'
       ],
+      detalle: [
+        'Es la franja más poblada y la más disputada. El chorito maico tapiza la roca formando una matriz de conchas, biso y sedimento atrapado, y dentro de esa matriz viven poliquetos, anfípodos, caracoles pequeños y juveniles de decenas de especies. Un organismo que construye hábitat para otros se llama ingeniero ecosistémico, y este mejillón es el ejemplo chileno de manual.',
+        'La competencia por espacio es la fuerza que ordena todo. El espacio es el recurso limitante, no el alimento: el agua trae plancton de sobra dos veces al día. Quien ocupa la roca, gana.',
+        'Lo que impide que el chorito lo tome todo son sus depredadores. El sol de mar y el loco suben con la marea, abren claros en el cinturón y esos claros se recolonizan con otras especies. La depredación mantiene la diversidad, un mecanismo descrito originalmente en costas del Pacífico y comprobado también acá.'
+      ],
       reto: 'Si raspáramos todo el chorito de un cuadrado de 50 cm, ¿qué esperarías encontrar ahí un año después? Escribe tu predicción antes de abrir la zona siguiente.',
       especies: [
         { forma: 'valva',     n: 700, color: '#3a2f3d', nombre: 'Chorito maico' },
@@ -141,6 +166,11 @@ window.MUNDOS.costa = {
         'Piure (<i>Pyura chilensis</i>), filtrador que forma manchones',
         'Loco (<i>Concholepas concholepas</i>), depredador de choritos',
         'Anémonas, algas rojas y pozas de marea'
+      ],
+      detalle: [
+        'Bajo el agua casi todo el tiempo, esta franja deja atrás el estrés físico. Ya no hay que resistir la desecación, y entonces mandan las relaciones entre organismos: quién come a quién y quién ocupa el espacio.',
+        'El resultado es la mayor diversidad de todo el intermareal. Piures formando manchones, anémonas, algas rojas coralinas que incrustan la roca de rosado, chitones, estrellas y erizos jóvenes. En las pozas de marea que quedan aisladas al bajar el agua se instalan comunidades completas en un metro cuadrado.',
+        'Es también la franja de mayor valor económico y la más presionada. El loco, la lapa y el piure se extraen desde acá, y su manejo mediante áreas de manejo con las caletas es uno de los experimentos de gobernanza pesquera más estudiados del mundo.'
       ],
       reto: 'Compara el número de especies de esta zona con el del supralitoral. ¿Cómo explicarías la diferencia usando las palabras <i>estrés</i> y <i>competencia</i>?',
       especies: [
@@ -157,6 +187,11 @@ window.MUNDOS.costa = {
         'Huiro negro (<i>Lessonia</i>) y huiro flotador (<i>Macrocystis</i>)',
         'Erizo rojo (<i>Loxechinus albus</i>), que pastorea las algas',
         'Jaibas, peces de roca y estrellas de mar'
+      ],
+      detalle: [
+        'Bajo el nivel de la bajamar más extrema empieza otro mundo: el bosque submarino. Las algas pardas gigantes se anclan a la roca con un disco, levantan un estipe y despliegan frondas que forman un dosel, exactamente como los árboles de un bosque templado.',
+        'Ese dosel amortigua el oleaje, da sombra, y ofrece superficie para que se asienten invertebrados y refugio para juveniles de peces. La productividad primaria de un bosque de huiro está entre las más altas del planeta, comparable a una selva tropical.',
+        'El equilibrio lo sostiene el erizo. Pastorea las algas, y mientras sus depredadores lo mantienen a raya el bosque persiste. Si esos depredadores desaparecen, la población de erizos explota, arrasa las algas y queda un fondo pelado conocido como blanquizal, un estado alternativo que puede durar años. Es uno de los ejemplos más claros de cascada trófica en el mar.'
       ],
       reto: 'Si la población de erizos creciera sin control, ¿qué pasaría con el bosque de huiro y con las especies que dependen de él?',
       especies: [

@@ -196,36 +196,6 @@ MUNDO.forma('resbalin', function (H, color, b) {
   H.pieza('caja', color, 'solido', b, [0.55, 1.35, 1], [34, 0, 0], [0.08, 0.35, 3.6], 0);
 }, 3.4);
 
-/* --------------------------------------------------------- FORMA: anfitrión
-   Figura de bienvenida, armada con cajas y esferas. Sin rasgos faciales:
-   lo que la identifica es la ropa, no la cara. */
-MUNDO.forma('anfitrion', function (H, color, b) {
-  var piel = '#c88d6b', pelo = '#241b16', polera = '#1b2430',
-      pantalon = '#15171b', zapato = '#0d0e10';
-
-  // piernas y zapatos
-  [-0.15, 0.15].forEach(function (x) {
-    H.pieza('caja', pantalon, 'solido', b, [x, 0.44, 0], [0, 0, 0], [0.23, 0.88, 0.25], 0);
-    H.pieza('caja', zapato, 'solido', b, [x, 0.05, 0.06], [0, 0, 0], [0.25, 0.11, 0.4], 0);
-  });
-
-  // polera oscura al centro, chaqueta abierta a los lados
-  H.pieza('caja', polera, 'solido', b, [0, 1.16, 0.02], [0, 0, 0], [0.36, 0.64, 0.24], 0);
-  H.pieza('caja', color, 'solido', b, [-0.21, 1.16, 0.01], [0, 0, 0], [0.21, 0.68, 0.31], 0);
-  H.pieza('caja', color, 'solido', b, [0.21, 1.16, 0.01], [0, 0, 0], [0.21, 0.68, 0.31], 0);
-  H.pieza('caja', color, 'solido', b, [0, 1.16, -0.14], [0, 0, 0], [0.58, 0.68, 0.1], 0);
-  H.pieza('caja', color, 'solido', b, [0, 1.52, 0], [0, 0, 0], [0.36, 0.16, 0.31], 0);
-
-  // brazos, con las manos hacia los bolsillos
-  H.pieza('caja', color, 'solido', b, [-0.37, 1.12, 0], [0, 0, 9], [0.18, 0.68, 0.21], 0);
-  H.pieza('caja', color, 'solido', b, [0.37, 1.12, 0], [0, 0, -9], [0.18, 0.68, 0.21], 0);
-
-  // cuello, cabeza y pelo corto
-  H.pieza('caja', piel, 'solido', b, [0, 1.64, 0], [0, 0, 0], [0.15, 0.13, 0.15], 0);
-  H.pieza('esfera', piel, 'solido', b, [0, 1.83, 0], [0, 0, 0], [0.155, 0.185, 0.155], 0);
-  H.pieza('esfera', pelo, 'solido', b, [0, 1.9, -0.012], [0, 0, 0], [0.163, 0.125, 0.168], 0);
-}, 2.5);
-
 /* ------------------------------------------------------------ COLOCACIONES */
 var OBJ = [];
 var FIERRO = '#38463f';
@@ -304,10 +274,23 @@ OBJ.push({ forma: 'semaforo', color: '#3c4a42', pos: [20, 0.05, 45], giro: 180 }
 
 /* ---- El anfitrión, junto a la entrada del paseo ---- */
 OBJ.push({
-  forma: 'anfitrion', color: '#5b3a26', pos: [3.2, 0.05, 36],
-  grupo: 'anfitrion', ficha: 'bienvenida', altoFicha: 2.5,
-  nombre: 'Anfitrión'
+  forma: 'persona', pos: [3.2, 0.05, 36], giro: 4,
+  grupo: 'anfitrion', dialogo: 'anfitrion', altoFicha: 2.55,
+  cuerpo: {
+    altura: 1.78,
+    piel: '#c88d6b', pelo: '#241b16',
+    chaqueta: '#5b3a26', polera: '#1b2430',
+    pantalon: '#15171b', zapato: '#0d0e10'
+  }
 });
+
+// Un par de personas más, para que la plaza no esté vacía
+OBJ.push({ forma: 'persona', pos: [-13.5, 0.05, 12], giro: 115,
+  cuerpo: { altura: 1.64, piel: '#a9714f', pelo: '#2b201a', chaqueta: '#7a4a58',
+            polera: '#e8e2d4', pantalon: '#3a4351', zapato: '#2a2622' } });
+OBJ.push({ forma: 'persona', pos: [15, 0.05, -4], giro: -70,
+  cuerpo: { altura: 1.71, piel: '#e0b48c', pelo: '#5a4634', chaqueta: '#3f5d6b',
+            polera: '#20242a', pantalon: '#4a4f57', zapato: '#1c1a18' } });
 
 /* ---------------------------------------------------------- ANIMACIONES ---- */
 
@@ -419,6 +402,62 @@ window.MUNDOS['villa-alemana'] = {
       especies: []
     }
   ],
+
+  dialogos: {
+    anfitrion: {
+      nombre: 'Anfitrión de la plaza',
+      inicio: 'saludo',
+      nodos: {
+        saludo: {
+          texto: '¡Hola! Bienvenido a Villa Alemana. Estás parado en la plaza, que es el punto donde se cruzan el comercio, el transporte y la gente que viene a pasar la tarde. ¿Te muestro algo?',
+          opciones: [
+            { dice: '¿Dónde estoy exactamente?', va: 'ubicacion' },
+            { dice: '¿Qué es ese tren?',          va: 'tren' },
+            { dice: '¿Por qué hace tanto calor?', va: 'calor' },
+            { dice: 'Voy a mirar solo',           va: null }
+          ]
+        },
+        ubicacion: {
+          texto: 'Villa Alemana está en la Provincia de Marga Marga, Región de Valparaíso, y forma parte del Gran Valparaíso junto a Quilpué, Viña del Mar y Valparaíso. El clima es mediterráneo: veranos secos y calurosos, inviernos lluviosos. Por eso los árboles que ves aguantan meses sin agua.',
+          opciones: [
+            { dice: '¿Y el tren?',       va: 'tren' },
+            { dice: 'Volvamos al inicio', va: 'saludo' },
+            { dice: 'Gracias',            va: null }
+          ]
+        },
+        tren: {
+          texto: 'Ese es el Metro de Valparaíso. Pasa cada pocos minutos y conecta la ciudad con Limache por un lado y con Valparaíso por el otro. Fíjate en algo: la estación está a pasos de la plaza. No es casualidad.',
+          opciones: [
+            { dice: '¿Por qué no es casualidad?', va: 'ferrocarril' },
+            { dice: 'Muéstrame la ficha completa', ficha: 'estacion' },
+            { dice: 'Entendido', va: 'saludo' }
+          ]
+        },
+        ferrocarril: {
+          texto: 'Las ciudades de este valle crecieron siguiendo la vía. Primero llegó el ferrocarril, después la estación, y alrededor de la estación se armó el pueblo. Por eso el centro está donde está, y la plaza quedó pegada al andén.',
+          opciones: [
+            { dice: '¿Eso sigue importando hoy?', va: 'hoy' },
+            { dice: 'Volvamos al inicio', va: 'saludo' }
+          ]
+        },
+        hoy: {
+          texto: 'Más que antes. Un carro lleno saca decenas de autos de la calle, y vivir cerca de una estación te ahorra tiempo y plata todos los días. Cuenta los autos estacionados y compáralos con la gente que cabe en un solo carro.',
+          opciones: [
+            { dice: 'Lo voy a contar', va: null },
+            { dice: 'Otra cosa', va: 'saludo' }
+          ]
+        },
+        calor: {
+          texto: 'Porque el pavimento absorbe radiación todo el día y la devuelve de noche. La ciudad completa funciona como una plancha caliente. Pero pisa el pasto bajo los árboles y vas a sentir la diferencia: esta plaza es una isla fría dentro de la isla de calor.',
+          opciones: [
+            { dice: 'Cuéntame más de eso', ficha: 'sol' },
+            { dice: 'Voy a probarlo', va: null },
+            { dice: 'Otra cosa', va: 'saludo' }
+          ]
+        }
+      }
+    }
+  },
 
   fichas: [
     {

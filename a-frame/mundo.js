@@ -11,6 +11,7 @@
 'use strict';
 
 var MUNDO = {
+  version: 6,
   formas: {},
   clima: { viento: 1 },
   datos: null
@@ -30,8 +31,9 @@ function nuevo(tag, attrs) {
    Todo se dibuja en un canvas al cargar: sin archivos, sin CDN, sin peso.
    De un mismo mapa de altura salen el color y el normal map, por eso el
    relieve calza exacto con las manchas del color.                            */
-var TAM_TEX = (AFRAME.utils.device && AFRAME.utils.device.isMobile &&
-               AFRAME.utils.device.isMobile()) ? 128 : 256;
+var MOVIL_TEX = !!(AFRAME.utils.device && AFRAME.utils.device.isMobile &&
+                   AFRAME.utils.device.isMobile());
+var TAM_TEX = MOVIL_TEX ? 256 : 512;   // el doble de resolución que antes
 var CACHE_TEX = {};
 
 function lienzoAltura(estilo, tam) {
@@ -54,6 +56,31 @@ function lienzoAltura(estilo, tam) {
     }
   }
 
+  // grietas finas, para la roca
+  function vetas(cant, t) {
+    g.strokeStyle = 'rgba(0,0,0,0.22)';
+    for (var i = 0; i < cant; i++) {
+      var x = Math.random() * t, y = Math.random() * t;
+      g.lineWidth = azar(0.5, 1.6);
+      g.beginPath(); g.moveTo(x, y);
+      for (var j = 0; j < 5; j++) { x += azar(-t * 0.06, t * 0.06); y += azar(-t * 0.06, t * 0.06); g.lineTo(x, y); }
+      g.stroke();
+    }
+  }
+  // ondulaciones suaves, para la arena
+  function ondas(t, fuerza) {
+    var img = g.getImageData(0, 0, t, t);
+    for (var y = 0; y < t; y++) {
+      var d = Math.sin(y / t * 6.2832 * 7) * 255 * fuerza;
+      for (var x = 0; x < t; x++) {
+        var i = (y * t + x) * 4;
+        img.data[i] = Math.max(0, Math.min(255, img.data[i] + d));
+        img.data[i + 1] = img.data[i]; img.data[i + 2] = img.data[i];
+      }
+    }
+    g.putImageData(img, 0, 0);
+  }
+
   if (estilo === 'baldosa') {
     // cuadrícula de baldosas: las juntas se convierten en surcos del normal map
     var paso = tam / 4;
@@ -69,10 +96,21 @@ function lienzoAltura(estilo, tam) {
   }
   if (estilo === 'asfalto') { manchas(10, tam * 0.3, 0.14); manchas(900, tam * 0.014, 0.4); return c; }
   if (estilo === 'pasto')   { manchas(14, tam * 0.22, 0.16); manchas(1800, tam * 0.010, 0.5); return c; }
-  if (estilo === 'roca')       { manchas(16, tam * 0.30, 0.30); manchas(55, tam * 0.09, 0.28); manchas(240, tam * 0.020, 0.34); }
-  else if (estilo === 'arena') { manchas(9,  tam * 0.32, 0.10); manchas(1300, tam * 0.012, 0.45); }
-  else if (estilo === 'nieve') { manchas(12, tam * 0.35, 0.08); manchas(400, tam * 0.02, 0.12); }
-  else                         { manchas(13, tam * 0.26, 0.22); manchas(110, tam * 0.05, 0.30); manchas(180, tam * 0.018, 0.28); }
+  // Más octavas = más niveles de detalle, de la mancha grande al poro
+  if (estilo === 'roca') {
+    manchas(14, tam * 0.34, 0.30); manchas(40, tam * 0.15, 0.26);
+    manchas(120, tam * 0.06, 0.24); manchas(420, tam * 0.022, 0.28);
+    manchas(1400, tam * 0.007, 0.26); vetas(26, tam);
+  } else if (estilo === 'arena') {
+    manchas(8, tam * 0.34, 0.09); manchas(70, tam * 0.07, 0.07);
+    manchas(4200, tam * 0.006, 0.42); ondas(tam, 0.06);
+  } else if (estilo === 'nieve') {
+    manchas(10, tam * 0.38, 0.07); manchas(300, tam * 0.05, 0.06);
+    manchas(1600, tam * 0.008, 0.10);
+  } else {
+    manchas(12, tam * 0.28, 0.22); manchas(90, tam * 0.06, 0.26);
+    manchas(360, tam * 0.02, 0.26); manchas(1500, tam * 0.007, 0.24);
+  }
   return c;
 }
 
@@ -123,10 +161,23 @@ function normalDesde(altura, fuerza) {
   return out;
 }
 
+var ANISO = 0;
+function anisotropia() {
+  if (ANISO) return ANISO;
+  var esc = document.querySelector('a-scene');
+  var r = esc && esc.renderer;
+  ANISO = (r && r.capabilities && r.capabilities.getMaxAnisotropy) ?
+          Math.min(8, r.capabilities.getMaxAnisotropy()) : 1;
+  return ANISO;
+}
+
 function aTextura(canvas, reps, esColor) {
   var t = new THREE.CanvasTexture(canvas);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.repeat.set(reps, reps);
+  t.generateMipmaps = true;
+  t.minFilter = THREE.LinearMipmapLinearFilter;
+  t.anisotropy = anisotropia();   // nitidez en ángulos rasantes: el suelo deja de verse borroso a lo lejos
   if (esColor && THREE.SRGBColorSpace) t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
@@ -143,9 +194,11 @@ function superficie(base, estilo, reps) {
   g.globalAlpha = 0.55;
   g.globalCompositeOperation = 'overlay';
   g.drawImage(altura, 0, 0);
+  var fuerza = { arena: 3.5, baldosa: 7, asfalto: 4, pasto: 4, nieve: 2.5 }[estilo] || 7;
   var res = {
     mapa: aTextura(col, reps, true),
-    normal: aTextura(normalDesde(altura, estilo === 'arena' ? 3 : 6), reps, false)
+    normal: aTextura(normalDesde(altura, fuerza), reps, false),
+    rugosidad: aTextura(altura, reps, false)   // lo alto brilla distinto que lo hundido
   };
   CACHE_TEX[clave] = res;
   return res;
@@ -208,12 +261,15 @@ var _p = new THREE.Vector3(), _e = new THREE.Euler(),
     _m = new THREE.Matrix4();
 
 /* pieza(forma, color, acabado, base, offset, rotación°, escala, viento) */
-var giroActual = 0;   // grados en Y aplicados a toda la figura
+var giroActual = 0;    // grados en Y aplicados a toda la figura
+var grupoActual = null; // si tiene nombre, las piezas van a un grupo que puede moverse
+MUNDO.grupos = {};
 
 function pieza(forma, color, acabado, b, off, rot, esc, viento) {
-  var clave = forma + '|' + color + '|' + acabado;
+  var clave = (grupoActual || '') + '|' + forma + '|' + color + '|' + acabado;
   var lote = LOTES[clave];
-  if (!lote) lote = LOTES[clave] = { forma: forma, color: color, acabado: acabado, datos: [], viento: false };
+  if (!lote) lote = LOTES[clave] = { forma: forma, color: color, acabado: acabado,
+                                     grupo: grupoActual, datos: [], viento: false };
   if (viento) lote.viento = true;
   var ox = off[0], oz = off[2];
   if (giroActual) {
@@ -261,20 +317,34 @@ function volcarLotes(padre) {
       malla.setMatrixAt(i, _m.compose(_p, _q, _s));
     }
     malla.instanceMatrix.needsUpdate = true;
-    raiz.add(malla);
+    var destino = raiz;
+    if (lote.grupo) {
+      if (!MUNDO.grupos[lote.grupo]) {
+        MUNDO.grupos[lote.grupo] = new THREE.Group();
+        raiz.add(MUNDO.grupos[lote.grupo]);
+      }
+      destino = MUNDO.grupos[lote.grupo];
+    }
+    destino.add(malla);
     if (lote.viento) vivos.push({ malla: malla, datos: lote.datos });
   });
 }
 
 /* ---------------------------------------------------------------- viento */
+MUNDO.animaciones = [];
+MUNDO.animar = function (fn) { MUNDO.animaciones.push(fn); };
+
 var tViento = 0, ultimoV = performance.now(), _mv = new THREE.Matrix4();
 function soplar(ahora) {
   requestAnimationFrame(soplar);
   var dt = Math.min(60, ahora - ultimoV);
   ultimoV = ahora;
-  if (!vivos.length || !MUNDO.clima.viento) return;
   tViento += dt / 1000;
   var t = tViento;
+  for (var a = 0; a < MUNDO.animaciones.length; a++) {
+    try { MUNDO.animaciones[a](t, dt); } catch (e) { /* una animación rota no frena el resto */ }
+  }
+  if (!vivos.length || !MUNDO.clima.viento) return;
   for (var k = 0; k < vivos.length; k++) {
     var datos = vivos[k].datos, malla = vivos[k].malla;
     for (var i = 0; i < datos.length; i++) {
@@ -552,6 +622,67 @@ MUNDO.forma('roca', function (H, color, b) {
     [H.azar(0, 40), H.azar(0, 360), H.azar(0, 40)], [t, t * 0.7, t * H.azar(0.7, 1.3)], 0);
 }, 1.6);
 
+
+/* ---------------------------------------------------------------- personas
+   Figura humana genérica con rostro. La ropa, el tono de piel y la estatura
+   vienen del mundo, en el campo "cuerpo" del objeto:
+     { forma:'persona', pos:[…], cuerpo:{ piel, pelo, chaqueta, polera, pantalon, zapato, altura } }
+   -------------------------------------------------------------------------- */
+MUNDO.forma('persona', function (H, color, b, ob) {
+  var c = (ob && ob.cuerpo) || {};
+  var piel     = c.piel     || '#c88d6b';
+  var pelo     = c.pelo     || '#241b16';
+  var chaqueta = c.chaqueta || color || '#5b3a26';
+  var polera   = c.polera   || '#1b2430';
+  var pantalon = c.pantalon || '#15171b';
+  var zapato   = c.zapato   || '#0d0e10';
+  var ojo      = c.ojo      || '#2a2320';
+  var boca     = c.boca     || '#8c5a50';
+  var k = (c.altura || 1.75) / 1.75;   // todo escala con la estatura
+
+  function P(g, col, off, rot, esc) {
+    H.pieza(g, col, 'solido', b,
+      [off[0] * k, off[1] * k, off[2] * k], rot,
+      [esc[0] * k, esc[1] * k, esc[2] * k], 0);
+  }
+
+  // piernas y zapatos
+  [-0.15, 0.15].forEach(function (x) {
+    P('caja', pantalon, [x, 0.44, 0], [0, 0, 0], [0.23, 0.88, 0.25]);
+    P('caja', zapato,   [x, 0.05, 0.06], [0, 0, 0], [0.25, 0.11, 0.4]);
+  });
+
+  // torso: polera al centro, chaqueta abierta a los lados y espalda
+  P('caja', polera,   [0, 1.16, 0.02],  [0, 0, 0], [0.36, 0.64, 0.24]);
+  P('caja', chaqueta, [-0.21, 1.16, 0.01], [0, 0, 0], [0.21, 0.68, 0.31]);
+  P('caja', chaqueta, [0.21, 1.16, 0.01],  [0, 0, 0], [0.21, 0.68, 0.31]);
+  P('caja', chaqueta, [0, 1.16, -0.14], [0, 0, 0], [0.58, 0.68, 0.1]);
+  P('caja', chaqueta, [0, 1.52, 0],     [0, 0, 0], [0.36, 0.16, 0.31]);
+
+  // brazos
+  P('caja', chaqueta, [-0.37, 1.12, 0], [0, 0, 9],  [0.18, 0.68, 0.21]);
+  P('caja', chaqueta, [0.37, 1.12, 0],  [0, 0, -9], [0.18, 0.68, 0.21]);
+
+  // cabeza
+  P('caja',   piel, [0, 1.64, 0],  [0, 0, 0], [0.15, 0.13, 0.15]);
+  P('esfera', piel, [0, 1.83, 0],  [0, 0, 0], [0.155, 0.185, 0.155]);
+
+  // ---- rostro ----
+  [-0.058, 0.058].forEach(function (x) {
+    P('esferaB', '#f0ece6', [x, 1.856, 0.125], [0, 0, 0], [0.037, 0.027, 0.022]); // ojo
+    P('esferaB', ojo,       [x, 1.853, 0.138], [0, 0, 0], [0.019, 0.019, 0.016]); // pupila
+    P('caja',    pelo,      [x, 1.906, 0.129], [0, 0, x > 0 ? -7 : 7], [0.066, 0.015, 0.022]); // ceja
+    P('esferaB', piel,      [x * 2.62, 1.828, 0.008], [0, 0, 0], [0.022, 0.036, 0.024]); // oreja
+  });
+  P('caja',    piel, [0, 1.816, 0.138], [0, 0, 0], [0.032, 0.05, 0.038]);  // nariz
+  P('caja',    boca, [0, 1.757, 0.132], [0, 0, 0], [0.072, 0.015, 0.024]); // boca
+  P('caja',    piel, [0, 1.735, 0.126], [0, 0, 0], [0.09, 0.03, 0.03]);    // mentón
+
+  // pelo: casquete y flequillo
+  P('esfera', pelo, [0, 1.9, -0.012], [0, 0, 0], [0.164, 0.128, 0.169]);
+  P('caja',   pelo, [0, 1.918, 0.108], [10, 0, 0], [0.22, 0.05, 0.12]);
+}, 2.5);
+
 /* ---------------------------------------------------------------- interfaz */
 function rotulo(texto) {
   var e = nuevo('a-entity', { 'class': 'etiqueta', 'mirar-camara': '' });
@@ -570,6 +701,7 @@ function mostrarFicha(d) {
     '<h2>' + d.nombre + '</h2>' +
     (d.rango ? '<div class="rango">' + d.rango + '</div>' : '') +
     '<p>' + d.texto + '</p>' +
+    (d.detalle ? d.detalle.map(function (q) { return '<p>' + q + '</p>'; }).join('') : '') +
     (d.vida ? '<ul class="lista">' + d.vida.map(function (v) { return '<li>' + v + '</li>'; }).join('') + '</ul>' : '') +
     (d.reto ? '<div class="reto"><b>Para observar</b>' + d.reto + '</div>' : '');
   document.getElementById('ficha').classList.add('visible');
@@ -597,6 +729,71 @@ function fallo(err) {
   console.error(err);
 }
 MUNDO.fallo = fallo;
+
+
+/* ---------------------------------------------------------------- diálogos
+   Los personajes hablan, pero el texto lo pone cada mundo en su campo
+   "dialogos". El motor solo sabe recorrer nodos y dibujar el panel.        */
+var panelD = null;
+
+function estilosDialogo() {
+  if (document.getElementById('estilo-dialogo')) return;
+  var st = document.createElement('style');
+  st.id = 'estilo-dialogo';
+  st.textContent =
+    '#dialogo{position:fixed;z-index:11;left:50%;bottom:74px;transform:translateX(-50%) translateY(140%);' +
+      'width:min(560px,calc(100vw - 24px));background:#f2ece0;color:#12211f;border-radius:3px;' +
+      'border-left:5px solid #6b4a1f;padding:14px 16px 12px;box-shadow:0 10px 34px rgba(0,0,0,.4);' +
+      'transition:transform .3s cubic-bezier(.2,.7,.3,1);}' +
+    '#dialogo.visible{transform:translateX(-50%);}' +
+    '#dialogo .quien{font-size:11px;letter-spacing:1.3px;text-transform:uppercase;color:#6b4a1f;' +
+      'font-weight:700;margin-bottom:5px;}' +
+    '#dialogo .dice{margin:0 0 12px;font-size:14.5px;line-height:1.55;}' +
+    '#dialogo .ops{display:flex;flex-wrap:wrap;gap:7px;}' +
+    '#dialogo .ops button{font:inherit;font-size:13px;font-weight:600;color:#12211f;' +
+      'background:#e2d8c2;border:1px solid #c9bda0;border-radius:2px;padding:8px 12px;cursor:pointer;}' +
+    '#dialogo .ops button:hover{background:#d3c5a6;}';
+  document.head.appendChild(st);
+}
+
+function crearPanelDialogo() {
+  estilosDialogo();
+  panelD = document.createElement('div');
+  panelD.id = 'dialogo';
+  panelD.innerHTML = '<div class="quien"></div><p class="dice"></p><div class="ops"></div>';
+  document.body.appendChild(panelD);
+}
+
+MUNDO.callar = function () { if (panelD) panelD.classList.remove('visible'); };
+
+MUNDO.hablar = function (idDialogo, idNodo) {
+  var D = (MUNDO.datos && MUNDO.datos.dialogos) ? MUNDO.datos.dialogos[idDialogo] : null;
+  if (!D) { console.warn('No existe el diálogo: ' + idDialogo); return; }
+  var nodo = D.nodos[idNodo || D.inicio];
+  if (!nodo) { MUNDO.callar(); return; }
+  if (!panelD) crearPanelDialogo();
+
+  panelD.querySelector('.quien').textContent = D.nombre || '';
+  panelD.querySelector('.dice').innerHTML = nodo.texto;
+
+  var ops = panelD.querySelector('.ops');
+  ops.innerHTML = '';
+  var lista = nodo.opciones || [{ dice: 'Cerrar' }];
+  lista.forEach(function (op) {
+    var b = document.createElement('button');
+    b.textContent = op.dice;
+    b.onclick = function () {
+      if (op.ficha) {
+        var fichas = MUNDO.fichasIndice || {};
+        if (fichas[op.ficha]) mostrarFicha(fichas[op.ficha]);
+      }
+      if (op.va) MUNDO.hablar(idDialogo, op.va);
+      else if (!op.ficha) MUNDO.callar();
+    };
+    ops.appendChild(b);
+  });
+  panelD.classList.add('visible');
+};
 
 /* ---------------------------------------------------------------- arranque */
 MUNDO.iniciar = function (M) {
@@ -681,6 +878,7 @@ function arranque(M) {
         var piel = superficie(f.color, estilo, reps);
         malla.material.map = piel.mapa;
         malla.material.normalMap = piel.normal;
+        malla.material.roughnessMap = piel.rugosidad;
         var k = estilo === 'arena' ? 0.7 : 1.1;
         malla.material.normalScale.set(k, k);
         malla.material.roughness = estilo === 'roca' ? 0.85 : 1;
@@ -734,8 +932,20 @@ function arranque(M) {
     var fn = MUNDO.formas[ob.forma];
     if (!fn) { console.warn('Forma desconocida: ' + ob.forma); return; }
     giroActual = ob.giro || 0;
+    grupoActual = ob.grupo || null;
     fn(H, ob.color, ob.pos, ob);
     giroActual = 0;
+    grupoActual = null;
+    if (ob.ficha || ob.dialogo) {
+      var pt = nuevo('a-sphere', {
+        'class': 'punto', radius: 0.42,
+        position: ob.pos[0] + ' ' + (ob.pos[1] + (ob.altoFicha || 2.4)) + ' ' + ob.pos[2],
+        material: 'color:#f0c060; shader:flat; opacity:0.95',
+        animation: 'property:scale; to:1.35 1.35 1.35; dir:alternate; loop:true; dur:1100; easing:easeInOutSine' });
+      if (ob.dialogo) pt.dataset.dialogo = ob.dialogo;
+      else pt.dataset.ficha = ob.ficha;
+      terreno.appendChild(pt);
+    }
     if (ob.nombre) {
       var et = rotulo(ob.nombre);
       et.setAttribute('position',
@@ -805,6 +1015,7 @@ function construirUI(M) {
   var fichas = {};
   M.franjas.forEach(function (f) { fichas[f.id] = f; });
   (M.fichas || []).forEach(function (f) { fichas[f.id] = f; });
+  MUNDO.fichasIndice = fichas;
 
   // Botones del nivel
   if (M.nivel && M.nivel.modos) {
@@ -884,6 +1095,8 @@ function construirUI(M) {
     if (arrastro) return;
     var el = (ev.detail && ev.detail.intersectedEl) ? ev.detail.intersectedEl : ev.target;
     if (!el) return;
+    var hab = el.dataset ? el.dataset.dialogo : null;
+    if (hab) { MUNDO.hablar(hab); return; }
     var id = el.dataset ? el.dataset.ficha : null;
     if (id && fichas[id]) { mostrarFicha(fichas[id]); return; }
     if (el.classList && el.classList.contains('suelo') && ev.detail && ev.detail.intersection) {
@@ -903,6 +1116,7 @@ function construirUI(M) {
   document.getElementById('cerrar').onclick = function () {
     document.getElementById('ficha').classList.remove('visible');
   };
+  crearPanelDialogo();
   setTimeout(function () { document.getElementById('pista').classList.add('oculta'); }, 9000);
 }
 
