@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El mundo de Felipe</title>
+<style>
+  :root{ --tinta:#12211f; --papel:#f2ece0; --acento:#1c5f78; }
+  *{box-sizing:border-box;}
+  body{margin:0;min-height:100vh;background:var(--tinta);color:var(--papel);
+    font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;padding:32px 20px 60px;}
+  header{max-width:900px;margin:0 auto 30px;}
+  h1{margin:0 0 6px;font-size:26px;letter-spacing:.4px;}
+  header p{margin:0;opacity:.7;font-size:14.5px;line-height:1.5;max-width:60ch;}
+  .rejilla{max-width:900px;margin:0 auto;display:grid;gap:14px;
+    grid-template-columns:repeat(auto-fill,minmax(250px,1fr));}
+  a.mundo{display:block;text-decoration:none;color:inherit;
+    border:1px solid rgba(242,236,224,.22);border-radius:3px;padding:16px 18px;
+    transition:border-color .2s, transform .2s;}
+  a.mundo:hover{border-color:var(--acento);transform:translateY(-2px);}
+  a.mundo h2{margin:0 0 4px;font-size:17px;line-height:1.25;}
+  a.mundo .meta{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;
+    opacity:.55;margin-bottom:8px;}
+  a.mundo p{margin:0;font-size:13.5px;line-height:1.45;opacity:.78;}
+  .falta{border-color:rgba(180,90,90,.5);opacity:.6;}
+  .falta h2{font-size:15px;}
+  footer{max-width:900px;margin:36px auto 0;font-size:13px;opacity:.55;line-height:1.6;}
+  code{background:rgba(242,236,224,.1);padding:1px 5px;border-radius:2px;font-size:12.5px;}
+</style>
+</head>
+<body>
+<header>
+  <h1>El mundo de Felipe</h1>
+  <p>Ambientes en tres dimensiones para recorrer con el curso. Cada uno se carga
+     por separado, así que el celular solo maneja un mundo a la vez.</p>
+</header>
+
+<div class="rejilla" id="rejilla"></div>
+
+<footer>
+  Para agregar un mundo: deja el archivo en <code>mundos/</code> y escribe su
+  nombre en la lista <code>CATALOGO</code>, arriba del script de esta página.
+  La tarjeta se arma sola con los datos del propio mundo.
+</footer>
+
+<script>
+/* =============================================================================
+   LA ÚNICA LÍNEA QUE HAY QUE EDITAR AL AGREGAR UN MUNDO.
+   El nombre debe ser igual al del archivo: 'costa' → mundos/costa.js
+   ============================================================================= */
+var CATALOGO = ['costa', 'villa-alemana', 'andes'];
+
+/* -------------------------------------------------------------------------- */
+/* Los archivos de mundo pueden registrar formas propias con MUNDO.forma().
+   Acá no está el motor cargado, así que se deja un maniquí que las ignora.    */
+window.MUNDO = window.MUNDO || { forma: function () {}, formas: {}, clima: {} };
+window.MUNDOS = window.MUNDOS || {};
+
+var rejilla = document.getElementById('rejilla');
+var faltantes = [];
+var pendientes = CATALOGO.length;
+
+function cargar(id, rutas, i) {
+  if (i >= rutas.length) { faltantes.push(id); listo(); return; }
+  var s = document.createElement('script');
+  s.src = rutas[i];
+  s.onload = listo;
+  s.onerror = function () { cargar(id, rutas, i + 1); };
+  document.head.appendChild(s);
+}
+
+function listo() {
+  if (--pendientes > 0) return;
+  CATALOGO.forEach(function (id) {
+    var M = window.MUNDOS[id];
+    var a = document.createElement('a');
+    if (!M) {
+      a.className = 'mundo falta';
+      a.href = 'mundo.html#' + id;
+      a.innerHTML = '<div class="meta">No encontrado</div><h2>' + id + '</h2>' +
+        '<p>Falta <code>mundos/' + id + '.js</code>, o adentro la clave no es ' +
+        '<code>MUNDOS[\'' + id + '\']</code>.</p>';
+    } else {
+      a.className = 'mundo';
+      a.href = 'mundo.html#' + id;
+      a.innerHTML =
+        '<div class="meta">' + (M.materia || 'Mundo 3D') + '</div>' +
+        '<h2>' + (M.titulo || id) + '</h2>' +
+        '<p>' + (M.resumen || 'Sin descripción.') + '</p>';
+    }
+    rejilla.appendChild(a);
+  });
+}
+
+CATALOGO.forEach(function (id) {
+  cargar(id, ['mundos/' + id + '.js', id + '.js'], 0);
+});
+</script>
+</body>
+</html>

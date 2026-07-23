@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Cargando mundo…</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.7.1/aframe.min.js"></script>
+<script>
+if (typeof AFRAME === 'undefined') {
+  document.write('<scr' + 'ipt src="https://aframe.io/releases/1.7.1/aframe.min.js"><\/scr' + 'ipt>');
+}
+window.addEventListener('error', function (e) {
+  var d = document.getElementById('fallo');
+  if (!d && document.body) {
+    d = document.createElement('div');
+    d.id = 'fallo';
+    d.style.cssText = 'position:fixed;z-index:999;left:0;right:0;top:0;max-height:60vh;' +
+      'overflow:auto;padding:12px 14px;background:#7d2a2a;color:#fff;' +
+      'font:12px/1.45 monospace;white-space:pre-wrap;user-select:text;';
+    document.body.appendChild(d);
+  }
+  if (d) {
+    d.textContent = 'Error: ' + e.message + '\n' +
+      (e.filename || '') + ' línea ' + (e.lineno || '?') + '\n' +
+      (window.MUNDO ? 'Paso: ' + MUNDO.paso : '') + '\n' +
+      (e.error && e.error.stack ? '\n' + e.error.stack : '');
+  }
+});
+</script>
+
+<style>
+  :root{ --acento:#1c5f78; --tinta:#12211f; --papel:#f2ece0; }
+  html,body{margin:0;height:100%;overflow:hidden;
+    font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;}
+
+  #barra{
+    position:fixed;top:0;left:0;right:0;z-index:10;
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 14px;
+    background:linear-gradient(180deg,rgba(18,33,31,.88),rgba(18,33,31,0));
+    color:var(--papel);pointer-events:none;
+  }
+  #titulo{margin:0;font-size:14px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;}
+  #nivel-lectura{font-variant-numeric:tabular-nums;font-size:13px;opacity:.85;
+    border-left:1px solid rgba(242,236,224,.35);padding-left:14px;}
+  #volver{pointer-events:auto;margin-left:auto;color:var(--papel);opacity:.8;
+    font-size:12.5px;text-decoration:none;border:1px solid rgba(242,236,224,.35);
+    padding:5px 10px;border-radius:2px;}
+
+  #controles{
+    position:fixed;left:0;right:0;bottom:0;z-index:10;
+    display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:12px;
+  }
+  button, select{
+    font:inherit;font-size:13px;font-weight:600;color:var(--papel);
+    background:rgba(18,33,31,.78);border:1px solid rgba(242,236,224,.3);
+    border-radius:2px;padding:9px 13px;cursor:pointer;backdrop-filter:blur(6px);
+  }
+  button:hover{background:rgba(28,95,120,.9);}
+  button[aria-pressed="true"]{background:var(--acento);border-color:var(--papel);}
+  button:focus-visible, select:focus-visible{outline:2px solid #f0c060;outline-offset:2px;}
+  .mover{user-select:none;-webkit-user-select:none;touch-action:none;}
+  .mover:active{background:var(--acento);}
+
+  #pista{
+    position:fixed;z-index:9;left:50%;bottom:104px;transform:translateX(-50%);
+    background:rgba(18,33,31,.7);color:var(--papel);font-size:12.5px;
+    padding:7px 12px;border-radius:2px;white-space:nowrap;
+    transition:opacity .5s;pointer-events:none;
+  }
+  #pista.oculta{opacity:0;}
+
+  #ficha{
+    position:fixed;z-index:10;right:12px;top:54px;width:min(330px,calc(100vw - 24px));
+    max-height:60vh;overflow:auto;background:var(--papel);color:var(--tinta);
+    border-radius:3px;border-left:5px solid var(--acento);padding:14px 16px;
+    box-shadow:0 8px 30px rgba(0,0,0,.35);
+    transform:translateX(120%);transition:transform .35s cubic-bezier(.2,.7,.3,1);
+  }
+  #ficha.visible{transform:none;}
+  #ficha h2{margin:0 0 2px;font-size:17px;line-height:1.2;}
+  #ficha .rango{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;
+    color:#6c6a60;margin-bottom:9px;}
+  #ficha p{margin:0 0 10px;font-size:13.5px;line-height:1.5;}
+  #ficha .lista{font-size:13px;line-height:1.6;margin:0 0 10px;padding-left:18px;}
+  #ficha .reto{background:#e6dcc7;border-left:3px solid #6b4a1f;
+    padding:9px 11px;font-size:13px;line-height:1.45;}
+  #ficha .reto b{display:block;font-size:10.5px;letter-spacing:1.3px;
+    text-transform:uppercase;color:#6b4a1f;margin-bottom:3px;}
+  #cerrar{position:absolute;top:8px;right:9px;background:none;border:none;
+    color:#6c6a60;font-size:20px;padding:2px 6px;line-height:1;}
+  #cerrar:hover{background:none;color:var(--tinta);}
+
+  @media (prefers-reduced-motion: reduce){ #ficha{transition:none;} }
+</style>
+
+<script src="mundo.js"></script>
+</head>
+<body>
+
+<div id="barra">
+  <h1 id="titulo">Cargando…</h1>
+  <span id="nivel-lectura"></span>
+  <a id="volver" href="index.html">Todos los mundos</a>
+</div>
+
+<div id="ficha" role="dialog" aria-live="polite">
+  <button id="cerrar" aria-label="Cerrar ficha">&times;</button>
+  <div id="ficha-cuerpo"></div>
+</div>
+
+<div id="pista">Toca el suelo para desplazarte hasta ahí</div>
+<div id="controles"></div>
+
+<a-scene id="escena" renderer="colorManagement:true; antialias:false"></a-scene>
+
+<script>
+/* Carga el mundo indicado en la dirección: mundo.html?m=costa
+   Prueba primero en la subcarpeta mundos/ y, si no está, en la misma carpeta.
+   Así funciona con cualquiera de las dos organizaciones de archivos. */
+(function () {
+  // Acepta mundo.html#costa y también mundo.html?m=costa
+  var id = (location.hash || '').replace('#', '').trim() ||
+           new URLSearchParams(location.search).get('m') || 'costa';
+  window.addEventListener('hashchange', function () { location.reload(); });
+  var rutas = ['mundos/' + id + '.js', id + '.js'];
+  var intento = 0;
+
+  function aviso(txt) { document.getElementById('titulo').textContent = txt; }
+
+  function cargar() {
+    if (intento >= rutas.length) {
+      aviso('No encontré el archivo del mundo. Busqué: ' + rutas.join('  y  '));
+      return;
+    }
+    var ruta = rutas[intento++];
+    var s = document.createElement('script');
+    s.src = ruta;
+    s.onload = function () {
+      if (window.MUNDOS && window.MUNDOS[id]) {
+        var escena = document.getElementById('escena');
+        var arrancar = function () {
+          MUNDO.iniciar(window.MUNDOS[id]);
+          if (MUNDO.informe) {
+            document.getElementById('nivel-lectura').textContent =
+              document.getElementById('nivel-lectura').textContent || MUNDO.informe;
+          }
+        };
+        if (escena.hasLoaded) { arrancar(); }
+        else { escena.addEventListener('loaded', arrancar); }
+      } else {
+        aviso('El archivo ' + ruta + ' se cargó pero no registró el mundo "' + id + '".');
+      }
+    };
+    s.onerror = cargar;
+    document.head.appendChild(s);
+  }
+
+  if (typeof MUNDO === 'undefined') {
+    aviso('Falta mundo.js: tiene que estar en la misma carpeta que mundo.html');
+    return;
+  }
+  cargar();
+})();
+</script>
+</body>
+</html>
