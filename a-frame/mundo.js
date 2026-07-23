@@ -11,7 +11,7 @@
 'use strict';
 
 var MUNDO = {
-  version: 6,
+  version: 7,
   formas: {},
   clima: { viento: 1 },
   datos: null
@@ -293,6 +293,18 @@ function materialDe(color, acabado) {
   if (acabado === 'lamina') {
     return new THREE.MeshStandardMaterial({
       color: color, side: THREE.DoubleSide, roughness: 0.95, metalness: 0 });
+  }
+  if (acabado === 'vidrio') {
+    return new THREE.MeshStandardMaterial({
+      color: color, side: THREE.DoubleSide, transparent: true, opacity: 0.32,
+      roughness: 0.08, metalness: 0.2 });
+  }
+  if (acabado === 'brillo') {   // no le afecta la luz: letreros, luminarias
+    return new THREE.MeshBasicMaterial({ color: color });
+  }
+  if (acabado === 'metal') {
+    return new THREE.MeshStandardMaterial({
+      color: color, roughness: 0.32, metalness: 0.75 });
   }
   return new THREE.MeshStandardMaterial({ color: color, roughness: 0.9, metalness: 0 });
 }
@@ -936,6 +948,17 @@ function arranque(M) {
     fn(H, ob.color, ob.pos, ob);
     giroActual = 0;
     grupoActual = null;
+    // superficie pisable: andenes, pisos de vehículos, plataformas
+    if (ob.piso) {
+      var pz = ob.piso, esp = 0.3;
+      terreno.appendChild(nuevo('a-box', {
+        'class': 'suelo',
+        width: pz.ancho, depth: pz.largo, height: esp,
+        position: ob.pos[0] + ' ' + (ob.pos[1] + pz.alto - esp / 2) + ' ' + ob.pos[2],
+        rotation: '0 ' + (ob.giro || 0) + ' 0',
+        material: 'color:' + (pz.color || '#b9b3a6') + '; roughness:0.9'
+      }));
+    }
     if (ob.ficha || ob.dialogo) {
       var pt = nuevo('a-sphere', {
         'class': 'punto', radius: 0.42,
