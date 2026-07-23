@@ -4,6 +4,13 @@
    que sube y baja no es la marea, es la capa de nubes de la inversión térmica.
    Ninguna forma nueva: todas se reutilizan del motor.
    ============================================================================= */
+/* Red de seguridad: este archivo puede cargarse con el motor completo, con un
+   motor antiguo, o con el maniquí de la portada. Que no reviente en ningún caso. */
+window.MUNDO = window.MUNDO || {};
+if (!MUNDO.forma)  MUNDO.forma  = function () {};
+if (!MUNDO.animar) MUNDO.animar = function () {};
+if (!MUNDO.grupos) MUNDO.grupos = {};
+
 window.MUNDOS = window.MUNDOS || {};
 window.MUNDOS.andes = {
 

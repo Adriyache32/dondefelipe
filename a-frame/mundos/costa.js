@@ -2,6 +2,13 @@
    MUNDO: costa — zonación del intermareal de Chile central
    Solo datos. Toda la maquinaria vive en mundo.js.
    ============================================================================= */
+/* Red de seguridad: este archivo puede cargarse con el motor completo, con un
+   motor antiguo, o con el maniquí de la portada. Que no reviente en ningún caso. */
+window.MUNDO = window.MUNDO || {};
+if (!MUNDO.forma)  MUNDO.forma  = function () {};
+if (!MUNDO.animar) MUNDO.animar = function () {};
+if (!MUNDO.grupos) MUNDO.grupos = {};
+
 window.MUNDOS = window.MUNDOS || {};
 window.MUNDOS.costa = {
 
