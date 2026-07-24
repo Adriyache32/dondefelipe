@@ -431,6 +431,22 @@ h2.sh::before { content: '⬧'; color: var(--gold); font-size: 0.75rem; opacity:
 ═══════════════════════════════════════════════ */
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
 
+/* Layout de dos columnas temáticas (ej. III° Medio) */
+.dual-col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+.dual-col .col-header {
+  font-family: var(--ff-title); font-size: 0.72rem; letter-spacing: 1.8px; font-weight: 700;
+  color: var(--bronze-rich); text-transform: uppercase;
+  padding: 9px 0 9px 14px; margin: 0 0 1.1rem;
+  border-left: 3px solid var(--gold);
+  background: linear-gradient(90deg, rgba(201,168,76,.07), transparent 70%);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  display: flex; align-items: center; gap: 8px;
+}
+.dual-col .grid { grid-template-columns: 1fr; }
+@media (max-width: 680px) {
+  .dual-col { grid-template-columns: 1fr; gap: 2.2rem; }
+}
+
 .card {
   background: var(--marble);
   border: 1px solid rgba(201,168,76,.16);
@@ -1654,38 +1670,62 @@ function r3(s){
       </div>
 
       <h2 class="sh">RECURSOS DE ESTUDIO</h2>
-      <div class="grid">
+      <div class="dual-col">
 
-        <div class="card c-sea" style="cursor:pointer;" onclick="window.open('fisica/ccclimatico.html','_blank')">
-          <div class="res-icon-badge"><i class="fa-solid fa-cloud-sun-rain"></i></div>
-          <span class="res-tag">Física</span>
-          <h3>CAMBIO CLIMÁTICO</h3>
-          <p>Recurso interactivo sobre el cambio climático: causas, evidencias y consecuencias del calentamiento global.</p>
-          <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
+        <!-- ── Columna 1: Ciencias para la Ciudadanía ── -->
+        <div>
+          <p class="col-header"><i class="fa-solid fa-people-roof"></i> CIENCIAS PARA LA CIUDADANÍA</p>
+          <div class="grid">
+
+            <div class="card c-gold" style="cursor:pointer;" onclick="window.open('biologia/acv.html','_blank')">
+              <div class="res-icon-badge"><i class="fa-solid fa-industry"></i></div>
+              <span class="res-tag">Tecnología</span>
+              <h3>ACV · ANÁLISIS DE CICLO DE VIDA</h3>
+              <p>Recurso interactivo sobre el análisis de ciclo de vida (ACV) de un producto: extracción de materias primas, fabricación, uso y disposición final, y su impacto ambiental en cada etapa.</p>
+              <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
+            </div>
+
+            <div class="card c-gold" style="cursor:pointer;" onclick="window.open('ciudadania/empresa1.html','_blank')">
+              <div class="res-icon-badge"><i class="fa-solid fa-hand-holding-seedling"></i></div>
+              <span class="res-tag">Tecnología</span>
+              <h3>CREACIÓN DE UNA EMPRESA SOSTENIBLE</h3>
+              <p>Recurso interactivo que analiza la creación de una empresa sostenible a partir de problemas del entorno, integrando criterios ambientales, sociales y económicos.</p>
+              <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
+            </div>
+
+          </div>
         </div>
 
-        <div class="card c-laurel" style="cursor:pointer;" onclick="window.open('biologia/ciclos.html','_blank')">
-          <div class="res-icon-badge"><i class="fa-solid fa-recycle"></i></div>
-          <span class="res-tag">Biología</span>
-          <h3>CICLOS BIOGEOQUÍMICOS</h3>
-          <p>Recurso interactivo sobre los ciclos de la materia en la naturaleza: agua, carbono, nitrógeno y su rol en los ecosistemas.</p>
-          <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
-        </div>
+        <!-- ── Columna 2: Biología de los Ecosistemas ── -->
+        <div>
+          <p class="col-header"><i class="fa-solid fa-leaf"></i> BIOLOGÍA DE LOS ECOSISTEMAS</p>
+          <div class="grid">
 
-        <div class="card c-laurel" style="cursor:pointer;" onclick="window.open('biologia/resiliencia.html','_blank')">
-          <div class="res-icon-badge"><i class="fa-solid fa-seedling"></i></div>
-          <span class="res-tag">Biología</span>
-          <h3>RESILIENCIA</h3>
-          <p>Recurso interactivo sobre la resiliencia de los ecosistemas: capacidad de recuperación frente a perturbaciones y alteraciones ambientales.</p>
-          <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
-        </div>
+            <div class="card c-sea" style="cursor:pointer;" onclick="window.open('fisica/ccclimatico.html','_blank')">
+              <div class="res-icon-badge"><i class="fa-solid fa-cloud-sun-rain"></i></div>
+              <span class="res-tag">Física</span>
+              <h3>CAMBIO CLIMÁTICO</h3>
+              <p>Recurso interactivo sobre el cambio climático: causas, evidencias y consecuencias del calentamiento global.</p>
+              <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
+            </div>
 
-        <div class="card c-gold" style="cursor:pointer;" onclick="window.open('biologia/acv.html','_blank')">
-          <div class="res-icon-badge"><i class="fa-solid fa-industry"></i></div>
-          <span class="res-tag">Tecnología</span>
-          <h3>ACV · ANÁLISIS DE CICLO DE VIDA</h3>
-          <p>Recurso interactivo sobre el análisis de ciclo de vida (ACV) de un producto: extracción de materias primas, fabricación, uso y disposición final, y su impacto ambiental en cada etapa.</p>
-          <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
+            <div class="card c-laurel" style="cursor:pointer;" onclick="window.open('biologia/ciclos.html','_blank')">
+              <div class="res-icon-badge"><i class="fa-solid fa-recycle"></i></div>
+              <span class="res-tag">Biología</span>
+              <h3>CICLOS BIOGEOQUÍMICOS</h3>
+              <p>Recurso interactivo sobre los ciclos de la materia en la naturaleza: agua, carbono, nitrógeno y su rol en los ecosistemas.</p>
+              <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
+            </div>
+
+            <div class="card c-laurel" style="cursor:pointer;" onclick="window.open('biologia/resiliencia.html','_blank')">
+              <div class="res-icon-badge"><i class="fa-solid fa-seedling"></i></div>
+              <span class="res-tag">Biología</span>
+              <h3>RESILIENCIA</h3>
+              <p>Recurso interactivo sobre la resiliencia de los ecosistemas: capacidad de recuperación frente a perturbaciones y alteraciones ambientales.</p>
+              <button class="btn-p" style="margin-top:12px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Recurso</button>
+            </div>
+
+          </div>
         </div>
 
       </div>
