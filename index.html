@@ -704,24 +704,6 @@ h2.sh::before { content: '⬧'; color: var(--gold); font-size: 0.75rem; opacity:
   box-shadow: 0 12px 40px rgba(0,0,0,.08), 0 0 0 1px rgba(201,168,76,.08);
 }
 
-/* ── ⛏️ Mostrador de estado del servidor de Minecraft (portada) ── */
-.mc-status-wrap {
-  border-radius: 14px;
-  overflow: hidden;
-  border: 1px solid rgba(61,140,64,.32);
-  box-shadow: 0 10px 32px rgba(0,0,0,.24), 0 0 0 1px rgba(61,140,64,.06);
-  margin-bottom: 2rem;
-  background: linear-gradient(160deg, rgba(61,140,64,.06), rgba(0,0,0,.15));
-}
-.mc-status-frame {
-  width: 100%;
-  height: 560px;      /* alto de respaldo mientras se mide el contenido real del iframe */
-  min-height: 340px;
-  border: none;
-  display: block;
-  transition: height 0.35s cubic-bezier(.4,0,.2,1);
-}
-
 .fade-in { animation: fadeIn 0.45s cubic-bezier(0.16,1,0.3,1); }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(18px); }
@@ -1281,11 +1263,6 @@ function rHome(stage){
         <p class="page-sub">🐙 Ciencia, Deporte y Jardín Submarino · 2026</p>
       </div>
 
-      <!-- ⛏️ ESTADO DEL SERVIDOR DE MINECRAFT -->
-      <div class="mc-status-wrap">
-        <iframe id="mc-status-frame" src="herramientas/servidormc.html" class="mc-status-frame" title="Estado del servidor de Minecraft" loading="eager"></iframe>
-      </div>
-
       <!-- 🧰 DESCRIPCIÓN DE HERRAMIENTAS -->
       <h2 class="sh">🧰 HERRAMIENTAS DISPONIBLES</h2>
 
@@ -1434,7 +1411,6 @@ function rHome(stage){
     </div>`;
   updateRadioBadge();
   startCountdown18();
-  setupMcStatusResize();
 }
 
 /* ── 🇨🇱 Cuenta regresiva 18 de Septiembre ── */
@@ -1459,35 +1435,6 @@ function startCountdown18(){
   }
   tick();
   _countdown18Interval = setInterval(tick, 1000);
-}
-
-/* ── ⛏️ Auto-ajuste de altura del mostrador de estado del servidor (mismo origen) ── */
-function setupMcStatusResize(){
-  const frame = document.getElementById('mc-status-frame');
-  if (!frame) return;
-
-  const ajustar = () => {
-    try {
-      const doc = frame.contentDocument;
-      if (doc && doc.body) {
-        const alto = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight);
-        if (alto > 0) frame.style.height = alto + 'px';
-      }
-    } catch (e) {
-      /* Origen cruzado: se mantiene el alto de respaldo definido en CSS */
-    }
-  };
-
-  frame.addEventListener('load', () => {
-    ajustar();
-    try {
-      const ro = new ResizeObserver(ajustar);
-      ro.observe(frame.contentDocument.body);
-    } catch (e) { /* no disponible: sin problema, ya se ajustó una vez */ }
-  });
-
-  // Por si el iframe ya estaba cargado (ej. al volver a home desde caché)
-  if (frame.contentDocument && frame.contentDocument.readyState === 'complete') ajustar();
 }
 
 /* ── 📻 Estado de la radio en la portada (misma hoja que radio.html) ── */
