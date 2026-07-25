@@ -253,19 +253,18 @@ MUNDO.forma('asiento', function (H, color, b) {
   H.pieza('cilindro', '#b9bfc4', 'metal', b, [0.24, 0.78, -0.02], [90, 0, 0], [0.022, 0.36, 0.022], 0);
 }, 1.2);
 
-/* Carro abierto: se puede entrar. El piso pisable lo declara el objeto
-   con el campo "piso"; acá van las paredes, el techo y el mobiliario. */
-MUNDO.forma('vagonAbierto', function (H, color, b) {
+/* Carro con puertas automáticas y cabina de control.
+   Las hojas de las puertas van a subgrupos con nombre para poder moverlas;
+   ese nombre lo entrega el objeto en su campo "puertas". */
+MUNDO.forma('vagonAbierto', function (H, color, b, ob) {
   var LARGO = 15.6, ALTO = 1.05, INT = '#e9edf0', AZUL = '#2f5fa8';
+  var pref = (ob && ob.id) ? ob.id : 'v';
 
-  // faldón y bogies
   H.pieza('caja', '#3a4148', 'solido', b, [0, 0.62, 0], [0, 0, 0], [2.8, 0.9, LARGO - 0.6], 0);
-  // piso visible (el pisable lo pone el motor)
   H.pieza('caja', '#c9ced3', 'solido', b, [0, ALTO - 0.04, 0], [0, 0, 0], [2.66, 0.08, LARGO - 0.4], 0);
 
-  // paredes laterales con dos vanos de puerta por costado
   var tramos = [[-6.6, -4.4], [-2.6, 2.6], [4.4, 6.6]];
-  [-1.42, 1.42].forEach(function (x) {
+  [-1.42, 1.42].forEach(function (x, li) {
     tramos.forEach(function (t) {
       var largo = t[1] - t[0], cz = (t[0] + t[1]) / 2;
       H.pieza('caja', color, 'solido', b, [x, ALTO + 0.55, cz], [0, 0, 0], [0.1, 1.1, largo], 0);
@@ -273,37 +272,35 @@ MUNDO.forma('vagonAbierto', function (H, color, b) {
       H.pieza('caja', color, 'solido', b, [x, ALTO + 2, cz], [0, 0, 0], [0.1, 0.4, largo], 0);
       H.pieza('caja', AZUL, 'solido', b, [x, ALTO + 0.28, cz], [0, 0, 0], [0.11, 0.26, largo], 0);
     });
-    // marcos de puerta
-    [-3.5, 3.5].forEach(function (cz) {
-      H.pieza('caja', '#9aa3ab', 'metal', b, [x, ALTO + 1.15, cz - 0.9], [0, 0, 0], [0.12, 2.3, 0.09], 0);
-      H.pieza('caja', '#9aa3ab', 'metal', b, [x, ALTO + 1.15, cz + 0.9], [0, 0, 0], [0.12, 2.3, 0.09], 0);
+    // marcos y hojas de puerta (una puerta por costado, al centro)
+    var lado = li === 0 ? 'I' : 'D';
+    H.pieza('caja', '#9aa3ab', 'metal', b, [x, ALTO + 1.15, -0.9], [0, 0, 0], [0.12, 2.3, 0.09], 0);
+    H.pieza('caja', '#9aa3ab', 'metal', b, [x, ALTO + 1.15, 0.9], [0, 0, 0], [0.12, 2.3, 0.09], 0);
+    // dos hojas correderas, cada una en su subgrupo
+    ['A', 'B'].forEach(function (h, hi) {
+      var g = pref + '_p' + lado + h;
+      _hoja(H, b, [x, ALTO + 1.15, hi ? 0.45 : -0.45], g, color);
     });
   });
 
-  // testeros
   [-LARGO / 2, LARGO / 2].forEach(function (z) {
     H.pieza('caja', color, 'solido', b, [0, ALTO + 1.2, z], [0, 0, 0], [2.9, 2.4, 0.12], 0);
     H.pieza('caja', '#1d2b38', 'vidrio', b, [0, ALTO + 1.6, z], [0, 0, 0], [1.5, 0.9, 0.14], 0);
   });
 
-  // techo y luminarias
   H.pieza('caja', INT, 'solido', b, [0, ALTO + 2.42, 0], [0, 0, 0], [2.9, 0.18, LARGO], 0);
-  for (var i = 0; i < 6; i++) {
+  for (var i = 0; i < 6; i++)
     H.pieza('caja', '#fdfbf2', 'brillo', b, [0, ALTO + 2.3, -6.2 + i * 2.5], [0, 0, 0], [0.5, 0.05, 1.9], 0);
-  }
 
-  // pasamanos: barra corrida y montantes junto a las puertas
   [-0.62, 0.62].forEach(function (x) {
     H.pieza('caja', '#b9bfc4', 'metal', b, [x, ALTO + 2.02, 0], [0, 0, 0], [0.05, 0.05, LARGO - 1.4], 0);
   });
-  [-3.5, 3.5].forEach(function (cz) {
-    [-0.85, 0.85].forEach(function (x) {
-      H.pieza('cilindro', '#b9bfc4', 'metal', b, [x, ALTO + 1.15, cz], [0, 0, 0], [0.035, 2.3, 0.035], 0);
-    });
+  [-0.9, 0.9].forEach(function (x) {
+    H.pieza('cilindro', '#b9bfc4', 'metal', b, [x, ALTO + 1.15, 0], [0, 0, 0], [0.035, 2.3, 0.035], 0);
   });
 
-  // asientos: dos por costado, pasillo al centro
-  var filas = [-6.2, -5.2, 5.2, 6.2, -1.9, -0.9, 0.9, 1.9];
+  // asientos azules
+  var filas = [-6.2, -5.2, 5.2, 6.2, -1.9, 1.9];
   filas.forEach(function (z) {
     [-1.02, -0.55, 0.55, 1.02].forEach(function (x) {
       H.pieza('caja', '#eef1f4', 'solido', b, [x, ALTO + 0.36, z], [0, 0, 0], [0.44, 0.08, 0.44], 0);
@@ -314,6 +311,264 @@ MUNDO.forma('vagonAbierto', function (H, color, b) {
     });
   });
 }, 4.6);
+
+// Una hoja de puerta corredera: panel + ventana, en un subgrupo posicionable
+function _hoja(H, b, off, grupo, color) {
+  H.pieza('caja', color, 'solido', b, off, [0, 0, 0], [0.12, 2.2, 0.86], 0, grupo);
+  H.pieza('caja', '#1d2b38', 'vidrio', b, [off[0], off[1] + 0.35, off[2]], [0, 0, 0], [0.1, 1, 0.72], 0, grupo);
+}
+
+// Cabina de control del conductor (sala de control del tren)
+MUNDO.forma('cabina', function (H, color, b) {
+  var A = 2.7, L = 2.4, ALTO = 1.05;
+  // mampara que separa cabina de pasajeros
+  H.pieza('caja', color, 'solido', b, [0, ALTO + 1.2, L / 2], [0, 0, 0], [A, 2.4, 0.12], 0);
+  H.pieza('caja', '#1d2b38', 'vidrio', b, [0.6, ALTO + 1.5, L / 2], [0, 0, 0], [1.2, 1, 0.14], 0);
+  // parabrisas frontal
+  H.pieza('caja', '#243541', 'vidrio', b, [0, ALTO + 1.5, -L / 2], [0, 0, 0], [A - 0.2, 1.5, 0.12], 0);
+  // pupitre de mando
+  H.pieza('caja', '#2f363d', 'solido', b, [0, ALTO + 0.55, -L / 2 + 0.5], [0, 0, 0], [A - 0.4, 0.5, 0.7], 0);
+  H.pieza('caja', '#20262b', 'solido', b, [0, ALTO + 0.82, -L / 2 + 0.5], [-18, 0, 0], [A - 0.5, 0.06, 0.5], 0);
+  // palanca de tracción y pantallas
+  H.pieza('poste', '#c4c8cc', 'metal', b, [-0.6, ALTO + 0.85, -L / 2 + 0.5], [0, 0, 0], [0.05, 0.32, 0.05], 0);
+  H.pieza('esferaB', '#c4392f', 'solido', b, [-0.6, ALTO + 1.02, -L / 2 + 0.5], [0, 0, 0], [0.08, 0.08, 0.08], 0);
+  H.pieza('caja', '#20262b', 'solido', b, [0.5, ALTO + 1.05, -L / 2 + 0.3], [-14, 0, 0], [0.5, 0.34, 0.05], 0);
+  H.pieza('caja', '#2f6bab', 'brillo', b, [0.5, ALTO + 1.05, -L / 2 + 0.27], [-14, 0, 0], [0.42, 0.26, 0.02], 0);
+  // asiento del conductor
+  H.pieza('cilindro', '#2b3138', 'solido', b, [0, ALTO + 0.24, 0.2], [0, 0, 0], [0.3, 0.48, 0.3], 0);
+  H.pieza('caja', '#39424a', 'solido', b, [0, ALTO + 0.52, 0.2], [0, 0, 0], [0.5, 0.09, 0.5], 0);
+  H.pieza('caja', '#39424a', 'solido', b, [0, ALTO + 0.82, 0.44], [-8, 0, 0], [0.5, 0.6, 0.09], 0);
+}, 4);
+
+
+
+
+// Sala de control del metro: se puede entrar, con puerta al costado del andén
+MUNDO.forma('salaControl', function (H, color, b) {
+  var A = 7, L = 11, H2 = 3.4;   // ancho, largo, alto interior
+
+  H.pieza('caja', '#b0aa9e', 'solido', b, [0, 0.08, 0], [0, 0, 0], [A + 0.6, 0.16, L + 0.6], 0);
+  H.pieza('caja', color, 'solido', b, [0, H2 + 0.15, 0], [0, 0, 0], [A + 0.7, 0.3, L + 0.7], 0);
+
+  // muro del fondo y laterales, con banda de ventanas
+  H.pieza('caja', color, 'solido', b, [-A / 2, H2 / 2, 0], [0, 0, 0], [0.22, H2, L], 0);
+  [-L / 2, L / 2].forEach(function (z) {
+    H.pieza('caja', color, 'solido', b, [0, 0.55, z], [0, 0, 0], [A, 1.1, 0.22], 0);
+    H.pieza('caja', '#3d4a52', 'vidrio', b, [0, 2, z], [0, 0, 0], [A, 1.8, 0.16], 0);
+    H.pieza('caja', color, 'solido', b, [0, 3.15, z], [0, 0, 0], [A, 0.5, 0.22], 0);
+  });
+  // muro que mira al andén: ventanal y vano de puerta
+  [[-3.2, 1.6], [1.4, 4.2]].forEach(function (t) {
+    var largo = t[1] - t[0], cz = (t[0] + t[1]) / 2;
+    H.pieza('caja', color, 'solido', b, [A / 2, 0.55, cz], [0, 0, 0], [0.22, 1.1, largo], 0);
+    H.pieza('caja', '#3d4a52', 'vidrio', b, [A / 2, 2, cz], [0, 0, 0], [0.16, 1.8, largo], 0);
+    H.pieza('caja', color, 'solido', b, [A / 2, 3.15, cz], [0, 0, 0], [0.22, 0.5, largo], 0);
+  });
+  H.pieza('caja', '#8e9aa2', 'metal', b, [A / 2, 2.3, -3.35], [0, 0, 0], [0.26, 0.12, 0.3], 0);
+
+  // consola en U
+  H.pieza('caja', '#4a5560', 'solido', b, [-2.4, 0.4, 0], [0, 0, 0], [1.4, 0.8, 6], 0);
+  H.pieza('caja', '#2f3840', 'solido', b, [-2.4, 0.83, 0], [0, 0, 0], [1.5, 0.08, 6.1], 0);
+  H.pieza('caja', '#4a5560', 'solido', b, [-0.6, 0.4, -2.6], [0, 0, 0], [2.4, 0.8, 1.2], 0);
+  H.pieza('caja', '#2f3840', 'solido', b, [-0.6, 0.83, -2.6], [0, 0, 0], [2.5, 0.08, 1.3], 0);
+
+  // pantallas de la consola
+  [-2, -0.6, 0.8, 2.2].forEach(function (z) {
+    H.pieza('caja', '#20262b', 'solido', b, [-2.2, 1.2, z], [0, 12, 0], [0.1, 0.6, 0.95], 0);
+    H.pieza('caja', '#2f6bab', 'brillo', b, [-2.13, 1.2, z], [0, 12, 0], [0.03, 0.5, 0.85], 0);
+  });
+  // muro de monitores del fondo
+  for (var i = 0; i < 3; i++) {
+    for (var j = 0; j < 2; j++) {
+      H.pieza('caja', '#20262b', 'solido', b, [-A / 2 + 0.3, 2.6 - j * 0.85, -2.2 + i * 2.2], [0, 90, 0], [1.9, 0.75, 0.1], 0);
+      H.pieza('caja', j ? '#3f8f6a' : '#2f6bab', 'brillo', b, [-A / 2 + 0.37, 2.6 - j * 0.85, -2.2 + i * 2.2], [0, 90, 0], [1.7, 0.62, 0.03], 0);
+    }
+  }
+  // sillas
+  [-1.4, 0.4].forEach(function (z) {
+    H.pieza('cilindro', '#2b3138', 'solido', b, [-1.1, 0.24, z], [0, 0, 0], [0.32, 0.48, 0.32], 0);
+    H.pieza('caja', '#39424a', 'solido', b, [-1.1, 0.52, z], [0, 0, 0], [0.5, 0.09, 0.5], 0);
+    H.pieza('caja', '#39424a', 'solido', b, [-0.85, 0.82, z], [0, 0, 8], [0.09, 0.6, 0.5], 0);
+  });
+  // luminarias
+  for (var k = 0; k < 3; k++) {
+    H.pieza('caja', '#fdfbf2', 'brillo', b, [-1, H2 - 0.06, -3.4 + k * 3.4], [0, 0, 0], [3.4, 0.05, 0.5], 0);
+  }
+}, 5);
+
+/* ----------------------------------------------------------------------------
+   NOMBRE DEL ANFITRIÓN
+   Se usa en el rótulo flotante y en el panel de diálogo. Cambiarlo acá lo
+   cambia en todas partes; dejarlo vacío deja al personaje sin nombre.
+   ---------------------------------------------------------------------------- */
+var ANFITRION = 'Esteban Devia';
+
+
+/* =========================================================================
+   FORMAS DEL COLEGIO SAN AGUSTÍN
+   ========================================================================= */
+
+// Fachada de recepción: mesón de madera, escudo SA y puerta de acceso
+MUNDO.forma('recepcion', function (H, color, b) {
+  var A = 14, ALTO = 3.6;
+  // muro de fondo con vano de puerta a la izquierda
+  H.pieza('caja', color, 'solido', b, [3, ALTO / 2, -3.5], [0, 0, 0], [A - 4.2, ALTO, 0.2], 0);
+  H.pieza('caja', color, 'solido', b, [-6, ALTO / 2, -3.5], [0, 0, 0], [1.8, ALTO, 0.2], 0);
+  H.pieza('caja', color, 'solido', b, [-4, ALTO - 0.5, -3.5], [0, 0, 0], [2.4, 1, 0.2], 0);
+  // techo con focos empotrados
+  H.pieza('caja', '#eceae4', 'solido', b, [0, ALTO + 0.15, 0], [0, 0, 0], [A, 0.3, 8], 0);
+  for (var i = 0; i < 3; i++) for (var j = 0; j < 2; j++) {
+    H.pieza('circulo', '#fdfbf2', 'brillo', b, [-3 + i * 3, ALTO - 0.02, -1.5 + j * 3], [90, 0, 0], [0.28, 0.28, 0.28], 0);
+  }
+  // mesón: cuerpo blanco y cubierta de madera
+  H.pieza('caja', '#e9e5dc', 'solido', b, [1, 0.6, 1.5], [0, 0, 0], [9, 1.2, 0.9], 0);
+  H.pieza('caja', '#8a5a34', 'solido', b, [1, 1.24, 1.5], [0, 0, 0], [9.4, 0.14, 1.15], 0);
+  // escudo circular SA en el frente del mesón
+  H.pieza('cilindro', '#7a3f24', 'solido', b, [1, 0.62, 1.98], [90, 0, 0], [0.66, 0.12, 0.66], 0);
+  H.pieza('cilindro', '#e8d8b0', 'solido', b, [1, 0.62, 2.02], [90, 0, 0], [0.5, 0.04, 0.5], 0);
+  H.pieza('caja', '#e0c48a', 'brillo', b, [1, 0.62, 2.05], [0, 0, 0], [0.34, 0.34, 0.02], 0);
+  // cuadro de San Agustín en el muro
+  H.pieza('caja', '#5a4632', 'solido', b, [-1.5, 2.5, -3.38], [0, 0, 0], [1.4, 1.7, 0.08], 0);
+  H.pieza('caja', '#4a6a8a', 'solido', b, [-1.5, 2.5, -3.34], [0, 0, 0], [1.1, 1.4, 0.04], 0);
+  // puerta doble de vaivén a la izquierda del mesón
+  H.pieza('caja', '#f2f0ea', 'solido', b, [-6, 1.4, 0.5], [0, 0, 0], [0.1, 2.8, 1.7], 0);
+  H.pieza('caja', '#dfe6ea', 'vidrio', b, [-6, 1.7, 0.5], [0, 0, 0], [0.06, 1.6, 1.5], 0);
+}, 4.4);
+
+// Bloque de aulas de dos pisos, con pasillo vidriado al frente
+MUNDO.forma('pabellon', function (H, color, b) {
+  var A = 22, F = 9, PISO = 3.2;
+  [0, 1].forEach(function (n) {
+    var y = n * PISO;
+    H.pieza('caja', color, 'solido', b, [0, y + PISO / 2, -F / 2], [0, 0, 0], [A, PISO, 0.25], 0);
+    // ventanas del pasillo
+    for (var i = 0; i < 7; i++) {
+      H.pieza('caja', '#cdd8dd', 'vidrio', b, [-9 + i * 3, y + 1.9, F / 2 - 0.1], [0, 0, 0], [2.4, 2, 0.12], 0);
+      H.pieza('caja', '#f0eee8', 'solido', b, [-9 + i * 3, y + 0.55, F / 2 - 0.1], [0, 0, 0], [2.6, 1.1, 0.14], 0);
+    }
+    // piso/losa
+    H.pieza('caja', '#d9d4c8', 'solido', b, [0, y, 0], [0, 0, 0], [A, 0.3, F], 0);
+  });
+  // techo
+  H.pieza('caja', '#c9c3b6', 'solido', b, [0, 2 * PISO + 0.2, 0], [0, 0, 0], [A + 0.6, 0.35, F + 0.6], 0);
+  // pilares del pasillo
+  for (var i = 0; i < 8; i++) {
+    H.pieza('poste', '#e6e2d8', 'solido', b, [-9.5 + i * 2.7, PISO, F / 2 - 0.3], [0, 0, 0], [0.2, PISO, 0.2], 0);
+  }
+  // baranda del segundo piso
+  H.pieza('caja', '#c4cace', 'metal', b, [0, PISO + 1, F / 2 - 0.3], [0, 0, 0], [A, 0.09, 0.09], 0);
+}, 7);
+
+// Caja de escalera: peldaños que se suben de verdad (la rampa la pone el objeto)
+MUNDO.forma('escalera', function (H, color, b) {
+  var pasos = 11, h = 0.2, d = 0.32, ancho = 2.6;
+  for (var i = 0; i < pasos; i++) {
+    H.pieza('caja', '#d8c23a', 'solido', b, [0, i * h + h / 2, -i * d], [0, 0, 0], [ancho, h, d + 0.02], 0);
+    H.pieza('caja', '#3a3a3a', 'solido', b, [0, i * h, -i * d - d / 2], [0, 0, 0], [ancho, 0.06, 0.05], 0);
+  }
+  // pasamanos y muros laterales
+  [-ancho / 2, ancho / 2].forEach(function (x) {
+    H.pieza('caja', '#f0eee8', 'solido', b, [x, 1.1, -pasos * d / 2], [-32, 0, 0], [0.12, 2.4, pasos * d * 1.25], 0);
+    H.pieza('caja', '#c9ccce', 'metal', b, [x * 0.82, 1.55, -pasos * d / 2], [-32, 0, 0], [0.06, 0.06, pasos * d * 1.25], 0);
+  });
+}, 3);
+
+// Multicancha: piso azul con líneas, muro blanco, reja verde y arcos
+MUNDO.forma('cancha', function (H, color, b) {
+  var A = 20, L = 32;
+  H.pieza('caja', '#2f74b5', 'solido', b, [0, 0.05, 0], [0, 0, 0], [A, 0.1, L], 0);
+  // líneas amarillas y blancas
+  H.pieza('caja', '#e8d24a', 'brillo', b, [0, 0.11, 0], [0, 0, 0], [0.16, 0.02, L - 2], 0);
+  H.pieza('caja', '#f2f2f2', 'brillo', b, [0, 0.11, 0], [0, 0, 0], [A - 2, 0.02, 0.16], 0);
+  H.pieza('circulo', '#f2f2f2', 'lamina', b, [0, 0.12, 0], [-90, 0, 0], [2.2, 2.2, 2.2], 0);
+  // muro blanco perimetral y reja verde encima
+  [-1, 1].forEach(function (sx) {
+    H.pieza('caja', '#eef0f0', 'solido', b, [sx * A / 2, 0.7, 0], [0, 0, 0], [0.3, 1.4, L], 0);
+    for (var i = 0; i < 10; i++)
+      H.pieza('caja', '#3f7a4a', 'metal', b, [sx * A / 2, 2.6, -L / 2 + 1.6 + i * 3.4], [0, 0, 0], [0.08, 3.6, 0.08], 0);
+    H.pieza('caja', '#3f7a4a', 'metal', b, [sx * A / 2, 4.3, 0], [0, 0, 0], [0.08, 0.08, L], 0);
+  });
+  [-1, 1].forEach(function (sz) {
+    H.pieza('caja', '#eef0f0', 'solido', b, [0, 0.7, sz * L / 2], [0, 0, 0], [A, 1.4, 0.3], 0);
+    for (var i = 0; i < 6; i++)
+      H.pieza('caja', '#3f7a4a', 'metal', b, [-A / 2 + 1.6 + i * 3.4, 2.6, sz * L / 2], [0, 0, 0], [0.08, 3.6, 0.08], 0);
+  });
+  // arcos de baby fútbol
+  [-1, 1].forEach(function (sz) {
+    H.pieza('caja', '#f2f2f2', 'metal', b, [-1.6, 1.1, sz * (L / 2 - 1)], [0, 0, 0], [0.1, 2, 0.1], 0);
+    H.pieza('caja', '#f2f2f2', 'metal', b, [1.6, 1.1, sz * (L / 2 - 1)], [0, 0, 0], [0.1, 2, 0.1], 0);
+    H.pieza('caja', '#f2f2f2', 'metal', b, [0, 2.05, sz * (L / 2 - 1)], [0, 0, 0], [3.3, 0.1, 0.1], 0);
+  });
+  // tableros de básquetbol
+  [-1, 1].forEach(function (sz) {
+    H.pieza('caja', '#f6f6f6', 'solido', b, [0, 4.4, sz * (L / 2 - 0.6)], [0, 0, 0], [1.8, 1.2, 0.1], 0);
+    H.pieza('toro', '#c4392f', 'metal', b, [0, 3.9, sz * (L / 2 - 1.1)], [-90, 0, 0], [0.34, 0.34, 0.34], 0);
+  });
+  // torres de iluminación
+  [[-A / 2 - 1, -L / 2 - 1], [A / 2 + 1, L / 2 + 1]].forEach(function (t) {
+    H.pieza('poste', '#c8ccce', 'metal', b, [t[0], 3, t[1]], [0, 0, 0], [0.16, 6, 0.16], 0);
+    H.pieza('caja', '#fdfbf0', 'brillo', b, [t[0], 6, t[1]], [0, 0, 0], [0.9, 0.5, 0.3], 0);
+  });
+}, 5);
+
+// Pasillo subterráneo: piso gris, zócalo de ladrillo, cielo con luces
+MUNDO.forma('subterraneo', function (H, color, b) {
+  var A = 5, L = 24, ALTO = 3;
+  H.pieza('caja', '#cfd2d4', 'solido', b, [0, 0.05, 0], [0, 0, 0], [A, 0.1, L], 0);
+  [-1, 1].forEach(function (sx) {
+    H.pieza('caja', '#f0efe9', 'solido', b, [sx * A / 2, 2.2, 0], [0, 0, 0], [0.2, 1.6, L], 0);   // muro claro arriba
+    H.pieza('caja', '#a86a4a', 'solido', b, [sx * A / 2, 0.75, 0], [0, 0, 0], [0.22, 1.5, L], 0); // zócalo ladrillo
+  });
+  H.pieza('caja', '#eceae4', 'solido', b, [0, ALTO, 0], [0, 0, 0], [A, 0.2, L], 0);
+  for (var i = 0; i < 6; i++)
+    H.pieza('caja', '#fdfbf2', 'brillo', b, [0, ALTO - 0.12, -L / 2 + 2 + i * 4], [0, 0, 0], [1.2, 0.06, 0.5], 0);
+  // felpudos oscuros del piso
+  for (var i = 0; i < 3; i++)
+    H.pieza('caja', '#33383c', 'solido', b, [0, 0.12, -6 + i * 6], [0, 45, 0], [1.4, 0.02, 1.4], 0);
+}, 3.4);
+
+// Portón de acceso al colegio, con nombre
+MUNDO.forma('porton', function (H, color, b) {
+  [-3, 3].forEach(function (x) {
+    H.pieza('caja', color, 'solido', b, [x, 2, 0], [0, 0, 0], [0.6, 4, 0.6], 0);
+  });
+  H.pieza('caja', color, 'solido', b, [0, 4.3, 0], [0, 0, 0], [7, 0.9, 0.5], 0);
+  H.pieza('caja', '#f4f2ec', 'brillo', b, [0, 4.3, 0.28], [0, 0, 0], [5.4, 0.5, 0.05], 0);
+  for (var i = 0; i < 9; i++)
+    H.pieza('caja', '#3c4a42', 'metal', b, [-2.4 + i * 0.6, 1.6, 0], [0, 0, 0], [0.07, 3.2, 0.07], 0);
+}, 5.2);
+
+
+// Pasajero sentado: reutiliza la persona pero con las piernas hacia adelante
+MUNDO.forma('pasajeroSentado', function (H, color, b, ob) {
+  var c = (ob && ob.cuerpo) || {};
+  var piel = c.piel || '#c88d6b', pelo = c.pelo || '#241b16',
+      chaq = c.chaqueta || '#5b3a26', pol = c.polera || '#1b2430',
+      pant = c.pantalon || '#2b2f36', zap = c.zapato || '#1a1917';
+  // muslos horizontales
+  [-0.15, 0.15].forEach(function (x) {
+    H.pieza('caja', pant, 'solido', b, [x, 0.42, 0.2], [0, 0, 0], [0.22, 0.2, 0.5], 0);
+    H.pieza('caja', pant, 'solido', b, [x, 0.24, 0.42], [0, 0, 0], [0.22, 0.42, 0.2], 0);
+    H.pieza('caja', zap, 'solido', b, [x, 0.05, 0.5], [0, 0, 0], [0.22, 0.1, 0.34], 0);
+  });
+  // torso
+  H.pieza('caja', pol, 'solido', b, [0, 0.78, 0.04], [0, 0, 0], [0.36, 0.5, 0.24], 0);
+  H.pieza('caja', chaq, 'solido', b, [-0.21, 0.78, 0.03], [0, 0, 0], [0.2, 0.54, 0.3], 0);
+  H.pieza('caja', chaq, 'solido', b, [0.21, 0.78, 0.03], [0, 0, 0], [0.2, 0.54, 0.3], 0);
+  H.pieza('caja', chaq, 'solido', b, [0, 0.78, -0.12], [0, 0, 0], [0.58, 0.54, 0.1], 0);
+  // brazos sobre las piernas
+  H.pieza('caja', chaq, 'solido', b, [-0.34, 0.7, 0.12], [20, 0, 6], [0.16, 0.5, 0.18], 0);
+  H.pieza('caja', chaq, 'solido', b, [0.34, 0.7, 0.12], [20, 0, -6], [0.16, 0.5, 0.18], 0);
+  // cabeza
+  H.pieza('caja', piel, 'solido', b, [0, 1.1, 0.02], [0, 0, 0], [0.14, 0.12, 0.14], 0);
+  H.pieza('esfera', piel, 'solido', b, [0, 1.26, 0.02], [0, 0, 0], [0.15, 0.18, 0.15], 0);
+  H.pieza('esfera', pelo, 'solido', b, [0, 1.32, 0.008], [0, 0, 0], [0.158, 0.12, 0.163], 0);
+  // rasgos mínimos
+  [-0.056, 0.056].forEach(function (x) {
+    H.pieza('esferaB', '#2a2320', 'solido', b, [x, 1.28, 0.15], [0, 0, 0], [0.02, 0.02, 0.016], 0);
+  });
+  H.pieza('caja', piel, 'solido', b, [0, 1.24, 0.16], [0, 0, 0], [0.03, 0.045, 0.035], 0);
+}, 1.5);
 
 /* ------------------------------------------------------------ COLOCACIONES */
 var OBJ = [];
@@ -344,10 +599,12 @@ OBJ.push({ forma: 'macetero', color: '#9c6a52', pos: [6.5, 0, 4] });
 
 // Borde norte: reja, quiosco y edificios
 for (var k = -4; k <= 4; k++) OBJ.push({ forma: 'reja', color: '#2f6b45', pos: [k * 6, 0, -19] });
-OBJ.push({ forma: 'quiosco', color: '#2f8f4f', pos: [-19, 0, -14], giro: 12, nombre: 'Quiosco' });
-OBJ.push({ forma: 'edificio', color: '#eceae4', pos: [0, 0, -30], nombre: 'Edificio del borde' });
-OBJ.push({ forma: 'edificio', color: '#ddd8cd', pos: [26, 0, -32] });
-OBJ.push({ forma: 'edificio', color: '#e4dfd4', pos: [-27, 0, -32] });
+OBJ.push({ forma: 'quiosco', color: '#2f8f4f', pos: [-19, 0, -14], giro: 12, nombre: 'Quiosco',
+           choca: [{ dx: 0, dz: 0, ancho: 5, largo: 3.4, alto: 2.9 }] });
+var MURO_EDIF = [{ dx: 0, dz: 0, ancho: 20, largo: 12, alto: 16 }];
+OBJ.push({ forma: 'edificio', color: '#eceae4', pos: [0, 0, -30], nombre: 'Edificio del borde', choca: MURO_EDIF });
+OBJ.push({ forma: 'edificio', color: '#ddd8cd', pos: [26, 0, -32], choca: MURO_EDIF });
+OBJ.push({ forma: 'edificio', color: '#e4dfd4', pos: [-27, 0, -32], choca: MURO_EDIF });
 
 
 /* ---- Estación de Villa Alemana, al costado derecho de la plaza ---- */
@@ -393,7 +650,8 @@ OBJ.push({ forma: 'persona', pos: [XA + 1.4, 0.95, -6], giro: 88,
             polera: '#1b2430', pantalon: '#3d4450', zapato: '#201d1b' } });
 
 // Acceso a la estación, con torniquetes
-OBJ.push({ forma: 'acceso', color: '#b6afa3', pos: [XA - 11, 0.05, 26], giro: -90 });
+OBJ.push({ forma: 'acceso', color: '#b6afa3', pos: [XA - 11, 0.05, 26], giro: -90,
+           choca: [{ dx: -4.6, dz: 0, ancho: 4.4, largo: 7, alto: 4.4 }] });
 [-1, 0.2, 1.4].forEach(function (d) {
   OBJ.push({ forma: 'torniquete', color: '#dcdfe2', pos: [XA - 8.4 + d, 0.05, 24], giro: 90 });
 });
@@ -401,14 +659,78 @@ OBJ.push({ forma: 'acceso', color: '#b6afa3', pos: [XA - 11, 0.05, 26], giro: -9
   OBJ.push({ forma: 'reja', color: '#2f6b45', pos: [r[0], 0.05, r[1]], giro: 90 });
 });
 
-// El tren detenido en el andén: se puede entrar
-[7.9, -7.9].forEach(function (z) {
-  OBJ.push({ forma: 'vagonAbierto', color: '#eef1f3', pos: [XV1, 0.05, z],
-             piso: { ancho: 2.66, largo: 15.2, alto: 1.1, color: '#c9ced3' } });
+// Paredes del carro: tres tramos por costado, con los vanos de puerta libres
+var MUROS_VAGON = [];
+[-1.42, 1.42].forEach(function (x) {
+  [[-6.6, -4.4], [-2.6, 2.6], [4.4, 6.6]].forEach(function (t) {
+    MUROS_VAGON.push({ dx: x, dz: (t[0] + t[1]) / 2, ancho: 0.24,
+                       largo: t[1] - t[0], base: 1, alto: 2.4 });
+  });
 });
-OBJ.push({ forma: 'vagonAbierto', color: '#eef1f3', pos: [XV1, 0.05, 23.7],
-           piso: { ancho: 2.66, largo: 15.2, alto: 1.1, color: '#c9ced3' },
-           ficha: 'interior', altoFicha: 5 });
+[-7.8, 7.8].forEach(function (z) {
+  MUROS_VAGON.push({ dx: 0, dz: z, ancho: 2.9, largo: 0.24, base: 1, alto: 2.4 });
+});
+
+// El tren detenido en el andén: se puede entrar, con puertas automáticas
+var CARROS = [
+  { id: 't1', z: 7.9 },
+  { id: 't2', z: -7.9 },
+  { id: 't3', z: 23.7, ficha: 'interior' }
+];
+CARROS.forEach(function (cr) {
+  var o = { forma: 'vagonAbierto', id: cr.id, color: '#eef1f3', pos: [XV1, 0.05, cr.z],
+            piso: { ancho: 2.66, largo: 15.2, alto: 1.1, color: '#c9ced3' },
+            choca: MUROS_VAGON };
+  if (cr.ficha) { o.ficha = cr.ficha; o.altoFicha = 5; }
+  OBJ.push(o);
+
+  // registrar las puertas de ambos costados de este carro
+  ['I', 'D'].forEach(function (lado) {
+    MUNDO.puerta({
+      hojas: [null, null], _lado: lado, _id: cr.id,
+      x: XV1 + (lado === 'I' ? -1.42 : 1.42), z: cr.z,
+      radio: 3.2, abre: 0.82, eje: 'z'
+    });
+  });
+});
+
+// La cabina de control, al frente del primer carro
+OBJ.push({ forma: 'cabina', color: '#eef1f3', pos: [XV1, 0.05, 16.5],
+           piso: { ancho: 2.7, largo: 2.4, alto: 1.1, color: '#c9ced3' },
+           ficha: 'cabina', altoFicha: 4.4 });
+OBJ.push({ forma: 'persona', pos: [XV1, 1.15, 15.9], giro: 0,
+  cuerpo: { altura: 1.72, piel: '#c48a63', pelo: '#2a2018', chaqueta: '#28405c',
+            polera: '#28405c', pantalon: '#20262b', zapato: '#17161a' } });
+
+// Pasajeros aleatorios dentro de los carros
+var PIELES = ['#c88d6b', '#b57a56', '#d8a077', '#a9714f', '#e0b48c', '#8a5a3c'];
+var PELOS  = ['#241b16', '#2a2018', '#3a2a20', '#5a4634', '#4a3a2c', '#1c1712'];
+var ROPAS  = ['#7a3f4a', '#2f4257', '#2f6b45', '#8a4a3c', '#3f5d6b', '#5b3a26', '#444a52', '#7a5a2c'];
+function rnd(a) { return a[Math.floor(Math.random() * a.length)]; }
+
+CARROS.forEach(function (cr) {
+  // sentados: en algunos asientos al azar
+  var asientos = [-6.2, -5.2, 5.2, 6.2, -1.9, 1.9];
+  asientos.forEach(function (z) {
+    [-0.78, 0.78].forEach(function (x) {
+      if (Math.random() > 0.5) {
+        OBJ.push({ forma: 'pasajeroSentado', pos: [XV1 + x, 1.1, cr.z + z], giro: x < 0 ? 90 : -90,
+          cuerpo: { altura: 1.68, piel: rnd(PIELES), pelo: rnd(PELOS),
+                    chaqueta: rnd(ROPAS), polera: rnd(ROPAS), pantalon: '#2b2f36', zapato: '#1a1917' } });
+      }
+    });
+  });
+  // de pie: agarrados de la barra central
+  var nDePie = 1 + Math.floor(Math.random() * 3);
+  for (var k = 0; k < nDePie; k++) {
+    var zx = cr.z + (Math.random() * 8 - 4);
+    OBJ.push({ forma: 'persona', pos: [XV1 + (Math.random() > 0.5 ? 0.5 : -0.5), 1.1, zx],
+      giro: Math.random() * 360,
+      cuerpo: { altura: 1.6 + Math.random() * 0.2, piel: rnd(PIELES), pelo: rnd(PELOS),
+                chaqueta: rnd(ROPAS), polera: rnd(ROPAS), pantalon: '#2b2f36', zapato: '#1a1917',
+                mochila: Math.random() > 0.6 } });
+  }
+});
 
 // El tren que pasa por la otra vía, sin detenerse
 [16, 1.4, -13.2].forEach(function (z) {
@@ -416,7 +738,8 @@ OBJ.push({ forma: 'vagonAbierto', color: '#eef1f3', pos: [XV1, 0.05, 23.7],
 });
 
 /* ---- Más elementos de la plaza ---- */
-OBJ.push({ forma: 'pileta', color: '#cdc6b6', pos: [0, 0.05, 18], nombre: 'Pileta', altoFicha: 3 });
+OBJ.push({ forma: 'pileta', color: '#cdc6b6', pos: [0, 0.05, 18], nombre: 'Pileta', altoFicha: 3,
+           choca: [{ r: 1.7, alto: 0.7 }] });
 OBJ.push({ forma: 'resbalin', color: '#3f78a8', pos: [-19, 0.05, -6], nombre: 'Juegos' });
 OBJ.push({ forma: 'paradero', color: '#41525c', pos: [-14, 0.05, 44], giro: 180, nombre: 'Paradero' });
 OBJ.push({ forma: 'semaforo', color: '#3c4a42', pos: [-24, 0.05, 45] });
@@ -428,13 +751,90 @@ OBJ.push({ forma: 'semaforo', color: '#3c4a42', pos: [20, 0.05, 45], giro: 180 }
 
 // Árboles sueltos del borde de la estación
 [[28, 26], [28, -14], [30, 34], [26, -22]].forEach(function (q) {
-  OBJ.push({ forma: 'arbolSombra', color: '#4c7038', pos: [q[0], 0.05, q[1]] });
+  OBJ.push({ forma: 'arbolSombra', color: '#4c7038', pos: [q[0], 0.05, q[1]],
+             choca: [{ r: 0.32, alto: 4 }] });
 });
+
+
+/* ================= COLEGIO SAN AGUSTÍN (después de la estación) =============
+   Se ubica al costado izquierdo-fondo, en la zona z negativa, pasando la
+   plaza. La estación queda a la derecha; el colegio, más allá del borde. */
+var CX = -30;   // eje horizontal del recinto escolar
+var CZ = -46;   // fondo de la escena
+
+// Portón de acceso, mirando a la plaza
+OBJ.push({ forma: 'porton', color: '#7a4a30', pos: [CX + 10, 0.05, -20],
+           nombre: 'Colegio San Agustín', ficha: 'colegio', altoFicha: 6,
+           choca: [{ dx: -3, dz: 0, r: 0.4, alto: 4 }, { dx: 3, dz: 0, r: 0.4, alto: 4 }] });
+
+// Recepción con el escudo SA
+OBJ.push({ forma: 'recepcion', color: '#f0eee8', pos: [CX + 10, 0.05, -27], giro: 0,
+           ficha: 'recepcion', altoFicha: 4.6,
+           piso: { ancho: 14, largo: 8, alto: 0.15, color: '#e4e0d6' },
+           choca: [
+             { dx: 3, dz: -3.5, ancho: 9.8, largo: 0.3, alto: 3.6 },
+             { dx: -6, dz: -3.5, ancho: 1.8, largo: 0.3, alto: 3.6 },
+             { dx: 1, dz: 1.5, ancho: 9, largo: 1, alto: 1.3 }
+           ] });
+OBJ.push({ forma: 'persona', pos: [CX + 12, 0.2, -28.5], giro: 180,
+  cuerpo: { altura: 1.66, piel: '#c88d6b', pelo: '#2a2018', chaqueta: '#7a3f4a',
+            polera: '#e8e2d4', pantalon: '#33383c', zapato: '#20201e' } });
+
+// Pabellón de aulas de dos pisos, al fondo del patio
+OBJ.push({ forma: 'pabellon', color: '#eceae4', pos: [CX + 2, 0.05, -40],
+           choca: [{ dx: 0, dz: -4.5, ancho: 22, largo: 0.4, alto: 6.4 }],
+           piso: { ancho: 22, largo: 9, alto: 0.15, color: '#d9d4c8' } });
+
+// Escalera que sube al segundo piso del pabellón
+OBJ.push({ forma: 'escalera', color: '#d8c23a', pos: [CX + 12, 0.05, -37], giro: 180,
+           rampas: [{ dx: 0, dz: 0, ancho: 2.6, largo: 4.6, alto: 1.1, base: 1.1, pitch: 32, color: '#c9a832' }] });
+
+// Multicancha techada, a la derecha del patio
+OBJ.push({ forma: 'cancha', color: '#2f74b5', pos: [CX + 26, 0.05, -40],
+           ficha: 'cancha', altoFicha: 6,
+           piso: { ancho: 20, largo: 32, alto: 0.1, color: '#2f74b5' },
+           choca: [
+             { dx: -10, dz: 0, ancho: 0.3, largo: 32, alto: 4.4 },
+             { dx: 10, dz: 0, ancho: 0.3, largo: 32, alto: 4.4 },
+             { dx: 0, dz: -16, ancho: 20, largo: 0.3, alto: 4.4 },
+             { dx: 0, dz: 16, ancho: 20, largo: 0.3, alto: 4.4 }
+           ] });
+
+// Escalera de bajada al subterráneo y el pasillo subterráneo
+OBJ.push({ forma: 'escalera', color: '#d8c23a', pos: [CX - 2, 0.05, -30], giro: 0,
+           rampas: [{ dx: 0, dz: 0, ancho: 2.6, largo: 4.6, alto: -1.6, base: 0, pitch: -32, color: '#c9a832' }] });
+OBJ.push({ forma: 'subterraneo', color: '#f0efe9', pos: [CX - 2, -1.55, -37],
+           ficha: 'subterraneo', altoFicha: 3.2,
+           piso: { ancho: 5, largo: 24, alto: 0.15, color: '#cfd2d4' },
+           choca: [
+             { dx: -2.5, dz: 0, ancho: 0.3, largo: 24, alto: 3, base: 0 },
+             { dx: 2.5, dz: 0, ancho: 0.3, largo: 24, alto: 3, base: 0 }
+           ] });
+
+// Felipe, el historiador de Villa Alemana, en la entrada del colegio
+OBJ.push({
+  forma: 'persona', pos: [CX + 12.5, 0.05, -22], giro: 200,
+  dialogo: 'felipe', altoFicha: 2.6, nombre: 'Felipe', alto: 2.1,
+  cuerpo: {
+    altura: 1.74, piel: '#c48a63', pelo: '#1c1712',
+    chaqueta: '#c4342e', polera: '#20242a', pantalon: '#2b2f36', zapato: '#1a1917',
+    barba: '#241b16', lentes: '#20201f', capucha: true, mochila: '#7a7168'
+  }
+});
+
+// Un par de estudiantes en el patio
+OBJ.push({ forma: 'persona', pos: [CX + 8, 0.05, -32], giro: 30,
+  cuerpo: { altura: 1.62, piel: '#b57a56', pelo: '#1e1814', chaqueta: '#3f5d6b',
+            polera: '#20242a', pantalon: '#2b3138', zapato: '#17161a' } });
+OBJ.push({ forma: 'persona', pos: [CX + 30, 0.05, -34], giro: -80,
+  cuerpo: { altura: 1.72, piel: '#d8a077', pelo: '#3a2a20', chaqueta: '#2f6b45',
+            polera: '#e8e2d4', pantalon: '#3d4450', zapato: '#201d1b' } });
 
 /* ---- El anfitrión, junto a la entrada del paseo ---- */
 OBJ.push({
   forma: 'persona', pos: [3.2, 0.05, 36], giro: 4,
   grupo: 'anfitrion', dialogo: 'anfitrion', altoFicha: 2.55,
+  nombre: ANFITRION, alto: 2.1,
   cuerpo: {
     altura: 1.78,
     piel: '#c88d6b', pelo: '#241b16',
@@ -481,7 +881,7 @@ window.MUNDOS['villa-alemana'] = {
   luz: { cielo: '#e2f0f8', suelo: '#9a8f74', ambiente: 0.95, sol: '#fff6e0', intensidad: 0.85,
          posicion: '-14 26 10' },
 
-  ancho: 104,
+  ancho: 130,
   anchoVida: 56,
   inicio: '0 1.7 42',
 
@@ -492,7 +892,9 @@ window.MUNDOS['villa-alemana'] = {
     sombra:  { etiqueta: 'La zona de sombra',  pos: '14 1.7 0',  pitch: 4,   yaw: -60 },
     estacion:{ etiqueta: 'La estación',        pos: '30 1.7 26', pitch: 0,   yaw: 178 },
     anden:   { etiqueta: 'En el andén',        pos: '33.5 2.7 14', pitch: -3, yaw: 178 },
-    vagon:   { etiqueta: 'Dentro del vagón',   pos: '39.5 2.8 4',  pitch: 0,  yaw: 180 }
+    vagon:   { etiqueta: 'Dentro del vagón',   pos: '39.5 2.8 4',  pitch: 0,  yaw: 180 },
+    colegio: { etiqueta: 'Colegio San Agustín', pos: '-20 1.7 -22', pitch: -3, yaw: 200 },
+    cancha:  { etiqueta: 'La multicancha',     pos: '-4 1.7 -40',  pitch: 0,  yaw: -90 }
   },
 
   cielos: [
@@ -525,7 +927,7 @@ window.MUNDOS['villa-alemana'] = {
       ],
       reto: 'Observa dónde se sienta la gente en la plaza a las 15:00 de un día de enero. ¿Qué variable física explica mejor la distribución de las personas?',
       especies: [
-        { forma: 'palmera', n: 22, color: '#5f8a4a', nombre: 'Palma canaria', hueco: 9 }
+        { forma: 'palmera', n: 22, color: '#5f8a4a', nombre: 'Palma canaria', hueco: 9, choca: { r: 0.42, alto: 7 } }
       ]
     },
     {
@@ -540,8 +942,8 @@ window.MUNDOS['villa-alemana'] = {
       ],
       reto: 'Elige un árbol de la plaza y estima su copa en metros. Con eso calcula cuántos metros cuadrados de suelo mantiene a la sombra. ¿Cuántos árboles harían falta para cubrir el paseo completo?',
       especies: [
-        { forma: 'arbolSombra', n: 26, color: '#4c7038', nombre: 'Árbol de sombra', hueco: 10 },
-        { forma: 'arbolSombra', n: 14, color: '#5f7d42' },
+        { forma: 'arbolSombra', n: 26, color: '#4c7038', nombre: 'Árbol de sombra', hueco: 10, choca: { r: 0.32, alto: 4 } },
+        { forma: 'arbolSombra', n: 14, color: '#5f7d42', choca: { r: 0.32, alto: 4 } },
         { forma: 'pasto',       n: 260, color: '#6f8a45', hueco: 10 },
         { forma: 'cojin',       n: 30, color: '#5d7a3c', hueco: 11 }
       ]
@@ -561,16 +963,77 @@ window.MUNDOS['villa-alemana'] = {
   ],
 
   dialogos: {
-    anfitrion: {
-      nombre: 'Anfitrión de la plaza',
+    felipe: {
+      nombre: 'Felipe',
       inicio: 'saludo',
       nodos: {
         saludo: {
-          texto: '¡Hola! Bienvenido a Villa Alemana. Estás parado en la plaza, que es el punto donde se cruzan el comercio, el transporte y la gente que viene a pasar la tarde. ¿Te muestro algo?',
+          texto: 'Hola, soy Felipe. Me gusta la historia de este lugar, y hay más de la que se ve a simple vista. ¿Te cuento cómo nació Villa Alemana?',
+          opciones: [
+            { dice: '¿Cómo empezó todo?',       va: 'origen' },
+            { dice: '¿Por qué se llama así?',    va: 'nombre' },
+            { dice: '¿Y el ferrocarril?',        va: 'tren' },
+            { dice: 'La ciudad de los molinos',  va: 'molinos' },
+            { dice: 'En otro momento',           va: null }
+          ]
+        },
+        origen: {
+          texto: 'Antes de ser ciudad, esto eran campos: una pequeña viña, árboles y sobre todo espino. En 1894, don Buenaventura Joglar compró y loteó el predio, que primero se llamó Viña Miraflores. Vendía el metro de terreno a veinte centavos.',
+          opciones: [
+            { dice: '¿Y de dónde el nombre alemán?', va: 'nombre' },
+            { dice: 'Sigue', va: 'tren' },
+            { dice: 'Volvamos al inicio', va: 'saludo' }
+          ]
+        },
+        nombre: {
+          texto: 'Los primeros en comprar esos sitios fueron inmigrantes alemanes, y por eso la villa tomó ese nombre. Curiosamente, muchos de ellos nunca edificaron ni vivieron aquí: vendieron y se fueron. El nombre quedó como homenaje a quienes llegaron primero.',
+          opciones: [
+            { dice: '¿Y el tren qué papel jugó?', va: 'tren' },
+            { dice: 'Volvamos al inicio', va: 'saludo' }
+          ]
+        },
+        tren: {
+          texto: 'El ferrocarril es la clave de todo: la ciudad nació a su amparo. La línea entre Valparaíso y el interior pasó por acá, y alrededor de la estación se armó el pueblo. Sin el tren, Villa Alemana no existiría donde está. Ese mismo tren es hoy el Metro de Valparaíso que viste en la estación.',
+          opciones: [
+            { dice: 'Por eso el lema del clima', va: 'lema' },
+            { dice: 'Cuéntame lo de los molinos', va: 'molinos' },
+            { dice: 'Volvamos al inicio', va: 'saludo' }
+          ]
+        },
+        lema: {
+          texto: 'El clima templado le dio su lema: "Por su clima, la juventud no teme a la vejez". Era famosa como lugar sano para vivir, y por un tiempo fue destino de descanso para gente de Valparaíso.',
+          opciones: [
+            { dice: '¿Los molinos?', va: 'molinos' },
+            { dice: 'Gracias, Felipe', va: null }
+          ]
+        },
+        molinos: {
+          texto: 'También la llamaban la Ciudad de los Molinos. En sus inicios el agua se sacaba de pozos con molinos de viento, tantos que se volvieron un sello del paisaje. En el escudo comunal el molino recuerda esa época, junto al racimo de uva de la antigua Viña Miraflores.',
+          opciones: [
+            { dice: '¿Qué más hay en el escudo?', va: 'escudo' },
+            { dice: 'Volvamos al inicio', va: 'saludo' }
+          ]
+        },
+        escudo: {
+          texto: 'El racimo recuerda la viña que dio origen a la ciudad; el molino, los pozos de agua; y las franjas con los colores de Chile y de Alemania, el porqué del nombre. Cada símbolo es un pedazo de esta historia que acabas de recorrer.',
+          opciones: [
+            { dice: 'Impresionante', va: null },
+            { dice: 'Otra vez desde el inicio', va: 'saludo' }
+          ]
+        }
+      }
+    },
+    anfitrion: {
+      nombre: ANFITRION,
+      inicio: 'saludo',
+      nodos: {
+        saludo: {
+          texto: 'Hola, soy ' + ANFITRION + '. ¡Bienvenido a Villa Alemana! Estás parado en la plaza, que es el punto donde se cruzan el comercio, el transporte y la gente que viene a pasar la tarde. ¿Te muestro algo?',
           opciones: [
             { dice: '¿Dónde estoy exactamente?', va: 'ubicacion' },
             { dice: '¿Qué es ese tren?',          va: 'tren' },
             { dice: '¿Por qué hace tanto calor?', va: 'calor' },
+            { dice: '¿Dónde queda el colegio?',    va: 'colegio' },
             { dice: 'Voy a mirar solo',           va: null }
           ]
         },
@@ -604,6 +1067,14 @@ window.MUNDOS['villa-alemana'] = {
             { dice: 'Otra cosa', va: 'saludo' }
           ]
         },
+        colegio: {
+          texto: 'El Colegio San Agustín está pasando la estación, hacia el fondo. Se entra por el portón; adentro tienes la recepción, el patio con las canchas y el pabellón, y hasta un subterráneo. Date una vuelta.',
+          opciones: [
+            { dice: 'Ver la ficha del colegio', ficha: 'colegio' },
+            { dice: 'Gracias, voy para allá', va: null },
+            { dice: 'Otra cosa', va: 'saludo' }
+          ]
+        },
         calor: {
           texto: 'Porque el pavimento absorbe radiación todo el día y la devuelve de noche. La ciudad completa funciona como una plancha caliente. Pero pisa el pasto bajo los árboles y vas a sentir la diferencia: esta plaza es una isla fría dentro de la isla de calor.',
           opciones: [
@@ -628,6 +1099,56 @@ window.MUNDOS['villa-alemana'] = {
         'Clima mediterráneo: veranos secos y calurosos, inviernos lluviosos'
       ],
       reto: 'Recorre la plaza y anota tres cosas que hoy no existían hace cincuenta años. Después pregúntale a alguien mayor si tenías razón.'
+    },
+    {
+      id: 'colegio', nombre: 'Colegio San Agustín de Villa Alemana', rango: 'Entrada del establecimiento',
+      texto: 'Bienvenido al colegio. Cruzando el portón está la recepción con el escudo del San Agustín; al fondo, el patio con el pabellón de aulas y la multicancha; y una escalera baja al subterráneo. Recorre con calma: casi todo se puede pisar.',
+      vida: [
+        'Recepción con el escudo institucional y el cuadro de San Agustín',
+        'Pabellón de aulas de dos pisos con pasillo vidriado',
+        'Multicancha techada para fútbol y básquetbol',
+        'Subterráneo con pasillos que conectan los sectores'
+      ],
+      reto: 'Recorre el colegio completo y haz un plano a mano de lo que viste. Después compáralo con el colegio real: ¿qué falta y qué sobra en esta versión?'
+    },
+    {
+      id: 'recepcion', nombre: 'Recepción', rango: 'La entrada del colegio',
+      texto: 'El mesón de madera, el escudo del San Agustín al frente y el cuadro en el muro. Es el primer punto de contacto de cualquiera que llega al establecimiento.',
+      reto: 'Toda institución tiene una imagen que la representa. ¿Qué elementos del escudo crees que resumen la identidad del colegio?'
+    },
+    {
+      id: 'cancha', nombre: 'La multicancha', rango: 'Zona deportiva',
+      texto: 'Piso azul con líneas amarillas y blancas, reja verde perimetral, arcos de baby fútbol y tableros de básquetbol. Cuando llueve, el agua queda sobre la superficie porque es impermeable: la misma idea de la isla de calor que vimos en la plaza, pero acá al servicio del deporte.',
+      reto: 'La cancha se moja y demora en secar. ¿Qué solución de drenaje propondrías sin perder la superficie dura que el deporte necesita?'
+    },
+    {
+      id: 'subterraneo', nombre: 'El subterráneo', rango: 'Bajo el patio',
+      texto: 'Un pasillo bajo el nivel del patio, con zócalo de ladrillo y cielo iluminado, que conecta sectores del colegio. Bajar y subir escaleras dentro del mundo es posible gracias a las superficies inclinadas que sigues con los pies.',
+      reto: 'Los espacios subterráneos son más frescos y estables en temperatura. ¿Por qué? Piensa en la tierra que los rodea como un aislante.'
+    },
+    {
+      id: 'control', nombre: 'La sala de control', rango: 'El cerebro del servicio',
+      texto: 'Desde una sala como esta se regula la circulación: dónde está cada tren, qué señal está en rojo, qué andén está ocupado y cuánto se atrasó el servicio. Un sistema ferroviario no funciona por los trenes, funciona por la coordinación entre ellos.',
+      detalle: [
+        'La lógica de fondo es el bloqueo: la vía se divide en tramos y solo un tren puede ocupar cada tramo a la vez. Las señales no son adornos, son la manera física de garantizar esa regla. Si un tren no respeta una señal, el sistema puede frenarlo por su cuenta.',
+        'La otra mitad del trabajo es la información al pasajero. Los letreros del andén salen de acá, y esa información cambia el comportamiento de la gente: saber que el próximo tren llega en tres minutos evita que alguien cruce corriendo la vía.'
+      ],
+      vida: [
+        'Control de circulación: posición de los trenes y estado de las señales',
+        'Regulación de frecuencia cuando el servicio se atrasa',
+        'Cámaras y comunicación con el personal de las estaciones',
+        'Información en tiempo real hacia los letreros del andén'
+      ],
+      reto: 'Si dos trenes van con diez minutos de retraso, ¿conviene apurar al primero o retener al segundo? Piensa en qué le pasa a la cantidad de gente esperando en cada andén.'
+    },
+    {
+      id: 'cabina', nombre: 'La cabina de control', rango: 'El puesto del conductor',
+      texto: 'Desde aquí se conduce el tren: la palanca de tracción regula la velocidad, las pantallas muestran las señales de la vía y el parabrisas da la vista al frente. En sistemas modernos el conductor no está solo, lo respalda la sala de control central que regula todo el servicio.',
+      detalle: [
+        'La conducción sigue las señales de la vía, que dividen el recorrido en tramos: el tren solo avanza al siguiente tramo cuando está libre. El conductor obedece esas señales igual que un auto obedece un semáforo, pero con sistemas que pueden frenar el tren si se pasa una en rojo.',
+        'La cabina y la sala de control central son dos escalas del mismo trabajo: una maneja este tren, la otra coordina todos los trenes de la línea para que no se junten ni se atrasen.'
+      ],
+      reto: 'El conductor ve una señal amarilla, que significa "prepárate a detenerte en la próxima". ¿Por qué el sistema avisa con una señal de anticipación en vez de solo una roja de golpe?'
     },
     {
       id: 'interior', nombre: 'Dentro del carro', rango: 'Sube y camina por el pasillo',

@@ -11,7 +11,7 @@
 'use strict';
 
 var MUNDO = {
-  version: 7,
+  version: 11,
   formas: {},
   clima: { viento: 1 },
   datos: null
@@ -33,7 +33,7 @@ function nuevo(tag, attrs) {
    relieve calza exacto con las manchas del color.                            */
 var MOVIL_TEX = !!(AFRAME.utils.device && AFRAME.utils.device.isMobile &&
                    AFRAME.utils.device.isMobile());
-var TAM_TEX = MOVIL_TEX ? 256 : 512;   // el doble de resolución que antes
+var TAM_TEX = MOVIL_TEX ? 384 : 768;   // aún más fino
 var CACHE_TEX = {};
 
 function lienzoAltura(estilo, tam) {
@@ -194,6 +194,12 @@ function superficie(base, estilo, reps) {
   g.globalAlpha = 0.55;
   g.globalCompositeOperation = 'overlay';
   g.drawImage(altura, 0, 0);
+  // oclusión falsa: multiplicar por el mapa de altura hunde las grietas
+  g.globalAlpha = 0.28;
+  g.globalCompositeOperation = 'multiply';
+  g.drawImage(altura, 0, 0);
+  g.globalAlpha = 1;
+  g.globalCompositeOperation = 'source-over';
   var fuerza = { arena: 3.5, baldosa: 7, asfalto: 4, pasto: 4, nieve: 2.5 }[estilo] || 7;
   var res = {
     mapa: aTextura(col, reps, true),
@@ -264,12 +270,14 @@ var _p = new THREE.Vector3(), _e = new THREE.Euler(),
 var giroActual = 0;    // grados en Y aplicados a toda la figura
 var grupoActual = null; // si tiene nombre, las piezas van a un grupo que puede moverse
 MUNDO.grupos = {};
+MUNDO.subgrupos = {};   // grupos hijos posicionables (hojas de puerta, etc.)
 
-function pieza(forma, color, acabado, b, off, rot, esc, viento) {
-  var clave = (grupoActual || '') + '|' + forma + '|' + color + '|' + acabado;
+function pieza(forma, color, acabado, b, off, rot, esc, viento, grupoForzado) {
+  var grp = grupoForzado || grupoActual;
+  var clave = (grp || '') + '|' + forma + '|' + color + '|' + acabado;
   var lote = LOTES[clave];
   if (!lote) lote = LOTES[clave] = { forma: forma, color: color, acabado: acabado,
-                                     grupo: grupoActual, datos: [], viento: false };
+                                     grupo: grp, datos: [], viento: false };
   if (viento) lote.viento = true;
   var ox = off[0], oz = off[2];
   if (giroActual) {
@@ -306,7 +314,7 @@ function materialDe(color, acabado) {
     return new THREE.MeshStandardMaterial({
       color: color, roughness: 0.32, metalness: 0.75 });
   }
-  return new THREE.MeshStandardMaterial({ color: color, roughness: 0.9, metalness: 0 });
+  return new THREE.MeshStandardMaterial({ color: color, roughness: 0.82, metalness: 0.02 });
 }
 
 var vivos = [];   // lotes que mueve el viento
@@ -331,11 +339,13 @@ function volcarLotes(padre) {
     malla.instanceMatrix.needsUpdate = true;
     var destino = raiz;
     if (lote.grupo) {
-      if (!MUNDO.grupos[lote.grupo]) {
-        MUNDO.grupos[lote.grupo] = new THREE.Group();
-        raiz.add(MUNDO.grupos[lote.grupo]);
+      var esHoja = lote.grupo.indexOf('_p') >= 0;
+      var tabla = esHoja ? MUNDO.subgrupos : MUNDO.grupos;
+      if (!tabla[lote.grupo] || tabla[lote.grupo] === true) {
+        tabla[lote.grupo] = new THREE.Group();
+        raiz.add(tabla[lote.grupo]);
       }
-      destino = MUNDO.grupos[lote.grupo];
+      destino = tabla[lote.grupo];
     }
     destino.add(malla);
     if (lote.viento) vivos.push({ malla: malla, datos: lote.datos });
@@ -343,8 +353,13 @@ function volcarLotes(padre) {
 }
 
 /* ---------------------------------------------------------------- viento */
+MUNDO.puertas = [];   // { grupo, x, z, radio, abierta, corre, eje }
 MUNDO.animaciones = [];
 MUNDO.animar = function (fn) { MUNDO.animaciones.push(fn); };
+
+/* Puerta automática: el motor mueve dos hojas (grupos) en sentidos opuestos
+   cuando el observador entra en el radio. Lo declara el mundo con "puerta". */
+MUNDO.puerta = function (def) { MUNDO.puertas.push(def); };
 
 var tViento = 0, ultimoV = performance.now(), _mv = new THREE.Matrix4();
 function soplar(ahora) {
@@ -355,6 +370,29 @@ function soplar(ahora) {
   var t = tViento;
   for (var a = 0; a < MUNDO.animaciones.length; a++) {
     try { MUNDO.animaciones[a](t, dt); } catch (e) { /* una animación rota no frena el resto */ }
+  }
+  // puertas automáticas
+  if (MUNDO.puertas.length && MUNDO.jugador) {
+    var jp = MUNDO.jugador.object3D.position;
+    for (var d = 0; d < MUNDO.puertas.length; d++) {
+      var pu = MUNDO.puertas[d];
+      var cx = pu.x, cz = pu.z;
+      if (pu.sigue) { var gp = pu.sigue.position; cx += gp.x; cz += gp.z; }
+      var cerca = (jp.x - cx) * (jp.x - cx) + (jp.z - cz) * (jp.z - cz) < pu.radio * pu.radio;
+      pu.ap = (pu.ap == null) ? 0 : pu.ap;
+      pu.ap += ((cerca ? 1 : 0) - pu.ap) * Math.min(1, dt / 260);
+      var d1 = pu.hojas[0], d2 = pu.hojas[1];
+      var corr = pu.abre * pu.ap;
+      if (pu.eje === 'x') {
+        if (d1) d1.position.x = -corr;
+        if (d2) d2.position.x = corr;
+      } else {
+        if (d1) d1.position.z = -corr;
+        if (d2) d2.position.z = corr;
+      }
+      // abre/cierra el paso físico
+      if (pu.choque) pu.choque.y1 = cerca ? -99 : pu.choque._y1;
+    }
   }
   if (!vivos.length || !MUNDO.clima.viento) return;
   for (var k = 0; k < vivos.length; k++) {
@@ -375,6 +413,64 @@ function soplar(ahora) {
   }
 }
 requestAnimationFrame(soplar);
+
+
+/* ---------------------------------------------------------------- colisiones
+   Volúmenes que el observador no puede atravesar. Hay dos tipos:
+   cajas (paredes, edificios, vagones) y cilindros (troncos, postes).
+   Se registran solos desde los datos del mundo:
+     especies: { choca:{ r:0.3, alto:4 } }            → un cilindro por individuo
+     objetos:  { choca:[ {dx,dz,ancho,largo,alto,base} ] }  → cajas propias
+   -------------------------------------------------------------------------- */
+var CHOQUES = [];
+var RADIO_CUERPO = 0.34;
+var ALTO_CUERPO = 1.65;
+MUNDO.choques = CHOQUES;
+MUNDO.fisica = true;
+
+function chocaCaja(x, z, ancho, largo, y0, y1, giro) {
+  var g = rad(giro || 0);
+  CHOQUES.push({ t: 'c', x: x, z: z, ax: ancho / 2, az: largo / 2,
+                 y0: y0, y1: y1, co: Math.cos(g), si: Math.sin(g) });
+}
+function chocaCilindro(x, z, r, y0, y1) {
+  CHOQUES.push({ t: 'r', x: x, z: z, r: r, y0: y0, y1: y1 });
+}
+
+/* Empuja la posición fuera de cualquier volumen en el que haya entrado.
+   Se resuelve por el eje de menor penetración: así uno se desliza a lo
+   largo de la pared en vez de quedarse pegado. */
+function resolverChoques(p) {
+  if (!MUNDO.fisica || !CHOQUES.length) return;
+  var pies = p.y - ALTO_CUERPO;
+  for (var i = 0; i < CHOQUES.length; i++) {
+    var c = CHOQUES[i];
+    if (pies > c.y1 - 0.3) continue;          // se puede pasar por encima
+    if (pies + ALTO_CUERPO < c.y0) continue;  // se puede pasar por debajo
+    var dx = p.x - c.x, dz = p.z - c.z;
+    if (dx * dx + dz * dz > 400) continue;    // descarte rápido
+
+    if (c.t === 'r') {
+      var d2 = dx * dx + dz * dz, rr = c.r + RADIO_CUERPO;
+      if (d2 < rr * rr) {
+        var d = Math.sqrt(d2) || 0.0001;
+        p.x = c.x + dx / d * rr;
+        p.z = c.z + dz / d * rr;
+      }
+    } else {
+      var lx = dx * c.co - dz * c.si;
+      var lz = dx * c.si + dz * c.co;
+      var ex = c.ax + RADIO_CUERPO, ez = c.az + RADIO_CUERPO;
+      if (Math.abs(lx) < ex && Math.abs(lz) < ez) {
+        if (ex - Math.abs(lx) < ez - Math.abs(lz)) lx = (lx < 0 ? -ex : ex);
+        else lz = (lz < 0 ? -ez : ez);
+        p.x = c.x + lx * c.co + lz * c.si;
+        p.z = c.z - lx * c.si + lz * c.co;
+      }
+    }
+  }
+}
+MUNDO.resolver = resolverChoques;
 
 /* ---------------------------------------------------------------- componentes */
 AFRAME.registerComponent('mirar-camara', {
@@ -404,6 +500,7 @@ AFRAME.registerComponent('caminar', {
     p.addScaledVector(this.d, this.data.dir * this.data.vel * dt / 1000);
     p.x = THREE.MathUtils.clamp(p.x, -lim.x, lim.x);
     p.z = THREE.MathUtils.clamp(p.z, lim.zMin, lim.zMax);
+    MUNDO.resolver(p);
   }
 });
 
@@ -430,7 +527,15 @@ AFRAME.registerComponent('piso-adherido', {
     this.origen.set(p.x, p.y + 14, p.z);
     this.ray.set(this.origen, this.abajo);
     var golpes = this.ray.intersectObjects(this.mallas, false);
-    if (golpes.length) p.y += (golpes[0].point.y + this.data.altura - p.y) * 0.4;
+    if (golpes.length) {
+      // toma la superficie más alta bajo los pies pero por debajo de la cabeza
+      var cabeza = p.y + 0.2, mejor = null;
+      for (var gi = 0; gi < golpes.length; gi++) {
+        if (golpes[gi].point.y <= cabeza) { mejor = golpes[gi]; break; }
+      }
+      if (!mejor) mejor = golpes[golpes.length - 1];
+      p.y += (mejor.point.y + this.data.altura - p.y) * 0.35;
+    }
   }
 });
 
@@ -692,7 +797,42 @@ MUNDO.forma('persona', function (H, color, b, ob) {
 
   // pelo: casquete y flequillo
   P('esfera', pelo, [0, 1.9, -0.012], [0, 0, 0], [0.164, 0.128, 0.169]);
-  P('caja',   pelo, [0, 1.918, 0.108], [10, 0, 0], [0.22, 0.05, 0.12]);
+  if (!c.calvo) P('caja', pelo, [0, 1.918, 0.108], [10, 0, 0], [0.22, 0.05, 0.12]);
+
+  // barba: cubre mentón y mejillas
+  if (c.barba) {
+    var bc = c.barba === true ? '#241b16' : c.barba;
+    P('caja',    bc, [0, 1.742, 0.118], [0, 0, 0], [0.14, 0.075, 0.05]);
+    P('esferaB', bc, [0, 1.76, 0.06],   [0, 0, 0], [0.15, 0.11, 0.15]);
+    [-0.11, 0.11].forEach(function (x) {
+      P('caja', bc, [x, 1.8, 0.05], [0, 0, 0], [0.03, 0.13, 0.05]);
+    });
+    P('caja', bc, [0, 1.79, 0.128], [0, 0, 0], [0.09, 0.03, 0.04]);  // bigote
+  }
+
+  // lentes redondos
+  if (c.lentes) {
+    var lc = c.lentes === true ? '#2a2a2a' : c.lentes;
+    [-0.058, 0.058].forEach(function (x) {
+      P('toro', lc, [x, 1.856, 0.15], [0, 0, 0], [0.05, 0.05, 0.05]);
+    });
+    P('caja', lc, [0, 1.856, 0.15], [0, 0, 0], [0.05, 0.012, 0.02]);   // puente
+    P('caja', lc, [-0.11, 1.86, 0.09], [0, 40, 0], [0.09, 0.012, 0.012]); // patillas
+    P('caja', lc, [0.11, 1.86, 0.09], [0, -40, 0], [0.09, 0.012, 0.012]);
+  }
+
+  // gorro de polerón (capucha caída en la espalda)
+  if (c.capucha) {
+    P('esferaB', chaqueta, [0, 1.32, -0.2], [20, 0, 0], [0.24, 0.28, 0.16]);
+  }
+
+  // mochila
+  if (c.mochila) {
+    var mc = c.mochila === true ? '#3a4048' : c.mochila;
+    P('caja', mc, [0, 1.2, -0.26], [0, 0, 0], [0.42, 0.6, 0.18]);
+    P('caja', '#9a9088', [-0.16, 1.28, -0.02], [12, 0, 0], [0.06, 0.5, 0.05]);
+    P('caja', '#9a9088', [0.16, 1.28, -0.02], [12, 0, 0], [0.06, 0.5, 0.05]);
+  }
 }, 2.5);
 
 /* ---------------------------------------------------------------- interfaz */
@@ -835,6 +975,12 @@ function arranque(M) {
   marcar('creando cielo y luces');
   // Cielo, niebla y luces
   escena.setAttribute('background', 'color:' + (M.cielo || '#8fabb9'));
+  var rend = escena.renderer;
+  if (rend) {
+    rend.toneMapping = THREE.ACESFilmicToneMapping;
+    rend.toneMappingExposure = 1.05;
+    if (THREE.SRGBColorSpace) rend.outputColorSpace = THREE.SRGBColorSpace;
+  }
   if (M.niebla) {
     escena.setAttribute('fog', 'type:linear; color:' + M.niebla.color +
       '; near:' + M.niebla.cerca + '; far:' + M.niebla.lejos);
@@ -860,6 +1006,7 @@ function arranque(M) {
     material: 'color:#f2ece0; shader:flat; opacity:0.55' }));
   jugador.appendChild(camara);
   escena.appendChild(jugador);
+  MUNDO.jugador = jugador;
   escena.appendChild(nuevo('a-entity', {
     cursor: 'rayOrigin:mouse', raycaster: 'objects:.punto, .suelo; far:120' }));
 
@@ -912,6 +1059,10 @@ function arranque(M) {
         var b = [bx, f.y, azar(z1 + 0.5, z0 - 0.5)];
         giroActual = 0;
         fn(H, sp.color, b);
+        if (sp.choca) {
+          chocaCilindro(b[0], b[2], sp.choca.r || 0.3,
+                        b[1], b[1] + (sp.choca.alto || 3));
+        }
         if (i === 0 && sp.nombre) {
           var et = rotulo(sp.nombre);
           et.setAttribute('position',
@@ -948,6 +1099,35 @@ function arranque(M) {
     fn(H, ob.color, ob.pos, ob);
     giroActual = 0;
     grupoActual = null;
+    if (ob.choca) {
+      var lista = ob.choca.length ? ob.choca : [ob.choca];
+      var ga = rad(ob.giro || 0), co = Math.cos(ga), si = Math.sin(ga);
+      lista.forEach(function (q) {
+        var y0 = ob.pos[1] + (q.base || 0);
+        if (q.r) {
+          chocaCilindro(ob.pos[0], ob.pos[2], q.r, y0, y0 + (q.alto || 3));
+        } else {
+          var gx = ob.pos[0] + (q.dx || 0) * co + (q.dz || 0) * si;
+          var gz = ob.pos[2] - (q.dx || 0) * si + (q.dz || 0) * co;
+          chocaCaja(gx, gz, q.ancho, q.largo, y0, y0 + (q.alto || 3), ob.giro || 0);
+        }
+      });
+    }
+
+    // rampas y escaleras: planos inclinados que el piso-adherido sí sigue
+    (ob.rampas || []).forEach(function (rp) {
+      var ga = rad(ob.giro || 0), co = Math.cos(ga), si = Math.sin(ga);
+      var gx = ob.pos[0] + (rp.dx || 0) * co + (rp.dz || 0) * si;
+      var gz = ob.pos[2] - (rp.dx || 0) * si + (rp.dz || 0) * co;
+      terreno.appendChild(nuevo('a-box', {
+        'class': 'suelo',
+        width: rp.ancho, depth: rp.largo, height: 0.3,
+        position: gx + ' ' + (ob.pos[1] + (rp.base || 0)) + ' ' + gz,
+        rotation: (rp.pitch || 0) + ' ' + (ob.giro || 0) + ' 0',
+        material: 'color:' + (rp.color || '#b0aaa0') + '; roughness:0.9'
+      }));
+    });
+
     // superficie pisable: andenes, pisos de vehículos, plataformas
     if (ob.piso) {
       var pz = ob.piso, esp = 0.3;
@@ -1023,6 +1203,14 @@ function arranque(M) {
   } else {
     terreno.addEventListener('loaded', function () { volcarLotes(terreno.object3D); });
   }
+  // enlazar las hojas de puerta (subgrupos t1_pIA, t1_pIB, …) a sus definiciones
+  MUNDO.puertas.forEach(function (pu) {
+    if (pu._id && pu._lado) {
+      pu.hojas = [ MUNDO.subgrupos[pu._id + '_p' + pu._lado + 'A'] || null,
+                   MUNDO.subgrupos[pu._id + '_p' + pu._lado + 'B'] || null ];
+    }
+  });
+
   marcar('armando la interfaz');
   construirUI(M);
   marcar('listo');
@@ -1125,10 +1313,12 @@ function construirUI(M) {
     if (el.classList && el.classList.contains('suelo') && ev.detail && ev.detail.intersection) {
       var p = ev.detail.intersection.point, lim = MUNDO.limites;
       var actual = jugador.getAttribute('position');
-      jugador.setAttribute('position', {
-        x: THREE.MathUtils.clamp(p.x, -lim.x, lim.x),
-        y: actual.y,
-        z: THREE.MathUtils.clamp(p.z, lim.zMin, lim.zMax) });
+      var destino = new THREE.Vector3(
+        THREE.MathUtils.clamp(p.x, -lim.x, lim.x),
+        actual.y,
+        THREE.MathUtils.clamp(p.z, lim.zMin, lim.zMax));
+      MUNDO.resolver(destino);
+      jugador.setAttribute('position', { x: destino.x, y: destino.y, z: destino.z });
       marca.setAttribute('position', p.x + ' ' + (p.y + 0.05) + ' ' + p.z);
       marca.setAttribute('material', 'opacity', 0.9);
       marca.emit('aterriza');
