@@ -11,7 +11,7 @@
 'use strict';
 
 var MUNDO = {
-  version: 20,
+  version: 22,
   formas: {},
   clima: { viento: 1 },
   datos: null
@@ -536,6 +536,167 @@ function resolverChoques(p) {
 }
 MUNDO.resolver = resolverChoques;
 
+
+/* ---------------------------------------------------------------- peligros
+   Zonas de daño declaradas por el mundo en M.peligros o en objetos con
+   campo "peligro". El motor vigila la posición del jugador y aplica daño;
+   si la salud llega a 0, se activa la pantalla de fin. También hay caída
+   al vacío: si el jugador cae bajo cierta cota, muere. */
+MUNDO.peligros = [];
+MUNDO.salud = 100;
+MUNDO.vivo = true;
+MUNDO.cotaMuerte = -30;   // caer bajo esto = muerte
+
+MUNDO.zonaPeligro = function (def) { MUNDO.peligros.push(def); };
+
+MUNDO.dano = function (cantidad, causa) {
+  if (!MUNDO.vivo) return;
+  MUNDO.salud = Math.max(0, MUNDO.salud - cantidad);
+  var barra = document.getElementById('salud-relleno');
+  if (barra) barra.style.width = MUNDO.salud + '%';
+  var cont = document.getElementById('salud');
+  if (cont) {
+    cont.classList.add('golpe');
+    setTimeout(function () { cont.classList.remove('golpe'); }, 180);
+  }
+  if (MUNDO.salud <= 0) MUNDO.morir(causa || 'Has caído');
+};
+
+MUNDO.curar = function (cantidad) {
+  if (!MUNDO.vivo) return;
+  MUNDO.salud = Math.min(100, MUNDO.salud + cantidad);
+  var barra = document.getElementById('salud-relleno');
+  if (barra) barra.style.width = MUNDO.salud + '%';
+};
+
+MUNDO.morir = function (causa) {
+  if (!MUNDO.vivo) return;
+  MUNDO.vivo = false;
+  if (MUNDO.sonido) MUNDO.sonido('muerte');
+  var ov = document.getElementById('fin');
+  if (ov) {
+    var msj = document.getElementById('fin-causa');
+    if (msj) msj.textContent = causa || 'Fin del recorrido';
+    ov.classList.add('visible');
+  }
+};
+
+MUNDO.revivir = function () {
+  MUNDO.salud = 100;
+  MUNDO.vivo = true;
+  var barra = document.getElementById('salud-relleno');
+  if (barra) barra.style.width = '100%';
+  var ov = document.getElementById('fin');
+  if (ov) ov.classList.remove('visible');
+  // volver al punto de inicio
+  var jug = MUNDO.jugador;
+  if (jug && MUNDO.datos && MUNDO.datos.inicio) {
+    var pi = MUNDO.datos.inicio.split(' ');
+    jug.object3D.position.set(parseFloat(pi[0]), parseFloat(pi[1]), parseFloat(pi[2]));
+  }
+};
+
+// Chequeo de peligros por frame (registrado como animación)
+var _acumPeligro = 0;
+MUNDO.animar(function (t, dt) {
+  if (!MUNDO.vivo || !MUNDO.jugador) return;
+  var p = MUNDO.jugador.object3D.position;
+  // caída al vacío
+  if (p.y < MUNDO.cotaMuerte) { MUNDO.morir('Caíste al vacío'); return; }
+  if (!MUNDO.peligros.length) return;
+  _acumPeligro += dt;
+  if (_acumPeligro < 250) return;   // chequear 4 veces por segundo
+  _acumPeligro = 0;
+  for (var i = 0; i < MUNDO.peligros.length; i++) {
+    var z = MUNDO.peligros[i];
+    var dx = p.x - z.x, dz = p.z - z.z;
+    var dentro;
+    if (z.r != null) dentro = (dx*dx + dz*dz) < z.r*z.r;
+    else dentro = Math.abs(dx) < z.ancho/2 && Math.abs(dz) < z.largo/2;
+    // rango vertical opcional
+    if (dentro && z.y != null) dentro = Math.abs(p.y - z.y) < (z.altoY || 3);
+    if (dentro) {
+      MUNDO.dano(z.dano || 10, z.causa || 'Zona peligrosa');
+      if (z.unaVez) { MUNDO.peligros.splice(i, 1); i--; }
+    }
+  }
+});
+
+
+/* ---------------------------------------------------------------- gamepad
+   Joystick genérico de PC (estándar). Stick izquierdo: caminar/lateral.
+   Stick derecho: girar la mirada. Botón inferior (A): saltar/teletransporte.
+   Se activa solo al detectar un mando conectado. */
+AFRAME.registerComponent('mando', {
+  init: function () {
+    this.hay = false;
+    this.ultBoton = false;
+    var self = this;
+    window.addEventListener('gamepadconnected', function () {
+      self.hay = true;
+      var av = document.getElementById('aviso-mando');
+      if (!av) {
+        av = document.createElement('div');
+        av.id = 'aviso-mando';
+        av.style.cssText = 'position:fixed;z-index:40;left:50%;top:14px;transform:translateX(-50%);' +
+          'background:rgba(28,42,40,.7);color:#f2ece0;font:600 13px/1 system-ui;padding:9px 15px;' +
+          'border-radius:11px;border:1px solid rgba(242,236,224,.18);backdrop-filter:blur(14px);pointer-events:none;';
+        document.body.appendChild(av);
+      }
+      av.textContent = '\uD83C\uDFAE Mando conectado';
+      av.style.display = 'block';
+      setTimeout(function () { if (av) av.style.display = 'none'; }, 3500);
+    });
+    window.addEventListener('gamepaddisconnected', function () { self.hay = false; });
+  },
+  tick: function (t, dt) {
+    if (!MUNDO.vivo) return;
+    var pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    var gp = null;
+    for (var i = 0; i < pads.length; i++) { if (pads[i]) { gp = pads[i]; break; } }
+    if (!gp) return;
+    var zm = 0.18;   // zona muerta
+
+    // stick izquierdo: movimiento
+    var ejeX = gp.axes[0] || 0, ejeY = gp.axes[1] || 0;
+    var p = this.el.object3D.position;
+    var cam = this.el.sceneEl.camera;
+    if (cam && (Math.abs(ejeX) > zm || Math.abs(ejeY) > zm)) {
+      var dir = new THREE.Vector3();
+      cam.getWorldDirection(dir); dir.y = 0; dir.normalize();
+      var lado = new THREE.Vector3(-dir.z, 0, dir.x);   // perpendicular
+      var vel = 4.2 * dt / 1000;
+      p.addScaledVector(dir, -ejeY * vel);
+      p.addScaledVector(lado, ejeX * vel);
+      var lim = MUNDO.limites;
+      p.x = THREE.MathUtils.clamp(p.x, -lim.x, lim.x);
+      p.z = THREE.MathUtils.clamp(p.z, lim.zMin, lim.zMax);
+      MUNDO.resolver(p);
+    }
+
+    // stick derecho: girar la cámara (yaw y pitch)
+    var mirX = gp.axes[2] || 0, mirY = gp.axes[3] || 0;
+    var camEl = document.getElementById('camara');
+    if (camEl && (Math.abs(mirX) > zm || Math.abs(mirY) > zm)) {
+      var lc = camEl.getAttribute('rotation') || { x: 0, y: 0, z: 0 };
+      var ny = lc.y - mirX * 2.2;
+      var nx = Math.max(-85, Math.min(85, lc.x - mirY * 1.8));
+      camEl.setAttribute('rotation', { x: nx, y: ny, z: 0 });
+      // sincronizar look-controls para que no lo revierta
+      var comp = camEl.components && camEl.components['look-controls'];
+      if (comp) {
+        comp.pitchObject.rotation.x = nx * Math.PI / 180;
+        comp.yawObject.rotation.y = ny * Math.PI / 180;
+      }
+    }
+
+    // botón A (0): saltar; si estamos en VR-tp, dispara teletransporte
+    var botonA = gp.buttons[0] && gp.buttons[0].pressed;
+    if (botonA && !this.ultBoton && MUNDO.saltar) MUNDO.saltar();
+    this.ultBoton = botonA;
+  }
+});
+
 /* ---------------------------------------------------------------- componentes */
 AFRAME.registerComponent('mirar-camara', {
   init: function () { this.v = new THREE.Vector3(); },
@@ -587,6 +748,7 @@ AFRAME.registerComponent('caminar', {
   },
 
   _avanza: function (cam, mover, dt) {
+    if (!MUNDO.vivo) return;
     cam.getWorldDirection(this.d);
     this.d.y = 0;
     if (this.d.lengthSq() < 0.0001) return;
@@ -1285,7 +1447,10 @@ MUNDO.animar(function (t, dt) {
    - Puntual (teletransporte, clic): tonos cortos.
    - Posicional: fuentes con posición; el volumen sube al acercarse.
    Los navegadores bloquean el audio hasta el primer toque: lo desbloqueamos. */
-var AUDIO = { ctx: null, listo: false, master: null, fuentes: [], cola: [] };
+var AUDIO = { ctx: null, listo: false, master: null, fuentes: [], cola: [], buses: {} };
+
+// Volúmenes por categoría (0..1). Ajustables desde el panel de mezcla.
+MUNDO.mezcla = { ambiente: 0.5, naturaleza: 0.95, fauna: 1.0, efectos: 0.8 };
 
 // Encola una tarea de audio; se ejecuta ya si está listo, o al desbloquear.
 function alAudio(fn) {
@@ -1300,8 +1465,15 @@ function iniAudio() {
     if (!AC) { console.warn('WebAudio no soportado'); return false; }
     AUDIO.ctx = new AC();
     AUDIO.master = AUDIO.ctx.createGain();
-    AUDIO.master.gain.value = 0.6;
+    AUDIO.master.gain.value = 0.7;
     AUDIO.master.connect(AUDIO.ctx.destination);
+    // buses de categoría, cada uno con su ganancia
+    ['ambiente', 'naturaleza', 'fauna', 'efectos'].forEach(function (cat) {
+      var g = AUDIO.ctx.createGain();
+      g.gain.value = MUNDO.mezcla[cat];
+      g.connect(AUDIO.master);
+      AUDIO.buses[cat] = g;
+    });
     return true;
   } catch (e) { AUDIO.ctx = null; console.warn('audio init:', e); return false; }
 }
@@ -1330,6 +1502,11 @@ window.addEventListener('keydown', desbloquearAudio);
 window.addEventListener('click', desbloquearAudio, { capture: true });
 
 // diagnóstico: llamar MUNDO.audioEstado() en consola
+MUNDO.setMezcla = function (cat, v) {
+  MUNDO.mezcla[cat] = v;
+  if (AUDIO.buses[cat]) AUDIO.buses[cat].gain.setTargetAtTime(v, AUDIO.ctx.currentTime, 0.1);
+};
+
 MUNDO.audioEstado = function () {
   return {
     contexto: AUDIO.ctx ? AUDIO.ctx.state : 'sin crear',
@@ -1360,12 +1537,12 @@ function crearAmbiente() {
   vFuente.buffer = bufferRuido(); vFuente.loop = true;
   var vFiltro = AUDIO.ctx.createBiquadFilter();
   vFiltro.type = 'lowpass'; vFiltro.frequency.value = 420;
-  var vGain = AUDIO.ctx.createGain(); vGain.gain.value = 0.12;
+  var vGain = AUDIO.ctx.createGain(); vGain.gain.value = 0.07;
   // modulación lenta del viento (ráfagas)
   var lfo = AUDIO.ctx.createOscillator(); lfo.frequency.value = 0.12;
-  var lfoG = AUDIO.ctx.createGain(); lfoG.gain.value = 0.06;
+  var lfoG = AUDIO.ctx.createGain(); lfoG.gain.value = 0.04;
   lfo.connect(lfoG); lfoG.connect(vGain.gain);
-  vFuente.connect(vFiltro); vFiltro.connect(vGain); vGain.connect(AUDIO.master);
+  vFuente.connect(vFiltro); vFiltro.connect(vGain); vGain.connect(AUDIO.buses.ambiente);
   vFuente.start(); lfo.start();
   MUNDO.audioAmbiente.viento = vGain;
 
@@ -1375,7 +1552,7 @@ function crearAmbiente() {
   var lFiltro = AUDIO.ctx.createBiquadFilter();
   lFiltro.type = 'highpass'; lFiltro.frequency.value = 1800;
   var lGain = AUDIO.ctx.createGain(); lGain.gain.value = 0;
-  lFuente.connect(lFiltro); lFiltro.connect(lGain); lGain.connect(AUDIO.master);
+  lFuente.connect(lFiltro); lFiltro.connect(lGain); lGain.connect(AUDIO.buses.ambiente);
   lFuente.start();
   MUNDO.audioAmbiente.lluvia = lGain;
 }
@@ -1384,10 +1561,10 @@ function crearAmbiente() {
 MUNDO.audioClima = function (modo) {
   if (!AUDIO.ctx || !MUNDO.audioAmbiente.lluvia) return;
   var t = AUDIO.ctx.currentTime;
-  var lluvia = 0, viento = 0.12;
-  if (modo === 'lluvia')  { lluvia = 0.22; viento = 0.16; }
-  if (modo === 'tormenta'){ lluvia = 0.35; viento = 0.26; }
-  if (modo === 'nublado') { viento = 0.14; }
+  var lluvia = 0, viento = 0.07;
+  if (modo === 'lluvia')  { lluvia = 0.2; viento = 0.1; }
+  if (modo === 'tormenta'){ lluvia = 0.32; viento = 0.16; }
+  if (modo === 'nublado') { viento = 0.08; }
   MUNDO.audioAmbiente.lluvia.gain.setTargetAtTime(lluvia, t, 1.5);
   MUNDO.audioAmbiente.viento.gain.setTargetAtTime(viento, t, 1.5);
 };
@@ -1410,6 +1587,11 @@ MUNDO.sonido = function (tipo) {
     osc.type = 'triangle'; osc.frequency.setValueAtTime(600, t);
     g.gain.setValueAtTime(0.08, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
     osc.start(t); osc.stop(t + 0.13);
+  } else if (tipo === 'muerte') {
+    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(400, t);
+    osc.frequency.exponentialRampToValueAtTime(60, t + 0.7);
+    g.gain.setValueAtTime(0.22, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
+    osc.start(t); osc.stop(t + 0.82);
   } else if (tipo === 'ficha') {
     osc.type = 'sine'; osc.frequency.setValueAtTime(520, t);
     osc.frequency.exponentialRampToValueAtTime(680, t + 0.09);
@@ -1422,23 +1604,49 @@ MUNDO.sonido = function (tipo) {
    distancia al oyente (la cámara). refDist = donde suena a tope,
    maxDist = donde deja de oírse. */
 MUNDO.audioFuente = function (def) {
-  MUNDO._crearFuente = MUNDO._crearFuente || [];
   function build() {
     if (!AUDIO.ctx) return;
-    var fuente = AUDIO.ctx.createBufferSource();
-    fuente.buffer = bufferRuido(); fuente.loop = true;
-    var filtro = AUDIO.ctx.createBiquadFilter();
-    filtro.type = def.filtro || 'bandpass';
-    filtro.frequency.value = def.freq || 800;
-    filtro.Q.value = def.q || 1;
-    var g = AUDIO.ctx.createGain(); g.gain.value = 0;
-    fuente.connect(filtro); filtro.connect(g); g.connect(AUDIO.master);
-    fuente.start();
-    AUDIO.fuentes.push({
-      x: def.pos[0], y: def.pos[1], z: def.pos[2],
-      ref: def.refDist || 4, max: def.maxDist || 22,
-      vol: def.vol != null ? def.vol : 0.3, g: g
-    });
+    var bus = AUDIO.buses[def.cat || 'naturaleza'] || AUDIO.master;
+    var g = AUDIO.ctx.createGain(); g.gain.value = 0;   // ganancia por distancia
+    var reg = { x: def.pos[0], y: def.pos[1], z: def.pos[2],
+                ref: def.refDist || 4, max: def.maxDist || 22,
+                vol: def.vol != null ? def.vol : 0.3, g: g };
+
+    if (def.tipo === 'olas') {
+      // Olas: ruido filtrado + un vaivén rítmico (rompiente cada ~5 s).
+      var fuente = AUDIO.ctx.createBufferSource();
+      fuente.buffer = bufferRuido(); fuente.loop = true;
+      var filtro = AUDIO.ctx.createBiquadFilter();
+      filtro.type = 'lowpass'; filtro.frequency.value = def.freq || 650; filtro.Q.value = 0.6;
+      var vaiven = AUDIO.ctx.createGain(); vaiven.gain.value = 0.5;
+      // LFO lento que sube y baja el volumen: eso es lo que suena a "ola que rompe"
+      var lfo = AUDIO.ctx.createOscillator(); lfo.type = 'sine';
+      lfo.frequency.value = def.ritmo || 0.19;   // ~1 ola cada 5 s
+      var lfoG = AUDIO.ctx.createGain(); lfoG.gain.value = 0.42;
+      lfo.connect(lfoG); lfoG.connect(vaiven.gain);
+      // segundo filtro que abre en la cresta (espuma) para dar brillo variable
+      var bril = AUDIO.ctx.createBiquadFilter(); bril.type = 'highpass'; bril.frequency.value = 500;
+      fuente.connect(filtro); filtro.connect(vaiven); vaiven.connect(g); g.connect(bus);
+      fuente.start(); lfo.start();
+    } else {
+      var f2 = AUDIO.ctx.createBufferSource();
+      f2.buffer = bufferRuido(); f2.loop = true;
+      var flt = AUDIO.ctx.createBiquadFilter();
+      flt.type = def.filtro || 'bandpass'; flt.frequency.value = def.freq || 800; flt.Q.value = def.q || 1;
+      // trémolo suave para hojas y fauna (susurro/canto entrecortado)
+      if (def.tremolo) {
+        var trem = AUDIO.ctx.createGain(); trem.gain.value = 0.6;
+        var tl = AUDIO.ctx.createOscillator(); tl.type = 'sine'; tl.frequency.value = def.tremolo;
+        var tg = AUDIO.ctx.createGain(); tg.gain.value = 0.35;
+        tl.connect(tg); tg.connect(trem.gain);
+        f2.connect(flt); flt.connect(trem); trem.connect(g); g.connect(bus);
+        f2.start(); tl.start();
+      } else {
+        f2.connect(flt); flt.connect(g); g.connect(bus);
+        f2.start();
+      }
+    }
+    AUDIO.fuentes.push(reg);
   }
   alAudio(build);
 };
@@ -1463,6 +1671,105 @@ MUNDO.animar(function (t, dt) {
     f.g.gain.setTargetAtTime(vol, AUDIO.ctx.currentTime, 0.15);
   }
 });
+
+/* Panel de atmósferas: botones para cambiar el ambiente del hábitat */
+function crearPanelAtmosfera(lista) {
+  var ya = document.getElementById('atm-panel');
+  if (ya) { ya.remove(); return; }
+  var p = document.createElement('div');
+  p.id = 'atm-panel';
+  var html = '<div class="mz-cab"><b>Atmósfera del hábitat</b>' +
+             '<button id="atm-cerrar" aria-label="Cerrar">\u00d7</button></div>' +
+             '<div class="atm-nota">Solo tiene efecto dentro de la cúpula</div>';
+  lista.forEach(function (a, i) {
+    html += '<button class="atm-op" data-i="' + i + '" style="--sw:' + (a.cielo || '#333') + '">' +
+            '<span class="atm-punto"></span>' + a.nombre + '</button>';
+  });
+  p.innerHTML = html;
+  document.body.appendChild(p);
+  p.querySelectorAll('.atm-op').forEach(function (b) {
+    b.onclick = function () {
+      MUNDO.setAtmosfera(lista[parseInt(b.dataset.i, 10)]);
+      p.querySelectorAll('.atm-op').forEach(function(o){o.classList.remove('activo');});
+      b.classList.add('activo');
+    };
+  });
+  document.getElementById('atm-cerrar').onclick = function () { p.remove(); };
+}
+
+/* Panel de mezcla de audio: un slider por categoría */
+function crearPanelMezcla() {
+  var ya = document.getElementById('mezcla-panel');
+  if (ya) { ya.remove(); return; }   // toggle
+  var CATS = [
+    { id: 'ambiente',   nombre: 'Ambiente',    desc: 'Viento y lluvia' },
+    { id: 'naturaleza', nombre: 'Naturaleza',  desc: 'Hojas, agua, olas' },
+    { id: 'fauna',      nombre: 'Fauna',       desc: 'Aves y animales' },
+    { id: 'efectos',    nombre: 'Efectos',     desc: 'Teletransporte, fichas' }
+  ];
+  var p = document.createElement('div');
+  p.id = 'mezcla-panel';
+  var html = '<div class="mz-cab"><b>Mezcla de sonido</b>' +
+             '<button id="mz-cerrar" aria-label="Cerrar">\u00d7</button></div>';
+  CATS.forEach(function (c) {
+    var v = Math.round((MUNDO.mezcla[c.id] != null ? MUNDO.mezcla[c.id] : 1) * 100);
+    html += '<div class="mz-fila">' +
+      '<div class="mz-txt"><span>' + c.nombre + '</span><small>' + c.desc + '</small></div>' +
+      '<input type="range" min="0" max="100" value="' + v + '" data-cat="' + c.id + '">' +
+      '<span class="mz-val" data-val="' + c.id + '">' + v + '</span></div>';
+  });
+  html += '<button id="mz-mute" class="mz-mute">Silenciar todo</button>';
+  p.innerHTML = html;
+  document.body.appendChild(p);
+
+  p.querySelectorAll('input[type=range]').forEach(function (sl) {
+    sl.oninput = function () {
+      var cat = sl.dataset.cat, v = parseInt(sl.value, 10) / 100;
+      MUNDO.setMezcla(cat, v);
+      var et = p.querySelector('[data-val="' + cat + '"]');
+      if (et) et.textContent = sl.value;
+    };
+  });
+  document.getElementById('mz-cerrar').onclick = function () { p.remove(); };
+  var muted = false;
+  document.getElementById('mz-mute').onclick = function () {
+    muted = !muted;
+    if (AUDIO.master) AUDIO.master.gain.setTargetAtTime(muted ? 0 : 0.7, AUDIO.ctx.currentTime, 0.1);
+    this.textContent = muted ? 'Activar sonido' : 'Silenciar todo';
+    this.classList.toggle('activo', muted);
+  };
+}
+
+
+/* ---------------------------------------------------------------- atmósferas
+   Cambia el ambiente visual del mundo en vivo: color de cielo, niebla y tinte.
+   Pensado para el hábitat de Mercurio (atmósfera terrestre, coloreada, etc.)
+   pero es genérico. Las define el mundo en M.atmosferas y se activan por botón. */
+MUNDO.setAtmosfera = function (a) {
+  var escena = document.getElementById('escena');
+  if (!escena) return;
+  // cielo
+  escena.setAttribute('background', 'color:' + (a.cielo || '#050608'));
+  document.querySelectorAll('a-sky').forEach(function (k) { k.setAttribute('color', a.cielo || '#050608'); });
+  // niebla (tinte atmosférico)
+  if (a.niebla) {
+    escena.setAttribute('fog', 'type:linear; color:' + a.niebla + '; near:' + (a.near || 8) + '; far:' + (a.far || 90));
+  } else {
+    escena.removeAttribute('fog');
+  }
+  // luz ambiental teñida
+  var amb = document.getElementById('luz-ambiente');
+  if (amb && a.luz) amb.setAttribute('light', 'type:ambient; color:' + a.luz + '; intensity:' + (a.intensidad || 0.6));
+  MUNDO.atmActual = a.id;
+  // aviso breve
+  var av = document.getElementById('aviso-atm');
+  if (av && a.nombre) {
+    av.textContent = a.nombre;
+    av.style.display = 'block';
+    clearTimeout(MUNDO._atmT);
+    MUNDO._atmT = setTimeout(function () { av.style.display = 'none'; }, 2500);
+  }
+};
 
 /* ---------------------------------------------------------------- interfaz */
 function rotulo(texto) {
@@ -1622,6 +1929,7 @@ function arranque(M) {
   escena.appendChild(nuevo('a-sky', { color: M.cielo || '#9db8c4' }));
   var luz = M.luz || {};
   escena.appendChild(nuevo('a-light', {
+    id: 'luz-ambiente',
     type: 'hemisphere', color: luz.cielo || '#cfe3ea',
     groundColor: luz.suelo || '#8a7c5c', intensity: luz.ambiente || 0.85 }));
   escena.appendChild(nuevo('a-light', {
@@ -1638,6 +1946,7 @@ function arranque(M) {
   var jugador = nuevo('a-entity', {
     id: 'jugador', position: (M.inicio || '0 3.2 26'), caminar: '' });
   jugador.setAttribute(usaGrav ? 'gravedad' : 'piso-adherido', usaGrav ? 'altura: 1.65' : '');
+  jugador.setAttribute('mando', '');
   var camara = nuevo('a-entity', {
     id: 'camara', camera: 'active: true', 'look-controls': 'pointerLockEnabled:false' });
   camara.appendChild(nuevo('a-entity', {
@@ -1784,6 +2093,15 @@ function arranque(M) {
     fn(H, ob.color, ob.pos, ob);
     giroActual = 0;
     grupoActual = null;
+    if (ob.peligro) {
+      var pl = ob.peligro;
+      MUNDO.zonaPeligro({
+        x: ob.pos[0] + (pl.dx || 0), z: ob.pos[2] + (pl.dz || 0),
+        r: pl.r, ancho: pl.ancho, largo: pl.largo,
+        y: pl.y != null ? ob.pos[1] + pl.y : null, altoY: pl.altoY,
+        dano: pl.dano || 10, causa: pl.causa, unaVez: pl.unaVez
+      });
+    }
     if (ob.choca) {
       var lista = ob.choca.length ? ob.choca : [ob.choca];
       var ga = rad(ob.giro || 0), co = Math.cos(ga), si = Math.sin(ga);
@@ -1894,6 +2212,18 @@ function arranque(M) {
     poblarAves(escena, M.aves);
   }
 
+  // peligros del mundo
+  MUNDO.peligros = [];
+  MUNDO.salud = 100; MUNDO.vivo = true;
+  if (M.cotaMuerte != null) MUNDO.cotaMuerte = M.cotaMuerte;
+  (M.peligros || []).forEach(function (z) { MUNDO.zonaPeligro(z); });
+  if (M.peligros || M.cotaMuerte != null) {
+    var barraS = document.getElementById('salud');
+    if (barraS) barraS.classList.add('on');
+    var rev = document.getElementById('fin-revivir');
+    if (rev) rev.onclick = function () { MUNDO.revivir(); };
+  }
+
   // Audio: crear ambiente y fuentes posicionales tras el desbloqueo
   if (M.sonido) {
     var arrancarAudio = function () {
@@ -1999,6 +2329,14 @@ function construirUI(M) {
     });
   }
 
+  // panel de atmósferas (hábitat)
+  if (M.atmosferas) {
+    var batm = nuevo('button', { id: 'btn-atm' });
+    batm.textContent = '\uD83C\uDF08 Atmósfera';
+    batm.onclick = function () { crearPanelAtmosfera(M.atmosferas); };
+    ctrl.appendChild(batm);
+  }
+
   // control de gravedad
   if (M.gravedad) {
     var bs = nuevo('button', { 'class': 'mover' });
@@ -2047,16 +2385,11 @@ function construirUI(M) {
     }
   }
 
-  // botón de sonido
+  // botón de sonido: abre el panel de mezcla
   if (M.sonido) {
-    var bmute = nuevo('button', { id: 'btn-mute', 'aria-pressed': 'true' });
+    var bmute = nuevo('button', { id: 'btn-mute' });
     bmute.textContent = '\uD83D\uDD0A Sonido';
-    bmute.onclick = function () {
-      var on = bmute.getAttribute('aria-pressed') !== 'true';
-      bmute.setAttribute('aria-pressed', on ? 'true' : 'false');
-      bmute.textContent = on ? '\uD83D\uDD0A Sonido' : '\uD83D\uDD07 Silencio';
-      if (AUDIO.master) AUDIO.master.gain.setTargetAtTime(on ? 0.6 : 0, AUDIO.ctx.currentTime, 0.1);
-    };
+    bmute.onclick = function () { crearPanelMezcla(); };
     ctrl.appendChild(bmute);
   }
 

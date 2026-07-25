@@ -126,6 +126,100 @@ window.addEventListener('error', function (e) {
     color:#6c6a60;font-size:20px;padding:2px 6px;line-height:1;}
   #cerrar:hover{background:none;color:var(--tinta);}
 
+  /* A-Frame inserta su propia UI (barra de orientación / botón VR) abajo;
+     la reposicionamos para que no tape los controles */
+  .a-enter-vr, .a-enter-ar { right: 12px !important; bottom: auto !important; top: 54px !important; left: auto !important; }
+  .a-orientation-modal { display: none !important; }
+  .a-enter-vr-button { background-size: 90% 90% !important; }
+  a-scene .a-canvas { z-index: 0 !important; }
+
+  /* panel de mezcla de audio */
+  #mezcla-panel{
+    position:fixed;z-index:40;left:50%;bottom:78px;transform:translateX(-50%);
+    width:min(340px,calc(100vw - 24px));
+    background:rgba(20,32,30,.72);color:var(--papel);
+    backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);
+    border:1px solid rgba(242,236,224,.18);border-radius:16px;padding:16px 18px;
+    box-shadow:0 14px 40px rgba(0,0,0,.4);
+    font-family:system-ui,sans-serif;
+  }
+  #mezcla-panel .mz-cab{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  #mezcla-panel .mz-cab b{font-size:14px;letter-spacing:.4px;}
+  #mz-cerrar{background:none;border:none;color:var(--papel);font-size:22px;line-height:1;cursor:pointer;opacity:.7;padding:0 4px;}
+  #mz-cerrar:hover{opacity:1;}
+  #mezcla-panel .mz-fila{display:flex;align-items:center;gap:11px;margin-bottom:13px;}
+  #mezcla-panel .mz-txt{width:96px;flex:none;}
+  #mezcla-panel .mz-txt span{display:block;font-size:13px;font-weight:600;}
+  #mezcla-panel .mz-txt small{font-size:10.5px;opacity:.6;}
+  #mezcla-panel input[type=range]{
+    flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:3px;
+    background:rgba(242,236,224,.22);outline:none;
+  }
+  #mezcla-panel input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:17px;height:17px;border-radius:50%;
+    background:#8fb96a;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.4);
+  }
+  #mezcla-panel input[type=range]::-moz-range-thumb{
+    width:17px;height:17px;border:none;border-radius:50%;background:#8fb96a;cursor:pointer;
+  }
+  #mezcla-panel .mz-val{width:26px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums;opacity:.75;}
+  .mz-mute{width:100%;margin-top:4px;padding:9px;border-radius:10px;
+    background:rgba(242,236,224,.1);border:1px solid rgba(242,236,224,.2);
+    color:var(--papel);font-size:13px;font-weight:600;cursor:pointer;}
+  .mz-mute:hover{background:rgba(242,236,224,.16);}
+  .mz-mute.activo{background:rgba(180,90,90,.4);border-color:rgba(180,90,90,.6);}
+
+  /* barra de salud */
+  #salud{
+    position:fixed;z-index:11;left:16px;bottom:74px;width:180px;height:12px;display:none;
+    background:rgba(20,32,30,.6);border:1px solid rgba(242,236,224,.2);border-radius:8px;
+    overflow:hidden;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  }
+  #salud.on{display:block;}
+  #salud-relleno{height:100%;width:100%;border-radius:7px;
+    background:linear-gradient(90deg,#c4392f,#e0b455,#4a7c53);
+    background-size:180px 100%;transition:width .25s;}
+  #salud.golpe{animation:sacudir .18s;}
+  @keyframes sacudir{25%{transform:translateX(-4px);}75%{transform:translateX(4px);}}
+
+  /* pantalla de fin */
+  #fin{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;
+    background:rgba(8,6,6,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+  #fin.visible{display:flex;animation:aparece .6s ease;}
+  @keyframes aparece{from{opacity:0;}to{opacity:1;}}
+  #fin-caja{text-align:center;color:#f2ece0;padding:34px 40px;}
+  #fin-titulo{font-family:"Fraunces",Georgia,serif;font-size:38px;font-weight:900;
+    letter-spacing:1px;margin-bottom:10px;color:#e0685a;}
+  #fin-causa{font-size:15px;opacity:.8;margin-bottom:26px;}
+  #fin-revivir{background:rgba(242,236,224,.12);border:1px solid rgba(242,236,224,.3);
+    color:#f2ece0;font:600 14px/1 system-ui;padding:12px 24px;border-radius:12px;cursor:pointer;
+    backdrop-filter:blur(10px);}
+  #fin-revivir:hover{background:rgba(242,236,224,.2);}
+
+  /* avisos flotantes de atmósfera / mando */
+  #aviso-atm{position:fixed;z-index:40;left:50%;top:52px;transform:translateX(-50%);display:none;
+    background:rgba(28,42,40,.65);color:#f2ece0;font:600 13px/1 system-ui;padding:9px 16px;
+    border-radius:11px;border:1px solid rgba(242,236,224,.18);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);pointer-events:none;}
+
+  /* panel de atmósferas */
+  #atm-panel{position:fixed;z-index:40;left:50%;bottom:78px;transform:translateX(-50%);
+    width:min(300px,calc(100vw - 24px));background:rgba(20,32,30,.72);color:var(--papel);
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    border:1px solid rgba(242,236,224,.18);border-radius:16px;padding:16px 18px;
+    box-shadow:0 14px 40px rgba(0,0,0,.4);font-family:system-ui,sans-serif;}
+  #atm-panel .mz-cab{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  #atm-panel .mz-cab b{font-size:14px;}
+  #atm-cerrar{background:none;border:none;color:var(--papel);font-size:22px;cursor:pointer;opacity:.7;}
+  #atm-panel .atm-nota{font-size:11px;opacity:.55;margin-bottom:12px;}
+  .atm-op{display:flex;align-items:center;gap:10px;width:100%;text-align:left;margin-bottom:7px;
+    padding:9px 12px;border-radius:10px;background:rgba(242,236,224,.07);
+    border:1px solid rgba(242,236,224,.14);color:var(--papel);font-size:13.5px;font-weight:500;cursor:pointer;}
+  .atm-op:hover{background:rgba(242,236,224,.14);}
+  .atm-op.activo{border-color:var(--sw);background:rgba(242,236,224,.12);}
+  .atm-punto{width:16px;height:16px;border-radius:50%;background:var(--sw);flex:none;
+    border:1px solid rgba(255,255,255,.3);box-shadow:0 0 8px var(--sw);}
+
   @media (prefers-reduced-motion: reduce){ #ficha{transition:none;} }
 </style>
 
@@ -148,6 +242,21 @@ window.addEventListener('error', function (e) {
 
 <div id="pista">Toca el suelo para desplazarte hasta ahí</div>
 <div id="controles"></div>
+
+<!-- barra de salud (solo visible si el mundo tiene peligros) -->
+<div id="salud"><div id="salud-relleno"></div></div>
+
+<!-- avisos flotantes -->
+<div id="aviso-atm"></div>
+
+<!-- pantalla de fin (muerte) -->
+<div id="fin">
+  <div id="fin-caja">
+    <div id="fin-titulo">Has muerto</div>
+    <div id="fin-causa">Fin del recorrido</div>
+    <button id="fin-revivir">Volver al inicio</button>
+  </div>
+</div>
 
 <a-scene id="escena" renderer="colorManagement:true; antialias:false"></a-scene>
 

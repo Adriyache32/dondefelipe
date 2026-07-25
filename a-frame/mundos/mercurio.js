@@ -83,6 +83,65 @@ MUNDO.forma('hielo', function (H, color, b) {
     [H.azar(0,30), H.azar(0,360), 0], [t, t*0.5, t], 0);
 }, 1.2);
 
+
+// Base Discovery: hábitat presurizado con cúpula transparente. Se puede entrar.
+MUNDO.forma('habitat', function (H, color, b) {
+  var R = 9;   // radio de la cúpula
+  // base circular (piso metálico elevado)
+  H.pieza('cilindro', '#4a4e52', 'metal', b, [0, 0.3, 0], [0,0,0], [R+0.5, 0.6, R+0.5], 0);
+  H.pieza('cilindro', '#5a5e62', 'metal', b, [0, 0.62, 0], [0,0,0], [R, 0.08, R], 0);
+  // anillo estructural de la base
+  H.pieza('toro', '#8a9098', 'metal', b, [0, 0.66, 0], [-90,0,0], [R, R, 0.3], 0);
+  // costillas de la cúpula (media esfera de gajos)
+  var gajos = 10;
+  for (var i = 0; i < gajos; i++) {
+    var a = i / gajos * 6.2832;
+    for (var j = 0; j < 5; j++) {
+      var lat = j / 5 * 1.4;   // de 0 a ~80°
+      var y = 0.66 + Math.sin(lat) * R;
+      var rr = Math.cos(lat) * R;
+      var x = Math.cos(a) * rr, z = Math.sin(a) * rr;
+      H.pieza('caja', '#8a9098', 'metal', b, [x, y, z], [0, a*57.3, lat*57.3], [0.14, 0.14, R*0.32], 0);
+    }
+  }
+  // paneles de vidrio de la cúpula (semiesfera translúcida)
+  H.pieza('esfera', color, 'vidrio', b, [0, 0.66, 0], [0,0,0], [R, R, R], 0);
+  // domo interior de aire (se tiñe con la atmósfera) - una segunda capa muy tenue
+  // cilindro de acceso (esclusa) al frente
+  H.pieza('cilindro', '#6a6e72', 'metal', b, [0, 1.3, R-0.5], [90,0,0], [1.5, 3, 1.5], 0);
+  H.pieza('caja', '#20262b', 'vidrio', b, [0, 1.3, R+0.6], [0,0,0], [1.6, 2, 0.1], 0);
+  // consola de control de atmósfera adentro
+  H.pieza('caja', '#2f363d', 'solido', b, [0, 0.9, -3], [0,0,0], [2.4, 0.6, 0.7], 0);
+  H.pieza('caja', '#2f6bab', 'brillo', b, [0, 1.15, -3], [-16,0,0], [2, 0.4, 0.05], 0);
+  H.pieza('poste', '#c8ccce', 'metal', b, [-0.8, 1, -3], [0,0,0], [0.04, 0.3, 0.04], 0);
+  // literas / mobiliario básico
+  H.pieza('caja', '#4a5560', 'solido', b, [-5, 0.9, 2], [0,0,0], [2, 0.3, 1], 0);
+  H.pieza('caja', '#4a5560', 'solido', b, [5, 0.9, 2], [0,0,0], [2, 0.3, 1], 0);
+  // luz interior
+  H.pieza('esferaB', '#fff6e0', 'brillo', b, [0, R*0.7, 0], [0,0,0], [0.5, 0.5, 0.5], 0);
+}, 6);
+
+// Grieta/hoyo peligroso en la superficie
+MUNDO.forma('grieta', function (H, color, b, ob) {
+  var r = (ob && ob.radio) ? ob.radio : 2.5;
+  // borde oscuro
+  H.pieza('toro', '#3a3630', 'solido', b, [0, 0.1, 0], [-90,0,0], [r, r, 0.4], 0);
+  // interior negro (el vacío)
+  H.pieza('circulo', '#08070a', 'lamina', b, [0, 0.06, 0], [-90,0,0], [r*0.85, r*0.85, 1], 0);
+}, 0.5);
+
+// Placa de metal recalentado (peligro: quema)
+MUNDO.forma('placaMetal', function (H, color, b, ob) {
+  var s = (ob && ob.lado) ? ob.lado : 3;
+  H.pieza('caja', '#7a4a3a', 'metal', b, [0, 0.1, 0], [0,0,0], [s, 0.15, s], 0);
+  // vetas incandescentes
+  for (var i = 0; i < 5; i++) {
+    H.pieza('caja', '#e08040', 'brillo', b, [azarLocal(-s/2,s/2), 0.18, azarLocal(-s/2,s/2)],
+      [0, azarLocal(0,90), 0], [azarLocal(0.3,1), 0.02, 0.1], 0);
+  }
+}, 0.6);
+function azarLocal(a,b){ return a + Math.random()*(b-a); }
+
 /* ---------------------------------------------------------------- MUNDO */
 window.MUNDOS = window.MUNDOS || {};
 window.MUNDOS.mercurio = {
@@ -100,6 +159,26 @@ window.MUNDOS.mercurio = {
   anchoVida: 100,
   inicio: '0 2 30',
 
+  cotaMuerte: -25,
+
+  // ATMÓSFERAS ARTIFICIALES del hábitat (se activan con el botón dentro)
+  atmosferas: [
+    { id: 'vacio',    nombre: 'Sin atmósfera (Mercurio real)', cielo: '#050608', niebla: null },
+    { id: 'terrestre',nombre: 'Atmósfera terrestre con ozono', cielo: '#7fb3d5', niebla: '#cfe4f2', near: 6, far: 80, luz: '#dceaf5', intensidad: 0.9 },
+    { id: 'rosada',   nombre: 'Atmósfera rosada', cielo: '#e0789a', niebla: '#f2c0d4', near: 6, far: 70, luz: '#f5d0de', intensidad: 0.85 },
+    { id: 'morada',   nombre: 'Atmósfera morada', cielo: '#5a3f8a', niebla: '#8a6ab0', near: 6, far: 70, luz: '#c0a8e0', intensidad: 0.7 },
+    { id: 'ambar',    nombre: 'Atmósfera ámbar', cielo: '#c88a3c', niebla: '#e0b878', near: 6, far: 70, luz: '#f0d0a0', intensidad: 0.85 },
+    { id: 'verde',    nombre: 'Atmósfera verde (metano)', cielo: '#3f8a5c', niebla: '#8ac0a0', near: 6, far: 70, luz: '#c0e0c8', intensidad: 0.75 }
+  ],
+
+  // PELIGROS de la superficie
+  peligros: [
+    { x: -8, z: 18, r: 2.2, dano: 100, causa: 'Caíste en una grieta sin fondo' },
+    { x: 14, z: 8, r: 2, dano: 100, causa: 'Caíste en una grieta sin fondo' },
+    { x: 6, z: -4, ancho: 3, largo: 3, dano: 18, causa: 'Pisaste metal a 400°C' },
+    { x: -18, z: -12, ancho: 3, largo: 3, dano: 18, causa: 'Pisaste metal a 400°C' }
+  ],
+
   // GRAVEDAD DE MERCURIO: 3,70 m/s² (0,38 g). Salto escalado igual.
   gravedad: {
     valor: 3.70, salto: 3.2,
@@ -114,7 +193,8 @@ window.MUNDOS.mercurio = {
   vistas: {
     llegada: { etiqueta: 'Punto de llegada',  pos: '0 2 30',   pitch: -3, yaw: 0 },
     crater:  { etiqueta: 'El gran cráter',     pos: '-18 2 -6', pitch: 2,  yaw: -40 },
-    sol:     { etiqueta: 'Mirar al Sol',       pos: '0 2 10',   pitch: 8,  yaw: 150 }
+    sol:     { etiqueta: 'Mirar al Sol',       pos: '0 2 10',   pitch: 8,  yaw: 150 },
+    base:    { etiqueta: 'Base Discovery',     pos: '40 2.5 2', pitch: 0,  yaw: 0 }
   },
 
   // El Sol, enorme y brillante desde acá (Mercurio está muy cerca)
@@ -133,6 +213,7 @@ window.MUNDOS.mercurio = {
         'La gravedad en la superficie es de 3,70 m/s², un 38% de la terrestre. Con el selector de gravedad puedes sentir la diferencia: en Mercurio saltas mucho más alto y caes más lento que en la Tierra, porque tu masa es la misma pero el planeta tira de ti con menos fuerza.'
       ],
       reto: 'Salta en la Tierra, cambia a la gravedad de Mercurio y vuelve a saltar. Tu cuerpo pesa menos aquí, ¿pero tu masa cambió? ¿Qué es distinto entre peso y masa?',
+      detalle2: 'CUIDADO: la superficie tiene grietas sin fondo y placas de metal recalentado. Sin traje reforzado, un paso en falso es fatal. Observa tu barra de salud.',
       especies: [
         { forma: 'penasco', n: 90, color: '#7d756c', nombre: 'Roca', choca: { r: 0.5, alto: 1 } },
         { forma: 'penasco', n: 60, color: '#948b80' },
@@ -157,12 +238,35 @@ window.MUNDOS.mercurio = {
     // Región polar en sombra permanente, con hielo
     { forma: 'crater', color: '#5a5650', pos: [-40, 0.05, 30], radio: 7,
       nombre: 'Cráter polar con hielo', ficha: 'hielo', altoFicha: 3 },
+    // BASE DISCOVERY: el hábitat presurizado, se puede entrar
+    { forma: 'habitat', color: '#bcd4e0', pos: [40, 0.05, 8],
+      nombre: 'Base Discovery', ficha: 'base', altoFicha: 11,
+      piso: { ancho: 18, largo: 18, alto: 0.66, color: '#5a5e62' } },
+    // grietas peligrosas (visuales, el daño lo dan las zonas de peligro)
+    { forma: 'grieta', color: '#08070a', pos: [-8, 0.05, 18], radio: 2.2 },
+    { forma: 'grieta', color: '#08070a', pos: [14, 0.05, 8], radio: 2 },
+    // placas de metal recalentado
+    { forma: 'placaMetal', color: '#7a4a3a', pos: [6, 0.05, -4], lado: 3 },
+    { forma: 'placaMetal', color: '#7a4a3a', pos: [-18, 0.05, -12], lado: 3 },
     // Estación de estudio con el panel de gravedad
     { forma: 'hito', color: '#c4342e', pos: [3, 0.05, 22],
       nombre: 'Estación de estudio', ficha: 'gravedad', altoFicha: 3.6 }
   ],
 
   fichas: [
+    {
+      id: 'base', nombre: 'Base Discovery', rango: 'Hábitat presurizado',
+      texto: 'Un hábitat como este es la única forma de sobrevivir en Mercurio: una cúpula sellada que mantiene aire, presión y temperatura estables mientras afuera todo es vacío y radiación. Entra por la esclusa y usa la consola para experimentar con distintas atmósferas artificiales.',
+      detalle: [
+        'El botón "Atmósfera" cambia el aire de la cúpula. La atmósfera terrestre con ozono es la que respiramos y la que nos protege de la radiación solar. Las demás (rosada, morada, ámbar, verde) son experimentos: cada gas y cada partícula en suspensión daría al cielo un color distinto.',
+        'Afuera no hay atmósfera: por eso el cielo es negro incluso de día, no hay sonido, y la temperatura salta de 430°C al Sol a 180 bajo cero en sombra. Dentro de la cúpula, en cambio, se puede vivir.'
+      ],
+      actividad: 'Entra a la base y prueba las distintas atmósferas. Observa cómo cambia el color del cielo y la luz con cada una.',
+      pregunta: [
+        '¿Por qué el color del cielo depende de la atmósfera? Piensa en por qué el cielo de la Tierra es azul.',
+        '¿Qué hace especial a la atmósfera terrestre frente a las otras, para permitir la vida?'
+      ]
+    },
     {
       id: 'caloris', nombre: 'Cuenca Caloris', rango: 'Uno de los mayores cráteres del sistema solar',
       texto: 'Caloris es una cuenca de impacto gigantesca, de unos 1.550 kilómetros de diámetro: cabría gran parte de Chile dentro. Se formó por el choque de un asteroide hace unos 3.800 millones de años, y el golpe fue tan brutal que en el punto exactamente opuesto del planeta se levantó un terreno caótico, como si el impacto hubiera resonado a través de todo Mercurio.',
