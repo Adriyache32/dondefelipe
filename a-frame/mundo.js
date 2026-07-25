@@ -11,7 +11,7 @@
 'use strict';
 
 var MUNDO = {
-  version: 19,
+  version: 20,
   formas: {},
   clima: { viento: 1 },
   datos: null
@@ -1285,29 +1285,60 @@ MUNDO.animar(function (t, dt) {
    - Puntual (teletransporte, clic): tonos cortos.
    - Posicional: fuentes con posición; el volumen sube al acercarse.
    Los navegadores bloquean el audio hasta el primer toque: lo desbloqueamos. */
-var AUDIO = { ctx: null, listo: false, master: null, fuentes: [] };
+var AUDIO = { ctx: null, listo: false, master: null, fuentes: [], cola: [] };
+
+// Encola una tarea de audio; se ejecuta ya si está listo, o al desbloquear.
+function alAudio(fn) {
+  if (AUDIO.listo) { try { fn(); } catch (e) { console.warn('audio:', e); } }
+  else AUDIO.cola.push(fn);
+}
 
 function iniAudio() {
-  if (AUDIO.ctx) return;
+  if (AUDIO.ctx) return true;
   try {
-    AUDIO.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) { console.warn('WebAudio no soportado'); return false; }
+    AUDIO.ctx = new AC();
     AUDIO.master = AUDIO.ctx.createGain();
     AUDIO.master.gain.value = 0.6;
     AUDIO.master.connect(AUDIO.ctx.destination);
-  } catch (e) { AUDIO.ctx = null; }
+    return true;
+  } catch (e) { AUDIO.ctx = null; console.warn('audio init:', e); return false; }
 }
 
-// desbloqueo al primer gesto
+// desbloqueo al primer gesto (no cancela el evento; deja pasar el resto)
 function desbloquearAudio() {
-  iniAudio();
-  if (AUDIO.ctx && AUDIO.ctx.state === 'suspended') AUDIO.ctx.resume();
-  AUDIO.listo = true;
-  window.removeEventListener('pointerdown', desbloquearAudio);
-  window.removeEventListener('keydown', desbloquearAudio);
-  if (MUNDO._audioPendiente) { MUNDO._audioPendiente(); MUNDO._audioPendiente = null; }
+  if (AUDIO.listo) return;
+  if (!iniAudio()) return;
+  var seguir = function () {
+    AUDIO.listo = true;
+    var c = AUDIO.cola; AUDIO.cola = [];
+    for (var i = 0; i < c.length; i++) { try { c[i](); } catch (e) { console.warn('audio cola:', e); } }
+  };
+  // resume puede devolver promesa; esperar a que realmente corra
+  if (AUDIO.ctx.state === 'suspended') {
+    var pr = AUDIO.ctx.resume();
+    if (pr && pr.then) pr.then(seguir, seguir); else seguir();
+  } else {
+    seguir();
+  }
 }
-window.addEventListener('pointerdown', desbloquearAudio);
+// pasivos para no interferir con el teletransporte ni el clic
+window.addEventListener('pointerdown', desbloquearAudio, { passive: true, capture: true });
+window.addEventListener('touchstart', desbloquearAudio, { passive: true, capture: true });
 window.addEventListener('keydown', desbloquearAudio);
+window.addEventListener('click', desbloquearAudio, { capture: true });
+
+// diagnóstico: llamar MUNDO.audioEstado() en consola
+MUNDO.audioEstado = function () {
+  return {
+    contexto: AUDIO.ctx ? AUDIO.ctx.state : 'sin crear',
+    listo: AUDIO.listo,
+    fuentes: AUDIO.fuentes.length,
+    enCola: AUDIO.cola.length,
+    master: AUDIO.master ? AUDIO.master.gain.value : null
+  };
+};
 
 // Buffer de ruido blanco reutilizable
 function bufferRuido() {
@@ -1363,7 +1394,9 @@ MUNDO.audioClima = function (modo) {
 
 // PUNTUAL: tono corto (teletransporte, clic, etc.)
 MUNDO.sonido = function (tipo) {
+  if (!AUDIO.ctx) { iniAudio(); }
   if (!AUDIO.ctx) return;
+  if (AUDIO.ctx.state === 'suspended') AUDIO.ctx.resume();
   var t = AUDIO.ctx.currentTime;
   var osc = AUDIO.ctx.createOscillator();
   var g = AUDIO.ctx.createGain();
@@ -1407,7 +1440,7 @@ MUNDO.audioFuente = function (def) {
       vol: def.vol != null ? def.vol : 0.3, g: g
     });
   }
-  if (AUDIO.listo) build(); else { var prev = MUNDO._audioPendiente; MUNDO._audioPendiente = function(){ prev&&prev(); build(); }; }
+  alAudio(build);
 };
 
 // Actualizar volúmenes posicionales según la cámara (registrado como animación)
@@ -1867,9 +1900,21 @@ function arranque(M) {
       crearAmbiente();
       MUNDO.audioClima(MUNDO.clima.modo || (M.clima && M.clima.inicial) || 'despejado');
       (M.sonido.fuentes || []).forEach(function (f) { MUNDO.audioFuente(f); });
+      var av = document.getElementById('aviso-audio');
+      if (av) av.style.display = 'none';
     };
-    if (AUDIO.listo) arrancarAudio();
-    else { var prev = MUNDO._audioPendiente; MUNDO._audioPendiente = function(){ prev&&prev(); arrancarAudio(); }; }
+    alAudio(arrancarAudio);
+    // aviso "toca para sonido" mientras no esté desbloqueado
+    if (!AUDIO.listo) {
+      var av = document.createElement('div');
+      av.id = 'aviso-audio';
+      av.textContent = '\uD83D\uDD0A Toca la pantalla para activar el sonido';
+      av.style.cssText = 'position:fixed;z-index:40;left:50%;bottom:118px;transform:translateX(-50%);' +
+        'background:rgba(28,42,40,.6);color:#f2ece0;font:600 13px/1 system-ui;padding:10px 16px;' +
+        'border-radius:12px;border:1px solid rgba(242,236,224,.18);' +
+        'backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);pointer-events:none;';
+      document.body.appendChild(av);
+    }
   }
 
   if (M.nivel) {
