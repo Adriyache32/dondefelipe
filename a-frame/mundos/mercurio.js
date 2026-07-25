@@ -84,42 +84,76 @@ MUNDO.forma('hielo', function (H, color, b) {
 }, 1.2);
 
 
-// Base Discovery: hábitat presurizado con cúpula transparente. Se puede entrar.
-MUNDO.forma('habitat', function (H, color, b) {
-  var R = 9;   // radio de la cúpula
-  // base circular (piso metálico elevado)
-  H.pieza('cilindro', '#4a4e52', 'metal', b, [0, 0.3, 0], [0,0,0], [R+0.5, 0.6, R+0.5], 0);
-  H.pieza('cilindro', '#5a5e62', 'metal', b, [0, 0.62, 0], [0,0,0], [R, 0.08, R], 0);
-  // anillo estructural de la base
-  H.pieza('toro', '#8a9098', 'metal', b, [0, 0.66, 0], [-90,0,0], [R, R, 0.3], 0);
-  // costillas de la cúpula (media esfera de gajos)
-  var gajos = 10;
-  for (var i = 0; i < gajos; i++) {
-    var a = i / gajos * 6.2832;
-    for (var j = 0; j < 5; j++) {
-      var lat = j / 5 * 1.4;   // de 0 a ~80°
-      var y = 0.66 + Math.sin(lat) * R;
-      var rr = Math.cos(lat) * R;
-      var x = Math.cos(a) * rr, z = Math.sin(a) * rr;
-      H.pieza('caja', '#8a9098', 'metal', b, [x, y, z], [0, a*57.3, lat*57.3], [0.14, 0.14, R*0.32], 0);
-    }
+// Base Discovery: hábitat presurizado GRANDE con paredes sólidas opacas.
+// Las hojas de la puerta van a subgrupos para abrirse automáticamente.
+MUNDO.forma('habitat', function (H, color, b, ob) {
+  var R = 16;      // radio interior amplio
+  var ALTO = 5;    // altura del muro
+  var pref = (ob && ob.id) ? ob.id : 'base';
+
+  // piso metálico
+  H.pieza('cilindro', '#3f4348', 'metal', b, [0, 0.3, 0], [0,0,0], [R+1, 0.6, R+1], 0);
+  H.pieza('cilindro', '#565b60', 'metal', b, [0, 0.62, 0], [0,0,0], [R, 0.08, R], 0);
+  // líneas del piso (rejilla técnica)
+  for (var k = 0; k < 6; k++) {
+    H.pieza('caja', '#484d52', 'metal', b, [0, 0.67, -R + k*(2*R/6)], [0,0,0], [2*R, 0.02, 0.1], 0);
+    H.pieza('caja', '#484d52', 'metal', b, [-R + k*(2*R/6), 0.67, 0], [0,0,0], [0.1, 0.02, 2*R], 0);
   }
-  // paneles de vidrio de la cúpula (semiesfera translúcida)
-  H.pieza('esfera', color, 'vidrio', b, [0, 0.66, 0], [0,0,0], [R, R, R], 0);
-  // domo interior de aire (se tiñe con la atmósfera) - una segunda capa muy tenue
-  // cilindro de acceso (esclusa) al frente
-  H.pieza('cilindro', '#6a6e72', 'metal', b, [0, 1.3, R-0.5], [90,0,0], [1.5, 3, 1.5], 0);
-  H.pieza('caja', '#20262b', 'vidrio', b, [0, 1.3, R+0.6], [0,0,0], [1.6, 2, 0.1], 0);
-  // consola de control de atmósfera adentro
-  H.pieza('caja', '#2f363d', 'solido', b, [0, 0.9, -3], [0,0,0], [2.4, 0.6, 0.7], 0);
-  H.pieza('caja', '#2f6bab', 'brillo', b, [0, 1.15, -3], [-16,0,0], [2, 0.4, 0.05], 0);
-  H.pieza('poste', '#c8ccce', 'metal', b, [-0.8, 1, -3], [0,0,0], [0.04, 0.3, 0.04], 0);
-  // literas / mobiliario básico
-  H.pieza('caja', '#4a5560', 'solido', b, [-5, 0.9, 2], [0,0,0], [2, 0.3, 1], 0);
-  H.pieza('caja', '#4a5560', 'solido', b, [5, 0.9, 2], [0,0,0], [2, 0.3, 1], 0);
-  // luz interior
-  H.pieza('esferaB', '#fff6e0', 'brillo', b, [0, R*0.7, 0], [0,0,0], [0.5, 0.5, 0.5], 0);
+
+  // MURO CILÍNDRICO OPACO: segmentos de caja alrededor, dejando un vano para la puerta
+  var seg = 28;
+  for (var i = 0; i < seg; i++) {
+    var a = i / seg * 6.2832;
+    // hueco para la puerta: saltar los segmentos frontales (cerca de a=PI/2, +z)
+    var ang = a;
+    var frente = Math.abs(ang - Math.PI/2) < 0.28;   // vano al frente (+z)
+    if (frente) continue;
+    var x = Math.cos(a) * R, z = Math.sin(a) * R;
+    H.pieza('caja', color, 'solido', b, [x, ALTO/2 + 0.6, z], [0, a*57.3 + 90, 0],
+      [2*Math.PI*R/seg + 0.3, ALTO, 0.4], 0);
+    // franja de color inferior
+    H.pieza('caja', '#3f5568', 'solido', b, [x, 1.1, z], [0, a*57.3 + 90, 0],
+      [2*Math.PI*R/seg + 0.3, 0.5, 0.42], 0);
+    // ventanilla ocasional (opaca oscura, no atraviesa)
+    if (i % 4 === 0) H.pieza('caja', '#243541', 'solido', b, [x, 3.4, z], [0, a*57.3 + 90, 0],
+      [1.1, 1, 0.44], 0);
+  }
+
+  // TECHO opaco (cúpula baja de gajos sólidos)
+  var gaj = 12;
+  for (var g = 0; g < gaj; g++) {
+    var ga = g / gaj * 6.2832;
+    H.pieza('caja', '#7a8088', 'solido', b, [Math.cos(ga)*R*0.5, ALTO + 1.3, Math.sin(ga)*R*0.5],
+      [0, ga*57.3, 22], [0.5, 0.3, R], 0);
+  }
+  H.pieza('cilindro', color, 'solido', b, [0, ALTO + 0.7, 0], [0,0,0], [R+0.3, 0.4, R+0.3], 0);
+  H.pieza('cilindro', '#6a7078', 'solido', b, [0, ALTO + 2, 0], [0,0,0], [R*0.55, 0.5, R*0.55], 0);
+  // lucernario central (tenue, no se atraviesa)
+  H.pieza('cilindro', '#2a3a44', 'solido', b, [0, ALTO + 2.3, 0], [0,0,0], [R*0.2, 0.1, R*0.2], 0);
+
+  // MARCO Y PUERTA al frente (+z), con dos hojas correderas
+  var zPuerta = R;
+  H.pieza('caja', '#8a9098', 'metal', b, [-2.2, ALTO/2, zPuerta], [0,0,0], [0.4, ALTO, 0.6], 0);
+  H.pieza('caja', '#8a9098', 'metal', b, [2.2, ALTO/2, zPuerta], [0,0,0], [0.4, ALTO, 0.6], 0);
+  H.pieza('caja', '#8a9098', 'metal', b, [0, ALTO - 0.3, zPuerta], [0,0,0], [4.8, 0.6, 0.6], 0);
+  H.pieza('caja', '#c8443a', 'brillo', b, [0, ALTO - 0.3, zPuerta + 0.31], [0,0,0], [1.4, 0.3, 0.02], 0);
+  // dos hojas (subgrupos posicionables por el motor)
+  _hojaBase(H, b, [-1, ALTO/2 - 0.3, zPuerta], pref + '_pA', '#b8bcc0');
+  _hojaBase(H, b, [1, ALTO/2 - 0.3, zPuerta], pref + '_pB', '#b8bcc0');
+
+  // iluminación interior
+  for (var li = 0; li < 4; li++) {
+    var la = li / 4 * 6.2832;
+    H.pieza('esferaB', '#fff6e0', 'brillo', b, [Math.cos(la)*R*0.6, ALTO, Math.sin(la)*R*0.6], [0,0,0], [0.4, 0.4, 0.4], 0);
+  }
+  H.pieza('esferaB', '#fff6e0', 'brillo', b, [0, ALTO + 1.6, 0], [0,0,0], [0.6, 0.6, 0.6], 0);
 }, 6);
+
+// Una hoja de puerta de la base (panel opaco), en subgrupo posicionable
+function _hojaBase(H, b, off, grupo, color) {
+  H.pieza('caja', color, 'metal', b, off, [0, 0, 0], [2, 4, 0.18], 0, grupo);
+  H.pieza('caja', '#20262b', 'solido', b, [off[0], off[1]+0.4, off[2]], [0,0,0], [1.4, 1, 0.2], 0, grupo);
+}
 
 // Grieta/hoyo peligroso en la superficie
 MUNDO.forma('grieta', function (H, color, b, ob) {
@@ -142,8 +176,171 @@ MUNDO.forma('placaMetal', function (H, color, b, ob) {
 }, 0.6);
 function azarLocal(a,b){ return a + Math.random()*(b-a); }
 
+
+// Montaña / macizo rocoso de Mercurio
+MUNDO.forma('montana', function (H, color, b) {
+  var alt = H.azar(5, 10);
+  H.pieza('cono', color, 'roca', b, [0, alt/2, 0], [0, H.azar(0,360), H.azar(-4,4)], [alt*0.6, alt, alt*0.6], 0);
+  // riscos secundarios
+  for (var i = 0; i < 3; i++) {
+    var a = H.azar(0, 6.28);
+    H.pieza('cono', '#6e675f', 'roca', b, [Math.cos(a)*alt*0.3, alt*0.3, Math.sin(a)*alt*0.3],
+      [0, H.azar(0,360), H.azar(-8,8)], [alt*0.3, alt*0.6, alt*0.3], 0);
+  }
+  // cima clara (contraste de luz dura)
+  H.pieza('cono', '#a89f92', 'solido', b, [0, alt*0.85, 0], [0,0,0], [alt*0.22, alt*0.3, alt*0.22], 0);
+}, 10);
+
+// Roca con jeroglíficos antiguos grabados (¿huella de otra forma de vida?)
+MUNDO.forma('roca-glifo', function (H, color, b) {
+  // monolito plano, casi una estela
+  H.pieza('caja', color, 'roca', b, [0, 1.6, 0], [0, H.azar(-15,15), H.azar(-4,4)], [2.6, 3.2, 0.6], 0);
+  // cara pulida donde van los glifos
+  H.pieza('caja', '#8a7f70', 'solido', b, [0, 1.7, 0.32], [0, 0, 0], [2, 2.6, 0.05], 0);
+  // glifos: filas de símbolos incisos brillantes (líneas y puntos)
+  var filas = 5;
+  for (var f = 0; f < filas; f++) {
+    var y = 0.7 + f * 0.5;
+    var cols = 3 + Math.floor(H.azar(0, 2.5));
+    for (var c = 0; c < cols; c++) {
+      var x = -0.7 + c * 0.5;
+      var tipo = Math.floor(H.azar(0, 4));
+      var col = '#c8a24a';
+      if (tipo === 0) H.pieza('caja', col, 'brillo', b, [x, y, 0.36], [0,0,0], [0.06, 0.28, 0.02], 0);       // vertical
+      else if (tipo === 1) H.pieza('caja', col, 'brillo', b, [x, y, 0.36], [0,0,0], [0.28, 0.06, 0.02], 0);  // horizontal
+      else if (tipo === 2) { H.pieza('caja', col, 'brillo', b, [x, y, 0.36], [0,0,45], [0.24, 0.05, 0.02], 0);
+                             H.pieza('caja', col, 'brillo', b, [x, y, 0.36], [0,0,-45], [0.24, 0.05, 0.02], 0); } // aspa
+      else H.pieza('cilindro', col, 'brillo', b, [x, y, 0.36], [90,0,0], [0.09, 0.03, 0.09], 0);              // círculo
+    }
+  }
+}, 4);
+
+// Charco de regolito profundo / lava viscosa (zona pegajosa)
+MUNDO.forma('cienagaM', function (H, color, b, ob) {
+  var r = (ob && ob.radio) ? ob.radio : 3.5;
+  H.pieza('circulo', color, 'lamina', b, [0, 0.08, 0], [-90,0,0], [r, r, 1], 0);
+  // burbujas / textura
+  for (var i = 0; i < 10; i++) {
+    var a = H.azar(0,6.28), rr = H.azar(0, r*0.8);
+    H.pieza('esferaB', '#5a4a3a', 'solido', b, [Math.cos(a)*rr, 0.12, Math.sin(a)*rr],
+      [0,0,0], [H.azar(0.15,0.4), 0.1, H.azar(0.15,0.4)], 0);
+  }
+}, 0.4);
+
+// --- GADGETS del hábitat ---
+// Activador de oxígeno: cilindro con manómetro y luz
+MUNDO.forma('oxigeno', function (H, color, b) {
+  H.pieza('cilindro', '#3f7a9a', 'metal', b, [0, 0.9, 0], [0,0,0], [0.4, 1.8, 0.4], 0);
+  H.pieza('cilindro', '#5a9ab8', 'metal', b, [0, 1.85, 0], [0,0,0], [0.42, 0.15, 0.42], 0);
+  H.pieza('caja', '#20262b', 'solido', b, [0, 1.3, 0.4], [0,0,0], [0.34, 0.34, 0.06], 0);
+  H.pieza('circulo', '#4affa0', 'brillo', b, [0, 1.3, 0.44], [0,0,0], [0.12, 0.12, 1], 0);   // luz verde = O2 ok
+  H.pieza('caja', '#c8ccce', 'metal', b, [0, 0.5, 0.35], [0,0,0], [0.1, 0.5, 0.1], 0);       // válvula
+  H.pieza('caja', '#e8d8a0', 'brillo', b, [0, 2.1, 0], [0,0,0], [0.7, 0.18, 0.05], 0);       // etiqueta O₂
+}, 2.3);
+
+// Televisor / pantalla de monitoreo
+MUNDO.forma('tele', function (H, color, b) {
+  H.pieza('caja', '#26170f', 'solido', b, [0, 1.4, 0], [0,0,0], [2.2, 1.3, 0.12], 0);
+  H.pieza('caja', '#1a2a3a', 'brillo', b, [0, 1.4, 0.08], [0,0,0], [1.9, 1.05, 0.02], 0);
+  // "imagen": franjas de color tenue
+  H.pieza('caja', '#3f6b8a', 'brillo', b, [0, 1.6, 0.09], [0,0,0], [1.8, 0.3, 0.01], 0);
+  H.pieza('caja', '#8a6a3f', 'brillo', b, [0, 1.3, 0.09], [0,0,0], [1.8, 0.3, 0.01], 0);
+  H.pieza('poste', '#4a5560', 'metal', b, [0, 0.5, 0], [0,0,0], [0.1, 1, 0.1], 0);
+  H.pieza('caja', '#4a5560', 'solido', b, [0, 0.05, 0], [0,0,0], [0.8, 0.1, 0.5], 0);
+}, 2.2);
+
+// Panel de cultivo hidropónico (plantas bajo luz)
+MUNDO.forma('cultivo', function (H, color, b) {
+  H.pieza('caja', '#3a4048', 'metal', b, [0, 0.5, 0], [0,0,0], [2.4, 1, 0.8], 0);
+  H.pieza('caja', '#2a3820', 'solido', b, [0, 1.02, 0], [0,0,0], [2.2, 0.1, 0.7], 0);
+  for (var i = 0; i < 8; i++) {
+    H.pieza('esfera', '#4a9a3a', 'follaje', b, [-0.9 + i*0.26, 1.2, H.azar(-0.2,0.2)],
+      [0, H.azar(0,360), 0], [0.16, 0.22, 0.16], 0.05);
+  }
+  // luz de cultivo rosada
+  H.pieza('caja', '#d060a0', 'brillo', b, [0, 1.8, 0], [0,0,0], [2.2, 0.08, 0.6], 0);
+  H.pieza('poste', '#c8ccce', 'metal', b, [-1, 1.5, -0.3], [0,0,0], [0.05, 0.9, 0.05], 0);
+  H.pieza('poste', '#c8ccce', 'metal', b, [1, 1.5, -0.3], [0,0,0], [0.05, 0.9, 0.05], 0);
+}, 2.2);
+
+
+// Mesa de laboratorio: superficie con microscopio, matraces y pantalla
+MUNDO.forma('laboratorio', function (H, color, b) {
+  H.pieza('caja', color, 'solido', b, [0, 0.5, 0], [0,0,0], [3, 1, 1.2], 0);
+  H.pieza('caja', '#e8ebe4', 'solido', b, [0, 1.02, 0], [0,0,0], [3.1, 0.08, 1.3], 0);
+  // microscopio
+  H.pieza('cilindro', '#2a2f34', 'metal', b, [-1, 1.2, 0], [0,0,0], [0.18, 0.35, 0.18], 0);
+  H.pieza('cilindro', '#3a4048', 'metal', b, [-1, 1.5, 0.05], [12,0,0], [0.08, 0.4, 0.08], 0);
+  H.pieza('caja', '#20262b', 'solido', b, [-1, 1.1, 0.18], [0,0,0], [0.4, 0.1, 0.3], 0);
+  // matraces de colores
+  H.pieza('cilindro', '#4a9a6a', 'vidrio', b, [0, 1.2, 0], [0,0,0], [0.14, 0.35, 0.14], 0);
+  H.pieza('cilindro', '#c85a4a', 'vidrio', b, [0.4, 1.18, 0.1], [0,0,0], [0.12, 0.3, 0.12], 0);
+  H.pieza('cilindro', '#4a6ac8', 'vidrio', b, [-0.4, 1.16, -0.1], [0,0,0], [0.11, 0.26, 0.11], 0);
+  // pantalla de análisis
+  H.pieza('caja', '#20262b', 'solido', b, [1.1, 1.5, -0.2], [0,0,0], [0.9, 0.6, 0.06], 0);
+  H.pieza('caja', '#3f8f6a', 'brillo', b, [1.1, 1.5, -0.16], [0,0,0], [0.78, 0.48, 0.02], 0);
+  H.pieza('poste', '#4a5560', 'metal', b, [1.1, 1.15, -0.2], [0,0,0], [0.05, 0.3, 0.05], 0);
+}, 2.6);
+
+// Océano seco: cuenca lisa con polígonos de contracción (barro seco a lo grande)
+MUNDO.forma('oceanoSeco', function (H, color, b) {
+  H.pieza('circulo', color, 'roca', b, [0, 0.04, 0], [-90,0,0], [22, 22, 1], 0);
+  // grietas poligonales
+  for (var i = 0; i < 30; i++) {
+    var a = H.azar(0, 6.28), r = H.azar(2, 20);
+    H.pieza('caja', '#4a453e', 'solido', b, [Math.cos(a)*r, 0.06, Math.sin(a)*r],
+      [0, a*57.3 + H.azar(-30,30), 0], [H.azar(2,6), 0.02, 0.12], 0);
+  }
+  // borde de la antigua costa
+  H.pieza('toro', '#847b70', 'roca', b, [0, 0.15, 0], [-90,0,0], [21, 21, 0.5], 0);
+}, 0.5);
+
+// Cueva: boca oscura de tubo de lava con dos columnas
+MUNDO.forma('cueva', function (H, color, b) {
+  // montículo sobre la entrada
+  H.pieza('esferaB', '#5a544c', 'roca', b, [0, 2, -3], [0,0,0], [7, 5, 6], 0);
+  // boca negra
+  H.pieza('caja', '#050405', 'solido', b, [0, 1.6, 0], [0,0,0], [5, 3.2, 0.5], 0);
+  H.pieza('esferaB', '#050405', 'solido', b, [0, 2.4, 0.2], [0,0,0], [2.6, 1.6, 1], 0);
+  // columnas a los lados
+  H.pieza('cilindro', color, 'roca', b, [-3, 1.6, 0.3], [0,0,0], [0.8, 3.2, 0.8], 0);
+  H.pieza('cilindro', color, 'roca', b, [3, 1.6, 0.3], [0,0,0], [0.8, 3.2, 0.8], 0);
+  H.pieza('caja', color, 'roca', b, [0, 3.4, 0.3], [0,0,0], [6.6, 0.7, 1], 0);
+}, 4);
+
+// Sonda estrellada: cápsula abollada, panel roto, antena torcida
+MUNDO.forma('sonda', function (H, color, b) {
+  // cuerpo inclinado, semienterrado
+  H.pieza('cilindro', color, 'metal', b, [0, 0.7, 0], [18, 20, 8], [1.1, 1.8, 1.1], 0);
+  H.pieza('cono', '#c8ccce', 'metal', b, [0.3, 1.5, 0.2], [18, 20, 8], [1, 1.2, 1], 0);
+  // panel solar roto colgando
+  H.pieza('caja', '#2a3f6a', 'solido', b, [-2, 1, 0.5], [20, 30, 40], [2.5, 0.08, 1.4], 0);
+  H.pieza('caja', '#3a4f7a', 'solido', b, [2.2, 0.6, -0.4], [-10, 60, -20], [1.8, 0.08, 1.2], 0);
+  // antena torcida
+  H.pieza('poste', '#c8ccce', 'metal', b, [0.5, 2, -0.3], [0,0,35], [0.05, 2, 0.05], 0);
+  H.pieza('toro', '#e8e4da', 'metal', b, [1.2, 2.9, -0.3], [0, 0, 60], [0.5, 0.5, 0.06], 0);
+  // restos esparcidos
+  H.pieza('caja', '#8a8078', 'metal', b, [-1.5, 0.2, -1.5], [30, 40, 10], [0.5, 0.2, 0.7], 0);
+  H.pieza('caja', '#9a9088', 'metal', b, [1.8, 0.15, 1.6], [10, 70, 20], [0.4, 0.15, 0.5], 0);
+  // placa con bandera descolorida
+  H.pieza('caja', '#7a7570', 'solido', b, [0, 0.9, 1], [18, 20, 8], [0.6, 0.4, 0.03], 0);
+}, 3.5);
+
 /* ---------------------------------------------------------------- MUNDO */
 window.MUNDOS = window.MUNDOS || {};
+
+// Muros de colisión del hábitat: anillo de cilindros, con hueco para la puerta.
+// (cilindros no necesitan rotación, así siguen la curva del muro sin huecos)
+var MUROS_BASE = (function () {
+  var R = 16, seg = 44, muros = [];
+  for (var i = 0; i < seg; i++) {
+    var a = i / seg * 6.2832;
+    if (Math.abs(a - Math.PI/2) < 0.22) continue;   // hueco de la puerta al frente (+z)
+    muros.push({ r: 1.3, dx: Math.cos(a) * R, dz: Math.sin(a) * R, alto: 5, base: 0 });
+  }
+  return muros;
+})();
+
 window.MUNDOS.mercurio = {
 
   titulo: 'Mercurio · la superficie',
@@ -155,11 +352,64 @@ window.MUNDOS.mercurio = {
   luz: { cielo: '#141820', suelo: '#2e2820', ambiente: 0.22,
          sol: '#fff8ec', intensidad: 2.9, posicion: '55 24 -30' },
 
-  ancho: 120,
-  anchoVida: 100,
-  inicio: '0 2 30',
+  ancho: 240,
+  anchoVida: 200,
+  inicio: '0 2.5 0',
 
   cotaMuerte: -25,
+  semilla: 73519,
+  guardado: true,
+
+  // Rocas rompibles fijas cerca de la base (golpéalas por monedas)
+  rompibles: [
+    { id: 'r0', pos: [20, 0.8, 6], radio: 1.2, golpes: 3, monedas: 2, color: '#8a7f6a' },
+    { id: 'r1', pos: [-22, 0.8, -10], radio: 1, golpes: 3, monedas: 1, color: '#7d756c' },
+    { id: 'r2', pos: [12, 0.8, 24], radio: 1.4, golpes: 4, monedas: 3, color: '#948b80' },
+    { id: 'r3', pos: [-16, 0.9, 20], radio: 1.1, golpes: 3, monedas: 2, color: '#847b70' }
+  ],
+
+  // GENERADOR PROCEDURAL: puebla cada sector nuevo de forma determinista.
+  // Recibe {gx,gz,cx,cz,rng,terreno,nuevo,pieza}. Mismo sector → mismo contenido.
+  generador: function (S) {
+    // el sector 0,0 es la zona hecha a mano: no lo repueblan
+    if (S.gx === 0 && S.gz === 0) return;
+    var R = S.rng;
+    // rocas dispersas
+    var nRocas = 3 + Math.floor(R() * 6);
+    for (var i = 0; i < nRocas; i++) {
+      var x = S.cx + (R() - 0.5) * 36;
+      var z = S.cz + (R() - 0.5) * 36;
+      var t = 0.5 + R() * 1.3;
+      var e = S.nuevo('a-entity', { position: x + ' ' + (t*0.4) + ' ' + z });
+      e.setAttribute('geometry', 'primitive:dodecahedron; radius:' + t);
+      e.setAttribute('material', 'color:#7d756c; roughness:0.95; flatShading:true');
+      S.terreno.appendChild(e);
+      // 1 de cada 4 es rompible con monedas
+      if (R() < 0.25) {
+        var id = 's' + S.gx + '_' + S.gz + '_' + i;
+        if (!MUNDO.rotos[id]) {
+          MUNDO.rocaRompible({ id: id, x: x, z: z, golpes: 3, monedas: 1 + Math.floor(R()*3), el: e });
+          var v = S.nuevo('a-entity', { position: x + ' ' + (t*0.4+0.2) + ' ' + z });
+          v.setAttribute('geometry', 'primitive:sphere; radius:0.16');
+          v.setAttribute('material', 'color:#f0c850; shader:flat; emissive:#f0c850');
+          S.terreno.appendChild(v);
+        } else { e.setAttribute('visible', false); }
+      }
+    }
+    // algún cráter ocasional
+    if (R() < 0.5) {
+      var crx = S.cx + (R()-0.5)*30, crz = S.cz + (R()-0.5)*30;
+      var cr = S.nuevo('a-ring', { position: crx + ' 0.06 ' + crz, rotation: '-90 0 0',
+        'radius-inner': 2 + R()*3, 'radius-outer': 3 + R()*4,
+        material: 'color:#5a5650; shader:flat; side:double' });
+      S.terreno.appendChild(cr);
+    }
+    // piso del sector (para que se pueda pisar lo nuevo)
+    var piso = S.nuevo('a-box', { 'class': 'suelo', width: 40, depth: 40, height: 0.2,
+      position: S.cx + ' -0.1 ' + S.cz, material: 'color:#8a827a; roughness:1' });
+    S.terreno.appendChild(piso);
+  },
+
 
   // ATMÓSFERAS ARTIFICIALES del hábitat (se activan con el botón dentro)
   atmosferas: [
@@ -171,12 +421,41 @@ window.MUNDOS.mercurio = {
     { id: 'verde',    nombre: 'Atmósfera verde (metano)', cielo: '#3f8a5c', niebla: '#8ac0a0', near: 6, far: 70, luz: '#c0e0c8', intensidad: 0.75 }
   ],
 
+  // ZONAS PEGAJOSAS: cuesta caminar (regolito profundo / material viscoso)
+  pegajosas: [
+    { x: -24, z: 40, r: 4, factor: 0.3 },
+    { x: 30, z: -34, r: 4.5, factor: 0.28 },
+    { x: -50, z: -20, r: 4, factor: 0.32 }
+  ],
+
   // PELIGROS de la superficie
   peligros: [
     { x: -8, z: 18, r: 2.2, dano: 100, causa: 'Caíste en una grieta sin fondo' },
     { x: 14, z: 8, r: 2, dano: 100, causa: 'Caíste en una grieta sin fondo' },
     { x: 6, z: -4, ancho: 3, largo: 3, dano: 18, causa: 'Pisaste metal a 400°C' },
-    { x: -18, z: -12, ancho: 3, largo: 3, dano: 18, causa: 'Pisaste metal a 400°C' }
+    { x: -18, z: -12, ancho: 3, largo: 3, dano: 18, causa: 'Pisaste metal a 400°C' },
+    { x: -60, z: 60, r: 2.4, dano: 100, causa: 'Caíste en una grieta sin fondo' },
+    { x: 70, z: 40, r: 2.2, dano: 100, causa: 'Caíste en una grieta sin fondo' },
+    { x: 50, z: -70, ancho: 3, largo: 3, dano: 18, causa: 'Pisaste metal a 400°C' }
+  ],
+
+  // PUNTOS DE MUESTRA: recolectar en la superficie, analizar en el laboratorio
+  muestras: [
+    { id: 'roca1', pos: [26, 0.05, -20], tipo: 'roca', color: '#c0b8a0',
+      nombre: 'Roca de regolito',
+      analisis: 'Roca silicatada rica en minerales sin oxidar. La ausencia de agua y oxígeno significa que no se ha alterado químicamente: es casi idéntica a como quedó tras el último impacto, hace miles de millones de años. <b>Sin rastros orgánicos.</b>' },
+    { id: 'tierra1', pos: [-30, 0.05, 24], tipo: 'tierra', color: '#c8a068',
+      nombre: 'Polvo de regolito',
+      analisis: 'Polvo finísimo producido por micrometeoritos que trituran la superficie. Muy abrasivo y cargado eléctricamente por el viento solar. En la Tierra el suelo tiene vida (bacterias, hongos, raíces); esta muestra está <b>estéril</b>, sin materia orgánica detectable.' },
+    { id: 'pegajosa1', pos: [-24, 0.05, 40], tipo: 'pegajosa', color: '#6a5a3a',
+      nombre: 'Material viscoso',
+      analisis: 'Mezcla de regolito fino y compuestos de azufre semifundidos por el calor extremo. Su viscosidad explica por qué cuesta caminar sobre él. <b>Curiosamente contiene trazas de compuestos de carbono</b>, aunque de origen mineral, no biológico… hasta donde sabemos.' },
+    { id: 'hielo1', pos: [-72, 0.05, 66], tipo: 'hielo', color: '#c8d8e0',
+      nombre: 'Hielo polar',
+      analisis: 'Hielo de agua tomado de un cráter en sombra permanente. Su existencia junto al Sol demuestra lo fría que se mantiene la sombra. El agua es el ingrediente que buscamos primero cuando preguntamos si un lugar <b>pudo albergar vida</b>.' },
+    { id: 'metal1', pos: [45, 0.05, 60], tipo: 'metal', color: '#b8bcc0',
+      nombre: 'Fragmento de la sonda',
+      analisis: 'Aleación de aluminio y titanio: claramente <b>fabricada</b>, no natural. Es humano, de una misión anterior. Un buen recordatorio de cómo distinguir lo hecho por seres inteligentes de lo que produce la naturaleza: la pregunta clave de los monolitos.' }
   ],
 
   // GRAVEDAD DE MERCURIO: 3,70 m/s² (0,38 g). Salto escalado igual.
@@ -194,7 +473,9 @@ window.MUNDOS.mercurio = {
     llegada: { etiqueta: 'Punto de llegada',  pos: '0 2 30',   pitch: -3, yaw: 0 },
     crater:  { etiqueta: 'El gran cráter',     pos: '-18 2 -6', pitch: 2,  yaw: -40 },
     sol:     { etiqueta: 'Mirar al Sol',       pos: '0 2 10',   pitch: 8,  yaw: 150 },
-    base:    { etiqueta: 'Base Discovery',     pos: '40 2.5 2', pitch: 0,  yaw: 0 }
+    base:    { etiqueta: 'Base Discovery',     pos: '40 2.5 2', pitch: 0,  yaw: 0 },
+    montes:  { etiqueta: 'La cordillera',      pos: '-50 3 -30', pitch: 4, yaw: -45 },
+    monolito:{ etiqueta: 'Los monolitos',      pos: '-38 2 12',  pitch: 0, yaw: -90 }
   },
 
   // El Sol, enorme y brillante desde acá (Mercurio está muy cerca)
@@ -205,7 +486,7 @@ window.MUNDOS.mercurio = {
   franjas: [
     {
       id: 'regolito', nombre: 'Llanura de regolito', rango: 'Superficie de Mercurio',
-      z: [60, -60], y: 0, color: '#8a827a', superficie: 'roca',
+      z: [110, -110], y: 0, color: '#8a827a', superficie: 'roca',
       texto: 'Estás parado sobre el regolito de Mercurio: polvo y roca triturada por miles de millones de años de impactos. Sin atmósfera que los frene, cada meteorito llega directo a la superficie, y por eso Mercurio está tan lleno de cráteres como la Luna.',
       detalle: [
         'Mercurio es el planeta más pequeño y el más cercano al Sol. Un año dura apenas 88 días terrestres, pero rota tan lento que un día solar completo dura 176 días: aquí el Sol saldría, cruzaría el cielo y se pondría a lo largo de dos años mercurianos.',
@@ -215,12 +496,18 @@ window.MUNDOS.mercurio = {
       reto: 'Salta en la Tierra, cambia a la gravedad de Mercurio y vuelve a saltar. Tu cuerpo pesa menos aquí, ¿pero tu masa cambió? ¿Qué es distinto entre peso y masa?',
       detalle2: 'CUIDADO: la superficie tiene grietas sin fondo y placas de metal recalentado. Sin traje reforzado, un paso en falso es fatal. Observa tu barra de salud.',
       especies: [
-        { forma: 'penasco', n: 90, color: '#7d756c', nombre: 'Roca', choca: { r: 0.5, alto: 1 } },
-        { forma: 'penasco', n: 60, color: '#948b80' },
-        { forma: 'penasco', n: 40, color: '#6e675f' },
-        { forma: 'crater',  n: 18, color: '#6e675f' }
+        { forma: 'penasco', n: 160, color: '#7d756c', nombre: 'Roca', choca: { r: 0.5, alto: 1 } },
+        { forma: 'penasco', n: 120, color: '#948b80' },
+        { forma: 'penasco', n: 80, color: '#6e675f' },
+        { forma: 'crater',  n: 30, color: '#6e675f' },
+        { forma: 'montana', n: 10, color: '#7a726a', nombre: 'Monte', choca: { r: 1.4, alto: 8 } }
       ]
     }
+  ],
+
+  // PUERTA AUTOMÁTICA de la base (se abre al acercarse desde dentro o fuera)
+  puertas: [
+    { id: 'base', x: 0, z: 16, radio: 5, abre: 1.8, eje: 'x' }
   ],
 
   objetos: [
@@ -238,19 +525,71 @@ window.MUNDOS.mercurio = {
     // Región polar en sombra permanente, con hielo
     { forma: 'crater', color: '#5a5650', pos: [-40, 0.05, 30], radio: 7,
       nombre: 'Cráter polar con hielo', ficha: 'hielo', altoFicha: 3 },
-    // BASE DISCOVERY: el hábitat presurizado, se puede entrar
-    { forma: 'habitat', color: '#bcd4e0', pos: [40, 0.05, 8],
-      nombre: 'Base Discovery', ficha: 'base', altoFicha: 11,
-      piso: { ancho: 18, largo: 18, alto: 0.66, color: '#5a5e62' } },
+    // BASE DISCOVERY: el hábitat presurizado GRANDE, centrado. Se inicia adentro.
+    { forma: 'habitat', id: 'base', color: '#c4ccd2', pos: [0, 0.05, 0],
+      nombre: 'Base Discovery', ficha: 'base', altoFicha: 8,
+      piso: { ancho: 32, largo: 32, alto: 0.66, color: '#565b60' },
+      choca: MUROS_BASE },
     // grietas peligrosas (visuales, el daño lo dan las zonas de peligro)
     { forma: 'grieta', color: '#08070a', pos: [-8, 0.05, 18], radio: 2.2 },
     { forma: 'grieta', color: '#08070a', pos: [14, 0.05, 8], radio: 2 },
     // placas de metal recalentado
     { forma: 'placaMetal', color: '#7a4a3a', pos: [6, 0.05, -4], lado: 3 },
     { forma: 'placaMetal', color: '#7a4a3a', pos: [-18, 0.05, -12], lado: 3 },
+    // CORDILLERA: macizos grandes hacia los bordes del mapa ampliado
+    { forma: 'montana', color: '#7a726a', pos: [-70, 0.05, -60], choca: [{ r: 3, alto: 10 }] },
+    { forma: 'montana', color: '#847b70', pos: [80, 0.05, -50], choca: [{ r: 3, alto: 10 }] },
+    { forma: 'montana', color: '#6e675f', pos: [-85, 0.05, 40], choca: [{ r: 3, alto: 10 }] },
+    { forma: 'montana', color: '#7a726a', pos: [60, 0.05, 80], choca: [{ r: 3, alto: 10 }] },
+
+    // MONOLITOS con jeroglíficos antiguos (¿otra forma de vida?)
+    { forma: 'roca-glifo', color: '#6e675f', pos: [-40, 0.05, 12],
+      nombre: 'Monolito con inscripciones', ficha: 'glifos', altoFicha: 4,
+      choca: [{ dx: 0, dz: 0, ancho: 2.6, largo: 0.6, alto: 3.2 }] },
+    { forma: 'roca-glifo', color: '#726a60', pos: [52, 0.05, 24], giro: 40,
+      nombre: 'Monolito con inscripciones', ficha: 'glifos', altoFicha: 4,
+      choca: [{ dx: 0, dz: 0, ancho: 2.6, largo: 0.6, alto: 3.2 }] },
+    { forma: 'roca-glifo', color: '#6a635a', pos: [-8, 0.05, -64], giro: -25,
+      nombre: 'Monolito con inscripciones', ficha: 'glifos', altoFicha: 4,
+      choca: [{ dx: 0, dz: 0, ancho: 2.6, largo: 0.6, alto: 3.2 }] },
+
+    // CIÉNAGAS visibles sobre las zonas pegajosas
+    { forma: 'cienagaM', color: '#4a3f32', pos: [-24, 0.05, 40], radio: 4 },
+    { forma: 'cienagaM', color: '#463a30', pos: [30, 0.05, -34], radio: 4.5 },
+    { forma: 'cienagaM', color: '#4a3f32', pos: [-50, 0.05, -20], radio: 4 },
+
     // Estación de estudio con el panel de gravedad
     { forma: 'hito', color: '#c4342e', pos: [3, 0.05, 22],
-      nombre: 'Estación de estudio', ficha: 'gravedad', altoFicha: 3.6 }
+      nombre: 'Estación de estudio', ficha: 'gravedad', altoFicha: 3.6 },
+    { forma: 'hito', color: '#c8a84a', pos: [18, 0.05, 4],
+      nombre: 'Zona de minería', ficha: 'monedas', altoFicha: 3.6 },
+
+    // GADGETS dentro de la Base Discovery (centrada en 0,0)
+    { forma: 'oxigeno', color: '#3f7a9a', pos: [-6, 0.66, -8],
+      nombre: 'Activador de oxígeno', ficha: 'oxigeno', altoFicha: 2.6,
+      choca: [{ r: 0.5, alto: 2 }] },
+    { forma: 'tele', color: '#26170f', pos: [-10, 0.66, 0], giro: 90,
+      nombre: 'Monitor de la base', ficha: 'tele', altoFicha: 2.5 },
+    { forma: 'cultivo', color: '#3a4048', pos: [-9, 0.66, 7], giro: -40,
+      nombre: 'Cultivo hidropónico', ficha: 'cultivo', altoFicha: 2.5,
+      choca: [{ dx: 0, dz: 0, ancho: 2.4, largo: 0.8, alto: 1 }] },
+    // LABORATORIO: mesa de análisis dentro de la base
+    { forma: 'laboratorio', color: '#2f363d', pos: [8, 0.66, -6], giro: -90,
+      nombre: 'Laboratorio de muestras', ficha: 'laboratorio', altoFicha: 2.6,
+      choca: [{ dx: 0, dz: 0, ancho: 3, largo: 1.2, alto: 1.2 }] },
+
+    // ===== LUGARES NUEVOS DE LA SUPERFICIE =====
+    // Océano seco: una gran cuenca lisa y agrietada (mar de lava solidificada)
+    { forma: 'oceanoSeco', color: '#6e675f', pos: [-55, 0.05, 55],
+      nombre: 'Mar de lava seco', ficha: 'oceano', altoFicha: 3 },
+    // Boca de cueva de tubo de lava
+    { forma: 'cueva', color: '#3a352f', pos: [70, 0.05, -30],
+      nombre: 'Tubo de lava', ficha: 'cueva', altoFicha: 4,
+      choca: [{ dx: -3, dz: 0, r: 1, alto: 5 }, { dx: 3, dz: 0, r: 1, alto: 5 }] },
+    // Sonda estrellada antigua
+    { forma: 'sonda', color: '#9a9088', pos: [45, 0.05, 60], giro: 30,
+      nombre: 'Sonda estrellada', ficha: 'sonda', altoFicha: 3.5,
+      choca: [{ r: 1.5, alto: 2 }] }
   ],
 
   fichas: [
@@ -266,6 +605,63 @@ window.MUNDOS.mercurio = {
         '¿Por qué el color del cielo depende de la atmósfera? Piensa en por qué el cielo de la Tierra es azul.',
         '¿Qué hace especial a la atmósfera terrestre frente a las otras, para permitir la vida?'
       ]
+    },
+    {
+      id: 'glifos', nombre: 'Inscripciones antiguas', rango: '¿Huella de otra vida?',
+      texto: 'En la cara pulida de este monolito hay símbolos grabados que no parecen naturales: filas ordenadas de líneas, círculos y aspas. Nadie sabe cómo llegaron aquí. ¿Erosión que imita un patrón? ¿Una broma de la geología? ¿O la señal de que alguna vez existió algo más?',
+      detalle: [
+        'La ciencia trabaja con evidencia, pero también con preguntas abiertas. Buscar vida más allá de la Tierra —la astrobiología— parte de una idea sencilla: si la vida surgió aquí, ¿por qué no en otro lugar? Hasta ahora no hay prueba de vida fuera de nuestro planeta, pero tampoco hemos terminado de buscar.',
+        'Estos glifos son ficción, un detalle para imaginar. Pero la pregunta que despiertan es real y seria: ¿qué contaría como prueba de que hubo vida en otro mundo? ¿Un fósil? ¿Una molécula? ¿Un patrón que no pueda explicarse sin un ser que lo hiciera?'
+      ],
+      pregunta: [
+        'Si encontraras estos símbolos de verdad, ¿qué harías para saber si son obra de un ser vivo o solo una casualidad de la roca?',
+        '¿Qué diferencia a un patrón hecho por vida de uno hecho por procesos físicos (viento, agua, minerales)?'
+      ]
+    },
+    {
+      id: 'monedas', nombre: 'Minerales valiosos', rango: 'Economía de la exploración',
+      texto: 'Algunas rocas guardan vetas de minerales valiosos (el brillo dorado las delata). Golpéalas varias veces para romperlas y extraer las monedas. Servirán, más adelante, para comprar equipo y mejoras en la base.',
+      actividad: 'Rompe algunas rocas con veta y junta monedas. Aléjate de la base explorando: el terreno se genera solo a medida que avanzas, y siempre igual, porque nace de una misma semilla.',
+      reto: 'El mundo se expande con una "semilla" que hace que el mismo terreno se genere igual cada vez. ¿Por qué crees que un videojuego prefiere guardar una semilla en vez del mapa completo?'
+    },
+    {
+      id: 'laboratorio', nombre: 'Laboratorio de muestras', rango: 'El corazón científico de la base',
+      texto: 'Aquí se analizan las muestras que recolectas en la superficie. Sal por la puerta, acércate a un punto marcado, usa Recolectar, y vuelve aquí: abre el laboratorio para leer el análisis de cada muestra. Buscamos lo mismo que toda misión a otro mundo: ¿hay agua? ¿hay carbono? ¿hay algo que la química sola no explique?',
+      actividad: 'Recolecta al menos tres muestras distintas (roca, tierra, material viscoso) y analízalas en el laboratorio. Anota qué tienen en común y qué las diferencia.',
+      pregunta: [
+        '¿Cuál de las muestras se acerca más a las condiciones que podrían permitir vida? ¿Por qué?',
+        'El fragmento de la sonda es "artificial". ¿Cómo distingue un científico algo fabricado de algo natural?'
+      ]
+    },
+    {
+      id: 'oceano', nombre: 'Mar de lava seco', rango: 'Un océano que nunca fue de agua',
+      texto: 'Esta enorme llanura lisa parece el lecho de un mar, pero nunca hubo agua aquí. Es una cuenca de lava que se derramó tras un gran impacto y se solidificó, agrietándose al enfriarse en polígonos, igual que el barro seco pero a escala de kilómetros.',
+      reto: 'En la Tierra, una llanura tan lisa sería un fondo marino. Aquí es lava. ¿Qué otras pistas buscarías para saber si un terreno liso fue alguna vez cubierto por agua?'
+    },
+    {
+      id: 'cueva', nombre: 'Tubo de lava', rango: 'Refugio bajo la superficie',
+      texto: 'Cuando la lava corre, su superficie se enfría y forma una costra, mientras por dentro sigue fluyendo. Al vaciarse, deja un túnel: un tubo de lava. En Mercurio y la Luna, estos tubos son candidatos serios para futuras bases: bajo tierra protegen de la radiación, los micrometeoritos y los cambios brutales de temperatura.',
+      reto: 'Una base dentro de un tubo de lava estaría más protegida que una en la superficie. Nombra tres peligros de los que el subsuelo te protegería.'
+    },
+    {
+      id: 'sonda', nombre: 'Sonda estrellada', rango: 'Una visita anterior',
+      texto: 'Los restos de una sonda que llegó antes: cápsula abollada, panel solar roto, antena torcida. La humanidad ya ha enviado naves a Mercurio (como Mariner 10 y MESSENGER). Encontrar sus restos plantea una pregunta bonita: dentro de miles de años, ¿qué contarán nuestros artefactos sobre nosotros a quien los encuentre?',
+      reto: 'Esta sonda es claramente artificial. Si un explorador futuro la hallara sin saber nada de la Tierra, ¿qué podría deducir de quienes la construyeron solo mirándola?'
+    },
+    {
+      id: 'oxigeno', nombre: 'Activador de oxígeno', rango: 'Gadget del hábitat',
+      texto: 'Este equipo genera y regula el oxígeno de la base. En un mundo sin aire, respirar depende por completo de la máquina: si falla, no hay atmósfera de repuesto afuera. La luz verde indica que el nivel de oxígeno es seguro.',
+      reto: 'En la Tierra el oxígeno lo producen las plantas y las algas, gratis. Aquí hay que fabricarlo. ¿Qué proceso natural tendría que reemplazar esta máquina?'
+    },
+    {
+      id: 'tele', nombre: 'Monitor de la base', rango: 'Gadget del hábitat',
+      texto: 'Una pantalla de monitoreo: muestra el estado de los sistemas, las cámaras del exterior y las comunicaciones con la Tierra. A esta distancia, una señal tarda varios minutos en llegar: hablar en tiempo real con casa es imposible.',
+      reto: 'La luz tarda en viajar. Si Mercurio está a unos 90 millones de km de la Tierra en cierto momento, y la señal viaja a 300.000 km/s, ¿cuántos minutos tarda un mensaje en llegar?'
+    },
+    {
+      id: 'cultivo', nombre: 'Cultivo hidropónico', rango: 'Gadget del hábitat',
+      texto: 'Plantas creciendo sin tierra, alimentadas por agua con nutrientes y luz artificial rosada. En una base espacial, un cultivo así da alimento, recicla dióxido de carbono y produce oxígeno: un pequeño ecosistema que ayuda a cerrar el ciclo de la vida a bordo.',
+      reto: 'La luz de cultivo es rosada, no blanca. Las plantas usan sobre todo luz roja y azul para la fotosíntesis. ¿Por qué entonces las vemos verdes?'
     },
     {
       id: 'caloris', nombre: 'Cuenca Caloris', rango: 'Uno de los mayores cráteres del sistema solar',

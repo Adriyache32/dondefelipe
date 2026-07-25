@@ -11,7 +11,7 @@
 'use strict';
 
 var MUNDO = {
-  version: 22,
+  version: 25,
   formas: {},
   clima: { viento: 1 },
   datos: null
@@ -549,6 +549,23 @@ MUNDO.cotaMuerte = -30;   // caer bajo esto = muerte
 
 MUNDO.zonaPeligro = function (def) { MUNDO.peligros.push(def); };
 
+// Zonas donde cuesta caminar (regolito profundo, lava viscosa…)
+MUNDO.pegajosas = [];
+MUNDO.zonaLenta = function (def) { MUNDO.pegajosas.push(def); };
+
+// Factor de velocidad según dónde esté el jugador (1 = normal, <1 = lento)
+MUNDO.factorVel = function (x, z) {
+  if (!MUNDO.pegajosas.length) return 1;
+  for (var i = 0; i < MUNDO.pegajosas.length; i++) {
+    var q = MUNDO.pegajosas[i];
+    var dx = x - q.x, dz = z - q.z, dentro;
+    if (q.r != null) dentro = (dx*dx + dz*dz) < q.r*q.r;
+    else dentro = Math.abs(dx) < q.ancho/2 && Math.abs(dz) < q.largo/2;
+    if (dentro) return q.factor != null ? q.factor : 0.35;
+  }
+  return 1;
+};
+
 MUNDO.dano = function (cantidad, causa) {
   if (!MUNDO.vivo) return;
   MUNDO.salud = Math.max(0, MUNDO.salud - cantidad);
@@ -665,7 +682,8 @@ AFRAME.registerComponent('mando', {
       var dir = new THREE.Vector3();
       cam.getWorldDirection(dir); dir.y = 0; dir.normalize();
       var lado = new THREE.Vector3(-dir.z, 0, dir.x);   // perpendicular
-      var vel = 4.2 * dt / 1000;
+      var fv = MUNDO.factorVel(p.x, p.z);
+      var vel = 4.2 * fv * dt / 1000;
       p.addScaledVector(dir, -ejeY * vel);
       p.addScaledVector(lado, ejeX * vel);
       var lim = MUNDO.limites;
@@ -755,7 +773,8 @@ AFRAME.registerComponent('caminar', {
     this.d.normalize();
     var p = this.el.object3D.position;
     var lim = MUNDO.limites;
-    p.addScaledVector(this.d, mover * this.data.vel * dt / 1000);
+    var fv = MUNDO.factorVel(p.x, p.z);
+    p.addScaledVector(this.d, mover * this.data.vel * fv * dt / 1000);
     p.x = THREE.MathUtils.clamp(p.x, -lim.x, lim.x);
     p.z = THREE.MathUtils.clamp(p.z, lim.zMin, lim.zMax);
     MUNDO.resolver(p);
@@ -1587,6 +1606,16 @@ MUNDO.sonido = function (tipo) {
     osc.type = 'triangle'; osc.frequency.setValueAtTime(600, t);
     g.gain.setValueAtTime(0.08, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
     osc.start(t); osc.stop(t + 0.13);
+  } else if (tipo === 'golpe') {
+    osc.type = 'square'; osc.frequency.setValueAtTime(140, t);
+    osc.frequency.exponentialRampToValueAtTime(70, t + 0.08);
+    g.gain.setValueAtTime(0.14, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    osc.start(t); osc.stop(t + 0.11);
+  } else if (tipo === 'moneda') {
+    osc.type = 'triangle'; osc.frequency.setValueAtTime(880, t);
+    osc.frequency.exponentialRampToValueAtTime(1320, t + 0.1);
+    g.gain.setValueAtTime(0.16, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    osc.start(t); osc.stop(t + 0.23);
   } else if (tipo === 'muerte') {
     osc.type = 'sawtooth'; osc.frequency.setValueAtTime(400, t);
     osc.frequency.exponentialRampToValueAtTime(60, t + 0.7);
@@ -1680,7 +1709,7 @@ function crearPanelAtmosfera(lista) {
   p.id = 'atm-panel';
   var html = '<div class="mz-cab"><b>Atmósfera del hábitat</b>' +
              '<button id="atm-cerrar" aria-label="Cerrar">\u00d7</button></div>' +
-             '<div class="atm-nota">Solo tiene efecto dentro de la cúpula</div>';
+             '<div class="atm-nota">Se expande a toda la superficie del planeta</div>';
   lista.forEach(function (a, i) {
     html += '<button class="atm-op" data-i="' + i + '" style="--sw:' + (a.cielo || '#333') + '">' +
             '<span class="atm-punto"></span>' + a.nombre + '</button>';
@@ -1769,6 +1798,282 @@ MUNDO.setAtmosfera = function (a) {
     clearTimeout(MUNDO._atmT);
     MUNDO._atmT = setTimeout(function () { av.style.display = 'none'; }, 2500);
   }
+};
+
+
+/* ---------------------------------------------------------------- muestras
+   Recolección de muestras (roca, tierra, sustancia…) e inventario. El jugador
+   recoge cerca de puntos de muestra y luego las examina en el laboratorio.
+   Cada muestra tiene un id, nombre, tipo y un análisis (texto de laboratorio). */
+MUNDO.inventario = [];
+MUNDO.puntosMuestra = [];   // { x, z, id, nombre, tipo, analisis, tomada }
+
+MUNDO.puntoMuestra = function (def) {
+  if (def.pos) { def.x = def.pos[0]; def.z = def.pos[2]; }
+  MUNDO.puntosMuestra.push(def);
+};
+
+// Recolectar: revisa si hay un punto de muestra cerca y lo guarda
+MUNDO.recolectar = function () {
+  if (!MUNDO.jugador) return;
+  var p = MUNDO.jugador.object3D.position;
+  var mejor = null, mejorD = 9;   // radio de recolección
+  for (var i = 0; i < MUNDO.puntosMuestra.length; i++) {
+    var m = MUNDO.puntosMuestra[i];
+    if (m.tomada) continue;
+    var dx = p.x - m.x, dz = p.z - m.z, d = dx*dx + dz*dz;
+    if (d < mejorD) { mejorD = d; mejor = m; }
+  }
+  if (!mejor) { avisoMuestra('No hay muestras cerca'); return; }
+  mejor.tomada = true;
+  MUNDO.inventario.push({ id: mejor.id, nombre: mejor.nombre, tipo: mejor.tipo, analisis: mejor.analisis });
+  if (MUNDO.sonido) MUNDO.sonido('ficha');
+  avisoMuestra('Recolectado: ' + mejor.nombre);
+  actualizarContadorMuestras();
+  // ocultar el marcador visual si existe
+  var marca = document.getElementById('m-' + mejor.id);
+  if (marca && marca.parentNode) marca.setAttribute('visible', false);
+};
+
+function avisoMuestra(txt) {
+  var av = document.getElementById('aviso-muestra');
+  if (!av) {
+    av = document.createElement('div');
+    av.id = 'aviso-muestra';
+    av.style.cssText = 'position:fixed;z-index:41;left:50%;bottom:150px;transform:translateX(-50%);' +
+      'background:rgba(45,90,60,.8);color:#f2ece0;font:600 13px/1 system-ui;padding:10px 16px;' +
+      'border-radius:11px;border:1px solid rgba(242,236,224,.2);backdrop-filter:blur(14px);pointer-events:none;';
+    document.body.appendChild(av);
+  }
+  av.textContent = txt;
+  av.style.display = 'block';
+  clearTimeout(MUNDO._muestraT);
+  MUNDO._muestraT = setTimeout(function () { av.style.display = 'none'; }, 2200);
+}
+
+function actualizarContadorMuestras() {
+  var c = document.getElementById('muestras-cont');
+  if (c) c.textContent = MUNDO.inventario.length;
+}
+
+// Laboratorio: panel que lista lo recolectado y muestra el análisis
+MUNDO.abrirLaboratorio = function () {
+  var ya = document.getElementById('lab-panel');
+  if (ya) { ya.remove(); return; }
+  var p = document.createElement('div');
+  p.id = 'lab-panel';
+  var html = '<div class="mz-cab"><b>\uD83E\uDDEA Laboratorio de análisis</b>' +
+             '<button id="lab-cerrar" aria-label="Cerrar">\u00d7</button></div>';
+  if (!MUNDO.inventario.length) {
+    html += '<div class="lab-vacio">Aún no has recolectado muestras.<br>' +
+            'Acércate a los puntos marcados en la superficie y usa el botón <b>Recolectar</b>.</div>';
+  } else {
+    html += '<div class="lab-lista">';
+    MUNDO.inventario.forEach(function (m, i) {
+      html += '<button class="lab-item" data-i="' + i + '"><span class="lab-tipo lab-' + m.tipo + '"></span>' + m.nombre + '</button>';
+    });
+    html += '</div><div class="lab-detalle" id="lab-detalle">Selecciona una muestra para analizarla.</div>';
+  }
+  p.innerHTML = html;
+  document.body.appendChild(p);
+  p.querySelectorAll('.lab-item').forEach(function (b) {
+    b.onclick = function () {
+      p.querySelectorAll('.lab-item').forEach(function(o){o.classList.remove('activo');});
+      b.classList.add('activo');
+      var m = MUNDO.inventario[parseInt(b.dataset.i, 10)];
+      document.getElementById('lab-detalle').innerHTML =
+        '<h4>' + m.nombre + '</h4>' + (m.analisis || 'Sin datos de análisis.');
+      if (MUNDO.sonido) MUNDO.sonido('marca');
+    };
+  });
+  document.getElementById('lab-cerrar').onclick = function () { p.remove(); };
+};
+
+
+/* ---------------------------------------------------------------- monedas
+   Monedas que se obtienen rompiendo rocas a golpes. Sirven para un futuro
+   sistema de compras. El total se guarda en el estado del mundo. */
+MUNDO.monedas = 0;
+MUNDO.rompibles = [];   // { x, z, golpes, dados, monedas, el }
+
+MUNDO.setMonedas = function (n) {
+  MUNDO.monedas = n;
+  var c = document.getElementById('monedas-cont');
+  if (c) c.textContent = n;
+};
+MUNDO.sumarMonedas = function (n) { MUNDO.setMonedas(MUNDO.monedas + n); };
+
+// Registrar una roca rompible (el motor la vincula a su entidad visual)
+MUNDO.rocaRompible = function (def) {
+  if (def.pos) { def.x = def.pos[0]; def.z = def.pos[2]; }
+  def.dados = 0;
+  MUNDO.rompibles.push(def);
+};
+
+/* Golpear: busca la roca rompible más cercana y le pega. Cada golpe la
+   sacude; al llegar a "golpes" se rompe y suelta monedas. */
+MUNDO.golpear = function () {
+  if (!MUNDO.jugador || !MUNDO.vivo) return;
+  var p = MUNDO.jugador.object3D.position;
+  var mejor = null, mejorD = 12;   // alcance del golpe
+  for (var i = 0; i < MUNDO.rompibles.length; i++) {
+    var r = MUNDO.rompibles[i];
+    if (r.rota) continue;
+    var dx = p.x - r.x, dz = p.z - r.z, d = dx*dx + dz*dz;
+    if (d < mejorD) { mejorD = d; mejor = r; }
+  }
+  if (!mejor) { avisoMoneda('No hay nada que golpear cerca'); return; }
+  mejor.dados++;
+  if (MUNDO.sonido) MUNDO.sonido('golpe');
+  // sacudir la entidad
+  if (mejor.el && mejor.el.object3D) {
+    var o = mejor.el.object3D, gx = o.position.x;
+    o.position.x = gx + 0.12;
+    setTimeout(function () { if (o) o.position.x = gx; }, 70);
+  }
+  if (mejor.dados >= (mejor.golpes || 3)) {
+    mejor.rota = true;
+    if (mejor.el) mejor.el.setAttribute('visible', false);
+    var m = mejor.monedas || (1 + Math.floor(Math.random() * 3));
+    MUNDO.sumarMonedas(m);
+    if (MUNDO.sonido) MUNDO.sonido('moneda');
+    avisoMoneda('+' + m + ' \uD83E\uDE99');
+    if (MUNDO.marcarRoto) MUNDO.marcarRoto(mejor.id);   // para el guardado
+  } else {
+    avisoMoneda('\uD83E\uDEA8 ' + (mejor.golpes - mejor.dados) + ' golpes más');
+  }
+};
+
+function avisoMoneda(txt) {
+  var av = document.getElementById('aviso-moneda');
+  if (!av) {
+    av = document.createElement('div');
+    av.id = 'aviso-moneda';
+    av.style.cssText = 'position:fixed;z-index:41;left:50%;bottom:186px;transform:translateX(-50%);' +
+      'background:rgba(90,74,20,.82);color:#ffe9a8;font:700 14px/1 system-ui;padding:9px 16px;' +
+      'border-radius:11px;border:1px solid rgba(255,220,120,.3);backdrop-filter:blur(12px);pointer-events:none;';
+    document.body.appendChild(av);
+  }
+  av.textContent = txt;
+  av.style.display = 'block';
+  clearTimeout(MUNDO._monedaT);
+  MUNDO._monedaT = setTimeout(function () { av.style.display = 'none'; }, 1600);
+}
+
+
+/* ---------------------------------------------------------------- sectores
+   Expansión procedural: al acercarse al borde explorado, se generan sectores
+   nuevos con contenido determinista (misma semilla → mismo mundo). No es
+   relieve infinito tipo voxel, pero sí terreno que crece al explorar. */
+MUNDO.semilla = 12345;
+MUNDO.sectores = {};        // "gx,gz" → true (ya generado)
+MUNDO.TAM_SECTOR = 40;
+var _genSector = null;      // función que el mundo define para poblar un sector
+
+MUNDO.generador = function (fn) { _genSector = fn; };
+
+// PRNG determinista (mulberry32): misma entrada → misma salida
+function prng(semilla) {
+  var a = semilla >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    var t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+// hash de coordenadas de sector + semilla global → semilla local estable
+function semillaSector(gx, gz) {
+  return (MUNDO.semilla ^ (gx * 374761393) ^ (gz * 668265263)) >>> 0;
+}
+
+// Genera un sector si no existe. Llama al generador del mundo con un rng propio.
+function generarSector(gx, gz) {
+  var clave = gx + ',' + gz;
+  if (MUNDO.sectores[clave]) return;
+  MUNDO.sectores[clave] = true;
+  if (!_genSector) return;
+  var rng = prng(semillaSector(gx, gz));
+  var cx = gx * MUNDO.TAM_SECTOR, cz = gz * MUNDO.TAM_SECTOR;
+  var terreno = document.getElementById('terreno');
+  _genSector({ gx: gx, gz: gz, cx: cx, cz: cz, rng: rng, terreno: terreno,
+               nuevo: nuevo, pieza: pieza });
+}
+
+// Vigilar la posición del jugador y generar los sectores vecinos
+var _acumSector = 0;
+MUNDO.animar(function (t, dt) {
+  if (!_genSector || !MUNDO.jugador) return;
+  _acumSector += dt;
+  if (_acumSector < 500) return;   // chequear 2 veces por segundo
+  _acumSector = 0;
+  var p = MUNDO.jugador.object3D.position;
+  var gx = Math.round(p.x / MUNDO.TAM_SECTOR);
+  var gz = Math.round(p.z / MUNDO.TAM_SECTOR);
+  // generar el sector actual y los 8 vecinos
+  for (var dx = -1; dx <= 1; dx++)
+    for (var dz = -1; dz <= 1; dz++)
+      generarSector(gx + dx, gz + dz);
+  // expandir los límites de movimiento a medida que se explora
+  var alcance = (Math.max(Math.abs(gx), Math.abs(gz)) + 2) * MUNDO.TAM_SECTOR;
+  if (MUNDO.limites) {
+    MUNDO.limites.x = Math.max(MUNDO.limites.x, alcance);
+    MUNDO.limites.zMin = Math.min(MUNDO.limites.zMin, -alcance);
+    MUNDO.limites.zMax = Math.max(MUNDO.limites.zMax, alcance);
+  }
+});
+
+/* ---------------------------------------------------------------- guardado
+   Guardar/cargar el estado del mundo como archivo .json descargable.
+   Guarda: semilla, monedas, muestras, rocas rotas, sectores vistos, posición. */
+MUNDO.rotos = {};   // ids de rocas ya rotas (para no repoblarlas al cargar)
+MUNDO.marcarRoto = function (id) { if (id) MUNDO.rotos[id] = true; };
+
+MUNDO.exportarEstado = function () {
+  var p = MUNDO.jugador ? MUNDO.jugador.object3D.position : { x: 0, y: 2, z: 0 };
+  var estado = {
+    mundo: MUNDO.datos ? MUNDO.datos.id : '',
+    version: MUNDO.version,
+    fecha: new Date().toISOString(),
+    semilla: MUNDO.semilla,
+    monedas: MUNDO.monedas,
+    salud: MUNDO.salud,
+    inventario: MUNDO.inventario,
+    rotos: MUNDO.rotos,
+    sectores: Object.keys(MUNDO.sectores),
+    posicion: { x: Math.round(p.x*100)/100, y: Math.round(p.y*100)/100, z: Math.round(p.z*100)/100 }
+  };
+  var blob = new Blob([JSON.stringify(estado, null, 2)], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'mercurio-' + (MUNDO.datos ? MUNDO.datos.id : 'mundo') + '-' +
+               new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+MUNDO.importarEstado = function (obj) {
+  try {
+    if (obj.semilla != null) MUNDO.semilla = obj.semilla;
+    if (obj.monedas != null) MUNDO.setMonedas(obj.monedas);
+    if (obj.salud != null) { MUNDO.salud = obj.salud; var b = document.getElementById('salud-relleno'); if (b) b.style.width = obj.salud + '%'; }
+    if (obj.inventario) { MUNDO.inventario = obj.inventario; actualizarContadorMuestras(); }
+    if (obj.rotos) MUNDO.rotos = obj.rotos;
+    // marcar rocas ya rotas como invisibles
+    MUNDO.rompibles.forEach(function (r) {
+      if (r.id && MUNDO.rotos[r.id]) { r.rota = true; if (r.el) r.el.setAttribute('visible', false); }
+    });
+    // regenerar sectores guardados
+    if (obj.sectores) obj.sectores.forEach(function (k) {
+      var pr = k.split(','); generarSector(parseInt(pr[0],10), parseInt(pr[1],10));
+    });
+    // teletransportar a la posición guardada
+    if (obj.posicion && MUNDO.jugador) {
+      MUNDO.jugador.object3D.position.set(obj.posicion.x, obj.posicion.y, obj.posicion.z);
+    }
+    avisoMoneda('Partida cargada');
+  } catch (e) { avisoMoneda('Archivo no válido'); }
 };
 
 /* ---------------------------------------------------------------- interfaz */
@@ -2093,6 +2398,11 @@ function arranque(M) {
     fn(H, ob.color, ob.pos, ob);
     giroActual = 0;
     grupoActual = null;
+    if (ob.lento) {
+      var lt = ob.lento;
+      MUNDO.zonaLenta({ x: ob.pos[0] + (lt.dx||0), z: ob.pos[2] + (lt.dz||0),
+        r: lt.r, ancho: lt.ancho, largo: lt.largo, factor: lt.factor });
+    }
     if (ob.peligro) {
       var pl = ob.peligro;
       MUNDO.zonaPeligro({
@@ -2208,6 +2518,9 @@ function arranque(M) {
 
   marcar('creando la superficie móvil');
   // Superficie móvil
+  MUNDO.puertas = [];
+  (M.puertas || []).forEach(function (pu) { MUNDO.puerta(pu); });
+
   if (M.aves) {
     poblarAves(escena, M.aves);
   }
@@ -2217,6 +2530,44 @@ function arranque(M) {
   MUNDO.salud = 100; MUNDO.vivo = true;
   if (M.cotaMuerte != null) MUNDO.cotaMuerte = M.cotaMuerte;
   (M.peligros || []).forEach(function (z) { MUNDO.zonaPeligro(z); });
+  MUNDO.pegajosas = [];
+  (M.pegajosas || []).forEach(function (z) { MUNDO.zonaLenta(z); });
+
+  // monedas, rocas rompibles y expansión procedural
+  MUNDO.monedas = 0; MUNDO.rompibles = []; MUNDO.rotos = {};
+  MUNDO.sectores = {};
+  if (M.semilla != null) MUNDO.semilla = M.semilla;
+  if (M.generador) MUNDO.generador(M.generador);
+  (M.rompibles || []).forEach(function (rr) {
+    MUNDO.rocaRompible(rr);
+    // crear la entidad visual de la roca
+    var e = nuevo('a-entity', { position: rr.pos[0] + ' ' + rr.pos[1] + ' ' + rr.pos[2] });
+    e.setAttribute('geometry', 'primitive:dodecahedron; radius:' + (rr.radio || 1));
+    e.setAttribute('material', 'color:' + (rr.color || '#8a7f6a') + '; roughness:0.9; flatShading:true');
+    terreno.appendChild(e);
+    MUNDO.rompibles[MUNDO.rompibles.length - 1].el = e;
+    // brillo de veta (indica que tiene monedas)
+    if (rr.veta !== false) {
+      var v = nuevo('a-entity', { position: rr.pos[0] + ' ' + (rr.pos[1]+0.2) + ' ' + rr.pos[2] });
+      v.setAttribute('geometry', 'primitive:sphere; radius:0.18');
+      v.setAttribute('material', 'color:#f0c850; shader:flat; emissive:#f0c850');
+      terreno.appendChild(v);
+    }
+  });
+
+  // puntos de muestra
+  MUNDO.inventario = [];
+  MUNDO.puntosMuestra = [];
+  (M.muestras || []).forEach(function (m) {
+    MUNDO.puntoMuestra(m);
+    // marcador visual: anillo brillante flotante
+    var mk = nuevo('a-entity', { id: 'm-' + m.id, position: m.pos[0] + ' ' + (m.pos[1] + 0.6) + ' ' + m.pos[2] });
+    mk.appendChild(nuevo('a-ring', { 'radius-inner': 0.3, 'radius-outer': 0.42, rotation: '-90 0 0',
+      material: 'color:' + (m.color || '#5ad8a0') + '; shader:flat; opacity:0.85; side:double' }));
+    mk.appendChild(nuevo('a-text', { value: '\u25BC', align: 'center', width: 4,
+      color: m.color || '#5ad8a0', position: '0 0.8 0', rotation: '0 0 0' }));
+    terreno.appendChild(mk);
+  });
   if (M.peligros || M.cotaMuerte != null) {
     var barraS = document.getElementById('salud');
     if (barraS) barraS.classList.add('on');
@@ -2290,11 +2641,16 @@ function arranque(M) {
   } else {
     terreno.addEventListener('loaded', function () { volcarLotes(terreno.object3D); });
   }
-  // enlazar las hojas de puerta (subgrupos t1_pIA, t1_pIB, …) a sus definiciones
+  // enlazar las hojas de puerta a sus definiciones
   MUNDO.puertas.forEach(function (pu) {
     if (pu._id && pu._lado) {
+      // puertas del tren: id + lado (I/D) + A/B
       pu.hojas = [ MUNDO.subgrupos[pu._id + '_p' + pu._lado + 'A'] || null,
                    MUNDO.subgrupos[pu._id + '_p' + pu._lado + 'B'] || null ];
+    } else if (pu.id && !pu.hojas) {
+      // puertas simples: id_pA / id_pB
+      pu.hojas = [ MUNDO.subgrupos[pu.id + '_pA'] || null,
+                   MUNDO.subgrupos[pu.id + '_pB'] || null ];
     }
   });
 
@@ -2327,6 +2683,41 @@ function construirUI(M) {
       };
       ctrl.appendChild(b);
     });
+  }
+
+  // golpear rocas por monedas
+  if (M.rompibles || M.generador) {
+    var bgolpe = nuevo('button', { id: 'btn-golpe' });
+    bgolpe.textContent = '\uD83E\uDEA8 Golpear';
+    bgolpe.onclick = function () { MUNDO.golpear(); };
+    ctrl.appendChild(bgolpe);
+    var bmon = nuevo('button', { id: 'btn-monedas', disabled: 'true' });
+    bmon.innerHTML = '\uD83E\uDE99 <span id="monedas-cont">0</span>';
+    ctrl.appendChild(bmon);
+  }
+
+  // guardar / cargar partida
+  if (M.guardado) {
+    var bguar = nuevo('button', { id: 'btn-guardar' });
+    bguar.textContent = '\uD83D\uDCBE Guardar';
+    bguar.onclick = function () { MUNDO.exportarEstado(); };
+    ctrl.appendChild(bguar);
+    var bcarg = nuevo('button', { id: 'btn-cargar' });
+    bcarg.textContent = '\uD83D\uDCC2 Cargar';
+    bcarg.onclick = function () { document.getElementById('archivo-guardado').click(); };
+    ctrl.appendChild(bcarg);
+  }
+
+  // recolección de muestras y laboratorio
+  if (M.muestras) {
+    var brec = nuevo('button', { id: 'btn-recolectar' });
+    brec.textContent = '\u26CF\uFE0F Recolectar';
+    brec.onclick = function () { MUNDO.recolectar(); };
+    ctrl.appendChild(brec);
+    var blab = nuevo('button', { id: 'btn-lab' });
+    blab.innerHTML = '\uD83E\uDDEA Lab <span id="muestras-cont">0</span>';
+    blab.onclick = function () { MUNDO.abrirLaboratorio(); };
+    ctrl.appendChild(blab);
   }
 
   // panel de atmósferas (hábitat)
@@ -2440,7 +2831,12 @@ function construirUI(M) {
 
   // Teclado
   var TECLAS = { w: 1, W: 1, ArrowUp: 1, s: -1, S: -1, ArrowDown: -1 };
-  window.addEventListener('keydown', function (e) { if (TECLAS[e.key]) jugador.setAttribute('caminar', 'dir', TECLAS[e.key]); });
+  window.addEventListener('keydown', function (e) {
+    if ((M.rompibles || M.generador) && (e.key === 'g' || e.key === 'G')) MUNDO.golpear();
+    if (M.muestras && (e.key === 'r' || e.key === 'R')) MUNDO.recolectar();
+    if (M.muestras && (e.key === 'l' || e.key === 'L')) MUNDO.abrirLaboratorio();
+    if (TECLAS[e.key]) jugador.setAttribute('caminar', 'dir', TECLAS[e.key]);
+  });
   window.addEventListener('keyup', function (e) { if (TECLAS[e.key]) jugador.setAttribute('caminar', 'dir', 0); });
 
   // Toque vs arrastre

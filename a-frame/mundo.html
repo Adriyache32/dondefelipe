@@ -220,6 +220,32 @@ window.addEventListener('error', function (e) {
   .atm-punto{width:16px;height:16px;border-radius:50%;background:var(--sw);flex:none;
     border:1px solid rgba(255,255,255,.3);box-shadow:0 0 8px var(--sw);}
 
+  /* laboratorio */
+  #lab-panel{position:fixed;z-index:42;left:50%;bottom:78px;transform:translateX(-50%);
+    width:min(380px,calc(100vw - 24px));max-height:70vh;overflow-y:auto;
+    background:rgba(18,28,30,.82);color:var(--papel);
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    border:1px solid rgba(242,236,224,.18);border-radius:16px;padding:16px 18px;
+    box-shadow:0 14px 44px rgba(0,0,0,.5);font-family:system-ui,sans-serif;}
+  #lab-panel .mz-cab{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  #lab-panel .mz-cab b{font-size:14px;}
+  #lab-cerrar{background:none;border:none;color:var(--papel);font-size:22px;cursor:pointer;opacity:.7;}
+  .lab-vacio{font-size:13px;line-height:1.6;opacity:.7;padding:10px 4px;}
+  .lab-lista{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
+  .lab-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;
+    background:rgba(242,236,224,.08);border:1px solid rgba(242,236,224,.16);
+    color:var(--papel);font-size:12.5px;font-weight:500;cursor:pointer;}
+  .lab-item:hover{background:rgba(242,236,224,.15);}
+  .lab-item.activo{border-color:#5ad8a0;background:rgba(90,216,160,.15);}
+  .lab-tipo{width:13px;height:13px;border-radius:3px;flex:none;}
+  .lab-roca{background:#9a8f7a;} .lab-tierra{background:#8a6a3f;}
+  .lab-pegajosa{background:#4a7c53;} .lab-hielo{background:#c8d8e0;} .lab-metal{background:#b8bcc0;}
+  .lab-detalle{font-size:13px;line-height:1.55;background:rgba(242,236,224,.05);
+    border-radius:10px;padding:13px 14px;border:1px solid rgba(242,236,224,.1);}
+  .lab-detalle h4{font-family:"Fraunces",Georgia,serif;font-size:17px;margin-bottom:8px;color:#8fd8b0;}
+  #btn-lab #muestras-cont{display:inline-block;min-width:16px;text-align:center;
+    background:#5ad8a0;color:#123;border-radius:8px;font-size:11px;font-weight:700;padding:0 5px;margin-left:2px;}
+
   @media (prefers-reduced-motion: reduce){ #ficha{transition:none;} }
 </style>
 
@@ -242,6 +268,7 @@ window.addEventListener('error', function (e) {
 
 <div id="pista">Toca el suelo para desplazarte hasta ahí</div>
 <div id="controles"></div>
+<input type="file" id="archivo-guardado" accept="application/json,.json" style="display:none">
 
 <!-- barra de salud (solo visible si el mundo tiene peligros) -->
 <div id="salud"><div id="salud-relleno"></div></div>
@@ -313,6 +340,22 @@ window.addEventListener('error', function (e) {
   }
   cargar();
 })();
+</script>
+<script>
+  (function () {
+    var inp = document.getElementById('archivo-guardado');
+    if (inp) inp.addEventListener('change', function (ev) {
+      var f = ev.target.files[0];
+      if (!f) return;
+      var lector = new FileReader();
+      lector.onload = function () {
+        try { window.MUNDO.importarEstado(JSON.parse(lector.result)); }
+        catch (e) { alert('No se pudo leer el archivo de guardado.'); }
+      };
+      lector.readAsText(f);
+      inp.value = '';
+    });
+  })();
 </script>
 </body>
 </html>
