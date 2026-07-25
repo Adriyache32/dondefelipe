@@ -48,12 +48,18 @@
    LA ÚNICA LÍNEA QUE HAY QUE EDITAR AL AGREGAR UN MUNDO.
    El nombre debe ser igual al del archivo: 'costa' → mundos/costa.js
    ============================================================================= */
-var CATALOGO = ['costa', 'villa-alemana', 'andes','san'];
+var CATALOGO = ['costa', 'villa-alemana', 'andes', 'mercurio'];
 
 /* -------------------------------------------------------------------------- */
 /* Los archivos de mundo pueden registrar formas propias con MUNDO.forma().
    Acá no está el motor cargado, así que se deja un maniquí que las ignora.    */
-window.MUNDO = window.MUNDO || { forma: function () {}, formas: {}, clima: {} };
+var nada = function () {};
+var maniqui = { forma: nada, animar: nada, ficha: nada, iniciar: nada,
+                formas: {}, grupos: {}, clima: { viento: 1 }, version: 0 };
+// Con Proxy, cualquier método que el motor agregue en el futuro es un no-op acá
+window.MUNDO = window.MUNDO || (typeof Proxy !== 'undefined'
+  ? new Proxy(maniqui, { get: function (t, k) { return (k in t) ? t[k] : nada; } })
+  : maniqui);
 window.MUNDOS = window.MUNDOS || {};
 
 var rejilla = document.getElementById('rejilla');

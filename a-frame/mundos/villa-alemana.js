@@ -631,6 +631,80 @@ MUNDO.forma('sala', function (H, color, b, ob) {
   }
 }, 3.2);
 
+
+// Pasamanos laterales de una escalera (los peldaños los genera el motor)
+MUNDO.forma('baranda-esc', function (H, color, b, ob) {
+  var es = ob.escalones[0];
+  var largoDiag = Math.sqrt(es.largo * es.largo + es.alto * es.alto);
+  var ang = -Math.atan2(es.alto, es.largo) * 180 / Math.PI;
+  [-es.ancho/2, es.ancho/2].forEach(function (x) {
+    H.pieza('caja', '#f0eee8', 'solido', b, [x, es.alto/2 + 0.3, es.dz - es.largo/2],
+      [ang, 0, 0], [0.14, 0.9, largoDiag], 0);
+    H.pieza('caja', color, 'metal', b, [x, es.alto/2 + 0.95, es.dz - es.largo/2],
+      [ang, 0, 0], [0.07, 0.07, largoDiag], 0);
+  });
+}, 3);
+
+
+// Municipalidad de Villa Alemana: edificio institucional con bandera
+MUNDO.forma('municipalidad', function (H, color, b) {
+  var A = 20, ALTO = 9, F = 14;
+  // cuerpo principal
+  H.pieza('caja', color, 'solido', b, [0, ALTO/2, 0], [0, 0, 0], [A, ALTO, F], 0);
+  // basamento
+  H.pieza('caja', '#c9c3b6', 'solido', b, [0, 0.4, F/2 + 0.3], [0, 0, 0], [A + 1, 0.8, 1], 0);
+  // pórtico de columnas al frente
+  for (var i = 0; i < 5; i++) {
+    H.pieza('poste', '#f2f0ea', 'solido', b, [-8 + i * 4, ALTO*0.42, F/2 + 0.6], [0, 0, 0], [0.5, ALTO*0.85, 0.5], 0);
+  }
+  H.pieza('caja', '#e8e4da', 'solido', b, [0, ALTO*0.9, F/2 + 0.6], [0, 0, 0], [A, 1.2, 1.4], 0);
+  // frontón triangular
+  H.pieza('cono', '#e0dcd2', 'solido', b, [0, ALTO + 1, F/2 + 0.6], [0, 0, 0], [A*0.62, 2, 1.4], 0);
+  // ventanas en dos pisos
+  for (var p2 = 0; p2 < 2; p2++) for (var i = 0; i < 6; i++) {
+    H.pieza('caja', '#3d5566', 'vidrio', b, [-7.5 + i * 3, 2.4 + p2 * 3.2, F/2 + 0.05], [0, 0, 0], [1.4, 1.8, 0.14], 0);
+  }
+  // asta con bandera
+  H.pieza('poste', '#c8ccce', 'metal', b, [-11, 0, F/2 + 2], [0, 0, 0], [0.12, 11, 0.12], 0);
+  H.pieza('caja', '#d33', 'solido', b, [-10.2, 10, F/2 + 2], [0, 0, 0], [1.6, 0.5, 0.05], 0);
+  H.pieza('caja', '#fff', 'solido', b, [-10.2, 10.5, F/2 + 2], [0, 0, 0], [1.6, 0.5, 0.05], 0);
+  H.pieza('caja', '#2f5fa8', 'solido', b, [-10.9, 10.75, F/2 + 2.02], [0, 0, 0], [0.5, 0.25, 0.06], 0);
+  // letrero
+  H.pieza('caja', '#20262b', 'solido', b, [0, 6.2, F/2 + 0.7], [0, 0, 0], [6, 0.7, 0.1], 0);
+  H.pieza('caja', '#e8d8a0', 'brillo', b, [0, 6.2, F/2 + 0.76], [0, 0, 0], [5.4, 0.42, 0.03], 0);
+}, 12);
+
+// Toldo de local comercial del paseo (fachada con toldo de colores)
+MUNDO.forma('local', function (H, color, b, ob) {
+  var A = (ob && ob.dim) ? ob.dim : 6;
+  H.pieza('caja', '#d8d2c4', 'solido', b, [0, 2, 0], [0, 0, 0], [A, 4, 0.3], 0);
+  // vitrina
+  H.pieza('caja', '#2b3540', 'vidrio', b, [0, 1.3, 0.16], [0, 0, 0], [A - 1, 2.2, 0.12], 0);
+  // toldo
+  H.pieza('caja', color, 'solido', b, [0, 2.7, 0.9], [-24, 0, 0], [A - 0.6, 0.1, 1.6], 0);
+  H.pieza('caja', '#f4f2ec', 'brillo', b, [0, 3.3, 0.2], [0, 0, 0], [A - 1.5, 0.5, 0.05], 0);
+}, 4.4);
+
+// Barrera vial roja (las de la foto del paseo)
+MUNDO.forma('barrera', function (H, color, b) {
+  H.pieza('caja', '#d33', 'solido', b, [0, 0.5, 0], [0, 0, 0], [1.8, 1, 0.5], 0);
+  H.pieza('caja', '#f2f2f2', 'brillo', b, [0, 0.65, 0.26], [0, 0, 0], [1.5, 0.5, 0.02], 0);
+  H.pieza('caja', '#b02a2a', 'solido', b, [0, 0.12, 0], [0, 0, 0], [1.9, 0.24, 0.7], 0);
+}, 1.4);
+
+// Guirnalda de luces cruzando el paseo (postes + cable con ampolletas)
+MUNDO.forma('guirnalda', function (H, color, b, ob) {
+  var largo = (ob && ob.largo) ? ob.largo : 16;
+  H.pieza('poste', '#3c4a42', 'metal', b, [-largo/2, 0, 0], [0, 0, 0], [0.14, 5, 0.14], 0);
+  H.pieza('poste', '#3c4a42', 'metal', b, [largo/2, 0, 0], [0, 0, 0], [0.14, 5, 0.14], 0);
+  H.pieza('caja', '#222', 'metal', b, [0, 4.7, 0], [0, 0, 0], [largo, 0.04, 0.04], 0);
+  var n = Math.floor(largo / 1.3);
+  for (var i = 0; i <= n; i++) {
+    var caida = Math.sin(i / n * Math.PI) * 0.4;
+    H.pieza('esferaB', '#fff2c0', 'brillo', b, [-largo/2 + i * 1.3, 4.55 - caida, 0], [0, 0, 0], [0.09, 0.09, 0.09], 0);
+  }
+}, 5.4);
+
 /* ------------------------------------------------------------ COLOCACIONES */
 var OBJ = [];
 var FIERRO = '#38463f';
@@ -824,8 +898,8 @@ OBJ.push({ forma: 'semaforo', color: '#3c4a42', pos: [20, 0.05, 45], giro: 180 }
      Piso 1          y = 4     → la multicancha
      Piso 2          y = 8     → cinco salas de clases
    ========================================================================== */
-var CX = -34;    // eje del edificio (lado opuesto a la estación)
-var CZ = -8;     // centro en profundidad
+var CX = 6;      // centrado, cruzando hacia el norte
+var CZ = -78;    // al fondo del todo: más al norte que la estación
 var P1 = 4;      // altura del piso 1
 var P2 = 8;      // altura del piso 2
 var EDA = 30, EDL = 24;   // ancho y largo del edificio
@@ -869,9 +943,9 @@ OBJ.push({ forma: 'persona', pos: [CX + 8, 0.25, CZ + 2], giro: 30,
   cuerpo: { altura: 1.62, piel: '#b57a56', pelo: '#1e1814', chaqueta: '#3f5d6b',
             polera: '#20242a', pantalon: '#2b3138', zapato: '#17161a' } });
 
-// Escalera piso 0 → piso 1 (a la izquierda del edificio)
-OBJ.push({ forma: 'escalera', color: '#d8c23a', pos: [CX - 12, 0.25, CZ + 6], giro: 0,
-           rampas: [{ dx: 0, dz: 0, ancho: 2.6, largo: 11, alto: P1 - 0.25, base: P1 - 0.25, pitch: 34, color: '#c9a832' }] });
+// Escalera piso 0 → piso 1 (a la izquierda del edificio), con peldaños reales
+OBJ.push({ forma: 'baranda-esc', color: '#c4cace', pos: [CX - 12, 0.25, CZ + 6], giro: 0,
+           escalones: [{ dx: 0, dz: 5.5, ancho: 2.8, largo: 11, alto: P1 - 0.25, base: 0, pasos: 16, color: '#d8c23a' }] });
 
 /* ---------- PISO 1 · la multicancha ---------- */
 OBJ.push({ forma: 'losa', color: '#a8a294', pos: [CX, P1, CZ], dim: [EDA, EDL], pilar: P1,
@@ -888,9 +962,9 @@ OBJ.push({ forma: 'cancha', color: '#2f74b5', pos: [CX, P1 + 0.2, CZ],
 // baranda del borde frontal del piso 1
 OBJ.push({ forma: 'baranda', color: '#c4cace', pos: [CX, P1 + 0.25, CZ + EDL/2 - 0.3], largo: EDA });
 
-// Escalera piso 1 → piso 2 (a la derecha)
-OBJ.push({ forma: 'escalera', color: '#d8c23a', pos: [CX + 12, P1 + 0.2, CZ + 6], giro: 0,
-           rampas: [{ dx: 0, dz: 0, ancho: 2.6, largo: 11, alto: P2 - P1, base: P2 - P1, pitch: 34, color: '#c9a832' }] });
+// Escalera piso 1 → piso 2 (a la derecha), con peldaños reales
+OBJ.push({ forma: 'baranda-esc', color: '#c4cace', pos: [CX + 12, P1 + 0.2, CZ + 6], giro: 0,
+           escalones: [{ dx: 0, dz: 5.5, ancho: 2.8, largo: 11, alto: P2 - P1, base: 0, pasos: 16, color: '#d8c23a' }] });
 
 /* ---------- PISO 2 · cinco salas de clases ---------- */
 OBJ.push({ forma: 'losa', color: '#a8a294', pos: [CX, P2, CZ], dim: [EDA, EDL], pilar: P1,
@@ -924,6 +998,49 @@ SALAS.forEach(function (sa, i) {
                 polera: '#20242a', pantalon: '#2b2f36', zapato: '#1a1917' } });
   }
 });
+
+
+/* ================= MUNICIPALIDAD (al este) ================= */
+OBJ.push({ forma: 'municipalidad', color: '#e8e4da', pos: [66, 0.05, -6], giro: -90,
+           nombre: 'Municipalidad de Villa Alemana', ficha: 'municipalidad', altoFicha: 13,
+           choca: [{ dx: 0, dz: 0, ancho: 14, largo: 20, alto: 9 }] });
+
+/* ================= PASEO PEATONAL (al sur) ================= */
+// El paseo baja hacia z positivo desde la plaza. Piso de baldosa.
+OBJ.push({ forma: 'anden', color: '#c9c3b4', pos: [0, 0.02, 66],
+           piso: { ancho: 22, largo: 40, alto: 0.12, color: '#cfc7b4' } });
+// dos hileras de locales con toldos de colores
+var COLORES_TOLDO = ['#c4342e', '#2f6b45', '#2f5fa8', '#d88a2c', '#7a3f7a', '#2f8f8f'];
+for (var i = 0; i < 6; i++) {
+  var pz = 50 + i * 5.5;
+  OBJ.push({ forma: 'local', color: COLORES_TOLDO[i % 6], pos: [-11.5, 0.05, pz], giro: 90, dim: 5,
+             choca: [{ dx: 0, dz: 0, ancho: 5, largo: 0.4, alto: 4 }] });
+  OBJ.push({ forma: 'local', color: COLORES_TOLDO[(i+3) % 6], pos: [11.5, 0.05, pz], giro: -90, dim: 5,
+             choca: [{ dx: 0, dz: 0, ancho: 5, largo: 0.4, alto: 4 }] });
+}
+// guirnaldas de luces cruzando el paseo
+[52, 60, 68, 76].forEach(function (pz) {
+  OBJ.push({ forma: 'guirnalda', color: '#fff2c0', pos: [0, 0.05, pz], largo: 20 });
+});
+// barreras rojas de obra, como en la foto
+[[-4, 82], [-1.5, 82], [1, 82], [3.5, 82], [-7, 48], [7, 48]].forEach(function (br) {
+  OBJ.push({ forma: 'barrera', color: '#d33', pos: [br[0], 0.05, br[1]],
+             choca: [{ dx: 0, dz: 0, ancho: 1.8, largo: 0.5, alto: 1 }] });
+});
+// palmeras y bancas en el paseo
+[54, 64, 74].forEach(function (pz) {
+  OBJ.push({ forma: 'palmera', color: '#5f8a4a', pos: [-8, 0.05, pz], choca: [{ r: 0.42, alto: 7 }] });
+  OBJ.push({ forma: 'palmera', color: '#5f8a4a', pos: [8, 0.05, pz], choca: [{ r: 0.42, alto: 7 }] });
+  OBJ.push({ forma: 'banca', color: '#7c3f2f', pos: [-4, 0.05, pz], giro: 0 });
+  OBJ.push({ forma: 'banca', color: '#7c3f2f', pos: [4, 0.05, pz], giro: 0 });
+});
+// gente paseando
+OBJ.push({ forma: 'persona', pos: [-2, 0.05, 58], giro: 20,
+  cuerpo: { altura: 1.68, piel: '#c88d6b', pelo: '#241b16', chaqueta: '#2f6b45',
+            polera: '#e8e2d4', pantalon: '#2b2f36', zapato: '#1a1917' } });
+OBJ.push({ forma: 'persona', pos: [3, 0.05, 70], giro: -150,
+  cuerpo: { altura: 1.63, piel: '#d8a077', pelo: '#3a2a20', chaqueta: '#7a3f4a',
+            polera: '#20242a', pantalon: '#3d4450', zapato: '#201d1b', mochila: true } });
 
 /* ---- El anfitrión, junto a la entrada del paseo ---- */
 OBJ.push({
@@ -969,6 +1086,7 @@ window.MUNDOS = window.MUNDOS || {};
 window.MUNDOS['villa-alemana'] = {
 
   titulo: 'Villa Alemana: la plaza',
+  clima: { inicial: 'despejado' },
   materia: 'Ciencias para la Ciudadanía · Ecología urbana',
   resumen: 'El paseo de palmas, el arbolado, el pasto y el borde construido. Isla de calor, sombra y superficies permeables.',
   cielo: '#a8cbe4',
@@ -976,7 +1094,7 @@ window.MUNDOS['villa-alemana'] = {
   luz: { cielo: '#e2f0f8', suelo: '#9a8f74', ambiente: 0.95, sol: '#fff6e0', intensidad: 0.85,
          posicion: '-14 26 10' },
 
-  ancho: 150,
+  ancho: 200,
   anchoVida: 56,
   inicio: '0 1.7 42',
 
@@ -988,9 +1106,11 @@ window.MUNDOS['villa-alemana'] = {
     estacion:{ etiqueta: 'La estación',        pos: '30 1.7 26', pitch: 0,   yaw: 178 },
     anden:   { etiqueta: 'En el andén',        pos: '33.5 2.7 14', pitch: -3, yaw: 178 },
     vagon:   { etiqueta: 'Dentro del vagón',   pos: '39.5 2.8 4',  pitch: 0,  yaw: 180 },
-    colegio: { etiqueta: 'Colegio: entrada',    pos: '-30 1.9 8',   pitch: -2,  yaw: 0 },
-    cancha:  { etiqueta: 'Colegio: la cancha',  pos: '-34 5.9 2',   pitch: 0,   yaw: 0 },
-    salas:   { etiqueta: 'Colegio: las salas',  pos: '-34 9.9 4',   pitch: -4,  yaw: 180 }
+    colegio: { etiqueta: 'Colegio: entrada',    pos: '6 1.9 -60',   pitch: -2,  yaw: 0 },
+    cancha:  { etiqueta: 'Colegio: la cancha',  pos: '6 5.9 -80',   pitch: 0,   yaw: 0 },
+    salas:   { etiqueta: 'Colegio: las salas',  pos: '6 9.9 -76',   pitch: -4,  yaw: 180 },
+    municip: { etiqueta: 'Municipalidad (este)', pos: '48 2 -6',    pitch: 2,   yaw: 90 },
+    paseo:   { etiqueta: 'Paseo peatonal (sur)', pos: '0 1.7 46',   pitch: -1,  yaw: 180 }
   },
 
   cielos: [
@@ -1184,6 +1304,26 @@ window.MUNDOS['villa-alemana'] = {
   },
 
   fichas: [
+    {
+      id: 'municipalidad', nombre: 'Municipalidad de Villa Alemana', rango: 'El edificio del gobierno comunal',
+      texto: 'Aquí funciona el gobierno de la comuna: la administración local, el alcalde y el concejo municipal. Es la institución que decide sobre el espacio público que acabas de recorrer, desde el arbolado de la plaza hasta el estado del paseo peatonal.',
+      vida: [
+        'Administra servicios locales: aseo, áreas verdes, permisos, patentes',
+        'El alcalde y los concejales son elegidos por la gente de la comuna',
+        'Decide sobre el uso del espacio público y la planificación urbana'
+      ],
+      reto: 'Muchas decisiones sobre la plaza y el paseo se toman aquí. Si pudieras proponer un cambio para tu barrio ante el municipio, ¿cuál sería y cómo lo justificarías?'
+    },
+    {
+      id: 'paseo', nombre: 'El paseo peatonal', rango: 'Corazón comercial de Villa Alemana',
+      texto: 'El paseo peatonal es donde se concentra el comercio y la vida de calle. Al cerrar el paso a los autos, el espacio se vuelve de las personas: se camina, se compra, se conversa. Las guirnaldas de luces y los toldos de colores le dan su carácter.',
+      vida: [
+        'Peatonalizar una calle prioriza a la gente por sobre los autos',
+        'El comercio a pie de calle sostiene la economía local',
+        'Las barreras rojas marcan obras: la ciudad siempre está cambiando'
+      ],
+      reto: 'Compara este paseo con una calle normal con autos. ¿Qué gana y qué pierde el comercio cuando se cierra al tránsito vehicular?'
+    },
     {
       id: 'bienvenida', nombre: '¡Bienvenido a Villa Alemana!',
       rango: 'El anfitrión de la plaza',

@@ -11,7 +11,7 @@
 'use strict';
 
 var MUNDO = {
-  version: 11,
+  version: 14,
   formas: {},
   clima: { viento: 1 },
   datos: null
@@ -33,7 +33,7 @@ function nuevo(tag, attrs) {
    relieve calza exacto con las manchas del color.                            */
 var MOVIL_TEX = !!(AFRAME.utils.device && AFRAME.utils.device.isMobile &&
                    AFRAME.utils.device.isMobile());
-var TAM_TEX = MOVIL_TEX ? 384 : 768;   // aún más fino
+var TAM_TEX = MOVIL_TEX ? 512 : 1024;  // máxima nitidez
 var CACHE_TEX = {};
 
 function lienzoAltura(estilo, tam) {
@@ -427,6 +427,8 @@ var RADIO_CUERPO = 0.34;
 var ALTO_CUERPO = 1.65;
 MUNDO.choques = CHOQUES;
 MUNDO.fisica = true;
+MUNDO.gravedad = 9.81;   // m/s²  (Tierra por defecto)
+MUNDO.saltoV = 5.2;      // velocidad inicial de salto en m/s (Tierra)
 
 function chocaCaja(x, z, ancho, largo, y0, y1, giro) {
   var g = rad(giro || 0);
@@ -486,18 +488,39 @@ AFRAME.registerComponent('mirar-camara', {
 
 AFRAME.registerComponent('caminar', {
   schema: { dir: { default: 0 }, vel: { default: 4.2 } },
-  init: function () { this.d = new THREE.Vector3(); },
+  init: function () {
+    this.d = new THREE.Vector3();
+    this.mira = new THREE.Vector3();
+    var self = this;
+    // detectar entrada/salida de VR para activar el avance por mirada
+    var esc = this.el.sceneEl;
+    MUNDO.vrCaminar = true;   // se puede desactivar desde consola
+    esc.addEventListener('enter-vr', function () { self.enVR = true; });
+    esc.addEventListener('exit-vr', function () { self.enVR = false; });
+  },
   tick: function (t, dt) {
-    if (!this.data.dir || !dt) return;
+    if (!dt) return;
     var cam = this.el.sceneEl.camera;
     if (!cam) return;
+    var mover = this.data.dir;   // -1 / 0 / 1 desde botones o teclado
+
+    // En VR: avanzar automáticamente hacia donde mira la cabeza,
+    // salvo que se mire muy hacia abajo (gesto para detenerse).
+    if (this.enVR && MUNDO.vrCaminar && mover === 0) {
+      cam.getWorldDirection(this.mira);   // apunta hacia -Z de la cámara
+      // this.mira.y negativo = mirando hacia abajo
+      if (this.mira.y > -0.55) mover = 1;   // avanza si no mira muy abajo
+      else mover = 0;                        // mirar al suelo = quieto
+    }
+    if (!mover) return;
+
     cam.getWorldDirection(this.d);
     this.d.y = 0;
     if (this.d.lengthSq() < 0.0001) return;
     this.d.normalize();
     var p = this.el.object3D.position;
     var lim = MUNDO.limites;
-    p.addScaledVector(this.d, this.data.dir * this.data.vel * dt / 1000);
+    p.addScaledVector(this.d, mover * this.data.vel * dt / 1000);
     p.x = THREE.MathUtils.clamp(p.x, -lim.x, lim.x);
     p.z = THREE.MathUtils.clamp(p.z, lim.zMin, lim.zMax);
     MUNDO.resolver(p);
@@ -515,7 +538,8 @@ AFRAME.registerComponent('piso-adherido', {
   },
   tick: function (t, dt) {
     this.acum += dt;
-    if (this.acum < 90) return;
+    if (this.acum < 55) return;
+    var paso = this.acum;
     this.acum = 0;
     if (this.mallas.length === 0) {
       this.mallas = Array.prototype.slice.call(document.querySelectorAll('.suelo'))
@@ -524,17 +548,95 @@ AFRAME.registerComponent('piso-adherido', {
       if (this.mallas.length === 0) return;
     }
     var p = this.el.object3D.position;
-    this.origen.set(p.x, p.y + 14, p.z);
+    var pies = p.y - this.data.altura;
+    this.origen.set(p.x, p.y + 20, p.z);
     this.ray.set(this.origen, this.abajo);
     var golpes = this.ray.intersectObjects(this.mallas, false);
-    if (golpes.length) {
-      // toma la superficie más alta bajo los pies pero por debajo de la cabeza
-      var cabeza = p.y + 0.2, mejor = null;
-      for (var gi = 0; gi < golpes.length; gi++) {
-        if (golpes[gi].point.y <= cabeza) { mejor = golpes[gi]; break; }
+    if (!golpes.length) return;
+
+    // superficie candidata: la más alta que no quede por encima de la cintura.
+    // Así uno puede subir peldaños (que están un poco más arriba de los pies)
+    // pero no atraviesa un piso que tiene sobre la cabeza.
+    var umbral = pies + 0.7;   // hasta 0,7 m de subida se considera "escalón"
+    var elegido = null;
+    for (var gi = 0; gi < golpes.length; gi++) {
+      var y = golpes[gi].point.y;
+      if (y <= umbral && (elegido === null || y > elegido)) elegido = y;
+    }
+    // si no hay nada bajo el umbral, tomar el más bajo (para caer, no atravesar)
+    if (elegido === null) {
+      elegido = golpes[golpes.length - 1].point.y;
+      for (var gj = 0; gj < golpes.length; gj++)
+        if (golpes[gj].point.y < elegido) elegido = golpes[gj].point.y;
+    }
+    var objetivo = elegido + this.data.altura;
+    // velocidad vertical limitada: nada de saltos bruscos
+    var maxSube = 0.09 * paso;   // ~5 m/s subiendo escaleras
+    var maxBaja = 0.16 * paso;
+    var dif = objetivo - p.y;
+    if (dif > maxSube) dif = maxSube;
+    if (dif < -maxBaja) dif = -maxBaja;
+    p.y += dif;
+  }
+});
+
+/* Gravedad y salto: el jugador tiene velocidad vertical propia. El suelo lo
+   detecta el mismo raycast que piso-adherido, pero acá decidimos si cae. */
+AFRAME.registerComponent('gravedad', {
+  init: function () {
+    this.vy = 0;
+    this.ray = new THREE.Raycaster();
+    this.abajo = new THREE.Vector3(0, -1, 0);
+    this.origen = new THREE.Vector3();
+    this.mallas = [];
+    this.enSuelo = false;
+    var self = this;
+    window.addEventListener('keydown', function (e) {
+      if ((e.code === 'Space' || e.key === ' ') && self.enSuelo) { self.vy = MUNDO.saltoV; self.enSuelo = false; }
+    });
+    // botón de salto táctil
+    MUNDO.saltar = function () { if (self.enSuelo) { self.vy = MUNDO.saltoV; self.enSuelo = false; } };
+  },
+  tick: function (t, dt) {
+    if (!dt) return;
+    dt = Math.min(dt, 50) / 1000;
+    var p = this.el.object3D.position;
+    var alt = this.data.altura || 1.65;
+
+    if (this.mallas.length === 0) {
+      this.mallas = Array.prototype.slice.call(document.querySelectorAll('.suelo'))
+        .map(function (e) { return e.getObject3D('mesh'); }).filter(function (m) { return !!m; });
+    }
+    // suelo bajo los pies
+    var sueloY = 0;
+    if (this.mallas.length) {
+      this.origen.set(p.x, p.y + 20, p.z);
+      this.ray.set(this.origen, this.abajo);
+      var golpes = this.ray.intersectObjects(this.mallas, false);
+      var cintura = p.y - alt + 0.7, mejor = null;
+      for (var i = 0; i < golpes.length; i++) {
+        var y = golpes[i].point.y;
+        if (y <= cintura && (mejor === null || y > mejor)) mejor = y;
       }
-      if (!mejor) mejor = golpes[golpes.length - 1];
-      p.y += (mejor.point.y + this.data.altura - p.y) * 0.35;
+      if (mejor === null && golpes.length) {
+        mejor = golpes[golpes.length - 1].point.y;
+        for (var j = 0; j < golpes.length; j++) if (golpes[j].point.y < mejor) mejor = golpes[j].point.y;
+      }
+      sueloY = (mejor === null ? 0 : mejor) + alt;
+    } else {
+      sueloY = alt;
+    }
+
+    // integrar gravedad
+    this.vy -= MUNDO.gravedad * dt;
+    p.y += this.vy * dt;
+
+    if (p.y <= sueloY) {
+      p.y = sueloY;
+      this.vy = 0;
+      this.enSuelo = true;
+    } else {
+      this.enSuelo = false;
     }
   }
 });
@@ -835,6 +937,73 @@ MUNDO.forma('persona', function (H, color, b, ob) {
   }
 }, 2.5);
 
+
+/* ---------------------------------------------------------------- clima
+   Lluvia con THREE.Points (una sola llamada de dibujo), nubes planas y
+   control de niebla. Todo se enciende desde MUNDO.clima o desde el mundo. */
+MUNDO.lluvia = null;
+function crearLluvia(escena, cantidad, area, alto) {
+  var geo = new THREE.BufferGeometry();
+  var pos = new Float32Array(cantidad * 3);
+  var vel = new Float32Array(cantidad);
+  for (var i = 0; i < cantidad; i++) {
+    pos[i*3]   = (Math.random() - 0.5) * area;
+    pos[i*3+1] = Math.random() * alto;
+    pos[i*3+2] = (Math.random() - 0.5) * area;
+    vel[i] = 12 + Math.random() * 10;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  var mat = new THREE.PointsMaterial({ color: '#9fb4c4', size: 0.08,
+              transparent: true, opacity: 0.5, depthWrite: false });
+  var pts = new THREE.Points(geo, mat);
+  pts.frustumCulled = false;
+  escena.object3D.add(pts);
+  return { pts: pts, pos: pos, vel: vel, n: cantidad, alto: alto, area: area, activa: false };
+}
+
+MUNDO.setClima = function (modo) {
+  var escena = document.getElementById('escena');
+  var L = MUNDO.lluvia;
+  if (L) L.activa = (modo === 'lluvia' || modo === 'tormenta');
+  var niebla = escena.getAttribute('fog');
+  // cielo y niebla según el clima
+  if (modo === 'lluvia' || modo === 'tormenta') {
+    escena.setAttribute('background', 'color:#6b7480');
+    document.querySelectorAll('a-sky').forEach(function(k){ k.setAttribute('color', '#6b7480'); });
+    if (niebla) escena.setAttribute('fog', 'type:linear; color:#7b8590; near:20; far:' + (modo==='tormenta'?90:140));
+    MUNDO.clima.viento = modo === 'tormenta' ? 2.2 : 1.2;
+  } else if (modo === 'nublado') {
+    escena.setAttribute('background', 'color:#9aa8b2');
+    document.querySelectorAll('a-sky').forEach(function(k){ k.setAttribute('color', '#9aa8b2'); });
+    MUNDO.clima.viento = 1;
+  } else {
+    var c = (MUNDO.datos && MUNDO.datos.cielo) || '#a8cbe4';
+    escena.setAttribute('background', 'color:' + c);
+    document.querySelectorAll('a-sky').forEach(function(k){ k.setAttribute('color', c); });
+    MUNDO.clima.viento = 1;
+  }
+  MUNDO.clima.modo = modo;
+};
+
+// animación de la lluvia
+MUNDO.animar(function (t, dt) {
+  var L = MUNDO.lluvia;
+  if (!L || !L.activa) return;
+  var cam = document.getElementById('camara');
+  var cx = 0, cz = 0;
+  if (cam && cam.object3D) { var wp = new THREE.Vector3(); cam.object3D.getWorldPosition(wp); cx = wp.x; cz = wp.z; }
+  var caida = dt / 1000;
+  for (var i = 0; i < L.n; i++) {
+    L.pos[i*3+1] -= L.vel[i] * caida;
+    if (L.pos[i*3+1] < 0) {
+      L.pos[i*3+1] = L.alto;
+      L.pos[i*3]   = cx + (Math.random() - 0.5) * L.area;
+      L.pos[i*3+2] = cz + (Math.random() - 0.5) * L.area;
+    }
+  }
+  L.pts.geometry.attributes.position.needsUpdate = true;
+});
+
 /* ---------------------------------------------------------------- interfaz */
 function rotulo(texto) {
   var e = nuevo('a-entity', { 'class': 'etiqueta', 'mirar-camara': '' });
@@ -996,8 +1165,14 @@ function arranque(M) {
 
   marcar('creando el observador');
   // Observador
+  var usaGrav = (M.gravedad != null);
+  if (usaGrav) {
+    MUNDO.gravedad = M.gravedad.valor != null ? M.gravedad.valor : 9.81;
+    MUNDO.saltoV = M.gravedad.salto != null ? M.gravedad.salto : 5.2;
+  }
   var jugador = nuevo('a-entity', {
-    id: 'jugador', position: (M.inicio || '0 3.2 26'), caminar: '', 'piso-adherido': '' });
+    id: 'jugador', position: (M.inicio || '0 3.2 26'), caminar: '' });
+  jugador.setAttribute(usaGrav ? 'gravedad' : 'piso-adherido', usaGrav ? 'altura: 1.65' : '');
   var camara = nuevo('a-entity', {
     id: 'camara', camera: 'active: true', 'look-controls': 'pointerLockEnabled:false' });
   camara.appendChild(nuevo('a-entity', {
@@ -1007,6 +1182,22 @@ function arranque(M) {
   jugador.appendChild(camara);
   escena.appendChild(jugador);
   MUNDO.jugador = jugador;
+
+  // Aviso sobre el control en VR (mirar para avanzar, mirar al suelo para parar)
+  escena.addEventListener('enter-vr', function () {
+    var av = document.getElementById('aviso-vr');
+    if (!av) {
+      av = document.createElement('div');
+      av.id = 'aviso-vr';
+      av.style.cssText = 'position:fixed;z-index:30;left:50%;top:12px;transform:translateX(-50%);' +
+        'background:rgba(18,33,31,.82);color:#f2ece0;font:13px/1.4 system-ui;padding:8px 14px;' +
+        'border-radius:3px;text-align:center;pointer-events:none;max-width:80vw;';
+      document.body.appendChild(av);
+    }
+    av.textContent = 'Mira hacia donde quieras ir para avanzar. Mira al suelo para detenerte.';
+    av.style.display = 'block';
+    setTimeout(function () { if (av) av.style.display = 'none'; }, 6000);
+  });
   escena.appendChild(nuevo('a-entity', {
     cursor: 'rayOrigin:mouse', raycaster: 'objects:.punto, .suelo; far:120' }));
 
@@ -1114,6 +1305,35 @@ function arranque(M) {
       });
     }
 
+    // escalones pisables: cada peldaño es una caja-suelo horizontal
+    (ob.escalones || []).forEach(function (es) {
+      var n = es.pasos || 10;
+      var subeH = es.alto / n, avanzaZ = es.largo / n;
+      var ga = rad(ob.giro || 0), co = Math.cos(ga), si = Math.sin(ga);
+      for (var k = 0; k < n; k++) {
+        var lx = es.dx || 0;
+        var lz = (es.dz || 0) - k * avanzaZ;
+        var gx = ob.pos[0] + lx * co + lz * si;
+        var gz = ob.pos[2] - lx * si + lz * co;
+        var yTop = ob.pos[1] + (es.base || 0) + (k + 1) * subeH;
+        // huella (pisable)
+        terreno.appendChild(nuevo('a-box', {
+          'class': 'suelo',
+          width: es.ancho, depth: avanzaZ + 0.06, height: 0.12,
+          position: gx + ' ' + (yTop - 0.06) + ' ' + gz,
+          rotation: '0 ' + (ob.giro || 0) + ' 0',
+          material: 'color:' + (es.color || '#d8c23a') + '; roughness:0.85'
+        }));
+        // contrahuella (vertical, decorativa)
+        terreno.appendChild(nuevo('a-box', {
+          width: es.ancho, depth: 0.05, height: subeH,
+          position: gx + ' ' + (yTop - subeH / 2) + ' ' + (gz + (avanzaZ/2) * co),
+          rotation: '0 ' + (ob.giro || 0) + ' 0',
+          material: 'color:#3a3a3a; roughness:0.9'
+        }));
+      }
+    });
+
     // rampas y escaleras: planos inclinados que el piso-adherido sí sigue
     (ob.rampas || []).forEach(function (rp) {
       var ga = rad(ob.giro || 0), co = Math.cos(ga), si = Math.sin(ga);
@@ -1197,9 +1417,22 @@ function arranque(M) {
     escena.appendChild(cont);
   }
 
+  // clima: crear el sistema de lluvia y aplicar el modo inicial
+  if (M.clima) {
+    MUNDO.lluvia = crearLluvia(escena, MOVIL_TEX ? 900 : 2200, 60, 30);
+    if (M.clima.inicial) MUNDO.setClima(M.clima.inicial);
+  }
+
   marcar('volcando las instancias a la GPU');
   if (terreno.object3D) {
-    volcarLotes(terreno.object3D);
+    MUNDO.setGravedad = function (v, saltoV) {
+    MUNDO.gravedad = v;
+    if (saltoV != null) MUNDO.saltoV = saltoV;
+    var caja = document.getElementById('grav-lectura');
+    if (caja) caja.textContent = 'Gravedad: ' + v.toFixed(2).replace('.', ',') + ' m/s²';
+  };
+
+  volcarLotes(terreno.object3D);
   } else {
     terreno.addEventListener('loaded', function () { volcarLotes(terreno.object3D); });
   }
@@ -1239,6 +1472,47 @@ function construirUI(M) {
         document.getElementById('nivel').setAttribute('nivel', 'modo', m.id);
       };
       ctrl.appendChild(b);
+    });
+  }
+
+  // control de gravedad
+  if (M.gravedad) {
+    var bs = nuevo('button', { 'class': 'mover' });
+    bs.textContent = '\u2191 Saltar';
+    ['pointerdown','touchstart'].forEach(function (ev) {
+      bs.addEventListener(ev, function (e) { e.preventDefault(); if (MUNDO.saltar) MUNDO.saltar(); }, { passive: false });
+    });
+    ctrl.appendChild(bs);
+
+    if (M.gravedad.opciones) {
+      var sg = nuevo('select', { id: 'sel-grav' });
+      M.gravedad.opciones.forEach(function (op) {
+        var o = nuevo('option', { value: op.g + '|' + (op.salto || '') });
+        o.textContent = op.etiqueta;
+        if (op.g === M.gravedad.valor) o.setAttribute('selected', 'selected');
+        sg.appendChild(o);
+      });
+      sg.onchange = function () {
+        var partes = sg.value.split('|');
+        MUNDO.setGravedad(parseFloat(partes[0]), partes[1] ? parseFloat(partes[1]) : null);
+      };
+      ctrl.appendChild(sg);
+    }
+  }
+
+  // botones de clima
+  if (M.clima) {
+    var CLIMAS = [['despejado','Despejado'],['nublado','Nublado'],['lluvia','Lluvia'],['tormenta','Tormenta']];
+    CLIMAS.forEach(function (cl, i) {
+      var bc = nuevo('button', { 'data-clima': cl[0],
+        'aria-pressed': (M.clima.inicial || 'despejado') === cl[0] ? 'true' : 'false' });
+      bc.textContent = cl[1];
+      bc.onclick = function () {
+        ctrl.querySelectorAll('[data-clima]').forEach(function(o){ o.setAttribute('aria-pressed','false'); });
+        bc.setAttribute('aria-pressed','true');
+        MUNDO.setClima(cl[0]);
+      };
+      ctrl.appendChild(bc);
     });
   }
 
