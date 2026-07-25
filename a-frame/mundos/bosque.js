@@ -96,6 +96,7 @@ window.MUNDOS = window.MUNDOS || {};
 window.MUNDOS.bosque = {
 
   titulo: 'Bosque nativo · cambio climático',
+  semilla: 58390,
   materia: 'Biología · U3 Ecosistemas',
   resumen: 'Bosque de la Cordillera de la Costa. Una guía de trabajo por estaciones sobre las consecuencias del cambio climático en la naturaleza y las personas.',
 
@@ -109,11 +110,14 @@ window.MUNDOS.bosque = {
   sonido: {
     fuentes: [
       // arroyo en el fondo de la quebrada (agua corriente)
-      { pos: [-18, 0, 8], filtro: 'bandpass', freq: 1600, q: 0.7, vol: 0.3, refDist: 5, maxDist: 26 },
-      // canto de aves en el sotobosque húmedo
-      { pos: [-10, 3, 14], filtro: 'bandpass', freq: 3200, q: 3, vol: 0.12, refDist: 4, maxDist: 18 },
-      // viento seco silbando en la ladera
-      { pos: [18, 2, -10], filtro: 'lowpass', freq: 600, q: 0.5, vol: 0.16, refDist: 6, maxDist: 30 }
+      { pos: [-18, 0, 8], filtro: 'bandpass', freq: 1500, q: 0.7, cat: 'naturaleza', vol: 0.34, refDist: 5, maxDist: 28 },
+      // susurro de hojas movidas por el viento (varias fuentes suaves)
+      { pos: [-4, 4, 20], filtro: 'highpass', freq: 3800, cat: 'naturaleza', tremolo: 0.4, vol: 0.22, refDist: 6, maxDist: 30 },
+      { pos: [10, 4, -6], filtro: 'highpass', freq: 4200, cat: 'naturaleza', tremolo: 0.55, vol: 0.2, refDist: 6, maxDist: 30 },
+      // aves: chincol y fío-fío en el sotobosque
+      { pos: [-10, 3, 14], filtro: 'bandpass', freq: 3200, q: 4, cat: 'fauna', tremolo: 0.9, vol: 0.24, refDist: 5, maxDist: 22 },
+      { pos: [6, 4, 2], filtro: 'bandpass', freq: 2800, q: 5, cat: 'fauna', tremolo: 1.3, vol: 0.2, refDist: 5, maxDist: 20 },
+      { pos: [16, 5, -12], filtro: 'bandpass', freq: 3600, q: 4, cat: 'fauna', tremolo: 0.7, vol: 0.18, refDist: 6, maxDist: 24 }
     ]
   },
 

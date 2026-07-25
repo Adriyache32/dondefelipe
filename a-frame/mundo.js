@@ -11,14 +11,33 @@
 'use strict';
 
 var MUNDO = {
-  version: 26,
+  version: 27,
   formas: {},
   clima: { viento: 1 },
   datos: null
 };
 
 /* ---------------------------------------------------------------- utilidades */
-var azar = function (a, b) { return a + Math.random() * (b - a); };
+// PRNG determinista sembrado por MUNDO.semilla: el mismo mundo con la misma
+// semilla reparte árboles, rocas y detalles igual cada vez. Si no hay semilla,
+// cae en Math.random (comportamiento aleatorio de siempre).
+var _rngEstado = 0;
+var _rngSembrado = false;
+function _sembrarRng() {
+  var sem = (window.MUNDO && MUNDO.semilla != null) ? MUNDO.semilla : null;
+  if (sem == null) { _rngSembrado = false; return; }
+  _rngEstado = sem >>> 0;
+  _rngSembrado = true;
+}
+function _rng() {
+  if (!_rngSembrado) return Math.random();
+  // mulberry32
+  _rngEstado |= 0; _rngEstado = (_rngEstado + 0x6D2B79F5) | 0;
+  var t = Math.imul(_rngEstado ^ (_rngEstado >>> 15), 1 | _rngEstado);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+var azar = function (a, b) { return a + _rng() * (b - a); };
 var rad = function (g) { return g * Math.PI / 180; };
 
 function nuevo(tag, attrs) {
@@ -262,34 +281,58 @@ function texturaCorteza(base) {
 var TEX_HOJAS = null;
 function texturaHojas() {
   if (TEX_HOJAS) return TEX_HOJAS;
-  var t = 128;
+  var t = MOVIL_TEX ? 256 : 384;   // más resolución
   var c = document.createElement('canvas');
   c.width = c.height = t;
   var g = c.getContext('2d');
   g.clearRect(0, 0, t, t);
-  // hojas individuales, densas, con venas y bordes
-  for (var i = 0; i < 620; i++) {
+  var esc = t / 128;
+  // capa de sombra de fondo (racimos oscuros) para dar profundidad al follaje
+  for (var s0 = 0; s0 < 90; s0++) {
+    g.save();
+    g.globalAlpha = 0.5;
+    g.translate(Math.random() * t, Math.random() * t);
+    var rr = azar(5, 12) * esc;
+    var grad0 = g.createRadialGradient(0,0,0, 0,0,rr);
+    grad0.addColorStop(0, 'rgba(60,70,45,0.6)');
+    grad0.addColorStop(1, 'rgba(60,70,45,0)');
+    g.fillStyle = grad0;
+    g.beginPath(); g.arc(0,0,rr,0,6.2832); g.fill();
+    g.restore();
+  }
+  g.globalAlpha = 1;
+  // hojas individuales con forma de lanceta y gradiente de luz
+  var N = MOVIL_TEX ? 700 : 1100;
+  for (var i = 0; i < N; i++) {
     g.save();
     g.translate(Math.random() * t, Math.random() * t);
     g.rotate(Math.random() * 6.2832);
-    var luz = Math.floor(azar(120, 255));
-    var largo = azar(4, 10), ancho = azar(2, 4.5);
-    // hoja
-    g.fillStyle = 'rgb(' + luz + ',' + luz + ',' + luz + ')';
+    var largo = azar(4, 11) * esc, ancho = azar(1.8, 4.2) * esc;
+    // gradiente: hoja más clara en la punta, más oscura en la base
+    var base = Math.floor(azar(70, 150));
+    var punta = Math.floor(azar(170, 255));
+    var grad = g.createLinearGradient(0, largo, 0, -largo);
+    grad.addColorStop(0, 'rgb(' + base + ',' + base + ',' + base + ')');
+    grad.addColorStop(1, 'rgb(' + punta + ',' + punta + ',' + punta + ')');
+    g.fillStyle = grad;
     g.beginPath();
     g.moveTo(0, -largo);
-    g.quadraticCurveTo(ancho, 0, 0, largo);
-    g.quadraticCurveTo(-ancho, 0, 0, -largo);
+    g.quadraticCurveTo(ancho, -largo*0.1, 0, largo);
+    g.quadraticCurveTo(-ancho, -largo*0.1, 0, -largo);
     g.fill();
-    // vena central más oscura
-    g.strokeStyle = 'rgba(90,90,90,0.5)';
-    g.lineWidth = 0.6;
-    g.beginPath(); g.moveTo(0, -largo); g.lineTo(0, largo); g.stroke();
+    // vena central + un par de nervios laterales
+    g.strokeStyle = 'rgba(40,45,30,0.45)';
+    g.lineWidth = 0.5 * esc;
+    g.beginPath(); g.moveTo(0, -largo); g.lineTo(0, largo*0.8); g.stroke();
+    g.lineWidth = 0.3 * esc;
+    g.beginPath(); g.moveTo(0,0); g.lineTo(ancho*0.5, largo*0.35); g.moveTo(0,0); g.lineTo(-ancho*0.5, largo*0.35); g.stroke();
     g.restore();
   }
   TEX_HOJAS = new THREE.CanvasTexture(c);
   TEX_HOJAS.wrapS = TEX_HOJAS.wrapT = THREE.RepeatWrapping;
   TEX_HOJAS.repeat.set(3, 3);
+  if (TEX_HOJAS.generateMipmaps !== undefined) TEX_HOJAS.generateMipmaps = true;
+  if (THREE.LinearMipmapLinearFilter) TEX_HOJAS.minFilter = THREE.LinearMipmapLinearFilter;
   if (THREE.SRGBColorSpace) TEX_HOJAS.colorSpace = THREE.SRGBColorSpace;
   return TEX_HOJAS;
 }
@@ -735,6 +778,7 @@ AFRAME.registerComponent('caminar', {
     this.origen = new THREE.Vector3();
     this.rayo = new THREE.Raycaster();
     this.cargando = 0;
+    this.pasoAcum = 0;
     var self = this;
     var esc = this.el.sceneEl;
     // modo de movimiento en VR: 'tp' (teletransporte) | 'mirar' (avance continuo)
@@ -774,6 +818,9 @@ AFRAME.registerComponent('caminar', {
     var p = this.el.object3D.position;
     var lim = MUNDO.limites;
     var fv = MUNDO.factorVel(p.x, p.z);
+    // sonido de pasos: un tic cada ~420 ms de caminata (más lento si va lento)
+    this.pasoAcum += dt * fv;
+    if (this.pasoAcum > 420 && MUNDO.sonido) { this.pasoAcum = 0; MUNDO.sonido('paso'); }
     p.addScaledVector(this.d, mover * this.data.vel * fv * dt / 1000);
     p.x = THREE.MathUtils.clamp(p.x, -lim.x, lim.x);
     p.z = THREE.MathUtils.clamp(p.z, lim.zMin, lim.zMax);
@@ -887,10 +934,10 @@ AFRAME.registerComponent('gravedad', {
     this.enSuelo = false;
     var self = this;
     window.addEventListener('keydown', function (e) {
-      if ((e.code === 'Space' || e.key === ' ') && self.enSuelo) { self.vy = MUNDO.saltoV; self.enSuelo = false; }
+      if ((e.code === 'Space' || e.key === ' ') && self.enSuelo) { self.vy = MUNDO.saltoV; self.enSuelo = false; if (MUNDO.sonido) MUNDO.sonido('salto'); }
     });
     // botón de salto táctil
-    MUNDO.saltar = function () { if (self.enSuelo) { self.vy = MUNDO.saltoV; self.enSuelo = false; } };
+    MUNDO.saltar = function () { if (self.enSuelo) { self.vy = MUNDO.saltoV; self.enSuelo = false; if (MUNDO.sonido) MUNDO.sonido('salto'); } };
   },
   tick: function (t, dt) {
     if (!dt) return;
@@ -927,6 +974,8 @@ AFRAME.registerComponent('gravedad', {
     p.y += this.vy * dt;
 
     if (p.y <= sueloY) {
+      // aterrizaje: sonar si venía cayendo con cierta velocidad
+      if (!this.enSuelo && this.vy < -3 && MUNDO.sonido) MUNDO.sonido('aterrizar');
       p.y = sueloY;
       this.vy = 0;
       this.enSuelo = true;
@@ -1596,7 +1645,32 @@ MUNDO.sonido = function (tipo) {
   var t = AUDIO.ctx.currentTime;
   var osc = AUDIO.ctx.createOscillator();
   var g = AUDIO.ctx.createGain();
-  osc.connect(g); g.connect(AUDIO.master);
+  var destino = (AUDIO.buses && AUDIO.buses.efectos) ? AUDIO.buses.efectos : AUDIO.master;
+  osc.connect(g); g.connect(destino);
+  if (tipo === 'paso') {
+    // paso: golpe seco y corto de ruido filtrado (no tono)
+    var fp = AUDIO.ctx.createBufferSource(); fp.buffer = bufferRuido();
+    var flp = AUDIO.ctx.createBiquadFilter(); flp.type = 'lowpass'; flp.frequency.value = 320; flp.Q.value = 1;
+    var gp = AUDIO.ctx.createGain();
+    fp.connect(flp); flp.connect(gp); gp.connect(destino);
+    gp.gain.setValueAtTime(0.09, t); gp.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+    fp.start(t); fp.stop(t + 0.1);
+    return;
+  } else if (tipo === 'salto') {
+    osc.type = 'sine'; osc.frequency.setValueAtTime(260, t);
+    osc.frequency.exponentialRampToValueAtTime(480, t + 0.14);
+    g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+    osc.start(t); osc.stop(t + 0.19);
+    return;
+  } else if (tipo === 'aterrizar') {
+    var fa = AUDIO.ctx.createBufferSource(); fa.buffer = bufferRuido();
+    var fla = AUDIO.ctx.createBiquadFilter(); fla.type = 'lowpass'; fla.frequency.value = 200;
+    var ga = AUDIO.ctx.createGain();
+    fa.connect(fla); fla.connect(ga); ga.connect(destino);
+    ga.gain.setValueAtTime(0.16, t); ga.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+    fa.start(t); fa.stop(t + 0.17);
+    return;
+  }
   if (tipo === 'teleport') {
     osc.type = 'sine'; osc.frequency.setValueAtTime(300, t);
     osc.frequency.exponentialRampToValueAtTime(900, t + 0.18);
@@ -2247,6 +2321,7 @@ MUNDO.iniciar = function (M) {
 
 function arranque(M) {
   marcar('leyendo los datos del mundo');
+  if (M.semilla != null) MUNDO.semilla = M.semilla;   // semilla temprana (reparto determinista)
   MUNDO.datos = M;
   var escena = document.getElementById('escena');
   var movil = !!(AFRAME.utils.device && AFRAME.utils.device.isMobile && AFRAME.utils.device.isMobile());
@@ -2293,14 +2368,17 @@ function arranque(M) {
 
   marcar('creando el observador');
   // Observador
-  var usaGrav = (M.gravedad != null);
-  if (usaGrav) {
+  // Salto universal: TODOS los mundos usan gravedad. Por defecto, la terrestre.
+  // Solo los planetas (M.gravedad) cambian el valor y ofrecen el selector.
+  MUNDO.gravedad = 9.81;
+  MUNDO.saltoV = 5.2;
+  if (M.gravedad) {
     MUNDO.gravedad = M.gravedad.valor != null ? M.gravedad.valor : 9.81;
     MUNDO.saltoV = M.gravedad.salto != null ? M.gravedad.salto : 5.2;
   }
   var jugador = nuevo('a-entity', {
     id: 'jugador', position: (M.inicio || '0 3.2 26'), caminar: '' });
-  jugador.setAttribute(usaGrav ? 'gravedad' : 'piso-adherido', usaGrav ? 'altura: 1.65' : '');
+  jugador.setAttribute('gravedad', 'altura: 1.65');
   jugador.setAttribute('mando', '');
   var camara = nuevo('a-entity', {
     id: 'camara', camera: 'active: true', 'look-controls': 'pointerLockEnabled:false' });
@@ -2368,6 +2446,7 @@ function arranque(M) {
   escena.appendChild(terreno);
 
   marcar('construyendo las franjas');
+  _sembrarRng();   // reparto determinista según MUNDO.semilla
   M.franjas.forEach(function (f) {
     marcar('franja: ' + f.id);
     var z0 = f.z[0], z1 = f.z[1];
@@ -2783,15 +2862,17 @@ function construirUI(M) {
   }
 
   // control de gravedad
-  if (M.gravedad) {
-    var bs = nuevo('button', { 'class': 'mover' });
-    bs.textContent = '\u2191 Saltar';
-    ['pointerdown','touchstart'].forEach(function (ev) {
-      bs.addEventListener(ev, function (e) { e.preventDefault(); if (MUNDO.saltar) MUNDO.saltar(); }, { passive: false });
-    });
-    ctrl.appendChild(bs);
+  // Botón de salto: en TODOS los mundos (el salto es universal)
+  var bs = nuevo('button', { 'class': 'mover' });
+  bs.textContent = '\u2191 Saltar';
+  ['pointerdown','touchstart'].forEach(function (ev) {
+    bs.addEventListener(ev, function (e) { e.preventDefault(); if (MUNDO.saltar) MUNDO.saltar(); }, { passive: false });
+  });
+  ctrl.appendChild(bs);
 
-    if (M.gravedad.opciones) {
+  // Selector de gravedad: solo en planetas que lo definan
+  if (M.gravedad && M.gravedad.opciones) {
+    {
       var sg = nuevo('select', { id: 'sel-grav' });
       M.gravedad.opciones.forEach(function (op) {
         var o = nuevo('option', { value: op.g + '|' + (op.salto || '') });

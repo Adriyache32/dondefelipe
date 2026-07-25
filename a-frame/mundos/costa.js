@@ -13,14 +13,17 @@ window.MUNDOS = window.MUNDOS || {};
 window.MUNDOS.costa = {
 
   titulo: 'Zonación del intermareal',
+  semilla: 40217,
   clima: { inicial: 'despejado', real: true, auto: false, fallback: { lat: -33.02, lon: -71.55 } },
 
   sonido: {
     fuentes: [
-      // oleaje: fuente grave y ancha hacia el mar
-      { pos: [0, 0, -30], filtro: 'lowpass', freq: 500, q: 0.4, vol: 0.34, refDist: 10, maxDist: 60 },
+      // oleaje: olas que rompen con vaivén rítmico
+      { pos: [0, 0, -30], tipo: 'olas', cat: 'naturaleza', freq: 650, ritmo: 0.19, vol: 0.5, refDist: 12, maxDist: 70 },
+      { pos: [0, 0, -55], tipo: 'olas', cat: 'naturaleza', freq: 520, ritmo: 0.14, vol: 0.4, refDist: 14, maxDist: 80 },
       // gaviotas hacia la orilla
-      { pos: [0, 4, 0], filtro: 'bandpass', freq: 2600, q: 4, vol: 0.1, refDist: 6, maxDist: 26 }
+      { pos: [-14, 4, 4], filtro: 'bandpass', freq: 2600, q: 5, cat: 'fauna', tremolo: 0.7, vol: 0.16, refDist: 6, maxDist: 30 },
+      { pos: [12, 5, -2], filtro: 'bandpass', freq: 3000, q: 6, cat: 'fauna', tremolo: 1.1, vol: 0.12, refDist: 6, maxDist: 26 }
     ]
   },
   materia: 'Biología · Ecosistemas',

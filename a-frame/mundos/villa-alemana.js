@@ -854,6 +854,7 @@ window.MUNDOS = window.MUNDOS || {};
 window.MUNDOS['villa-alemana'] = {
 
   titulo: 'Villa Alemana: la estación',
+  semilla: 33471,
   materia: 'Mundo urbano',
   resumen: 'La estación de Villa Alemana con sus trenes. Base para reconstruir la ciudad con orden.',
 

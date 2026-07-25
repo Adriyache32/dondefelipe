@@ -15,6 +15,7 @@ window.MUNDOS = window.MUNDOS || {};
 window.MUNDOS.andes = {
 
   titulo: 'Gradiente altitudinal andino',
+  semilla: 91744,
   clima: { inicial: 'despejado', real: true, auto: false, fallback: { lat: -33.0, lon: -70.3 } },
   materia: 'Biología · Ciencias para la Ciudadanía',
   resumen: 'Del valle a la nieve permanente. Acá la superficie que se mueve no es la marea: es el techo de nubes de la inversión térmica.',
