@@ -11,7 +11,7 @@
 'use strict';
 
 var MUNDO = {
-  version: 25,
+  version: 26,
   formas: {},
   clima: { viento: 1 },
   datos: null
@@ -1774,21 +1774,57 @@ function crearPanelMezcla() {
    Cambia el ambiente visual del mundo en vivo: color de cielo, niebla y tinte.
    Pensado para el hábitat de Mercurio (atmósfera terrestre, coloreada, etc.)
    pero es genérico. Las define el mundo en M.atmosferas y se activan por botón. */
+
+/* Sonido ambiental de la atmósfera activa. Cada atmósfera puede definir su
+   propio carácter (viento denso, zumbido grave, silencio del vacío). */
+MUNDO._atmFuentes = null;
+MUNDO.audioAtmosfera = function (a) {
+  function build() {
+    if (!AUDIO.ctx) return;
+    // crear las fuentes de atmósfera una sola vez, luego solo ajustar ganancias
+    if (!MUNDO._atmFuentes) {
+      var mk = function (tipo, freq, q) {
+        var f = AUDIO.ctx.createBufferSource(); f.buffer = bufferRuido(); f.loop = true;
+        var flt = AUDIO.ctx.createBiquadFilter(); flt.type = tipo; flt.frequency.value = freq; flt.Q.value = q || 1;
+        var g = AUDIO.ctx.createGain(); g.gain.value = 0;
+        f.connect(flt); flt.connect(g); g.connect(AUDIO.buses.ambiente);
+        f.start();
+        return g;
+      };
+      MUNDO._atmFuentes = {
+        viento: mk('lowpass', 500, 0.7),     // silbido de aire
+        subsuelo: mk('lowpass', 90, 1.2),    // zumbido grave subterráneo
+        agudo: mk('highpass', 2600, 0.8)     // siseo tenue (aire denso)
+      };
+    }
+    var F = MUNDO._atmFuentes, t = AUDIO.ctx.currentTime;
+    // niveles según el "cuerpo" de la atmósfera (a.aire: 0 vacío … 1 densa)
+    var aire = a.aire != null ? a.aire : (a.niebla ? 0.6 : 0);
+    F.viento.gain.setTargetAtTime(aire * 0.22, t, 1.2);
+    F.subsuelo.gain.setTargetAtTime((a.subsuelo || 0) * 0.3, t, 1.2);
+    F.agudo.gain.setTargetAtTime(aire * 0.06, t, 1.2);
+  }
+  alAudio(build);
+};
+
 MUNDO.setAtmosfera = function (a) {
   var escena = document.getElementById('escena');
   if (!escena) return;
-  // cielo
+  // cielo (cambiar color no recompila materiales, es seguro)
   escena.setAttribute('background', 'color:' + (a.cielo || '#050608'));
   document.querySelectorAll('a-sky').forEach(function (k) { k.setAttribute('color', a.cielo || '#050608'); });
-  // niebla (tinte atmosférico)
+  // niebla: NO se quita nunca (quitarla causa un destello al recompilar los
+  // materiales). Si no se quiere, se empuja lejísimos con el color del cielo.
   if (a.niebla) {
     escena.setAttribute('fog', 'type:linear; color:' + a.niebla + '; near:' + (a.near || 8) + '; far:' + (a.far || 90));
   } else {
-    escena.removeAttribute('fog');
+    escena.setAttribute('fog', 'type:linear; color:' + (a.cielo || '#050608') + '; near:400; far:1200');
   }
   // luz ambiental teñida
   var amb = document.getElementById('luz-ambiente');
   if (amb && a.luz) amb.setAttribute('light', 'type:ambient; color:' + a.luz + '; intensity:' + (a.intensidad || 0.6));
+  // sonido de la atmósfera
+  if (MUNDO.audioAtmosfera) MUNDO.audioAtmosfera(a);
   MUNDO.atmActual = a.id;
   // aviso breve
   var av = document.getElementById('aviso-atm');
@@ -2164,6 +2200,13 @@ function crearPanelDialogo() {
 
 MUNDO.callar = function () { if (panelD) panelD.classList.remove('visible'); };
 
+// Acciones que los diálogos pueden ejecutar. Algunas son del motor (abrir
+// laboratorio); otras las define el mundo en M.acciones.
+MUNDO.acciones = {
+  abrirLaboratorio: function () { if (MUNDO.abrirLaboratorio) MUNDO.abrirLaboratorio(); },
+  panelAtmosfera:   function () { if (MUNDO.datos && MUNDO.datos.atmosferas) crearPanelAtmosfera(MUNDO.datos.atmosferas); }
+};
+
 MUNDO.hablar = function (idDialogo, idNodo) {
   var D = (MUNDO.datos && MUNDO.datos.dialogos) ? MUNDO.datos.dialogos[idDialogo] : null;
   if (!D) { console.warn('No existe el diálogo: ' + idDialogo); return; }
@@ -2185,8 +2228,12 @@ MUNDO.hablar = function (idDialogo, idNodo) {
         var fichas = MUNDO.fichasIndice || {};
         if (fichas[op.ficha]) mostrarFicha(fichas[op.ficha]);
       }
+      if (op.accion && MUNDO.acciones && MUNDO.acciones[op.accion]) {
+        MUNDO.acciones[op.accion]();
+      }
       if (op.va) MUNDO.hablar(idDialogo, op.va);
-      else if (!op.ficha) MUNDO.callar();
+      else if (!op.ficha && !op.accion) MUNDO.callar();
+      else if (op.accion && !op.va) MUNDO.callar();
     };
     ops.appendChild(b);
   });
@@ -2230,6 +2277,9 @@ function arranque(M) {
   if (M.niebla) {
     escena.setAttribute('fog', 'type:linear; color:' + M.niebla.color +
       '; near:' + M.niebla.cerca + '; far:' + M.niebla.lejos);
+  } else if (M.atmosferas) {
+    // niebla lejana desde el inicio: así la primera atmósfera no recompila materiales
+    escena.setAttribute('fog', 'type:linear; color:' + (M.cielo || '#050608') + '; near:400; far:1200');
   }
   escena.appendChild(nuevo('a-sky', { color: M.cielo || '#9db8c4' }));
   var luz = M.luz || {};
@@ -2520,6 +2570,10 @@ function arranque(M) {
   // Superficie móvil
   MUNDO.puertas = [];
   (M.puertas || []).forEach(function (pu) { MUNDO.puerta(pu); });
+
+  // acciones propias del mundo (se suman a las del motor)
+  if (M.acciones) { for (var ak in M.acciones) MUNDO.acciones[ak] = M.acciones[ak]; }
+  MUNDO.oxigenoOn = false;
 
   if (M.aves) {
     poblarAves(escena, M.aves);

@@ -106,7 +106,7 @@ MUNDO.forma('habitat', function (H, color, b, ob) {
     var a = i / seg * 6.2832;
     // hueco para la puerta: saltar los segmentos frontales (cerca de a=PI/2, +z)
     var ang = a;
-    var frente = Math.abs(ang - Math.PI/2) < 0.28;   // vano al frente (+z)
+    var frente = Math.abs(ang - Math.PI/2) < 0.16;   // vano ajustado al frente (+z)
     if (frente) continue;
     var x = Math.cos(a) * R, z = Math.sin(a) * R;
     H.pieza('caja', color, 'solido', b, [x, ALTO/2 + 0.6, z], [0, a*57.3 + 90, 0],
@@ -119,17 +119,18 @@ MUNDO.forma('habitat', function (H, color, b, ob) {
       [1.1, 1, 0.44], 0);
   }
 
-  // TECHO opaco (cúpula baja de gajos sólidos)
-  var gaj = 12;
+  // TECHO HERMÉTICO: media esfera sólida completa (sin huecos entre gajos)
+  H.pieza('esfera', color, 'solido', b, [0, ALTO + 0.6, 0], [0,0,0], [R+0.4, R*0.6, R+0.4], 0);
+  // anillo de unión muro-techo
+  H.pieza('cilindro', '#6a7078', 'solido', b, [0, ALTO + 0.6, 0], [0,0,0], [R+0.45, 0.5, R+0.45], 0);
+  // costillas estructurales sobre la cúpula (decorativas, por fuera)
+  var gaj = 10;
   for (var g = 0; g < gaj; g++) {
     var ga = g / gaj * 6.2832;
-    H.pieza('caja', '#7a8088', 'solido', b, [Math.cos(ga)*R*0.5, ALTO + 1.3, Math.sin(ga)*R*0.5],
-      [0, ga*57.3, 22], [0.5, 0.3, R], 0);
+    H.pieza('caja', '#565b60', 'metal', b, [Math.cos(ga)*R*0.5, ALTO + 1.6, Math.sin(ga)*R*0.5],
+      [0, ga*57.3, 24], [0.3, 0.2, R+0.5], 0);
   }
-  H.pieza('cilindro', color, 'solido', b, [0, ALTO + 0.7, 0], [0,0,0], [R+0.3, 0.4, R+0.3], 0);
-  H.pieza('cilindro', '#6a7078', 'solido', b, [0, ALTO + 2, 0], [0,0,0], [R*0.55, 0.5, R*0.55], 0);
-  // lucernario central (tenue, no se atraviesa)
-  H.pieza('cilindro', '#2a3a44', 'solido', b, [0, ALTO + 2.3, 0], [0,0,0], [R*0.2, 0.1, R*0.2], 0);
+  H.pieza('cilindro', '#6a7078', 'solido', b, [0, ALTO + 3.2, 0], [0,0,0], [R*0.3, 0.5, R*0.3], 0);
 
   // MARCO Y PUERTA al frente (+z), con dos hojas correderas
   var zPuerta = R;
@@ -335,7 +336,7 @@ var MUROS_BASE = (function () {
   var R = 16, seg = 44, muros = [];
   for (var i = 0; i < seg; i++) {
     var a = i / seg * 6.2832;
-    if (Math.abs(a - Math.PI/2) < 0.22) continue;   // hueco de la puerta al frente (+z)
+    if (Math.abs(a - Math.PI/2) < 0.16) continue;   // hueco de la puerta (ajustado)
     muros.push({ r: 1.3, dx: Math.cos(a) * R, dz: Math.sin(a) * R, alto: 5, base: 0 });
   }
   return muros;
@@ -404,6 +405,68 @@ window.MUNDOS.mercurio = {
         material: 'color:#5a5650; shader:flat; side:double' });
       S.terreno.appendChild(cr);
     }
+
+    // CUEVA SUBTERRÁNEA: 1 de cada 3 sectores tiene una entrada con rampa que baja
+    if (R() < 0.34) {
+      var cux = S.cx + (R()-0.5)*24, cuz = S.cz + (R()-0.5)*24;
+      var prof = 6 + R()*3;   // profundidad de la cámara
+
+      // montículo de entrada
+      var mont = S.nuevo('a-entity', { position: cux + ' 1.6 ' + (cuz-3) });
+      mont.setAttribute('geometry', 'primitive:sphere; radius:4');
+      mont.setAttribute('material', 'color:#5a544c; roughness:1; flatShading:true');
+      S.terreno.appendChild(mont);
+      // boca oscura
+      var boca = S.nuevo('a-box', { position: cux + ' 1.4 ' + cuz,
+        width: 4, height: 2.8, depth: 0.5, material: 'color:#050405; shader:flat' });
+      S.terreno.appendChild(boca);
+
+      // RAMPA pisable que baja a la cámara
+      var rampa = S.nuevo('a-box', { 'class': 'suelo', width: 3.4, height: 0.3, depth: 12,
+        position: cux + ' ' + (-prof/2 + 0.5) + ' ' + (cuz + 6),
+        rotation: (Math.atan2(prof, 12) * 57.3) + ' 0 0',
+        material: 'color:#3a352f; roughness:1' });
+      S.terreno.appendChild(rampa);
+
+      // CÁMARA subterránea: piso pisable + paredes + techo (a profundidad -prof)
+      var camz = cuz + 12, camY = -prof;
+      var pisoC = S.nuevo('a-box', { 'class': 'suelo', width: 16, height: 0.3, depth: 16,
+        position: cux + ' ' + camY + ' ' + camz, material: 'color:#2e2a24; roughness:1' });
+      S.terreno.appendChild(pisoC);
+      // paredes de la cámara
+      [[0,-8,16,0.5],[0,8,16,0.5],[-8,0,0.5,16],[8,0,0.5,16]].forEach(function(w){
+        var pared = S.nuevo('a-box', { width: w[2], height: 5, depth: w[3],
+          position: (cux+w[0]) + ' ' + (camY+2.5) + ' ' + (camz+w[1]),
+          material: 'color:#3a352f; roughness:1' });
+        S.terreno.appendChild(pared);
+      });
+      // techo de la cámara
+      var techoC = S.nuevo('a-box', { width: 16, height: 0.4, depth: 16,
+        position: cux + ' ' + (camY+5) + ' ' + camz, material: 'color:#252119' });
+      S.terreno.appendChild(techoC);
+      // cristales luminosos en la cámara (algo que descubrir abajo)
+      var nCrist = 3 + Math.floor(R()*4);
+      for (var cc = 0; cc < nCrist; cc++) {
+        var chx = cux + (R()-0.5)*12, chz = camz + (R()-0.5)*12;
+        var crist = S.nuevo('a-entity', { position: chx + ' ' + (camY+0.6) + ' ' + chz,
+          rotation: '0 ' + (R()*360) + ' ' + (R()*20-10) });
+        crist.setAttribute('geometry', 'primitive:cone; radiusBottom:0.3; radiusTop:0; height:' + (1+R()*1.5));
+        crist.setAttribute('material', 'color:#6ad0e0; shader:flat; emissive:#6ad0e0; emissiveIntensity:0.6; opacity:0.85; transparent:true');
+        S.terreno.appendChild(crist);
+        // roca rompible con más monedas en la cueva
+        if (R() < 0.5) {
+          var idc = 'cave' + S.gx + '_' + S.gz + '_' + cc;
+          if (!MUNDO.rotos[idc]) {
+            var rc = S.nuevo('a-entity', { position: chx + ' ' + (camY+0.6) + ' ' + (chz+1) });
+            rc.setAttribute('geometry', 'primitive:dodecahedron; radius:1');
+            rc.setAttribute('material', 'color:#4a4038; roughness:0.9; flatShading:true');
+            S.terreno.appendChild(rc);
+            MUNDO.rocaRompible({ id: idc, x: chx, z: chz+1, golpes: 4, monedas: 3 + Math.floor(R()*4), el: rc });
+          }
+        }
+      }
+    }
+
     // piso del sector (para que se pueda pisar lo nuevo)
     var piso = S.nuevo('a-box', { 'class': 'suelo', width: 40, depth: 40, height: 0.2,
       position: S.cx + ' -0.1 ' + S.cz, material: 'color:#8a827a; roughness:1' });
@@ -413,12 +476,12 @@ window.MUNDOS.mercurio = {
 
   // ATMÓSFERAS ARTIFICIALES del hábitat (se activan con el botón dentro)
   atmosferas: [
-    { id: 'vacio',    nombre: 'Sin atmósfera (Mercurio real)', cielo: '#050608', niebla: null },
-    { id: 'terrestre',nombre: 'Atmósfera terrestre con ozono', cielo: '#7fb3d5', niebla: '#cfe4f2', near: 6, far: 80, luz: '#dceaf5', intensidad: 0.9 },
-    { id: 'rosada',   nombre: 'Atmósfera rosada', cielo: '#e0789a', niebla: '#f2c0d4', near: 6, far: 70, luz: '#f5d0de', intensidad: 0.85 },
-    { id: 'morada',   nombre: 'Atmósfera morada', cielo: '#5a3f8a', niebla: '#8a6ab0', near: 6, far: 70, luz: '#c0a8e0', intensidad: 0.7 },
-    { id: 'ambar',    nombre: 'Atmósfera ámbar', cielo: '#c88a3c', niebla: '#e0b878', near: 6, far: 70, luz: '#f0d0a0', intensidad: 0.85 },
-    { id: 'verde',    nombre: 'Atmósfera verde (metano)', cielo: '#3f8a5c', niebla: '#8ac0a0', near: 6, far: 70, luz: '#c0e0c8', intensidad: 0.75 }
+    { id: 'vacio',    nombre: 'Sin atmósfera (Mercurio real)', cielo: '#050608', niebla: null, aire: 0, subsuelo: 0.5 },
+    { id: 'terrestre',nombre: 'Atmósfera terrestre con ozono', cielo: '#7fb3d5', niebla: '#cfe4f2', near: 6, far: 80, luz: '#dceaf5', intensidad: 0.9, aire: 0.7, subsuelo: 0.1 },
+    { id: 'rosada',   nombre: 'Atmósfera rosada', cielo: '#e0789a', niebla: '#f2c0d4', near: 6, far: 70, luz: '#f5d0de', intensidad: 0.85, aire: 0.6, subsuelo: 0.2 },
+    { id: 'morada',   nombre: 'Atmósfera morada', cielo: '#5a3f8a', niebla: '#8a6ab0', near: 6, far: 70, luz: '#c0a8e0', intensidad: 0.7, aire: 0.5, subsuelo: 0.4 },
+    { id: 'ambar',    nombre: 'Atmósfera ámbar', cielo: '#c88a3c', niebla: '#e0b878', near: 6, far: 70, luz: '#f0d0a0', intensidad: 0.85, aire: 0.8, subsuelo: 0.2 },
+    { id: 'verde',    nombre: 'Atmósfera verde (metano)', cielo: '#3f8a5c', niebla: '#8ac0a0', near: 6, far: 70, luz: '#c0e0c8', intensidad: 0.75, aire: 0.9, subsuelo: 0.3 }
   ],
 
   // ZONAS PEGAJOSAS: cuesta caminar (regolito profundo / material viscoso)
@@ -566,16 +629,16 @@ window.MUNDOS.mercurio = {
 
     // GADGETS dentro de la Base Discovery (centrada en 0,0)
     { forma: 'oxigeno', color: '#3f7a9a', pos: [-6, 0.66, -8],
-      nombre: 'Activador de oxígeno', ficha: 'oxigeno', altoFicha: 2.6,
+      nombre: 'Activador de oxígeno', dialogo: 'oxigeno', altoFicha: 2.6,
       choca: [{ r: 0.5, alto: 2 }] },
     { forma: 'tele', color: '#26170f', pos: [-10, 0.66, 0], giro: 90,
       nombre: 'Monitor de la base', ficha: 'tele', altoFicha: 2.5 },
     { forma: 'cultivo', color: '#3a4048', pos: [-9, 0.66, 7], giro: -40,
       nombre: 'Cultivo hidropónico', ficha: 'cultivo', altoFicha: 2.5,
       choca: [{ dx: 0, dz: 0, ancho: 2.4, largo: 0.8, alto: 1 }] },
-    // LABORATORIO: mesa de análisis dentro de la base
+    // LABORATORIO: mesa de análisis dentro de la base (interactúa por diálogo)
     { forma: 'laboratorio', color: '#2f363d', pos: [8, 0.66, -6], giro: -90,
-      nombre: 'Laboratorio de muestras', ficha: 'laboratorio', altoFicha: 2.6,
+      nombre: 'Laboratorio de muestras', dialogo: 'laboratorio', altoFicha: 2.6,
       choca: [{ dx: 0, dz: 0, ancho: 3, largo: 1.2, alto: 1.2 }] },
 
     // ===== LUGARES NUEVOS DE LA SUPERFICIE =====
@@ -591,6 +654,66 @@ window.MUNDOS.mercurio = {
       nombre: 'Sonda estrellada', ficha: 'sonda', altoFicha: 3.5,
       choca: [{ r: 1.5, alto: 2 }] }
   ],
+
+  // ACCIONES que los diálogos pueden ejecutar
+  acciones: {
+    activarOxigeno: function () {
+      MUNDO.oxigenoOn = true;
+      if (MUNDO.curar) MUNDO.curar(100);
+    }
+  },
+
+  dialogos: {
+    oxigeno: {
+      nombre: 'Activador de oxígeno',
+      inicio: 'menu',
+      nodos: {
+        menu: {
+          texto: 'Consola del generador de oxígeno. El nivel de O₂ de la base está bajo tu control. ¿Qué deseas hacer?',
+          opciones: [
+            { dice: 'Activar el oxígeno', accion: 'activarOxigeno', va: 'activado' },
+            { dice: '¿Cómo funciona?', va: 'info' },
+            { dice: 'Cerrar', va: null }
+          ]
+        },
+        activado: {
+          texto: 'Oxígeno activado. Los niveles suben a valores seguros y el aire de la cúpula se renueva. La luz del equipo pasa a verde. Ahora puedes respirar con normalidad dentro de la base.',
+          opciones: [
+            { dice: '¿Cómo funciona?', va: 'info' },
+            { dice: 'Listo', va: null }
+          ]
+        },
+        info: {
+          texto: 'El equipo separa oxígeno del hielo de agua traído de los cráteres polares, por electrólisis: se aplica electricidad al agua y se divide en hidrógeno y oxígeno. En la Tierra las plantas hacen algo parecido con la fotosíntesis, gratis y a gran escala.',
+          opciones: [
+            { dice: 'Activar el oxígeno', accion: 'activarOxigeno', va: 'activado' },
+            { dice: 'Volver', va: 'menu' }
+          ]
+        }
+      }
+    },
+    laboratorio: {
+      nombre: 'Laboratorio de muestras',
+      inicio: 'menu',
+      nodos: {
+        menu: {
+          texto: 'Estación de análisis. Aquí puedes examinar las muestras que recolectaste en la superficie con el instrumental del laboratorio.',
+          opciones: [
+            { dice: 'Abrir el analizador', accion: 'abrirLaboratorio', va: null },
+            { dice: '¿Qué busco en las muestras?', va: 'info' },
+            { dice: 'Cerrar', va: null }
+          ]
+        },
+        info: {
+          texto: 'Buscamos tres cosas: agua (base de la vida como la conocemos), carbono (el ladrillo de las moléculas orgánicas) y patrones que la química sola no explique. Recolecta muestras afuera y tráelas aquí para analizarlas.',
+          opciones: [
+            { dice: 'Abrir el analizador', accion: 'abrirLaboratorio', va: null },
+            { dice: 'Volver', va: 'menu' }
+          ]
+        }
+      }
+    }
+  },
 
   fichas: [
     {
