@@ -1086,7 +1086,7 @@ window.MUNDOS = window.MUNDOS || {};
 window.MUNDOS['villa-alemana'] = {
 
   titulo: 'Villa Alemana: la plaza',
-  clima: { inicial: 'despejado' },
+  clima: { inicial: 'despejado', real: true, auto: false, fallback: { lat: -33.04, lon: -71.37 } },
   materia: 'Ciencias para la Ciudadanía · Ecología urbana',
   resumen: 'El paseo de palmas, el arbolado, el pasto y el borde construido. Isla de calor, sombra y superficies permeables.',
   cielo: '#a8cbe4',

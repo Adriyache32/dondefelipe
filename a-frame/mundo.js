@@ -11,7 +11,7 @@
 'use strict';
 
 var MUNDO = {
-  version: 14,
+  version: 15,
   formas: {},
   clima: { viento: 1 },
   datos: null
@@ -1004,6 +1004,72 @@ MUNDO.animar(function (t, dt) {
   L.pts.geometry.attributes.position.needsUpdate = true;
 });
 
+
+/* ---------------------------------------------------------------- clima real
+   Consulta el tiempo actual del lugar desde donde se visita el sitio (via
+   Open-Meteo, sin API key, CORS abierto) y lo traduce a un modo de clima.
+   Solo aplica a mundos terrestres: los del sistema solar lo ignoran. */
+
+// WMO weather code → modo de clima del motor
+function climaDesdeCodigo(code) {
+  if (code == null) return 'despejado';
+  if (code === 0) return 'despejado';
+  if (code >= 1 && code <= 3) return 'nublado';        // parcial a nublado
+  if (code >= 45 && code <= 48) return 'nublado';      // niebla
+  if (code >= 51 && code <= 67) return 'lluvia';       // llovizna y lluvia
+  if (code >= 71 && code <= 77) return 'lluvia';       // nieve (usamos lluvia)
+  if (code >= 80 && code <= 82) return 'lluvia';       // chubascos
+  if (code >= 95) return 'tormenta';                   // tormenta eléctrica
+  return 'nublado';
+}
+
+MUNDO.climaReal = function (lat, lon) {
+  var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat +
+            '&longitude=' + lon + '&current=weather_code,temperature_2m,is_day';
+  return fetch(url).then(function (r) { return r.json(); }).then(function (d) {
+    var c = d && d.current ? d.current : null;
+    if (!c) throw new Error('sin datos');
+    return {
+      modo: climaDesdeCodigo(c.weather_code),
+      temp: c.temperature_2m,
+      dia: c.is_day === 1,
+      code: c.weather_code
+    };
+  });
+};
+
+// Aplica el clima real: primero geolocaliza, si falla usa una ubicación por defecto
+MUNDO.aplicarClimaReal = function (opciones) {
+  opciones = opciones || {};
+  var fallback = opciones.fallback || { lat: -33.04, lon: -71.37 };  // Villa Alemana
+  function pedir(lat, lon, fuente) {
+    MUNDO.climaReal(lat, lon).then(function (info) {
+      MUNDO.setClima(info.modo);
+      var caja = document.getElementById('clima-real-lectura');
+      if (caja) {
+        caja.textContent = 'Tiempo real: ' + info.modo +
+          (info.temp != null ? ' · ' + Math.round(info.temp) + '°C' : '') + ' (' + fuente + ')';
+      }
+      // marcar el botón activo
+      document.querySelectorAll('[data-clima]').forEach(function (b) {
+        b.setAttribute('aria-pressed', b.dataset.clima === info.modo ? 'true' : 'false');
+      });
+    }).catch(function (e) {
+      var caja = document.getElementById('clima-real-lectura');
+      if (caja) caja.textContent = 'Tiempo real no disponible';
+    });
+  }
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function (pos) { pedir(pos.coords.latitude, pos.coords.longitude, 'tu ubicación'); },
+      function () { pedir(fallback.lat, fallback.lon, 'Villa Alemana'); },
+      { timeout: 6000, maximumAge: 600000 }
+    );
+  } else {
+    pedir(fallback.lat, fallback.lon, 'Villa Alemana');
+  }
+};
+
 /* ---------------------------------------------------------------- interfaz */
 function rotulo(texto) {
   var e = nuevo('a-entity', { 'class': 'etiqueta', 'mirar-camara': '' });
@@ -1421,6 +1487,9 @@ function arranque(M) {
   if (M.clima) {
     MUNDO.lluvia = crearLluvia(escena, MOVIL_TEX ? 900 : 2200, 60, 30);
     if (M.clima.inicial) MUNDO.setClima(M.clima.inicial);
+    if (M.clima.real && M.clima.auto) {
+      setTimeout(function () { MUNDO.aplicarClimaReal({ fallback: M.clima.fallback }); }, 800);
+    }
   }
 
   marcar('volcando las instancias a la GPU');
@@ -1514,6 +1583,13 @@ function construirUI(M) {
       };
       ctrl.appendChild(bc);
     });
+    // botón de tiempo real (solo si el mundo lo permite)
+    if (M.clima.real) {
+      var br = nuevo('button', { id: 'btn-clima-real' });
+      br.textContent = '\uD83C\uDF10 Tiempo real';
+      br.onclick = function () { MUNDO.aplicarClimaReal({ fallback: M.clima.fallback }); };
+      ctrl.appendChild(br);
+    }
   }
 
   var bn = nuevo('button', { id: 'nombres', 'aria-pressed': 'true' });

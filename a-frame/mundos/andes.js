@@ -15,6 +15,7 @@ window.MUNDOS = window.MUNDOS || {};
 window.MUNDOS.andes = {
 
   titulo: 'Gradiente altitudinal andino',
+  clima: { inicial: 'despejado', real: true, auto: false, fallback: { lat: -33.0, lon: -70.3 } },
   materia: 'Biología · Ciencias para la Ciudadanía',
   resumen: 'Del valle a la nieve permanente. Acá la superficie que se mueve no es la marea: es el techo de nubes de la inversión térmica.',
   cielo: '#7fa3c4',
@@ -50,10 +51,10 @@ window.MUNDOS.andes = {
       vida: ['Quillay y peumo en quebradas húmedas', 'Litre en laderas expuestas', 'Espino donde el suelo está degradado'],
       reto: '¿Por qué el mismo cerro tiene bosque denso en una ladera y espinal en la otra? Piensa en cuántas horas de sol recibe cada una.',
       especies: [
-        { forma: 'quillay', n: 40, color: '#6f8256', nombre: 'Quillay' },
-        { forma: 'peumo',   n: 34, color: '#3f5c34', nombre: 'Peumo' },
-        { forma: 'litre',   n: 40, color: '#5c7040', nombre: 'Litre' },
-        { forma: 'espino',  n: 30, color: '#818c5e', nombre: 'Espino' }
+        { forma: 'quillay', n: 40, color: '#6f8256', nombre: 'Quillay', choca: { r: 0.34, alto: 6 } },
+        { forma: 'peumo',   n: 34, color: '#3f5c34', nombre: 'Peumo', choca: { r: 0.3, alto: 5 } },
+        { forma: 'litre',   n: 40, color: '#5c7040', nombre: 'Litre', choca: { r: 0.24, alto: 3.5 } },
+        { forma: 'espino',  n: 30, color: '#818c5e', nombre: 'Espino', choca: { r: 0.24, alto: 3.5 } }
       ]
     },
     {
@@ -63,9 +64,9 @@ window.MUNDOS.andes = {
       vida: ['Quisco (<i>Echinopsis chiloensis</i>)', 'Chagual (<i>Puya chilensis</i>)', 'Litre achaparrado y arbustos espinosos'],
       reto: 'Sube el techo de nubes con el botón de nubosidad alta. ¿Qué franjas quedan adentro? Esa niebla es agua que la planta puede capturar sin que llueva.',
       especies: [
-        { forma: 'columna', n: 44, color: '#55703f', nombre: 'Quisco' },
+        { forma: 'columna', n: 44, color: '#55703f', nombre: 'Quisco', choca: { r: 0.3, alto: 3.5 } },
         { forma: 'roseta',  n: 38, color: '#7d8b6a', nombre: 'Chagual' },
-        { forma: 'litre',   n: 26, color: '#57683c', nombre: 'Litre achaparrado' }
+        { forma: 'litre',   n: 26, color: '#57683c', nombre: 'Litre achaparrado', choca: { r: 0.24, alto: 3.5 } }
       ]
     },
     {

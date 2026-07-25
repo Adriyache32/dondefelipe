@@ -13,6 +13,7 @@ window.MUNDOS = window.MUNDOS || {};
 window.MUNDOS.costa = {
 
   titulo: 'Zonación del intermareal',
+  clima: { inicial: 'despejado', real: true, auto: false, fallback: { lat: -33.02, lon: -71.55 } },
   materia: 'Biología · Ecosistemas',
   resumen: 'La costa rocosa de Chile central con la marea subiendo y bajando sobre cada franja, del bosque esclerófilo al huiro.',
   cielo: '#9db8c4',
@@ -68,11 +69,11 @@ window.MUNDOS.costa = {
       ],
       reto: 'Toma una hoja de peumo y una de la duna. ¿Qué tienen en común las plantas que viven donde el agua escasea, aunque sean de familias distintas?',
       especies: [
-        { forma: 'quillay',  n: 46, color: '#6f8256', nombre: 'Quillay' },
-        { forma: 'peumo',    n: 42, color: '#3f5c34', nombre: 'Peumo' },
-        { forma: 'litre',    n: 48, color: '#5c7040', nombre: 'Litre' },
-        { forma: 'espino',   n: 34, color: '#818c5e', nombre: 'Espino' },
-        { forma: 'columna',  n: 30, color: '#55703f', nombre: 'Quisco' },
+        { forma: 'quillay',  n: 46, color: '#6f8256', nombre: 'Quillay', choca: { r: 0.34, alto: 6 } },
+        { forma: 'peumo',    n: 42, color: '#3f5c34', nombre: 'Peumo', choca: { r: 0.3, alto: 5 } },
+        { forma: 'litre',    n: 48, color: '#5c7040', nombre: 'Litre', choca: { r: 0.24, alto: 3.5 } },
+        { forma: 'espino',   n: 34, color: '#818c5e', nombre: 'Espino', choca: { r: 0.24, alto: 3.5 } },
+        { forma: 'columna',  n: 30, color: '#55703f', nombre: 'Quisco', choca: { r: 0.3, alto: 3.5 } },
         { forma: 'roseta',   n: 26, color: '#7d8b6a', nombre: 'Chagual' }
       ]
     },
