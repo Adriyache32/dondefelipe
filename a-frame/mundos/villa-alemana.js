@@ -570,6 +570,67 @@ MUNDO.forma('pasajeroSentado', function (H, color, b, ob) {
   H.pieza('caja', piel, 'solido', b, [0, 1.24, 0.16], [0, 0, 0], [0.03, 0.045, 0.035], 0);
 }, 1.5);
 
+
+// Losa/plataforma elevada con pilares (un piso del edificio)
+MUNDO.forma('losa', function (H, color, b, ob) {
+  var A = (ob && ob.dim) ? ob.dim[0] : 24;
+  var L = (ob && ob.dim) ? ob.dim[1] : 20;
+  H.pieza('caja', color, 'solido', b, [0, 0, 0], [0, 0, 0], [A, 0.4, L], 0);
+  H.pieza('caja', '#c9c3b6', 'solido', b, [0, 0.22, 0], [0, 0, 0], [A - 0.4, 0.06, L - 0.4], 0);
+  // pilares en las esquinas y bordes (bajan al piso inferior)
+  var h = (ob && ob.pilar) ? ob.pilar : 3.4;
+  [[-A/2+0.6, -L/2+0.6],[A/2-0.6,-L/2+0.6],[-A/2+0.6,L/2-0.6],[A/2-0.6,L/2-0.6],
+   [0,-L/2+0.6],[0,L/2-0.6],[-A/2+0.6,0],[A/2-0.6,0]].forEach(function(pz){
+    H.pieza('caja', '#e0dcd2', 'solido', b, [pz[0], -h/2, pz[1]], [0,0,0], [0.44, h, 0.44], 0);
+  });
+}, 1);
+
+// Baranda perimetral de un piso abierto
+MUNDO.forma('baranda', function (H, color, b, ob) {
+  var largo = (ob && ob.largo) ? ob.largo : 20;
+  H.pieza('caja', color, 'metal', b, [0, 1.05, 0], [0, 0, 0], [largo, 0.09, 0.09], 0);
+  H.pieza('caja', color, 'metal', b, [0, 0.55, 0], [0, 0, 0], [largo, 0.06, 0.06], 0);
+  var n = Math.floor(largo / 1.2);
+  for (var i = 0; i <= n; i++) {
+    H.pieza('caja', color, 'metal', b, [-largo/2 + i*1.2, 0.55, 0], [0,0,0], [0.05, 1.1, 0.05], 0);
+  }
+}, 1.5);
+
+// Sala de clases: piso, tres muros, pizarra, escritorio y pupitres en grilla
+MUNDO.forma('sala', function (H, color, b, ob) {
+  var A = 6.4, L = 5.6, ALTO = 3;
+  var muros = (ob && ob.muros) ? ob.muros : 'IFD';  // I=izq F=fondo D=der (frente abierto al pasillo)
+  // piso
+  H.pieza('caja', '#d7d2c6', 'solido', b, [0, 0.06, 0], [0, 0, 0], [A, 0.12, L], 0);
+  // cielo
+  H.pieza('caja', '#eceae4', 'solido', b, [0, ALTO, 0], [0, 0, 0], [A, 0.12, L], 0);
+  H.pieza('caja', '#fdfbf2', 'brillo', b, [0, ALTO - 0.08, 0], [0, 0, 0], [1.6, 0.05, 2.2], 0);
+  // muros según config
+  if (muros.indexOf('F') >= 0) H.pieza('caja', color, 'solido', b, [0, ALTO/2, -L/2], [0,0,0], [A, ALTO, 0.16], 0);
+  if (muros.indexOf('I') >= 0) H.pieza('caja', color, 'solido', b, [-A/2, ALTO/2, 0], [0,0,0], [0.16, ALTO, L], 0);
+  if (muros.indexOf('D') >= 0) H.pieza('caja', color, 'solido', b, [A/2, ALTO/2, 0], [0,0,0], [0.16, ALTO, L], 0);
+  // pizarra blanca en el muro del fondo
+  H.pieza('caja', '#3a3a3a', 'solido', b, [0, 1.6, -L/2 + 0.12], [0,0,0], [3.4, 1.3, 0.06], 0);
+  H.pieza('caja', '#f6f7f4', 'solido', b, [0, 1.6, -L/2 + 0.16], [0,0,0], [3.1, 1.05, 0.03], 0);
+  // escritorio del profesor
+  H.pieza('caja', '#8a5a34', 'solido', b, [-2, 0.55, -L/2 + 1], [0,0,0], [1.4, 0.08, 0.7], 0);
+  H.pieza('caja', '#6d4426', 'solido', b, [-2, 0.28, -L/2 + 1], [0,0,0], [1.3, 0.5, 0.6], 0);
+  // pupitres 3x3 mirando la pizarra
+  for (var fila = 0; fila < 3; fila++) {
+    for (var col = 0; col < 3; col++) {
+      var px = -1.7 + col * 1.7, pz = -0.4 + fila * 1.5;
+      // mesa
+      H.pieza('caja', '#d8c9a8', 'solido', b, [px, 0.55, pz], [0,0,0], [0.7, 0.06, 0.5], 0);
+      H.pieza('caja', '#a89878', 'solido', b, [px, 0.3, pz], [0,0,0], [0.06, 0.5, 0.06], 0);
+      H.pieza('caja', '#a89878', 'solido', b, [px, 0.3, pz - 0.2], [0,0,0], [0.06, 0.5, 0.06], 0);
+      // silla
+      H.pieza('caja', '#3f6b8a', 'solido', b, [px, 0.34, pz + 0.5], [0,0,0], [0.42, 0.06, 0.42], 0);
+      H.pieza('caja', '#3f6b8a', 'solido', b, [px, 0.6, pz + 0.68], [-6,0,0], [0.42, 0.5, 0.06], 0);
+      H.pieza('caja', '#2f2f2f', 'solido', b, [px, 0.16, pz + 0.5], [0,0,0], [0.06, 0.34, 0.06], 0);
+    }
+  }
+}, 3.2);
+
 /* ------------------------------------------------------------ COLOCACIONES */
 var OBJ = [];
 var FIERRO = '#38463f';
@@ -756,64 +817,47 @@ OBJ.push({ forma: 'semaforo', color: '#3c4a42', pos: [20, 0.05, 45], giro: 180 }
 });
 
 
-/* ================= COLEGIO SAN AGUSTÍN (después de la estación) =============
-   Se ubica al costado izquierdo-fondo, en la zona z negativa, pasando la
-   plaza. La estación queda a la derecha; el colegio, más allá del borde. */
-var CX = -30;   // eje horizontal del recinto escolar
-var CZ = -46;   // fondo de la escena
+/* ================= COLEGIO SAN AGUSTÍN (al otro lado de la estación) =========
+   La estación está en X positivo (derecha). El colegio va en X negativo.
+   Tres pisos reales conectados por escaleras:
+     Piso 0 (calle)  y = 0     → recepción, patio, Felipe
+     Piso 1          y = 4     → la multicancha
+     Piso 2          y = 8     → cinco salas de clases
+   ========================================================================== */
+var CX = -34;    // eje del edificio (lado opuesto a la estación)
+var CZ = -8;     // centro en profundidad
+var P1 = 4;      // altura del piso 1
+var P2 = 8;      // altura del piso 2
+var EDA = 30, EDL = 24;   // ancho y largo del edificio
 
-// Portón de acceso, mirando a la plaza
-OBJ.push({ forma: 'porton', color: '#7a4a30', pos: [CX + 10, 0.05, -20],
+// ---- Portón de acceso, mirando a la plaza ----
+OBJ.push({ forma: 'porton', color: '#7a4a30', pos: [CX + 4, 0.05, CZ + 16],
            nombre: 'Colegio San Agustín', ficha: 'colegio', altoFicha: 6,
            choca: [{ dx: -3, dz: 0, r: 0.4, alto: 4 }, { dx: 3, dz: 0, r: 0.4, alto: 4 }] });
 
-// Recepción con el escudo SA
-OBJ.push({ forma: 'recepcion', color: '#f0eee8', pos: [CX + 10, 0.05, -27], giro: 0,
+/* ---------- PISO 0 · nivel calle ---------- */
+// piso del recinto
+OBJ.push({ forma: 'losa', color: '#b8b2a4', pos: [CX, 0, CZ], dim: [EDA, EDL], pilar: 0.4,
+           piso: { ancho: EDA, largo: EDL, alto: 0.25, color: '#c3bdaf' } });
+// recepción con escudo SA, contra el muro del fondo
+OBJ.push({ forma: 'recepcion', color: '#f0eee8', pos: [CX + 4, 0.25, CZ - 7], giro: 0,
            ficha: 'recepcion', altoFicha: 4.6,
-           piso: { ancho: 14, largo: 8, alto: 0.15, color: '#e4e0d6' },
            choca: [
              { dx: 3, dz: -3.5, ancho: 9.8, largo: 0.3, alto: 3.6 },
              { dx: -6, dz: -3.5, ancho: 1.8, largo: 0.3, alto: 3.6 },
              { dx: 1, dz: 1.5, ancho: 9, largo: 1, alto: 1.3 }
            ] });
-OBJ.push({ forma: 'persona', pos: [CX + 12, 0.2, -28.5], giro: 180,
-  cuerpo: { altura: 1.66, piel: '#c88d6b', pelo: '#2a2018', chaqueta: '#7a3f4a',
-            polera: '#e8e2d4', pantalon: '#33383c', zapato: '#20201e' } });
-
-// Pabellón de aulas de dos pisos, al fondo del patio
-OBJ.push({ forma: 'pabellon', color: '#eceae4', pos: [CX + 2, 0.05, -40],
-           choca: [{ dx: 0, dz: -4.5, ancho: 22, largo: 0.4, alto: 6.4 }],
-           piso: { ancho: 22, largo: 9, alto: 0.15, color: '#d9d4c8' } });
-
-// Escalera que sube al segundo piso del pabellón
-OBJ.push({ forma: 'escalera', color: '#d8c23a', pos: [CX + 12, 0.05, -37], giro: 180,
-           rampas: [{ dx: 0, dz: 0, ancho: 2.6, largo: 4.6, alto: 1.1, base: 1.1, pitch: 32, color: '#c9a832' }] });
-
-// Multicancha techada, a la derecha del patio
-OBJ.push({ forma: 'cancha', color: '#2f74b5', pos: [CX + 26, 0.05, -40],
-           ficha: 'cancha', altoFicha: 6,
-           piso: { ancho: 20, largo: 32, alto: 0.1, color: '#2f74b5' },
+// muros perimetrales del piso 0 (dejan el frente abierto)
+OBJ.push({ forma: 'losa', color: '#b8b2a4', pos: [CX, 0, CZ], dim: [0.1,0.1], pilar: 0,
            choca: [
-             { dx: -10, dz: 0, ancho: 0.3, largo: 32, alto: 4.4 },
-             { dx: 10, dz: 0, ancho: 0.3, largo: 32, alto: 4.4 },
-             { dx: 0, dz: -16, ancho: 20, largo: 0.3, alto: 4.4 },
-             { dx: 0, dz: 16, ancho: 20, largo: 0.3, alto: 4.4 }
+             { dx: -EDA/2, dz: 0, ancho: 0.4, largo: EDL, alto: P1, base: 0 },
+             { dx: EDA/2, dz: 0, ancho: 0.4, largo: EDL, alto: P1, base: 0 },
+             { dx: 0, dz: -EDL/2, ancho: EDA, largo: 0.4, alto: P1, base: 0 }
            ] });
 
-// Escalera de bajada al subterráneo y el pasillo subterráneo
-OBJ.push({ forma: 'escalera', color: '#d8c23a', pos: [CX - 2, 0.05, -30], giro: 0,
-           rampas: [{ dx: 0, dz: 0, ancho: 2.6, largo: 4.6, alto: -1.6, base: 0, pitch: -32, color: '#c9a832' }] });
-OBJ.push({ forma: 'subterraneo', color: '#f0efe9', pos: [CX - 2, -1.55, -37],
-           ficha: 'subterraneo', altoFicha: 3.2,
-           piso: { ancho: 5, largo: 24, alto: 0.15, color: '#cfd2d4' },
-           choca: [
-             { dx: -2.5, dz: 0, ancho: 0.3, largo: 24, alto: 3, base: 0 },
-             { dx: 2.5, dz: 0, ancho: 0.3, largo: 24, alto: 3, base: 0 }
-           ] });
-
-// Felipe, el historiador de Villa Alemana, en la entrada del colegio
+// Felipe, en la entrada, a nivel de la calle
 OBJ.push({
-  forma: 'persona', pos: [CX + 12.5, 0.05, -22], giro: 200,
+  forma: 'persona', pos: [CX + 4, 0.25, CZ + 10], giro: 0,
   dialogo: 'felipe', altoFicha: 2.6, nombre: 'Felipe', alto: 2.1,
   cuerpo: {
     altura: 1.74, piel: '#c48a63', pelo: '#1c1712',
@@ -821,14 +865,65 @@ OBJ.push({
     barba: '#241b16', lentes: '#20201f', capucha: true, mochila: '#7a7168'
   }
 });
-
-// Un par de estudiantes en el patio
-OBJ.push({ forma: 'persona', pos: [CX + 8, 0.05, -32], giro: 30,
+OBJ.push({ forma: 'persona', pos: [CX + 8, 0.25, CZ + 2], giro: 30,
   cuerpo: { altura: 1.62, piel: '#b57a56', pelo: '#1e1814', chaqueta: '#3f5d6b',
             polera: '#20242a', pantalon: '#2b3138', zapato: '#17161a' } });
-OBJ.push({ forma: 'persona', pos: [CX + 30, 0.05, -34], giro: -80,
-  cuerpo: { altura: 1.72, piel: '#d8a077', pelo: '#3a2a20', chaqueta: '#2f6b45',
-            polera: '#e8e2d4', pantalon: '#3d4450', zapato: '#201d1b' } });
+
+// Escalera piso 0 → piso 1 (a la izquierda del edificio)
+OBJ.push({ forma: 'escalera', color: '#d8c23a', pos: [CX - 12, 0.25, CZ + 6], giro: 0,
+           rampas: [{ dx: 0, dz: 0, ancho: 2.6, largo: 11, alto: P1 - 0.25, base: P1 - 0.25, pitch: 34, color: '#c9a832' }] });
+
+/* ---------- PISO 1 · la multicancha ---------- */
+OBJ.push({ forma: 'losa', color: '#a8a294', pos: [CX, P1, CZ], dim: [EDA, EDL], pilar: P1,
+           piso: { ancho: EDA, largo: EDL, alto: 0.25, color: '#9aa0a6' } });
+OBJ.push({ forma: 'cancha', color: '#2f74b5', pos: [CX, P1 + 0.2, CZ],
+           ficha: 'cancha', altoFicha: 6,
+           piso: { ancho: 20, largo: 20, alto: 0.1, color: '#2f74b5' },
+           choca: [
+             { dx: -10, dz: 0, ancho: 0.3, largo: 20, alto: 4.4, base: P1 },
+             { dx: 10, dz: 0, ancho: 0.3, largo: 20, alto: 4.4, base: P1 },
+             { dx: 0, dz: -10, ancho: 20, largo: 0.3, alto: 4.4, base: P1 },
+             { dx: 0, dz: 10, ancho: 20, largo: 0.3, alto: 4.4, base: P1 }
+           ] });
+// baranda del borde frontal del piso 1
+OBJ.push({ forma: 'baranda', color: '#c4cace', pos: [CX, P1 + 0.25, CZ + EDL/2 - 0.3], largo: EDA });
+
+// Escalera piso 1 → piso 2 (a la derecha)
+OBJ.push({ forma: 'escalera', color: '#d8c23a', pos: [CX + 12, P1 + 0.2, CZ + 6], giro: 0,
+           rampas: [{ dx: 0, dz: 0, ancho: 2.6, largo: 11, alto: P2 - P1, base: P2 - P1, pitch: 34, color: '#c9a832' }] });
+
+/* ---------- PISO 2 · cinco salas de clases ---------- */
+OBJ.push({ forma: 'losa', color: '#a8a294', pos: [CX, P2, CZ], dim: [EDA, EDL], pilar: P1,
+           piso: { ancho: EDA, largo: EDL, alto: 0.25, color: '#d9d4c8' } });
+// techo del edificio
+OBJ.push({ forma: 'losa', color: '#c9c3b6', pos: [CX, P2 + 3.3, CZ], dim: [EDA + 0.6, EDL + 0.6], pilar: 0 });
+// baranda del pasillo frontal del piso 2
+OBJ.push({ forma: 'baranda', color: '#c4cace', pos: [CX, P2 + 0.25, CZ + EDL/2 - 0.3], largo: EDA });
+
+// Las cinco salas, alineadas contra el muro del fondo, mirando al pasillo
+var SALAS = [
+  { n: '1° Medio', muros: 'IF' },
+  { n: '2° Medio', muros: 'F'  },
+  { n: '3° Medio', muros: 'F'  },
+  { n: '4° Medio', muros: 'F'  },
+  { n: 'Laboratorio', muros: 'FD' }
+];
+SALAS.forEach(function (sa, i) {
+  var sx = CX - EDA/2 + 3.6 + i * 5.7;
+  OBJ.push({ forma: 'sala', color: '#eceae4', pos: [sx, P2 + 0.2, CZ - 2.4], muros: sa.muros,
+             nombre: sa.n, ficha: 'salas', altoFicha: 3.4,
+             choca: [
+               { dx: 0, dz: -2.8, ancho: 6.4, largo: 0.3, alto: 3, base: P2 },
+               (sa.muros.indexOf('I') >= 0 ? { dx: -3.2, dz: 0, ancho: 0.3, largo: 5.6, alto: 3, base: P2 } : null),
+               (sa.muros.indexOf('D') >= 0 ? { dx: 3.2, dz: 0, ancho: 0.3, largo: 5.6, alto: 3, base: P2 } : null)
+             ].filter(Boolean) });
+  // un estudiante en la primera fila de algunas salas
+  if (i < 3) {
+    OBJ.push({ forma: 'pasajeroSentado', pos: [sx - 1.7, P2 + 0.75, CZ - 2.8], giro: 180,
+      cuerpo: { altura: 1.6, piel: '#c88d6b', pelo: '#241b16', chaqueta: '#3f5d6b',
+                polera: '#20242a', pantalon: '#2b2f36', zapato: '#1a1917' } });
+  }
+});
 
 /* ---- El anfitrión, junto a la entrada del paseo ---- */
 OBJ.push({
@@ -881,7 +976,7 @@ window.MUNDOS['villa-alemana'] = {
   luz: { cielo: '#e2f0f8', suelo: '#9a8f74', ambiente: 0.95, sol: '#fff6e0', intensidad: 0.85,
          posicion: '-14 26 10' },
 
-  ancho: 130,
+  ancho: 150,
   anchoVida: 56,
   inicio: '0 1.7 42',
 
@@ -893,8 +988,9 @@ window.MUNDOS['villa-alemana'] = {
     estacion:{ etiqueta: 'La estación',        pos: '30 1.7 26', pitch: 0,   yaw: 178 },
     anden:   { etiqueta: 'En el andén',        pos: '33.5 2.7 14', pitch: -3, yaw: 178 },
     vagon:   { etiqueta: 'Dentro del vagón',   pos: '39.5 2.8 4',  pitch: 0,  yaw: 180 },
-    colegio: { etiqueta: 'Colegio San Agustín', pos: '-20 1.7 -22', pitch: -3, yaw: 200 },
-    cancha:  { etiqueta: 'La multicancha',     pos: '-4 1.7 -40',  pitch: 0,  yaw: -90 }
+    colegio: { etiqueta: 'Colegio: entrada',    pos: '-30 1.9 8',   pitch: -2,  yaw: 0 },
+    cancha:  { etiqueta: 'Colegio: la cancha',  pos: '-34 5.9 2',   pitch: 0,   yaw: 0 },
+    salas:   { etiqueta: 'Colegio: las salas',  pos: '-34 9.9 4',   pitch: -4,  yaw: 180 }
   },
 
   cielos: [
@@ -1102,12 +1198,12 @@ window.MUNDOS['villa-alemana'] = {
     },
     {
       id: 'colegio', nombre: 'Colegio San Agustín de Villa Alemana', rango: 'Entrada del establecimiento',
-      texto: 'Bienvenido al colegio. Cruzando el portón está la recepción con el escudo del San Agustín; al fondo, el patio con el pabellón de aulas y la multicancha; y una escalera baja al subterráneo. Recorre con calma: casi todo se puede pisar.',
+      texto: 'Bienvenido al colegio. Tiene tres pisos que se recorren subiendo escaleras: en el nivel de la calle está la recepción y te recibe Felipe; una escalera sube a la multicancha del segundo piso; y otra más lleva al tercer piso, donde están las salas de clases. Casi todo se puede pisar.',
       vida: [
-        'Recepción con el escudo institucional y el cuadro de San Agustín',
-        'Pabellón de aulas de dos pisos con pasillo vidriado',
-        'Multicancha techada para fútbol y básquetbol',
-        'Subterráneo con pasillos que conectan los sectores'
+        'Piso 1, a nivel de calle: recepción con el escudo San Agustín',
+        'Piso 2: la multicancha con arcos y tableros',
+        'Piso 3: cinco salas de clases con pizarras y pupitres',
+        'Escaleras que conectan los tres niveles'
       ],
       reto: 'Recorre el colegio completo y haz un plano a mano de lo que viste. Después compáralo con el colegio real: ¿qué falta y qué sobra en esta versión?'
     },
@@ -1140,6 +1236,11 @@ window.MUNDOS['villa-alemana'] = {
         'Información en tiempo real hacia los letreros del andén'
       ],
       reto: 'Si dos trenes van con diez minutos de retraso, ¿conviene apurar al primero o retener al segundo? Piensa en qué le pasa a la cantidad de gente esperando en cada andén.'
+    },
+    {
+      id: 'salas', nombre: 'Las salas de clases', rango: 'Tercer piso del colegio',
+      texto: 'Cinco salas en fila, cada una con su pizarra, el escritorio del profesor y los pupitres mirando al frente. Es el espacio donde ocurre lo esencial del colegio, y también el más simple de reconocer: casi cualquiera ha pasado horas en una sala como esta.',
+      reto: 'Mira la disposición de los pupitres: todos mirando la pizarra. ¿Qué otras formas de ordenar una sala conoces, y qué tipo de clase favorece cada una?'
     },
     {
       id: 'cabina', nombre: 'La cabina de control', rango: 'El puesto del conductor',
