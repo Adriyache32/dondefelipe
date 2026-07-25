@@ -1087,6 +1087,17 @@ window.MUNDOS['villa-alemana'] = {
 
   titulo: 'Villa Alemana: la plaza',
   clima: { inicial: 'despejado', real: true, auto: false, fallback: { lat: -33.04, lon: -71.37 } },
+
+  sonido: {
+    fuentes: [
+      // murmullo de gente en la plaza
+      { pos: [0, 2, 10], filtro: 'bandpass', freq: 700, q: 0.8, vol: 0.14, refDist: 8, maxDist: 30 },
+      // zumbido de la estación / rieles
+      { pos: [39, 1, 6], filtro: 'lowpass', freq: 300, q: 0.7, vol: 0.2, refDist: 6, maxDist: 34 },
+      // paseo comercial al sur
+      { pos: [0, 2, 62], filtro: 'bandpass', freq: 900, q: 0.6, vol: 0.16, refDist: 10, maxDist: 40 }
+    ]
+  },
   materia: 'Ciencias para la Ciudadanía · Ecología urbana',
   resumen: 'El paseo de palmas, el arbolado, el pasto y el borde construido. Isla de calor, sombra y superficies permeables.',
   cielo: '#a8cbe4',

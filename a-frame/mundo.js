@@ -11,7 +11,7 @@
 'use strict';
 
 var MUNDO = {
-  version: 16,
+  version: 19,
   formas: {},
   clima: { viento: 1 },
   datos: null
@@ -210,6 +210,55 @@ function superficie(base, estilo, reps) {
   return res;
 }
 
+// Textura de corteza: vetas verticales, grietas y parches de liquen
+var TEX_CORTEZA = {};
+function texturaCorteza(base) {
+  if (TEX_CORTEZA[base]) return TEX_CORTEZA[base];
+  var t = 256;
+  var c = document.createElement('canvas');
+  c.width = c.height = t;
+  var g = c.getContext('2d');
+  g.fillStyle = base;
+  g.fillRect(0, 0, t, t);
+  // vetas verticales
+  for (var i = 0; i < 60; i++) {
+    var x = Math.random() * t;
+    var w = azar(1, 4);
+    var oscuro = Math.random() > 0.5;
+    g.strokeStyle = oscuro ? 'rgba(30,22,14,0.28)' : 'rgba(210,195,170,0.18)';
+    g.lineWidth = w;
+    g.beginPath();
+    g.moveTo(x, 0);
+    var xx = x;
+    for (var y = 0; y < t; y += 12) { xx += azar(-3, 3); g.lineTo(xx, y); }
+    g.stroke();
+  }
+  // grietas horizontales cortas
+  for (var k = 0; k < 40; k++) {
+    g.strokeStyle = 'rgba(20,14,8,0.3)';
+    g.lineWidth = azar(0.5, 1.5);
+    var gx = Math.random()*t, gy = Math.random()*t, gw = azar(6, 20);
+    g.beginPath(); g.moveTo(gx, gy); g.lineTo(gx + gw, gy + azar(-3,3)); g.stroke();
+  }
+  // parches de liquen (verde grisáceo y ocre)
+  for (var l = 0; l < 22; l++) {
+    var lx = Math.random()*t, ly = Math.random()*t, lr = azar(4, 14);
+    g.fillStyle = Math.random() > 0.5 ? 'rgba(150,168,140,0.33)' : 'rgba(178,170,120,0.28)';
+    g.beginPath();
+    for (var p = 0; p < 8; p++) {
+      var a = p/8*6.2832, rr = lr*azar(0.6,1.1);
+      g.lineTo(lx + Math.cos(a)*rr, ly + Math.sin(a)*rr);
+    }
+    g.closePath(); g.fill();
+  }
+  var tx = new THREE.CanvasTexture(c);
+  tx.wrapS = tx.wrapT = THREE.RepeatWrapping;
+  tx.repeat.set(1, 3);
+  if (THREE.SRGBColorSpace) tx.colorSpace = THREE.SRGBColorSpace;
+  TEX_CORTEZA[base] = tx;
+  return tx;
+}
+
 var TEX_HOJAS = null;
 function texturaHojas() {
   if (TEX_HOJAS) return TEX_HOJAS;
@@ -218,15 +267,24 @@ function texturaHojas() {
   c.width = c.height = t;
   var g = c.getContext('2d');
   g.clearRect(0, 0, t, t);
-  for (var i = 0; i < 320; i++) {
+  // hojas individuales, densas, con venas y bordes
+  for (var i = 0; i < 620; i++) {
     g.save();
     g.translate(Math.random() * t, Math.random() * t);
     g.rotate(Math.random() * 6.2832);
-    var luz = Math.floor(azar(150, 255));
+    var luz = Math.floor(azar(120, 255));
+    var largo = azar(4, 10), ancho = azar(2, 4.5);
+    // hoja
     g.fillStyle = 'rgb(' + luz + ',' + luz + ',' + luz + ')';
     g.beginPath();
-    g.ellipse(0, 0, azar(4, 9), azar(2, 4.5), 0, 0, 6.2832);
+    g.moveTo(0, -largo);
+    g.quadraticCurveTo(ancho, 0, 0, largo);
+    g.quadraticCurveTo(-ancho, 0, 0, -largo);
     g.fill();
+    // vena central más oscura
+    g.strokeStyle = 'rgba(90,90,90,0.5)';
+    g.lineWidth = 0.6;
+    g.beginPath(); g.moveTo(0, -largo); g.lineTo(0, largo); g.stroke();
     g.restore();
   }
   TEX_HOJAS = new THREE.CanvasTexture(c);
@@ -296,7 +354,11 @@ function pieza(forma, color, acabado, b, off, rot, esc, viento, grupoForzado) {
 function materialDe(color, acabado) {
   if (acabado === 'follaje') {
     return new THREE.MeshStandardMaterial({
-      color: color, map: texturaHojas(), alphaTest: 0.45, roughness: 1, metalness: 0 });
+      color: color, map: texturaHojas(), alphaTest: 0.4, roughness: 1, metalness: 0 });
+  }
+  if (acabado === 'corteza') {
+    return new THREE.MeshStandardMaterial({
+      color: color, map: texturaCorteza(color), roughness: 0.95, metalness: 0 });
   }
   if (acabado === 'lamina') {
     return new THREE.MeshStandardMaterial({
@@ -574,6 +636,7 @@ AFRAME.registerComponent('caminar', {
       p.x = tx; p.z = tz;
       MUNDO.resolver(p);
       if (marca) marca.setAttribute('visible', false);
+      if (MUNDO.sonido) MUNDO.sonido('teleport');
     }
   }
 });
@@ -1034,6 +1097,7 @@ MUNDO.setClima = function (modo) {
     MUNDO.clima.viento = 1;
   }
   MUNDO.clima.modo = modo;
+  if (MUNDO.audioClima) MUNDO.audioClima(modo);
 };
 
 // animación de la lluvia
@@ -1121,6 +1185,252 @@ MUNDO.aplicarClimaReal = function (opciones) {
   }
 };
 
+
+/* ---------------------------------------------------------------- aves
+   El motor sabe volar: cada ave es un cuerpo + alas que baten, y se mueve
+   en círculos amplios con leve deriva. El mundo define las ESPECIES
+   (color, tamaño, altura de vuelo, cuántas) en M.aves. */
+
+var AVES = [];   // instancias vivas
+
+// Construye la geometría de un ave (cuerpo, cabeza, cola y dos alas móviles)
+function crearAve(esp) {
+  var g = new THREE.Group();
+  var esc = esp.tam || 1;
+  var matCuerpo = new THREE.MeshStandardMaterial({ color: esp.color || '#5a4a3a', roughness: 0.8 });
+  var matPecho = new THREE.MeshStandardMaterial({ color: esp.pecho || esp.color || '#8a7a6a', roughness: 0.8 });
+  var matAla = new THREE.MeshStandardMaterial({ color: esp.ala || esp.color || '#4a3a2a', roughness: 0.85, side: THREE.DoubleSide });
+
+  // cuerpo
+  var cuerpo = new THREE.Mesh(new THREE.SphereGeometry(0.16 * esc, 7, 6), matCuerpo);
+  cuerpo.scale.set(1, 0.85, 1.7);
+  g.add(cuerpo);
+  // pecho
+  var pecho = new THREE.Mesh(new THREE.SphereGeometry(0.12 * esc, 6, 5), matPecho);
+  pecho.scale.set(1, 0.9, 1.2); pecho.position.set(0, -0.03 * esc, 0.14 * esc);
+  g.add(pecho);
+  // cabeza
+  var cab = new THREE.Mesh(new THREE.SphereGeometry(0.1 * esc, 6, 5), matCuerpo);
+  cab.position.set(0, 0.06 * esc, 0.24 * esc);
+  g.add(cab);
+  // pico
+  var pico = new THREE.Mesh(new THREE.ConeGeometry(0.03 * esc, 0.1 * esc, 4), matAla);
+  pico.rotation.x = Math.PI / 2; pico.position.set(0, 0.05 * esc, 0.34 * esc);
+  g.add(pico);
+  // cola
+  var cola = new THREE.Mesh(new THREE.BoxGeometry(0.14 * esc, 0.02 * esc, 0.24 * esc), matCuerpo);
+  cola.position.set(0, 0, -0.28 * esc);
+  g.add(cola);
+  // alas (pivotan desde el cuerpo)
+  var alaGeo = new THREE.PlaneGeometry(0.5 * esc, 0.22 * esc);
+  var alaIzq = new THREE.Group(), alaDer = new THREE.Group();
+  var mIzq = new THREE.Mesh(alaGeo, matAla); mIzq.position.x = -0.25 * esc; mIzq.rotation.y = 0.2;
+  var mDer = new THREE.Mesh(alaGeo, matAla); mDer.position.x = 0.25 * esc; mDer.rotation.y = -0.2;
+  alaIzq.add(mIzq); alaDer.add(mDer);
+  g.add(alaIzq); g.add(alaDer);
+
+  return { g: g, alaIzq: alaIzq, alaDer: alaDer };
+}
+
+// Poblar el cielo con las aves del mundo
+function poblarAves(escena, lista) {
+  lista.forEach(function (esp) {
+    var n = esp.n || 3;
+    for (var i = 0; i < n; i++) {
+      var ave = crearAve(esp);
+      escena.object3D.add(ave.g);
+      AVES.push({
+        modelo: ave,
+        // trayectoria: círculo con centro, radio, altura y velocidad angular
+        cx: esp.centro ? esp.centro[0] : azar(-30, 30),
+        cz: esp.centro ? esp.centro[2] : azar(-30, 30),
+        r: azar(esp.radio ? esp.radio[0] : 8, esp.radio ? esp.radio[1] : 18),
+        alt: azar(esp.altura ? esp.altura[0] : 6, esp.altura ? esp.altura[1] : 14),
+        vel: (esp.vel || 0.25) * (Math.random() > 0.5 ? 1 : -1) * azar(0.7, 1.3),
+        fase: Math.random() * 6.2832,
+        bateo: azar(8, 14),           // velocidad del aleteo
+        planea: esp.planea || 0,      // 0 = siempre aletea, 1 = planea a ratos
+        nombre: esp.nombre
+      });
+    }
+  });
+}
+
+// Animar el vuelo (registrado como animación del motor)
+MUNDO.animar(function (t, dt) {
+  if (!AVES.length) return;
+  for (var i = 0; i < AVES.length; i++) {
+    var a = AVES[i];
+    var ang = a.fase + t * a.vel;
+    var x = a.cx + Math.cos(ang) * a.r;
+    var z = a.cz + Math.sin(ang) * a.r;
+    var y = a.alt + Math.sin(t * 0.6 + a.fase) * 1.5;   // sube y baja suave
+    var g = a.modelo.g;
+    g.position.set(x, y, z);
+    // orientar en la dirección del vuelo (tangente al círculo)
+    var tx = -Math.sin(ang) * a.vel, tz = Math.cos(ang) * a.vel;
+    g.rotation.y = Math.atan2(tx, tz);
+    // aleteo: planea a ratos si la especie lo hace
+    var planeando = a.planea && (Math.sin(t * 0.5 + a.fase) > 0.3);
+    var bat = planeando ? 0.1 : Math.sin(t * a.bateo + a.fase) * 0.9;
+    a.modelo.alaIzq.rotation.z = bat;
+    a.modelo.alaDer.rotation.z = -bat;
+  }
+});
+
+
+/* ---------------------------------------------------------------- sonido
+   Todo el audio se SINTETIZA con WebAudio: sin archivos, sin CDN.
+   - Ambiente (viento, lluvia): ruido filtrado, volumen según el clima.
+   - Puntual (teletransporte, clic): tonos cortos.
+   - Posicional: fuentes con posición; el volumen sube al acercarse.
+   Los navegadores bloquean el audio hasta el primer toque: lo desbloqueamos. */
+var AUDIO = { ctx: null, listo: false, master: null, fuentes: [] };
+
+function iniAudio() {
+  if (AUDIO.ctx) return;
+  try {
+    AUDIO.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    AUDIO.master = AUDIO.ctx.createGain();
+    AUDIO.master.gain.value = 0.6;
+    AUDIO.master.connect(AUDIO.ctx.destination);
+  } catch (e) { AUDIO.ctx = null; }
+}
+
+// desbloqueo al primer gesto
+function desbloquearAudio() {
+  iniAudio();
+  if (AUDIO.ctx && AUDIO.ctx.state === 'suspended') AUDIO.ctx.resume();
+  AUDIO.listo = true;
+  window.removeEventListener('pointerdown', desbloquearAudio);
+  window.removeEventListener('keydown', desbloquearAudio);
+  if (MUNDO._audioPendiente) { MUNDO._audioPendiente(); MUNDO._audioPendiente = null; }
+}
+window.addEventListener('pointerdown', desbloquearAudio);
+window.addEventListener('keydown', desbloquearAudio);
+
+// Buffer de ruido blanco reutilizable
+function bufferRuido() {
+  if (AUDIO._ruido) return AUDIO._ruido;
+  var n = AUDIO.ctx.sampleRate * 2;
+  var buf = AUDIO.ctx.createBuffer(1, n, AUDIO.ctx.sampleRate);
+  var d = buf.getChannelData(0);
+  for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  AUDIO._ruido = buf;
+  return buf;
+}
+
+// AMBIENTE: viento (ruido grave filtrado) y lluvia (ruido agudo)
+MUNDO.audioAmbiente = { viento: null, lluvia: null };
+function crearAmbiente() {
+  if (!AUDIO.ctx) return;
+  // viento
+  var vFuente = AUDIO.ctx.createBufferSource();
+  vFuente.buffer = bufferRuido(); vFuente.loop = true;
+  var vFiltro = AUDIO.ctx.createBiquadFilter();
+  vFiltro.type = 'lowpass'; vFiltro.frequency.value = 420;
+  var vGain = AUDIO.ctx.createGain(); vGain.gain.value = 0.12;
+  // modulación lenta del viento (ráfagas)
+  var lfo = AUDIO.ctx.createOscillator(); lfo.frequency.value = 0.12;
+  var lfoG = AUDIO.ctx.createGain(); lfoG.gain.value = 0.06;
+  lfo.connect(lfoG); lfoG.connect(vGain.gain);
+  vFuente.connect(vFiltro); vFiltro.connect(vGain); vGain.connect(AUDIO.master);
+  vFuente.start(); lfo.start();
+  MUNDO.audioAmbiente.viento = vGain;
+
+  // lluvia (empieza en silencio, sube con el clima)
+  var lFuente = AUDIO.ctx.createBufferSource();
+  lFuente.buffer = bufferRuido(); lFuente.loop = true;
+  var lFiltro = AUDIO.ctx.createBiquadFilter();
+  lFiltro.type = 'highpass'; lFiltro.frequency.value = 1800;
+  var lGain = AUDIO.ctx.createGain(); lGain.gain.value = 0;
+  lFuente.connect(lFiltro); lFiltro.connect(lGain); lGain.connect(AUDIO.master);
+  lFuente.start();
+  MUNDO.audioAmbiente.lluvia = lGain;
+}
+
+// Ajusta el ambiente según el modo de clima
+MUNDO.audioClima = function (modo) {
+  if (!AUDIO.ctx || !MUNDO.audioAmbiente.lluvia) return;
+  var t = AUDIO.ctx.currentTime;
+  var lluvia = 0, viento = 0.12;
+  if (modo === 'lluvia')  { lluvia = 0.22; viento = 0.16; }
+  if (modo === 'tormenta'){ lluvia = 0.35; viento = 0.26; }
+  if (modo === 'nublado') { viento = 0.14; }
+  MUNDO.audioAmbiente.lluvia.gain.setTargetAtTime(lluvia, t, 1.5);
+  MUNDO.audioAmbiente.viento.gain.setTargetAtTime(viento, t, 1.5);
+};
+
+// PUNTUAL: tono corto (teletransporte, clic, etc.)
+MUNDO.sonido = function (tipo) {
+  if (!AUDIO.ctx) return;
+  var t = AUDIO.ctx.currentTime;
+  var osc = AUDIO.ctx.createOscillator();
+  var g = AUDIO.ctx.createGain();
+  osc.connect(g); g.connect(AUDIO.master);
+  if (tipo === 'teleport') {
+    osc.type = 'sine'; osc.frequency.setValueAtTime(300, t);
+    osc.frequency.exponentialRampToValueAtTime(900, t + 0.18);
+    g.gain.setValueAtTime(0.18, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    osc.start(t); osc.stop(t + 0.26);
+  } else if (tipo === 'marca') {
+    osc.type = 'triangle'; osc.frequency.setValueAtTime(600, t);
+    g.gain.setValueAtTime(0.08, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+    osc.start(t); osc.stop(t + 0.13);
+  } else if (tipo === 'ficha') {
+    osc.type = 'sine'; osc.frequency.setValueAtTime(520, t);
+    osc.frequency.exponentialRampToValueAtTime(680, t + 0.09);
+    g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    osc.start(t); osc.stop(t + 0.16);
+  }
+};
+
+/* POSICIONAL: una fuente con posición fija. El volumen depende de la
+   distancia al oyente (la cámara). refDist = donde suena a tope,
+   maxDist = donde deja de oírse. */
+MUNDO.audioFuente = function (def) {
+  MUNDO._crearFuente = MUNDO._crearFuente || [];
+  function build() {
+    if (!AUDIO.ctx) return;
+    var fuente = AUDIO.ctx.createBufferSource();
+    fuente.buffer = bufferRuido(); fuente.loop = true;
+    var filtro = AUDIO.ctx.createBiquadFilter();
+    filtro.type = def.filtro || 'bandpass';
+    filtro.frequency.value = def.freq || 800;
+    filtro.Q.value = def.q || 1;
+    var g = AUDIO.ctx.createGain(); g.gain.value = 0;
+    fuente.connect(filtro); filtro.connect(g); g.connect(AUDIO.master);
+    fuente.start();
+    AUDIO.fuentes.push({
+      x: def.pos[0], y: def.pos[1], z: def.pos[2],
+      ref: def.refDist || 4, max: def.maxDist || 22,
+      vol: def.vol != null ? def.vol : 0.3, g: g
+    });
+  }
+  if (AUDIO.listo) build(); else { var prev = MUNDO._audioPendiente; MUNDO._audioPendiente = function(){ prev&&prev(); build(); }; }
+};
+
+// Actualizar volúmenes posicionales según la cámara (registrado como animación)
+var _wp = null;
+MUNDO.animar(function (t, dt) {
+  if (!AUDIO.ctx || !AUDIO.fuentes.length) return;
+  var cam = document.getElementById('camara');
+  if (!cam || !cam.object3D) return;
+  if (!_wp) _wp = new THREE.Vector3();
+  cam.object3D.getWorldPosition(_wp);
+  for (var i = 0; i < AUDIO.fuentes.length; i++) {
+    var f = AUDIO.fuentes[i];
+    var dx = _wp.x - f.x, dy = _wp.y - f.y, dz = _wp.z - f.z;
+    var d = Math.sqrt(dx*dx + dy*dy + dz*dz);
+    // atenuación lineal entre refDist (tope) y maxDist (silencio)
+    var vol;
+    if (d <= f.ref) vol = f.vol;
+    else if (d >= f.max) vol = 0;
+    else vol = f.vol * (1 - (d - f.ref) / (f.max - f.ref));
+    f.g.gain.setTargetAtTime(vol, AUDIO.ctx.currentTime, 0.15);
+  }
+});
+
 /* ---------------------------------------------------------------- interfaz */
 function rotulo(texto) {
   var e = nuevo('a-entity', { 'class': 'etiqueta', 'mirar-camara': '' });
@@ -1141,7 +1451,12 @@ function mostrarFicha(d) {
     '<p>' + d.texto + '</p>' +
     (d.detalle ? d.detalle.map(function (q) { return '<p>' + q + '</p>'; }).join('') : '') +
     (d.vida ? '<ul class="lista">' + d.vida.map(function (v) { return '<li>' + v + '</li>'; }).join('') + '</ul>' : '') +
-    (d.reto ? '<div class="reto"><b>Para observar</b>' + d.reto + '</div>' : '');
+    (d.reto ? '<div class="reto"><b>Para observar</b>' + d.reto + '</div>' : '') +
+    (d.actividad ? '<div class="act act-hacer"><b>\u270D\uFE0F Actividad</b>' + d.actividad + '</div>' : '') +
+    (d.esquema ? '<div class="act act-dibujar"><b>\u270F\uFE0F En tu cuaderno</b>' + d.esquema + '</div>' : '') +
+    (d.pregunta ? '<div class="act act-responder"><b>\u2753 Responde</b>' + (d.pregunta.length ?
+        '<ol>' + d.pregunta.map(function(q){return '<li>'+q+'</li>';}).join('') + '</ol>' : d.pregunta) + '</div>' : '') +
+    (d.estacion ? '<div class="est-num">Estaci\u00f3n ' + d.estacion + '</div>' : '');
   document.getElementById('ficha').classList.add('visible');
 }
 MUNDO.ficha = mostrarFicha;
@@ -1542,6 +1857,21 @@ function arranque(M) {
 
   marcar('creando la superficie móvil');
   // Superficie móvil
+  if (M.aves) {
+    poblarAves(escena, M.aves);
+  }
+
+  // Audio: crear ambiente y fuentes posicionales tras el desbloqueo
+  if (M.sonido) {
+    var arrancarAudio = function () {
+      crearAmbiente();
+      MUNDO.audioClima(MUNDO.clima.modo || (M.clima && M.clima.inicial) || 'despejado');
+      (M.sonido.fuentes || []).forEach(function (f) { MUNDO.audioFuente(f); });
+    };
+    if (AUDIO.listo) arrancarAudio();
+    else { var prev = MUNDO._audioPendiente; MUNDO._audioPendiente = function(){ prev&&prev(); arrancarAudio(); }; }
+  }
+
   if (M.nivel) {
     var N = M.nivel;
     var cont = nuevo('a-entity', {
@@ -1672,6 +2002,19 @@ function construirUI(M) {
     }
   }
 
+  // botón de sonido
+  if (M.sonido) {
+    var bmute = nuevo('button', { id: 'btn-mute', 'aria-pressed': 'true' });
+    bmute.textContent = '\uD83D\uDD0A Sonido';
+    bmute.onclick = function () {
+      var on = bmute.getAttribute('aria-pressed') !== 'true';
+      bmute.setAttribute('aria-pressed', on ? 'true' : 'false');
+      bmute.textContent = on ? '\uD83D\uDD0A Sonido' : '\uD83D\uDD07 Silencio';
+      if (AUDIO.master) AUDIO.master.gain.setTargetAtTime(on ? 0.6 : 0, AUDIO.ctx.currentTime, 0.1);
+    };
+    ctrl.appendChild(bmute);
+  }
+
   var bn = nuevo('button', { id: 'nombres', 'aria-pressed': 'true' });
   bn.textContent = 'Nombres';
   bn.onclick = function () {
@@ -1746,7 +2089,7 @@ function construirUI(M) {
     var hab = el.dataset ? el.dataset.dialogo : null;
     if (hab) { MUNDO.hablar(hab); return; }
     var id = el.dataset ? el.dataset.ficha : null;
-    if (id && fichas[id]) { mostrarFicha(fichas[id]); return; }
+    if (id && fichas[id]) { mostrarFicha(fichas[id]); if (MUNDO.sonido) MUNDO.sonido('ficha'); return; }
     if (el.classList && el.classList.contains('suelo') && ev.detail && ev.detail.intersection) {
       var p = ev.detail.intersection.point, lim = MUNDO.limites;
       var actual = jugador.getAttribute('position');
@@ -1760,6 +2103,7 @@ function construirUI(M) {
       marca.setAttribute('material', 'opacity', 0.9);
       marca.emit('aterriza');
       document.getElementById('pista').classList.add('oculta');
+      if (MUNDO.sonido) MUNDO.sonido('teleport');
     }
   });
 

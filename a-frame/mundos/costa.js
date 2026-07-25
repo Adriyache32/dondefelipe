@@ -14,6 +14,15 @@ window.MUNDOS.costa = {
 
   titulo: 'Zonación del intermareal',
   clima: { inicial: 'despejado', real: true, auto: false, fallback: { lat: -33.02, lon: -71.55 } },
+
+  sonido: {
+    fuentes: [
+      // oleaje: fuente grave y ancha hacia el mar
+      { pos: [0, 0, -30], filtro: 'lowpass', freq: 500, q: 0.4, vol: 0.34, refDist: 10, maxDist: 60 },
+      // gaviotas hacia la orilla
+      { pos: [0, 4, 0], filtro: 'bandpass', freq: 2600, q: 4, vol: 0.1, refDist: 6, maxDist: 26 }
+    ]
+  },
   materia: 'Biología · Ecosistemas',
   resumen: 'La costa rocosa de Chile central con la marea subiendo y bajando sobre cada franja, del bosque esclerófilo al huiro.',
   cielo: '#9db8c4',
