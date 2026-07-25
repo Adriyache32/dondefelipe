@@ -11,7 +11,7 @@
 'use strict';
 
 var MUNDO = {
-  version: 15,
+  version: 16,
   formas: {},
   clima: { viento: 1 },
   datos: null
@@ -491,29 +491,40 @@ AFRAME.registerComponent('caminar', {
   init: function () {
     this.d = new THREE.Vector3();
     this.mira = new THREE.Vector3();
+    this.origen = new THREE.Vector3();
+    this.rayo = new THREE.Raycaster();
+    this.cargando = 0;
     var self = this;
-    // detectar entrada/salida de VR para activar el avance por mirada
     var esc = this.el.sceneEl;
-    MUNDO.vrCaminar = true;   // se puede desactivar desde consola
-    esc.addEventListener('enter-vr', function () { self.enVR = true; });
-    esc.addEventListener('exit-vr', function () { self.enVR = false; });
+    // modo de movimiento en VR: 'tp' (teletransporte) | 'mirar' (avance continuo)
+    MUNDO.vrModo = 'tp';
+    MUNDO.vrCaminar = true;
+    esc.addEventListener('enter-vr', function () { self.enVR = true; MUNDO.mostrarVR && MUNDO.mostrarVR(); });
+    esc.addEventListener('exit-vr', function () { self.enVR = false; MUNDO.ocultarVR && MUNDO.ocultarVR(); });
   },
   tick: function (t, dt) {
     if (!dt) return;
     var cam = this.el.sceneEl.camera;
     if (!cam) return;
-    var mover = this.data.dir;   // -1 / 0 / 1 desde botones o teclado
 
-    // En VR: avanzar automáticamente hacia donde mira la cabeza,
-    // salvo que se mire muy hacia abajo (gesto para detenerse).
-    if (this.enVR && MUNDO.vrCaminar && mover === 0) {
-      cam.getWorldDirection(this.mira);   // apunta hacia -Z de la cámara
-      // this.mira.y negativo = mirando hacia abajo
-      if (this.mira.y > -0.55) mover = 1;   // avanza si no mira muy abajo
-      else mover = 0;                        // mirar al suelo = quieto
+    // ---------- VR ----------
+    if (this.enVR) {
+      if (MUNDO.vrModo === 'tp') { this._teleport(cam, dt); return; }
+      // modo mirar: avance continuo (mirar al suelo detiene)
+      var mv = this.data.dir;
+      if (MUNDO.vrCaminar && mv === 0) {
+        cam.getWorldDirection(this.mira);
+        mv = this.mira.y > -0.55 ? 1 : 0;
+      }
+      if (mv) this._avanza(cam, mv, dt);
+      return;
     }
-    if (!mover) return;
 
+    // ---------- pantalla / teclado ----------
+    if (this.data.dir) this._avanza(cam, this.data.dir, dt);
+  },
+
+  _avanza: function (cam, mover, dt) {
     cam.getWorldDirection(this.d);
     this.d.y = 0;
     if (this.d.lengthSq() < 0.0001) return;
@@ -524,6 +535,46 @@ AFRAME.registerComponent('caminar', {
     p.x = THREE.MathUtils.clamp(p.x, -lim.x, lim.x);
     p.z = THREE.MathUtils.clamp(p.z, lim.zMin, lim.zMax);
     MUNDO.resolver(p);
+  },
+
+  // Teletransporte: apunta con la mirada al suelo, marca el punto y salta
+  // tras mantener la mira (fuse). Sin desplazamiento continuo → sin mareo.
+  _teleport: function (cam, dt) {
+    var marca = document.getElementById('tp-marca');
+    cam.getWorldDirection(this.d);
+    // solo apuntar si se mira hacia abajo (al suelo)
+    if (this.d.y > -0.18) {
+      if (marca) marca.setAttribute('visible', false);
+      this.cargando = 0;
+      return;
+    }
+    cam.getWorldPosition(this.origen);
+    // intersección con el plano del suelo a la altura de los pies
+    var pies = this.origen.y - (this.data.altura || 1.65);
+    var tScal = (pies - this.origen.y) / this.d.y;
+    if (tScal <= 0) { if (marca) marca.setAttribute('visible', false); return; }
+    var tx = this.origen.x + this.d.x * tScal;
+    var tz = this.origen.z + this.d.z * tScal;
+    var lim = MUNDO.limites;
+    tx = THREE.MathUtils.clamp(tx, -lim.x, lim.x);
+    tz = THREE.MathUtils.clamp(tz, lim.zMin, lim.zMax);
+    this._tx = tx; this._tz = tz;
+
+    if (marca) {
+      marca.setAttribute('visible', true);
+      marca.setAttribute('position', tx + ' ' + (pies + 0.05) + ' ' + tz);
+    }
+    // fuse: mantener la mira ~1 s dispara el salto
+    this.cargando += dt;
+    if (marca) marca.setAttribute('scale', (0.5 + 0.5 * Math.min(1, this.cargando / 900)) + ' 1 ' +
+                                            (0.5 + 0.5 * Math.min(1, this.cargando / 900)));
+    if (this.cargando >= 900) {
+      this.cargando = 0;
+      var p = this.el.object3D.position;
+      p.x = tx; p.z = tz;
+      MUNDO.resolver(p);
+      if (marca) marca.setAttribute('visible', false);
+    }
   }
 });
 
@@ -1249,6 +1300,27 @@ function arranque(M) {
   escena.appendChild(jugador);
   MUNDO.jugador = jugador;
 
+  // Panel de modo VR: botones grandes en el mundo 3D, visibles solo en VR
+  var panelVR = nuevo('a-entity', { id: 'panel-vr', visible: false });
+  var MODOS_VR = [
+    { id: 'tp',    txt: 'Teletransporte', x: -1.3 },
+    { id: 'mirar', txt: 'Avanzar mirando', x: 0 },
+    { id: 'stop',  txt: 'Quieto',          x: 1.3 }
+  ];
+  MODOS_VR.forEach(function (m) {
+    var btn = nuevo('a-entity', {
+      geometry: 'primitive:plane; width:1.15; height:0.4',
+      material: 'color:#12211f; opacity:0.72; transparent:true; shader:flat',
+      position: m.x + ' -0.7 -2.4', 'data-vrmodo': m.id, 'class': 'punto' });
+    btn.appendChild(nuevo('a-text', { value: m.txt, align: 'center', width: 2.4,
+      color: '#f2ece0', position: '0 0 0.01' }));
+    panelVR.appendChild(btn);
+  });
+  camara.appendChild(panelVR);   // el panel sigue a la cámara
+
+  MUNDO.mostrarVR = function () { panelVR.setAttribute('visible', true); };
+  MUNDO.ocultarVR = function () { panelVR.setAttribute('visible', false); };
+
   // Aviso sobre el control en VR (mirar para avanzar, mirar al suelo para parar)
   escena.addEventListener('enter-vr', function () {
     var av = document.getElementById('aviso-vr');
@@ -1271,6 +1343,14 @@ function arranque(M) {
     id: 'marca', 'radius-inner': 0.35, 'radius-outer': 0.5, rotation: '-90 0 0',
     material: 'color:#f0c060; shader:flat; opacity:0', position: '0 -99 0' });
   escena.appendChild(marca);
+
+  // marcador de teletransporte VR
+  var tp = nuevo('a-entity', { id: 'tp-marca', visible: false, position: '0 -99 0' });
+  tp.appendChild(nuevo('a-ring', { 'radius-inner': 0.4, 'radius-outer': 0.62, rotation: '-90 0 0',
+    material: 'color:#57c7ff; shader:flat; opacity:0.9; side:double' }));
+  tp.appendChild(nuevo('a-circle', { radius: 0.38, rotation: '-90 0 0',
+    material: 'color:#57c7ff; shader:flat; opacity:0.3; side:double' }));
+  escena.appendChild(tp);
 
   var terreno = nuevo('a-entity', { id: 'terreno' });
   escena.appendChild(terreno);
@@ -1656,6 +1736,13 @@ function construirUI(M) {
     if (arrastro) return;
     var el = (ev.detail && ev.detail.intersectedEl) ? ev.detail.intersectedEl : ev.target;
     if (!el) return;
+    var vm = el.dataset ? el.dataset.vrmodo : null;
+    if (vm) {
+      if (vm === 'stop') { MUNDO.vrCaminar = false; MUNDO.vrModo = 'mirar'; }
+      else if (vm === 'mirar') { MUNDO.vrCaminar = true; MUNDO.vrModo = 'mirar'; }
+      else { MUNDO.vrModo = 'tp'; }
+      return;
+    }
     var hab = el.dataset ? el.dataset.dialogo : null;
     if (hab) { MUNDO.hablar(hab); return; }
     var id = el.dataset ? el.dataset.ficha : null;

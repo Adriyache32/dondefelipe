@@ -36,36 +36,59 @@ window.addEventListener('error', function (e) {
 
   #barra{
     position:fixed;top:0;left:0;right:0;z-index:10;
-    display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 14px;
-    background:linear-gradient(180deg,rgba(18,33,31,.88),rgba(18,33,31,0));
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:calc(10px + env(safe-area-inset-top,0)) 16px 10px;
+    background:linear-gradient(180deg,rgba(10,16,15,.55),rgba(10,16,15,0));
     color:var(--papel);pointer-events:none;
   }
-  #titulo{margin:0;font-size:14px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;}
-  #nivel-lectura{font-variant-numeric:tabular-nums;font-size:13px;opacity:.85;
-    border-left:1px solid rgba(242,236,224,.35);padding-left:14px;}
-  #volver{pointer-events:auto;margin-left:auto;color:var(--papel);opacity:.8;
-    font-size:12.5px;text-decoration:none;border:1px solid rgba(242,236,224,.35);
-    padding:5px 10px;border-radius:2px;}
+  #titulo{margin:0;font-size:13.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+    background:rgba(28,42,40,.4);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    padding:6px 13px;border-radius:10px;border:1px solid rgba(242,236,224,.14);}
+  #nivel-lectura, #grav-lectura, #clima-real-lectura{
+    background:rgba(28,42,40,.4);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    padding:6px 12px;border-radius:10px;border:1px solid rgba(242,236,224,.12);}
+  #nivel-lectura{font-variant-numeric:tabular-nums;font-size:13px;opacity:.9;}
+  #volver{pointer-events:auto;margin-left:auto;color:var(--papel);opacity:.85;
+    font-size:12.5px;font-weight:600;text-decoration:none;
+    background:rgba(28,42,40,.4);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid rgba(242,236,224,.16);padding:7px 13px;border-radius:10px;}
+  #volver:hover{background:rgba(40,72,88,.5);}
 
   #controles{
     position:fixed;left:0;right:0;bottom:0;z-index:10;
-    display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:12px;
+    display:flex;gap:7px;justify-content:center;flex-wrap:wrap;
+    padding:14px 12px calc(14px + env(safe-area-inset-bottom,0));
+    background:linear-gradient(0deg,rgba(10,16,15,.5),rgba(10,16,15,0));
+    pointer-events:none;
   }
+  #controles > *{pointer-events:auto;}
   button, select{
-    font:inherit;font-size:13px;font-weight:600;color:var(--papel);
-    background:rgba(18,33,31,.78);border:1px solid rgba(242,236,224,.3);
-    border-radius:2px;padding:9px 13px;cursor:pointer;backdrop-filter:blur(6px);
+    font:inherit;font-size:13px;font-weight:600;letter-spacing:.2px;
+    color:var(--papel);
+    background:rgba(28,42,40,.42);
+    border:1px solid rgba(242,236,224,.16);
+    border-radius:11px;padding:10px 15px;cursor:pointer;
+    backdrop-filter:blur(16px) saturate(1.3);
+    -webkit-backdrop-filter:blur(16px) saturate(1.3);
+    box-shadow:0 4px 16px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.08);
+    transition:background .18s, transform .1s, border-color .18s;
   }
-  button:hover{background:rgba(28,95,120,.9);}
-  button[aria-pressed="true"]{background:var(--acento);border-color:var(--papel);}
+  button:hover{background:rgba(40,72,88,.55);border-color:rgba(242,236,224,.3);}
+  button:active{transform:scale(.95);}
+  button[aria-pressed="true"]{
+    background:rgba(45,130,168,.62);border-color:rgba(242,236,224,.45);
+    box-shadow:0 4px 18px rgba(45,130,168,.4), inset 0 1px 0 rgba(255,255,255,.16);
+  }
   button:focus-visible, select:focus-visible{outline:2px solid #f0c060;outline-offset:2px;}
-  .mover{user-select:none;-webkit-user-select:none;touch-action:none;}
-  .mover:active{background:var(--acento);}
+  .mover{user-select:none;-webkit-user-select:none;touch-action:none;font-size:14px;padding:11px 17px;}
+  .mover:active{background:rgba(45,130,168,.6);}
 
   #pista{
-    position:fixed;z-index:9;left:50%;bottom:104px;transform:translateX(-50%);
-    background:rgba(18,33,31,.7);color:var(--papel);font-size:12.5px;
-    padding:7px 12px;border-radius:2px;white-space:nowrap;
+    position:fixed;z-index:9;left:50%;bottom:112px;transform:translateX(-50%);
+    background:rgba(28,42,40,.5);color:var(--papel);font-size:12.5px;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    padding:8px 14px;border-radius:11px;white-space:nowrap;
+    border:1px solid rgba(242,236,224,.14);
     transition:opacity .5s;pointer-events:none;
   }
   #pista.oculta{opacity:0;}
