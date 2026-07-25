@@ -705,42 +705,14 @@ MUNDO.forma('guirnalda', function (H, color, b, ob) {
   }
 }, 5.4);
 
-/* ------------------------------------------------------------ COLOCACIONES */
+
+/* ============================================================================
+   COLOCACIONES
+   Empezamos de nuevo: por ahora SOLO la estación con sus trenes.
+   El resto de la plaza/ciudad se reconstruirá con orden desde aquí.
+   Todas las formas siguen disponibles arriba para volver a usarlas.
+   ============================================================================ */
 var OBJ = [];
-var FIERRO = '#38463f';
-
-// Dos hileras de faroles bordeando el paseo central
-for (var i = 0; i < 9; i++) {
-  var z = 34 - i * 5.5;
-  OBJ.push({ forma: 'farol', color: FIERRO, pos: [-8.5, 0, z] });
-  OBJ.push({ forma: 'farol', color: FIERRO, pos: [8.5, 0, z] });
-}
-OBJ[0].nombre = 'Farol';
-
-// Bancas mirando al paseo
-for (var j = 0; j < 6; j++) {
-  var zb = 30 - j * 7;
-  OBJ.push({ forma: 'banca', color: '#7c3f2f', pos: [-12.5, 0, zb], giro: 90 });
-  OBJ.push({ forma: 'banca', color: '#7c3f2f', pos: [12.5, 0, zb], giro: -90 });
-}
-OBJ[18].nombre = 'Banca';
-
-// Basureros y maceteros
-[-10.5, 10.5].forEach(function (x) {
-  [26, 12, -2].forEach(function (zz) { OBJ.push({ forma: 'basurero', color: '#2f6b45', pos: [x, 0, zz] }); });
-});
-OBJ.push({ forma: 'macetero', color: '#9c6a52', pos: [-6.5, 0, 4], nombre: 'Macetero' });
-OBJ.push({ forma: 'macetero', color: '#9c6a52', pos: [6.5, 0, 4] });
-
-// Borde norte: reja, quiosco y edificios
-for (var k = -4; k <= 4; k++) OBJ.push({ forma: 'reja', color: '#2f6b45', pos: [k * 6, 0, -19] });
-OBJ.push({ forma: 'quiosco', color: '#2f8f4f', pos: [-19, 0, -14], giro: 12, nombre: 'Quiosco',
-           choca: [{ dx: 0, dz: 0, ancho: 5, largo: 3.4, alto: 2.9 }] });
-var MURO_EDIF = [{ dx: 0, dz: 0, ancho: 20, largo: 12, alto: 16 }];
-OBJ.push({ forma: 'edificio', color: '#eceae4', pos: [0, 0, -30], nombre: 'Edificio del borde', choca: MURO_EDIF });
-OBJ.push({ forma: 'edificio', color: '#ddd8cd', pos: [26, 0, -32], choca: MURO_EDIF });
-OBJ.push({ forma: 'edificio', color: '#e4dfd4', pos: [-27, 0, -32], choca: MURO_EDIF });
-
 
 /* ---- Estación de Villa Alemana, al costado derecho de la plaza ---- */
 var XA  = 34.5;   // eje del andén
@@ -867,205 +839,7 @@ CARROS.forEach(function (cr) {
   }
 });
 
-// El tren que pasa por la otra vía, sin detenerse
-[16, 1.4, -13.2].forEach(function (z) {
-  OBJ.push({ forma: 'vagon', color: '#eef1f3', pos: [XV2, 0.55, z], grupo: 'tren' });
-});
-
-/* ---- Más elementos de la plaza ---- */
-OBJ.push({ forma: 'pileta', color: '#cdc6b6', pos: [0, 0.05, 18], nombre: 'Pileta', altoFicha: 3,
-           choca: [{ r: 1.7, alto: 0.7 }] });
-OBJ.push({ forma: 'resbalin', color: '#3f78a8', pos: [-19, 0.05, -6], nombre: 'Juegos' });
-OBJ.push({ forma: 'paradero', color: '#41525c', pos: [-14, 0.05, 44], giro: 180, nombre: 'Paradero' });
-OBJ.push({ forma: 'semaforo', color: '#3c4a42', pos: [-24, 0.05, 45] });
-OBJ.push({ forma: 'semaforo', color: '#3c4a42', pos: [20, 0.05, 45], giro: 180 });
-[[-30, 46, 0, '#9c3b34'], [-22, 46.5, 0, '#2f4257'], [8, 46, 180, '#d8d4cc'], [24, 46.5, 180, '#43584a']]
-  .forEach(function (a) {
-    OBJ.push({ forma: 'auto', color: a[3], pos: [a[0], 0.05, a[1]], giro: a[2] });
-  });
-
-// Árboles sueltos del borde de la estación
-[[28, 26], [28, -14], [30, 34], [26, -22]].forEach(function (q) {
-  OBJ.push({ forma: 'arbolSombra', color: '#4c7038', pos: [q[0], 0.05, q[1]],
-             choca: [{ r: 0.32, alto: 4 }] });
-});
-
-
-/* ================= COLEGIO SAN AGUSTÍN (al otro lado de la estación) =========
-   La estación está en X positivo (derecha). El colegio va en X negativo.
-   Tres pisos reales conectados por escaleras:
-     Piso 0 (calle)  y = 0     → recepción, patio, Felipe
-     Piso 1          y = 4     → la multicancha
-     Piso 2          y = 8     → cinco salas de clases
-   ========================================================================== */
-var CX = 6;      // centrado, cruzando hacia el norte
-var CZ = -78;    // al fondo del todo: más al norte que la estación
-var P1 = 4;      // altura del piso 1
-var P2 = 8;      // altura del piso 2
-var EDA = 30, EDL = 24;   // ancho y largo del edificio
-
-// ---- Portón de acceso, mirando a la plaza ----
-OBJ.push({ forma: 'porton', color: '#7a4a30', pos: [CX + 4, 0.05, CZ + 16],
-           nombre: 'Colegio San Agustín', ficha: 'colegio', altoFicha: 6,
-           choca: [{ dx: -3, dz: 0, r: 0.4, alto: 4 }, { dx: 3, dz: 0, r: 0.4, alto: 4 }] });
-
-/* ---------- PISO 0 · nivel calle ---------- */
-// piso del recinto
-OBJ.push({ forma: 'losa', color: '#b8b2a4', pos: [CX, 0, CZ], dim: [EDA, EDL], pilar: 0.4,
-           piso: { ancho: EDA, largo: EDL, alto: 0.25, color: '#c3bdaf' } });
-// recepción con escudo SA, contra el muro del fondo
-OBJ.push({ forma: 'recepcion', color: '#f0eee8', pos: [CX + 4, 0.25, CZ - 7], giro: 0,
-           ficha: 'recepcion', altoFicha: 4.6,
-           choca: [
-             { dx: 3, dz: -3.5, ancho: 9.8, largo: 0.3, alto: 3.6 },
-             { dx: -6, dz: -3.5, ancho: 1.8, largo: 0.3, alto: 3.6 },
-             { dx: 1, dz: 1.5, ancho: 9, largo: 1, alto: 1.3 }
-           ] });
-// muros perimetrales del piso 0 (dejan el frente abierto)
-OBJ.push({ forma: 'losa', color: '#b8b2a4', pos: [CX, 0, CZ], dim: [0.1,0.1], pilar: 0,
-           choca: [
-             { dx: -EDA/2, dz: 0, ancho: 0.4, largo: EDL, alto: P1, base: 0 },
-             { dx: EDA/2, dz: 0, ancho: 0.4, largo: EDL, alto: P1, base: 0 },
-             { dx: 0, dz: -EDL/2, ancho: EDA, largo: 0.4, alto: P1, base: 0 }
-           ] });
-
-// Felipe, en la entrada, a nivel de la calle
-OBJ.push({
-  forma: 'persona', pos: [CX + 4, 0.25, CZ + 10], giro: 0,
-  dialogo: 'felipe', altoFicha: 2.6, nombre: 'Felipe', alto: 2.1,
-  cuerpo: {
-    altura: 1.74, piel: '#c48a63', pelo: '#1c1712',
-    chaqueta: '#c4342e', polera: '#20242a', pantalon: '#2b2f36', zapato: '#1a1917',
-    barba: '#241b16', lentes: '#20201f', capucha: true, mochila: '#7a7168'
-  }
-});
-OBJ.push({ forma: 'persona', pos: [CX + 8, 0.25, CZ + 2], giro: 30,
-  cuerpo: { altura: 1.62, piel: '#b57a56', pelo: '#1e1814', chaqueta: '#3f5d6b',
-            polera: '#20242a', pantalon: '#2b3138', zapato: '#17161a' } });
-
-// Escalera piso 0 → piso 1 (a la izquierda del edificio), con peldaños reales
-OBJ.push({ forma: 'baranda-esc', color: '#c4cace', pos: [CX - 12, 0.25, CZ + 6], giro: 0,
-           escalones: [{ dx: 0, dz: 5.5, ancho: 2.8, largo: 11, alto: P1 - 0.25, base: 0, pasos: 16, color: '#d8c23a' }] });
-
-/* ---------- PISO 1 · la multicancha ---------- */
-OBJ.push({ forma: 'losa', color: '#a8a294', pos: [CX, P1, CZ], dim: [EDA, EDL], pilar: P1,
-           piso: { ancho: EDA, largo: EDL, alto: 0.25, color: '#9aa0a6' } });
-OBJ.push({ forma: 'cancha', color: '#2f74b5', pos: [CX, P1 + 0.2, CZ],
-           ficha: 'cancha', altoFicha: 6,
-           piso: { ancho: 20, largo: 20, alto: 0.1, color: '#2f74b5' },
-           choca: [
-             { dx: -10, dz: 0, ancho: 0.3, largo: 20, alto: 4.4, base: P1 },
-             { dx: 10, dz: 0, ancho: 0.3, largo: 20, alto: 4.4, base: P1 },
-             { dx: 0, dz: -10, ancho: 20, largo: 0.3, alto: 4.4, base: P1 },
-             { dx: 0, dz: 10, ancho: 20, largo: 0.3, alto: 4.4, base: P1 }
-           ] });
-// baranda del borde frontal del piso 1
-OBJ.push({ forma: 'baranda', color: '#c4cace', pos: [CX, P1 + 0.25, CZ + EDL/2 - 0.3], largo: EDA });
-
-// Escalera piso 1 → piso 2 (a la derecha), con peldaños reales
-OBJ.push({ forma: 'baranda-esc', color: '#c4cace', pos: [CX + 12, P1 + 0.2, CZ + 6], giro: 0,
-           escalones: [{ dx: 0, dz: 5.5, ancho: 2.8, largo: 11, alto: P2 - P1, base: 0, pasos: 16, color: '#d8c23a' }] });
-
-/* ---------- PISO 2 · cinco salas de clases ---------- */
-OBJ.push({ forma: 'losa', color: '#a8a294', pos: [CX, P2, CZ], dim: [EDA, EDL], pilar: P1,
-           piso: { ancho: EDA, largo: EDL, alto: 0.25, color: '#d9d4c8' } });
-// techo del edificio
-OBJ.push({ forma: 'losa', color: '#c9c3b6', pos: [CX, P2 + 3.3, CZ], dim: [EDA + 0.6, EDL + 0.6], pilar: 0 });
-// baranda del pasillo frontal del piso 2
-OBJ.push({ forma: 'baranda', color: '#c4cace', pos: [CX, P2 + 0.25, CZ + EDL/2 - 0.3], largo: EDA });
-
-// Las cinco salas, alineadas contra el muro del fondo, mirando al pasillo
-var SALAS = [
-  { n: '1° Medio', muros: 'IF' },
-  { n: '2° Medio', muros: 'F'  },
-  { n: '3° Medio', muros: 'F'  },
-  { n: '4° Medio', muros: 'F'  },
-  { n: 'Laboratorio', muros: 'FD' }
-];
-SALAS.forEach(function (sa, i) {
-  var sx = CX - EDA/2 + 3.6 + i * 5.7;
-  OBJ.push({ forma: 'sala', color: '#eceae4', pos: [sx, P2 + 0.2, CZ - 2.4], muros: sa.muros,
-             nombre: sa.n, ficha: 'salas', altoFicha: 3.4,
-             choca: [
-               { dx: 0, dz: -2.8, ancho: 6.4, largo: 0.3, alto: 3, base: P2 },
-               (sa.muros.indexOf('I') >= 0 ? { dx: -3.2, dz: 0, ancho: 0.3, largo: 5.6, alto: 3, base: P2 } : null),
-               (sa.muros.indexOf('D') >= 0 ? { dx: 3.2, dz: 0, ancho: 0.3, largo: 5.6, alto: 3, base: P2 } : null)
-             ].filter(Boolean) });
-  // un estudiante en la primera fila de algunas salas
-  if (i < 3) {
-    OBJ.push({ forma: 'pasajeroSentado', pos: [sx - 1.7, P2 + 0.75, CZ - 2.8], giro: 180,
-      cuerpo: { altura: 1.6, piel: '#c88d6b', pelo: '#241b16', chaqueta: '#3f5d6b',
-                polera: '#20242a', pantalon: '#2b2f36', zapato: '#1a1917' } });
-  }
-});
-
-
-/* ================= MUNICIPALIDAD (al este) ================= */
-OBJ.push({ forma: 'municipalidad', color: '#e8e4da', pos: [66, 0.05, -6], giro: -90,
-           nombre: 'Municipalidad de Villa Alemana', ficha: 'municipalidad', altoFicha: 13,
-           choca: [{ dx: 0, dz: 0, ancho: 14, largo: 20, alto: 9 }] });
-
-/* ================= PASEO PEATONAL (al sur) ================= */
-// El paseo baja hacia z positivo desde la plaza. Piso de baldosa.
-OBJ.push({ forma: 'anden', color: '#c9c3b4', pos: [0, 0.02, 66],
-           piso: { ancho: 22, largo: 40, alto: 0.12, color: '#cfc7b4' } });
-// dos hileras de locales con toldos de colores
-var COLORES_TOLDO = ['#c4342e', '#2f6b45', '#2f5fa8', '#d88a2c', '#7a3f7a', '#2f8f8f'];
-for (var i = 0; i < 6; i++) {
-  var pz = 50 + i * 5.5;
-  OBJ.push({ forma: 'local', color: COLORES_TOLDO[i % 6], pos: [-11.5, 0.05, pz], giro: 90, dim: 5,
-             choca: [{ dx: 0, dz: 0, ancho: 5, largo: 0.4, alto: 4 }] });
-  OBJ.push({ forma: 'local', color: COLORES_TOLDO[(i+3) % 6], pos: [11.5, 0.05, pz], giro: -90, dim: 5,
-             choca: [{ dx: 0, dz: 0, ancho: 5, largo: 0.4, alto: 4 }] });
-}
-// guirnaldas de luces cruzando el paseo
-[52, 60, 68, 76].forEach(function (pz) {
-  OBJ.push({ forma: 'guirnalda', color: '#fff2c0', pos: [0, 0.05, pz], largo: 20 });
-});
-// barreras rojas de obra, como en la foto
-[[-4, 82], [-1.5, 82], [1, 82], [3.5, 82], [-7, 48], [7, 48]].forEach(function (br) {
-  OBJ.push({ forma: 'barrera', color: '#d33', pos: [br[0], 0.05, br[1]],
-             choca: [{ dx: 0, dz: 0, ancho: 1.8, largo: 0.5, alto: 1 }] });
-});
-// palmeras y bancas en el paseo
-[54, 64, 74].forEach(function (pz) {
-  OBJ.push({ forma: 'palmera', color: '#5f8a4a', pos: [-8, 0.05, pz], choca: [{ r: 0.42, alto: 7 }] });
-  OBJ.push({ forma: 'palmera', color: '#5f8a4a', pos: [8, 0.05, pz], choca: [{ r: 0.42, alto: 7 }] });
-  OBJ.push({ forma: 'banca', color: '#7c3f2f', pos: [-4, 0.05, pz], giro: 0 });
-  OBJ.push({ forma: 'banca', color: '#7c3f2f', pos: [4, 0.05, pz], giro: 0 });
-});
-// gente paseando
-OBJ.push({ forma: 'persona', pos: [-2, 0.05, 58], giro: 20,
-  cuerpo: { altura: 1.68, piel: '#c88d6b', pelo: '#241b16', chaqueta: '#2f6b45',
-            polera: '#e8e2d4', pantalon: '#2b2f36', zapato: '#1a1917' } });
-OBJ.push({ forma: 'persona', pos: [3, 0.05, 70], giro: -150,
-  cuerpo: { altura: 1.63, piel: '#d8a077', pelo: '#3a2a20', chaqueta: '#7a3f4a',
-            polera: '#20242a', pantalon: '#3d4450', zapato: '#201d1b', mochila: true } });
-
-/* ---- El anfitrión, junto a la entrada del paseo ---- */
-OBJ.push({
-  forma: 'persona', pos: [3.2, 0.05, 36], giro: 4,
-  grupo: 'anfitrion', dialogo: 'anfitrion', altoFicha: 2.55,
-  nombre: ANFITRION, alto: 2.1,
-  cuerpo: {
-    altura: 1.78,
-    piel: '#c88d6b', pelo: '#241b16',
-    chaqueta: '#5b3a26', polera: '#1b2430',
-    pantalon: '#15171b', zapato: '#0d0e10'
-  }
-});
-
-// Un par de personas más, para que la plaza no esté vacía
-OBJ.push({ forma: 'persona', pos: [-13.5, 0.05, 12], giro: 115,
-  cuerpo: { altura: 1.64, piel: '#a9714f', pelo: '#2b201a', chaqueta: '#7a4a58',
-            polera: '#e8e2d4', pantalon: '#3a4351', zapato: '#2a2622' } });
-OBJ.push({ forma: 'persona', pos: [15, 0.05, -4], giro: -70,
-  cuerpo: { altura: 1.71, piel: '#e0b48c', pelo: '#5a4634', chaqueta: '#3f5d6b',
-            polera: '#20242a', pantalon: '#4a4f57', zapato: '#1c1a18' } });
-
-/* ---------------------------------------------------------- ANIMACIONES ---- */
-
-// El tren llega, se detiene un rato en el andén y se va
+/* ------------------------------------------------------------ ANIMACIONES */
 MUNDO.animar(function (t) {
   var g = MUNDO.grupos['tren'];
   if (!g) return;
@@ -1075,364 +849,69 @@ MUNDO.animar(function (t) {
   g.position.z = (f < 0.42) ? 200 - (f / 0.42) * 400 : 220;
 });
 
-// El anfitrión respira
-MUNDO.animar(function (t) {
-  var g = MUNDO.grupos['anfitrion'];
-  if (g) g.position.y = Math.sin(t * 1.5) * 0.025;
-});
-
 /* ------------------------------------------------------------------ MUNDO */
 window.MUNDOS = window.MUNDOS || {};
 window.MUNDOS['villa-alemana'] = {
 
-  titulo: 'Villa Alemana: la plaza',
+  titulo: 'Villa Alemana: la estación',
+  materia: 'Mundo urbano',
+  resumen: 'La estación de Villa Alemana con sus trenes. Base para reconstruir la ciudad con orden.',
+
   clima: { inicial: 'despejado', real: true, auto: false, fallback: { lat: -33.04, lon: -71.37 } },
 
   sonido: {
     fuentes: [
-      // murmullo de gente en la plaza
-      { pos: [0, 2, 10], filtro: 'bandpass', freq: 700, q: 0.8, vol: 0.14, refDist: 8, maxDist: 30 },
       // zumbido de la estación / rieles
-      { pos: [39, 1, 6], filtro: 'lowpass', freq: 300, q: 0.7, vol: 0.2, refDist: 6, maxDist: 34 },
-      // paseo comercial al sur
-      { pos: [0, 2, 62], filtro: 'bandpass', freq: 900, q: 0.6, vol: 0.16, refDist: 10, maxDist: 40 }
+      { pos: [39, 1, 6], filtro: 'lowpass', freq: 280, q: 0.7, cat: 'ambiente', vol: 0.24, refDist: 6, maxDist: 36 }
     ]
   },
-  materia: 'Ciencias para la Ciudadanía · Ecología urbana',
-  resumen: 'El paseo de palmas, el arbolado, el pasto y el borde construido. Isla de calor, sombra y superficies permeables.',
-  cielo: '#a8cbe4',
-  niebla: { color: '#c3d5e0', cerca: 70, lejos: 220 },
-  luz: { cielo: '#e2f0f8', suelo: '#9a8f74', ambiente: 0.95, sol: '#fff6e0', intensidad: 0.85,
-         posicion: '-14 26 10' },
 
-  ancho: 200,
+  cielo: '#a8c4d4',
+  luz: { cielo: '#dce8ee', suelo: '#8a8270', ambiente: 0.9, sol: '#fff2d8', intensidad: 0.8, posicion: '-16 24 12' },
+
+  ancho: 120,
   anchoVida: 56,
-  inicio: '0 1.7 42',
+  inicio: '34 1.7 40',
 
   vistas: {
-    entrada: { etiqueta: 'Entrada del paseo',  pos: '0 1.7 42',  pitch: -2,  yaw: 0 },
-    palmas:  { etiqueta: 'Bajo las palmas',    pos: '-11 1.7 20', pitch: 12, yaw: 25 },
-    aerea:   { etiqueta: 'Vista aérea',        pos: '0 26 40',   pitch: -32, yaw: 0 },
-    sombra:  { etiqueta: 'La zona de sombra',  pos: '14 1.7 0',  pitch: 4,   yaw: -60 },
-    estacion:{ etiqueta: 'La estación',        pos: '30 1.7 26', pitch: 0,   yaw: 178 },
-    anden:   { etiqueta: 'En el andén',        pos: '33.5 2.7 14', pitch: -3, yaw: 178 },
-    vagon:   { etiqueta: 'Dentro del vagón',   pos: '39.5 2.8 4',  pitch: 0,  yaw: 180 },
-    colegio: { etiqueta: 'Colegio: entrada',    pos: '6 1.9 -60',   pitch: -2,  yaw: 0 },
-    cancha:  { etiqueta: 'Colegio: la cancha',  pos: '6 5.9 -80',   pitch: 0,   yaw: 0 },
-    salas:   { etiqueta: 'Colegio: las salas',  pos: '6 9.9 -76',   pitch: -4,  yaw: 180 },
-    municip: { etiqueta: 'Municipalidad (este)', pos: '48 2 -6',    pitch: 2,   yaw: 90 },
-    paseo:   { etiqueta: 'Paseo peatonal (sur)', pos: '0 1.7 46',   pitch: -1,  yaw: 180 }
+    anden:  { etiqueta: 'En el andén',        pos: '34.5 2.7 14', pitch: -3, yaw: 178 },
+    vagon:  { etiqueta: 'Dentro del vagón',   pos: '39.5 2.8 4',  pitch: 0,  yaw: 180 },
+    control:{ etiqueta: 'Sala de control',    pos: '22 1.7 6',    pitch: 0,  yaw: 90 }
   },
-
-  cielos: [
-    { id: 'sol', posicion: '-40 40 30', radio: 2.4, color: '#fff3c9' }
-  ],
 
   objetos: OBJ,
 
   franjas: [
     {
-      id: 'calle', nombre: 'Calle y vereda', rango: 'El borde de la plaza',
-      z: [50, 40], y: 0, color: '#6d6a66', superficie: 'asfalto',
-      texto: 'El pavimento es una superficie impermeable: el agua de lluvia no se infiltra, corre. Además absorbe radiación durante el día y la devuelve como calor de noche. Es el punto de partida para entender por qué una ciudad es más calurosa que el campo que la rodea.',
-      vida: [
-        'Sin suelo vivo: el agua escurre en vez de infiltrarse',
-        'El asfalto puede superar los 50 °C en un día de verano',
-        'Árboles de la vereda como única sombra disponible'
-      ],
-      reto: 'Camina de la calle al pasto y compara. Si pudieras medir la temperatura del suelo en ambos puntos al mediodía, ¿cuánta diferencia esperarías? ¿Por qué?',
-      especies: []
-    },
-    {
-      id: 'paseo', nombre: 'El paseo de palmas', rango: 'Eje central de la plaza',
-      z: [40, 8], y: 0.05, color: '#cfc7b4', superficie: 'baldosa', hueco: 9,
-      texto: 'La palma canaria (<i>Phoenix canariensis</i>) es la firma de las plazas chilenas, y viene de las Islas Canarias. Da altura y carácter, pero muy poca sombra: sus frondas se concentran arriba y dejan pasar el sol. Por eso la gente camina por el eje y se sienta bajo los árboles del costado.',
-      vida: [
-        'Palma canaria (<i>Phoenix canariensis</i>), introducida',
-        'Baldosa clara, que refleja más radiación que el asfalto',
-        'Faroles, bancas y basureros: el mobiliario que define el uso'
-      ],
-      reto: 'Observa dónde se sienta la gente en la plaza a las 15:00 de un día de enero. ¿Qué variable física explica mejor la distribución de las personas?',
-      especies: [
-        { forma: 'palmera', n: 22, color: '#5f8a4a', nombre: 'Palma canaria', hueco: 9, choca: { r: 0.42, alto: 7 } }
-      ]
-    },
-    {
-      id: 'arbolado', nombre: 'Arbolado y áreas verdes', rango: 'A ambos lados del paseo',
-      z: [8, -18], y: 0.05, color: '#6f7d4a', superficie: 'pasto', hueco: 9,
-      texto: 'Acá está el trabajo real de la plaza. Un árbol grande de sombra baja la temperatura del aire bajo su copa varios grados, retiene material particulado en sus hojas y permite que el agua se infiltre al suelo. Todo eso son servicios ecosistémicos, y no aparecen en ningún presupuesto municipal.',
-      vida: [
-        'Pimiento (<i>Schinus molle</i>), nativo, copa amplia y colgante',
-        'Especies introducidas de copa densa que dan la sombra del sector',
-        'Pasto: superficie permeable, la contraria del asfalto',
-        'Aves urbanas: tordos, zorzales, palomas, queltehues en el pasto'
-      ],
-      reto: 'Elige un árbol de la plaza y estima su copa en metros. Con eso calcula cuántos metros cuadrados de suelo mantiene a la sombra. ¿Cuántos árboles harían falta para cubrir el paseo completo?',
-      especies: [
-        { forma: 'arbolSombra', n: 26, color: '#4c7038', nombre: 'Árbol de sombra', hueco: 10, choca: { r: 0.32, alto: 4 } },
-        { forma: 'arbolSombra', n: 14, color: '#5f7d42', choca: { r: 0.32, alto: 4 } },
-        { forma: 'pasto',       n: 260, color: '#6f8a45', hueco: 10 },
-        { forma: 'cojin',       n: 30, color: '#5d7a3c', hueco: 11 }
-      ]
-    },
-    {
-      id: 'borde', nombre: 'El borde construido', rango: 'Reja, quiosco y edificios',
-      z: [-18, -34], y: 0.05, color: '#c8c1b0', superficie: 'baldosa',
-      texto: 'Donde termina la plaza empieza la ciudad. La altura de lo construido define cuánta sombra recibe la plaza en invierno y cuánto viento la cruza. Un edificio nuevo no solo tapa la vista: cambia el microclima del espacio público que tiene al lado.',
-      vida: [
-        'Reja perimetral: define horarios y usos',
-        'Quiosco: comercio que sostiene la vida de la plaza',
-        'Edificación en altura, cada vez más frecuente en el centro'
-      ],
-      reto: 'Mira la sombra que proyectan los edificios. En junio el sol está mucho más bajo. ¿Qué parte de la plaza quedaría sin sol toda la mañana de invierno?',
-      especies: []
+      id: 'explanada', nombre: 'Explanada de la estación', rango: 'Punto de partida',
+      z: [60, -30], y: 0, color: '#9a9282', superficie: 'baldosa',
+      texto: 'La estación de Villa Alemana con sus dos vías: un tren detenido en el andén al que puedes subir, y otro que cruza sin parar. Desde aquí reconstruiremos la ciudad, esta vez con orden.',
+      vida: ['Sube al tren detenido y recórrelo por dentro', 'Entra a la sala de control junto al andén', 'El otro tren pasa cada 26 segundos sin detenerse']
     }
   ],
 
-  dialogos: {
-    felipe: {
-      nombre: 'Felipe',
-      inicio: 'saludo',
-      nodos: {
-        saludo: {
-          texto: 'Hola, soy Felipe. Me gusta la historia de este lugar, y hay más de la que se ve a simple vista. ¿Te cuento cómo nació Villa Alemana?',
-          opciones: [
-            { dice: '¿Cómo empezó todo?',       va: 'origen' },
-            { dice: '¿Por qué se llama así?',    va: 'nombre' },
-            { dice: '¿Y el ferrocarril?',        va: 'tren' },
-            { dice: 'La ciudad de los molinos',  va: 'molinos' },
-            { dice: 'En otro momento',           va: null }
-          ]
-        },
-        origen: {
-          texto: 'Antes de ser ciudad, esto eran campos: una pequeña viña, árboles y sobre todo espino. En 1894, don Buenaventura Joglar compró y loteó el predio, que primero se llamó Viña Miraflores. Vendía el metro de terreno a veinte centavos.',
-          opciones: [
-            { dice: '¿Y de dónde el nombre alemán?', va: 'nombre' },
-            { dice: 'Sigue', va: 'tren' },
-            { dice: 'Volvamos al inicio', va: 'saludo' }
-          ]
-        },
-        nombre: {
-          texto: 'Los primeros en comprar esos sitios fueron inmigrantes alemanes, y por eso la villa tomó ese nombre. Curiosamente, muchos de ellos nunca edificaron ni vivieron aquí: vendieron y se fueron. El nombre quedó como homenaje a quienes llegaron primero.',
-          opciones: [
-            { dice: '¿Y el tren qué papel jugó?', va: 'tren' },
-            { dice: 'Volvamos al inicio', va: 'saludo' }
-          ]
-        },
-        tren: {
-          texto: 'El ferrocarril es la clave de todo: la ciudad nació a su amparo. La línea entre Valparaíso y el interior pasó por acá, y alrededor de la estación se armó el pueblo. Sin el tren, Villa Alemana no existiría donde está. Ese mismo tren es hoy el Metro de Valparaíso que viste en la estación.',
-          opciones: [
-            { dice: 'Por eso el lema del clima', va: 'lema' },
-            { dice: 'Cuéntame lo de los molinos', va: 'molinos' },
-            { dice: 'Volvamos al inicio', va: 'saludo' }
-          ]
-        },
-        lema: {
-          texto: 'El clima templado le dio su lema: "Por su clima, la juventud no teme a la vejez". Era famosa como lugar sano para vivir, y por un tiempo fue destino de descanso para gente de Valparaíso.',
-          opciones: [
-            { dice: '¿Los molinos?', va: 'molinos' },
-            { dice: 'Gracias, Felipe', va: null }
-          ]
-        },
-        molinos: {
-          texto: 'También la llamaban la Ciudad de los Molinos. En sus inicios el agua se sacaba de pozos con molinos de viento, tantos que se volvieron un sello del paisaje. En el escudo comunal el molino recuerda esa época, junto al racimo de uva de la antigua Viña Miraflores.',
-          opciones: [
-            { dice: '¿Qué más hay en el escudo?', va: 'escudo' },
-            { dice: 'Volvamos al inicio', va: 'saludo' }
-          ]
-        },
-        escudo: {
-          texto: 'El racimo recuerda la viña que dio origen a la ciudad; el molino, los pozos de agua; y las franjas con los colores de Chile y de Alemania, el porqué del nombre. Cada símbolo es un pedazo de esta historia que acabas de recorrer.',
-          opciones: [
-            { dice: 'Impresionante', va: null },
-            { dice: 'Otra vez desde el inicio', va: 'saludo' }
-          ]
-        }
-      }
-    },
-    anfitrion: {
-      nombre: ANFITRION,
-      inicio: 'saludo',
-      nodos: {
-        saludo: {
-          texto: 'Hola, soy ' + ANFITRION + '. ¡Bienvenido a Villa Alemana! Estás parado en la plaza, que es el punto donde se cruzan el comercio, el transporte y la gente que viene a pasar la tarde. ¿Te muestro algo?',
-          opciones: [
-            { dice: '¿Dónde estoy exactamente?', va: 'ubicacion' },
-            { dice: '¿Qué es ese tren?',          va: 'tren' },
-            { dice: '¿Por qué hace tanto calor?', va: 'calor' },
-            { dice: '¿Dónde queda el colegio?',    va: 'colegio' },
-            { dice: 'Voy a mirar solo',           va: null }
-          ]
-        },
-        ubicacion: {
-          texto: 'Villa Alemana está en la Provincia de Marga Marga, Región de Valparaíso, y forma parte del Gran Valparaíso junto a Quilpué, Viña del Mar y Valparaíso. El clima es mediterráneo: veranos secos y calurosos, inviernos lluviosos. Por eso los árboles que ves aguantan meses sin agua.',
-          opciones: [
-            { dice: '¿Y el tren?',       va: 'tren' },
-            { dice: 'Volvamos al inicio', va: 'saludo' },
-            { dice: 'Gracias',            va: null }
-          ]
-        },
-        tren: {
-          texto: 'Ese es el Metro de Valparaíso. Pasa cada pocos minutos y conecta la ciudad con Limache por un lado y con Valparaíso por el otro. Fíjate en algo: la estación está a pasos de la plaza. No es casualidad.',
-          opciones: [
-            { dice: '¿Por qué no es casualidad?', va: 'ferrocarril' },
-            { dice: 'Muéstrame la ficha completa', ficha: 'estacion' },
-            { dice: 'Entendido', va: 'saludo' }
-          ]
-        },
-        ferrocarril: {
-          texto: 'Las ciudades de este valle crecieron siguiendo la vía. Primero llegó el ferrocarril, después la estación, y alrededor de la estación se armó el pueblo. Por eso el centro está donde está, y la plaza quedó pegada al andén.',
-          opciones: [
-            { dice: '¿Eso sigue importando hoy?', va: 'hoy' },
-            { dice: 'Volvamos al inicio', va: 'saludo' }
-          ]
-        },
-        hoy: {
-          texto: 'Más que antes. Un carro lleno saca decenas de autos de la calle, y vivir cerca de una estación te ahorra tiempo y plata todos los días. Cuenta los autos estacionados y compáralos con la gente que cabe en un solo carro.',
-          opciones: [
-            { dice: 'Lo voy a contar', va: null },
-            { dice: 'Otra cosa', va: 'saludo' }
-          ]
-        },
-        colegio: {
-          texto: 'El Colegio San Agustín está pasando la estación, hacia el fondo. Se entra por el portón; adentro tienes la recepción, el patio con las canchas y el pabellón, y hasta un subterráneo. Date una vuelta.',
-          opciones: [
-            { dice: 'Ver la ficha del colegio', ficha: 'colegio' },
-            { dice: 'Gracias, voy para allá', va: null },
-            { dice: 'Otra cosa', va: 'saludo' }
-          ]
-        },
-        calor: {
-          texto: 'Porque el pavimento absorbe radiación todo el día y la devuelve de noche. La ciudad completa funciona como una plancha caliente. Pero pisa el pasto bajo los árboles y vas a sentir la diferencia: esta plaza es una isla fría dentro de la isla de calor.',
-          opciones: [
-            { dice: 'Cuéntame más de eso', ficha: 'sol' },
-            { dice: 'Voy a probarlo', va: null },
-            { dice: 'Otra cosa', va: 'saludo' }
-          ]
-        }
-      }
-    }
-  },
-
   fichas: [
     {
-      id: 'municipalidad', nombre: 'Municipalidad de Villa Alemana', rango: 'El edificio del gobierno comunal',
-      texto: 'Aquí funciona el gobierno de la comuna: la administración local, el alcalde y el concejo municipal. Es la institución que decide sobre el espacio público que acabas de recorrer, desde el arbolado de la plaza hasta el estado del paseo peatonal.',
-      vida: [
-        'Administra servicios locales: aseo, áreas verdes, permisos, patentes',
-        'El alcalde y los concejales son elegidos por la gente de la comuna',
-        'Decide sobre el uso del espacio público y la planificación urbana'
-      ],
-      reto: 'Muchas decisiones sobre la plaza y el paseo se toman aquí. Si pudieras proponer un cambio para tu barrio ante el municipio, ¿cuál sería y cómo lo justificarías?'
-    },
-    {
-      id: 'paseo', nombre: 'El paseo peatonal', rango: 'Corazón comercial de Villa Alemana',
-      texto: 'El paseo peatonal es donde se concentra el comercio y la vida de calle. Al cerrar el paso a los autos, el espacio se vuelve de las personas: se camina, se compra, se conversa. Las guirnaldas de luces y los toldos de colores le dan su carácter.',
-      vida: [
-        'Peatonalizar una calle prioriza a la gente por sobre los autos',
-        'El comercio a pie de calle sostiene la economía local',
-        'Las barreras rojas marcan obras: la ciudad siempre está cambiando'
-      ],
-      reto: 'Compara este paseo con una calle normal con autos. ¿Qué gana y qué pierde el comercio cuando se cierra al tránsito vehicular?'
-    },
-    {
-      id: 'bienvenida', nombre: '¡Bienvenido a Villa Alemana!',
-      rango: 'El anfitrión de la plaza',
-      texto: 'Hola, y bienvenido. Estás parado en la plaza, que es el corazón de la ciudad: acá se cruzan el comercio, el transporte y la gente que viene a pasar la tarde. Camina hacia el fondo y vas a llegar al borde construido; a tu derecha está la estación, por donde pasa el Metro de Valparaíso.',
-      vida: [
-        'Villa Alemana está en la Provincia de Marga Marga, Región de Valparaíso',
-        'Forma parte del Gran Valparaíso junto a Quilpué, Viña del Mar y Valparaíso',
-        'El tren la conecta con Limache por un lado y con Valparaíso por el otro',
-        'Clima mediterráneo: veranos secos y calurosos, inviernos lluviosos'
-      ],
-      reto: 'Recorre la plaza y anota tres cosas que hoy no existían hace cincuenta años. Después pregúntale a alguien mayor si tenías razón.'
-    },
-    {
-      id: 'colegio', nombre: 'Colegio San Agustín de Villa Alemana', rango: 'Entrada del establecimiento',
-      texto: 'Bienvenido al colegio. Tiene tres pisos que se recorren subiendo escaleras: en el nivel de la calle está la recepción y te recibe Felipe; una escalera sube a la multicancha del segundo piso; y otra más lleva al tercer piso, donde están las salas de clases. Casi todo se puede pisar.',
-      vida: [
-        'Piso 1, a nivel de calle: recepción con el escudo San Agustín',
-        'Piso 2: la multicancha con arcos y tableros',
-        'Piso 3: cinco salas de clases con pizarras y pupitres',
-        'Escaleras que conectan los tres niveles'
-      ],
-      reto: 'Recorre el colegio completo y haz un plano a mano de lo que viste. Después compáralo con el colegio real: ¿qué falta y qué sobra en esta versión?'
-    },
-    {
-      id: 'recepcion', nombre: 'Recepción', rango: 'La entrada del colegio',
-      texto: 'El mesón de madera, el escudo del San Agustín al frente y el cuadro en el muro. Es el primer punto de contacto de cualquiera que llega al establecimiento.',
-      reto: 'Toda institución tiene una imagen que la representa. ¿Qué elementos del escudo crees que resumen la identidad del colegio?'
-    },
-    {
-      id: 'cancha', nombre: 'La multicancha', rango: 'Zona deportiva',
-      texto: 'Piso azul con líneas amarillas y blancas, reja verde perimetral, arcos de baby fútbol y tableros de básquetbol. Cuando llueve, el agua queda sobre la superficie porque es impermeable: la misma idea de la isla de calor que vimos en la plaza, pero acá al servicio del deporte.',
-      reto: 'La cancha se moja y demora en secar. ¿Qué solución de drenaje propondrías sin perder la superficie dura que el deporte necesita?'
-    },
-    {
-      id: 'subterraneo', nombre: 'El subterráneo', rango: 'Bajo el patio',
-      texto: 'Un pasillo bajo el nivel del patio, con zócalo de ladrillo y cielo iluminado, que conecta sectores del colegio. Bajar y subir escaleras dentro del mundo es posible gracias a las superficies inclinadas que sigues con los pies.',
-      reto: 'Los espacios subterráneos son más frescos y estables en temperatura. ¿Por qué? Piensa en la tierra que los rodea como un aislante.'
-    },
-    {
-      id: 'control', nombre: 'La sala de control', rango: 'El cerebro del servicio',
-      texto: 'Desde una sala como esta se regula la circulación: dónde está cada tren, qué señal está en rojo, qué andén está ocupado y cuánto se atrasó el servicio. Un sistema ferroviario no funciona por los trenes, funciona por la coordinación entre ellos.',
-      detalle: [
-        'La lógica de fondo es el bloqueo: la vía se divide en tramos y solo un tren puede ocupar cada tramo a la vez. Las señales no son adornos, son la manera física de garantizar esa regla. Si un tren no respeta una señal, el sistema puede frenarlo por su cuenta.',
-        'La otra mitad del trabajo es la información al pasajero. Los letreros del andén salen de acá, y esa información cambia el comportamiento de la gente: saber que el próximo tren llega en tres minutos evita que alguien cruce corriendo la vía.'
-      ],
-      vida: [
-        'Control de circulación: posición de los trenes y estado de las señales',
-        'Regulación de frecuencia cuando el servicio se atrasa',
-        'Cámaras y comunicación con el personal de las estaciones',
-        'Información en tiempo real hacia los letreros del andén'
-      ],
-      reto: 'Si dos trenes van con diez minutos de retraso, ¿conviene apurar al primero o retener al segundo? Piensa en qué le pasa a la cantidad de gente esperando en cada andén.'
-    },
-    {
-      id: 'salas', nombre: 'Las salas de clases', rango: 'Tercer piso del colegio',
-      texto: 'Cinco salas en fila, cada una con su pizarra, el escritorio del profesor y los pupitres mirando al frente. Es el espacio donde ocurre lo esencial del colegio, y también el más simple de reconocer: casi cualquiera ha pasado horas en una sala como esta.',
-      reto: 'Mira la disposición de los pupitres: todos mirando la pizarra. ¿Qué otras formas de ordenar una sala conoces, y qué tipo de clase favorece cada una?'
-    },
-    {
-      id: 'cabina', nombre: 'La cabina de control', rango: 'El puesto del conductor',
-      texto: 'Desde aquí se conduce el tren: la palanca de tracción regula la velocidad, las pantallas muestran las señales de la vía y el parabrisas da la vista al frente. En sistemas modernos el conductor no está solo, lo respalda la sala de control central que regula todo el servicio.',
-      detalle: [
-        'La conducción sigue las señales de la vía, que dividen el recorrido en tramos: el tren solo avanza al siguiente tramo cuando está libre. El conductor obedece esas señales igual que un auto obedece un semáforo, pero con sistemas que pueden frenar el tren si se pasa una en rojo.',
-        'La cabina y la sala de control central son dos escalas del mismo trabajo: una maneja este tren, la otra coordina todos los trenes de la línea para que no se junten ni se atrasen.'
-      ],
-      reto: 'El conductor ve una señal amarilla, que significa "prepárate a detenerte en la próxima". ¿Por qué el sistema avisa con una señal de anticipación en vez de solo una roja de golpe?'
+      id: 'estacion', nombre: 'Estación de Villa Alemana', rango: 'Metro de Valparaíso',
+      texto: 'La estación tiene dos vías: la del andén, donde el tren se detiene y suben los pasajeros, y la exterior, por donde pasan los trenes que no paran aquí. El servicio es hoy el Metro Regional de Valparaíso (Merval), heredero del ferrocarril que dio origen a la ciudad.',
+      vida: ['Dos vías: una de andén y una de paso', 'Andén con acceso, torniquetes y sala de control', 'El tren detenido se puede recorrer por dentro'],
+      reto: 'Cuenta cuánta gente cabe en un carro y estima cuántos autos reemplaza un tren lleno.'
     },
     {
       id: 'interior', nombre: 'Dentro del carro', rango: 'Sube y camina por el pasillo',
       texto: 'Los asientos van en pares a cada lado con un pasillo al centro, y hay barras y montantes junto a las puertas para quien viaja de pie. Cada centímetro está pensado para mover mucha gente en poco espacio.',
-      vida: [
-        'Un carro transporta del orden de cien a doscientas personas entre sentadas y de pie',
-        'Las puertas anchas y el piso a nivel del andén aceleran la subida y bajada',
-        'La superficie de calle que ocuparían esos pasajeros en auto es decenas de veces mayor'
-      ],
-      reto: 'Cuenta los asientos de este carro y estima cuánta gente cabe de pie. Después cuenta los autos estacionados afuera y calcula cuántos viajes reemplaza un solo tren.'
+      vida: ['Un carro transporta del orden de cien a doscientas personas', 'Las puertas anchas y el piso a nivel del andén aceleran la subida', 'La superficie de calle que ocuparían esos pasajeros en auto es decenas de veces mayor'],
+      reto: 'Cuenta los asientos de este carro y estima cuánta gente cabe de pie.'
     },
     {
-      id: 'estacion', nombre: 'La estación y la ciudad', rango: 'Metro de Valparaíso',
-      texto: 'Las ciudades del valle del Marga Marga crecieron siguiendo la línea del ferrocarril: primero llegó la vía, después la estación, y alrededor de la estación se armó el pueblo. Por eso el centro de Villa Alemana está donde está, y por eso la plaza y la estación quedaron a pasos una de la otra.',
-      vida: [
-        'El tren mueve muchas personas ocupando muy poco espacio por pasajero',
-        'Un carro lleno equivale a decenas de autos sacados de la carretera',
-        'Vivir cerca de una estación reduce el tiempo y el costo de moverse',
-        'Alrededor de las estaciones el suelo tiende a valer más y a construirse en altura'
-      ],
-      reto: 'Cuenta cuántos autos ves en la calle y cuánta gente cabe en un carro del tren. ¿Cuánto espacio de calle ahorra el tren en cada viaje?'
+      id: 'cabina', nombre: 'La cabina de control', rango: 'El puesto del conductor',
+      texto: 'Desde aquí se conduce el tren: la palanca de tracción regula la velocidad, las pantallas muestran las señales de la vía y el parabrisas da la vista al frente.',
+      reto: 'El conductor ve una señal amarilla, que significa "prepárate a detenerte en la próxima". ¿Por qué el sistema avisa con anticipación en vez de una roja de golpe?'
     },
     {
-      id: 'sol', nombre: 'Isla de calor urbana', rango: 'Por qué la ciudad es más caliente',
-      texto: 'Una ciudad puede estar varios grados más caliente que su entorno rural, sobre todo de noche. El asfalto y el hormigón absorben radiación todo el día y la liberan lentamente después del atardecer, mientras el suelo con vegetación se enfría rápido porque el agua que evapora se lleva calor consigo.',
-      vida: [
-        'Superficies oscuras e impermeables: absorben y no infiltran',
-        'Menos vegetación: menos evapotranspiración, menos enfriamiento',
-        'Calor de vehículos, industria y aire acondicionado',
-        'La geometría de las calles atrapa la radiación entre muros'
-      ],
-      reto: 'La plaza es una isla fría dentro de la isla de calor. ¿Qué tres cambios concretos harías en tu barrio para bajarle la temperatura, y cuál de ellos es el más barato?'
+      id: 'control', nombre: 'La sala de control', rango: 'El cerebro del servicio',
+      texto: 'Desde una sala como esta se regula la circulación: dónde está cada tren, qué señal está en rojo, qué andén está ocupado. Un sistema ferroviario no funciona por los trenes, funciona por la coordinación entre ellos.',
+      reto: 'Si dos trenes van con diez minutos de retraso, ¿conviene apurar al primero o retener al segundo?'
     }
   ]
 };
