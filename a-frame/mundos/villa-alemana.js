@@ -724,15 +724,29 @@ MUNDO.forma('boleteria', function (H, color, b, ob) {
   var A = (ob && ob.dim) ? ob.dim[0] : 10;
   var L = (ob && ob.dim) ? ob.dim[1] : 16;
   var ALTO = 3;
-  // paredes de baldosa
+  var abierto = !!(ob && ob.abierto);   // extremos abiertos: pasaje peatonal
+  var hu = (ob && ob.hueco) ? ob.hueco : null;  // {x, z, ancho, largo} en coords locales
+  // paredes largas de baldosa
   [-1,1].forEach(function (sx) {
     H.pieza('caja', color, 'baldosa', b, [sx*A/2, ALTO/2, 0], [0,0,0], [0.3, ALTO, L], 0);
   });
-  [-1,1].forEach(function (sz) {
+  // testeras: solo si NO es pasaje abierto
+  if (!abierto) [-1,1].forEach(function (sz) {
     H.pieza('caja', color, 'baldosa', b, [0, ALTO/2, sz*L/2], [0,0,0], [A, ALTO, 0.3], 0);
   });
-  // cielo con luminarias
-  H.pieza('caja', '#e8ebe4', 'solido', b, [0, ALTO, 0], [0,0,0], [A, 0.2, L], 0);
+  // cielo: entero, o en cuatro tramos si hay hueco de escalera
+  if (!hu) {
+    H.pieza('caja', '#e8ebe4', 'solido', b, [0, ALTO, 0], [0,0,0], [A, 0.2, L], 0);
+  } else {
+    var x0 = hu.x - hu.ancho/2, x1 = hu.x + hu.ancho/2;
+    var z0 = hu.z - hu.largo/2, z1 = hu.z + hu.largo/2;
+    var aS = x0 - (-A/2), aN = (A/2) - x1;      // franjas a los costados del hueco
+    if (aS > 0.05) H.pieza('caja', '#e8ebe4', 'solido', b, [(-A/2 + x0)/2, ALTO, 0], [0,0,0], [aS, 0.2, L], 0);
+    if (aN > 0.05) H.pieza('caja', '#e8ebe4', 'solido', b, [(x1 + A/2)/2, ALTO, 0], [0,0,0], [aN, 0.2, L], 0);
+    var lW = z0 - (-L/2), lE = (L/2) - z1;      // franjas antes y después del hueco
+    if (lW > 0.05) H.pieza('caja', '#e8ebe4', 'solido', b, [hu.x, ALTO, (-L/2 + z0)/2], [0,0,0], [hu.ancho, 0.2, lW], 0);
+    if (lE > 0.05) H.pieza('caja', '#e8ebe4', 'solido', b, [hu.x, ALTO, (z1 + L/2)/2], [0,0,0], [hu.ancho, 0.2, lE], 0);
+  }
   for (var i = 0; i < 4; i++)
     H.pieza('caja', '#fdfbf2', 'brillo', b, [0, ALTO-0.1, -L/2+2.5+i*4], [0,0,0], [1.6, 0.05, 0.6], 0);
   // módulo de boletería (caseta)
@@ -740,6 +754,22 @@ MUNDO.forma('boleteria', function (H, color, b, ob) {
   H.pieza('caja', '#2b3540', 'vidrio', b, [-A/2+2.85, 1.4, 0], [0,0,0], [0.1, 1, 2.4], 0);
   H.pieza('caja', '#1f5f7a', 'brillo', b, [-A/2+2, 2.35, 0], [0,0,0], [1.4, 0.3, 0.05], 0);
 }, 3.4);
+
+// Tablero de viaducto: losa sin pilares (los pilares se colocan aparte, para
+// poder saltarse la zona del paso peatonal)
+MUNDO.forma('viaducto', function (H, color, b, ob) {
+  var A = (ob && ob.dim) ? ob.dim[0] : 12;
+  var L = (ob && ob.dim) ? ob.dim[1] : 30;
+  H.pieza('caja', color, 'solido', b, [0, 0, 0], [0, 0, 0], [A, 0.4, L], 0);
+  H.pieza('caja', '#8e8a80', 'solido', b, [0, -0.24, 0], [0, 0, 0], [A - 1.2, 0.12, L], 0);
+}, 1);
+
+// Pilar de hormigón del viaducto (baja hasta el suelo)
+MUNDO.forma('pilarV', function (H, color, b, ob) {
+  var h = (ob && ob.alto) ? ob.alto : 4;
+  H.pieza('caja', color, 'solido', b, [0, -h/2, 0], [0, 0, 0], [0.7, h, 0.7], 0);
+  H.pieza('caja', '#b8b2a6', 'solido', b, [0, -h + 0.2, 0], [0, 0, 0], [1.2, 0.4, 1.2], 0);
+}, 1);
 
 // Charco / lámina de agua en el piso (el humor de la inundación)
 MUNDO.forma('agua', function (H, color, b, ob) {
@@ -763,103 +793,113 @@ var XA  = 34.5;   // eje del andén
 var XV1 = 39.5;   // vía del andén (tren detenido, se puede subir)
 var XV2 = 45.5;   // vía de paso (tren en movimiento)
 
-// Las dos vías
+/* ============================ DOS NIVELES ============================
+   NIVEL 1 (suelo, y = 0): el paso peatonal con la boletería, que cruza
+     TRANSVERSAL por debajo de la línea. Es el nivel de calle: se entra
+     caminando por cualquiera de los dos extremos.
+   NIVEL 2 (viaducto, y = YA): el andén, las dos vías y los trenes, sobre
+     un tablero con pilares. Se sube por la escalera que nace en el paso.
+   Así no hace falta perforar el terreno: el suelo natural ES el piso del
+   nivel 1. Para subir o bajar todo el conjunto, basta cambiar YA.
+   ==================================================================== */
+var YA  = 4.6;              // altura del tablero del viaducto (nivel 2)
+var YAND = YA + 1.0;        // superficie pisable del andén
+var XDECK = 39.35;          // eje del tablero
+
+// ---- Tablero del viaducto (tres bandas: deja libre el hueco de la escalera) ----
+OBJ.push({ forma: 'viaducto', color: '#a9a49a', pos: [36.35, YA - 0.15, -23.5], dim: [12.3, 93] });
+OBJ.push({ forma: 'viaducto', color: '#a9a49a', pos: [45.5,  YA - 0.15, -5],   dim: [6, 130] });
+OBJ.push({ forma: 'viaducto', color: '#a9a49a', pos: [39.5,  YA - 0.15, 41.5], dim: [6, 37] });
+
+// Pilares cada 13 m, salteando la franja del paso peatonal (z 19 a 33)
+[31.5, 41, 47].forEach(function (px) {
+  for (var pz = -66; pz <= 58; pz += 13) {
+    if (pz > 19 && pz < 33) continue;
+    OBJ.push({ forma: 'pilarV', color: '#b0aaa0', pos: [px, YA - 0.2, pz], alto: YA });
+  }
+});
+
+// ---- NIVEL 2: las dos vías sobre el tablero ----
 for (var v = 0; v < 22; v++) {
   var zv = 58 - v * 6;
-  OBJ.push({ forma: 'rieles', color: '#8a8d90', pos: [XV1, 0.05, zv] });
-  OBJ.push({ forma: 'rieles', color: '#8a8d90', pos: [XV2, 0.05, zv] });
+  OBJ.push({ forma: 'rieles', color: '#8a8d90', pos: [XV1, YA + 0.05, zv] });
+  OBJ.push({ forma: 'rieles', color: '#8a8d90', pos: [XV2, YA + 0.05, zv] });
 }
 
 // Catenaria: postes cada 12 m y los cables entre medio
 for (var c = 0; c < 11; c++) {
-  OBJ.push({ forma: 'catenaria', color: '#7c8288', pos: [49, 0.05, 56 - c * 12] });
-  OBJ.push({ forma: 'cable', color: '#8e9498', pos: [XV1, 0.05, 50 - c * 12] });
-  OBJ.push({ forma: 'cable', color: '#8e9498', pos: [XV2, 0.05, 50 - c * 12] });
+  OBJ.push({ forma: 'catenaria', color: '#7c8288', pos: [49, YA + 0.05, 56 - c * 12] });
+  OBJ.push({ forma: 'cable', color: '#8e9498', pos: [XV1, YA + 0.05, 50 - c * 12] });
+  OBJ.push({ forma: 'cable', color: '#8e9498', pos: [XV2, YA + 0.05, 50 - c * 12] });
 }
 
-// Andén: superficie pisable de verdad
-OBJ.push({ forma: 'anden', color: '#c6bfae', pos: [XA, 0.05, 6],
+// Andén elevado: superficie pisable de verdad
+OBJ.push({ forma: 'anden', color: '#c6bfae', pos: [XA, YA + 0.05, 6],
            piso: { ancho: 7, largo: 34, alto: 0.95, color: '#c6bfae' } });
-OBJ.push({ forma: 'marquesina', color: '#5b6a74', pos: [XA, 0.05, 6] });
-OBJ.push({ forma: 'letrero', color: '#2f4f7d', pos: [XA - 3.4, 0.95, 20],
+OBJ.push({ forma: 'marquesina', color: '#5b6a74', pos: [XA, YA + 0.05, 6] });
+OBJ.push({ forma: 'letrero', color: '#2f4f7d', pos: [XA - 3.4, YAND, 20],
            nombre: 'Estación Villa Alemana', ficha: 'estacion', altoFicha: 5.6 });
-OBJ.push({ forma: 'letrero', color: '#2f4f7d', pos: [XA - 3.4, 0.95, -8] });
+OBJ.push({ forma: 'letrero', color: '#2f4f7d', pos: [XA - 3.4, YAND, -8] });
+
+// Baranda en el borde libre del andén (ahora está en altura)
+OBJ.push({ forma: 'baranda', color: '#9aa3ab', pos: [31.3, YAND, 6], giro: 90, largo: 33 });
 
 // Mobiliario del andén
 [14, 8, 2, -4].forEach(function (z) {
-  OBJ.push({ forma: 'banca', color: '#2f6b45', pos: [XA - 1.6, 0.95, z], giro: 90 });
+  OBJ.push({ forma: 'banca', color: '#2f6b45', pos: [XA - 1.6, YAND, z], giro: 90 });
 });
-OBJ.push({ forma: 'basurero', color: '#2f6b45', pos: [XA - 1.6, 0.95, 11] });
-OBJ.push({ forma: 'basurero', color: '#2f6b45', pos: [XA - 1.6, 0.95, -1] });
+OBJ.push({ forma: 'basurero', color: '#2f6b45', pos: [XA - 1.6, YAND, 11] });
+OBJ.push({ forma: 'basurero', color: '#2f6b45', pos: [XA - 1.6, YAND, -1] });
 
-// Gente esperando
-OBJ.push({ forma: 'persona', pos: [XA - 0.6, 0.95, 5], giro: 90,
+// Gente esperando en el andén
+OBJ.push({ forma: 'persona', pos: [XA - 0.6, YAND, 5], giro: 90,
   cuerpo: { altura: 1.68, piel: '#b57a56', pelo: '#1e1814', chaqueta: '#2f4257',
             polera: '#c9d2d8', pantalon: '#22262c', zapato: '#17161a' } });
-OBJ.push({ forma: 'persona', pos: [XA + 1.4, 0.95, -6], giro: 88,
+OBJ.push({ forma: 'persona', pos: [XA + 1.4, YAND, -6], giro: 88,
   cuerpo: { altura: 1.6, piel: '#d8a077', pelo: '#3a2a20', chaqueta: '#8a4a3c',
             polera: '#1b2430', pantalon: '#3d4450', zapato: '#201d1b' } });
 
-/* ---- BOLETERÍA SUBTERRÁNEA (característica real de esta estación) ----
-   Se baja por una escalera desde el nivel de calle, la boletería y los
-   torniquetes están abajo, y se sube por otra escalera al otro lado.
-   Y como siempre se inunda, hay agua en el piso. */
-var YSUB = -3.4;          // profundidad del subterráneo
-var XSUB = XA - 16;       // eje del subterráneo (al costado del andén)
+/* ---- NIVEL 1: paso peatonal con boletería, transversal bajo la línea ----
+   Está al nivel del suelo, con los dos extremos abiertos: se cruza de un lado
+   a otro de la vía caminando. Y como siempre se inunda, hay agua en el piso. */
+var SUB_CZ = 26;            // eje del paso (z)
+var YSUB = 0;               // nivel 1 = suelo natural
 
-// La boletería cruza TRANSVERSAL a la vía: un paso bajo nivel bajo los rieles,
-// como el real. Todo se define con las coords originales y se gira 90° al eje X
-// mediante subP(); para correr el paso, se cambian SUB_CX/SUB_CZ en un solo sitio.
-var SUB_CX = 42.5, SUB_CZ = 6;                 // centro del paso, bajo las dos vías
-function subP(x, z, y) {                        // rota 90° (eje viejo Z -> eje nuevo X)
-  return [SUB_CX + (z - 6), y, SUB_CZ - (x - XSUB)];
-}
-
-// Piso del nivel calle a ambos lados del paso (para bajar/subir)
-OBJ.push({ forma: 'anden', color: '#b8b2a4', pos: subP(XSUB, 34, 0.02), giro: 90,
-           piso: { ancho: 12, largo: 10, alto: 0.15, color: '#b8b2a4' } });   // acceso este
-OBJ.push({ forma: 'anden', color: '#b8b2a4', pos: subP(XSUB, -18, 0.02), giro: 90,
-           piso: { ancho: 12, largo: 10, alto: 0.15, color: '#b8b2a4' } });   // acceso oeste
-
-// Escalera de BAJADA (lado este) al paso bajo nivel
-OBJ.push({ forma: 'escaleraBaranda', color: '#c4cace', pos: subP(XSUB, 28, 0.15), giro: 90,
-           escalones: [{ dx: 0, dz: 3, ancho: 3.2, largo: 7, alto: 3.55, base: YSUB, pasos: 14, color: '#d8c23a' }] });
-
-// SALA de boletería, cruzando por debajo de las vías
-OBJ.push({ forma: 'boleteria', color: '#c9beac', pos: subP(XSUB, 6, YSUB), giro: 90, dim: [11, 30],
+// La sala cruza a lo largo del eje X (giro 90°), bajo el viaducto.
+// 'hueco' abre el cielo donde sube la escalera (coords locales de la forma).
+OBJ.push({ forma: 'boleteria', color: '#c9beac', pos: [XDECK, YSUB, SUB_CZ], giro: 90,
+           dim: [11, 30], abierto: true,
+           hueco: { x: 1.8, z: -4.85, ancho: 6.8, largo: 5 },
            ficha: 'boleteria', altoFicha: 3.4, nombre: 'Boletería',
-           piso: { ancho: 11, largo: 30, alto: 0.15, color: '#b0a898' },
+           piso: { ancho: 30, largo: 11, alto: 0.15, color: '#b0a898' },
            choca: [
              { dx: -5.5, dz: 0, ancho: 0.4, largo: 30, alto: 3, base: 0 },
              { dx: 5.5, dz: 0, ancho: 0.4, largo: 30, alto: 3, base: 0 }
            ] });
 
-// Torniquetes (alineados cruzando el paso)
+// ESCALERA PRINCIPAL: nace en el paso, atraviesa el hueco del cielo y llega al andén
+OBJ.push({ forma: 'escaleraBaranda', color: '#c4cace', pos: [XA, 0.15, 27.6], giro: 0,
+           escalones: [{ dx: 0, dz: 3, ancho: 3.2, largo: 8,
+                         alto: YAND - 0.15, base: 0, pasos: 20, color: '#d8c23a' }] });
+
+// Torniquetes cruzando el paso, antes de la escalera
 [-2, -0.4, 1.2].forEach(function (d) {
-  OBJ.push({ forma: 'torniquete', color: '#dcdfe2', pos: subP(XSUB + d, 6, YSUB), giro: 90 });
+  OBJ.push({ forma: 'torniquete', color: '#dcdfe2', pos: [30, 0.15, SUB_CZ + d], giro: 90 });
 });
 
 // AGUA en el piso: la estación siempre se inunda
-OBJ.push({ forma: 'agua', color: '#4a7a8a', pos: subP(XSUB, 10, YSUB), giro: 90, dim: [9, 8],
+OBJ.push({ forma: 'agua', color: '#4a7a8a', pos: [37, 0.16, SUB_CZ - 2], dim: [8, 7],
            nombre: 'Siempre se inunda', ficha: 'agua', altoFicha: 1.5 });
-OBJ.push({ forma: 'agua', color: '#4a7a8a', pos: subP(XSUB, -2, YSUB), giro: 90, dim: [8, 6] });
-OBJ.push({ forma: 'agua', color: '#4a7a8a', pos: subP(XSUB, 20, YSUB), giro: 90, dim: [5, 5] });
+OBJ.push({ forma: 'agua', color: '#4a7a8a', pos: [45, 0.16, SUB_CZ + 2], dim: [7, 6] });
+OBJ.push({ forma: 'agua', color: '#4a7a8a', pos: [27, 0.16, SUB_CZ + 1], dim: [5, 5] });
 
-// Escalera de SUBIDA (lado oeste), saliendo al otro lado de la vía
-OBJ.push({ forma: 'escaleraBaranda', color: '#c4cace', pos: subP(XSUB, -14, 0.15), giro: 270,
-           escalones: [{ dx: 0, dz: 3, ancho: 3.2, largo: 7, alto: 3.55, base: YSUB, pasos: 14, color: '#d8c23a' }] });
-
-// Gente en la boletería
-OBJ.push({ forma: 'persona', pos: subP(XSUB - 3, 4, YSUB), giro: 180,
+// Gente en el paso
+OBJ.push({ forma: 'persona', pos: [33, 0.15, SUB_CZ - 3], giro: 180,
   cuerpo: { altura: 1.66, piel: '#c88d6b', pelo: '#241b16', chaqueta: '#3f5d6b',
             polera: '#e8e2d4', pantalon: '#2b2f36', zapato: '#1a1917' } });
-OBJ.push({ forma: 'persona', pos: subP(XSUB + 2, 14, YSUB), giro: 70,
+OBJ.push({ forma: 'persona', pos: [47, 0.15, SUB_CZ + 3], giro: 70,
   cuerpo: { altura: 1.62, piel: '#b57a56', pelo: '#1e1814', chaqueta: '#8a4a3c',
             polera: '#20242a', pantalon: '#3d4450', zapato: '#201d1b' } });
-
-// Conexión del andén con el paso: una escalera baja desde el andén al paso, bajo las vías
-OBJ.push({ forma: 'escaleraBaranda', color: '#c4cace', pos: [XA + 1, 0.15, 6], giro: 90,
-           escalones: [{ dx: 0, dz: 3, ancho: 2.6, largo: 6.5, alto: 3.55, base: YSUB, pasos: 13, color: '#d8c23a' }] });
 
 // Factores de escala del vagón: 15% más ancho (X), 40% más largo (Z).
 // Se aplican a la cáscara (esc), a la colisión, al piso, a las puertas y a los
@@ -885,7 +925,7 @@ var CARROS = [
   { id: 't3', z: 23.7, ficha: 'interior' }
 ];
 CARROS.forEach(function (cr) {
-  var o = { forma: 'vagonAbierto', id: cr.id, color: '#eef1f3', pos: [XV1, 0.05, cr.z * AL],
+  var o = { forma: 'vagonAbierto', id: cr.id, color: '#eef1f3', pos: [XV1, YA + 0.05, cr.z * AL],
             esc: [AW, 1, AL],
             piso: { ancho: 2.66 * AW, largo: 15.2 * AL, alto: 1.1, color: '#c9ced3' },
             choca: MUROS_VAGON };
@@ -903,11 +943,11 @@ CARROS.forEach(function (cr) {
 });
 
 // La cabina de control, al frente del primer carro
-OBJ.push({ forma: 'cabina', color: '#eef1f3', pos: [XV1, 0.05, 16.5 * AL],
+OBJ.push({ forma: 'cabina', color: '#eef1f3', pos: [XV1, YA + 0.05, 16.5 * AL],
            esc: [AW, 1, 1],
            piso: { ancho: 2.7 * AW, largo: 2.4, alto: 1.1, color: '#c9ced3' },
            ficha: 'cabina', altoFicha: 4.4 });
-OBJ.push({ forma: 'persona', pos: [XV1, 1.15, 15.9 * AL], giro: 0,
+OBJ.push({ forma: 'persona', pos: [XV1, YA + 1.15, 15.9 * AL], giro: 0,
   cuerpo: { altura: 1.72, piel: '#c48a63', pelo: '#2a2018', chaqueta: '#28405c',
             polera: '#28405c', pantalon: '#20262b', zapato: '#17161a' } });
 
@@ -923,7 +963,7 @@ CARROS.forEach(function (cr) {
   asientos.forEach(function (z) {
     [-0.78, 0.78].forEach(function (x) {
       if (Math.random() > 0.5) {
-        OBJ.push({ forma: 'pasajeroSentado', pos: [XV1 + x * AW, 1.1, (cr.z + z) * AL], giro: x < 0 ? 90 : -90,
+        OBJ.push({ forma: 'pasajeroSentado', pos: [XV1 + x * AW, YA + 1.1, (cr.z + z) * AL], giro: x < 0 ? 90 : -90,
           cuerpo: { altura: 1.68, piel: rnd(PIELES), pelo: rnd(PELOS),
                     chaqueta: rnd(ROPAS), polera: rnd(ROPAS), pantalon: '#2b2f36', zapato: '#1a1917' } });
       }
@@ -933,7 +973,7 @@ CARROS.forEach(function (cr) {
   var nDePie = 1 + Math.floor(Math.random() * 3);
   for (var k = 0; k < nDePie; k++) {
     var zx = (cr.z + (Math.random() * 8 - 4)) * AL;
-    OBJ.push({ forma: 'persona', pos: [XV1 + (Math.random() > 0.5 ? 0.5 : -0.5) * AW, 1.1, zx],
+    OBJ.push({ forma: 'persona', pos: [XV1 + (Math.random() > 0.5 ? 0.5 : -0.5) * AW, YA + 1.1, zx],
       giro: Math.random() * 360,
       cuerpo: { altura: 1.6 + Math.random() * 0.2, piel: rnd(PIELES), pelo: rnd(PELOS),
                 chaqueta: rnd(ROPAS), polera: rnd(ROPAS), pantalon: '#2b2f36', zapato: '#1a1917',
@@ -965,7 +1005,7 @@ window.MUNDOS['villa-alemana'] = {
   sonido: {
     fuentes: [
       // zumbido de la estación / rieles
-      { pos: [39, 1, 6], filtro: 'lowpass', freq: 280, q: 0.7, cat: 'ambiente', vol: 0.24, refDist: 6, maxDist: 36 }
+      { pos: [39, 5.6, 6], filtro: 'lowpass', freq: 280, q: 0.7, cat: 'ambiente', vol: 0.24, refDist: 6, maxDist: 36 }
     ]
   },
 
@@ -974,11 +1014,12 @@ window.MUNDOS['villa-alemana'] = {
 
   ancho: 120,
   anchoVida: 56,
-  inicio: '34 1.7 40',
+  inicio: '22 1.7 26',
 
   vistas: {
-    anden:  { etiqueta: 'En el andén',        pos: '34.5 2.7 14', pitch: -3, yaw: 178 },
-    vagon:  { etiqueta: 'Dentro del vagón',   pos: '39.5 2.8 4',  pitch: 0,  yaw: 180 },
+    paso:   { etiqueta: 'Paso bajo la línea', pos: '24 1.7 26',   pitch: 0,  yaw: 90 },
+    anden:  { etiqueta: 'En el andén',        pos: '34.5 7.3 14', pitch: -3, yaw: 178 },
+    vagon:  { etiqueta: 'Dentro del vagón',   pos: '39.5 7.4 4',  pitch: 0,  yaw: 180 },
     control:{ etiqueta: 'Sala de control',    pos: '22 1.7 6',    pitch: 0,  yaw: 90 }
   },
 
@@ -989,7 +1030,7 @@ window.MUNDOS['villa-alemana'] = {
       id: 'explanada', nombre: 'Explanada de la estación', rango: 'Punto de partida',
       z: [60, -30], y: 0, color: '#9a9282', superficie: 'baldosa',
       texto: 'La estación de Villa Alemana con sus dos vías: un tren detenido en el andén al que puedes subir, y otro que cruza sin parar. Desde aquí reconstruiremos la ciudad, esta vez con orden.',
-      vida: ['Sube al tren detenido y recórrelo por dentro', 'Entra a la sala de control junto al andén', 'El otro tren pasa cada 26 segundos sin detenerse']
+      vida: ['Nivel 1: el paso peatonal con la boletería, bajo la línea', 'Nivel 2: el andén y las vías, sobre el viaducto', 'Sube por la escalera del paso y recorre el tren por dentro']
     }
   ],
 
