@@ -706,6 +706,50 @@ MUNDO.forma('guirnalda', function (H, color, b, ob) {
 }, 5.4);
 
 
+
+// Tramo de escaleras con peldaños pisables (el motor los genera por 'escalones')
+// Aquí va solo la baranda; los peldaños los pone el objeto con campo escalones.
+MUNDO.forma('escaleraBaranda', function (H, color, b, ob) {
+  var es = ob.escalones[0];
+  var largoDiag = Math.sqrt(es.largo*es.largo + es.alto*es.alto);
+  var ang = -Math.atan2(es.alto, es.largo) * 180 / Math.PI;
+  [-es.ancho/2, es.ancho/2].forEach(function (x) {
+    H.pieza('caja', color, 'metal', b, [x, es.alto/2 + 0.5, es.dz - es.largo/2],
+      [ang, 0, 0], [0.08, 0.9, largoDiag], 0);
+  });
+}, 2);
+
+// Sala de boletería subterránea: piso, paredes, cielo y luces
+MUNDO.forma('boleteria', function (H, color, b, ob) {
+  var A = (ob && ob.dim) ? ob.dim[0] : 10;
+  var L = (ob && ob.dim) ? ob.dim[1] : 16;
+  var ALTO = 3;
+  // paredes de baldosa
+  [-1,1].forEach(function (sx) {
+    H.pieza('caja', color, 'baldosa', b, [sx*A/2, ALTO/2, 0], [0,0,0], [0.3, ALTO, L], 0);
+  });
+  [-1,1].forEach(function (sz) {
+    H.pieza('caja', color, 'baldosa', b, [0, ALTO/2, sz*L/2], [0,0,0], [A, ALTO, 0.3], 0);
+  });
+  // cielo con luminarias
+  H.pieza('caja', '#e8ebe4', 'solido', b, [0, ALTO, 0], [0,0,0], [A, 0.2, L], 0);
+  for (var i = 0; i < 4; i++)
+    H.pieza('caja', '#fdfbf2', 'brillo', b, [0, ALTO-0.1, -L/2+2.5+i*4], [0,0,0], [1.6, 0.05, 0.6], 0);
+  // módulo de boletería (caseta)
+  H.pieza('caja', '#3a4750', 'solido', b, [-A/2+2, 1.1, 0], [0,0,0], [1.6, 2.2, 3], 0);
+  H.pieza('caja', '#2b3540', 'vidrio', b, [-A/2+2.85, 1.4, 0], [0,0,0], [0.1, 1, 2.4], 0);
+  H.pieza('caja', '#1f5f7a', 'brillo', b, [-A/2+2, 2.35, 0], [0,0,0], [1.4, 0.3, 0.05], 0);
+}, 3.4);
+
+// Charco / lámina de agua en el piso (el humor de la inundación)
+MUNDO.forma('agua', function (H, color, b, ob) {
+  var A = (ob && ob.dim) ? ob.dim[0] : 6;
+  var L = (ob && ob.dim) ? ob.dim[1] : 6;
+  H.pieza('caja', '#4a7a8a', 'vidrio', b, [0, 0.06, 0], [0,0,0], [A, 0.06, L], 0);
+  H.pieza('caja', '#6a9aa8', 'vidrio', b, [0, 0.09, 0], [0,0,0], [A*0.7, 0.02, L*0.7], 0);
+}, 0.3);
+
+
 /* ============================================================================
    COLOCACIONES
    Empezamos de nuevo: por ahora SOLO la estación con sus trenes.
@@ -756,15 +800,59 @@ OBJ.push({ forma: 'persona', pos: [XA + 1.4, 0.95, -6], giro: 88,
   cuerpo: { altura: 1.6, piel: '#d8a077', pelo: '#3a2a20', chaqueta: '#8a4a3c',
             polera: '#1b2430', pantalon: '#3d4450', zapato: '#201d1b' } });
 
-// Acceso a la estación, con torniquetes
-OBJ.push({ forma: 'acceso', color: '#b6afa3', pos: [XA - 11, 0.05, 26], giro: -90,
-           choca: [{ dx: -4.6, dz: 0, ancho: 4.4, largo: 7, alto: 4.4 }] });
-[-1, 0.2, 1.4].forEach(function (d) {
-  OBJ.push({ forma: 'torniquete', color: '#dcdfe2', pos: [XA - 8.4 + d, 0.05, 24], giro: 90 });
+/* ---- BOLETERÍA SUBTERRÁNEA (característica real de esta estación) ----
+   Se baja por una escalera desde el nivel de calle, la boletería y los
+   torniquetes están abajo, y se sube por otra escalera al otro lado.
+   Y como siempre se inunda, hay agua en el piso. */
+var YSUB = -3.4;          // profundidad del subterráneo
+var XSUB = XA - 16;       // eje del subterráneo (al costado del andén)
+
+// Piso del nivel calle a ambos lados (para bajar/subir)
+OBJ.push({ forma: 'anden', color: '#b8b2a4', pos: [XSUB, 0.02, 34],
+           piso: { ancho: 12, largo: 10, alto: 0.15, color: '#b8b2a4' } });   // lado de entrada (norte)
+OBJ.push({ forma: 'anden', color: '#b8b2a4', pos: [XSUB, 0.02, -18],
+           piso: { ancho: 12, largo: 10, alto: 0.15, color: '#b8b2a4' } });   // lado de salida (sur)
+
+// Escalera de BAJADA desde la calle (norte) al subterráneo
+OBJ.push({ forma: 'escaleraBaranda', color: '#c4cace', pos: [XSUB, 0.15, 28], giro: 0,
+           escalones: [{ dx: 0, dz: 3, ancho: 3.2, largo: 7, alto: 3.55, base: YSUB, pasos: 14, color: '#d8c23a' }] });
+
+// SALA de boletería subterránea
+OBJ.push({ forma: 'boleteria', color: '#c9beac', pos: [XSUB, YSUB, 6], dim: [11, 30],
+           ficha: 'boleteria', altoFicha: 3.4, nombre: 'Boletería',
+           piso: { ancho: 11, largo: 30, alto: 0.15, color: '#b0a898' },
+           choca: [
+             { dx: -5.5, dz: 0, ancho: 0.4, largo: 30, alto: 3, base: 0 },
+             { dx: 5.5, dz: 0, ancho: 0.4, largo: 30, alto: 3, base: 0 }
+           ] });
+
+// Torniquetes en el subterráneo (a nivel del piso subterráneo)
+[-2, -0.4, 1.2].forEach(function (d) {
+  OBJ.push({ forma: 'torniquete', color: '#dcdfe2', pos: [XSUB + d, YSUB, 6], giro: 0 });
 });
-[[XA - 8, 20], [XA - 8, 14], [XA - 8, -2], [XA - 8, -8]].forEach(function (r) {
-  OBJ.push({ forma: 'reja', color: '#2f6b45', pos: [r[0], 0.05, r[1]], giro: 90 });
-});
+
+// AGUA en el piso: la estación siempre se inunda
+OBJ.push({ forma: 'agua', color: '#4a7a8a', pos: [XSUB, YSUB, 10], dim: [9, 8],
+           nombre: 'Siempre se inunda', ficha: 'agua', altoFicha: 1.5 });
+OBJ.push({ forma: 'agua', color: '#4a7a8a', pos: [XSUB, YSUB, -2], dim: [8, 6] });
+// charquitos al pie de las escaleras
+OBJ.push({ forma: 'agua', color: '#4a7a8a', pos: [XSUB, YSUB, 20], dim: [5, 5] });
+
+// Escalera de SUBIDA al otro lado (sur), saliendo de la estación
+OBJ.push({ forma: 'escaleraBaranda', color: '#c4cace', pos: [XSUB, 0.15, -14], giro: 180,
+           escalones: [{ dx: 0, dz: 3, ancho: 3.2, largo: 7, alto: 3.55, base: YSUB, pasos: 14, color: '#d8c23a' }] });
+
+// Gente en la boletería
+OBJ.push({ forma: 'persona', pos: [XSUB - 3, YSUB, 4], giro: 90,
+  cuerpo: { altura: 1.66, piel: '#c88d6b', pelo: '#241b16', chaqueta: '#3f5d6b',
+            polera: '#e8e2d4', pantalon: '#2b2f36', zapato: '#1a1917' } });
+OBJ.push({ forma: 'persona', pos: [XSUB + 2, YSUB, 14], giro: -20,
+  cuerpo: { altura: 1.62, piel: '#b57a56', pelo: '#1e1814', chaqueta: '#8a4a3c',
+            polera: '#20242a', pantalon: '#3d4450', zapato: '#201d1b' } });
+
+// Conexión del andén con el subterráneo: una escalera desde el andén baja también
+OBJ.push({ forma: 'escaleraBaranda', color: '#c4cace', pos: [XA - 4, 0.15, 6], giro: -90,
+           escalones: [{ dx: 0, dz: 3, ancho: 2.6, largo: 6.5, alto: 3.55, base: YSUB, pasos: 13, color: '#d8c23a' }] });
 
 // Paredes del carro: tres tramos por costado, con los vanos de puerta libres
 var MUROS_VAGON = [];
@@ -897,6 +985,17 @@ window.MUNDOS['villa-alemana'] = {
       texto: 'La estación tiene dos vías: la del andén, donde el tren se detiene y suben los pasajeros, y la exterior, por donde pasan los trenes que no paran aquí. El servicio es hoy el Metro Regional de Valparaíso (Merval), heredero del ferrocarril que dio origen a la ciudad.',
       vida: ['Dos vías: una de andén y una de paso', 'Andén con acceso, torniquetes y sala de control', 'El tren detenido se puede recorrer por dentro'],
       reto: 'Cuenta cuánta gente cabe en un carro y estima cuántos autos reemplaza un tren lleno.'
+    },
+    {
+      id: 'boleteria', nombre: 'Boletería subterránea', rango: 'Bajo el nivel de calle',
+      texto: 'Esta estación tiene una particularidad: la boletería y los torniquetes no están a nivel de calle, sino en un subterráneo. Se baja por una escalera desde un lado, se pasa por los torniquetes, y se sube por otra escalera para salir por el lado opuesto. El paso subterráneo conecta ambos costados de la vía.',
+      vida: ['Escalera de bajada desde el nivel de calle', 'Boletería y torniquetes en el subsuelo', 'Escalera de subida al otro lado para salir'],
+      reto: 'Un paso bajo nivel conecta los dos lados de la vía sin cruzarla. ¿Qué ventajas de seguridad tiene frente a un cruce a nivel?'
+    },
+    {
+      id: 'agua', nombre: 'La inundación de siempre', rango: 'Un clásico local',
+      texto: 'El piso del subterráneo tiene agua acumulada. En Villa Alemana es casi una tradición: cada vez que llueve fuerte, la estación se inunda y el agua baja por las escaleras hasta la boletería. Un recordatorio, con humor, de que la infraestructura y el clima no siempre se llevan bien.',
+      reto: 'El agua baja al punto más bajo por gravedad, y el subterráneo lo es. ¿Qué soluciones de drenaje o bombeo se te ocurren para una estación bajo el nivel de calle?'
     },
     {
       id: 'interior', nombre: 'Dentro del carro', rango: 'Sube y camina por el pasillo',

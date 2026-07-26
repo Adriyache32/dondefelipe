@@ -11,7 +11,7 @@
 'use strict';
 
 var MUNDO = {
-  version: 27,
+  version: 28,
   formas: {},
   clima: { viento: 1 },
   datos: null
@@ -945,7 +945,11 @@ AFRAME.registerComponent('gravedad', {
     var p = this.el.object3D.position;
     var alt = this.data.altura || 1.65;
 
-    if (this.mallas.length === 0) {
+    // refrescar la lista de suelos cada ~1 s (captura plataformas nuevas:
+    // andén, pisos de tren, sectores procedurales…)
+    this._refr = (this._refr || 0) + dt * 1000;
+    if (this.mallas.length === 0 || this._refr > 1000) {
+      this._refr = 0;
       this.mallas = Array.prototype.slice.call(document.querySelectorAll('.suelo'))
         .map(function (e) { return e.getObject3D('mesh'); }).filter(function (m) { return !!m; });
     }
@@ -955,10 +959,12 @@ AFRAME.registerComponent('gravedad', {
       this.origen.set(p.x, p.y + 20, p.z);
       this.ray.set(this.origen, this.abajo);
       var golpes = this.ray.intersectObjects(this.mallas, false);
-      var cintura = p.y - alt + 0.7, mejor = null;
+      // umbral de subida: hasta 1,3 m sobre los pies. Permite subir a andenes
+      // y pisos de tren (altura ~1 m) sin atravesar techos (a 2,4 m+).
+      var umbral = p.y - alt + 1.3, mejor = null;
       for (var i = 0; i < golpes.length; i++) {
         var y = golpes[i].point.y;
-        if (y <= cintura && (mejor === null || y > mejor)) mejor = y;
+        if (y <= umbral && (mejor === null || y > mejor)) mejor = y;
       }
       if (mejor === null && golpes.length) {
         mejor = golpes[golpes.length - 1].point.y;
@@ -976,7 +982,13 @@ AFRAME.registerComponent('gravedad', {
     if (p.y <= sueloY) {
       // aterrizaje: sonar si venía cayendo con cierta velocidad
       if (!this.enSuelo && this.vy < -3 && MUNDO.sonido) MUNDO.sonido('aterrizar');
-      p.y = sueloY;
+      // subida suave a la plataforma (escalón alto): interpola en vez de saltar
+      if (sueloY - p.y > 0.05 && sueloY - p.y < 1.4) {
+        p.y += Math.min(sueloY - p.y, 0.12 * (dt * 1000));
+        if (p.y > sueloY) p.y = sueloY;
+      } else {
+        p.y = sueloY;
+      }
       this.vy = 0;
       this.enSuelo = true;
     } else {
