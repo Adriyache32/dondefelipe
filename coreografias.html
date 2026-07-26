@@ -289,6 +289,8 @@
         <button data-tool="erase">✖ Borrar</button>
       </div>
       <button class="btn-icon btn-help" id="btnHelp" title="Ayuda" aria-label="Ayuda">?</button>
+      <button class="btn-icon" id="btnSelectAll" title="Seleccionar todos los bailarines">☑ Seleccionar todos</button>
+      <span class="selection-hint" id="selectionHint">Ctrl/Cmd + clic: seleccionar varios</span>
       <button class="btn-icon" id="btnClearArrows">🧹 Limpiar flechas</button>
       <button class="btn-icon" id="btnAddScene">➕ Nueva viñeta</button>
       <button class="btn-icon" id="btnDeleteScene" title="Eliminar viñeta">🗑 Eliminar</button>
@@ -768,6 +770,7 @@
   /* ---------- Selección múltiple ---------- */
   function updateSelectionUI(){
     var btn = document.getElementById('btnSelectAll');
+    if(!btn) return;
     var all = state.roster.length > 0 && selectedIds.size === state.roster.length;
     btn.classList.toggle('active-select', all);
     btn.textContent = all ? '☒ Quitar selección' : '☑ Seleccionar todos';
@@ -961,8 +964,8 @@
   });
 
   document.getElementById('rosterList').addEventListener('click', function(e){
-    var btn = e.target.closest('[data-remove-dancer]');
-    if(btn) removeDancer(btn.dataset.removeDancer);
+    var btn = e.target.closest('[data-remove]');
+    if(btn) removeDancer(btn.dataset.remove);
   });
   document.getElementById('btnAddDancerName').addEventListener('click', function(){
     var input = document.getElementById('newDancerName');
@@ -1350,7 +1353,7 @@
     state.mode = 'numbers';
     state.layout = 'top';
     state.roster = labels.map(function(lab,i){
-      return { id:genId('p'), label:lab, color:COLORS[i % COLORS.length] };
+      return { id:genId('p'), label:String(i+1), optionalName:'', color:COLORS[i % COLORS.length] };
     });
     var L = currentLayout();
     var positioned = defaultFormation(state.roster, L.floor);
