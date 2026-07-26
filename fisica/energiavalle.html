@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Energía en el Valle del Aconcagua · Interactivo</title>
+<style>
+:root{--bg:#061714;--glass:rgba(8,37,31,.76);--text:#f4fff9;--muted:#b8d7cb;--g:#5ee69b;--y:#ffd166;--b:#61b9ff;--r:#ff7a7a}
+*{box-sizing:border-box} html,body{margin:0;height:100%;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;background:#061714;color:var(--text)}
+body{overflow:hidden}.slide{position:absolute;inset:0;display:none;padding:6vh 7vw 11vh;overflow:auto;background:radial-gradient(circle at 85% 10%,#174b3c 0,transparent 34%),linear-gradient(145deg,#061714,#0a2821)}
+.slide.active{display:flex;flex-direction:column;justify-content:center;animation:enter .6s cubic-bezier(.2,.8,.2,1)}
+@keyframes enter{from{opacity:0;transform:scale(.985) translateX(35px)}to{opacity:1;transform:none}}
+.hero{background-image:linear-gradient(90deg,rgba(3,18,15,.92),rgba(3,18,15,.3)),url("https://www.gochile.cl/fotos/full/111881-valle-de-aconcagua.jpg");background-size:cover;background-position:center}
+h1{font-size:clamp(3rem,7vw,6.5rem);line-height:.92;margin:.1em 0;max-width:1000px}h2{font-size:clamp(2.1rem,4.4vw,4rem);margin:.15em 0 .5em}
+p,li{font-size:clamp(1rem,1.45vw,1.3rem);line-height:1.5;color:var(--muted)}strong{color:white}.k{font-size:.8rem;text-transform:uppercase;letter-spacing:.17em;color:var(--g);font-weight:900}
+.lead{font-size:clamp(1.15rem,2vw,1.7rem);max-width:900px}.yellow{color:var(--y)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.two{grid-template-columns:repeat(2,1fr)}
+.card{background:var(--glass);backdrop-filter:blur(14px);border:1px solid #ffffff18;border-radius:24px;padding:22px;box-shadow:0 20px 50px #0003;transition:.25s}
+.card:hover{transform:translateY(-5px);border-color:#5ee69b66}.ico{font-size:2.5rem}.tag{display:inline-block;padding:7px 11px;margin:4px;border-radius:99px;background:#ffffff10}
+.flow{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin:25px 0}.node{background:#123c32;border-radius:18px;padding:18px 20px;font-weight:800}.arr{color:var(--y);font-size:2rem;animation:pulse 1.4s infinite}
+@keyframes pulse{50%{transform:translateX(5px);opacity:.55}}
+.photo{min-height:72vh;background-size:cover;background-position:center}.photo .card{max-width:620px}
+.quiz button,.btn{display:block;width:100%;text-align:left;border:1px solid #ffffff18;background:#ffffff0c;color:white;border-radius:15px;padding:14px 16px;margin:9px 0;font-size:1rem;cursor:pointer;transition:.2s}
+.quiz button:hover,.btn:hover{background:#ffffff18;transform:translateX(4px)}.correct{background:#1e7c4e!important}.wrong{background:#8c3030!important}
+.feedback{min-height:30px;font-weight:800;margin-top:10px}.sim{display:grid;grid-template-columns:1.2fr .8fr;gap:20px;align-items:stretch}
+.plant{position:relative;min-height:390px;border-radius:25px;overflow:hidden;background:linear-gradient(#8bd5ff 0 43%,#638d4e 43% 54%,#3c6d43 54%);border:1px solid #ffffff22}
+.mountain{position:absolute;left:-5%;top:23%;width:65%;height:42%;background:#536c61;clip-path:polygon(0 100%,38% 8%,52% 46%,67% 0,100% 100%)}
+.reservoir{position:absolute;left:0;bottom:32%;width:44%;height:16%;background:#3ca9dc;transition:.3s}.pipe{position:absolute;left:39%;top:46%;width:34%;height:16px;background:#c5d2d0;transform:rotate(28deg);transform-origin:left center;border-radius:10px}
+.house{position:absolute;right:9%;bottom:15%;width:22%;height:25%;background:#d8e1df;border-radius:8px}.turbine{position:absolute;right:21%;bottom:22%;font-size:3.5rem;animation:spin 2s linear infinite;animation-play-state:paused}
+.plant.on .turbine{animation-play-state:running}@keyframes spin{to{transform:rotate(360deg)}}.waterdrop{position:absolute;font-size:1.4rem;animation:water 1.3s linear infinite;display:none}.plant.on .waterdrop{display:block}@keyframes water{from{left:43%;top:48%}to{left:68%;top:64%}}
+.meter{font-size:clamp(2.5rem,5vw,4.5rem);font-weight:900;color:var(--y)}input[type=range]{width:100%;accent-color:var(--g)}
+.nav{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:10;display:flex;gap:10px}.nav button{width:48px;height:48px;border:0;border-radius:50%;font-size:1.2rem;cursor:pointer}.count{position:fixed;right:25px;bottom:33px;color:#b8d7cb;z-index:10}.progress{position:fixed;left:0;bottom:0;height:5px;background:var(--g);z-index:20;transition:.3s}
+.topbar{position:fixed;top:18px;right:24px;z-index:20}.topbar button{border:1px solid #ffffff22;background:#071d19cc;color:white;padding:9px 12px;border-radius:12px;cursor:pointer}
+.fact{border-left:4px solid var(--y);padding:12px 18px;background:#ffd1660c;border-radius:0 16px 16px 0}
+@media(max-width:800px){.slide{padding:7vh 6vw 14vh;justify-content:flex-start}.grid,.two,.sim{grid-template-columns:1fr}.plant{min-height:300px}.hero{background-position:center}.card{padding:16px}}
+
+.student-modal{position:fixed;inset:0;z-index:1000;background:rgba(2,12,10,.94);display:flex;align-items:center;justify-content:center;padding:24px}
+.student-box{width:min(560px,94vw);background:#0b2b24;border:1px solid #ffffff20;border-radius:28px;padding:30px;box-shadow:0 30px 80px #0008}
+.student-box h2{margin-top:0}.student-box input,.ticket textarea{width:100%;border:1px solid #ffffff22;background:#ffffff0c;color:white;border-radius:14px;padding:14px;font:inherit;outline:none}
+.student-box input:focus,.ticket textarea:focus{border-color:var(--g)}
+.student-box button,.save-btn{border:0;background:var(--g);color:#062019;border-radius:14px;padding:14px 18px;font-weight:900;cursor:pointer}
+.student-name{position:fixed;top:18px;left:24px;z-index:20;background:#071d19cc;border:1px solid #ffffff22;padding:9px 12px;border-radius:12px;color:#dff7ed}
+.ticket textarea{min-height:95px;resize:vertical;margin-top:8px}.ticket .qblock{margin:14px 0;padding:16px;border-radius:18px;background:#ffffff08}
+.ticket label{display:block;margin:7px 0;color:#eafff6}.save-btn{width:100%;font-size:1.08rem;margin-top:14px;text-align:center}.save-status{min-height:32px;margin-top:12px;font-weight:800}
+
+</style>
+</head>
+<body>
+
+<div class="student-modal" id="studentModal">
+  <div class="student-box">
+    <div class="k">Antes de comenzar</div>
+    <h2>¿Cuál es tu nombre?</h2>
+    <p>Escribe tu nombre y apellido. Se utilizará para identificar tus respuestas cuando guardes la actividad.</p>
+    <input id="studentInput" type="text" autocomplete="name" placeholder="Ej.: Martina González">
+    <br><br><button onclick="startActivity()">Comenzar actividad →</button>
+    <div id="studentError" style="color:#ffb1b1;margin-top:10px"></div>
+  </div>
+</div>
+<div class="student-name" id="studentBadge">👤 Estudiante</div>
+
+<div class="topbar"><button onclick="toggleFS()">⛶ Pantalla completa</button></div>
+
+<section class="slide hero active">
+<div class="k">Ciencias · 7°–8° básico</div><h1>Energía en el <span class="yellow">Valle del Aconcagua</span></h1>
+<p class="lead">Explora cómo el Sol, el agua y las características del territorio pueden relacionarse con nuestra producción y uso de energía.</p>
+<div><span class="tag">☀️ Solar</span><span class="tag">💧 Hidráulica</span><span class="tag">⚡ Transformaciones</span><span class="tag">🌱 Sustentabilidad</span></div>
+</section>
+
+<section class="slide"><div class="k">01 · Activación</div><h2>¿Dónde usamos energía?</h2>
+<div class="grid"><div class="card"><div class="ico">🏠</div><h3>Hogar</h3><p>Iluminación, refrigeración, calefacción y dispositivos.</p></div><div class="card"><div class="ico">🌾</div><h3>Agricultura</h3><p>Bombas, riego, maquinaria, transporte y conservación.</p></div><div class="card"><div class="ico">🏫</div><h3>Escuela</h3><p>Computadores, proyectores, iluminación y climatización.</p></div></div>
+</section>
+
+<section class="slide"><div class="k">02 · Concepto</div><h2>La energía produce cambios</h2>
+<p class="lead">En ciencias entendemos la energía como una propiedad de los sistemas que permite explicar <strong>cambios y transformaciones</strong>.</p>
+<div class="flow"><div class="node">☀️ Radiación</div><div class="arr">→</div><div class="node">▦ Panel solar</div><div class="arr">→</div><div class="node">⚡ Electricidad</div><div class="arr">→</div><div class="node">🚰 Bomba</div></div>
+<div class="fact">Una misma situación puede involucrar varias formas de energía.</div>
+</section>
+
+<section class="slide photo" style="background-image:linear-gradient(90deg,#061714e8,#06171455),url('https://www.gochile.cl/fotos/full/111881-valle-de-aconcagua.jpg')">
+<div class="card"><div class="k">03 · Territorio</div><h2>Un valle entre montañas</h2><p>El Valle del Aconcagua combina zonas agrícolas, cursos de agua, ciudades y un relieve marcado por la Cordillera de los Andes.</p><p><strong>Pregunta guía:</strong> ¿qué recursos del paisaje podrían utilizarse para obtener energía?</p></div>
+</section>
+
+<section class="slide"><div class="k">04 · Renovables</div><h2>Fuentes que podemos aprovechar</h2>
+<div class="grid"><div class="card"><div class="ico">☀️</div><h3>Solar</h3><p>Los paneles fotovoltaicos transforman energía de la radiación solar en electricidad.</p></div><div class="card"><div class="ico">💧</div><h3>Hidráulica</h3><p>Aprovecha el movimiento del agua y diferencias de altura para accionar turbinas.</p></div><div class="card"><div class="ico">🌬️</div><h3>Eólica</h3><p>Transforma parte de la energía cinética del viento en energía eléctrica.</p></div></div>
+</section>
+
+<section class="slide"><div class="k">05 · Transformaciones</div><h2>¿Qué ocurre en una hidroeléctrica?</h2>
+<div class="flow"><div class="node">🏔️ Agua en altura</div><div class="arr">→</div><div class="node">🌊 Agua en movimiento</div><div class="arr">→</div><div class="node">⚙️ Turbina</div><div class="arr">→</div><div class="node">⚡ Generador</div></div>
+<p class="lead">La energía asociada a la posición del agua se transforma en movimiento y finalmente en <strong>energía eléctrica</strong>.</p>
+</section>
+
+<section class="slide"><div class="k">06 · Laboratorio virtual</div><h2>Simulador hidroeléctrico</h2>
+<div class="sim">
+<div class="plant" id="plant"><div class="mountain"></div><div class="reservoir" id="reservoir"></div><div class="pipe"></div><div class="house"></div><div class="turbine">⚙️</div><div class="waterdrop">💧</div></div>
+<div class="card"><h3>Controla la central</h3><label>Caudal de agua: <strong><span id="qv">50</span>%</strong></label><input id="q" type="range" min="0" max="100" value="50">
+<label>Altura efectiva: <strong><span id="hv">60</span> m</strong></label><input id="h" type="range" min="10" max="100" value="60">
+<p>Potencia relativa estimada</p><div class="meter" id="power">30%</div>
+<button class="btn" onclick="togglePlant()">▶ Activar / pausar</button><p>Observa: aumentar el caudal o la altura aumenta la energía disponible para generar electricidad.</p></div>
+</div></section>
+
+<section class="slide"><div class="k">07 · Quiz</div><h2>Comprueba tu comprensión</h2>
+<div class="card quiz" id="quiz1" data-answer="2"><h3>¿Cuál secuencia representa mejor una central hidroeléctrica?</h3>
+<button onclick="answer(this,0)">Electricidad → agua → turbina</button><button onclick="answer(this,1)">Turbina → Sol → electricidad</button><button onclick="answer(this,2)">Agua → turbina → generador → electricidad</button><button onclick="answer(this,3)">Combustible → panel solar → agua</button><div class="feedback"></div></div>
+</section>
+
+<section class="slide"><div class="k">08 · Energía solar</div><h2>Una central en cada techo</h2>
+<div class="grid two"><div class="card"><div class="ico">☀️ → ▦ → ⚡</div><h3>Fotovoltaica</h3><p>Las celdas fotovoltaicas permiten transformar directamente parte de la radiación solar en electricidad.</p></div><div class="card"><h3>Aplicación</h3><p>La electricidad obtenida puede utilizarse para iluminación, equipos o bombeo de agua, entre otras funciones.</p><div class="fact">La producción cambia según la radiación disponible, orientación, sombras y características del sistema.</div></div></div>
+</section>
+
+<section class="slide"><div class="k">09 · Quiz</div><h2>Detecta el error</h2>
+<div class="card quiz" id="quiz2" data-answer="1"><h3>¿Cuál afirmación es incorrecta?</h3>
+<button onclick="answer(this,0)">La energía puede transformarse.</button><button onclick="answer(this,1)">Una energía renovable nunca produce impactos ambientales.</button><button onclick="answer(this,2)">Un panel fotovoltaico produce electricidad a partir de radiación solar.</button><button onclick="answer(this,3)">El agua en movimiento puede transferir energía a una turbina.</button><div class="feedback"></div></div>
+</section>
+
+<section class="slide"><div class="k">10 · Decisiones</div><h2>Renovable ≠ impacto cero</h2>
+<div class="grid"><div class="card"><h3>🌱 Beneficios</h3><p>Permiten reducir la dependencia de combustibles fósiles y aprovechar recursos renovables.</p></div><div class="card"><h3>🔎 Impactos</h3><p>Las instalaciones pueden ocupar suelo, modificar paisajes o afectar ecosistemas y cursos de agua.</p></div><div class="card"><h3>⚖️ Decidir</h3><p>Una solución energética debe evaluar necesidades, disponibilidad del recurso, impactos y comunidad.</p></div></div>
+</section>
+
+<section class="slide"><div class="k">11 · Desafío local</div><h2>¿Qué tecnología elegirías?</h2>
+<p class="lead">Una comunidad agrícola necesita electricidad para bombear agua principalmente durante el día.</p>
+<div class="card quiz" id="quiz3" data-answer="0"><button onclick="answer(this,0)">☀️ Sistema solar fotovoltaico</button><button onclick="answer(this,1)">⛽ Generador fósil como primera opción renovable</button><button onclick="answer(this,2)">🔌 Ninguna fuente: la bomba no necesita energía</button><div class="feedback"></div></div>
+<p>Después de responder, explica oralmente <strong>una ventaja y una limitación</strong> de tu elección.</p>
+</section>
+
+<section class="slide">
+<div class="k">12 · Ticket de salida</div><h2>Cierra la actividad</h2>
+<p class="lead">Responde y luego presiona <strong>Guardar actividad</strong>. Todo se enviará en una sola vez.</p>
+<div class="card ticket">
+  <div class="qblock">
+    <h3>1. ¿Cuál es una fuente de energía renovable relevante para el Valle del Aconcagua?</h3>
+    <label><input type="radio" name="ticketAlt" value="Solar"> Solar</label>
+    <label><input type="radio" name="ticketAlt" value="Carbón"> Carbón</label>
+    <label><input type="radio" name="ticketAlt" value="Petróleo"> Petróleo</label>
+  </div>
+  <div class="qblock">
+    <h3>2. Explica una transformación de energía que ocurra en una central hidroeléctrica.</h3>
+    <textarea id="ticketDev" placeholder="Escribe tu respuesta..."></textarea>
+  </div>
+  <div class="qblock">
+    <h3>3. Propón un uso de energía renovable para una comunidad del Valle del Aconcagua.</h3>
+    <textarea id="ticketApp" placeholder="Escribe tu propuesta..."></textarea>
+  </div>
+  <button class="save-btn" id="saveBtn" onclick="saveActivity()">💾 Guardar actividad</button>
+  <div class="save-status" id="saveStatus"></div>
+</div>
+</section>
+
+<section class="slide"><div class="k">Cierre</div><h1>El territorio también es un <span class="yellow">laboratorio</span>.</h1>
+<p class="lead">Observar el Valle del Aconcagua nos permite conectar energía, agua, Sol, tecnología, ambiente y decisiones humanas.</p>
+</section>
+
+<div class="nav"><button onclick="move(-1)">←</button><button onclick="move(1)">→</button></div><div class="count" id="count"></div><div class="progress" id="progress"></div>
+<script>
+const S=[...document.querySelectorAll('.slide')];
+let n=0, playing=false, studentName="";
+
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJz6tmrnYqfvgJx8OMUE4Nt4Bq3hc30ubHqfEJptqnccPOQZTWdVJZjS0g12jqSI8/exec";
+
+function show(x){
+  n=Math.max(0,Math.min(S.length-1,x));
+  S.forEach((s,i)=>s.classList.toggle('active',i===n));
+  document.getElementById('count').textContent=`${n+1} / ${S.length}`;
+  document.getElementById('progress').style.width=`${(n+1)/S.length*100}%`;
+}
+function move(d){show(n+d)}
+
+document.addEventListener('keydown',e=>{
+  const modalOpen=document.getElementById("studentModal").style.display!=="none";
+  if(modalOpen && e.key==="Enter"){ startActivity(); return; }
+  if(modalOpen) return;
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();move(1)}
+  if(e.key==='ArrowLeft') move(-1);
+  if(e.key==='Home') show(0);
+  if(e.key==='End') show(S.length-1);
+});
+
+function startActivity(){
+  const input=document.getElementById("studentInput");
+  const error=document.getElementById("studentError");
+  const name=input.value.trim();
+  if(name.length<3){
+    error.textContent="Escribe tu nombre y apellido.";
+    input.focus();
+    return;
+  }
+  studentName=name;
+  error.textContent="";
+  document.getElementById("studentBadge").textContent="👤 "+studentName;
+  document.getElementById("studentModal").style.display="none";
+  try{ sessionStorage.setItem("aconcagua_student",studentName); }catch(e){}
+  show(0);
+}
+
+function answer(btn,idx){
+  const box=btn.closest('.quiz'),ok=+box.dataset.answer;
+  box.dataset.selected=btn.textContent.trim();
+  box.dataset.correct=(idx===ok?'Sí':'No');
+  box.querySelectorAll('button').forEach((b,i)=>{
+    b.disabled=true;
+    if(i===ok)b.classList.add('correct');
+    else if(i===idx)b.classList.add('wrong');
+  });
+  box.querySelector('.feedback').textContent=
+    idx===ok?'✓ ¡Correcto!':'✗ Revisa la transformación de energía.';
+}
+
+const q=document.getElementById('q'), h=document.getElementById('h');
+function sim(){
+  document.getElementById('qv').textContent=q.value;
+  document.getElementById('hv').textContent=h.value;
+  const p=Math.round((q.value/100)*(h.value/100)*100);
+  document.getElementById('power').textContent=p+'%';
+  document.getElementById('reservoir').style.height=(8+q.value*.12)+'%';
+  document.querySelector('.turbine').style.animationDuration=(2.8-Math.max(.1,q.value/100)*2)+'s';
+}
+q.addEventListener('input',sim); h.addEventListener('input',sim); sim();
+
+function togglePlant(){
+  playing=!playing;
+  document.getElementById('plant').classList.toggle('on',playing);
+}
+function toggleFS(){
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+
+let sx=null;
+document.addEventListener('touchstart',e=>sx=e.touches[0].clientX);
+document.addEventListener('touchend',e=>{
+  if(sx!==null){
+    const d=e.changedTouches[0].clientX-sx;
+    if(Math.abs(d)>55)move(d<0?1:-1);
+    sx=null;
+  }
+});
+
+function collectActivity(){
+  const alt=document.querySelector('input[name="ticketAlt"]:checked');
+  return {
+    estudiante: studentName,
+    actividad: "Energía en el Valle del Aconcagua",
+    alternativas: [
+      "Quiz hidroeléctrica: "+(document.getElementById("quiz1").dataset.selected||"Sin responder")+" ["+(document.getElementById("quiz1").dataset.correct||"-")+"]",
+      "Quiz impacto renovable: "+(document.getElementById("quiz2").dataset.selected||"Sin responder")+" ["+(document.getElementById("quiz2").dataset.correct||"-")+"]",
+      "Desafío local: "+(document.getElementById("quiz3").dataset.selected||"Sin responder")+" ["+(document.getElementById("quiz3").dataset.correct||"-")+"]",
+      "Ticket alternativa: "+(alt?alt.value:"Sin responder")
+    ].join(" | "),
+    desarrollo: "Transformación hidroeléctrica: "+(document.getElementById("ticketDev").value.trim()||"Sin responder"),
+    otras_actividades: "Propuesta local: "+(document.getElementById("ticketApp").value.trim()||"Sin responder")
+  };
+}
+
+async function saveActivity(){
+  const status=document.getElementById("saveStatus");
+  const btn=document.getElementById("saveBtn");
+  if(!studentName){status.textContent="⚠️ Falta identificar al estudiante.";return;}
+  const data=collectActivity();
+  btn.disabled=true;
+  status.textContent="⏳ Guardando...";
+  try{
+    await fetch(APPS_SCRIPT_URL,{
+      method:"POST",
+      mode:"no-cors",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify(data)
+    });
+    status.textContent="✅ Actividad enviada. Ya puedes cerrar esta página.";
+    btn.textContent="✅ Guardado";
+  }catch(err){
+    console.error(err);
+    status.textContent="⚠️ No se pudo enviar. Revisa tu conexión y vuelve a intentarlo.";
+    btn.disabled=false;
+  }
+}
+
+try{
+  const priorStudent=sessionStorage.getItem("aconcagua_student");
+  if(priorStudent){
+    studentName=priorStudent;
+    document.getElementById("studentInput").value=priorStudent;
+    document.getElementById("studentBadge").textContent="👤 "+priorStudent;
+    document.getElementById("studentModal").style.display="none";
+  }else{
+    setTimeout(()=>document.getElementById("studentInput").focus(),50);
+  }
+}catch(e){}
+
+show(0);
+</script>
+</body></html>
