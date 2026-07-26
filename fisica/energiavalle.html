@@ -1,486 +1,1374 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Energía en el Valle del Aconcagua · Interactivo</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>En Escena · Diseñador de Coreografías</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#061714;--glass:rgba(8,37,31,.76);--text:#f4fff9;--muted:#b8d7cb;--g:#5ee69b;--y:#ffd166;--b:#61b9ff;--r:#ff7a7a}
-*{box-sizing:border-box} html,body{margin:0;height:100%;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;background:#061714;color:var(--text)}
-body{overflow:hidden}.slide{position:absolute;inset:0;display:none;padding:6vh 7vw 11vh;overflow:auto;background:radial-gradient(circle at 85% 10%,#174b3c 0,transparent 34%),linear-gradient(145deg,#061714,#0a2821)}
-.slide.active{display:flex;flex-direction:column;justify-content:center;animation:enter .6s cubic-bezier(.2,.8,.2,1)}
-@keyframes enter{from{opacity:0;transform:scale(.985) translateX(35px)}to{opacity:1;transform:none}}
-.hero{background-image:linear-gradient(90deg,rgba(3,18,15,.92),rgba(3,18,15,.3)),url("https://www.gochile.cl/fotos/full/111881-valle-de-aconcagua.jpg");background-size:cover;background-position:center}
-h1{font-size:clamp(3rem,7vw,6.5rem);line-height:.92;margin:.1em 0;max-width:1000px}h2{font-size:clamp(2.1rem,4.4vw,4rem);margin:.15em 0 .5em}
-p,li{font-size:clamp(1rem,1.45vw,1.3rem);line-height:1.5;color:var(--muted)}strong{color:white}.k{font-size:.8rem;text-transform:uppercase;letter-spacing:.17em;color:var(--g);font-weight:900}
-.lead{font-size:clamp(1.15rem,2vw,1.7rem);max-width:900px}.yellow{color:var(--y)}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.two{grid-template-columns:repeat(2,1fr)}
-.card{background:var(--glass);backdrop-filter:blur(14px);border:1px solid #ffffff18;border-radius:24px;padding:22px;box-shadow:0 20px 50px #0003;transition:.25s}
-.card:hover{transform:translateY(-5px);border-color:#5ee69b66}.ico{font-size:2.5rem}.tag{display:inline-block;padding:7px 11px;margin:4px;border-radius:99px;background:#ffffff10}
-.flow{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin:25px 0}.node{background:#123c32;border-radius:18px;padding:18px 20px;font-weight:800}.arr{color:var(--y);font-size:2rem;animation:pulse 1.4s infinite}
-@keyframes pulse{50%{transform:translateX(5px);opacity:.55}}
-.photo{min-height:72vh;background-size:cover;background-position:center}.photo .card{max-width:620px}
-.quiz button,.btn{display:block;width:100%;text-align:left;border:1px solid #ffffff18;background:#ffffff0c;color:white;border-radius:15px;padding:14px 16px;margin:9px 0;font-size:1rem;cursor:pointer;transition:.2s}
-.quiz button:hover,.btn:hover{background:#ffffff18;transform:translateX(4px)}.correct{background:#1e7c4e!important}.wrong{background:#8c3030!important}
-.feedback{min-height:30px;font-weight:800;margin-top:10px}.sim{display:grid;grid-template-columns:1.2fr .8fr;gap:20px;align-items:stretch}
-.plant{position:relative;min-height:390px;border-radius:25px;overflow:hidden;background:linear-gradient(#8bd5ff 0 43%,#638d4e 43% 54%,#3c6d43 54%);border:1px solid #ffffff22}
-.mountain{position:absolute;left:-5%;top:23%;width:65%;height:42%;background:#536c61;clip-path:polygon(0 100%,38% 8%,52% 46%,67% 0,100% 100%)}
-.reservoir{position:absolute;left:0;bottom:32%;width:44%;height:16%;background:#3ca9dc;transition:.3s}.pipe{position:absolute;left:39%;top:46%;width:34%;height:16px;background:#c5d2d0;transform:rotate(28deg);transform-origin:left center;border-radius:10px}
-.house{position:absolute;right:9%;bottom:15%;width:22%;height:25%;background:#d8e1df;border-radius:8px}.turbine{position:absolute;right:21%;bottom:22%;font-size:3.5rem;animation:spin 2s linear infinite;animation-play-state:paused}
-.plant.on .turbine{animation-play-state:running}@keyframes spin{to{transform:rotate(360deg)}}.waterdrop{position:absolute;font-size:1.4rem;animation:water 1.3s linear infinite;display:none}.plant.on .waterdrop{display:block}@keyframes water{from{left:43%;top:48%}to{left:68%;top:64%}}
-.meter{font-size:clamp(2.5rem,5vw,4.5rem);font-weight:900;color:var(--y)}input[type=range]{width:100%;accent-color:var(--g)}
-.nav{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:10;display:flex;gap:10px}.nav button{width:48px;height:48px;border:0;border-radius:50%;font-size:1.2rem;cursor:pointer}.count{position:fixed;right:25px;bottom:33px;color:#b8d7cb;z-index:10}.progress{position:fixed;left:0;bottom:0;height:5px;background:var(--g);z-index:20;transition:.3s}
-.topbar{position:fixed;top:18px;right:24px;z-index:20}.topbar button{border:1px solid #ffffff22;background:#071d19cc;color:white;padding:9px 12px;border-radius:12px;cursor:pointer}
-.fact{border-left:4px solid var(--y);padding:12px 18px;background:#ffd1660c;border-radius:0 16px 16px 0}
-@media(max-width:800px){.slide{padding:7vh 6vw 14vh;justify-content:flex-start}.grid,.two,.sim{grid-template-columns:1fr}.plant{min-height:300px}.hero{background-position:center}.card{padding:16px}}
+  :root{
+    --bg:#17131f;
+    --panel:#211c30;
+    --panel-2:#2a2340;
+    --border:rgba(255,255,255,0.09);
+    --text:#f4f1ea;
+    --muted:#a89bc4;
+    --gold:#e8b34a;
+    --coral:#ff6b5b;
+    --shadow-sm:0 2px 8px rgba(0,0,0,0.28);
+    --shadow-md:0 8px 24px rgba(0,0,0,0.38);
+    --shadow-lg:0 24px 60px rgba(0,0,0,0.5);
+    --shadow-gold:0 0 0 3px rgba(232,179,74,0.18), 0 8px 20px rgba(232,179,74,0.15);
+    --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;overflow:hidden;}
+  button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}
+  button,input,textarea{touch-action:manipulation;}
+  input,textarea{font-family:inherit;}
 
-.student-modal{position:fixed;inset:0;z-index:1000;background:rgba(2,12,10,.94);display:flex;align-items:center;justify-content:center;padding:24px}
-.student-box{width:min(560px,94vw);background:#0b2b24;border:1px solid #ffffff20;border-radius:28px;padding:30px;box-shadow:0 30px 80px #0008}
-.student-box h2{margin-top:0}.student-box input,.ticket textarea{width:100%;border:1px solid #ffffff22;background:#ffffff0c;color:white;border-radius:14px;padding:14px;font:inherit;outline:none}
-.student-box input:focus,.ticket textarea:focus{border-color:var(--g)}
-.student-box button,.save-btn{border:0;background:var(--g);color:#062019;border-radius:14px;padding:14px 18px;font-weight:900;cursor:pointer}
-.student-name{position:fixed;top:18px;left:24px;z-index:20;background:#071d19cc;border:1px solid #ffffff22;padding:9px 12px;border-radius:12px;color:#dff7ed}
-.ticket textarea{min-height:95px;resize:vertical;margin-top:8px}.ticket .qblock{margin:14px 0;padding:16px;border-radius:18px;background:#ffffff08}
-.ticket label{display:block;margin:7px 0;color:#eafff6}.save-btn{width:100%;font-size:1.08rem;margin-top:14px;text-align:center}.save-status{min-height:32px;margin-top:12px;font-weight:800}
+  @keyframes fadeInUp{ from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);} }
+  @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+  @keyframes popIn{ from{opacity:0; transform:scale(.85);} to{opacity:1; transform:scale(1);} }
+  @keyframes toastIn{ from{opacity:0; transform:translate(-50%,16px);} to{opacity:1; transform:translate(-50%,0);} }
+  @keyframes softGlow{ 0%,100%{box-shadow:var(--shadow-gold);} 50%{box-shadow:0 0 0 3px rgba(232,179,74,0.32), 0 10px 26px rgba(232,179,74,0.26);} }
+
+  /* ---------- Setup screen ---------- */
+  #setupScreen{
+    position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    background:
+      radial-gradient(ellipse 700px 500px at 50% 15%, rgba(232,179,74,0.14), transparent 60%),
+      var(--bg);
+    padding:calc(24px + env(safe-area-inset-top)) calc(24px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left));
+    overflow-y:auto;
+  }
+  .setup-card{width:100%;max-width:460px;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:36px 32px;box-shadow:var(--shadow-lg);animation:fadeInUp .5s var(--ease);}
+  .setup-card h1{font-family:'Bebas Neue',sans-serif;font-size:44px;letter-spacing:3px;margin:0 0 6px;color:var(--gold);text-shadow:0 2px 18px rgba(232,179,74,0.35);}
+  .setup-card p.sub{color:var(--muted);margin:0 0 30px;font-size:14px;line-height:1.5;}
+  .step-label{font-size:13px;color:var(--muted);margin:0 0 12px;font-weight:600;}
+  .step2{animation:fadeInUp .35s var(--ease);}
+  .mode-grid{display:flex;gap:14px;}
+  .mode-opt{flex:1;border:2px solid var(--border);border-radius:14px;padding:22px 10px;text-align:center;cursor:pointer;background:var(--panel-2);transition:transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s var(--ease);box-shadow:var(--shadow-sm);}
+  .mode-opt:hover{border-color:var(--coral);transform:translateY(-3px);box-shadow:var(--shadow-md);}
+  .mode-opt:active{filter:brightness(0.9);transform:translateY(-1px);}
+  .mode-opt.selected{border-color:var(--gold);background:rgba(232,179,74,0.12);box-shadow:var(--shadow-gold);}
+  .mode-opt .ico{font-size:30px;display:block;margin-bottom:8px;transition:transform .2s var(--ease);}
+  .mode-opt:hover .ico{transform:scale(1.12) rotate(-4deg);}
+  .mode-opt .lbl{font-weight:600;font-size:14px;}
+  .step2{display:none;margin-top:24px;}
+  .step2.visible{display:block;}
+  .back-link{background:none;border:none;color:var(--muted);font-size:12px;padding:6px 0;margin-bottom:10px;transition:color .15s;}
+  .back-link:hover{color:var(--coral);}
+  #namesInput{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px;resize:vertical;font-size:16px;transition:box-shadow .15s, border-color .15s;}
+  #countInput{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px;font-size:16px;text-align:center;transition:box-shadow .15s, border-color .15s;}
+  #namesInput:focus,#countInput:focus{outline:none;border-color:var(--gold);box-shadow:var(--shadow-gold);}
+  .count-hint{color:var(--muted);font-size:12px;margin:8px 0 16px;}
+  .btn-primary{background:var(--gold);color:#1a1420;border:none;border-radius:10px;padding:16px;font-weight:700;font-size:15px;width:100%;transition:filter .15s, transform .15s var(--ease), box-shadow .2s;box-shadow:0 6px 18px rgba(232,179,74,0.25);}
+  .btn-primary:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
+  .btn-primary:not(:disabled):hover{filter:brightness(1.08);transform:translateY(-2px);box-shadow:0 10px 26px rgba(232,179,74,0.35);}
+  .btn-primary:not(:disabled):active{filter:brightness(0.92);transform:translateY(0);box-shadow:0 4px 12px rgba(232,179,74,0.25);}
+  .btn-secondary{background:transparent;color:var(--gold);border:1.5px solid var(--gold);border-radius:10px;padding:13px;font-weight:700;font-size:14px;width:100%;transition:.15s;}
+  .btn-secondary:hover{background:rgba(232,179,74,0.1);transform:translateY(-1px);box-shadow:var(--shadow-sm);}
+  .btn-secondary:active{filter:brightness(0.92);transform:none;}
+  .setup-divider{display:flex;align-items:center;gap:10px;margin:22px 0;color:var(--muted);font-size:12px;}
+  .setup-divider::before,.setup-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+  /* ---------- Design screen ---------- */
+  #designScreen{position:fixed;inset:0;display:none;flex-direction:column;}
+  .toolbar{
+    background:var(--panel);border-bottom:1px solid var(--border);
+    padding:calc(10px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 8px calc(16px + env(safe-area-inset-left));
+    display:flex;flex-direction:column;gap:8px;
+    -webkit-user-select:none;user-select:none;
+  }
+  .toolbar-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .toolbar-row.between{justify-content:space-between;row-gap:6px;}
+  .tb-left{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap;}
+  .tb-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .brand-mini{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);letter-spacing:2px;white-space:nowrap;}
+  .scene-indicator{color:var(--muted);font-size:13px;white-space:nowrap;}
+  .seg{display:flex;background:var(--panel-2);border-radius:10px;padding:3px;gap:2px;flex:1 1 auto;box-shadow:inset 0 1px 4px rgba(0,0,0,0.3);}
+  .seg button{border:none;background:transparent;color:var(--muted);padding:10px 14px;border-radius:8px;font-size:13px;flex:1;white-space:nowrap;transition:background .18s var(--ease), color .18s var(--ease), box-shadow .18s var(--ease);}
+  .seg button.active{background:var(--coral);color:#fff;box-shadow:0 4px 14px rgba(255,107,91,0.4);}
+  .seg button:active{filter:brightness(0.9);}
+  .btn-icon{background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:9px 14px;border-radius:9px;font-size:13px;white-space:nowrap;position:relative;transition:border-color .18s, transform .15s var(--ease), box-shadow .18s;}
+  .btn-icon:hover:not(:disabled){border-color:var(--coral);transform:translateY(-2px);box-shadow:var(--shadow-sm);}
+  .btn-icon:active:not(:disabled){filter:brightness(0.88);transform:translateY(0);}
+  .btn-icon:disabled{opacity:.35;cursor:not-allowed;}
+  .btn-export{background:var(--gold);color:#1a1420;font-weight:700;border:none;box-shadow:0 4px 14px rgba(232,179,74,0.28);}
+  .btn-export:hover{filter:brightness(1.08);}
+  .btn-help{border-radius:50%;width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;font-weight:700;flex:0 0 auto;}
+  #btnDetails.has-content::after{content:'';position:absolute;top:5px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 3px rgba(255,107,91,0.25);animation:softGlow 2.4s ease-in-out infinite;}
+
+  .workspace{flex:1;display:flex;align-items:center;justify-content:center;padding:16px;overflow:hidden;min-height:0;position:relative;}
+  .stage-wrap{width:100%;max-width:1360px;background:var(--panel-2);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-lg), inset 0 0 0 1px rgba(255,255,255,0.03);position:relative;transition:box-shadow .25s;animation:fadeIn .4s var(--ease);}
+  #stageSvg{width:100%;height:100%;display:block;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none;}
+  #stageSvg.tool-arrow{cursor:crosshair;}
+  #stageSvg.tool-erase{cursor:not-allowed;}
+  #dockHint{position:absolute;display:none;background:rgba(232,179,74,0.32);border:2px dashed var(--gold);border-radius:8px;pointer-events:none;z-index:5;transition:left .12s var(--ease), top .12s var(--ease), width .12s var(--ease), height .12s var(--ease);box-shadow:0 0 0 4px rgba(232,179,74,0.12);}
+  #dynamicLayer circle{filter:drop-shadow(0 3px 5px rgba(0,0,0,0.4));}
+  .thumb svg circle{filter:drop-shadow(0 1.5px 2px rgba(0,0,0,0.4));}
+
+  .scene-strip{
+    background:var(--panel);border-top:1px solid var(--border);
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+    display:flex;gap:10px;overflow-x:auto;align-items:flex-start;
+    -webkit-overflow-scrolling:touch;-webkit-user-select:none;user-select:none;
+  }
+  .thumb{flex:0 0 auto;width:130px;cursor:pointer;position:relative;animation:popIn .25s var(--ease);}
+  .thumb svg{width:100%;height:auto;display:block;border-radius:8px;border:2px solid var(--border);background:var(--panel-2);transition:border-color .18s, box-shadow .18s, transform .18s var(--ease);box-shadow:var(--shadow-sm);}
+  .thumb:hover svg{transform:translateY(-3px);box-shadow:var(--shadow-md);}
+  .thumb.active svg{border-color:var(--gold);box-shadow:var(--shadow-gold);}
+  .thumb .cap{font-size:11px;color:var(--muted);text-align:center;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .thumb .del{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:13px;line-height:20px;text-align:center;padding:0;opacity:0.9;box-shadow:0 3px 8px rgba(255,107,91,0.45);transition:opacity .15s, transform .15s var(--ease);}
+  .thumb .del:hover{transform:scale(1.12);opacity:1;}
+  .thumb .del:active{opacity:1;filter:brightness(0.9);transform:scale(0.95);}
+  .thumb .note-badge{position:absolute;top:-6px;left:-6px;width:20px;height:20px;border-radius:50%;background:var(--panel);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;box-shadow:var(--shadow-sm);}
+  .thumb-add{flex:0 0 auto;width:130px;height:96px;border-radius:8px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:26px;background:transparent;transition:border-color .18s, color .18s, transform .18s var(--ease), background .18s;}
+  .thumb-add:hover{border-color:var(--gold);color:var(--gold);transform:translateY(-3px);background:rgba(232,179,74,0.06);}
+  .thumb-add:active{filter:brightness(0.9);transform:translateY(0);}
+
+  /* ---------- Paneles deslizables (Detalles / Bailarines) ---------- */
+  #panelBackdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:15;display:none;backdrop-filter:blur(2px);transition:opacity .2s;opacity:0;}
+  #panelBackdrop.open{display:block;opacity:1;}
+  #detailsPanel,#rosterPanel,#progressPanel{
+    position:absolute;left:0;right:0;top:0;
+    background:var(--panel);border-bottom:1px solid var(--border);
+    z-index:20;padding:18px 20px calc(20px + env(safe-area-inset-bottom));
+    box-shadow:var(--shadow-lg);
+    transform:translateY(-115%);opacity:0;transition:transform .26s var(--ease), opacity .2s ease;
+    max-height:82vh;overflow-y:auto;
+  }
+  #detailsPanel.open,#rosterPanel.open,#progressPanel.open{transform:translateY(0);opacity:1;}
+  .details-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .details-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--gold);}
+  .btn-close{background:var(--panel-2);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:8px;font-size:14px;transition:transform .15s var(--ease), border-color .15s;}
+  .btn-close:hover{border-color:var(--coral);transform:rotate(90deg);}
+  .field-label{display:block;font-size:12px;color:var(--muted);font-weight:600;margin:14px 0 6px;}
+  .field-label:first-of-type{margin-top:0;}
+  #sceneTitleInput, #sceneNotesInput, #newDancerName{width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:11px 12px;border-radius:9px;font-size:16px;transition:box-shadow .15s, border-color .15s;}
+  #sceneNotesInput{resize:vertical;line-height:1.4;}
+  #sceneTitleInput:focus,#sceneNotesInput:focus,#newDancerName:focus{outline:none;border-color:var(--gold);box-shadow:var(--shadow-gold);}
+  .details-divider{height:1px;background:var(--border);margin:20px 0 4px;}
+  .progress-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+  .progress-actions .btn-icon{flex:1;text-align:center;justify-content:center;}
+
+  /* ---------- Presencia de bailarines por viñeta ---------- */
+  .presence-list{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 4px;}
+  .presence-chip{display:flex;align-items:center;gap:7px;background:var(--panel-2);border:1.5px solid var(--border);border-radius:20px;padding:7px 12px 7px 8px;font-size:12.5px;color:var(--muted);transition:border-color .18s var(--ease), background .18s var(--ease), color .18s var(--ease), transform .15s var(--ease), box-shadow .18s;}
+  .presence-chip:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm);}
+  .presence-chip:active{transform:translateY(0);}
+  .presence-chip .chip-dot{width:12px;height:12px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 2px rgba(0,0,0,0.25) inset;}
+  .presence-chip .chip-label{font-weight:600;color:var(--text);}
+  .presence-chip .chip-status{font-size:10.5px;letter-spacing:.3px;}
+  .presence-chip.on-floor{border-color:rgba(232,179,74,0.55);background:rgba(232,179,74,0.1);}
+  .presence-chip.on-floor .chip-status{color:var(--gold);}
+  .presence-chip.off-floor .chip-status{color:var(--muted);}
+  .presence-chip.off-floor{opacity:0.75;}
+  .hint-text{color:var(--muted);font-size:11.5px;margin:10px 0 0;line-height:1.4;}
+
+  .layout-options{display:flex;gap:6px;margin:0 0 14px;}
+  .layout-opt{flex:1;background:var(--panel-2);border:1px solid var(--border);color:var(--muted);padding:10px 4px;border-radius:8px;font-size:12px;text-align:center;transition:background .18s var(--ease), color .18s, transform .15s var(--ease), box-shadow .18s;}
+  .layout-opt:hover{transform:translateY(-2px);}
+  .layout-opt.active{background:var(--coral);color:#fff;border-color:var(--coral);box-shadow:0 4px 14px rgba(255,107,91,0.4);}
+
+  #rosterList{max-height:230px;overflow-y:auto;margin-top:4px;}
+  .roster-row{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--border);transition:background .15s;}
+  .roster-row:hover{background:rgba(255,255,255,0.03);}
+  .roster-dot{width:16px;height:16px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 2px rgba(0,0,0,0.25) inset;}
+  .roster-label{flex:1;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .roster-remove{background:var(--panel-2);border:1px solid var(--border);color:var(--coral);width:30px;height:30px;border-radius:8px;font-size:13px;flex:0 0 auto;transition:transform .15s var(--ease), box-shadow .15s;}
+  .roster-remove:hover{transform:scale(1.1);box-shadow:var(--shadow-sm);}
+  .roster-add-row{display:flex;gap:8px;}
+  .roster-add-row #newDancerName{flex:1;}
+
+  /* ---------- Aviso de guardado (toast) ---------- */
+  .save-toast{
+    position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));
+    transform:translate(-50%,16px);
+    background:var(--panel);border:1px solid rgba(232,179,74,0.4);
+    border-radius:14px;padding:10px 10px 10px 16px;
+    display:flex;align-items:center;gap:10px;max-width:min(92vw,420px);
+    box-shadow:var(--shadow-lg);z-index:25;
+    opacity:0;pointer-events:none;transition:opacity .25s var(--ease), transform .25s var(--ease);
+  }
+  .save-toast.show{opacity:1;pointer-events:auto;transform:translate(-50%,0);animation:toastIn .3s var(--ease);}
+  .save-toast-icon{font-size:18px;flex:0 0 auto;}
+  .save-toast-text{font-size:12.5px;color:var(--text);line-height:1.35;flex:1;}
+  .save-toast-btn{background:var(--gold);color:#1a1420;border:none;border-radius:9px;padding:8px 12px;font-weight:700;font-size:12.5px;flex:0 0 auto;transition:filter .15s, transform .15s var(--ease);}
+  .save-toast-btn:hover{filter:brightness(1.08);transform:translateY(-1px);}
+  .save-toast-close{background:transparent;border:none;color:var(--muted);font-size:14px;padding:4px 6px;flex:0 0 auto;}
+  .save-toast-close:hover{color:var(--coral);}
+
+  @media (max-width:700px){
+    .setup-card{padding:28px 22px;}
+    .setup-card h1{font-size:36px;}
+    .brand-mini{font-size:17px;}
+    .scene-indicator{font-size:11px;}
+    .btn-icon{padding:10px 12px;font-size:12px;}
+    #btnClearArrows,#btnAddScene,#btnDeleteScene{flex:1 1 auto;justify-content:center;text-align:center;}
+    .seg{flex:1 1 100%;order:1;}
+    .btn-help{order:2;}
+    #btnClearArrows{order:3;}
+    #btnAddScene{order:4;}
+    #btnDeleteScene{order:5;}
+    .thumb,.thumb-add{width:100px;}
+  }
+
+  /* ---------- Mejoras de edición v4 ---------- */
+  .toolbar{
+    padding:calc(5px + env(safe-area-inset-top)) calc(10px + env(safe-area-inset-right)) 5px calc(10px + env(safe-area-inset-left));
+    gap:4px;
+  }
+  .toolbar-row{gap:6px;}
+  .tb-left{gap:7px;}
+  .tb-right{gap:5px;}
+  .brand-mini{font-size:18px;}
+  .scene-indicator{font-size:11px;}
+  .btn-icon{padding:6px 9px;border-radius:7px;font-size:11px;}
+  .btn-help{width:27px;height:27px;}
+  .seg{padding:2px;border-radius:8px;}
+  .seg button{padding:6px 10px;border-radius:6px;font-size:11px;}
+  .workspace{padding:6px;}
+  .stage-wrap{max-width:none;border-radius:10px;}
+  .scene-strip{padding:5px 10px calc(5px + env(safe-area-inset-bottom));gap:7px;align-items:flex-start;}
+  .thumb{width:92px;}
+  .thumb-add{width:92px;height:69px;font-size:21px;}
+  .thumb .cap{font-size:9px;margin-top:2px;}
+  .thumb .del{width:18px;height:18px;line-height:16px;font-size:11px;top:-4px;right:-4px;}
+  .thumb .note-badge{width:17px;height:17px;font-size:8px;top:-4px;left:-4px;}
+  #btnSelectAll.active-select{border-color:var(--gold);color:var(--gold);background:rgba(232,179,74,.12);}
+  .selection-hint{font-size:10px;color:var(--muted);white-space:nowrap;}
+  @media (max-width:700px){
+    .btn-icon{padding:6px 8px;font-size:10px;}
+    .seg button{padding:6px 7px;font-size:10px;}
+    .thumb,.thumb-add{width:78px;}
+    .thumb-add{height:58px;}
+    .selection-hint{display:none;}
+  }
 
 
-/* ===== Tema bosque al atardecer ===== */
-:root{
-  --bg:#171820;
-  --glass:rgba(31,28,34,.72);
-  --text:#fff8ef;
-  --muted:#decfc4;
-  --g:#e8b47a;
-  --y:#ffd39b;
-  --b:#d99a78;
-  --r:#e27c72;
-}
-html,body{background:#171820;color:var(--text)}
-body::before{
-  content:"";
-  position:fixed;inset:0;z-index:-4;
-  background:
-    radial-gradient(circle at 73% 22%,rgba(255,211,155,.82) 0 4%,rgba(232,142,103,.38) 10%,transparent 27%),
-    linear-gradient(180deg,#5a536b 0%,#a76c70 38%,#d48a69 58%,#6a4b4b 78%,#1a2020 100%);
-}
-body::after{
-  content:"";
-  position:fixed;left:0;right:0;bottom:0;height:43vh;z-index:-2;
-  background:#101817;
-  clip-path:polygon(
-    0 100%,0 64%,3% 64%,5% 38%,7% 64%,10% 64%,12% 27%,15% 64%,18% 64%,
-    20% 42%,22% 64%,25% 64%,28% 18%,31% 64%,34% 64%,36% 34%,39% 64%,
-    42% 64%,45% 24%,48% 64%,51% 64%,54% 39%,57% 64%,60% 64%,63% 16%,
-    66% 64%,69% 64%,72% 33%,75% 64%,78% 64%,81% 22%,84% 64%,87% 64%,
-    90% 37%,93% 64%,96% 29%,98% 64%,100% 64%,100% 100%
-  );
-  filter:drop-shadow(0 -15px 28px rgba(0,0,0,.18));
-}
-.slide{
-  background:
-    linear-gradient(90deg,rgba(17,20,22,.62),rgba(38,26,31,.20)),
-    linear-gradient(180deg,rgba(40,30,40,.08),rgba(10,18,17,.48));
-}
-.hero{
-  background:
-    radial-gradient(circle at 73% 22%,rgba(255,219,167,.30),transparent 22%),
-    linear-gradient(90deg,rgba(17,18,22,.78),rgba(46,31,37,.20)) !important;
-}
-.photo{
-  background:
-    linear-gradient(90deg,rgba(18,20,21,.82),rgba(53,35,39,.28)) !important;
-}
-.card{
-  background:linear-gradient(145deg,rgba(42,34,39,.72),rgba(20,27,26,.70));
-  border:1px solid rgba(255,225,195,.16);
-  box-shadow:0 22px 60px rgba(8,8,10,.28);
-  backdrop-filter:blur(16px);
-}
-.card:hover{border-color:rgba(255,211,155,.45);box-shadow:0 26px 70px rgba(8,8,10,.36)}
-.k{color:#ffd39b}
-.yellow{color:#ffd39b}
-.tag{background:rgba(255,224,194,.10);border:1px solid rgba(255,224,194,.13)}
-.node{background:rgba(34,39,36,.78);border:1px solid rgba(255,211,155,.14)}
-.arr{color:#ffd39b}
-.fact{border-left-color:#e8b47a;background:rgba(232,180,122,.09)}
-.student-box{
-  background:linear-gradient(145deg,#34282d,#172321);
-  border-color:rgba(255,220,185,.18);
-}
-.student-modal{
-  background:
-    radial-gradient(circle at 72% 24%,rgba(238,166,111,.20),transparent 26%),
-    rgba(15,18,19,.93);
-}
-.student-box button,.save-btn{background:#e8b47a;color:#251a17}
-.student-name,.topbar button{background:rgba(23,27,27,.78);border-color:rgba(255,222,190,.15)}
-.progress{background:linear-gradient(90deg,#d88969,#ffd39b)}
-.nav button{background:#fff3e5;color:#2b2422;box-shadow:0 8px 24px rgba(0,0,0,.25)}
-.quiz button,.btn{background:rgba(255,239,222,.07);border-color:rgba(255,224,194,.13)}
-.quiz button:hover,.btn:hover{background:rgba(255,239,222,.13)}
-.plant{filter:saturate(.75) sepia(.12);border-color:rgba(255,224,194,.18)}
-h1,h2,h3{text-shadow:0 3px 20px rgba(0,0,0,.22)}
-
-
-/* Guardado local y resumen imprimible */
-.resume-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-.resume-actions button{flex:1;min-width:210px;border:0;border-radius:14px;padding:14px 18px;font-weight:900;cursor:pointer}
-.pdf-btn{background:#f2d0a4;color:#241b18}
-.local-note{font-size:.92rem;color:var(--muted);margin-top:8px}
-#printSummary{display:none}
-@media print{
-  @page{size:A4;margin:16mm}
-  body{overflow:visible!important;background:#fff!important;color:#222!important}
-  body::before,body::after,.slide,.nav,.count,.progress,.topbar,.student-name,.student-modal{display:none!important}
-  #printSummary{display:block!important;background:#fff;color:#222;font-family:Arial,sans-serif}
-  #printSummary h1{font-size:25pt;color:#222;text-shadow:none}
-  #printSummary h2{font-size:16pt;color:#333;text-shadow:none;border-bottom:1px solid #bbb;padding-bottom:5px;margin-top:22px}
-  #printSummary h3{font-size:12pt;color:#333;text-shadow:none;margin-bottom:4px}
-  #printSummary p{font-size:10.5pt;line-height:1.45;color:#333}
-  #printSummary .answer{border-left:4px solid #9b6c4b;background:#f5f1ec;padding:8px 12px;margin:6px 0 12px}
-  #printSummary .meta{padding:10px 0;border-bottom:2px solid #333}
-}
-
+  .roster-name-input{flex:1;min-width:100px;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:7px 9px;border-radius:7px;font-size:13px}
+  .roster-name-input:focus{outline:none;border-color:var(--gold);box-shadow:var(--shadow-gold)}
+  .roster-number{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#17131f;flex:0 0 auto}
 </style>
 </head>
 <body>
 
-<div class="student-modal" id="studentModal">
-  <form class="student-box" id="studentForm">
-    <div class="k">Antes de comenzar</div>
-    <h2>¿Cuál es tu nombre?</h2>
-    <p>Escribe tu nombre y apellido. Se utilizará para identificar tus respuestas cuando guardes la actividad.</p>
-    <input id="studentInput" type="text" autocomplete="name" placeholder="Ej.: Martina González" required minlength="3">
-    <br><br>
-    <button id="startBtn" type="submit">Comenzar actividad →</button>
-    <div id="studentError" style="color:#ffb1b1;margin-top:10px"></div>
-  </form>
-</div>
-<div class="student-name" id="studentBadge">Estudiante</div>
-
-<div class="topbar"><button onclick="resetLocalActivity()">Nueva actividad</button> <button onclick="toggleFS()">Pantalla completa</button></div>
-
-<section class="slide hero active">
-<div class="k">Ciencias · 7°–8° básico</div><h1>Energía en el <span class="yellow">Valle del Aconcagua</span></h1>
-<p class="lead">Explora cómo el Sol, el agua y las características del territorio pueden relacionarse con nuestra producción y uso de energía.</p>
-<div><span class="tag">️ Solar</span><span class="tag"> Hidráulica</span><span class="tag"> Transformaciones</span><span class="tag"> Sustentabilidad</span></div>
-</section>
-
-<section class="slide"><div class="k">01 · Activación</div><h2>¿Dónde usamos energía?</h2>
-<div class="grid"><div class="card"><h3>Hogar</h3><p>Iluminación, refrigeración, calefacción y dispositivos.</p></div><div class="card"><h3>Agricultura</h3><p>Bombas, riego, maquinaria, transporte y conservación.</p></div><div class="card"><h3>Escuela</h3><p>Computadores, proyectores, iluminación y climatización.</p></div></div>
-</section>
-
-<section class="slide"><div class="k">02 · Concepto</div><h2>La energía produce cambios</h2>
-<p class="lead">En ciencias entendemos la energía como una propiedad de los sistemas que permite explicar <strong>cambios y transformaciones</strong>.</p>
-<div class="flow"><div class="node">️ Radiación</div><div class="arr">→</div><div class="node">▦ Panel solar</div><div class="arr">→</div><div class="node"> Electricidad</div><div class="arr">→</div><div class="node"> Bomba</div></div>
-<div class="fact">Una misma situación puede involucrar varias formas de energía.</div>
-</section>
-
-<section class="slide photo">
-<div class="card"><div class="k">03 · Territorio</div><h2>Un valle entre montañas</h2><p>El Valle del Aconcagua combina zonas agrícolas, cursos de agua, ciudades y un relieve marcado por la Cordillera de los Andes.</p><p><strong>Pregunta guía:</strong> ¿qué recursos del paisaje podrían utilizarse para obtener energía?</p></div>
-</section>
-
-<section class="slide"><div class="k">04 · Renovables</div><h2>Fuentes que podemos aprovechar</h2>
-<div class="grid"><div class="card"><div class="ico">️</div><h3>Solar</h3><p>Los paneles fotovoltaicos transforman energía de la radiación solar en electricidad.</p></div><div class="card"><h3>Hidráulica</h3><p>Aprovecha el movimiento del agua y diferencias de altura para accionar turbinas.</p></div><div class="card"><div class="ico">️</div><h3>Eólica</h3><p>Transforma parte de la energía cinética del viento en energía eléctrica.</p></div></div>
-</section>
-
-<section class="slide"><div class="k">05 · Transformaciones</div><h2>¿Qué ocurre en una hidroeléctrica?</h2>
-<div class="flow"><div class="node">️ Agua en altura</div><div class="arr">→</div><div class="node"> Agua en movimiento</div><div class="arr">→</div><div class="node">️ Turbina</div><div class="arr">→</div><div class="node"> Generador</div></div>
-<p class="lead">La energía asociada a la posición del agua se transforma en movimiento y finalmente en <strong>energía eléctrica</strong>.</p>
-</section>
-
-<section class="slide"><div class="k">06 · Laboratorio virtual</div><h2>Simulador hidroeléctrico</h2>
-<div class="sim">
-<div class="plant" id="plant"><div class="mountain"></div><div class="reservoir" id="reservoir"></div><div class="pipe"></div><div class="house"></div><div class="turbine">️</div><div class="waterdrop"></div></div>
-<div class="card"><h3>Controla la central</h3><label>Caudal de agua: <strong><span id="qv">50</span>%</strong></label><input id="q" type="range" min="0" max="100" value="50">
-<label>Altura efectiva: <strong><span id="hv">60</span> m</strong></label><input id="h" type="range" min="10" max="100" value="60">
-<p>Potencia relativa estimada</p><div class="meter" id="power">30%</div>
-<button class="btn" onclick="togglePlant()">▶ Activar / pausar</button><p>Observa: aumentar el caudal o la altura aumenta la energía disponible para generar electricidad.</p></div>
-</div></section>
-
-<section class="slide"><div class="k">07 · Quiz</div><h2>Comprueba tu comprensión</h2>
-<div class="card quiz" id="quiz1" data-answer="2"><h3>¿Cuál secuencia representa mejor una central hidroeléctrica?</h3>
-<button onclick="answer(this,0)">Electricidad → agua → turbina</button><button onclick="answer(this,1)">Turbina → Sol → electricidad</button><button onclick="answer(this,2)">Agua → turbina → generador → electricidad</button><button onclick="answer(this,3)">Combustible → panel solar → agua</button><div class="feedback"></div></div>
-</section>
-
-<section class="slide"><div class="k">08 · Energía solar</div><h2>Una central en cada techo</h2>
-<div class="grid two"><div class="card"><div class="ico">️ → ▦ → </div><h3>Fotovoltaica</h3><p>Las celdas fotovoltaicas permiten transformar directamente parte de la radiación solar en electricidad.</p></div><div class="card"><h3>Aplicación</h3><p>La electricidad obtenida puede utilizarse para iluminación, equipos o bombeo de agua, entre otras funciones.</p><div class="fact">La producción cambia según la radiación disponible, orientación, sombras y características del sistema.</div></div></div>
-</section>
-
-<section class="slide"><div class="k">09 · Quiz</div><h2>Detecta el error</h2>
-<div class="card quiz" id="quiz2" data-answer="1"><h3>¿Cuál afirmación es incorrecta?</h3>
-<button onclick="answer(this,0)">La energía puede transformarse.</button><button onclick="answer(this,1)">Una energía renovable nunca produce impactos ambientales.</button><button onclick="answer(this,2)">Un panel fotovoltaico produce electricidad a partir de radiación solar.</button><button onclick="answer(this,3)">El agua en movimiento puede transferir energía a una turbina.</button><div class="feedback"></div></div>
-</section>
-
-<section class="slide"><div class="k">10 · Decisiones</div><h2>Renovable ≠ impacto cero</h2>
-<div class="grid"><div class="card"><h3> Beneficios</h3><p>Permiten reducir la dependencia de combustibles fósiles y aprovechar recursos renovables.</p></div><div class="card"><h3> Impactos</h3><p>Las instalaciones pueden ocupar suelo, modificar paisajes o afectar ecosistemas y cursos de agua.</p></div><div class="card"><h3>️ Decidir</h3><p>Una solución energética debe evaluar necesidades, disponibilidad del recurso, impactos y comunidad.</p></div></div>
-</section>
-
-<section class="slide"><div class="k">11 · Desafío local</div><h2>¿Qué tecnología elegirías?</h2>
-<p class="lead">Una comunidad agrícola necesita electricidad para bombear agua principalmente durante el día.</p>
-<div class="card quiz" id="quiz3" data-answer="0"><button onclick="answer(this,0)">️ Sistema solar fotovoltaico</button><button onclick="answer(this,1)"> Generador fósil como primera opción renovable</button><button onclick="answer(this,2)"> Ninguna fuente: la bomba no necesita energía</button><div class="feedback"></div></div>
-<p>Después de responder, explica oralmente <strong>una ventaja y una limitación</strong> de tu elección.</p>
-</section>
-
-<section class="slide">
-<div class="k">12 · Ticket de salida</div><h2>Cierra la actividad</h2>
-<p class="lead">Responde y luego presiona <strong>Guardar actividad</strong>. Todo se enviará en una sola vez.</p>
-<div class="card ticket">
-  <div class="qblock">
-    <h3>1. ¿Cuál es una fuente de energía renovable relevante para el Valle del Aconcagua?</h3>
-    <label><input type="radio" name="ticketAlt" value="Solar"> Solar</label>
-    <label><input type="radio" name="ticketAlt" value="Carbón"> Carbón</label>
-    <label><input type="radio" name="ticketAlt" value="Petróleo"> Petróleo</label>
+<div id="setupScreen">
+  <div class="setup-card">
+    <h1>EN ESCENA</h1>
+    <p class="sub">Indica cuántos bailarines participan. Cada uno se identifica por número y, si quieres, después puedes asignarle un nombre desde <strong>👥 Bailarines</strong>.</p>
+    <button class="btn-secondary" id="btnLoadProgressSetup">📂 Continuar un avance guardado</button>
+    <div class="setup-divider"><span>o empieza uno nuevo</span></div>
+    <p class="step-label">¿Cuántos bailarines participan?</p>
+    <input type="number" id="countInput" min="1" max="80" value="8" inputmode="numeric">
+    <button class="btn-primary" id="numbersContinue" style="margin-top:16px;">Comenzar a diseñar →</button>
   </div>
-  <div class="qblock">
-    <h3>2. Explica una transformación de energía que ocurra en una central hidroeléctrica.</h3>
-    <textarea id="ticketDev" placeholder="Escribe tu respuesta..."></textarea>
-  </div>
-  <div class="qblock">
-    <h3>3. Propón un uso de energía renovable para una comunidad del Valle del Aconcagua.</h3>
-    <textarea id="ticketApp" placeholder="Escribe tu propuesta..."></textarea>
-  </div>
-  <div class="resume-actions">
-  <button class="save-btn" id="saveBtn" onclick="saveActivity()">Guardar actividad</button>
-  <button class="pdf-btn" onclick="generatePDF()">Generar resumen PDF</button>
 </div>
-<div class="local-note">El progreso se guarda automáticamente en este navegador.</div>
-  <div class="save-status" id="saveStatus"></div>
+
+<div id="designScreen">
+  <div class="toolbar">
+    <div class="toolbar-row between">
+      <div class="tb-left">
+        <div class="brand-mini">EN ESCENA</div>
+        <div class="scene-indicator" id="sceneIndicator">Viñeta 1 de 1</div>
+      </div>
+      <div class="tb-right">
+        <button class="btn-icon" id="btnRoster" title="Bailarines">👥 Bailarines</button>
+        <button class="btn-icon" id="btnDetails" title="Título y observaciones">📝 Detalles</button>
+        <button class="btn-icon" id="btnProgress" title="Guardar o cargar avance">💾 Progreso</button>
+        <button class="btn-icon btn-export" id="btnExport">⬇ Exportar PDF</button>
+      </div>
+    </div>
+    <div class="toolbar-row">
+      <div class="seg" role="group" aria-label="Herramienta de dibujo">
+        <button data-tool="move" class="active">✋ Mover</button>
+        <button data-tool="arrow">➜ Flecha</button>
+        <button data-tool="erase">✖ Borrar</button>
+      </div>
+      <button class="btn-icon btn-help" id="btnHelp" title="Ayuda" aria-label="Ayuda">?</button>
+      <button class="btn-icon" id="btnSelectAll" title="Seleccionar todos los bailarines">☑ Seleccionar todos</button>
+      <span class="selection-hint" id="selectionHint">Ctrl/Cmd + clic: seleccionar varios</span>
+      <button class="btn-icon" id="btnClearArrows">🧹 Limpiar flechas</button>
+      <button class="btn-icon" id="btnAddScene">➕ Nueva viñeta</button>
+      <button class="btn-icon" id="btnDeleteScene" title="Eliminar viñeta">🗑 Eliminar</button>
+    </div>
+  </div>
+
+  <div class="workspace">
+    <div class="stage-wrap">
+      <svg id="stageSvg" viewBox="0 0 900 660" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="floorGrid" width="45" height="45" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="1.3" fill="rgba(255,255,255,0.07)"></circle>
+          </pattern>
+          <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#ff6b5b"></path>
+          </marker>
+        </defs>
+        <g id="dynamicLayer"></g>
+        <line id="tempArrow" x1="0" y1="0" x2="0" y2="0" stroke="#ff6b5b" stroke-width="3" stroke-linecap="round" marker-end="url(#arrowhead)" style="display:none"></line>
+      </svg>
+      <div id="dockHint"></div>
+      <div class="save-toast" id="saveToast" role="status" aria-live="polite">
+        <span class="save-toast-icon">💾</span>
+        <span class="save-toast-text">Llevas varias viñetas nuevas sin guardar. ¿Guardamos tu avance?</span>
+        <button class="save-toast-btn" id="btnToastSave">Guardar</button>
+        <button class="save-toast-close" id="btnToastClose" aria-label="Cerrar aviso">✕</button>
+      </div>
+    </div>
+
+    <div id="panelBackdrop"></div>
+
+    <div id="detailsPanel">
+      <div class="details-header">
+        <span class="details-title">Detalles de la viñeta</span>
+        <button class="btn-close" id="btnCloseDetails" aria-label="Cerrar">✕</button>
+      </div>
+      <label class="field-label" for="sceneTitleInput">Título</label>
+      <input type="text" id="sceneTitleInput" placeholder="Ej: Formación en V">
+      <label class="field-label" for="sceneNotesInput">Observaciones</label>
+      <textarea id="sceneNotesInput" rows="4" placeholder="Notas para esta viñeta: conteos, indicaciones, vestuario, etc."></textarea>
+
+      <div class="details-divider"></div>
+      <p class="field-label">Bailarines en esta viñeta</p>
+      <p class="hint-text" style="margin:0 0 10px;">Toca para mandar a un bailarín al piso o a bastidores solo en esta viñeta. Para sumar o sacar a alguien de toda la coreografía, usa <strong>👥 Bailarines</strong>.</p>
+      <div class="presence-list" id="scenePresenceList"></div>
+    </div>
+
+    <div id="progressPanel">
+      <div class="details-header">
+        <span class="details-title">Progreso</span>
+        <button class="btn-close" id="btnCloseProgress" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="progress-actions">
+        <button class="btn-icon" id="btnSaveProgress">💾 Guardar avance</button>
+        <button class="btn-icon" id="btnLoadProgressDetails">📂 Cargar otro avance</button>
+      </div>
+      <p class="hint-text">💡 El PDF es para imprimir o compartir. Guarda el avance (.json) para seguir editando más tarde, en este u otro computador.</p>
+    </div>
+
+    <div id="rosterPanel">
+      <div class="details-header">
+        <span class="details-title" id="rosterTitle">Bailarines</span>
+        <button class="btn-close" id="btnCloseRoster" aria-label="Cerrar">✕</button>
+      </div>
+
+      <p class="field-label" style="margin-top:0;">Ubicación de bastidores</p>
+      <div class="layout-options" id="layoutOptions">
+        <button class="layout-opt" data-layout="left">⬅ Costado izq.</button>
+        <button class="layout-opt" data-layout="top">⬆ Detrás</button>
+        <button class="layout-opt" data-layout="right">➡ Costado der.</button>
+      </div>
+
+      <p class="hint-text" style="margin:0 0 10px;">Agregar o quitar bailarines aquí afecta a toda la coreografía. Si alguien no participa solo en una viñeta puntual, arrástralo a <strong>Bastidores</strong> en el escenario, o usa la lista de <strong>📝 Detalles → Bailarines en esta viñeta</strong> para hacerlo con un toque.</p>
+      <div id="rosterList"></div>
+      <div class="details-divider"></div>
+      <div id="rosterAddNames" style="display:none;">
+        <label class="field-label" for="newDancerName">Agregar bailarín</label>
+        <div class="roster-add-row">
+          <input type="text" id="newDancerName" placeholder="Nombre">
+          <button class="btn-icon" id="btnAddDancerName">+ Agregar</button>
+        </div>
+      </div>
+      <div id="rosterAddNumbers">
+        <button class="btn-icon" id="btnAddDancerNumber" style="width:100%;justify-content:center;">+ Agregar siguiente número</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="scene-strip" id="sceneStrip"></div>
 </div>
-</section>
 
-<section class="slide"><div class="k">Cierre</div><h1>El territorio también es un <span class="yellow">laboratorio</span>.</h1>
-<p class="lead">Observar el Valle del Aconcagua nos permite conectar energía, agua, Sol, tecnología, ambiente y decisiones humanas.</p>
-</section>
+<input type="file" id="loadFileInput" accept="application/json,.json" style="display:none">
 
-<div id="printSummary"></div>
-<div class="nav"><button onclick="move(-1)">←</button><button onclick="move(1)">→</button></div><div class="count" id="count"></div><div class="progress" id="progress"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-const S=[...document.querySelectorAll('.slide')];
-const APPS_SCRIPT_URL="https://script.google.com/macros/s/AKfycbwPixrnTHiblyB8hC9e_p64wDX-DxHagAeIHuWDBkcj2mjghF-RImYsGbAbyh6IniKc/exec";
-const LOCAL_KEY="energia_aconcagua_progreso_v2";
-let n=0,playing=false,studentName="";
+(function(){
+  "use strict";
 
-function show(x){
-  n=Math.max(0,Math.min(S.length-1,x));
-  S.forEach((s,i)=>s.classList.toggle('active',i===n));
-  document.getElementById('count').textContent=`${n+1} / ${S.length}`;
-  document.getElementById('progress').style.width=`${(n+1)/S.length*100}%`;
-}
-function move(d){show(n+d);saveLocalProgress();}
+  var COLORS = ['#e8b34a','#ff6b5b','#7ed9a8','#6fb8e8','#ef8fbe','#c9a6ff','#f2a65a','#8fe0d0','#f4d35e','#9fb8f0'];
+  var DEFS_MARKUP = '<defs><pattern id="floorGrid" width="45" height="45" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1.3" fill="rgba(255,255,255,0.07)"/></pattern><marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#ff6b5b"/></marker></defs>';
 
-document.addEventListener('keydown',e=>{
-  const modal=document.getElementById("studentModal");
-  const modalOpen=getComputedStyle(modal).display!=="none";
-  if(modalOpen) return;
-  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();move(1)}
-  if(e.key==='ArrowLeft')move(-1);
-  if(e.key==='Home'){show(0);saveLocalProgress()}
-  if(e.key==='End'){show(S.length-1);saveLocalProgress()}
-});
+  var state = { mode:null, layout:'top', roster:[], scenes:[], current:0, tool:'move' };
+  var selectedIds = new Set();
+  var idSeq = 1;
+  function genId(prefix){ return prefix + '_' + (idSeq++); }
+  function clamp(v,min,max){ return Math.min(max, Math.max(min, v)); }
 
-function startActivity(){
-  const input=document.getElementById("studentInput");
-  const error=document.getElementById("studentError");
-  const modal=document.getElementById("studentModal");
-  const name=(input.value||"").trim();
-
-  if(name.length<3){
-    error.textContent="Escribe tu nombre y apellido.";
-    input.focus();
-    return false;
+  function rosterById(id){
+    for(var i=0;i<state.roster.length;i++){ if(state.roster[i].id===id) return state.roster[i]; }
+    return null;
   }
 
-  studentName=name;
-  error.textContent="";
-  document.getElementById("studentBadge").textContent=name;
-
-  // Primero cerramos el modal. El guardado local se hace después.
-  modal.style.display="none";
-  show(0);
-
-  try{ saveLocalProgress(); }
-  catch(err){ console.warn("El guardado local no impidió iniciar:",err); }
-
-  return false;
-}
-
-document.getElementById("studentForm").addEventListener("submit",function(e){
-  e.preventDefault();
-  startActivity();
-});
-
-function answer(btn,idx){
-  const box=btn.closest('.quiz'),ok=+box.dataset.answer;
-  box.dataset.selected=btn.textContent.trim();
-  box.dataset.correct=(idx===ok?'Sí':'No');
-  box.querySelectorAll('button').forEach((b,i)=>{
-    b.disabled=true;
-    if(i===ok)b.classList.add('correct');
-    else if(i===idx)b.classList.add('wrong');
-  });
-  box.querySelector('.feedback').textContent=idx===ok?'Respuesta correcta.':'Revisa la transformación de energía.';
-  saveLocalProgress();
-}
-
-const q=document.getElementById('q'),h=document.getElementById('h');
-function sim(){
-  document.getElementById('qv').textContent=q.value;
-  document.getElementById('hv').textContent=h.value;
-  const p=Math.round((q.value/100)*(h.value/100)*100);
-  document.getElementById('power').textContent=p+'%';
-  document.getElementById('reservoir').style.height=(8+q.value*.12)+'%';
-  document.querySelector('.turbine').style.animationDuration=(2.8-Math.max(.1,q.value/100)*2)+'s';
-}
-q.addEventListener('input',()=>{sim();saveLocalProgress()});
-h.addEventListener('input',()=>{sim();saveLocalProgress()});
-sim();
-
-function togglePlant(){playing=!playing;document.getElementById('plant').classList.toggle('on',playing)}
-function toggleFS(){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen()}
-
-let sx=null;
-document.addEventListener('touchstart',e=>sx=e.touches[0].clientX);
-document.addEventListener('touchend',e=>{
-  if(sx!==null){const d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>55)move(d<0?1:-1);sx=null}
-});
-
-function collectActivity(){
-  const alt=document.querySelector('input[name="ticketAlt"]:checked');
-  return {
-    estudiante:studentName,
-    actividad:"Energía en el Valle del Aconcagua",
-    alternativas:[
-      "Quiz hidroeléctrica: "+(document.getElementById("quiz1").dataset.selected||"Sin responder")+" ["+(document.getElementById("quiz1").dataset.correct||"-")+"]",
-      "Quiz impacto renovable: "+(document.getElementById("quiz2").dataset.selected||"Sin responder")+" ["+(document.getElementById("quiz2").dataset.correct||"-")+"]",
-      "Desafío local: "+(document.getElementById("quiz3").dataset.selected||"Sin responder")+" ["+(document.getElementById("quiz3").dataset.correct||"-")+"]",
-      "Ticket alternativa: "+(alt?alt.value:"Sin responder")
-    ].join(" | "),
-    desarrollo:"Transformación hidroeléctrica: "+(document.getElementById("ticketDev").value.trim()||"Sin responder"),
-    otras_actividades:"Propuesta local: "+(document.getElementById("ticketApp").value.trim()||"Sin responder")
-  };
-}
-
-function saveLocalProgress(){
-  if(!studentName)return;
-  const alt=document.querySelector('input[name="ticketAlt"]:checked');
-  const data={
-    estudiante:studentName,slide:n,
-    quiz1:{selected:document.getElementById("quiz1").dataset.selected||"",correct:document.getElementById("quiz1").dataset.correct||""},
-    quiz2:{selected:document.getElementById("quiz2").dataset.selected||"",correct:document.getElementById("quiz2").dataset.correct||""},
-    quiz3:{selected:document.getElementById("quiz3").dataset.selected||"",correct:document.getElementById("quiz3").dataset.correct||""},
-    ticketAlt:alt?alt.value:"",
-    ticketDev:document.getElementById("ticketDev").value,
-    ticketApp:document.getElementById("ticketApp").value,
-    q:q.value,h:h.value,savedAt:new Date().toISOString()
-  };
-  try{localStorage.setItem(LOCAL_KEY,JSON.stringify(data))}catch(err){console.warn("No se pudo guardar localmente",err)}
-}
-
-function restoreQuiz(id,data){
-  if(!data||!data.selected)return;
-  const box=document.getElementById(id),buttons=[...box.querySelectorAll("button")];
-  const idx=buttons.findIndex(b=>b.textContent.trim()===data.selected);
-  if(idx<0)return;
-  const ok=+box.dataset.answer;
-  box.dataset.selected=data.selected;box.dataset.correct=data.correct;
-  buttons.forEach((b,i)=>{b.disabled=true;if(i===ok)b.classList.add("correct");else if(i===idx)b.classList.add("wrong")});
-  box.querySelector(".feedback").textContent=data.correct==="Sí"?"Respuesta recuperada: correcta.":"Respuesta recuperada.";
-}
-
-function restoreLocalProgress(){
-  try{
-    const raw=localStorage.getItem(LOCAL_KEY);
-    if(!raw)return false;
-    const d=JSON.parse(raw);
-    if(!d.estudiante)return false;
-    studentName=d.estudiante;
-    document.getElementById("studentInput").value=d.estudiante;
-    document.getElementById("studentBadge").textContent=d.estudiante;
-    document.getElementById("studentModal").style.display="none";
-    restoreQuiz("quiz1",d.quiz1);restoreQuiz("quiz2",d.quiz2);restoreQuiz("quiz3",d.quiz3);
-    if(d.ticketAlt){
-      [...document.querySelectorAll('input[name="ticketAlt"]')].forEach(r=>{if(r.value===d.ticketAlt)r.checked=true});
-    }
-    document.getElementById("ticketDev").value=d.ticketDev||"";
-    document.getElementById("ticketApp").value=d.ticketApp||"";
-    if(d.q!=null)q.value=d.q;if(d.h!=null)h.value=d.h;sim();
-    show(Number.isFinite(+d.slide)?+d.slide:0);
-    return true;
-  }catch(err){console.warn("No se pudo restaurar",err);return false}
-}
-
-function resetLocalActivity(){
-  if(confirm("¿Borrar el progreso guardado en este dispositivo y comenzar nuevamente?")){
-    try{localStorage.removeItem(LOCAL_KEY)}catch(e){}
-    location.reload();
-  }
-}
-
-document.getElementById("ticketDev").addEventListener("input",saveLocalProgress);
-document.getElementById("ticketApp").addEventListener("input",saveLocalProgress);
-document.querySelectorAll('input[name="ticketAlt"]').forEach(r=>r.addEventListener("change",saveLocalProgress));
-
-async function saveActivity(){
-  const status=document.getElementById("saveStatus"),btn=document.getElementById("saveBtn");
-  if(!studentName){status.textContent="Falta identificar al estudiante.";return}
-  saveLocalProgress();
-  btn.disabled=true;status.textContent="Guardando...";
-  try{
-    await fetch(APPS_SCRIPT_URL,{
-      method:"POST",mode:"no-cors",
-      headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify(collectActivity())
+  function escapeXML(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'})[c];
     });
-    status.textContent="Actividad enviada al profesor y guardada en este dispositivo.";
-    btn.textContent="Guardado";
-  }catch(err){
-    console.error(err);
-    status.textContent="No se pudo enviar a Google Sheets. El progreso local se mantiene.";
-    btn.disabled=false;
   }
-}
 
-function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
-function generatePDF(){
-  saveLocalProgress();
-  const alt=document.querySelector('input[name="ticketAlt"]:checked');
-  const concepts=[
-    "La energía permite explicar cambios y transformaciones.",
-    "La energía puede transferirse y transformarse entre distintas formas.",
-    "Los paneles fotovoltaicos transforman parte de la radiación solar en electricidad.",
-    "Una central hidroeléctrica aprovecha la energía del agua para mover turbinas conectadas a generadores.",
-    "Las energías renovables también pueden producir impactos que deben evaluarse.",
-    "El Valle del Aconcagua permite relacionar energía, agua, radiación solar, relieve y actividades humanas."
-  ];
-  const answers=[
-    ["Central hidroeléctrica",document.getElementById("quiz1").dataset.selected||"Sin responder",document.getElementById("quiz1").dataset.correct||""],
-    ["Impactos de energías renovables",document.getElementById("quiz2").dataset.selected||"Sin responder",document.getElementById("quiz2").dataset.correct||""],
-    ["Desafío local",document.getElementById("quiz3").dataset.selected||"Sin responder",document.getElementById("quiz3").dataset.correct||""],
-    ["Fuente renovable",alt?alt.value:"Sin responder",""],
-    ["Transformación hidroeléctrica",document.getElementById("ticketDev").value.trim()||"Sin responder",""],
-    ["Aplicación local",document.getElementById("ticketApp").value.trim()||"Sin responder",""]
-  ];
-  document.getElementById("printSummary").innerHTML=`
-    <h1>Energía en el Valle del Aconcagua</h1>
-    <div class="meta"><strong>Estudiante:</strong> ${esc(studentName)}<br><strong>Fecha:</strong> ${new Date().toLocaleString("es-CL")}</div>
-    <h2>Resumen de contenidos</h2>${concepts.map(x=>`<p>• ${esc(x)}</p>`).join("")}
-    <h2>Mis respuestas</h2>${answers.map(a=>`<h3>${esc(a[0])}</h3><div class="answer">${esc(a[1])}${a[2]?` <strong>(${a[2]==="Sí"?"Correcta":"Incorrecta"})</strong>`:""}</div>`).join("")}
-    <h2>Simulador hidroeléctrico</h2><p>Última configuración: caudal ${esc(q.value)}% y altura ${esc(h.value)} m.</p>`;
-  window.print();
-}
+  function shortLabel(mode, label){
+    if(mode === 'numbers') return String(label);
+    var trimmed = String(label).trim();
+    var parts = trimmed.split(/\s+/).filter(Boolean);
+    if(parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return trimmed.slice(0,2).toUpperCase();
+  }
 
-let restored=false;
-try{ restored=restoreLocalProgress(); }
-catch(err){ console.warn("Inicio sin restaurar progreso:",err); }
+  /* ---------- Geometría del escenario según ubicación de bastidores ---------- */
+  /* THICK define el ancho/alto del cajón de Bastidores: se agrandó para dar más espacio para ubicar bailarines. */
+  var FLOOR_W = 820, FLOOR_H = 480, MARGIN = 40, GAP = 40, THICK = 160;
+  var BAND = THICK - 20;
 
-if(!restored){
-  show(0);
-  document.getElementById("studentModal").style.display="flex";
-  setTimeout(()=>{
-    const input=document.getElementById("studentInput");
-    if(input) input.focus();
-  },50);
-}
+  function getLayoutConfig(pos){
+    if(pos === 'left'){
+      var canvasW = THICK+GAP+FLOOR_W+MARGIN, canvasH = MARGIN+FLOOR_H+MARGIN;
+      var floor = {x:THICK+GAP, y:MARGIN, w:FLOOR_W, h:FLOOR_H};
+      var band = {x:10, y:20, w:BAND, h:canvasH-40};
+      var cy = floor.y+floor.h/2;
+      var bandEnd = band.x+band.w;
+      return {
+        position:'left', canvasW:canvasW, canvasH:canvasH, floor:floor, backstageRect:band, axis:'y',
+        curtain:{x1:4,y1:20,x2:4,y2:canvasH-20},
+        label:{x:band.x+band.w/2, y:band.y+band.h/2, anchor:'middle', rotate:true},
+        chevron:'M '+(bandEnd+6)+' '+(cy-10)+' L '+(bandEnd+6)+' '+(cy+10)+' L '+(bandEnd+22)+' '+cy+' Z',
+        audiencePath:'M '+(floor.x+70)+' '+(floor.y+floor.h-20)+' Q '+(floor.x+floor.w/2)+' '+(floor.y+floor.h+25)+' '+(floor.x+floor.w-70)+' '+(floor.y+floor.h-20),
+        audienceText:{x:floor.x+floor.w/2, y:floor.y+floor.h+10},
+        clamp:{xMin:26, xMax:floor.x+floor.w-25, yMin:floor.y+25, yMax:floor.y+floor.h-25}
+      };
+    }
+    if(pos === 'right'){
+      var floor2 = {x:MARGIN, y:MARGIN, w:FLOOR_W, h:FLOOR_H};
+      var canvasW2 = MARGIN+FLOOR_W+GAP+THICK, canvasH2 = MARGIN+FLOOR_H+MARGIN;
+      var bandX = floor2.x+floor2.w+GAP;
+      var band2 = {x:bandX+10, y:20, w:BAND, h:canvasH2-40};
+      var cy2 = floor2.y+floor2.h/2;
+      return {
+        position:'right', canvasW:canvasW2, canvasH:canvasH2, floor:floor2, backstageRect:band2, axis:'y',
+        curtain:{x1:bandX+4,y1:20,x2:bandX+4,y2:canvasH2-20},
+        label:{x:band2.x+band2.w/2, y:band2.y+band2.h/2, anchor:'middle', rotate:true},
+        chevron:'M '+(floor2.x+floor2.w-6)+' '+(cy2-10)+' L '+(floor2.x+floor2.w-6)+' '+(cy2+10)+' L '+(floor2.x+floor2.w-22)+' '+cy2+' Z',
+        audiencePath:'M '+(floor2.x+70)+' '+(floor2.y+floor2.h-20)+' Q '+(floor2.x+floor2.w/2)+' '+(floor2.y+floor2.h+25)+' '+(floor2.x+floor2.w-70)+' '+(floor2.y+floor2.h-20),
+        audienceText:{x:floor2.x+floor2.w/2, y:floor2.y+floor2.h+10},
+        clamp:{xMin:floor2.x+25, xMax:bandX+THICK-26, yMin:floor2.y+25, yMax:floor2.y+floor2.h-25}
+      };
+    }
+    /* 'top' (por defecto) */
+    var floor3 = {x:MARGIN, y:THICK+GAP, w:FLOOR_W, h:FLOOR_H};
+    var canvasW3 = MARGIN+FLOOR_W+MARGIN, canvasH3 = THICK+GAP+FLOOR_H+MARGIN;
+    var band3 = {x:20, y:10, w:canvasW3-40, h:BAND};
+    var cx3 = canvasW3/2;
+    var bandEnd3 = band3.y+band3.h;
+    return {
+      position:'top', canvasW:canvasW3, canvasH:canvasH3, floor:floor3, backstageRect:band3, axis:'x',
+      curtain:{x1:20,y1:4,x2:canvasW3-20,y2:4},
+      label:{x:34, y:29, anchor:'start', rotate:false},
+      chevron:'M '+(cx3-10)+' '+(bandEnd3+14)+' L '+(cx3+10)+' '+(bandEnd3+14)+' L '+cx3+' '+(bandEnd3+30)+' Z',
+      audiencePath:'M '+(floor3.x+70)+' '+(floor3.y+floor3.h-20)+' Q '+(floor3.x+floor3.w/2)+' '+(floor3.y+floor3.h+25)+' '+(floor3.x+floor3.w-70)+' '+(floor3.y+floor3.h-20),
+      audienceText:{x:floor3.x+floor3.w/2, y:floor3.y+floor3.h+10},
+      clamp:{xMin:floor3.x+25, xMax:floor3.x+floor3.w-25, yMin:band3.y+16, yMax:floor3.y+floor3.h-40}
+    };
+  }
+
+  function currentLayout(){ return getLayoutConfig(state.layout || 'top'); }
+
+  /* Reubica un punto al cambiar la ubicación de bastidores, preservando si estaba en el piso o en bastidores */
+  function remapPoint(pt, oldL, newL){
+    var inFloor = pt.x >= oldL.floor.x && pt.x <= oldL.floor.x+oldL.floor.w && pt.y >= oldL.floor.y && pt.y <= oldL.floor.y+oldL.floor.h;
+    if(inFloor){
+      var relX = clamp((pt.x-oldL.floor.x)/oldL.floor.w, 0, 1);
+      var relY = clamp((pt.y-oldL.floor.y)/oldL.floor.h, 0, 1);
+      return { x:newL.floor.x+relX*newL.floor.w, y:newL.floor.y+relY*newL.floor.h };
+    }
+    var rel;
+    if(oldL.axis === 'x'){ rel = (pt.x-oldL.backstageRect.x)/oldL.backstageRect.w; }
+    else { rel = (pt.y-oldL.backstageRect.y)/oldL.backstageRect.h; }
+    rel = clamp(rel,0,1);
+    if(newL.axis === 'x'){
+      return { x:newL.backstageRect.x+rel*newL.backstageRect.w, y:newL.backstageRect.y+newL.backstageRect.h/2 };
+    }
+    return { x:newL.backstageRect.x+newL.backstageRect.w/2, y:newL.backstageRect.y+rel*newL.backstageRect.h };
+  }
+
+  function setLayout(pos){
+    if(pos === state.layout) return;
+    var oldL = currentLayout();
+    state.layout = pos;
+    var newL = currentLayout();
+    state.scenes.forEach(function(s){
+      s.points.forEach(function(p){
+        var np = remapPoint(p, oldL, newL);
+        p.x = np.x; p.y = np.y;
+      });
+    });
+    updateLayoutButtons();
+    render();
+    requestAnimationFrame(fitStage);
+  }
+  function updateLayoutButtons(){
+    document.querySelectorAll('.layout-opt').forEach(function(b){
+      b.classList.toggle('active', b.dataset.layout === state.layout);
+    });
+  }
+  document.querySelectorAll('.layout-opt').forEach(function(b){
+    b.addEventListener('click', function(){ setLayout(b.dataset.layout); });
+  });
+
+  /* ---------- Formación por defecto (todos parten en el piso) ---------- */
+  function defaultFormation(list, floor){
+    var padX = 110, topInset = 90, usableH = 260;
+    var n = list.length;
+    var cols = Math.max(1, Math.min(n, Math.ceil(Math.sqrt(n * (floor.w-2*padX) / usableH))));
+    var rows = Math.ceil(n/cols);
+    var stepX = cols>1 ? (floor.w-2*padX)/(cols-1) : 0;
+    var stepY = rows>1 ? usableH/(rows-1) : 0;
+    var topY = floor.y + topInset;
+    return list.map(function(p,i){
+      var row = Math.floor(i/cols), col = i%cols;
+      var rowCount = Math.min(cols, n-row*cols);
+      var rowWidth = (rowCount-1)*stepX;
+      var startX = floor.x + (floor.w-rowWidth)/2;
+      var x = rowCount===1 ? floor.x+floor.w/2 : startX + col*stepX;
+      var y = topY + row*stepY;
+      return { id:p.id, x:x, y:y };
+    });
+  }
+
+  function backstageDefaultPos(L){
+    var n = state.roster.length;
+    var t = (n % 7) - 3;
+    if(L.axis === 'x'){
+      return { x: clamp(L.backstageRect.x+L.backstageRect.w/2 + t*90, L.backstageRect.x+20, L.backstageRect.x+L.backstageRect.w-20), y: L.backstageRect.y+L.backstageRect.h/2 };
+    }
+    return { x: L.backstageRect.x+L.backstageRect.w/2, y: clamp(L.backstageRect.y+L.backstageRect.h/2 + t*70, L.backstageRect.y+20, L.backstageRect.y+L.backstageRect.h-20) };
+  }
+
+  /* ---------- Render de contenido SVG (compartido: escenario vivo, miniaturas y export) ---------- */
+  function fullBackground(L){
+    var labelRotate = L.label.rotate ? ' transform="rotate(-90 '+L.label.x+' '+L.label.y+')"' : '';
+    var labelBaseline = L.label.anchor==='middle' ? ' dominant-baseline="middle"' : '';
+    return '<rect width="'+L.canvasW+'" height="'+L.canvasH+'" fill="#241f33"/>' +
+      '<line x1="'+L.curtain.x1+'" y1="'+L.curtain.y1+'" x2="'+L.curtain.x2+'" y2="'+L.curtain.y2+'" stroke="#e8b34a" stroke-width="2" stroke-dasharray="10 6" opacity="0.5"/>' +
+      '<rect x="'+L.backstageRect.x+'" y="'+L.backstageRect.y+'" width="'+L.backstageRect.w+'" height="'+L.backstageRect.h+'" rx="10" fill="#1c1830" stroke="#4a3f66" stroke-width="2" stroke-dasharray="6 5"/>' +
+      '<text x="'+L.label.x+'" y="'+L.label.y+'" text-anchor="'+L.label.anchor+'"'+labelBaseline+' font-family="Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="2" fill="#a89bc4"'+labelRotate+'>BASTIDORES</text>' +
+      '<path d="'+L.chevron+'" fill="#6a5c8f" opacity="0.65"/>' +
+      '<rect x="'+L.floor.x+'" y="'+L.floor.y+'" width="'+L.floor.w+'" height="'+L.floor.h+'" rx="10" fill="url(#floorGrid)" stroke="#4a3f66" stroke-width="2"/>' +
+      '<path d="'+L.audiencePath+'" stroke="#6a5c8f" stroke-width="2" fill="none" stroke-dasharray="5 5"/>' +
+      '<text x="'+L.audienceText.x+'" y="'+L.audienceText.y+'" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" letter-spacing="3" fill="#a89bc4">PÚBLICO</text>';
+  }
+
+  function pointMarkup(p, mode){
+    var short = shortLabel(mode, p.label);
+    return '<g>' +
+      '<circle cx="'+p.x+'" cy="'+p.y+'" r="18" fill="'+p.color+'" stroke="#17131f" stroke-width="2.5"/>' +
+      '<text x="'+p.x+'" y="'+(p.y+5)+'" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#17131f">'+escapeXML(short)+'</text>' +
+      '<rect x="'+(p.x-32)+'" y="'+(p.y+22)+'" width="64" height="17" rx="8.5" fill="rgba(23,19,31,0.75)"/>' +
+      '<text x="'+p.x+'" y="'+(p.y+34)+'" text-anchor="middle" font-family="Arial, sans-serif" font-size="10.5" fill="#f4f1ea">'+escapeXML(p.label)+'</text>' +
+      '</g>';
+  }
+
+  function arrowMarkup(a){
+    return '<g>' +
+      '<line x1="'+a.x1+'" y1="'+a.y1+'" x2="'+a.x2+'" y2="'+a.y2+'" stroke="#17131f" stroke-width="6" stroke-linecap="round" opacity="0.25"/>' +
+      '<line x1="'+a.x1+'" y1="'+a.y1+'" x2="'+a.x2+'" y2="'+a.y2+'" stroke="#ff6b5b" stroke-width="3" stroke-linecap="round" marker-end="url(#arrowhead)"/>' +
+      '</g>';
+  }
+
+  function stageContent(scene, mode){
+    var pts = scene.points.map(function(pp){
+      var m = rosterById(pp.id) || {label:'?', color:'#999999'};
+      return { x:pp.x, y:pp.y, label:m.label, color:m.color };
+    });
+    return scene.arrows.map(arrowMarkup).join('') + pts.map(function(p){ return pointMarkup(p, mode); }).join('');
+  }
+
+  function wrapTextLines(text, maxChars, maxLines){
+    var words = text.split(/\s+/).filter(Boolean);
+    var lines = [];
+    var cur = '';
+    for(var i=0;i<words.length;i++){
+      var w = words[i];
+      var test = cur ? (cur+' '+w) : w;
+      if(test.length > maxChars){
+        if(cur) lines.push(cur);
+        cur = w;
+        if(lines.length >= maxLines) break;
+      } else {
+        cur = test;
+      }
+    }
+    if(cur && lines.length < maxLines) lines.push(cur);
+    var totalUsed = lines.join(' ').length;
+    if(lines.length >= maxLines && totalUsed < text.length){
+      var last = lines[maxLines-1];
+      lines[maxLines-1] = (last.length>3 ? last.slice(0,last.length-1) : last) + '…';
+    }
+    return lines.slice(0,maxLines);
+  }
+
+  function footerMarkup(notes, W){
+    var hasNotes = notes && notes.trim().length > 0;
+    var body;
+    if(hasNotes){
+      var lines = wrapTextLines(notes.trim(), Math.max(40, Math.floor(W/7.5)), 2);
+      var tspans = lines.map(function(line,i){
+        return '<tspan x="40" dy="'+(i===0?'0':'17')+'">'+escapeXML(line)+'</tspan>';
+      }).join('');
+      body = '<text x="40" y="34" font-family="Arial, sans-serif" font-size="14" fill="#f4f1ea">'+tspans+'</text>';
+    } else {
+      body = '<text x="40" y="34" font-family="Arial, sans-serif" font-size="13" fill="#6f6591" font-style="italic">Sin observaciones</text>';
+    }
+    return '<rect width="'+W+'" height="60" fill="#211c30"/>' +
+      '<text x="40" y="16" font-family="Arial, sans-serif" font-size="10.5" font-weight="700" letter-spacing="2" fill="#a89bc4">OBSERVACIONES</text>' +
+      body;
+  }
+
+  /* ---------- Escenas ---------- */
+  function currentScene(){ return state.scenes[state.current]; }
+
+  var scenesSinceReminder = 0;
+  var SAVE_REMINDER_EVERY = 4;
+
+  function addScene(){
+    var src = currentScene();
+    var ns = { id:genId('scene'), title:'', notes:'', points: src.points.map(function(p){ return {id:p.id,x:p.x,y:p.y}; }), arrows: [] };
+    state.scenes.splice(state.current+1, 0, ns);
+    state.current++;
+    render();
+    openDetails();
+    var ti = document.getElementById('sceneTitleInput');
+    setTimeout(function(){ ti.focus(); }, 240);
+
+    scenesSinceReminder++;
+    if(scenesSinceReminder >= SAVE_REMINDER_EVERY){
+      scenesSinceReminder = 0;
+      showSaveToast();
+    }
+  }
+
+  function deleteScene(i){
+    if(state.scenes.length <= 1) return;
+    if(!confirm('¿Eliminar esta viñeta?')) return;
+    state.scenes.splice(i,1);
+    if(state.current >= state.scenes.length) state.current = state.scenes.length-1;
+    else if(i < state.current) state.current--;
+    render();
+  }
+
+  function clearArrows(){
+    var scene = currentScene();
+    if(scene.arrows.length === 0) return;
+    if(!confirm('¿Borrar todas las flechas de esta viñeta?')) return;
+    scene.arrows = [];
+    render();
+  }
+
+  /* ---------- Render principal ---------- */
+  function updateDetailsIndicator(){
+    var scene = currentScene();
+    var has = (scene.title && scene.title.trim()) || (scene.notes && scene.notes.trim());
+    document.getElementById('btnDetails').classList.toggle('has-content', !!has);
+  }
+
+  function updateRosterButtonLabel(){
+    document.getElementById('btnRoster').textContent = '👥 Bailarines (' + state.roster.length + ')';
+  }
+
+  function render(){
+    var L = currentLayout();
+    var scene = currentScene();
+    var svgEl = document.getElementById('stageSvg');
+    svgEl.setAttribute('viewBox', '0 0 '+L.canvasW+' '+L.canvasH);
+    document.getElementById('dynamicLayer').innerHTML = fullBackground(L) + stageContent(scene, state.mode, true);
+    document.getElementById('sceneTitleInput').value = scene.title || '';
+    document.getElementById('sceneNotesInput').value = scene.notes || '';
+    document.getElementById('sceneIndicator').textContent = 'Viñeta ' + (state.current+1) + ' de ' + state.scenes.length;
+    document.getElementById('btnDeleteScene').disabled = state.scenes.length <= 1;
+    document.getElementById('btnClearArrows').disabled = scene.arrows.length === 0;
+    updateDetailsIndicator();
+    updateRosterButtonLabel();
+    renderScenePresenceList();
+    renderStrip();
+  }
+
+  /* ---------- Presencia de bailarines por viñeta (piso / bastidores, sin afectar otras viñetas) ---------- */
+  function isPointOnFloor(pt, L){
+    return pt.x >= L.floor.x && pt.x <= L.floor.x+L.floor.w && pt.y >= L.floor.y && pt.y <= L.floor.y+L.floor.h;
+  }
+
+  function floorDefaultPos(L, scene){
+    var cx = L.floor.x + L.floor.w/2;
+    var cy = L.floor.y + L.floor.h/2;
+    var jitterX = (Math.random()-0.5) * Math.min(220, L.floor.w*0.5);
+    var jitterY = (Math.random()-0.5) * Math.min(160, L.floor.h*0.5);
+    return { x: clamp(cx+jitterX, L.clamp.xMin, L.clamp.xMax), y: clamp(cy+jitterY, L.clamp.yMin, L.clamp.yMax) };
+  }
+
+  function togglePresence(dancerId){
+    var scene = currentScene();
+    var L = currentLayout();
+    var pt = scene.points.find(function(p){ return p.id === dancerId; });
+    if(!pt) return;
+    if(isPointOnFloor(pt, L)){
+      var back = backstageDefaultPos(L);
+      pt.x = back.x; pt.y = back.y;
+    } else {
+      var front = floorDefaultPos(L, scene);
+      pt.x = front.x; pt.y = front.y;
+    }
+    render();
+  }
+
+  function renderScenePresenceList(){
+    var list = document.getElementById('scenePresenceList');
+    if(!list) return;
+    var scene = currentScene();
+    var L = currentLayout();
+    list.innerHTML = state.roster.map(function(r){
+      var pt = scene.points.find(function(p){ return p.id === r.id; });
+      var onFloor = pt ? isPointOnFloor(pt, L) : false;
+      return '<button type="button" class="presence-chip '+(onFloor?'on-floor':'off-floor')+'" data-presence="'+r.id+'" title="'+(onFloor?'Enviar a bastidores':'Sacar al piso')+' en esta viñeta">' +
+        '<span class="chip-dot" style="background:'+r.color+'"></span>' +
+        '<span class="chip-label">'+escapeXML(r.label)+'</span>' +
+        '<span class="chip-status">'+(onFloor?'En escena':'Bastidores')+'</span>' +
+        '</button>';
+    }).join('');
+  }
+
+  document.getElementById('scenePresenceList').addEventListener('click', function(e){
+    var btn = e.target.closest('[data-presence]');
+    if(btn) togglePresence(btn.dataset.presence);
+  });
+
+  function renderStrip(){
+    var L = currentLayout();
+    var strip = document.getElementById('sceneStrip');
+    var html = state.scenes.map(function(s,i){
+      var badge = (s.notes && s.notes.trim()) ? '<span class="note-badge" title="Tiene observaciones">📝</span>' : '';
+      return '<div class="thumb '+(i===state.current?'active':'')+'" data-idx="'+i+'">' +
+        badge +
+        '<svg viewBox="0 0 '+L.canvasW+' '+L.canvasH+'" xmlns="http://www.w3.org/2000/svg">'+DEFS_MARKUP+fullBackground(L)+stageContent(s, state.mode, false)+'</svg>' +
+        '<button class="del" data-del="'+i+'" title="Eliminar viñeta">×</button>' +
+        '<div class="cap">'+(i+1)+'. '+escapeXML(s.title || 'Sin título')+'</div>' +
+        '</div>';
+    }).join('') + '<button class="thumb-add" id="btnAddFromStrip" title="Nueva viñeta">+</button>';
+    strip.innerHTML = html;
+  }
+
+  document.getElementById('sceneStrip').addEventListener('click', function(e){
+    var del = e.target.closest('[data-del]');
+    if(del){ e.stopPropagation(); deleteScene(parseInt(del.dataset.del,10)); return; }
+    var add = e.target.closest('#btnAddFromStrip');
+    if(add){ addScene(); return; }
+    var th = e.target.closest('.thumb');
+    if(th){ state.current = parseInt(th.dataset.idx,10); clearSelection(); render(); }
+  });
+
+
+  /* ---------- Selección múltiple ---------- */
+  function updateSelectionUI(){
+    var btn = document.getElementById('btnSelectAll');
+    if(!btn) return;
+    var all = state.roster.length > 0 && selectedIds.size === state.roster.length;
+    btn.classList.toggle('active-select', all);
+    btn.textContent = all ? '☒ Quitar selección' : '☑ Seleccionar todos';
+    var hint = document.getElementById('selectionHint');
+    if(selectedIds.size > 0){
+      hint.textContent = selectedIds.size + ' seleccionado' + (selectedIds.size===1?'':'s') + ' · arrastra uno para mover el grupo';
+    } else {
+      hint.textContent = 'Ctrl/Cmd + clic: seleccionar varios';
+    }
+  }
+
+  function clearSelection(){
+    selectedIds.clear();
+    updateSelectionUI();
+  }
+
+  document.getElementById('btnSelectAll').addEventListener('click', function(){
+    if(state.roster.length > 0 && selectedIds.size === state.roster.length){
+      selectedIds.clear();
+    } else {
+      selectedIds = new Set(state.roster.map(function(r){ return r.id; }));
+    }
+    updateSelectionUI();
+    render();
+  });
+
+  /* ---------- Herramientas ---------- */
+  function setTool(t){
+    state.tool = t;
+    document.querySelectorAll('.seg button').forEach(function(b){
+      b.classList.toggle('active', b.dataset.tool === t);
+    });
+    var svgEl = document.getElementById('stageSvg');
+    svgEl.classList.remove('tool-move','tool-arrow','tool-erase');
+    svgEl.classList.add('tool-'+t);
+  }
+  document.querySelectorAll('.seg button').forEach(function(b){
+    b.addEventListener('click', function(){ setTool(b.dataset.tool); });
+  });
+
+  document.getElementById('btnClearArrows').addEventListener('click', clearArrows);
+  document.getElementById('btnAddScene').addEventListener('click', addScene);
+  document.getElementById('btnDeleteScene').addEventListener('click', function(){ deleteScene(state.current); });
+  document.getElementById('sceneTitleInput').addEventListener('input', function(e){
+    currentScene().title = e.target.value;
+    updateDetailsIndicator();
+    renderStrip();
+  });
+  document.getElementById('sceneNotesInput').addEventListener('input', function(e){
+    currentScene().notes = e.target.value;
+    updateDetailsIndicator();
+    renderStrip();
+  });
+
+  document.getElementById('btnHelp').addEventListener('click', function(){
+    alert('Cómo usar En Escena:\n\n✋ Mover: arrastra los puntos por el escenario. Usa Ctrl/Cmd/Shift + clic para seleccionar varios; luego arrastra cualquiera de los seleccionados para mover el grupo. El botón «Seleccionar todos» permite mover a todo el elenco junto. También puedes arrastrar el cajón de Bastidores completo hacia un costado, detrás, o el otro costado.\n➜ Flecha: arrastra desde un bailarín hacia su próxima posición (incluso desde Bastidores hacia el piso).\n✖ Borrar: toca una flecha para eliminarla.\n\n👥 Bailarines: agrega o quita gente de toda la coreografía.\n📝 Detalles: título, observaciones, y una lista para mandar bailarines al piso o a bastidores solo en esta viñeta (con un toque, sin arrastrar).\n💾 Progreso: guarda o carga tu avance (.json) cuando quieras.\n➕ Nueva viñeta: crea el siguiente paso a partir de la formación actual.');
+  });
+
+  /* ---------- Paneles deslizables ---------- */
+  function panelTop(){ return document.querySelector('.toolbar').offsetHeight + 'px'; }
+  function showBackdrop(){ document.getElementById('panelBackdrop').classList.add('open'); }
+  function maybeHideBackdrop(){
+    var d = document.getElementById('detailsPanel').classList.contains('open');
+    var r = document.getElementById('rosterPanel').classList.contains('open');
+    var p = document.getElementById('progressPanel').classList.contains('open');
+    if(!d && !r && !p) document.getElementById('panelBackdrop').classList.remove('open');
+  }
+  function openDetails(){
+    closeRoster();
+    closeProgress();
+    renderScenePresenceList();
+    var panel = document.getElementById('detailsPanel');
+    panel.style.top = panelTop();
+    panel.classList.add('open');
+    showBackdrop();
+  }
+  function closeDetails(){
+    document.getElementById('detailsPanel').classList.remove('open');
+    maybeHideBackdrop();
+  }
+  function openRoster(){
+    closeDetails();
+    closeProgress();
+    var panel = document.getElementById('rosterPanel');
+    panel.style.top = panelTop();
+    panel.classList.add('open');
+    showBackdrop();
+    updateLayoutButtons();
+    renderRosterList();
+  }
+  function closeRoster(){
+    document.getElementById('rosterPanel').classList.remove('open');
+    maybeHideBackdrop();
+  }
+  function openProgress(){
+    closeDetails();
+    closeRoster();
+    var panel = document.getElementById('progressPanel');
+    panel.style.top = panelTop();
+    panel.classList.add('open');
+    showBackdrop();
+  }
+  function closeProgress(){
+    document.getElementById('progressPanel').classList.remove('open');
+    maybeHideBackdrop();
+  }
+  document.getElementById('btnDetails').addEventListener('click', function(){
+    var panel = document.getElementById('detailsPanel');
+    if(panel.classList.contains('open')) closeDetails(); else openDetails();
+  });
+  document.getElementById('btnCloseDetails').addEventListener('click', closeDetails);
+  document.getElementById('btnRoster').addEventListener('click', function(){
+    var panel = document.getElementById('rosterPanel');
+    if(panel.classList.contains('open')) closeRoster(); else openRoster();
+  });
+  document.getElementById('btnCloseRoster').addEventListener('click', closeRoster);
+  document.getElementById('btnProgress').addEventListener('click', function(){
+    var panel = document.getElementById('progressPanel');
+    if(panel.classList.contains('open')) closeProgress(); else openProgress();
+  });
+  document.getElementById('btnCloseProgress').addEventListener('click', closeProgress);
+  document.getElementById('panelBackdrop').addEventListener('click', function(){ closeDetails(); closeRoster(); closeProgress(); });
+
+  /* ---------- Aviso de guardado (toast no intrusivo) ---------- */
+  var saveToastTimer = null;
+  function showSaveToast(){
+    var t = document.getElementById('saveToast');
+    t.classList.add('show');
+    clearTimeout(saveToastTimer);
+    saveToastTimer = setTimeout(function(){ t.classList.remove('show'); }, 7000);
+  }
+  function hideSaveToast(){
+    document.getElementById('saveToast').classList.remove('show');
+    clearTimeout(saveToastTimer);
+  }
+  document.getElementById('btnToastSave').addEventListener('click', function(){
+    saveProgress();
+    hideSaveToast();
+  });
+  document.getElementById('btnToastClose').addEventListener('click', hideSaveToast);
+
+  /* ---------- Gestión de bailarines (roster) ---------- */
+  function nextNumberLabel(){
+    var maxN = 0;
+    state.roster.forEach(function(r){
+      var n = parseInt(r.label,10);
+      if(!isNaN(n) && n>maxN) maxN=n;
+    });
+    return String(maxN+1);
+  }
+
+  function addDancer(label){
+    label = String(label).trim();
+    if(!label) return;
+    var color = COLORS[state.roster.length % COLORS.length];
+    var newP = { id:genId('p'), label:label, color:color };
+    state.roster.push(newP);
+    var L = currentLayout();
+    var pos = backstageDefaultPos(L);
+    state.scenes.forEach(function(s){ s.points.push({ id:newP.id, x:pos.x, y:pos.y }); });
+    renderRosterList();
+    render();
+  }
+
+  function removeDancer(id){
+    if(state.roster.length <= 1){ alert('Debe quedar al menos un bailarín.'); return; }
+    if(!confirm('¿Quitar a este bailarín de toda la coreografía? Se eliminará de todas las viñetas.')) return;
+    state.roster = state.roster.filter(function(r){ return r.id !== id; });
+    state.scenes.forEach(function(s){ s.points = s.points.filter(function(p){ return p.id !== id; }); });
+    renderRosterList();
+    render();
+  }
+
+  function renderRosterList(){
+    var list=document.getElementById('rosterList');
+    list.innerHTML=state.roster.map(function(r){
+      return '<div class="roster-row">'+
+        '<span class="roster-number" style="background:'+r.color+'">'+escapeXML(r.label)+'</span>'+
+        '<input class="roster-name-input" data-name-id="'+r.id+'" value="'+escapeXML(r.optionalName||'')+'" placeholder="Nombre opcional">'+
+        '<button class="roster-remove" data-remove="'+r.id+'" title="Quitar bailarín">✕</button>'+
+      '</div>';
+    }).join('');
+    document.getElementById('rosterTitle').textContent='Bailarines ('+state.roster.length+')';
+  }
+
+  document.getElementById('rosterList').addEventListener('input', function(e){
+    var el=e.target.closest('[data-name-id]');
+    if(!el) return;
+    var r=rosterById(el.dataset.nameId);
+    if(r){ r.optionalName=el.value; render(); }
+  });
+
+  document.getElementById('rosterList').addEventListener('click', function(e){
+    var btn = e.target.closest('[data-remove]');
+    if(btn) removeDancer(btn.dataset.remove);
+  });
+  document.getElementById('btnAddDancerName').addEventListener('click', function(){
+    var input = document.getElementById('newDancerName');
+    addDancer(input.value);
+    input.value = '';
+    input.focus();
+  });
+  document.getElementById('newDancerName').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ document.getElementById('btnAddDancerName').click(); }
+  });
+  document.getElementById('btnAddDancerNumber').addEventListener('click', function(){
+    addDancer(nextNumberLabel());
+  });
+
+  /* ---------- Ajuste dinámico del tamaño del escenario (clave para celulares) ---------- */
+  function fitStage(){
+    var workspace = document.querySelector('.workspace');
+    var wrap = document.querySelector('.stage-wrap');
+    if(!workspace || !wrap) return;
+    var L = currentLayout();
+    var availW = workspace.clientWidth - 32;
+    var availH = workspace.clientHeight - 32;
+    if(availW <= 0 || availH <= 0) return;
+    var ratio = L.canvasW/L.canvasH;
+    var w = availW, h = w/ratio;
+    if(h > availH){ h = availH; w = h*ratio; }
+    wrap.style.width = Math.max(w,120) + 'px';
+    wrap.style.height = Math.max(h,80) + 'px';
+  }
+  window.addEventListener('resize', fitStage);
+  window.addEventListener('orientationchange', function(){ setTimeout(fitStage, 250); });
+  if(window.ResizeObserver){
+    var ro = new ResizeObserver(function(){ fitStage(); });
+    ro.observe(document.querySelector('.toolbar'));
+  }
+
+  /* ---------- Interacción en el escenario ---------- */
+  var svg = document.getElementById('stageSvg');
+  var tempArrowEl = document.getElementById('tempArrow');
+  var dockHintEl = document.getElementById('dockHint');
+  var dragPointId = null;
+  var groupDragStart = null;
+  var groupOriginal = null;
+  var drawing = null;
+  var layoutDragging = false;
+  var dockTarget = null;
+
+  function pointInRect(p, r){
+    return p.x >= r.x && p.x <= r.x+r.w && p.y >= r.y && p.y <= r.y+r.h;
+  }
+
+  function classifyDockTarget(evt){
+    var rect = svg.getBoundingClientRect();
+    var fx = (evt.clientX - rect.left) / rect.width;
+    if(fx < 0.25) return 'left';
+    if(fx > 0.75) return 'right';
+    return 'top';
+  }
+
+  function showDockHint(target){
+    dockHintEl.style.display = 'block';
+    if(target === 'left'){
+      dockHintEl.style.left='0'; dockHintEl.style.top='0'; dockHintEl.style.width='25%'; dockHintEl.style.height='100%';
+    } else if(target === 'right'){
+      dockHintEl.style.left='75%'; dockHintEl.style.top='0'; dockHintEl.style.width='25%'; dockHintEl.style.height='100%';
+    } else {
+      dockHintEl.style.left='0'; dockHintEl.style.top='0'; dockHintEl.style.width='100%'; dockHintEl.style.height='22%';
+    }
+  }
+  function hideDockHint(){ dockHintEl.style.display = 'none'; }
+
+  function toSVGPoint(evt){
+    var pt = svg.createSVGPoint();
+    pt.x = evt.clientX; pt.y = evt.clientY;
+    var ctm = svg.getScreenCTM();
+    var loc = pt.matrixTransform(ctm.inverse());
+    return { x: loc.x, y: loc.y };
+  }
+
+  function hitTestPoint(scene, p, radius){
+    radius = radius || 27;
+    var best = null, bestD = Infinity;
+    scene.points.forEach(function(pt){
+      var d = Math.hypot(pt.x-p.x, pt.y-p.y);
+      if(d < radius && d < bestD){ best = pt; bestD = d; }
+    });
+    return best;
+  }
+
+  function distToSegment(p,a,b){
+    var l2 = Math.pow(b.x-a.x,2) + Math.pow(b.y-a.y,2);
+    if(l2 === 0) return Math.hypot(p.x-a.x, p.y-a.y);
+    var t = ((p.x-a.x)*(b.x-a.x) + (p.y-a.y)*(b.y-a.y)) / l2;
+    t = Math.max(0, Math.min(1, t));
+    var proj = { x:a.x+t*(b.x-a.x), y:a.y+t*(b.y-a.y) };
+    return Math.hypot(p.x-proj.x, p.y-proj.y);
+  }
+
+  function hitTestArrow(scene, p, tol){
+    tol = tol || 13;
+    var best = null, bestD = Infinity;
+    scene.arrows.forEach(function(a){
+      var d = distToSegment(p, {x:a.x1,y:a.y1}, {x:a.x2,y:a.y2});
+      if(d < tol && d < bestD){ best = a; bestD = d; }
+    });
+    return best;
+  }
+
+  svg.addEventListener('pointerdown', function(e){
+    var p = toSVGPoint(e);
+    var scene = currentScene();
+    if(state.tool === 'move'){
+      var hit = hitTestPoint(scene, p);
+      if(hit){
+        if(e.ctrlKey || e.metaKey || e.shiftKey){
+          if(selectedIds.has(hit.id)) selectedIds.delete(hit.id);
+          else selectedIds.add(hit.id);
+          updateSelectionUI();
+          render();
+          return;
+        }
+        if(!selectedIds.has(hit.id)){
+          selectedIds.clear();
+          selectedIds.add(hit.id);
+        }
+        dragPointId = hit.id;
+        groupDragStart = {x:p.x, y:p.y};
+        groupOriginal = {};
+        scene.points.forEach(function(pt){
+          if(selectedIds.has(pt.id)) groupOriginal[pt.id] = {x:pt.x, y:pt.y};
+        });
+        updateSelectionUI();
+        svg.setPointerCapture(e.pointerId);
+        svg.style.cursor = 'grabbing';
+      } else {
+        if(!(e.ctrlKey || e.metaKey || e.shiftKey)) clearSelection();
+        var L0 = currentLayout();
+        if(pointInRect(p, L0.backstageRect)){
+          layoutDragging = true;
+          dockTarget = state.layout;
+          svg.setPointerCapture(e.pointerId);
+          svg.style.cursor = 'grabbing';
+        } else {
+          render();
+        }
+      }
+    } else if(state.tool === 'arrow'){
+      var snap = hitTestPoint(scene, p, 28);
+      var start = snap ? {x:snap.x, y:snap.y} : p;
+      drawing = { x1:start.x, y1:start.y };
+      svg.setPointerCapture(e.pointerId);
+      tempArrowEl.style.display = 'block';
+      tempArrowEl.setAttribute('x1', start.x); tempArrowEl.setAttribute('y1', start.y);
+      tempArrowEl.setAttribute('x2', start.x); tempArrowEl.setAttribute('y2', start.y);
+    } else if(state.tool === 'erase'){
+      var hitA = hitTestArrow(scene, p);
+      if(hitA){ scene.arrows = scene.arrows.filter(function(a){ return a.id !== hitA.id; }); render(); }
+    }
+  });
+
+  svg.addEventListener('pointermove', function(e){
+    var p = toSVGPoint(e);
+    if(dragPointId){
+      var scene = currentScene();
+      var L = currentLayout();
+      var dx = p.x - groupDragStart.x, dy = p.y - groupDragStart.y;
+      var minDx=-Infinity, maxDx=Infinity, minDy=-Infinity, maxDy=Infinity;
+      Object.keys(groupOriginal).forEach(function(id){
+        var o=groupOriginal[id];
+        minDx=Math.max(minDx, L.clamp.xMin-o.x); maxDx=Math.min(maxDx, L.clamp.xMax-o.x);
+        minDy=Math.max(minDy, L.clamp.yMin-o.y); maxDy=Math.min(maxDy, L.clamp.yMax-o.y);
+      });
+      dx=clamp(dx,minDx,maxDx); dy=clamp(dy,minDy,maxDy);
+      scene.points.forEach(function(pt){
+        if(groupOriginal[pt.id]){
+          pt.x=groupOriginal[pt.id].x+dx;
+          pt.y=groupOriginal[pt.id].y+dy;
+        }
+      });
+      document.getElementById('dynamicLayer').innerHTML = fullBackground(L) + stageContent(scene, state.mode, true);
+    } else if(drawing){
+      tempArrowEl.setAttribute('x2', p.x); tempArrowEl.setAttribute('y2', p.y);
+    } else if(layoutDragging){
+      dockTarget = classifyDockTarget(e);
+      showDockHint(dockTarget);
+    }
+  });
+
+  svg.addEventListener('pointerup', function(e){
+    var scene = currentScene();
+    if(dragPointId){ dragPointId = null; groupDragStart = null; groupOriginal = null; render(); }
+    if(layoutDragging){
+      hideDockHint();
+      if(dockTarget && dockTarget !== state.layout){ setLayout(dockTarget); }
+      layoutDragging = false;
+      dockTarget = null;
+    }
+    if(drawing){
+      var p = toSVGPoint(e);
+      var snap = hitTestPoint(scene, p, 28);
+      var end = snap ? {x:snap.x, y:snap.y} : p;
+      var dx = end.x-drawing.x1, dy = end.y-drawing.y1;
+      if(Math.hypot(dx,dy) > 14){
+        scene.arrows.push({ id:genId('arrow'), x1:drawing.x1, y1:drawing.y1, x2:end.x, y2:end.y });
+      }
+      drawing = null;
+      tempArrowEl.style.display = 'none';
+      render();
+    }
+    svg.style.cursor = '';
+    try{ svg.releasePointerCapture(e.pointerId); }catch(err){}
+  });
+
+  /* ---------- Exportar PDF ---------- */
+  function buildExportSVGString(scene, idx, total, mode, L){
+    var title = (scene.title && scene.title.trim()) ? scene.title.trim() : ('Viñeta ' + idx);
+    var W = L.canvasW, H = L.canvasH + 100; /* +40 encabezado +60 pie */
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'">' +
+      DEFS_MARKUP +
+      '<rect width="'+W+'" height="'+H+'" fill="#17131f"/>' +
+      '<text x="40" y="34" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#e8b34a">'+escapeXML(title)+'</text>' +
+      '<text x="'+(W-40)+'" y="34" text-anchor="end" font-family="Arial, sans-serif" font-size="14" fill="#a89bc4">'+idx+' / '+total+'</text>' +
+      '<g transform="translate(0,40)">' + fullBackground(L) + stageContent(scene, mode, false) + '</g>' +
+      '<g transform="translate(0,'+(40+L.canvasH)+')">' + footerMarkup(scene.notes, W) + '</g>' +
+      '</svg>';
+  }
+
+  function loadImage(src){
+    return new Promise(function(resolve, reject){
+      var img = new Image();
+      img.onload = function(){ resolve(img); };
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+
+  function exportPDF(){
+    var btn = document.getElementById('btnExport');
+    btn.disabled = true;
+    var oldText = btn.textContent;
+    btn.textContent = 'Generando…';
+    (async function(){
+      try{
+        if(!window.jspdf){
+          alert('No se pudo cargar la librería de PDF. Revisa tu conexión a internet e inténtalo de nuevo.');
+          return;
+        }
+        var L = currentLayout();
+        var W = L.canvasW, H = L.canvasH + 100;
+        var jsPDF = window.jspdf.jsPDF;
+        var doc = new jsPDF({ orientation:'landscape', unit:'px', format:[W,H] });
+        for(var i=0; i<state.scenes.length; i++){
+          var svgStr = buildExportSVGString(state.scenes[i], i+1, state.scenes.length, state.mode, L);
+          var dataUrl = 'data:image/svg+xml;charset=utf-8;base64,' + btoa(unescape(encodeURIComponent(svgStr)));
+          var img = await loadImage(dataUrl);
+          var canvas = document.createElement('canvas');
+          var scale = 2;
+          canvas.width = W*scale; canvas.height = H*scale;
+          var ctx = canvas.getContext('2d');
+          ctx.scale(scale, scale);
+          ctx.drawImage(img, 0, 0, W, H);
+          var png = canvas.toDataURL('image/png');
+          if(i>0) doc.addPage([W,H], 'landscape');
+          doc.addImage(png, 'PNG', 0, 0, W, H);
+        }
+        doc.save('coreografia.pdf');
+      } catch(err){
+        console.error(err);
+        alert('Ocurrió un problema al generar el PDF. Intenta nuevamente.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = oldText;
+      }
+    })();
+  }
+  document.getElementById('btnExport').addEventListener('click', exportPDF);
+
+  /* ---------- Guardar / cargar avance (.json) ---------- */
+  function saveProgress(){
+    var data = { app:'en-escena', version:4, mode: state.mode, layout: state.layout, roster: state.roster, scenes: state.scenes };
+    var blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    var stamp = new Date().toISOString().slice(0,10);
+    a.download = 'coreografia-avance-' + stamp + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function loadProgressFromFile(file){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      try{
+        var data = JSON.parse(e.target.result);
+        if(!data || typeof data.mode !== 'string' || !Array.isArray(data.scenes) || data.scenes.length < 1){
+          alert('Este archivo no parece ser un avance válido de En Escena.');
+          return;
+        }
+        var roster, scenes;
+        if(data.version >= 2 && Array.isArray(data.roster)){
+          roster = data.roster.map(function(r){ return {id:r.id, label:String(r.label||''), color:r.color||'#e8b34a'}; });
+          scenes = data.scenes.map(function(s){
+            return {
+              id: s.id || genId('scene'),
+              title: typeof s.title==='string' ? s.title : '',
+              notes: typeof s.notes==='string' ? s.notes : '',
+              points: (Array.isArray(s.points)?s.points:[]).map(function(p){ return {id:p.id, x:Number(p.x)||0, y:Number(p.y)||0}; }),
+              arrows: Array.isArray(s.arrows) ? s.arrows : []
+            };
+          });
+        } else {
+          var rosterMap = {};
+          data.scenes.forEach(function(s){
+            (s.points||[]).forEach(function(p){
+              if(!rosterMap[p.id]) rosterMap[p.id] = { id:p.id, label:String(p.label||'?'), color:p.color||'#e8b34a' };
+            });
+          });
+          roster = Object.keys(rosterMap).map(function(k){ return rosterMap[k]; });
+          scenes = data.scenes.map(function(s){
+            return {
+              id: s.id || genId('scene'),
+              title: typeof s.title==='string' ? s.title : '',
+              notes: typeof s.notes==='string' ? s.notes : '',
+              points: (Array.isArray(s.points)?s.points:[]).map(function(p){ return {id:p.id, x:Number(p.x)||0, y:Number(p.y)||0}; }),
+              arrows: Array.isArray(s.arrows) ? s.arrows : []
+            };
+          });
+        }
+        state.mode = data.mode;
+        state.layout = (data.layout==='left'||data.layout==='right'||data.layout==='top') ? data.layout : 'top';
+        state.roster = roster;
+        state.scenes = scenes;
+        state.current = 0;
+        selectedIds.clear();
+        document.getElementById('setupScreen').style.display = 'none';
+        document.getElementById('designScreen').style.display = 'flex';
+        closeDetails();
+        closeRoster();
+        setTool('move');
+        render();
+        requestAnimationFrame(fitStage);
+      } catch(err){
+        console.error(err);
+        alert('No se pudo leer el archivo. Asegúrate de que sea un avance exportado desde En Escena (.json).');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  document.getElementById('loadFileInput').addEventListener('change', function(e){
+    var f = e.target.files[0];
+    if(f) loadProgressFromFile(f);
+    e.target.value = '';
+  });
+  document.getElementById('btnSaveProgress').addEventListener('click', function(){
+    saveProgress();
+    scenesSinceReminder = 0;
+    hideSaveToast();
+  });
+  document.getElementById('btnLoadProgressSetup').addEventListener('click', function(){
+    document.getElementById('loadFileInput').click();
+  });
+  document.getElementById('btnLoadProgressDetails').addEventListener('click', function(){
+    if(confirm('Cargar un avance reemplazará el diseño actual (asegúrate de haber guardado antes si quieres conservarlo). ¿Continuar?')){
+      document.getElementById('loadFileInput').click();
+    }
+  });
+
+  /* ---------- Pantalla inicial (setup) ---------- */
+  /* Inicio simplificado: identificación numérica */
+  document.getElementById('numbersContinue').addEventListener('click', function(){
+    var n=clamp(parseInt(document.getElementById('countInput').value,10)||1,1,80);
+    var labels=[];
+    for(var i=1;i<=n;i++) labels.push(String(i));
+    startApp('numbers', labels);
+  });
+  document.getElementById('countInput').addEventListener('keydown', function(e){
+    if(e.key==='Enter') document.getElementById('numbersContinue').click();
+  });
+
+  function startApp(mode, labels){
+    state.mode = 'numbers';
+    state.layout = 'top';
+    state.roster = labels.map(function(lab,i){
+      return { id:genId('p'), label:String(i+1), optionalName:'', color:COLORS[i % COLORS.length] };
+    });
+    var L = currentLayout();
+    var positioned = defaultFormation(state.roster, L.floor);
+    state.scenes = [{ id:genId('scene'), title:'Formación inicial', notes:'', points:positioned, arrows:[] }];
+    state.current = 0;
+    selectedIds.clear();
+    document.getElementById('setupScreen').style.display = 'none';
+    document.getElementById('designScreen').style.display = 'flex';
+    setTool('move');
+    updateLayoutButtons();
+    render();
+    requestAnimationFrame(fitStage);
+  }
+
+})();
 </script>
-</body></html>
+</body>
+</html>
