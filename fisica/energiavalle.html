@@ -121,6 +121,27 @@ body::after{
 .plant{filter:saturate(.75) sepia(.12);border-color:rgba(255,224,194,.18)}
 h1,h2,h3{text-shadow:0 3px 20px rgba(0,0,0,.22)}
 
+
+/* ===== Guardado local + resumen imprimible/PDF ===== */
+.resume-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.resume-actions button{flex:1;min-width:210px;border:0;border-radius:14px;padding:14px 18px;font-weight:900;cursor:pointer}
+.pdf-btn{background:#f2d0a4;color:#241b18}
+.local-note{font-size:.92rem;color:var(--muted);margin-top:8px}
+#printSummary{display:none}
+@media print{
+  @page{size:A4;margin:16mm}
+  body{overflow:visible!important;background:white!important;color:#1b1b1b!important}
+  body::before,body::after,.slide,.nav,.count,.progress,.topbar,.student-name,.student-modal{display:none!important}
+  #printSummary{display:block!important;color:#1b1b1b;background:white;font-family:Arial,sans-serif}
+  #printSummary h1{font-size:25pt;text-shadow:none;color:#222}
+  #printSummary h2{font-size:16pt;margin-top:22px;border-bottom:1px solid #bbb;padding-bottom:5px;text-shadow:none;color:#333}
+  #printSummary h3{font-size:12pt;margin-bottom:4px;text-shadow:none;color:#333}
+  #printSummary p,#printSummary li{font-size:10.5pt;line-height:1.45;color:#333}
+  #printSummary .answer{border-left:4px solid #9b6c4b;background:#f5f1ec;padding:8px 12px;margin:6px 0 12px}
+  #printSummary .meta{padding:10px 0;border-bottom:2px solid #333}
+  #printSummary .concept{margin:5px 0}
+}
+
 </style>
 </head>
 <body>
@@ -137,7 +158,7 @@ h1,h2,h3{text-shadow:0 3px 20px rgba(0,0,0,.22)}
 </div>
 <div class="student-name" id="studentBadge">Estudiante</div>
 
-<div class="topbar"><button onclick="toggleFS()">Pantalla completa</button></div>
+<div class="topbar"><button onclick="resetLocalActivity()">Nueva actividad</button> <button onclick="toggleFS()">Pantalla completa</button></div>
 
 <section class="slide hero active">
 <div class="k">Ciencias · 7°–8° básico</div><h1>Energía en el <span class="yellow">Valle del Aconcagua</span></h1>
@@ -219,7 +240,11 @@ h1,h2,h3{text-shadow:0 3px 20px rgba(0,0,0,.22)}
     <h3>3. Propón un uso de energía renovable para una comunidad del Valle del Aconcagua.</h3>
     <textarea id="ticketApp" placeholder="Escribe tu propuesta..."></textarea>
   </div>
+  <div class="resume-actions">
   <button class="save-btn" id="saveBtn" onclick="saveActivity()">Guardar actividad</button>
+  <button class="pdf-btn" onclick="generatePDF()">Generar resumen PDF</button>
+</div>
+<div class="local-note">Tus respuestas también quedan guardadas en este navegador para que puedas continuar más tarde.</div>
   <div class="save-status" id="saveStatus"></div>
 </div>
 </section>
@@ -228,6 +253,7 @@ h1,h2,h3{text-shadow:0 3px 20px rgba(0,0,0,.22)}
 <p class="lead">Observar el Valle del Aconcagua nos permite conectar energía, agua, Sol, tecnología, ambiente y decisiones humanas.</p>
 </section>
 
+<div id="printSummary"></div>
 <div class="nav"><button onclick="move(-1)">←</button><button onclick="move(1)">→</button></div><div class="count" id="count"></div><div class="progress" id="progress"></div>
 <script>
 const S=[...document.querySelectorAll('.slide')];
@@ -241,7 +267,7 @@ function show(x){
   document.getElementById('count').textContent=`${n+1} / ${S.length}`;
   document.getElementById('progress').style.width=`${(n+1)/S.length*100}%`;
 }
-function move(d){show(n+d)}
+function move(d){show(n+d);saveLocalProgress()}
 
 document.addEventListener('keydown',e=>{
   const modalOpen=document.getElementById("studentModal").style.display!=="none";
@@ -249,7 +275,121 @@ document.addEventListener('keydown',e=>{
   if(modalOpen) return;
   if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();move(1)}
   if(e.key==='ArrowLeft') move(-1);
-  if(e.key==='Home') show(0);
+  if(e.key==='Home') 
+const LOCAL_KEY = "energia_aconcagua_progreso_v1";
+
+function saveLocalProgress(){
+  const alt=document.querySelector('input[name="ticketAlt"]:checked');
+  const data={
+    estudiante:studentName,
+    slide:n,
+    quiz1:{selected:document.getElementById("quiz1").dataset.selected||"",correct:document.getElementById("quiz1").dataset.correct||""},
+    quiz2:{selected:document.getElementById("quiz2").dataset.selected||"",correct:document.getElementById("quiz2").dataset.correct||""},
+    quiz3:{selected:document.getElementById("quiz3").dataset.selected||"",correct:document.getElementById("quiz3").dataset.correct||""},
+    ticketAlt:alt?alt.value:"",
+    ticketDev:document.getElementById("ticketDev").value,
+    ticketApp:document.getElementById("ticketApp").value,
+    q:q.value,h:h.value,
+    savedAt:new Date().toISOString()
+  };
+  try{localStorage.setItem(LOCAL_KEY,JSON.stringify(data));}catch(e){}
+}
+
+function restoreQuiz(id,data){
+  if(!data||!data.selected)return;
+  const box=document.getElementById(id);
+  const buttons=[...box.querySelectorAll("button")];
+  const idx=buttons.findIndex(b=>b.textContent.trim()===data.selected);
+  if(idx>=0){
+    const ok=+box.dataset.answer;
+    box.dataset.selected=data.selected;
+    box.dataset.correct=data.correct;
+    buttons.forEach((b,i)=>{
+      b.disabled=true;
+      if(i===ok)b.classList.add("correct");
+      else if(i===idx)b.classList.add("wrong");
+    });
+    box.querySelector(".feedback").textContent=data.correct==="Sí"?"✓ Respuesta recuperada: correcta.":"Respuesta recuperada.";
+  }
+}
+
+function restoreLocalProgress(){
+  try{
+    const raw=localStorage.getItem(LOCAL_KEY);
+    if(!raw)return false;
+    const d=JSON.parse(raw);
+    if(!d.estudiante)return false;
+    studentName=d.estudiante;
+    document.getElementById("studentInput").value=d.estudiante;
+    document.getElementById("studentBadge").textContent=d.estudiante;
+    document.getElementById("studentModal").style.display="none";
+    restoreQuiz("quiz1",d.quiz1);restoreQuiz("quiz2",d.quiz2);restoreQuiz("quiz3",d.quiz3);
+    if(d.ticketAlt){
+      const radio=document.querySelector('input[name="ticketAlt"][value="'+CSS.escape(d.ticketAlt)+'"]');
+      if(radio)radio.checked=true;
+    }
+    document.getElementById("ticketDev").value=d.ticketDev||"";
+    document.getElementById("ticketApp").value=d.ticketApp||"";
+    if(d.q!==undefined)q.value=d.q;
+    if(d.h!==undefined)h.value=d.h;
+    sim();
+    show(Number.isInteger(d.slide)?d.slide:0);
+    return true;
+  }catch(e){return false;}
+}
+
+function resetLocalActivity(){
+  if(confirm("¿Quieres borrar el progreso guardado en este dispositivo y comenzar nuevamente?")){
+    localStorage.removeItem(LOCAL_KEY);
+    sessionStorage.removeItem("aconcagua_student");
+    location.reload();
+  }
+}
+
+function escapeHTML(v){
+  return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+}
+
+function generatePDF(){
+  saveLocalProgress();
+  const data=collectActivity();
+  const alt=document.querySelector('input[name="ticketAlt"]:checked');
+  const concepts=[
+    "La energía permite explicar cambios y transformaciones en los sistemas.",
+    "La energía puede transferirse y transformarse entre distintas formas.",
+    "La energía solar fotovoltaica transforma parte de la radiación solar en electricidad.",
+    "Una central hidroeléctrica aprovecha la energía del agua para mover una turbina conectada a un generador.",
+    "Las fuentes renovables también pueden producir impactos ambientales y sociales que deben evaluarse.",
+    "En el Valle del Aconcagua, el Sol, el agua, el relieve y las actividades humanas permiten analizar usos locales de la energía."
+  ];
+  const qs=[
+    ["Quiz: central hidroeléctrica",document.getElementById("quiz1").dataset.selected||"Sin responder",document.getElementById("quiz1").dataset.correct||"-"],
+    ["Quiz: impactos de energías renovables",document.getElementById("quiz2").dataset.selected||"Sin responder",document.getElementById("quiz2").dataset.correct||"-"],
+    ["Desafío local",document.getElementById("quiz3").dataset.selected||"Sin responder",document.getElementById("quiz3").dataset.correct||"-"],
+    ["Ticket: fuente renovable",alt?alt.value:"Sin responder",""],
+    ["Desarrollo: transformación hidroeléctrica",document.getElementById("ticketDev").value.trim()||"Sin responder",""],
+    ["Aplicación local",document.getElementById("ticketApp").value.trim()||"Sin responder",""]
+  ];
+  document.getElementById("printSummary").innerHTML=`
+    <h1>Energía en el Valle del Aconcagua</h1>
+    <div class="meta"><strong>Estudiante:</strong> ${escapeHTML(studentName)}<br>
+    <strong>Fecha:</strong> ${new Date().toLocaleString("es-CL")}</div>
+    <h2>Resumen de contenidos</h2>
+    ${concepts.map(c=>`<p class="concept">• ${escapeHTML(c)}</p>`).join("")}
+    <h2>Mis respuestas</h2>
+    ${qs.map(([qst,ans,ok])=>`<h3>${escapeHTML(qst)}</h3><div class="answer">${escapeHTML(ans)}${ok&&ok!=="-"?` <strong>(${escapeHTML(ok==="Sí"?"Correcta":"Incorrecta")})</strong>`:""}</div>`).join("")}
+    <h2>Simulador hidroeléctrico</h2>
+    <p>Última configuración utilizada: caudal ${escapeHTML(q.value)}% y altura efectiva ${escapeHTML(h.value)} m.</p>
+  `;
+  window.print();
+}
+
+// Guardado local automático: no hace llamadas a Google.
+document.addEventListener("input",e=>{
+  if(e.target.matches("textarea,input[type=radio],input[type=range]"))saveLocalProgress();
+});
+
+if(!restoreLocalProgress()) show(0);
   if(e.key==='End') show(S.length-1);
 });
 
@@ -268,6 +408,7 @@ function startActivity(){
   document.getElementById("studentModal").style.display="none";
   try{ sessionStorage.setItem("aconcagua_student",studentName); }catch(e){}
   show(0);
+  saveLocalProgress();
 }
 
 function answer(btn,idx){
@@ -279,6 +420,7 @@ function answer(btn,idx){
     if(i===ok)b.classList.add('correct');
     else if(i===idx)b.classList.add('wrong');
   });
+  saveLocalProgress();
   box.querySelector('.feedback').textContent=
     idx===ok?' ¡Correcto!':' Revisa la transformación de energía.';
 }
