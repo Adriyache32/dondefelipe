@@ -428,6 +428,7 @@
         <button class="menu-trigger">Viñeta</button>
         <div class="menu-dropdown">
           <button class="menu-item" data-action="new-scene">➕ Nueva viñeta</button>
+          <button class="menu-item" data-action="duplicate-scene">⧉ Duplicar viñeta</button>
           <button class="menu-item" data-action="new-blank-scene">＋ Viñeta vacía</button>
           <button class="menu-item" data-action="details">📝 Título y observaciones</button>
         </div>
@@ -470,7 +471,7 @@
         <button data-tool="arrow">➜ Flecha</button>
         <button data-tool="erase">✖ Borrar</button>
       </div>
-      <span class="selection-hint" id="selectionHint">Ctrl/Cmd + clic: seleccionar varios</span>
+      <span class="selection-hint" id="selectionHint">Mantén 3 s y arrastra: selección</span>
     </div>
 
     <div class="formation-controls" id="formationControls">
@@ -994,7 +995,7 @@
     if(selectedIds.size > 0){
       hint.textContent = selectedIds.size + ' seleccionado' + (selectedIds.size===1?'':'s') + ' · arrastra uno para mover el grupo';
     } else {
-      hint.textContent = 'Ctrl/Cmd + clic: seleccionar varios';
+      hint.textContent = 'Mantén 3 s y arrastra: selección';
     }
   }
 
@@ -1023,6 +1024,12 @@
       x:(r.left-wr.left)+(pt.x-vb.x)/vb.width*r.width,
       y:(r.top-wr.top)+(pt.y-vb.y)/vb.height*r.height
     };
+  }
+
+  function cancelMarqueePending(){
+    if(marqueeTimer){ clearTimeout(marqueeTimer); marqueeTimer=null; }
+    marqueePending=null;
+    marqueePointerId=null;
   }
 
   function showMarquee(a,b){
@@ -1081,7 +1088,7 @@
   });
 
   document.getElementById('btnHelp').addEventListener('click', function(){
-    alert('Cómo usar En Escena:\n\nLos comandos generales están ordenados arriba en Archivo, Edición, Viñeta, Formaciones y Coreografía. En Formaciones puedes distribuir automáticamente a los bailarines en círculo, cuadrado, doble fila, parejas, fila única o V.\n\n✋ Mover: arrastra los puntos por el escenario. Usa arrastra un rectángulo sobre una zona vacía para seleccionar varios bailarines. También puedes usar Ctrl/Cmd/Shift + clic. Luego arrastra cualquiera de los seleccionados para mover el grupo. El botón «Seleccionar todos» permite mover a todo el elenco junto. También puedes arrastrar el cajón de Bastidores completo hacia un costado, detrás, o el otro costado.\n➜ Flecha: arrastra desde un bailarín hacia su próxima posición (incluso desde Bastidores hacia el piso).\n✖ Borrar: toca una flecha para eliminarla.\n\n👥 Bailarines: agrega o quita gente de toda la coreografía.\n📝 Detalles: título, observaciones, y una lista para mandar bailarines al piso o a bastidores solo en esta viñeta (con un toque, sin arrastrar).\n💾 Progreso: guarda o carga tu avance (.json) cuando quieras.\n➕ Nueva viñeta: crea el siguiente paso a partir de la formación actual.');
+    alert('Cómo usar En Escena:\n\nLos comandos generales están ordenados arriba en Archivo, Edición, Viñeta, Formaciones y Coreografía. En Formaciones puedes distribuir automáticamente a los bailarines en círculo, cuadrado, doble fila, parejas, fila única o V.\n\n✋ Mover: arrastra los puntos por el escenario. Usa mantén presionado el botón izquierdo durante 3 segundos sobre una zona vacía; recién entonces aparece el rectángulo de selección. Sin soltar, arrástralo para encerrar y seleccionar bailarines. También puedes usar Ctrl/Cmd/Shift + clic. Luego arrastra cualquiera de los seleccionados para mover el grupo. El botón «Seleccionar todos» permite mover a todo el elenco junto. También puedes arrastrar el cajón de Bastidores completo hacia un costado, detrás, o el otro costado.\n➜ Flecha: arrastra desde un bailarín hacia su próxima posición (incluso desde Bastidores hacia el piso).\n✖ Borrar: toca una flecha para eliminarla.\n\n👥 Bailarines: agrega o quita gente de toda la coreografía.\n📝 Detalles: título, observaciones, y una lista para mandar bailarines al piso o a bastidores solo en esta viñeta (con un toque, sin arrastrar).\n💾 Progreso: guarda o carga tu avance (.json) cuando quieras.\n➕ Nueva viñeta: crea el siguiente paso a partir de la formación actual.');
   });
 
   /* ---------- Paneles deslizables ---------- */
@@ -1317,6 +1324,10 @@
   var groupOriginal = null;
   var marqueeStart=null;
   var marqueeActive=false;
+  var marqueeTimer=null;
+  var marqueePending=null;
+  var marqueePointerId=null;
+  var marqueeDelay=3000;
   var drawing = null;
   var layoutDragging = false;
   var dockTarget = null;
@@ -1417,11 +1428,22 @@
           svg.setPointerCapture(e.pointerId);
           svg.style.cursor = 'grabbing';
         } else {
-          marqueeStart={x:p.x,y:p.y,additive:(e.ctrlKey||e.metaKey||e.shiftKey)};
-          marqueeActive=true;
-          if(!marqueeStart.additive) selectedIds.clear();
-          showMarquee(marqueeStart,p);
+          cancelMarqueePending();
+          marqueePending={x:p.x,y:p.y,additive:(e.ctrlKey||e.metaKey||e.shiftKey)};
+          marqueePointerId=e.pointerId;
           svg.setPointerCapture(e.pointerId);
+          marqueeTimer=setTimeout(function(){
+            if(!marqueePending || marqueePointerId!==e.pointerId) return;
+            marqueeStart={
+              x:marqueePending.x,
+              y:marqueePending.y,
+              additive:marqueePending.additive
+            };
+            marqueeActive=true;
+            if(!marqueeStart.additive) selectedIds.clear();
+            showMarquee(marqueeStart,marqueeStart);
+            marqueeTimer=null;
+          },marqueeDelay);
         }
       }
     } else if(state.tool === 'arrow'){
@@ -1440,6 +1462,10 @@
 
   svg.addEventListener('pointermove', function(e){
     var p = toSVGPoint(e);
+    if(marqueePending && !marqueeActive){
+      var pdx=p.x-marqueePending.x, pdy=p.y-marqueePending.y;
+      if(Math.sqrt(pdx*pdx+pdy*pdy)>7) cancelMarqueePending();
+    }
     if(marqueeActive && marqueeStart){
       showMarquee(marqueeStart,p);
     } else if(dragPointId){
@@ -1474,6 +1500,9 @@
       var endPt=svgPoint(e);
       selectPointsInRect(marqueeStart,endPt,marqueeStart.additive);
       marqueeActive=false; marqueeStart=null; hideMarquee();
+      cancelMarqueePending();
+    } else if(marqueePending){
+      cancelMarqueePending();
     }
     if(dragPointId){ dragPointId = null; groupDragStart = null; groupOriginal = null; render(); }
     if(layoutDragging){
@@ -1497,6 +1526,11 @@
     svg.style.cursor = '';
     try{ svg.releasePointerCapture(e.pointerId); }catch(err){}
   });
+  svg.addEventListener('pointercancel', function(){
+    cancelMarqueePending();
+    if(marqueeActive){ marqueeActive=false; marqueeStart=null; hideMarquee(); }
+  });
+
 
   /* ---------- Exportar PDF ---------- */
   function buildExportSVGString(scene, idx, total, mode, L){
@@ -1848,6 +1882,29 @@
     updateLabels();
   })();
 
+  function duplicateCurrentScene(){
+    var source=currentScene();
+    if(!source) return;
+    var copy={
+      id:genId('scene'),
+      title:(source.title || 'Viñeta')+' (copia)',
+      notes:source.notes || '',
+      points:(source.points || []).map(function(p){
+        return {id:p.id,x:p.x,y:p.y};
+      }),
+      arrows:(source.arrows || []).map(function(a){
+        return {
+          id:genId('arrow'),
+          x1:a.x1,y1:a.y1,x2:a.x2,y2:a.y2
+        };
+      })
+    };
+    state.scenes.splice(state.current+1,0,copy);
+    state.current++;
+    selectedIds.clear();
+    render();
+  }
+
   function addBlankScene(){
     state.scenes.push({id:genId('scene'),title:'Nueva formación',notes:'',points:[],arrows:[]});
     state.current=state.scenes.length-1;
@@ -1888,6 +1945,7 @@
       else if(action==='clear-arrows') document.getElementById('btnClearArrows').click();
       else if(action==='delete-scene') document.getElementById('btnDeleteScene').click();
       else if(action==='new-scene') document.getElementById('btnAddScene').click();
+      else if(action==='duplicate-scene') duplicateCurrentScene();
       else if(action==='new-blank-scene') addBlankScene();
       else if(action==='details') document.getElementById('btnDetails').click();
       else if(action==='formation-circle'){ document.getElementById('formationCount').value='1'; formationSettings.count=1; applyPresetFormation('circle'); }
