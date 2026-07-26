@@ -29,6 +29,16 @@ window.addEventListener('error', function (e) {
 });
 </script>
 
+<script>
+/* ¿El equipo tiene un visor de VR? Solo entonces mostramos el botón de A-Frame.
+   En un PC de escritorio normal esto no se cumple y el botón queda oculto. */
+if (navigator.xr && navigator.xr.isSessionSupported) {
+  navigator.xr.isSessionSupported('immersive-vr').then(function (ok) {
+    if (ok) document.documentElement.classList.add('tiene-vr');
+  }).catch(function () {});
+}
+</script>
+
 <style>
   :root{ --acento:#1c5f78; --tinta:#12211f; --papel:#f2ece0; }
   html,body{margin:0;height:100%;overflow:hidden;
@@ -126,11 +136,16 @@ window.addEventListener('error', function (e) {
     color:#6c6a60;font-size:20px;padding:2px 6px;line-height:1;}
   #cerrar:hover{background:none;color:var(--tinta);}
 
-  /* A-Frame inserta su propia UI (barra de orientación / botón VR) abajo;
-     la reposicionamos para que no tape los controles */
-  .a-enter-vr, .a-enter-ar { right: 12px !important; bottom: auto !important; top: 54px !important; left: auto !important; }
+  /* A-Frame inyecta un botón VR/AR (recuadro blanco) que en un PC sin visor
+     solo tapa los controles. Lo ocultamos por defecto y lo mostramos únicamente
+     si el dispositivo soporta VR real (ver el script <html class="tiene-vr">). */
+  .a-enter-vr, .a-enter-ar { display: none !important; }
+  html.tiene-vr .a-enter-vr {
+    display: block !important;
+    right: 12px !important; bottom: auto !important; top: 54px !important; left: auto !important;
+  }
+  html.tiene-vr .a-enter-vr-button { background-size: 90% 90% !important; }
   .a-orientation-modal { display: none !important; }
-  .a-enter-vr-button { background-size: 90% 90% !important; }
   a-scene .a-canvas { z-index: 0 !important; }
 
   /* panel de mezcla de audio */
