@@ -342,6 +342,16 @@ var MUROS_BASE = (function () {
   return muros;
 })();
 
+/* Recursos compartidos por TODAS las instancias de roca del generador: una sola
+   geometría y un solo material para todos los sectores (se crean una vez). */
+var GEO_ROCA = null, MAT_ROCA = null;
+function _recursosRoca() {
+  if (!GEO_ROCA) {
+    GEO_ROCA = new THREE.DodecahedronGeometry(1);
+    MAT_ROCA = new THREE.MeshStandardMaterial({ color: '#7d756c', roughness: 0.95, flatShading: true });
+  }
+}
+
 window.MUNDOS.mercurio = {
 
   titulo: 'Mercurio · la superficie',
@@ -375,27 +385,52 @@ window.MUNDOS.mercurio = {
     // el sector 0,0 es la zona hecha a mano: no lo repueblan
     if (S.gx === 0 && S.gz === 0) return;
     var R = S.rng;
-    // rocas dispersas
+    // rocas dispersas: las DECORATIVAS van a una sola InstancedMesh (1 draw call
+    // por sector); las ROMPIBLES siguen siendo entidad (las necesita el raycaster
+    // de golpes). El orden del rng se conserva para que el sector regenere igual.
+    _recursosRoca();
+    var _deco = [];
     var nRocas = 3 + Math.floor(R() * 6);
     for (var i = 0; i < nRocas; i++) {
       var x = S.cx + (R() - 0.5) * 36;
       var z = S.cz + (R() - 0.5) * 36;
       var t = 0.5 + R() * 1.3;
-      var e = S.nuevo('a-entity', { position: x + ' ' + (t*0.4) + ' ' + z });
-      e.setAttribute('geometry', 'primitive:dodecahedron; radius:' + t);
-      e.setAttribute('material', 'color:#7d756c; roughness:0.95; flatShading:true');
-      S.terreno.appendChild(e);
-      // 1 de cada 4 es rompible con monedas
-      if (R() < 0.25) {
+      var esRompible = (R() < 0.25);
+      var mon = 1 + Math.floor(R()*3);   // se consume siempre → determinista al regenerar
+      if (esRompible) {
         var id = 's' + S.gx + '_' + S.gz + '_' + i;
         if (!MUNDO.rotos[id]) {
-          MUNDO.rocaRompible({ id: id, x: x, z: z, golpes: 3, monedas: 1 + Math.floor(R()*3), el: e });
+          var e = S.nuevo('a-entity', { position: x + ' ' + (t*0.4) + ' ' + z });
+          e.setAttribute('geometry', 'primitive:dodecahedron; radius:' + t);
+          e.setAttribute('material', 'color:#7d756c; roughness:0.95; flatShading:true');
+          S.terreno.appendChild(e);
+          MUNDO.rocaRompible({ id: id, x: x, z: z, golpes: 3, monedas: mon, el: e });
           var v = S.nuevo('a-entity', { position: x + ' ' + (t*0.4+0.2) + ' ' + z });
           v.setAttribute('geometry', 'primitive:sphere; radius:0.16');
           v.setAttribute('material', 'color:#f0c850; shader:flat; emissive:#f0c850');
           S.terreno.appendChild(v);
-        } else { e.setAttribute('visible', false); }
+        }
+        // si ya está rota, no se dibuja
+      } else {
+        _deco.push({ x: x, y: t*0.4, z: z, s: t });
       }
+    }
+    // volcar las decorativas a una InstancedMesh colgada del grupo por object3D
+    if (_deco.length) {
+      var _malla = new THREE.InstancedMesh(GEO_ROCA, MAT_ROCA, _deco.length);
+      _malla.frustumCulled = false;
+      var _m = new THREE.Matrix4(), _p = new THREE.Vector3(),
+          _q = new THREE.Quaternion(), _eu = new THREE.Euler(), _sc = new THREE.Vector3();
+      for (var j = 0; j < _deco.length; j++) {
+        var d = _deco[j];
+        _p.set(d.x, d.y, d.z);
+        _eu.set(R()*0.6, R()*6.28, R()*0.6);
+        _q.setFromEuler(_eu);
+        _sc.set(d.s, d.s*0.7, d.s*(0.7 + R()*0.6));
+        _malla.setMatrixAt(j, _m.compose(_p, _q, _sc));
+      }
+      _malla.instanceMatrix.needsUpdate = true;
+      S.terreno.setObject3D('rocas', _malla);
     }
     // algún cráter ocasional
     if (R() < 0.5) {
@@ -469,7 +504,7 @@ window.MUNDOS.mercurio = {
 
     // piso del sector (para que se pueda pisar lo nuevo)
     var piso = S.nuevo('a-box', { 'class': 'suelo', width: 40, depth: 40, height: 0.2,
-      position: S.cx + ' -0.1 ' + S.cz, material: 'color:#8a827a; roughness:1' });
+      position: S.cx + ' -0.3 ' + S.cz, material: 'color:#8a827a; roughness:1' });
     S.terreno.appendChild(piso);
   },
 

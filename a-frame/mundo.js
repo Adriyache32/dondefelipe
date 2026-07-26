@@ -1612,28 +1612,57 @@ function bufferRuido() {
 MUNDO.audioAmbiente = { viento: null, lluvia: null };
 function crearAmbiente() {
   if (!AUDIO.ctx) return;
-  // viento
-  var vFuente = AUDIO.ctx.createBufferSource();
-  vFuente.buffer = bufferRuido(); vFuente.loop = true;
-  var vFiltro = AUDIO.ctx.createBiquadFilter();
-  vFiltro.type = 'lowpass'; vFiltro.frequency.value = 420;
-  var vGain = AUDIO.ctx.createGain(); vGain.gain.value = 0.07;
-  // modulación lenta del viento (ráfagas)
-  var lfo = AUDIO.ctx.createOscillator(); lfo.frequency.value = 0.12;
-  var lfoG = AUDIO.ctx.createGain(); lfoG.gain.value = 0.04;
-  lfo.connect(lfoG); lfoG.connect(vGain.gain);
-  vFuente.connect(vFiltro); vFiltro.connect(vGain); vGain.connect(AUDIO.buses.ambiente);
-  vFuente.start(); lfo.start();
+  var ctx = AUDIO.ctx, ahora = ctx.currentTime;
+
+  /* ---------- VIENTO ----------
+     El viento sonaba a mar porque usaba la misma receta que las olas: ruido
+     pasa-bajos + un LFO senoidal lento subiendo y bajando el volumen (ese
+     vaivén rítmico ES una ola rompiendo). El viento real no tiene ritmo: tiene
+     un silbido en la banda media, ráfagas irregulares y siseo agudo sostenido.
+     Separo esas tres capas y muevo las ráfagas con dos LFO inconmensurables. */
+  var vGain = ctx.createGain(); vGain.gain.value = 0.07;   // audioClima() sube/baja esto
+  vGain.connect(AUDIO.buses.ambiente);
   MUNDO.audioAmbiente.viento = vGain;
 
-  // lluvia (empieza en silencio, sube con el clima)
-  var lFuente = AUDIO.ctx.createBufferSource();
-  lFuente.buffer = bufferRuido(); lFuente.loop = true;
-  var lFiltro = AUDIO.ctx.createBiquadFilter();
-  lFiltro.type = 'highpass'; lFiltro.frequency.value = 1800;
-  var lGain = AUDIO.ctx.createGain(); lGain.gain.value = 0;
+  // Capa 1 — cuerpo grave (el empuje del aire). Estable, sin ritmo.
+  var cuerpo = ctx.createBufferSource(); cuerpo.buffer = bufferRuido(); cuerpo.loop = true;
+  var cuerpoLP = ctx.createBiquadFilter(); cuerpoLP.type = 'lowpass'; cuerpoLP.frequency.value = 500;
+  var cuerpoG = ctx.createGain(); cuerpoG.gain.value = 0.55;
+  cuerpo.connect(cuerpoLP); cuerpoLP.connect(cuerpoG); cuerpoG.connect(vGain);
+
+  // Capa 2 — SILBIDO (lo que el mar no tiene): banda media resonante que se
+  // barre con las ráfagas. Ruido → pasa-banda con Q alto = aire pasando por un borde.
+  var silbido = ctx.createBufferSource(); silbido.buffer = bufferRuido(); silbido.loop = true;
+  var silbidoBP = ctx.createBiquadFilter(); silbidoBP.type = 'bandpass';
+  silbidoBP.frequency.value = 550; silbidoBP.Q.value = 4.5;
+  var silbidoG = ctx.createGain(); silbidoG.gain.value = 0.32;
+  silbido.connect(silbidoBP); silbidoBP.connect(silbidoG); silbidoG.connect(vGain);
+
+  // Capa 3 — siseo agudo (turbulencia fina). Sostenido, da "aire".
+  var siseo = ctx.createBufferSource(); siseo.buffer = bufferRuido(); siseo.loop = true;
+  var siseoHP = ctx.createBiquadFilter(); siseoHP.type = 'highpass'; siseoHP.frequency.value = 3200;
+  var siseoG = ctx.createGain(); siseoG.gain.value = 0.12;
+  siseo.connect(siseoHP); siseoHP.connect(siseoG); siseoG.connect(vGain);
+
+  // RÁFAGAS irregulares: dos LFO de frecuencias inconmensurables (0.07 y 0.163
+  // Hz) que nunca se repiten igual. Modulan volumen y frecuencia del silbido.
+  var g1 = ctx.createOscillator(); g1.type = 'sine'; g1.frequency.value = 0.07;
+  var g2 = ctx.createOscillator(); g2.type = 'sine'; g2.frequency.value = 0.163;
+  var m1 = ctx.createGain(); m1.gain.value = 0.20; g1.connect(m1); m1.connect(silbidoG.gain);
+  var m2 = ctx.createGain(); m2.gain.value = 0.14; g2.connect(m2); m2.connect(silbidoG.gain);
+  var mf1 = ctx.createGain(); mf1.gain.value = 220; g1.connect(mf1); mf1.connect(silbidoBP.frequency);
+  var mf2 = ctx.createGain(); mf2.gain.value = 130; g2.connect(mf2); mf2.connect(silbidoBP.frequency);
+  var ms = ctx.createGain(); ms.gain.value = 0.05; g1.connect(ms); ms.connect(siseoG.gain);
+
+  cuerpo.start(ahora); silbido.start(ahora); siseo.start(ahora);
+  g1.start(ahora); g2.start(ahora);
+
+  /* ---------- LLUVIA (empieza en silencio, sube con el clima) ---------- */
+  var lFuente = ctx.createBufferSource(); lFuente.buffer = bufferRuido(); lFuente.loop = true;
+  var lFiltro = ctx.createBiquadFilter(); lFiltro.type = 'highpass'; lFiltro.frequency.value = 1800;
+  var lGain = ctx.createGain(); lGain.gain.value = 0;
   lFuente.connect(lFiltro); lFiltro.connect(lGain); lGain.connect(AUDIO.buses.ambiente);
-  lFuente.start();
+  lFuente.start(ahora);
   MUNDO.audioAmbiente.lluvia = lGain;
 }
 
@@ -2090,6 +2119,8 @@ function avisoMoneda(txt) {
 MUNDO.semilla = 12345;
 MUNDO.sectores = {};        // "gx,gz" → true (ya generado)
 MUNDO.TAM_SECTOR = 40;
+MUNDO.RADIO_SECTORES = 3;   // sectores de radio que se mantienen vivos; el resto se descarga
+MUNDO._sectorGrupo = {};    // "gx,gz" → a-entity contenedora del sector
 var _genSector = null;      // función que el mundo define para poblar un sector
 
 MUNDO.generador = function (fn) { _genSector = fn; };
@@ -2109,7 +2140,8 @@ function semillaSector(gx, gz) {
   return (MUNDO.semilla ^ (gx * 374761393) ^ (gz * 668265263)) >>> 0;
 }
 
-// Genera un sector si no existe. Llama al generador del mundo con un rng propio.
+// Genera un sector si no existe. Cada sector vive dentro de UN grupo (a-entity),
+// así se puede descargar entero cuando el jugador se aleja.
 function generarSector(gx, gz) {
   var clave = gx + ',' + gz;
   if (MUNDO.sectores[clave]) return;
@@ -2118,11 +2150,25 @@ function generarSector(gx, gz) {
   var rng = prng(semillaSector(gx, gz));
   var cx = gx * MUNDO.TAM_SECTOR, cz = gz * MUNDO.TAM_SECTOR;
   var terreno = document.getElementById('terreno');
-  _genSector({ gx: gx, gz: gz, cx: cx, cz: cz, rng: rng, terreno: terreno,
+  // grupo propio del sector: todo lo del generador cuelga de aquí
+  var grupo = nuevo('a-entity', { id: 'sec_' + gx + '_' + gz });
+  terreno.appendChild(grupo);
+  MUNDO._sectorGrupo[clave] = grupo;
+  _genSector({ gx: gx, gz: gz, cx: cx, cz: cz, rng: rng, terreno: grupo,
                nuevo: nuevo, pieza: pieza });
 }
 
-// Vigilar la posición del jugador y generar los sectores vecinos
+// Descarga un sector: borra su grupo y lo olvida. Como el terreno es
+// determinista (semilla), al volver se regenera idéntico; MUNDO.rotos conserva
+// lo que se rompió, así que lo roto sigue roto.
+function descargarSector(clave) {
+  var grupo = MUNDO._sectorGrupo[clave];
+  if (grupo && grupo.parentNode) grupo.parentNode.removeChild(grupo);
+  delete MUNDO._sectorGrupo[clave];
+  delete MUNDO.sectores[clave];
+}
+
+// Vigilar la posición del jugador: generar lo cercano, descargar lo lejano.
 var _acumSector = 0;
 MUNDO.animar(function (t, dt) {
   if (!_genSector || !MUNDO.jugador) return;
@@ -2136,6 +2182,29 @@ MUNDO.animar(function (t, dt) {
   for (var dx = -1; dx <= 1; dx++)
     for (var dz = -1; dz <= 1; dz++)
       generarSector(gx + dx, gz + dz);
+
+  // descargar los que quedaron fuera del radio (distancia de Chebyshev)
+  var R = MUNDO.RADIO_SECTORES, hubo = false;
+  Object.keys(MUNDO._sectorGrupo).forEach(function (clave) {
+    var par = clave.split(',');
+    var sx = parseInt(par[0], 10), sz = parseInt(par[1], 10);
+    if (Math.max(Math.abs(sx - gx), Math.abs(sz - gz)) > R) {
+      descargarSector(clave); hubo = true;
+    }
+  });
+  // si se descargó algo: soltar rocas rompibles muertas y refrescar los suelos
+  // cacheados por el jugador (para no raycastear mallas fantasma)
+  if (hubo) {
+    if (MUNDO.rompibles) MUNDO.rompibles = MUNDO.rompibles.filter(function (r) {
+      return !r.el || r.el.isConnected;
+    });
+    var jug = MUNDO.jugador, cmp = jug && jug.components;
+    if (cmp) {
+      if (cmp['gravedad'])      cmp['gravedad'].mallas = [];
+      if (cmp['piso-adherido']) cmp['piso-adherido'].mallas = [];
+    }
+  }
+
   // expandir los límites de movimiento a medida que se explora
   var alcance = (Math.max(Math.abs(gx), Math.abs(gz)) + 2) * MUNDO.TAM_SECTOR;
   if (MUNDO.limites) {
