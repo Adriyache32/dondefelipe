@@ -362,6 +362,17 @@
     .formation-controls-title{display:none;}
   }
 
+
+  .formation-controls select{
+    background:#10365f;color:#fff;border:1px solid var(--border);
+    border-radius:5px;padding:3px 5px;font-size:9px;
+  }
+  #selectionRect{
+    position:absolute;display:none;pointer-events:none;z-index:12;
+    border:1.5px solid #ffffff;background:rgba(255,255,255,.10);
+    box-shadow:0 0 0 1px rgba(7,26,51,.45) inset;
+  }
+
 </style>
 </head>
 <body>
@@ -413,9 +424,9 @@
       <div class="menu">
         <button class="menu-trigger">Formaciones</button>
         <div class="menu-dropdown">
-          <button class="menu-item" data-action="formation-circle">○ Círculo</button>
+          <button class="menu-item" data-action="formation-circle">○ Círculo / círculos concéntricos</button>
           <button class="menu-item" data-action="formation-square">□ Cuadrado</button>
-          <button class="menu-item" data-action="formation-double-row">═ Doble fila</button>
+          <button class="menu-item" data-action="formation-double-row">═ Filas múltiples</button>
           <button class="menu-item" data-action="formation-pairs">⚭ En parejas</button>
           <div class="menu-separator"></div>
           <button class="menu-item" data-action="formation-line">— Fila única</button>
@@ -460,6 +471,15 @@
         <input type="range" id="formationSpacing" min="60" max="150" value="100" step="5">
         <span id="formationSpacingValue">100%</span>
       </label>
+      <label>Cantidad
+        <select id="formationCount" title="Cantidad de círculos, filas o capas">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
+      </label>
       <button class="formation-mini-btn" id="btnReapplyFormation" title="Volver a aplicar la última formación">↻ Aplicar</button>
     </div>
 
@@ -492,6 +512,7 @@
         <line id="tempArrow" x1="0" y1="0" x2="0" y2="0" stroke="#d52b1e" stroke-width="3" stroke-linecap="round" marker-end="url(#arrowhead)" style="display:none"></line>
       </svg>
       <div id="dockHint"></div>
+      <div id="selectionRect"></div>
       <div class="save-toast" id="saveToast" role="status" aria-live="polite">
         <span class="save-toast-icon">💾</span>
         <span class="save-toast-text">Llevas varias viñetas nuevas sin guardar. ¿Guardamos tu avance?</span>
@@ -976,6 +997,45 @@
     render();
   });
 
+
+  function stagePointToPixels(pt){
+    var svg=document.getElementById('stageSvg');
+    var wrap=document.querySelector('.stage-wrap');
+    var r=svg.getBoundingClientRect(), wr=wrap.getBoundingClientRect();
+    var vb=svg.viewBox.baseVal;
+    return {
+      x:(r.left-wr.left)+(pt.x-vb.x)/vb.width*r.width,
+      y:(r.top-wr.top)+(pt.y-vb.y)/vb.height*r.height
+    };
+  }
+
+  function showMarquee(a,b){
+    var box=document.getElementById('selectionRect');
+    var pa=stagePointToPixels(a), pb=stagePointToPixels(b);
+    box.style.display='block';
+    box.style.left=Math.min(pa.x,pb.x)+'px';
+    box.style.top=Math.min(pa.y,pb.y)+'px';
+    box.style.width=Math.abs(pb.x-pa.x)+'px';
+    box.style.height=Math.abs(pb.y-pa.y)+'px';
+  }
+
+  function hideMarquee(){
+    var box=document.getElementById('selectionRect');
+    box.style.display='none';
+  }
+
+  function selectPointsInRect(a,b,additive){
+    var scene=currentScene();
+    var minX=Math.min(a.x,b.x), maxX=Math.max(a.x,b.x);
+    var minY=Math.min(a.y,b.y), maxY=Math.max(a.y,b.y);
+    if(!additive) selectedIds.clear();
+    scene.points.forEach(function(pt){
+      if(pt.x>=minX && pt.x<=maxX && pt.y>=minY && pt.y<=maxY) selectedIds.add(pt.id);
+    });
+    updateSelectionUI();
+    render();
+  }
+
   /* ---------- Herramientas ---------- */
   function setTool(t){
     state.tool = t;
@@ -1005,7 +1065,7 @@
   });
 
   document.getElementById('btnHelp').addEventListener('click', function(){
-    alert('Cómo usar En Escena:\n\nLos comandos generales están ordenados arriba en Archivo, Edición, Viñeta, Formaciones y Coreografía. En Formaciones puedes distribuir automáticamente a los bailarines en círculo, cuadrado, doble fila, parejas, fila única o V.\n\n✋ Mover: arrastra los puntos por el escenario. Usa Ctrl/Cmd/Shift + clic para seleccionar varios; luego arrastra cualquiera de los seleccionados para mover el grupo. El botón «Seleccionar todos» permite mover a todo el elenco junto. También puedes arrastrar el cajón de Bastidores completo hacia un costado, detrás, o el otro costado.\n➜ Flecha: arrastra desde un bailarín hacia su próxima posición (incluso desde Bastidores hacia el piso).\n✖ Borrar: toca una flecha para eliminarla.\n\n👥 Bailarines: agrega o quita gente de toda la coreografía.\n📝 Detalles: título, observaciones, y una lista para mandar bailarines al piso o a bastidores solo en esta viñeta (con un toque, sin arrastrar).\n💾 Progreso: guarda o carga tu avance (.json) cuando quieras.\n➕ Nueva viñeta: crea el siguiente paso a partir de la formación actual.');
+    alert('Cómo usar En Escena:\n\nLos comandos generales están ordenados arriba en Archivo, Edición, Viñeta, Formaciones y Coreografía. En Formaciones puedes distribuir automáticamente a los bailarines en círculo, cuadrado, doble fila, parejas, fila única o V.\n\n✋ Mover: arrastra los puntos por el escenario. Usa arrastra un rectángulo sobre una zona vacía para seleccionar varios bailarines. También puedes usar Ctrl/Cmd/Shift + clic. Luego arrastra cualquiera de los seleccionados para mover el grupo. El botón «Seleccionar todos» permite mover a todo el elenco junto. También puedes arrastrar el cajón de Bastidores completo hacia un costado, detrás, o el otro costado.\n➜ Flecha: arrastra desde un bailarín hacia su próxima posición (incluso desde Bastidores hacia el piso).\n✖ Borrar: toca una flecha para eliminarla.\n\n👥 Bailarines: agrega o quita gente de toda la coreografía.\n📝 Detalles: título, observaciones, y una lista para mandar bailarines al piso o a bastidores solo en esta viñeta (con un toque, sin arrastrar).\n💾 Progreso: guarda o carga tu avance (.json) cuando quieras.\n➕ Nueva viñeta: crea el siguiente paso a partir de la formación actual.');
   });
 
   /* ---------- Paneles deslizables ---------- */
@@ -1188,6 +1248,8 @@
   var dragPointId = null;
   var groupDragStart = null;
   var groupOriginal = null;
+  var marqueeStart=null;
+  var marqueeActive=false;
   var drawing = null;
   var layoutDragging = false;
   var dockTarget = null;
@@ -1280,15 +1342,19 @@
         svg.setPointerCapture(e.pointerId);
         svg.style.cursor = 'grabbing';
       } else {
-        if(!(e.ctrlKey || e.metaKey || e.shiftKey)) clearSelection();
         var L0 = currentLayout();
         if(pointInRect(p, L0.backstageRect)){
+          if(!(e.ctrlKey || e.metaKey || e.shiftKey)) clearSelection();
           layoutDragging = true;
           dockTarget = state.layout;
           svg.setPointerCapture(e.pointerId);
           svg.style.cursor = 'grabbing';
         } else {
-          render();
+          marqueeStart={x:p.x,y:p.y,additive:(e.ctrlKey||e.metaKey||e.shiftKey)};
+          marqueeActive=true;
+          if(!marqueeStart.additive) selectedIds.clear();
+          showMarquee(marqueeStart,p);
+          svg.setPointerCapture(e.pointerId);
         }
       }
     } else if(state.tool === 'arrow'){
@@ -1307,7 +1373,9 @@
 
   svg.addEventListener('pointermove', function(e){
     var p = toSVGPoint(e);
-    if(dragPointId){
+    if(marqueeActive && marqueeStart){
+      showMarquee(marqueeStart,p);
+    } else if(dragPointId){
       var scene = currentScene();
       var L = currentLayout();
       var dx = p.x - groupDragStart.x, dy = p.y - groupDragStart.y;
@@ -1335,6 +1403,11 @@
 
   svg.addEventListener('pointerup', function(e){
     var scene = currentScene();
+    if(marqueeActive && marqueeStart){
+      var endPt=svgPoint(e);
+      selectPointsInRect(marqueeStart,endPt,marqueeStart.additive);
+      marqueeActive=false; marqueeStart=null; hideMarquee();
+    }
     if(dragPointId){ dragPointId = null; groupDragStart = null; groupOriginal = null; render(); }
     if(layoutDragging){
       hideDockHint();
@@ -1550,7 +1623,7 @@
 
 
 
-  var formationSettings={ type:null, size:1, spacing:1 };
+  var formationSettings={ type:null, size:1, spacing:1, count:1 };
 
   /* ---------- Formaciones predeterminadas ---------- */
   function applyPresetFormation(type){
@@ -1576,6 +1649,7 @@
     var size=formationSettings.size || 1;
     var spacing=formationSettings.spacing || 1;
     var spread=size*spacing;
+    var formationCount=Math.max(1, formationSettings.count || 1);
 
     function setPos(pt,x,y){
       pt.x=clamp(x,L.clamp.xMin,L.clamp.xMax);
@@ -1583,11 +1657,20 @@
     }
 
     if(type==='circle'){
-      var rx=Math.min(usableW*.45,270*spread)*Math.min(spread,1.35);
-      var ry=Math.min(usableH*.45,155*spread)*Math.min(spread,1.35);
-      pts.forEach(function(pt,i){
-        var a=-Math.PI/2+(Math.PI*2*i/n);
-        setPos(pt,cx+Math.cos(a)*rx,cy+Math.sin(a)*ry);
+      var rings=Math.min(formationCount,n);
+      var groups=[];
+      for(var rg=0;rg<rings;rg++) groups.push([]);
+      pts.forEach(function(pt,i){ groups[i % rings].push(pt); });
+      var maxRx=Math.min(usableW*.45,270*spread)*Math.min(spread,1.35);
+      var maxRy=Math.min(usableH*.45,155*spread)*Math.min(spread,1.35);
+      groups.forEach(function(group,ringIndex){
+        var factor=(ringIndex+1)/rings;
+        var rx=Math.max(34,maxRx*factor);
+        var ry=Math.max(26,maxRy*factor);
+        group.forEach(function(pt,i){
+          var a=-Math.PI/2+(Math.PI*2*i/group.length)+(ringIndex%2?Math.PI/group.length:0);
+          setPos(pt,cx+Math.cos(a)*rx,cy+Math.sin(a)*ry);
+        });
       });
     }
 
@@ -1609,15 +1692,17 @@
     }
 
     else if(type==='double-row'){
-      var topCount=Math.ceil(n/2), bottomCount=n-topCount;
-      [topCount,bottomCount].forEach(function(count,row){
-        if(count<=0) return;
-        var y=cy+(row===0?-70:70)*Math.min(spread,1.8);
+      var rowsCount=Math.min(Math.max(2,formationCount),n);
+      var base=Math.floor(n/rowsCount), extra=n%rowsCount, offset=0;
+      var rowGap=rowsCount>1?Math.min(95*spacing*size,usableH/(rowsCount-1)):0;
+      for(var row=0;row<rowsCount;row++){
+        var count=base+(row<extra?1:0);
+        var y=cy+(row-(rowsCount-1)/2)*rowGap;
         var gap=count>1?Math.min(100*spacing*size,usableW/(count-1)):0;
         var start=cx-gap*(count-1)/2;
-        var offset=row===0?0:topCount;
         for(var j=0;j<count;j++) setPos(pts[offset+j],start+j*gap,y);
-      });
+        offset+=count;
+      }
     }
 
     else if(type==='pairs'){
@@ -1669,6 +1754,7 @@
   (function setupFormationControls(){
     var sizeInput=document.getElementById('formationSize');
     var spacingInput=document.getElementById('formationSpacing');
+    var countInput=document.getElementById('formationCount');
     var sizeValue=document.getElementById('formationSizeValue');
     var spacingValue=document.getElementById('formationSpacingValue');
     var reapply=document.getElementById('btnReapplyFormation');
@@ -1676,6 +1762,7 @@
     function updateLabels(){
       formationSettings.size=parseInt(sizeInput.value,10)/100;
       formationSettings.spacing=parseInt(spacingInput.value,10)/100;
+      formationSettings.count=parseInt(countInput.value,10)||1;
       sizeValue.textContent=sizeInput.value+'%';
       spacingValue.textContent=spacingInput.value+'%';
     }
@@ -1685,6 +1772,7 @@
     }
     sizeInput.addEventListener('input',liveApply);
     spacingInput.addEventListener('input',liveApply);
+    countInput.addEventListener('change',liveApply);
     reapply.addEventListener('click',function(){
       updateLabels();
       if(formationSettings.type) applyPresetFormation(formationSettings.type);
@@ -1727,9 +1815,9 @@
       else if(action==='delete-scene') document.getElementById('btnDeleteScene').click();
       else if(action==='new-scene') document.getElementById('btnAddScene').click();
       else if(action==='details') document.getElementById('btnDetails').click();
-      else if(action==='formation-circle') applyPresetFormation('circle');
+      else if(action==='formation-circle'){ document.getElementById('formationCount').value='1'; formationSettings.count=1; applyPresetFormation('circle'); }
       else if(action==='formation-square') applyPresetFormation('square');
-      else if(action==='formation-double-row') applyPresetFormation('double-row');
+      else if(action==='formation-double-row'){ document.getElementById('formationCount').value='2'; formationSettings.count=2; applyPresetFormation('double-row'); }
       else if(action==='formation-pairs') applyPresetFormation('pairs');
       else if(action==='formation-line') applyPresetFormation('line');
       else if(action==='formation-v') applyPresetFormation('v');
