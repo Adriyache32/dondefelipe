@@ -146,14 +146,15 @@ h1,h2,h3{text-shadow:0 3px 20px rgba(0,0,0,.22)}
 <body>
 
 <div class="student-modal" id="studentModal">
-  <div class="student-box">
+  <form class="student-box" id="studentForm">
     <div class="k">Antes de comenzar</div>
     <h2>¿Cuál es tu nombre?</h2>
     <p>Escribe tu nombre y apellido. Se utilizará para identificar tus respuestas cuando guardes la actividad.</p>
-    <input id="studentInput" type="text" autocomplete="name" placeholder="Ej.: Martina González">
-    <br><br><button onclick="startActivity()">Comenzar actividad →</button>
+    <input id="studentInput" type="text" autocomplete="name" placeholder="Ej.: Martina González" required minlength="3">
+    <br><br>
+    <button id="startBtn" type="submit">Comenzar actividad →</button>
     <div id="studentError" style="color:#ffb1b1;margin-top:10px"></div>
-  </div>
+  </form>
 </div>
 <div class="student-name" id="studentBadge">Estudiante</div>
 
@@ -271,10 +272,7 @@ function move(d){show(n+d);saveLocalProgress();}
 document.addEventListener('keydown',e=>{
   const modal=document.getElementById("studentModal");
   const modalOpen=getComputedStyle(modal).display!=="none";
-  if(modalOpen){
-    if(e.key==="Enter")startActivity();
-    return;
-  }
+  if(modalOpen) return;
   if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();move(1)}
   if(e.key==='ArrowLeft')move(-1);
   if(e.key==='Home'){show(0);saveLocalProgress()}
@@ -284,15 +282,33 @@ document.addEventListener('keydown',e=>{
 function startActivity(){
   const input=document.getElementById("studentInput");
   const error=document.getElementById("studentError");
-  const name=input.value.trim();
-  if(name.length<3){error.textContent="Escribe tu nombre y apellido.";input.focus();return;}
+  const modal=document.getElementById("studentModal");
+  const name=(input.value||"").trim();
+
+  if(name.length<3){
+    error.textContent="Escribe tu nombre y apellido.";
+    input.focus();
+    return false;
+  }
+
   studentName=name;
   error.textContent="";
-  document.getElementById("studentBadge").textContent=studentName;
-  document.getElementById("studentModal").style.display="none";
+  document.getElementById("studentBadge").textContent=name;
+
+  // Primero cerramos el modal. El guardado local se hace después.
+  modal.style.display="none";
   show(0);
-  saveLocalProgress();
+
+  try{ saveLocalProgress(); }
+  catch(err){ console.warn("El guardado local no impidió iniciar:",err); }
+
+  return false;
 }
+
+document.getElementById("studentForm").addEventListener("submit",function(e){
+  e.preventDefault();
+  startActivity();
+});
 
 function answer(btn,idx){
   const box=btn.closest('.quiz'),ok=+box.dataset.answer;
@@ -454,9 +470,17 @@ function generatePDF(){
   window.print();
 }
 
-if(!restoreLocalProgress()){
+let restored=false;
+try{ restored=restoreLocalProgress(); }
+catch(err){ console.warn("Inicio sin restaurar progreso:",err); }
+
+if(!restored){
   show(0);
-  setTimeout(()=>document.getElementById("studentInput").focus(),50);
+  document.getElementById("studentModal").style.display="flex";
+  setTimeout(()=>{
+    const input=document.getElementById("studentInput");
+    if(input) input.focus();
+  },50);
 }
 </script>
 </body></html>

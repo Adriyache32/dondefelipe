@@ -248,6 +248,10 @@
     .selection-hint{display:none;}
   }
 
+
+  .roster-name-input{flex:1;min-width:100px;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:7px 9px;border-radius:7px;font-size:13px}
+  .roster-name-input:focus{outline:none;border-color:var(--gold);box-shadow:var(--shadow-gold)}
+  .roster-number{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#17131f;flex:0 0 auto}
 </style>
 </head>
 <body>
@@ -255,39 +259,12 @@
 <div id="setupScreen">
   <div class="setup-card">
     <h1>EN ESCENA</h1>
-    <p class="sub">Diseña formaciones de coreografía, marca direcciones de movimiento entre viñetas y exporta todo en PDF.</p>
-
+    <p class="sub">Indica cuántos bailarines participan. Cada uno se identifica por número y, si quieres, después puedes asignarle un nombre desde <strong>👥 Bailarines</strong>.</p>
     <button class="btn-secondary" id="btnLoadProgressSetup">📂 Continuar un avance guardado</button>
     <div class="setup-divider"><span>o empieza uno nuevo</span></div>
-
-    <div id="step1">
-      <p class="step-label">¿Cómo quieres identificar a los bailarines?</p>
-      <div class="mode-grid">
-        <div class="mode-opt" id="optNames" data-mode="names">
-          <span class="ico">🔤</span>
-          <span class="lbl">Por nombre</span>
-        </div>
-        <div class="mode-opt" id="optNumbers" data-mode="numbers">
-          <span class="ico">#️⃣</span>
-          <span class="lbl">Por número</span>
-        </div>
-      </div>
-    </div>
-
-    <div id="step2Names" class="step2">
-      <button class="back-link" data-back>← Cambiar</button>
-      <p class="step-label">Escribe un nombre por línea</p>
-      <textarea id="namesInput" rows="7" placeholder="Sofía&#10;Matías&#10;Valentina&#10;..."></textarea>
-      <p class="count-hint" id="namesCount">0 bailarines</p>
-      <button class="btn-primary" id="namesContinue" disabled>Comenzar a diseñar →</button>
-    </div>
-
-    <div id="step2Numbers" class="step2">
-      <button class="back-link" data-back>← Cambiar</button>
-      <p class="step-label">¿Cuántos bailarines participan?</p>
-      <input type="number" id="countInput" min="1" max="80" value="8" inputmode="numeric">
-      <button class="btn-primary" id="numbersContinue" style="margin-top:16px;">Comenzar a diseñar →</button>
-    </div>
+    <p class="step-label">¿Cuántos bailarines participan?</p>
+    <input type="number" id="countInput" min="1" max="80" value="8" inputmode="numeric">
+    <button class="btn-primary" id="numbersContinue" style="margin-top:16px;">Comenzar a diseñar →</button>
   </div>
 </div>
 
@@ -387,7 +364,7 @@
       <p class="hint-text" style="margin:0 0 10px;">Agregar o quitar bailarines aquí afecta a toda la coreografía. Si alguien no participa solo en una viñeta puntual, arrástralo a <strong>Bastidores</strong> en el escenario, o usa la lista de <strong>📝 Detalles → Bailarines en esta viñeta</strong> para hacerlo con un toque.</p>
       <div id="rosterList"></div>
       <div class="details-divider"></div>
-      <div id="rosterAddNames">
+      <div id="rosterAddNames" style="display:none;">
         <label class="field-label" for="newDancerName">Agregar bailarín</label>
         <div class="roster-add-row">
           <input type="text" id="newDancerName" placeholder="Nombre">
@@ -965,20 +942,23 @@
   }
 
   function renderRosterList(){
-    document.getElementById('rosterTitle').textContent = 'Bailarines (' + state.roster.length + ')';
-    var html = state.roster.map(function(r){
-      return '<div class="roster-row">' +
-        '<span class="roster-dot" style="background:'+r.color+'"></span>' +
-        '<span class="roster-label">'+escapeXML(r.label)+'</span>' +
-        '<button class="roster-remove" data-remove-dancer="'+r.id+'" title="Quitar">✕</button>' +
-        '</div>';
+    var list=document.getElementById('rosterList');
+    list.innerHTML=state.roster.map(function(r){
+      return '<div class="roster-row">'+
+        '<span class="roster-number" style="background:'+r.color+'">'+escapeXML(r.label)+'</span>'+
+        '<input class="roster-name-input" data-name-id="'+r.id+'" value="'+escapeXML(r.optionalName||'')+'" placeholder="Nombre opcional">'+
+        '<button class="roster-remove" data-remove="'+r.id+'" title="Quitar bailarín">✕</button>'+
+      '</div>';
     }).join('');
-    document.getElementById('rosterList').innerHTML = html;
-    document.getElementById('rosterAddNames').style.display = state.mode==='names' ? 'block' : 'none';
-    document.getElementById('rosterAddNumbers').style.display = state.mode==='numbers' ? 'block' : 'none';
-    var numBtn = document.getElementById('btnAddDancerNumber');
-    if(numBtn) numBtn.textContent = '+ Agregar bailarín n.º ' + nextNumberLabel();
+    document.getElementById('rosterTitle').textContent='Bailarines ('+state.roster.length+')';
   }
+
+  document.getElementById('rosterList').addEventListener('input', function(e){
+    var el=e.target.closest('[data-name-id]');
+    if(!el) return;
+    var r=rosterById(el.dataset.nameId);
+    if(r){ r.optionalName=el.value; render(); }
+  });
 
   document.getElementById('rosterList').addEventListener('click', function(e){
     var btn = e.target.closest('[data-remove-dancer]');
@@ -1355,47 +1335,19 @@
   });
 
   /* ---------- Pantalla inicial (setup) ---------- */
-  function chooseMode(m){
-    document.getElementById('optNames').classList.toggle('selected', m==='names');
-    document.getElementById('optNumbers').classList.toggle('selected', m==='numbers');
-    document.getElementById('step2Names').classList.toggle('visible', m==='names');
-    document.getElementById('step2Numbers').classList.toggle('visible', m==='numbers');
-    document.getElementById('step1').style.display = 'none';
-  }
-  function backToStep1(){
-    document.getElementById('step2Names').classList.remove('visible');
-    document.getElementById('step2Numbers').classList.remove('visible');
-    document.getElementById('optNames').classList.remove('selected');
-    document.getElementById('optNumbers').classList.remove('selected');
-    document.getElementById('step1').style.display = 'block';
-  }
-  document.getElementById('optNames').addEventListener('click', function(){ chooseMode('names'); });
-  document.getElementById('optNumbers').addEventListener('click', function(){ chooseMode('numbers'); });
-  document.querySelectorAll('[data-back]').forEach(function(b){ b.addEventListener('click', backToStep1); });
-
-  var namesInput = document.getElementById('namesInput');
-  var namesContinue = document.getElementById('namesContinue');
-  namesInput.addEventListener('input', function(){
-    var n = namesInput.value.split('\n').map(function(s){ return s.trim(); }).filter(Boolean).length;
-    document.getElementById('namesCount').textContent = n + (n===1 ? ' bailarín' : ' bailarines');
-    namesContinue.disabled = n < 1;
-  });
-  namesContinue.addEventListener('click', function(){
-    var lines = namesInput.value.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
-    if(lines.length < 1) return;
-    startApp('names', lines);
-  });
-
+  /* Inicio simplificado: identificación numérica */
   document.getElementById('numbersContinue').addEventListener('click', function(){
-    var n = parseInt(document.getElementById('countInput').value, 10);
-    if(!n || n < 1) return;
-    var list = [];
-    for(var i=1; i<=n; i++) list.push(String(i));
-    startApp('numbers', list);
+    var n=clamp(parseInt(document.getElementById('countInput').value,10)||1,1,80);
+    var labels=[];
+    for(var i=1;i<=n;i++) labels.push(String(i));
+    startApp('numbers', labels);
+  });
+  document.getElementById('countInput').addEventListener('keydown', function(e){
+    if(e.key==='Enter') document.getElementById('numbersContinue').click();
   });
 
   function startApp(mode, labels){
-    state.mode = mode;
+    state.mode = 'numbers';
     state.layout = 'top';
     state.roster = labels.map(function(lab,i){
       return { id:genId('p'), label:lab, color:COLORS[i % COLORS.length] };
