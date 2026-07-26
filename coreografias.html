@@ -341,6 +341,27 @@
     .compact-tools .seg button{padding:4px 5px;font-size:9px;}
   }
 
+
+  .formation-controls{
+    display:flex;align-items:center;gap:10px;padding:3px 9px;
+    min-height:29px;border-bottom:1px solid var(--border);
+    background:#0b2748;font-size:10px;color:var(--muted);
+  }
+  .formation-controls-title{font-weight:700;color:#fff;font-size:10px;}
+  .formation-controls label{display:flex;align-items:center;gap:5px;white-space:nowrap;}
+  .formation-controls input[type="range"]{width:92px;height:16px;accent-color:#d52b1e;}
+  .formation-controls label span{width:34px;color:#fff;font-size:9px;}
+  .formation-mini-btn{
+    border:1px solid var(--border);background:#10365f;color:#fff;border-radius:5px;
+    padding:4px 7px;font-size:9px;cursor:pointer;
+  }
+  .formation-mini-btn:hover{border-color:#fff;}
+  @media(max-width:700px){
+    .formation-controls{gap:5px;padding:3px 5px;overflow-x:auto;}
+    .formation-controls input[type="range"]{width:65px;}
+    .formation-controls-title{display:none;}
+  }
+
 </style>
 </head>
 <body>
@@ -390,6 +411,19 @@
       </div>
 
       <div class="menu">
+        <button class="menu-trigger">Formaciones</button>
+        <div class="menu-dropdown">
+          <button class="menu-item" data-action="formation-circle">○ Círculo</button>
+          <button class="menu-item" data-action="formation-square">□ Cuadrado</button>
+          <button class="menu-item" data-action="formation-double-row">═ Doble fila</button>
+          <button class="menu-item" data-action="formation-pairs">⚭ En parejas</button>
+          <div class="menu-separator"></div>
+          <button class="menu-item" data-action="formation-line">— Fila única</button>
+          <button class="menu-item" data-action="formation-v">∨ Formación en V</button>
+        </div>
+      </div>
+
+      <div class="menu">
         <button class="menu-trigger">Coreografía</button>
         <div class="menu-dropdown">
           <button class="menu-item" data-action="dancers">👥 Agregar / editar bailarines</button>
@@ -414,6 +448,19 @@
         <button data-tool="erase">✖ Borrar</button>
       </div>
       <span class="selection-hint" id="selectionHint">Ctrl/Cmd + clic: seleccionar varios</span>
+    </div>
+
+    <div class="formation-controls" id="formationControls">
+      <span class="formation-controls-title">Formación</span>
+      <label>Tamaño
+        <input type="range" id="formationSize" min="55" max="130" value="100" step="5">
+        <span id="formationSizeValue">100%</span>
+      </label>
+      <label>Separación
+        <input type="range" id="formationSpacing" min="60" max="150" value="100" step="5">
+        <span id="formationSpacingValue">100%</span>
+      </label>
+      <button class="formation-mini-btn" id="btnReapplyFormation" title="Volver a aplicar la última formación">↻ Aplicar</button>
     </div>
 
     <!-- Controles de compatibilidad: las acciones reales se disparan desde los menús -->
@@ -958,7 +1005,7 @@
   });
 
   document.getElementById('btnHelp').addEventListener('click', function(){
-    alert('Cómo usar En Escena:\n\nLos comandos generales están ordenados arriba en Archivo, Edición, Viñeta y Coreografía.\n\n✋ Mover: arrastra los puntos por el escenario. Usa Ctrl/Cmd/Shift + clic para seleccionar varios; luego arrastra cualquiera de los seleccionados para mover el grupo. El botón «Seleccionar todos» permite mover a todo el elenco junto. También puedes arrastrar el cajón de Bastidores completo hacia un costado, detrás, o el otro costado.\n➜ Flecha: arrastra desde un bailarín hacia su próxima posición (incluso desde Bastidores hacia el piso).\n✖ Borrar: toca una flecha para eliminarla.\n\n👥 Bailarines: agrega o quita gente de toda la coreografía.\n📝 Detalles: título, observaciones, y una lista para mandar bailarines al piso o a bastidores solo en esta viñeta (con un toque, sin arrastrar).\n💾 Progreso: guarda o carga tu avance (.json) cuando quieras.\n➕ Nueva viñeta: crea el siguiente paso a partir de la formación actual.');
+    alert('Cómo usar En Escena:\n\nLos comandos generales están ordenados arriba en Archivo, Edición, Viñeta, Formaciones y Coreografía. En Formaciones puedes distribuir automáticamente a los bailarines en círculo, cuadrado, doble fila, parejas, fila única o V.\n\n✋ Mover: arrastra los puntos por el escenario. Usa Ctrl/Cmd/Shift + clic para seleccionar varios; luego arrastra cualquiera de los seleccionados para mover el grupo. El botón «Seleccionar todos» permite mover a todo el elenco junto. También puedes arrastrar el cajón de Bastidores completo hacia un costado, detrás, o el otro costado.\n➜ Flecha: arrastra desde un bailarín hacia su próxima posición (incluso desde Bastidores hacia el piso).\n✖ Borrar: toca una flecha para eliminarla.\n\n👥 Bailarines: agrega o quita gente de toda la coreografía.\n📝 Detalles: título, observaciones, y una lista para mandar bailarines al piso o a bastidores solo en esta viñeta (con un toque, sin arrastrar).\n💾 Progreso: guarda o carga tu avance (.json) cuando quieras.\n➕ Nueva viñeta: crea el siguiente paso a partir de la formación actual.');
   });
 
   /* ---------- Paneles deslizables ---------- */
@@ -1502,6 +1549,150 @@
 
 
 
+
+  var formationSettings={ type:null, size:1, spacing:1 };
+
+  /* ---------- Formaciones predeterminadas ---------- */
+  function applyPresetFormation(type){
+    formationSettings.type=type;
+    var scene=currentScene();
+    if(!scene || state.roster.length===0){
+      alert('Primero agrega bailarines desde Coreografía → Agregar / editar bailarines.');
+      return;
+    }
+
+    var L=currentLayout();
+    var floor=L.floor;
+    var pts=scene.points.filter(function(p){ return state.roster.some(function(r){ return r.id===p.id; }); });
+    var n=pts.length;
+    if(!n) return;
+
+    var cx=floor.x+floor.w/2;
+    var cy=floor.y+floor.h/2;
+    var padX=Math.min(90,floor.w*.12);
+    var padY=Math.min(70,floor.h*.15);
+    var usableW=floor.w-2*padX;
+    var usableH=floor.h-2*padY;
+    var size=formationSettings.size || 1;
+    var spacing=formationSettings.spacing || 1;
+    var spread=size*spacing;
+
+    function setPos(pt,x,y){
+      pt.x=clamp(x,L.clamp.xMin,L.clamp.xMax);
+      pt.y=clamp(y,L.clamp.yMin,L.clamp.yMax);
+    }
+
+    if(type==='circle'){
+      var rx=Math.min(usableW*.45,270*spread)*Math.min(spread,1.35);
+      var ry=Math.min(usableH*.45,155*spread)*Math.min(spread,1.35);
+      pts.forEach(function(pt,i){
+        var a=-Math.PI/2+(Math.PI*2*i/n);
+        setPos(pt,cx+Math.cos(a)*rx,cy+Math.sin(a)*ry);
+      });
+    }
+
+    else if(type==='square'){
+      if(n===1){ setPos(pts[0],cx,cy); }
+      else{
+        var w=Math.min(usableW*.90,520*spread), h=Math.min(usableH*.90,280*spread);
+        var perimeter=2*(w+h);
+        pts.forEach(function(pt,i){
+          var d=(i/n)*perimeter;
+          var x,y;
+          if(d<w){ x=cx-w/2+d; y=cy-h/2; }
+          else if(d<w+h){ x=cx+w/2; y=cy-h/2+(d-w); }
+          else if(d<2*w+h){ x=cx+w/2-(d-w-h); y=cy+h/2; }
+          else{ x=cx-w/2; y=cy+h/2-(d-2*w-h); }
+          setPos(pt,x,y);
+        });
+      }
+    }
+
+    else if(type==='double-row'){
+      var topCount=Math.ceil(n/2), bottomCount=n-topCount;
+      [topCount,bottomCount].forEach(function(count,row){
+        if(count<=0) return;
+        var y=cy+(row===0?-70:70)*Math.min(spread,1.8);
+        var gap=count>1?Math.min(100*spacing*size,usableW/(count-1)):0;
+        var start=cx-gap*(count-1)/2;
+        var offset=row===0?0:topCount;
+        for(var j=0;j<count;j++) setPos(pts[offset+j],start+j*gap,y);
+      });
+    }
+
+    else if(type==='pairs'){
+      var pairCount=Math.ceil(n/2);
+      var cols=Math.min(pairCount,Math.max(1,Math.ceil(Math.sqrt(pairCount*1.7))));
+      var rows=Math.ceil(pairCount/cols);
+      var gx=cols>1?Math.min(180*spacing*size,usableW/(cols-1)):0;
+      var gy=rows>1?Math.min(150*spacing*size,usableH/(rows-1)):0;
+      var pairIndex=0;
+      for(var i=0;i<n;i+=2){
+        var row=Math.floor(pairIndex/cols), col=pairIndex%cols;
+        var pcx=cx+(col-(Math.min(cols,pairCount-row*cols)-1)/2)*gx;
+        var py=cy+(row-(rows-1)/2)*gy;
+        setPos(pts[i],pcx-27*spacing,py);
+        if(i+1<n) setPos(pts[i+1],pcx+27*spacing,py);
+        pairIndex++;
+      }
+    }
+
+    else if(type==='line'){
+      var gap=n>1?Math.min(100*spacing*size,usableW/(n-1)):0;
+      var start=cx-gap*(n-1)/2;
+      pts.forEach(function(pt,i){ setPos(pt,start+i*gap,cy); });
+    }
+
+    else if(type==='v'){
+      if(n===1){ setPos(pts[0],cx,cy-80); }
+      else{
+        var leftCount=Math.ceil((n-1)/2), rightCount=n-1-leftCount;
+        setPos(pts[0],cx,cy-110*size);
+        for(var li=0;li<leftCount;li++){
+          var t=(li+1)/(leftCount+0.2);
+          setPos(pts[1+li],cx-t*usableW*.32*Math.min(spread,1.35),cy-110*size+t*usableH*.68*Math.min(spread,1.35));
+        }
+        for(var ri=0;ri<rightCount;ri++){
+          var tr=(ri+1)/(rightCount+0.2);
+          setPos(pts[1+leftCount+ri],cx+tr*usableW*.32*Math.min(spread,1.35),cy-110*size+tr*usableH*.68*Math.min(spread,1.35));
+        }
+      }
+    }
+
+    scene.arrows=[];
+    clearSelection();
+    render();
+  }
+
+
+  /* ---------- Ajustes de tamaño y separación ---------- */
+  (function setupFormationControls(){
+    var sizeInput=document.getElementById('formationSize');
+    var spacingInput=document.getElementById('formationSpacing');
+    var sizeValue=document.getElementById('formationSizeValue');
+    var spacingValue=document.getElementById('formationSpacingValue');
+    var reapply=document.getElementById('btnReapplyFormation');
+
+    function updateLabels(){
+      formationSettings.size=parseInt(sizeInput.value,10)/100;
+      formationSettings.spacing=parseInt(spacingInput.value,10)/100;
+      sizeValue.textContent=sizeInput.value+'%';
+      spacingValue.textContent=spacingInput.value+'%';
+    }
+    function liveApply(){
+      updateLabels();
+      if(formationSettings.type) applyPresetFormation(formationSettings.type);
+    }
+    sizeInput.addEventListener('input',liveApply);
+    spacingInput.addEventListener('input',liveApply);
+    reapply.addEventListener('click',function(){
+      updateLabels();
+      if(formationSettings.type) applyPresetFormation(formationSettings.type);
+      else alert('Primero elige una formación desde el menú Formaciones.');
+    });
+    updateLabels();
+  })();
+
   /* ---------- Menús superiores ---------- */
   (function setupClassicMenus(){
     var bar=document.getElementById('menuBar');
@@ -1536,6 +1727,12 @@
       else if(action==='delete-scene') document.getElementById('btnDeleteScene').click();
       else if(action==='new-scene') document.getElementById('btnAddScene').click();
       else if(action==='details') document.getElementById('btnDetails').click();
+      else if(action==='formation-circle') applyPresetFormation('circle');
+      else if(action==='formation-square') applyPresetFormation('square');
+      else if(action==='formation-double-row') applyPresetFormation('double-row');
+      else if(action==='formation-pairs') applyPresetFormation('pairs');
+      else if(action==='formation-line') applyPresetFormation('line');
+      else if(action==='formation-v') applyPresetFormation('v');
       else if(action==='dancers') document.getElementById('btnRoster').click();
       else if(action==='help') document.getElementById('btnHelp').click();
     });
