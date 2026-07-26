@@ -373,6 +373,17 @@
     box-shadow:0 0 0 1px rgba(7,26,51,.45) inset;
   }
 
+
+  .scene-presence-btn{
+    border:1px solid var(--border);background:#10365f;color:#b8cce0;
+    border-radius:6px;padding:6px 7px;font-size:9px;white-space:nowrap;cursor:pointer;
+  }
+  .scene-presence-btn.present{background:#d52b1e;color:#fff;border-color:#d52b1e;}
+  .scene-presence-btn:hover{border-color:#fff;}
+
+
+  .scene-roster-actions{display:flex;gap:6px;margin:4px 0 12px;flex-wrap:wrap;}
+
 </style>
 </head>
 <body>
@@ -417,6 +428,7 @@
         <button class="menu-trigger">Viñeta</button>
         <div class="menu-dropdown">
           <button class="menu-item" data-action="new-scene">➕ Nueva viñeta</button>
+          <button class="menu-item" data-action="new-blank-scene">＋ Viñeta vacía</button>
           <button class="menu-item" data-action="details">📝 Título y observaciones</button>
         </div>
       </div>
@@ -568,6 +580,10 @@
       <div id="rosterList"></div>
       <div class="details-divider"></div>
       
+      <div class="scene-roster-actions">
+        <button class="formation-mini-btn" id="btnSceneAddAll">+ Todos a esta viñeta</button>
+        <button class="formation-mini-btn" id="btnSceneRemoveAll">− Vaciar esta viñeta</button>
+      </div>
       <div id="rosterAddNumbers">
         <label class="field-label" for="addDancerCount">Agregar bailarines</label>
         <div class="roster-add-row">
@@ -1165,11 +1181,32 @@
     label=String(label || nextNumberLabel());
     var r={id:genId('p'), label:label, optionalName:'', color:COLORS[state.roster.length % COLORS.length]};
     state.roster.push(r);
-    var L=currentLayout();
-    state.scenes.forEach(function(scene){
+
+    /* El elenco es global, pero la presencia es por viñeta.
+       Un bailarín nuevo entra solamente a la viñeta actual. */
+    var scene=currentScene();
+    if(scene){
+      var L=currentLayout();
       var pos=floorDefaultPos(L, scene);
       scene.points.push({id:r.id,x:pos.x,y:pos.y});
-    });
+    }
+
+    renderRosterList();
+    render();
+  }
+
+  function toggleDancerInCurrentScene(id){
+    var scene=currentScene();
+    if(!scene) return;
+    var existing=scene.points.find(function(p){return p.id===id;});
+    if(existing){
+      scene.points=scene.points.filter(function(p){return p.id!==id;});
+      selectedIds.delete(id);
+    }else{
+      var L=currentLayout();
+      var pos=floorDefaultPos(L,scene);
+      scene.points.push({id:id,x:pos.x,y:pos.y});
+    }
     renderRosterList();
     render();
   }
@@ -1193,7 +1230,10 @@
       return '<div class="roster-row">'+
         '<span class="roster-number" style="background:'+r.color+'">'+escapeXML(r.label)+'</span>'+
         '<input class="roster-name-input" data-name-id="'+r.id+'" value="'+escapeXML(r.optionalName||'')+'" placeholder="Nombre opcional">'+
-        '<button class="roster-remove" data-remove="'+r.id+'" title="Quitar bailarín">✕</button>'+
+        '<button class="scene-presence-btn '+(currentScene() && currentScene().points.some(function(p){return p.id===r.id;})?'present':'')+'" data-toggle-presence="'+r.id+'" title="Agregar o quitar solo de esta viñeta">'+
+          (currentScene() && currentScene().points.some(function(p){return p.id===r.id;})?'✓ En viñeta':'+ A viñeta')+
+        '</button>'+
+        '<button class="roster-remove" data-remove="'+r.id+'" title="Eliminar del elenco completo">✕</button>'+
       '</div>';
     }).join('');
     document.getElementById('rosterTitle').textContent='Bailarines ('+state.roster.length+')';
@@ -1207,7 +1247,12 @@
   });
 
   document.getElementById('rosterList').addEventListener('click', function(e){
-    var btn = e.target.closest('[data-remove]');
+    var presence=e.target.closest('[data-toggle-presence]');
+    if(presence){
+      toggleDancerInCurrentScene(presence.dataset.togglePresence);
+      return;
+    }
+    var btn=e.target.closest('[data-remove]');
     if(btn) removeDancer(btn.dataset.remove);
   });
   document.getElementById('btnAddDancerNumber').addEventListener('click', function(){
@@ -1217,6 +1262,28 @@
     input.value='1';
     renderRosterList();
     render();
+  });
+
+  document.getElementById('btnSceneAddAll').addEventListener('click',function(){
+    var scene=currentScene();
+    if(!scene) return;
+    var L=currentLayout();
+    state.roster.forEach(function(r){
+      if(!scene.points.some(function(p){return p.id===r.id;})){
+        var pos=floorDefaultPos(L,scene);
+        scene.points.push({id:r.id,x:pos.x,y:pos.y});
+      }
+    });
+    renderRosterList(); render();
+  });
+
+  document.getElementById('btnSceneRemoveAll').addEventListener('click',function(){
+    var scene=currentScene();
+    if(!scene) return;
+    if(!confirm('¿Quitar a todos los bailarines solo de esta viñeta?')) return;
+    scene.points=[];
+    selectedIds.clear();
+    renderRosterList(); render();
   });
 
   /* ---------- Ajuste dinámico del tamaño del escenario (clave para celulares) ---------- */
@@ -1781,6 +1848,13 @@
     updateLabels();
   })();
 
+  function addBlankScene(){
+    state.scenes.push({id:genId('scene'),title:'Nueva formación',notes:'',points:[],arrows:[]});
+    state.current=state.scenes.length-1;
+    selectedIds.clear();
+    render();
+  }
+
   /* ---------- Menús superiores ---------- */
   (function setupClassicMenus(){
     var bar=document.getElementById('menuBar');
@@ -1814,6 +1888,7 @@
       else if(action==='clear-arrows') document.getElementById('btnClearArrows').click();
       else if(action==='delete-scene') document.getElementById('btnDeleteScene').click();
       else if(action==='new-scene') document.getElementById('btnAddScene').click();
+      else if(action==='new-blank-scene') addBlankScene();
       else if(action==='details') document.getElementById('btnDetails').click();
       else if(action==='formation-circle'){ document.getElementById('formationCount').value='1'; formationSettings.count=1; applyPresetFormation('circle'); }
       else if(action==='formation-square') applyPresetFormation('square');
