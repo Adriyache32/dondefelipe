@@ -807,18 +807,26 @@ OBJ.push({ forma: 'persona', pos: [XA + 1.4, 0.95, -6], giro: 88,
 var YSUB = -3.4;          // profundidad del subterráneo
 var XSUB = XA - 16;       // eje del subterráneo (al costado del andén)
 
-// Piso del nivel calle a ambos lados (para bajar/subir)
-OBJ.push({ forma: 'anden', color: '#b8b2a4', pos: [XSUB, 0.02, 34],
-           piso: { ancho: 12, largo: 10, alto: 0.15, color: '#b8b2a4' } });   // lado de entrada (norte)
-OBJ.push({ forma: 'anden', color: '#b8b2a4', pos: [XSUB, 0.02, -18],
-           piso: { ancho: 12, largo: 10, alto: 0.15, color: '#b8b2a4' } });   // lado de salida (sur)
+// La boletería cruza TRANSVERSAL a la vía: un paso bajo nivel bajo los rieles,
+// como el real. Todo se define con las coords originales y se gira 90° al eje X
+// mediante subP(); para correr el paso, se cambian SUB_CX/SUB_CZ en un solo sitio.
+var SUB_CX = 42.5, SUB_CZ = 6;                 // centro del paso, bajo las dos vías
+function subP(x, z, y) {                        // rota 90° (eje viejo Z -> eje nuevo X)
+  return [SUB_CX + (z - 6), y, SUB_CZ - (x - XSUB)];
+}
 
-// Escalera de BAJADA desde la calle (norte) al subterráneo
-OBJ.push({ forma: 'escaleraBaranda', color: '#c4cace', pos: [XSUB, 0.15, 28], giro: 0,
+// Piso del nivel calle a ambos lados del paso (para bajar/subir)
+OBJ.push({ forma: 'anden', color: '#b8b2a4', pos: subP(XSUB, 34, 0.02), giro: 90,
+           piso: { ancho: 12, largo: 10, alto: 0.15, color: '#b8b2a4' } });   // acceso este
+OBJ.push({ forma: 'anden', color: '#b8b2a4', pos: subP(XSUB, -18, 0.02), giro: 90,
+           piso: { ancho: 12, largo: 10, alto: 0.15, color: '#b8b2a4' } });   // acceso oeste
+
+// Escalera de BAJADA (lado este) al paso bajo nivel
+OBJ.push({ forma: 'escaleraBaranda', color: '#c4cace', pos: subP(XSUB, 28, 0.15), giro: 90,
            escalones: [{ dx: 0, dz: 3, ancho: 3.2, largo: 7, alto: 3.55, base: YSUB, pasos: 14, color: '#d8c23a' }] });
 
-// SALA de boletería subterránea
-OBJ.push({ forma: 'boleteria', color: '#c9beac', pos: [XSUB, YSUB, 6], dim: [11, 30],
+// SALA de boletería, cruzando por debajo de las vías
+OBJ.push({ forma: 'boleteria', color: '#c9beac', pos: subP(XSUB, 6, YSUB), giro: 90, dim: [11, 30],
            ficha: 'boleteria', altoFicha: 3.4, nombre: 'Boletería',
            piso: { ancho: 11, largo: 30, alto: 0.15, color: '#b0a898' },
            choca: [
@@ -826,44 +834,48 @@ OBJ.push({ forma: 'boleteria', color: '#c9beac', pos: [XSUB, YSUB, 6], dim: [11,
              { dx: 5.5, dz: 0, ancho: 0.4, largo: 30, alto: 3, base: 0 }
            ] });
 
-// Torniquetes en el subterráneo (a nivel del piso subterráneo)
+// Torniquetes (alineados cruzando el paso)
 [-2, -0.4, 1.2].forEach(function (d) {
-  OBJ.push({ forma: 'torniquete', color: '#dcdfe2', pos: [XSUB + d, YSUB, 6], giro: 0 });
+  OBJ.push({ forma: 'torniquete', color: '#dcdfe2', pos: subP(XSUB + d, 6, YSUB), giro: 90 });
 });
 
 // AGUA en el piso: la estación siempre se inunda
-OBJ.push({ forma: 'agua', color: '#4a7a8a', pos: [XSUB, YSUB, 10], dim: [9, 8],
+OBJ.push({ forma: 'agua', color: '#4a7a8a', pos: subP(XSUB, 10, YSUB), giro: 90, dim: [9, 8],
            nombre: 'Siempre se inunda', ficha: 'agua', altoFicha: 1.5 });
-OBJ.push({ forma: 'agua', color: '#4a7a8a', pos: [XSUB, YSUB, -2], dim: [8, 6] });
-// charquitos al pie de las escaleras
-OBJ.push({ forma: 'agua', color: '#4a7a8a', pos: [XSUB, YSUB, 20], dim: [5, 5] });
+OBJ.push({ forma: 'agua', color: '#4a7a8a', pos: subP(XSUB, -2, YSUB), giro: 90, dim: [8, 6] });
+OBJ.push({ forma: 'agua', color: '#4a7a8a', pos: subP(XSUB, 20, YSUB), giro: 90, dim: [5, 5] });
 
-// Escalera de SUBIDA al otro lado (sur), saliendo de la estación
-OBJ.push({ forma: 'escaleraBaranda', color: '#c4cace', pos: [XSUB, 0.15, -14], giro: 180,
+// Escalera de SUBIDA (lado oeste), saliendo al otro lado de la vía
+OBJ.push({ forma: 'escaleraBaranda', color: '#c4cace', pos: subP(XSUB, -14, 0.15), giro: 270,
            escalones: [{ dx: 0, dz: 3, ancho: 3.2, largo: 7, alto: 3.55, base: YSUB, pasos: 14, color: '#d8c23a' }] });
 
 // Gente en la boletería
-OBJ.push({ forma: 'persona', pos: [XSUB - 3, YSUB, 4], giro: 90,
+OBJ.push({ forma: 'persona', pos: subP(XSUB - 3, 4, YSUB), giro: 180,
   cuerpo: { altura: 1.66, piel: '#c88d6b', pelo: '#241b16', chaqueta: '#3f5d6b',
             polera: '#e8e2d4', pantalon: '#2b2f36', zapato: '#1a1917' } });
-OBJ.push({ forma: 'persona', pos: [XSUB + 2, YSUB, 14], giro: -20,
+OBJ.push({ forma: 'persona', pos: subP(XSUB + 2, 14, YSUB), giro: 70,
   cuerpo: { altura: 1.62, piel: '#b57a56', pelo: '#1e1814', chaqueta: '#8a4a3c',
             polera: '#20242a', pantalon: '#3d4450', zapato: '#201d1b' } });
 
-// Conexión del andén con el subterráneo: una escalera desde el andén baja también
-OBJ.push({ forma: 'escaleraBaranda', color: '#c4cace', pos: [XA - 4, 0.15, 6], giro: -90,
+// Conexión del andén con el paso: una escalera baja desde el andén al paso, bajo las vías
+OBJ.push({ forma: 'escaleraBaranda', color: '#c4cace', pos: [XA + 1, 0.15, 6], giro: 90,
            escalones: [{ dx: 0, dz: 3, ancho: 2.6, largo: 6.5, alto: 3.55, base: YSUB, pasos: 13, color: '#d8c23a' }] });
+
+// Factores de escala del vagón: 15% más ancho (X), 40% más largo (Z).
+// Se aplican a la cáscara (esc), a la colisión, al piso, a las puertas y a los
+// pasajeros para que todo quede coherente.
+var AW = 1.15, AL = 1.4;
 
 // Paredes del carro: tres tramos por costado, con los vanos de puerta libres
 var MUROS_VAGON = [];
-[-1.42, 1.42].forEach(function (x) {
+[-1.42 * AW, 1.42 * AW].forEach(function (x) {
   [[-6.6, -4.4], [-2.6, 2.6], [4.4, 6.6]].forEach(function (t) {
-    MUROS_VAGON.push({ dx: x, dz: (t[0] + t[1]) / 2, ancho: 0.24,
-                       largo: t[1] - t[0], base: 1, alto: 2.4 });
+    MUROS_VAGON.push({ dx: x, dz: ((t[0] + t[1]) / 2) * AL, ancho: 0.24,
+                       largo: (t[1] - t[0]) * AL, base: 1, alto: 2.4 });
   });
 });
-[-7.8, 7.8].forEach(function (z) {
-  MUROS_VAGON.push({ dx: 0, dz: z, ancho: 2.9, largo: 0.24, base: 1, alto: 2.4 });
+[-7.8 * AL, 7.8 * AL].forEach(function (z) {
+  MUROS_VAGON.push({ dx: 0, dz: z, ancho: 2.9 * AW, largo: 0.24, base: 1, alto: 2.4 });
 });
 
 // El tren detenido en el andén: se puede entrar, con puertas automáticas
@@ -873,8 +885,9 @@ var CARROS = [
   { id: 't3', z: 23.7, ficha: 'interior' }
 ];
 CARROS.forEach(function (cr) {
-  var o = { forma: 'vagonAbierto', id: cr.id, color: '#eef1f3', pos: [XV1, 0.05, cr.z],
-            piso: { ancho: 2.66, largo: 15.2, alto: 1.1, color: '#c9ced3' },
+  var o = { forma: 'vagonAbierto', id: cr.id, color: '#eef1f3', pos: [XV1, 0.05, cr.z * AL],
+            esc: [AW, 1, AL],
+            piso: { ancho: 2.66 * AW, largo: 15.2 * AL, alto: 1.1, color: '#c9ced3' },
             choca: MUROS_VAGON };
   if (cr.ficha) { o.ficha = cr.ficha; o.altoFicha = 5; }
   OBJ.push(o);
@@ -883,17 +896,18 @@ CARROS.forEach(function (cr) {
   ['I', 'D'].forEach(function (lado) {
     MUNDO.puerta({
       hojas: [null, null], _lado: lado, _id: cr.id,
-      x: XV1 + (lado === 'I' ? -1.42 : 1.42), z: cr.z,
-      radio: 3.2, abre: 0.82, eje: 'z'
+      x: XV1 + (lado === 'I' ? -1.42 : 1.42) * AW, z: cr.z * AL,
+      radio: 3.2, abre: 0.82 * AL, eje: 'z'
     });
   });
 });
 
 // La cabina de control, al frente del primer carro
-OBJ.push({ forma: 'cabina', color: '#eef1f3', pos: [XV1, 0.05, 16.5],
-           piso: { ancho: 2.7, largo: 2.4, alto: 1.1, color: '#c9ced3' },
+OBJ.push({ forma: 'cabina', color: '#eef1f3', pos: [XV1, 0.05, 16.5 * AL],
+           esc: [AW, 1, 1],
+           piso: { ancho: 2.7 * AW, largo: 2.4, alto: 1.1, color: '#c9ced3' },
            ficha: 'cabina', altoFicha: 4.4 });
-OBJ.push({ forma: 'persona', pos: [XV1, 1.15, 15.9], giro: 0,
+OBJ.push({ forma: 'persona', pos: [XV1, 1.15, 15.9 * AL], giro: 0,
   cuerpo: { altura: 1.72, piel: '#c48a63', pelo: '#2a2018', chaqueta: '#28405c',
             polera: '#28405c', pantalon: '#20262b', zapato: '#17161a' } });
 
@@ -909,7 +923,7 @@ CARROS.forEach(function (cr) {
   asientos.forEach(function (z) {
     [-0.78, 0.78].forEach(function (x) {
       if (Math.random() > 0.5) {
-        OBJ.push({ forma: 'pasajeroSentado', pos: [XV1 + x, 1.1, cr.z + z], giro: x < 0 ? 90 : -90,
+        OBJ.push({ forma: 'pasajeroSentado', pos: [XV1 + x * AW, 1.1, (cr.z + z) * AL], giro: x < 0 ? 90 : -90,
           cuerpo: { altura: 1.68, piel: rnd(PIELES), pelo: rnd(PELOS),
                     chaqueta: rnd(ROPAS), polera: rnd(ROPAS), pantalon: '#2b2f36', zapato: '#1a1917' } });
       }
@@ -918,8 +932,8 @@ CARROS.forEach(function (cr) {
   // de pie: agarrados de la barra central
   var nDePie = 1 + Math.floor(Math.random() * 3);
   for (var k = 0; k < nDePie; k++) {
-    var zx = cr.z + (Math.random() * 8 - 4);
-    OBJ.push({ forma: 'persona', pos: [XV1 + (Math.random() > 0.5 ? 0.5 : -0.5), 1.1, zx],
+    var zx = (cr.z + (Math.random() * 8 - 4)) * AL;
+    OBJ.push({ forma: 'persona', pos: [XV1 + (Math.random() > 0.5 ? 0.5 : -0.5) * AW, 1.1, zx],
       giro: Math.random() * 360,
       cuerpo: { altura: 1.6 + Math.random() * 0.2, piel: rnd(PIELES), pelo: rnd(PELOS),
                 chaqueta: rnd(ROPAS), polera: rnd(ROPAS), pantalon: '#2b2f36', zapato: '#1a1917',
