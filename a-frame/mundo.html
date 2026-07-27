@@ -287,17 +287,21 @@ window.addEventListener('error', function (e) {
 
 <script>
 /* Disposición de los controles. Se guarda la preferencia en el navegador.
-   Por defecto van ARRIBA: en el navegador de escritorio el borde inferior
-   suele quedar tapado por la interfaz del sistema. */
+   Por defecto van A LA IZQUIERDA, en columna: así el borde inferior queda
+   libre (ahí es donde el navegador de escritorio dibuja su propia barra) y
+   tampoco compiten con el título de arriba.
+   Siempre se pueden ocultar, desde el menú o con la tecla H. */
 (function () {
   var POS = ['arriba', 'izq', 'der', 'abajo'];
   var cont = document.getElementById('controles');
   var btn  = document.getElementById('ctrl-btn');
   var menu = document.getElementById('ctrl-menu');
   var guardado, oculto;
-  try { guardado = localStorage.getItem('mundo_ctrl_pos'); } catch (e) {}
-  try { oculto = localStorage.getItem('mundo_ctrl_oculto') === '1'; } catch (e) {}
-  var pos = POS.indexOf(guardado) >= 0 ? guardado : 'arriba';
+  // La clave lleva versión: al cambiar el valor por defecto, se aplica una vez
+  // aunque el equipo ya tuviera guardada una preferencia anterior.
+  try { guardado = localStorage.getItem('mundo_ctrl_pos_v2'); } catch (e) {}
+  try { oculto = localStorage.getItem('mundo_ctrl_oculto_v2') === '1'; } catch (e) {}
+  var pos = POS.indexOf(guardado) >= 0 ? guardado : 'izq';
 
   function aplicar() {
     POS.forEach(function (p) { cont.classList.remove('pos-' + p); });
@@ -309,8 +313,8 @@ window.addEventListener('error', function (e) {
     var bo = document.getElementById('ctrl-ocultar');
     if (bo) bo.textContent = oculto ? 'Mostrar controles (H)' : 'Ocultar controles (H)';
     try {
-      localStorage.setItem('mundo_ctrl_pos', pos);
-      localStorage.setItem('mundo_ctrl_oculto', oculto ? '1' : '0');
+      localStorage.setItem('mundo_ctrl_pos_v2', pos);
+      localStorage.setItem('mundo_ctrl_oculto_v2', oculto ? '1' : '0');
     } catch (e) {}
   }
 
