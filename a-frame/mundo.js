@@ -369,6 +369,7 @@ var _p = new THREE.Vector3(), _e = new THREE.Euler(),
 
 /* pieza(forma, color, acabado, base, offset, rotación°, escala, viento) */
 var giroActual = 0;    // grados en Y aplicados a toda la figura
+var escalaActual = [1, 1, 1];  // escala local (x,y,z) aplicada a toda la figura, antes del giro
 var grupoActual = null; // si tiene nombre, las piezas van a un grupo que puede moverse
 MUNDO.grupos = {};
 MUNDO.subgrupos = {};   // grupos hijos posicionables (hojas de puerta, etc.)
@@ -380,16 +381,17 @@ function pieza(forma, color, acabado, b, off, rot, esc, viento, grupoForzado) {
   if (!lote) lote = LOTES[clave] = { forma: forma, color: color, acabado: acabado,
                                      grupo: grp, datos: [], viento: false };
   if (viento) lote.viento = true;
-  var ox = off[0], oz = off[2];
+  var ox = off[0] * escalaActual[0], oz = off[2] * escalaActual[2];
   if (giroActual) {
     var co = Math.cos(rad(giroActual)), si = Math.sin(rad(giroActual));
-    ox = off[0] * co + off[2] * si;
-    oz = -off[0] * si + off[2] * co;
+    var lx = ox, lz = oz;
+    ox = lx * co + lz * si;
+    oz = -lx * si + lz * co;
   }
   lote.datos.push({
-    x: b[0] + ox, y: b[1] + off[1], z: b[2] + oz,
+    x: b[0] + ox, y: b[1] + off[1] * escalaActual[1], z: b[2] + oz,
     rx: rot[0], ry: rot[1] + giroActual, rz: rot[2],
-    sx: esc[0], sy: esc[1], sz: esc[2],
+    sx: esc[0] * escalaActual[0], sy: esc[1] * escalaActual[1], sz: esc[2] * escalaActual[2],
     v: viento || 0, fase: Math.random() * 6.2832
   });
 }
@@ -418,6 +420,10 @@ function materialDe(color, acabado) {
   if (acabado === 'metal') {
     return new THREE.MeshStandardMaterial({
       color: color, roughness: 0.32, metalness: 0.75 });
+  }
+  if (acabado === 'domo') {   // opaco pero visible por dentro Y por fuera: cúpulas y techos
+    return new THREE.MeshStandardMaterial({
+      color: color, side: THREE.DoubleSide, roughness: 0.82, metalness: 0.02 });
   }
   return new THREE.MeshStandardMaterial({ color: color, roughness: 0.82, metalness: 0.02 });
 }
@@ -530,6 +536,7 @@ requestAnimationFrame(soplar);
 var CHOQUES = [];
 var RADIO_CUERPO = 0.34;
 var ALTO_CUERPO = 1.65;
+var _choqueSector = null;   // si no es null, las colisiones nuevas se etiquetan con este sector
 MUNDO.choques = CHOQUES;
 MUNDO.fisica = true;
 MUNDO.gravedad = 9.81;   // m/s²  (Tierra por defecto)
@@ -538,10 +545,10 @@ MUNDO.saltoV = 5.2;      // velocidad inicial de salto en m/s (Tierra)
 function chocaCaja(x, z, ancho, largo, y0, y1, giro) {
   var g = rad(giro || 0);
   CHOQUES.push({ t: 'c', x: x, z: z, ax: ancho / 2, az: largo / 2,
-                 y0: y0, y1: y1, co: Math.cos(g), si: Math.sin(g) });
+                 y0: y0, y1: y1, co: Math.cos(g), si: Math.sin(g), sec: _choqueSector });
 }
 function chocaCilindro(x, z, r, y0, y1) {
-  CHOQUES.push({ t: 'r', x: x, z: z, r: r, y0: y0, y1: y1 });
+  CHOQUES.push({ t: 'r', x: x, z: z, r: r, y0: y0, y1: y1, sec: _choqueSector });
 }
 
 /* Empuja la posición fuera de cualquier volumen en el que haya entrado.
@@ -595,6 +602,13 @@ MUNDO.zonaPeligro = function (def) { MUNDO.peligros.push(def); };
 // Zonas donde cuesta caminar (regolito profundo, lava viscosa…)
 MUNDO.pegajosas = [];
 MUNDO.zonaLenta = function (def) { MUNDO.pegajosas.push(def); };
+
+/* Zonas de luz: al entrar en una, la luz global vira suavemente hacia sus
+   valores. Sirve para que se SIENTA la diferencia entre una ladera de solana
+   y el fondo umbrío de una quebrada, sin cambiar de escena.
+   def: { x, z, r | ancho+largo, ambiente, intensidad, cielo, suelo, borde } */
+MUNDO.zonasLuz = [];
+MUNDO.zonaLuz = function (def) { MUNDO.zonasLuz.push(def); };
 
 // Factor de velocidad según dónde esté el jugador (1 = normal, <1 = lento)
 MUNDO.factorVel = function (x, z) {
@@ -2154,18 +2168,26 @@ function generarSector(gx, gz) {
   var grupo = nuevo('a-entity', { id: 'sec_' + gx + '_' + gz });
   terreno.appendChild(grupo);
   MUNDO._sectorGrupo[clave] = grupo;
+  // las colisiones creadas ahora se etiquetan con este sector (para borrarlas al descargar)
+  _choqueSector = clave;
   _genSector({ gx: gx, gz: gz, cx: cx, cz: cz, rng: rng, terreno: grupo,
-               nuevo: nuevo, pieza: pieza });
+               nuevo: nuevo, pieza: pieza,
+               chocaCilindro: chocaCilindro, chocaCaja: chocaCaja });
+  _choqueSector = null;
 }
 
-// Descarga un sector: borra su grupo y lo olvida. Como el terreno es
-// determinista (semilla), al volver se regenera idéntico; MUNDO.rotos conserva
+// Descarga un sector: borra su grupo, sus colisiones y lo olvida. Como el terreno
+// es determinista (semilla), al volver se regenera idéntico; MUNDO.rotos conserva
 // lo que se rompió, así que lo roto sigue roto.
 function descargarSector(clave) {
   var grupo = MUNDO._sectorGrupo[clave];
   if (grupo && grupo.parentNode) grupo.parentNode.removeChild(grupo);
   delete MUNDO._sectorGrupo[clave];
   delete MUNDO.sectores[clave];
+  // quitar las colisiones que pertenecían a este sector
+  for (var i = CHOQUES.length - 1; i >= 0; i--) {
+    if (CHOQUES[i].sec === clave) CHOQUES.splice(i, 1);
+  }
 }
 
 // Vigilar la posición del jugador: generar lo cercano, descargar lo lejano.
@@ -2444,8 +2466,62 @@ function arranque(M) {
     type: 'hemisphere', color: luz.cielo || '#cfe3ea',
     groundColor: luz.suelo || '#8a7c5c', intensity: luz.ambiente || 0.85 }));
   escena.appendChild(nuevo('a-light', {
+    id: 'luz-sol',
     type: 'directional', color: luz.sol || '#fff0d4',
     intensity: luz.intensidad || 0.7, position: luz.posicion || '-18 22 14' }));
+
+  // Luces locales del mundo: fogatas, lámparas, interiores.
+  (M.luces || []).forEach(function (lz) {
+    escena.appendChild(nuevo('a-light', {
+      type: lz.tipo || 'point', color: lz.color || '#ffd9a0',
+      intensity: lz.intensidad != null ? lz.intensidad : 0.6,
+      distance: lz.alcance || 12,
+      position: lz.pos[0] + ' ' + lz.pos[1] + ' ' + lz.pos[2] }));
+  });
+
+  // Zonas de luz declaradas por el mundo
+  (M.luzZonas || []).forEach(function (z) { MUNDO.zonaLuz(z); });
+
+  /* Motor de transición de luz: mezcla los valores base con los de la zona en
+     la que está el jugador. El peso cae suavemente en el borde, así el cambio
+     se percibe como caminar hacia la sombra, no como un interruptor. */
+  if (MUNDO.zonasLuz.length) {
+    var _baseL = { amb: luz.ambiente || 0.85, sol: luz.intensidad || 0.7 };
+    var _curL = { amb: _baseL.amb, sol: _baseL.sol };
+    var _accL = 0;
+    MUNDO.animar(function (t, dt) {
+      if (!MUNDO.jugador) return;
+      _accL += dt;
+      if (_accL < 90) return;
+      var paso = _accL; _accL = 0;
+      var p = MUNDO.jugador.object3D.position;
+      var tAmb = _baseL.amb, tSol = _baseL.sol, peso = 0;
+      for (var i = 0; i < MUNDO.zonasLuz.length; i++) {
+        var z = MUNDO.zonasLuz[i], w = 0;
+        var borde = z.borde || 6;
+        if (z.r) {
+          var d = Math.sqrt((p.x - z.x) * (p.x - z.x) + (p.z - z.z) * (p.z - z.z));
+          w = d <= z.r ? 1 : Math.max(0, 1 - (d - z.r) / borde);
+        } else {
+          var dx = Math.abs(p.x - z.x) - (z.ancho || 20) / 2;
+          var dz = Math.abs(p.z - z.z) - (z.largo || 20) / 2;
+          var dd = Math.max(dx, dz);
+          w = dd <= 0 ? 1 : Math.max(0, 1 - dd / borde);
+        }
+        if (w > peso) {
+          peso = w;
+          tAmb = _baseL.amb + ((z.ambiente != null ? z.ambiente : _baseL.amb) - _baseL.amb) * w;
+          tSol = _baseL.sol + ((z.intensidad != null ? z.intensidad : _baseL.sol) - _baseL.sol) * w;
+        }
+      }
+      var k = Math.min(1, paso / 700);   // suavizado temporal
+      _curL.amb += (tAmb - _curL.amb) * k;
+      _curL.sol += (tSol - _curL.sol) * k;
+      var ea = document.getElementById('luz-ambiente'), es = document.getElementById('luz-sol');
+      if (ea && ea.components && ea.components.light) ea.components.light.light.intensity = _curL.amb;
+      if (es && es.components && es.components.light) es.components.light.light.intensity = _curL.sol;
+    });
+  }
 
   marcar('creando el observador');
   // Observador
@@ -2604,9 +2680,11 @@ function arranque(M) {
     var fn = MUNDO.formas[ob.forma];
     if (!fn) { console.warn('Forma desconocida: ' + ob.forma); return; }
     giroActual = ob.giro || 0;
+    escalaActual = ob.esc || [1, 1, 1];
     grupoActual = ob.grupo || null;
     fn(H, ob.color, ob.pos, ob);
     giroActual = 0;
+    escalaActual = [1, 1, 1];
     grupoActual = null;
     if (ob.lento) {
       var lt = ob.lento;
@@ -2627,11 +2705,12 @@ function arranque(M) {
       var ga = rad(ob.giro || 0), co = Math.cos(ga), si = Math.sin(ga);
       lista.forEach(function (q) {
         var y0 = ob.pos[1] + (q.base || 0);
+        // desplazamiento local (dx,dz) rotado por el giro del objeto → mundo
+        var gx = ob.pos[0] + (q.dx || 0) * co + (q.dz || 0) * si;
+        var gz = ob.pos[2] - (q.dx || 0) * si + (q.dz || 0) * co;
         if (q.r) {
-          chocaCilindro(ob.pos[0], ob.pos[2], q.r, y0, y0 + (q.alto || 3));
+          chocaCilindro(gx, gz, q.r, y0, y0 + (q.alto || 3));
         } else {
-          var gx = ob.pos[0] + (q.dx || 0) * co + (q.dz || 0) * si;
-          var gz = ob.pos[2] - (q.dx || 0) * si + (q.dz || 0) * co;
           chocaCaja(gx, gz, q.ancho, q.largo, y0, y0 + (q.alto || 3), ob.giro || 0);
         }
       });
@@ -2681,6 +2760,21 @@ function arranque(M) {
     });
 
     // superficie pisable: andenes, pisos de vehículos, plataformas
+    // pisos múltiples: cada nivel es una superficie pisable con su propio dx/dz
+    (ob.pisos || []).forEach(function (pn) {
+      var gaP = rad(ob.giro || 0), coP = Math.cos(gaP), siP = Math.sin(gaP);
+      var gxP = ob.pos[0] + (pn.dx || 0) * coP + (pn.dz || 0) * siP;
+      var gzP = ob.pos[2] - (pn.dx || 0) * siP + (pn.dz || 0) * coP;
+      var espP = 0.3;
+      terreno.appendChild(nuevo('a-box', {
+        'class': 'suelo',
+        width: pn.ancho, depth: pn.largo, height: espP,
+        position: gxP + ' ' + (ob.pos[1] + pn.alto - espP / 2) + ' ' + gzP,
+        rotation: '0 ' + (ob.giro || 0) + ' 0',
+        material: 'color:' + (pn.color || '#b9b3a6') + '; roughness:0.9'
+      }));
+    });
+
     if (ob.piso) {
       var pz = ob.piso, esp = 0.3;
       terreno.appendChild(nuevo('a-box', {
