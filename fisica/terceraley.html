@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Unidad 2 · Tercera Ley de Newton: Acción y Reacción</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papel:#F7F8F6;
+  --tinta:#12263F;
+  --tinta-suave:#4A5D74;
+  --linea:#C9D3DE;
+  --ambar:#E0912F;
+  --verde:#2E8B6B;
+  --rojo:#C4453A;
+  --azul:#1F6FB2;
+  --blanco:#FFFFFF;
+  --grid: 24px;
+  --radio:4px;
+  --sombra:0 1px 0 var(--linea), 0 12px 32px -20px rgba(18,38,63,.45);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'IBM Plex Sans',system-ui,sans-serif;
+  color:var(--tinta);
+  background:var(--papel);
+  background-image:
+    linear-gradient(var(--linea) 1px, transparent 1px),
+    linear-gradient(90deg, var(--linea) 1px, transparent 1px);
+  background-size:var(--grid) var(--grid);
+  background-position:-1px -1px;
+  overflow:hidden;
+  -webkit-text-size-adjust:100%;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 50% 40%, rgba(247,248,246,.35), var(--papel) 78%);
+}
+
+/* ---------- Barra superior ---------- */
+.topbar{
+  position:fixed;top:0;left:0;right:0;height:46px;z-index:40;
+  display:flex;align-items:center;gap:12px;padding:0 14px;
+  background:rgba(247,248,246,.92);backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--linea);
+}
+.marca{font-family:'Archivo',sans-serif;font-weight:900;font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+.marca span{color:var(--ambar)}
+.progreso{flex:1;height:3px;background:var(--linea);border-radius:2px;overflow:hidden}
+.progreso i{display:block;height:100%;width:0;background:var(--tinta);transition:width .35s ease}
+.contador{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--tinta-suave);min-width:52px;text-align:right}
+
+/* ---------- Felipesos ---------- */
+.banco{
+  display:inline-flex;align-items:center;gap:6px;background:#FFF6E6;border:1px solid var(--ambar);
+  border-radius:99px;padding:4px 12px 4px 8px;cursor:default;
+}
+.banco .moneda{
+  width:20px;height:20px;border-radius:99px;background:var(--ambar);color:#1a1200;
+  display:grid;place-items:center;font-size:13px;font-weight:900;font-family:'Archivo',sans-serif;
+}
+.banco b{font-family:'IBM Plex Mono',monospace;font-size:14px;color:#8a5a10;font-weight:600;min-width:20px;text-align:right}
+.banco.late{animation:late .5s ease}
+@keyframes late{0%,100%{transform:scale(1)}40%{transform:scale(1.18)}}
+
+.toast{
+  position:fixed;top:56px;left:50%;transform:translateX(-50%) translateY(-14px);z-index:60;
+  background:var(--tinta);color:var(--papel);padding:10px 16px;border-radius:99px;
+  font-size:14px;font-weight:600;box-shadow:0 12px 30px -12px rgba(18,38,63,.6);
+  opacity:0;pointer-events:none;transition:opacity .3s, transform .3s;display:flex;align-items:center;gap:8px;
+}
+.toast.ver{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast .moneda{width:18px;height:18px;border-radius:99px;background:var(--ambar);color:#1a1200;display:grid;place-items:center;font-size:12px;font-weight:900}
+
+/* ---------- Juego de tablero ---------- */
+.juego{background:var(--blanco);border:1px solid var(--linea);border-radius:var(--radio);box-shadow:var(--sombra);overflow:hidden}
+.juego-cab{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--linea);background:#FBFCFD}
+.juego-cab .estado{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--tinta-suave)}
+.juego-cab .estado b{color:var(--tinta)}
+.setup{display:flex;flex-direction:column;gap:14px;padding:16px;border-bottom:1px solid var(--linea);background:#FBFCFD}
+.setup-fila{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.setup-lbl{font-size:14px;color:var(--tinta-suave)}
+.nombres{display:grid;gap:10px;grid-template-columns:repeat(2,1fr)}
+@media(min-width:640px){.nombres{grid-template-columns:repeat(4,1fr)}}
+.nombres .campo{display:flex;flex-direction:column;gap:4px}
+.nombres .campo label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--tinta-suave);display:flex;align-items:center;gap:6px}
+.nombres .campo label i{width:14px;height:14px;border-radius:99px;display:inline-block;flex:none}
+.nombres .campo input{border:1px solid var(--linea);border-radius:var(--radio);padding:8px 10px;font:inherit;font-size:14px;background:var(--blanco);color:var(--tinta)}
+.nombres .campo input:disabled{background:#EFF2F5;color:var(--tinta-suave)}
+.nombres .campo input:focus{border-color:var(--ambar);outline:none}
+.seg{display:inline-flex;border:1px solid var(--linea);border-radius:var(--radio);overflow:hidden}
+.seg button{background:var(--blanco);border:none;padding:9px 16px;font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--tinta);border-right:1px solid var(--linea)}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--tinta);color:var(--papel)}
+.dados{display:flex;gap:8px}
+.marcador{display:grid;gap:8px;grid-template-columns:repeat(2,1fr);padding:14px 16px;border-bottom:1px solid var(--linea)}
+@media(min-width:640px){.marcador{grid-template-columns:repeat(4,1fr)}}
+.jugador{
+  display:flex;align-items:center;gap:9px;border:1px solid var(--linea);border-radius:var(--radio);
+  padding:8px 10px;background:var(--blanco);transition:box-shadow .15s, border-color .15s;
+}
+.jugador.turno{border-color:var(--ambar);box-shadow:0 0 0 2px rgba(224,145,47,.25)}
+.jugador .tk{width:26px;height:26px;border-radius:99px;display:grid;place-items:center;font-size:15px;color:#fff;flex:none}
+.jugador .info{min-width:0;flex:1}
+.jugador .info input{width:100%;border:none;background:transparent;font:inherit;font-size:13.5px;font-weight:600;color:var(--tinta);padding:0}
+.jugador .info input:focus{outline:none;border-bottom:1px solid var(--ambar)}
+.jugador .fp{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8a5a10}
+.tablero{
+  display:grid;gap:8px;padding:16px;
+  grid-template-columns:repeat(4,1fr);
+}
+@media(min-width:620px){.tablero{grid-template-columns:repeat(6,1fr)}}
+@media(min-width:820px){.tablero{grid-template-columns:repeat(8,1fr)}}
+.casilla{
+  position:relative;aspect-ratio:1;border:1px solid var(--linea);border-radius:6px;background:var(--papel);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px;
+  font-size:11px;text-align:center;color:var(--tinta-suave);transition:transform .15s, box-shadow .15s;
+}
+.casilla .n{position:absolute;top:3px;left:5px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--linea)}
+.casilla .ico{font-size:18px;line-height:1}
+.casilla.tipo-pregunta{background:#EAF2FA;border-color:#BCDCF0}
+.casilla.tipo-viento{background:#EAF4EF;border-color:#B8DFCD}
+.casilla.tipo-roce{background:#FBEBEA;border-color:#F0C7C3}
+.casilla.tipo-social{background:#F3EEFB;border-color:#D9C9F0}
+.casilla.tipo-atajo{background:#E7F6F1;border-color:#A9E0CF}
+.casilla.tipo-contra{background:#FBEEE6;border-color:#F2CBAF}
+.casilla.tipo-meta{background:var(--tinta);border-color:var(--tinta);color:var(--papel)}
+.casilla.tipo-salida{background:#FFF6E6;border-color:var(--ambar)}
+.casilla.activa{box-shadow:0 0 0 2px var(--ambar), 0 8px 18px -8px rgba(224,145,47,.7);transform:translateY(-2px);z-index:2}
+.ficha{
+  position:absolute;width:18px;height:18px;border-radius:99px;
+  color:#fff;display:grid;place-items:center;font-size:10px;font-weight:700;
+  box-shadow:0 3px 8px -3px rgba(0,0,0,.5);transition:transform .2s;
+}
+.ficha.salta{animation:salta .3s ease}
+@keyframes salta{50%{transform:translateY(-8px) scale(1.12)}}
+.dado{
+  width:52px;height:52px;border:1px solid var(--linea);border-radius:10px;background:var(--blanco);
+  display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:7px;gap:2px;box-shadow:var(--sombra);
+}
+.dado i{width:9px;height:9px;border-radius:99px;background:var(--tinta);align-self:center;justify-self:center;visibility:hidden}
+.dado.rueda{animation:rueda .5s linear}
+@keyframes rueda{0%{transform:rotate(0) scale(1)}50%{transform:rotate(180deg) scale(.85)}100%{transform:rotate(360deg) scale(1)}}
+.juego-log{max-height:120px;overflow-y:auto;padding:10px 16px;border-top:1px solid var(--linea);font-size:13px;line-height:1.7;color:var(--tinta-suave)}
+.juego-log b{color:var(--tinta)}
+
+/* modal genérico */
+.modal-fondo{position:fixed;inset:0;z-index:70;background:rgba(18,38,63,.5);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:20px}
+.modal-fondo.ver{display:flex}
+.modal{background:var(--blanco);border:1px solid var(--linea);border-radius:8px;max-width:460px;width:100%;padding:22px;box-shadow:0 30px 70px -30px rgba(18,38,63,.7)}
+.modal h3{margin-bottom:10px}
+.modal .opciones{margin:14px 0}
+.modal .cierre{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+
+/* ---------- Diapositivas ---------- */
+.deck{position:fixed;inset:46px 0 64px;overflow:hidden}
+.slide{
+  position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;
+  padding:26px 20px 40px;opacity:0;visibility:hidden;transform:translateY(12px);
+  transition:opacity .35s ease, transform .35s ease, visibility .35s;
+}
+.slide.activa{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:980px;margin:0 auto}
+
+.eyebrow{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--tinta-suave);
+  display:flex;align-items:center;gap:10px;margin-bottom:10px;
+}
+.eyebrow::after{content:"";flex:1;height:1px;background:var(--linea)}
+h1{font-family:'Archivo',sans-serif;font-weight:900;font-size:clamp(28px,5.4vw,52px);line-height:1.02;letter-spacing:-.02em}
+h2{font-family:'Archivo',sans-serif;font-weight:800;font-size:clamp(22px,3.6vw,34px);line-height:1.08;letter-spacing:-.01em;margin-bottom:14px}
+h3{font-family:'Archivo',sans-serif;font-weight:700;font-size:17px;margin-bottom:6px}
+p{line-height:1.6;color:var(--tinta-suave);font-size:clamp(14px,1.6vw,16.5px)}
+strong{color:var(--tinta)}
+.lead{font-size:clamp(15px,1.9vw,18px)}
+
+.tarjeta{
+  background:var(--blanco);border:1px solid var(--linea);border-radius:var(--radio);
+  padding:18px;box-shadow:var(--sombra);
+}
+.rejilla{display:grid;gap:14px}
+@media(min-width:760px){.rejilla.dos{grid-template-columns:1fr 1fr}.rejilla.tres{grid-template-columns:repeat(3,1fr)}}
+
+.formula{
+  font-family:'IBM Plex Mono',monospace;font-weight:600;
+  background:var(--tinta);color:var(--papel);border-radius:var(--radio);
+  padding:12px 16px;display:inline-block;font-size:clamp(15px,2.4vw,20px);letter-spacing:.02em;
+}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;
+  font-size:11px;text-transform:uppercase;letter-spacing:.1em;
+  border:1px solid var(--linea);border-radius:99px;padding:4px 10px;color:var(--tinta-suave);background:var(--blanco);
+}
+.chip b{width:8px;height:8px;border-radius:99px;display:block}
+
+ul.lista{list-style:none;display:grid;gap:8px;margin-top:10px}
+ul.lista li{position:relative;padding-left:26px;line-height:1.55;color:var(--tinta-suave);font-size:15px}
+ul.lista li::before{
+  content:counter(paso,decimal-leading-zero);counter-increment:paso;
+  position:absolute;left:0;top:1px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ambar);font-weight:600;
+}
+ul.lista{counter-reset:paso}
+
+/* ---------- Portada + QR ---------- */
+.portada{display:grid;gap:26px;align-items:center}
+@media(min-width:820px){.portada{grid-template-columns:1.15fr .85fr}}
+.qr-caja{
+  background:var(--blanco);border:1px solid var(--linea);border-radius:var(--radio);
+  padding:18px;text-align:center;box-shadow:var(--sombra);
+}
+#qr{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:190px}
+#qr img,#qr canvas{width:min(58vw,240px)!important;height:min(58vw,240px)!important;image-rendering:pixelated}
+#qr a{max-width:240px}
+.qr-caja input{
+  width:100%;margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:12px;
+  border:1px solid var(--linea);border-radius:var(--radio);padding:8px;color:var(--tinta);background:var(--papel);
+}
+.qr-caja small{display:block;margin-top:8px;color:var(--tinta-suave);font-size:11.5px;line-height:1.4}
+.config-prof{margin-top:12px;border-top:1px solid var(--linea);padding-top:10px;text-align:left}
+.config-prof summary{cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--tinta-suave)}
+.config-prof summary:hover{color:var(--tinta)}
+.config-prof input{width:100%;margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;border:1px solid var(--linea);border-radius:var(--radio);padding:8px;color:var(--tinta);background:var(--papel)}
+.config-prof input:focus{border-color:var(--ambar);outline:none}
+.config-prof small{margin-top:6px}
+
+.identidad{display:grid;gap:10px;margin-top:18px}
+.identidad input{
+  border:1px solid var(--linea);border-radius:var(--radio);padding:10px 12px;font:inherit;font-size:14px;background:var(--blanco);color:var(--tinta);
+}
+@media(min-width:520px){.identidad{grid-template-columns:1fr 1fr}}
+
+/* ---------- Simulador ---------- */
+.sim{background:var(--blanco);border:1px solid var(--linea);border-radius:var(--radio);overflow:hidden;box-shadow:var(--sombra)}
+.escena{width:100%;display:block;background:
+  linear-gradient(180deg,#FBFCFB,#F1F4F7);border-bottom:1px solid var(--linea)}
+.transporte{
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 16px;
+  border-bottom:1px solid var(--linea);background:#FBFCFD;
+}
+.tbtn{
+  display:inline-flex;align-items:center;gap:7px;background:var(--blanco);border:1px solid var(--linea);
+  color:var(--tinta);padding:9px 13px;font-size:13.5px;font-weight:500;border-radius:var(--radio);
+  transition:border-color .15s, background .15s;
+}
+.tbtn:hover{border-color:var(--tinta-suave);background:#F4F6F8}
+.tbtn.primario{background:var(--tinta);color:var(--papel);border-color:var(--tinta);min-width:132px;justify-content:center}
+.tbtn.primario:hover{background:#0B1B2E}
+.tbtn.primario.corriendo{background:var(--ambar);color:#1a1200;border-color:var(--ambar)}
+.reloj{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--tinta-suave)}
+.reloj b{color:var(--tinta);font-weight:600}
+@media(max-width:520px){.reloj{margin-left:0;width:100%;text-align:right}.tbtn{flex:1;justify-content:center}}
+
+.controles{display:grid;gap:14px;padding:16px}
+@media(min-width:700px){.controles{grid-template-columns:repeat(3,1fr)}}
+.ctrl .fila{display:flex;align-items:center;gap:10px}
+.ctrl .fila input[type=range]{flex:1;min-width:0}
+.ctrl .fila input[type=number]{
+  width:74px;flex:none;border:1px solid var(--linea);border-radius:var(--radio);
+  padding:8px 6px;text-align:center;background:var(--papel);color:var(--tinta);
+  font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;
+}
+.ctrl .fila input[type=number]:focus{background:var(--blanco);border-color:var(--tinta)}
+.ctrl label b{color:var(--tinta-suave);font-weight:400;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.ctrl label{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--tinta-suave);margin-bottom:6px}
+.ctrl label b{color:var(--tinta)}
+input[type=range]{width:100%;-webkit-appearance:none;height:22px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--linea)}
+input[type=range]::-moz-range-track{height:2px;background:var(--linea)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:99px;background:var(--tinta);margin-top:-8px;border:3px solid var(--blanco);box-shadow:0 0 0 1px var(--linea)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border:3px solid var(--blanco);border-radius:99px;background:var(--tinta)}
+.lectura{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;background:var(--linea);border-top:1px solid var(--linea);
+}
+.lectura div{background:var(--blanco);padding:12px 14px}
+.lectura span{display:block;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--tinta-suave)}
+.lectura b{font-family:'Archivo',sans-serif;font-size:22px;font-weight:800;display:block;margin-top:2px}
+.pill{padding:4px 10px;border-radius:99px;font-size:12px;font-family:'IBM Plex Mono',monospace;display:inline-block;margin-top:6px}
+
+/* ---------- Ejercicios ---------- */
+.nivel{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.nivel em{font-style:normal;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+.basico{color:var(--verde)} .inter{color:var(--azul)} .desafio{color:var(--rojo)}
+.enunciado{border-left:2px solid var(--ambar);padding-left:12px;margin:10px 0 14px}
+.respuesta{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.respuesta input[type=text]{
+  flex:1;min-width:120px;border:1px solid var(--linea);border-radius:var(--radio);padding:10px 12px;
+  font-family:'IBM Plex Mono',monospace;font-size:15px;background:var(--papel);color:var(--tinta);
+}
+button{font:inherit;cursor:pointer;border:none;border-radius:var(--radio)}
+.btn{
+  background:var(--tinta);color:var(--papel);padding:10px 16px;font-weight:600;font-size:14px;
+  transition:transform .12s ease, background .2s;
+}
+.btn:hover{background:#0B1B2E} .btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--tinta);border:1px solid var(--linea)}
+.btn.ambar{background:var(--ambar);color:#1a1200}
+.feedback{width:100%;font-size:14px;margin-top:8px;line-height:1.5;display:none}
+.feedback.ok{display:block;color:var(--verde)}
+.feedback.no{display:block;color:var(--rojo)}
+.pasos{display:none;margin-top:10px;background:var(--papel);border:1px dashed var(--linea);border-radius:var(--radio);padding:12px;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.8;color:var(--tinta-suave)}
+.pasos.ver{display:block}
+
+/* ---------- Conceptuales ---------- */
+.opcion{
+  display:flex;gap:10px;align-items:flex-start;border:1px solid var(--linea);background:var(--blanco);
+  border-radius:var(--radio);padding:11px 13px;cursor:pointer;transition:border-color .15s, background .15s;font-size:15px;
+}
+.opcion:hover{border-color:var(--tinta-suave)}
+.opcion input{margin-top:4px;accent-color:var(--tinta)}
+.opcion.sel{border-color:var(--tinta);background:#FBFCFD}
+.opciones{display:grid;gap:8px;margin-top:10px}
+textarea{
+  width:100%;min-height:110px;border:1px solid var(--linea);border-radius:var(--radio);padding:12px;
+  font:inherit;font-size:15px;background:var(--blanco);color:var(--tinta);resize:vertical;line-height:1.55;
+}
+
+/* ---------- Semáforo ---------- */
+.semaforo{display:grid;gap:10px;grid-template-columns:repeat(3,1fr);margin-top:12px}
+.luz{border:1px solid var(--linea);background:var(--blanco);border-radius:var(--radio);padding:16px 12px;text-align:center;cursor:pointer;transition:transform .12s}
+.luz:hover{transform:translateY(-2px)}
+.luz i{display:block;width:30px;height:30px;border-radius:99px;margin:0 auto 8px}
+.luz.sel{border-color:var(--tinta);box-shadow:inset 0 0 0 1px var(--tinta)}
+.luz small{display:block;color:var(--tinta-suave);font-size:12px;margin-top:4px;line-height:1.35}
+
+/* ---------- Navegación inferior ---------- */
+.nav{
+  position:fixed;bottom:0;left:0;right:0;height:64px;z-index:40;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px;
+  background:rgba(247,248,246,.94);backdrop-filter:blur(6px);border-top:1px solid var(--linea);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.puntos{display:flex;gap:6px;flex:1;justify-content:center;flex-wrap:wrap;max-width:60%}
+.punto{width:7px;height:7px;border-radius:99px;background:var(--linea);border:none;padding:0;cursor:pointer}
+.punto.on{background:var(--tinta);transform:scale(1.35)}
+.nav .btn{padding:10px 14px}
+
+/* ---------- Calculadora flotante ---------- */
+.calc-fab{
+  position:fixed;right:14px;bottom:78px;z-index:50;width:52px;height:52px;border-radius:99px;
+  background:var(--ambar);color:#1a1200;font-size:20px;box-shadow:0 8px 24px -8px rgba(18,38,63,.6);
+  display:grid;place-items:center;
+}
+.calc{
+  position:fixed;right:14px;bottom:140px;z-index:51;width:min(300px,calc(100vw - 28px));
+  background:var(--blanco);border:1px solid var(--linea);border-radius:8px;box-shadow:0 24px 60px -24px rgba(18,38,63,.6);
+  padding:12px;display:none;
+}
+.calc.abierta{display:block}
+.calc .visor{
+  background:var(--tinta);color:var(--papel);border-radius:var(--radio);padding:10px 12px;text-align:right;
+  font-family:'IBM Plex Mono',monospace;font-size:22px;min-height:46px;word-break:break-all;margin-bottom:10px;
+}
+.calc .teclas{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.calc .teclas button{
+  padding:12px 0;background:var(--papel);border:1px solid var(--linea);font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--tinta);
+}
+.calc .teclas button:hover{background:#EEF1F4}
+.calc .teclas .op{background:var(--blanco);color:var(--azul);font-weight:600}
+.calc .teclas .eq{background:var(--tinta);color:var(--papel);border-color:var(--tinta)}
+.calc .teclas .cl{color:var(--rojo)}
+.calc .memo{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tinta-suave);margin-top:8px;text-align:center}
+
+.aviso{font-size:12.5px;color:var(--tinta-suave);margin-top:12px;line-height:1.5}
+.tps{border:1px dashed var(--ambar);border-radius:var(--radio);padding:14px;background:#FFFBF4}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
+
+@media print{
+  .topbar,.nav,.calc,.calc-fab{display:none}
+  .slide{position:static;opacity:1;visibility:visible;transform:none;page-break-after:always}
+  .deck{position:static;inset:auto;overflow:visible}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="marca">FÍSICA 2°M · <span>UNIDAD 2</span></div>
+  <div class="progreso"><i id="barra"></i></div>
+  <button class="banco" id="banco" title="Tus felipesos ganados">
+    <span class="moneda">Ⓕ</span><b id="saldoFelipesos">0</b>
+  </button>
+  <div class="contador"><span id="num">1</span>/<span id="total">10</span></div>
+</header>
+<div class="toast" id="toast"></div>
+
+<main class="deck" id="deck">
+
+  <!-- 1. PORTADA -->
+  <section class="slide activa">
+    <div class="wrap portada">
+      <div>
+        <div class="eyebrow">OA 10 · Cierre de unidad</div>
+        <h1>Tercera ley de Newton<br>acción y reacción</h1>
+        <p class="lead" style="margin-top:14px">Toda fuerza viene en pares: si un cuerpo empuja a otro, recibe de vuelta un empuje igual y opuesto. En esta última sesión cerramos la unidad conectando las tres leyes de Newton.</p>
+        <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap">
+          <span class="chip"><b style="background:var(--verde)"></b> Básico</span>
+          <span class="chip"><b style="background:var(--azul)"></b> Intermedio</span>
+          <span class="chip"><b style="background:var(--rojo)"></b> Desafío</span>
+        </div>
+        <div class="identidad">
+          <input id="nombre" type="text" placeholder="Nombre y apellido" autocomplete="name">
+          <input id="curso" type="text" placeholder="Curso (ej: 2° Medio A)">
+        </div>
+        <p class="aviso">Escribe tu nombre antes de comenzar. Todo lo que respondas quedará guardado en este dispositivo y podrás exportarlo en PDF al final.</p>
+      </div>
+
+      <div class="qr-caja">
+        <div class="eyebrow" style="justify-content:center">Escanea y sigue la clase</div>
+        <div id="qr">Generando código…</div>
+        <input id="qrTexto" type="text" value="https://fjimenez321-stack.github.io/dondefelipe/fisica/newton3.html" aria-label="Enlace del código QR">
+        <small>Profesor: edita el enlace y el QR se actualiza al instante.</small>
+        <details class="config-prof">
+          <summary>Configurar registro (profesor)</summary>
+          <input id="sheetUrl" type="text" placeholder="Pega aquí la URL /exec de tu Apps Script" aria-label="URL de registro en planilla">
+          <small id="sheetEstado">Si lo dejas vacío, la entrega solo genera el PDF local.</small>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. SIEMBRA -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">SIEMBRA · Activación</div>
+      <h2>Piensa · Comparte · Discute</h2>
+      <div class="tps">
+        <h3>El salto desde el bote</h3>
+        <p>Estás de pie en un bote pequeño junto al muelle. Saltas hacia el muelle y, al hacerlo, el bote <strong>se aleja</strong> hacia atrás. Nadie lo empujó… ¿o sí?</p>
+        <p style="margin-top:10px"><strong>Piensa (1 min):</strong> ¿qué empujó al bote hacia atrás? · <strong>Comparte (2 min):</strong> con tu compañero de banco. · <strong>Discute (3 min):</strong> con el curso.</p>
+      </div>
+      <div class="rejilla dos" style="margin-top:14px">
+        <div class="tarjeta">
+          <h3>Registra tu hipótesis</h3>
+          <textarea id="r_tps" placeholder="¿Por qué el bote retrocede cuando saltas hacia el muelle?"></textarea>
+        </div>
+        <div class="tarjeta">
+          <h3>Lo que descubriremos</h3>
+          <ul class="lista">
+            <li>Las fuerzas nunca vienen solas: aparecen de a pares.</li>
+            <li>Tú empujas el bote hacia atrás y el bote te empuja a ti hacia adelante.</li>
+            <li>Ambas fuerzas son iguales en módulo, pero actúan sobre cuerpos distintos.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. LA TERCERA LEY -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">RIEGO · Marco conceptual</div>
+      <h2>Acción y reacción: fuerzas en pares</h2>
+      <div class="tarjeta" style="margin-bottom:14px">
+        <p class="lead">Si un cuerpo A ejerce una fuerza sobre un cuerpo B, entonces B ejerce sobre A una fuerza de <strong>igual módulo</strong> y <strong>sentido opuesto</strong>.</p>
+        <div class="formula" style="margin-top:12px">F<sub>A→B</sub> = − F<sub>B→A</sub></div>
+      </div>
+      <div class="rejilla tres">
+        <div class="tarjeta">
+          <h3 style="color:var(--azul)">Igual módulo</h3>
+          <p>Las dos fuerzas del par tienen exactamente la misma magnitud, sin importar el tamaño de los cuerpos.</p>
+        </div>
+        <div class="tarjeta">
+          <h3 style="color:var(--ambar)">Sentido opuesto</h3>
+          <p>Apuntan en direcciones contrarias, sobre la misma línea de acción.</p>
+        </div>
+        <div class="tarjeta">
+          <h3 style="color:var(--rojo)">Cuerpos distintos</h3>
+          <p>Cada fuerza actúa sobre un cuerpo diferente. Por eso <strong>no se cancelan</strong>: no están sobre el mismo objeto.</p>
+        </div>
+      </div>
+      <p style="margin-top:16px"><strong>Error frecuente:</strong> creer que acción y reacción se anulan. Como actúan sobre cuerpos distintos, cada una produce su propio efecto.</p>
+    </div>
+  </section>
+
+  <!-- 4. CÓMO IDENTIFICAR EL PAR -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">RIEGO · Procedimiento</div>
+      <h2>Cómo identificar un par acción-reacción</h2>
+      <div class="rejilla dos">
+        <div class="tarjeta">
+          <ul class="lista">
+            <li>Nombra los dos cuerpos que interactúan (A y B).</li>
+            <li>Escribe la fuerza como "A ejerce sobre B".</li>
+            <li>La reacción es siempre "B ejerce sobre A".</li>
+            <li>Verifica: mismo módulo, sentido opuesto, misma línea.</li>
+            <li>Comprueba que cada fuerza actúe sobre un cuerpo distinto.</li>
+            <li>Si aparecen ambas sobre el mismo cuerpo, NO son un par acción-reacción.</li>
+          </ul>
+        </div>
+        <div class="tarjeta" style="display:flex;flex-direction:column;justify-content:center;gap:14px">
+          <div>
+            <span class="chip">Ejemplo: caminar</span>
+            <p style="margin-top:8px">Tu pie empuja el suelo hacia atrás (acción). El suelo te empuja hacia adelante (reacción). Por eso avanzas.</p>
+          </div>
+          <div>
+            <span class="chip">Ejemplo: cohete</span>
+            <p style="margin-top:8px">El motor empuja los gases hacia abajo. Los gases empujan el cohete hacia arriba.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. SIMULADOR -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">Simulador 01 · Signature</div>
+      <h2>Dos patinadores en el hielo</h2>
+      <p style="margin-bottom:14px">Dos personas se empujan sobre hielo sin roce. Ajusta la <strong>fuerza del empuje</strong> y la <strong>masa de cada una</strong>: verás que las dos fuerzas son <strong>iguales y opuestas</strong> (3ª ley), pero la persona más liviana sale más rápido (2ª ley). Pulsa <strong>Reproducir</strong>; <strong>Paso</strong> avanza 0,1 s y <strong>Rebobinar</strong> los vuelve al centro. La barra espaciadora también reproduce y pausa.</p>
+
+      <div class="sim">
+        <svg class="escena" id="escena" viewBox="0 0 800 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Simulación de acción y reacción entre dos cuerpos">
+          <defs>
+            <marker id="mAzul"  markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#1F6FB2"/></marker>
+            <marker id="mRojo"  markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#C4453A"/></marker>
+            <marker id="mGris"  markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#4A5D74"/></marker>
+          </defs>
+
+          <!-- hielo -->
+          <line x1="0" y1="250" x2="800" y2="250" stroke="#12263F" stroke-width="2"/>
+          <g id="hatch"></g>
+          <line id="linea" x1="400" y1="70" x2="400" y2="250" stroke="#C9D3DE" stroke-width="1" stroke-dasharray="4 5"/>
+          <text x="400" y="60" text-anchor="middle" fill="#4A5D74" font-family="IBM Plex Mono, monospace" font-size="11">punto de contacto</text>
+
+          <!-- cuerpo A (azul, izquierda) -->
+          <rect id="cuerpoA" x="330" y="190" width="60" height="60" rx="4" fill="#1F6FB2"/>
+          <text id="etA" x="360" y="225" text-anchor="middle" fill="#F7F8F6" font-family="IBM Plex Mono, monospace" font-size="13">A</text>
+          <!-- cuerpo B (rojo, derecha) -->
+          <rect id="cuerpoB" x="410" y="190" width="60" height="60" rx="4" fill="#C4453A"/>
+          <text id="etB" x="440" y="225" text-anchor="middle" fill="#F7F8F6" font-family="IBM Plex Mono, monospace" font-size="13">B</text>
+
+          <!-- fuerzas del par (iguales y opuestas) -->
+          <line id="vFa" stroke="#1F6FB2" stroke-width="5" marker-end="url(#mAzul)"/>
+          <line id="vFb" stroke="#C4453A" stroke-width="5" marker-end="url(#mRojo)"/>
+          <text id="tFa" fill="#1F6FB2" font-family="IBM Plex Mono, monospace" font-size="13" text-anchor="end"></text>
+          <text id="tFb" fill="#C4453A" font-family="IBM Plex Mono, monospace" font-size="13" text-anchor="start"></text>
+
+          <!-- velocidades -->
+          <line id="vVa" stroke="#4A5D74" stroke-width="3" marker-end="url(#mGris)"/>
+          <line id="vVb" stroke="#4A5D74" stroke-width="3" marker-end="url(#mGris)"/>
+          <text id="tVa" fill="#4A5D74" font-family="IBM Plex Mono, monospace" font-size="11" text-anchor="middle"></text>
+          <text id="tVb" fill="#4A5D74" font-family="IBM Plex Mono, monospace" font-size="11" text-anchor="middle"></text>
+        </svg>
+
+        <div class="transporte">
+          <button class="tbtn primario" id="btnPlay" aria-label="Reproducir o pausar">
+            <span id="icPlay">▶</span><span id="txtPlay">Reproducir</span>
+          </button>
+          <button class="tbtn" id="btnRebobinar" aria-label="Rebobinar al centro">↺ Rebobinar</button>
+          <button class="tbtn" id="btnPaso" aria-label="Avanzar un paso">⏭ Paso (0,1 s)</button>
+          <button class="tbtn" id="btnValores" aria-label="Restaurar valores iniciales">Valores iniciales</button>
+          <span class="reloj">t = <b id="oT">0.0</b> s</span>
+        </div>
+
+        <div class="controles">
+          <div class="ctrl">
+            <label for="sF">Fuerza del empuje F <b>newton</b></label>
+            <div class="fila">
+              <input id="sF" type="range" min="0" max="60" step="1" value="30">
+              <input id="nF" type="number" min="0" max="60" step="1" value="30" inputmode="decimal" aria-label="Fuerza del empuje en newton">
+            </div>
+          </div>
+          <div class="ctrl">
+            <label for="sMa">Masa de A <b>kilogramo</b></label>
+            <div class="fila">
+              <input id="sMa" type="range" min="1" max="20" step="1" value="6">
+              <input id="nMa" type="number" min="1" max="20" step="1" value="6" inputmode="decimal" aria-label="Masa de A en kilogramo">
+            </div>
+          </div>
+          <div class="ctrl">
+            <label for="sMb">Masa de B <b>kilogramo</b></label>
+            <div class="fila">
+              <input id="sMb" type="range" min="1" max="20" step="1" value="3">
+              <input id="nMb" type="number" min="1" max="20" step="1" value="3" inputmode="decimal" aria-label="Masa de B en kilogramo">
+            </div>
+          </div>
+        </div>
+
+        <div class="lectura">
+          <div><span>Fuerza sobre A</span><b id="oFa">30 N</b></div>
+          <div><span>Fuerza sobre B</span><b id="oFb">30 N</b></div>
+          <div><span>Aceleración de A</span><b id="oAa">5.0 m/s²</b></div>
+          <div><span>Aceleración de B</span><b id="oAb">10.0 m/s²</b></div>
+          <div><span>Ley que observas</span><b style="font-size:14px" id="oLey">Igual y opuesta</b><span class="pill" id="oPill" style="background:#EAF2FA;color:var(--azul)">3ª ley</span></div>
+        </div>
+      </div>
+
+      <div class="tarjeta" style="margin-top:14px">
+        <h3>Pregunta guiada</h3>
+        <p style="margin-bottom:8px">Deja la fuerza fija y haz que A pese el doble que B. ¿Las fuerzas siguen siendo iguales? ¿Qué pasa con las aceleraciones? Explica con qué ley se relaciona cada observación.</p>
+        <textarea id="r_sim" placeholder="Escribe tu respuesta…"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5b. SIMULADOR LUNA-TIERRA -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">Simulador 02 · A escala cósmica</div>
+      <h2>La Luna y la Tierra se tiran mutuamente</h2>
+      <p style="margin-bottom:14px">La tercera ley también gobierna el espacio. La Tierra atrae a la Luna… y la Luna atrae a la Tierra <strong>con exactamente la misma fuerza</strong>. Observa las dos flechas: siempre miden lo mismo, aunque la Tierra sea 81 veces más masiva. Por eso la Luna se mueve mucho y la Tierra apenas se bambolea.</p>
+
+      <div class="sim">
+        <svg class="escena" id="escenaLuna" viewBox="0 0 800 420" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Simulación de la atracción entre la Tierra y la Luna" style="background:radial-gradient(circle at 50% 45%, #0B1B2E, #060D18)">
+          <g id="estrellas"></g>
+          <circle id="orbita" cx="400" cy="210" r="150" fill="none" stroke="#2A3B52" stroke-width="1" stroke-dasharray="3 6"/>
+          <circle id="baricentro" cx="400" cy="210" r="3" fill="#E0912F"/>
+
+          <!-- Tierra -->
+          <circle id="tierra" cx="400" cy="210" r="34" fill="#1F6FB2"/>
+          <ellipse cx="392" cy="202" rx="10" ry="7" fill="#2E8B6B" opacity="0.7"/>
+          <ellipse cx="410" cy="218" rx="8" ry="6" fill="#2E8B6B" opacity="0.7"/>
+          <text x="400" y="266" text-anchor="middle" fill="#9FB2C8" font-family="IBM Plex Mono, monospace" font-size="12">Tierra</text>
+
+          <!-- Luna -->
+          <circle id="luna" cx="550" cy="210" r="12" fill="#C9CDD4"/>
+          <text id="etLuna" x="550" y="188" text-anchor="middle" fill="#9FB2C8" font-family="IBM Plex Mono, monospace" font-size="12">Luna</text>
+
+          <!-- fuerzas del par (iguales y opuestas) -->
+          <defs>
+            <marker id="mLunaAz" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#5FA8E8"/></marker>
+            <marker id="mLunaRo" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#F0A08F"/></marker>
+          </defs>
+          <line id="fTierra" stroke="#5FA8E8" stroke-width="4" marker-end="url(#mLunaAz)"/>
+          <line id="fLuna"   stroke="#F0A08F" stroke-width="4" marker-end="url(#mLunaRo)"/>
+          <text id="tfTierra" fill="#5FA8E8" font-family="IBM Plex Mono, monospace" font-size="12"></text>
+          <text id="tfLuna"   fill="#F0A08F" font-family="IBM Plex Mono, monospace" font-size="12"></text>
+        </svg>
+
+        <div class="transporte">
+          <button class="tbtn primario" id="btnPlayLuna" aria-label="Reproducir o pausar la órbita">
+            <span id="icPlayLuna">❚❚</span><span id="txtPlayLuna">Pausar</span>
+          </button>
+          <button class="tbtn" id="btnBamboleo" aria-label="Mostrar bamboleo de la Tierra">Ver bamboleo de la Tierra</button>
+          <span class="reloj">Fuerza del par: <b id="oFpar">100</b> (iguales)</span>
+        </div>
+
+        <div class="controles">
+          <div class="ctrl">
+            <label for="sDist">Distancia Tierra–Luna <b>relativa</b></label>
+            <div class="fila">
+              <input id="sDist" type="range" min="90" max="180" step="1" value="150">
+              <input id="nDist" type="number" min="90" max="180" step="1" value="150" inputmode="decimal" aria-label="Distancia relativa">
+            </div>
+          </div>
+          <div class="ctrl">
+            <label for="sVel">Velocidad de la órbita <b>x</b></label>
+            <div class="fila">
+              <input id="sVel" type="range" min="0" max="3" step="0.1" value="1">
+              <input id="nVel" type="number" min="0" max="3" step="0.1" value="1" inputmode="decimal" aria-label="Velocidad de la órbita">
+            </div>
+          </div>
+        </div>
+
+        <div class="lectura">
+          <div><span>Fuerza sobre la Luna</span><b id="oFl">100</b></div>
+          <div><span>Fuerza sobre la Tierra</span><b id="oFt">100</b></div>
+          <div><span>Masa de la Tierra</span><b style="font-size:15px">81 ×</b></div>
+          <div><span>Ley que observas</span><b style="font-size:14px">Igual y opuesta</b><span class="pill" style="background:#EAF2FA;color:var(--azul)">3ª ley</span></div>
+        </div>
+      </div>
+
+      <div class="tarjeta" style="margin-top:14px">
+        <h3>Pregunta guiada</h3>
+        <p style="margin-bottom:8px">Si las dos fuerzas son iguales, ¿por qué la Luna orbita alrededor de la Tierra y no al revés? Relaciona tu respuesta con la segunda ley (a = F / m) y la enorme masa de la Tierra.</p>
+        <textarea id="r_luna" placeholder="Escribe tu respuesta…"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. EJEMPLO RESUELTO -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">RIEGO · Modelamiento</div>
+      <h2>Un ejemplo, paso a paso</h2>
+      <div class="tarjeta">
+        <p class="lead"><strong>Situación.</strong> Una patinadora de 50 kg empuja a un patinador de 25 kg con una fuerza de 100 N sobre hielo sin roce. Determina la fuerza que recibe cada uno y la aceleración de cada uno.</p>
+      </div>
+      <div class="rejilla dos" style="margin-top:14px">
+        <div class="tarjeta">
+          <h3>1 · Las fuerzas del par</h3>
+          <p>Por la 3ª ley, la fuerza sobre cada persona es la <strong>misma</strong>: 100 N. Solo cambian de sentido.</p>
+          <div class="formula" style="margin-top:8px;font-size:15px">F<sub>A</sub> = F<sub>B</sub> = 100 N</div>
+        </div>
+        <div class="tarjeta">
+          <h3>2 · Aceleración de cada uno (2ª ley)</h3>
+          <div class="formula" style="margin-top:6px;font-size:14px">a<sub>A</sub> = 100 / 50 = 2 m/s²</div>
+          <div class="formula" style="margin-top:6px;font-size:14px">a<sub>B</sub> = 100 / 25 = 4 m/s²</div>
+          <p style="margin-top:12px"><strong>Interpretación:</strong> misma fuerza, pero el patinador más liviano acelera el doble.</p>
+        </div>
+      </div>
+      <p class="aviso"><strong>Error frecuente:</strong> pensar que la persona más fuerte o más pesada "empuja más". El par de fuerzas es siempre idéntico en módulo.</p>
+    </div>
+  </section>
+
+  <!-- 7. EJERCICIOS -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">COSECHA · Práctica diferenciada</div>
+      <h2>Calcula fuerzas y aceleraciones</h2>
+      <p style="margin-bottom:16px">Usa g = 10 m/s². Escribe solo el número que se pide. Cada respuesta correcta te da <strong>felipesos</strong>. La calculadora está en el botón naranjo, abajo a la derecha.</p>
+
+      <div class="tarjeta" style="margin-bottom:14px">
+        <div class="nivel"><span class="chip"><b style="background:var(--verde)"></b> Básico</span><em class="basico">Aplicar</em></div>
+        <div class="enunciado"><p>Un niño empuja una pared con una fuerza de <strong>30 N</strong>. Según la tercera ley, ¿con qué fuerza (en N) empuja la pared al niño?</p></div>
+        <div class="respuesta">
+          <input id="e1" type="text" inputmode="decimal" placeholder="F = ? N">
+          <button class="btn" data-check="1">Revisar</button>
+          <button class="btn ghost" data-pasos="1">Ver desarrollo</button>
+          <div class="feedback" id="f1"></div>
+        </div>
+        <div class="pasos" id="p1">Acción y reacción tienen igual módulo.<br>La pared empuja al niño con la misma fuerza.<br>F = 30 N (en sentido opuesto)</div>
+      </div>
+
+      <div class="tarjeta" style="margin-bottom:14px">
+        <div class="nivel"><span class="chip"><b style="background:var(--azul)"></b> Intermedio</span><em class="inter">Analizar</em></div>
+        <div class="enunciado"><p>Dos patinadores se empujan sobre hielo. Sobre el patinador de <strong>40 kg</strong> actúa una fuerza de <strong>80 N</strong>. ¿Cuál es su aceleración (en m/s²)?</p></div>
+        <div class="respuesta">
+          <input id="e2" type="text" inputmode="decimal" placeholder="a = ? m/s²">
+          <button class="btn" data-check="2">Revisar</button>
+          <button class="btn ghost" data-pasos="2">Ver desarrollo</button>
+          <div class="feedback" id="f2"></div>
+        </div>
+        <div class="pasos" id="p2">Por la 2ª ley: a = F / m<br>a = 80 / 40<br>a = 2 m/s²</div>
+      </div>
+
+      <div class="tarjeta">
+        <div class="nivel"><span class="chip"><b style="background:var(--rojo)"></b> Desafío</span><em class="desafio">Evaluar</em></div>
+        <div class="enunciado"><p>Una persona de <strong>60 kg</strong> empuja a otra de <strong>30 kg</strong> con <strong>120 N</strong> sobre hielo sin roce. Determina la aceleración (en m/s²) de la persona de <strong>30 kg</strong>.</p></div>
+        <div class="respuesta">
+          <input id="e3" type="text" inputmode="decimal" placeholder="a = ? m/s²">
+          <button class="btn" data-check="3">Revisar</button>
+          <button class="btn ghost" data-pasos="3">Ver desarrollo</button>
+          <div class="feedback" id="f3"></div>
+        </div>
+        <div class="pasos" id="p3">Por la 3ª ley, la fuerza sobre la persona de 30 kg también es 120 N.<br>Por la 2ª ley: a = 120 / 30<br>a = 4 m/s²</div>
+      </div>
+
+      <div class="tarjeta" style="margin-top:14px">
+        <div class="nivel"><span class="chip"><b style="background:var(--verde)"></b> Básico</span><em class="basico">Aplicar</em></div>
+        <div class="enunciado"><p>Un cohete expulsa gases hacia abajo con <strong>500 N</strong>. ¿Con qué fuerza (en N) empujan los gases al cohete hacia arriba?</p></div>
+        <div class="respuesta">
+          <input id="e4" type="text" inputmode="decimal" placeholder="F = ? N">
+          <button class="btn" data-check="4">Revisar</button>
+          <button class="btn ghost" data-pasos="4">Ver desarrollo</button>
+          <div class="feedback" id="f4"></div>
+        </div>
+        <div class="pasos" id="p4">Acción y reacción son iguales en módulo.<br>Los gases empujan al cohete con la misma fuerza.<br>F = 500 N hacia arriba</div>
+      </div>
+
+      <div class="tarjeta" style="margin-top:14px">
+        <div class="nivel"><span class="chip"><b style="background:var(--azul)"></b> Intermedio</span><em class="inter">Analizar</em></div>
+        <div class="enunciado"><p>Al saltar, una persona empuja el suelo con <strong>600 N</strong>. Si su masa es de <strong>50 kg</strong>, ¿cuál es su aceleración (en m/s²) por la fuerza de reacción del suelo? (usa solo la reacción)</p></div>
+        <div class="respuesta">
+          <input id="e5" type="text" inputmode="decimal" placeholder="a = ? m/s²">
+          <button class="btn" data-check="5">Revisar</button>
+          <button class="btn ghost" data-pasos="5">Ver desarrollo</button>
+          <div class="feedback" id="f5"></div>
+        </div>
+        <div class="pasos" id="p5">El suelo reacciona con 600 N (3ª ley).<br>Por la 2ª ley: a = F / m = 600 / 50<br>a = 12 m/s²</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. STEAM -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">Conexión STEAM</div>
+      <h2>Dónde vive esta física</h2>
+      <div class="rejilla tres">
+        <div class="tarjeta">
+          <h3>Ingeniería</h3>
+          <p>Un cohete avanza por acción-reacción: expulsa gases hacia atrás y estos lo impulsan hacia adelante, incluso en el vacío del espacio.</p>
+        </div>
+        <div class="tarjeta">
+          <h3>Tecnología</h3>
+          <p>La hélice de un dron empuja el aire hacia abajo; el aire empuja el dron hacia arriba. Ese par de fuerzas lo mantiene volando.</p>
+        </div>
+        <div class="tarjeta">
+          <h3>Arte y deporte</h3>
+          <p>Al nadar, tus brazos empujan el agua hacia atrás y el agua te empuja hacia adelante. Sin ese par, no habría avance.</p>
+        </div>
+      </div>
+      <div class="tarjeta" style="margin-top:14px">
+        <h3>Tu turno</h3>
+        <p style="margin-bottom:8px">Nombra una situación de tu vida diaria en Villa Alemana donde veas un par de acción y reacción. Identifica los dos cuerpos que interactúan y hacia dónde apunta cada fuerza.</p>
+        <textarea id="r_steam" placeholder="Ejemplo: cuando remo en una lancha…"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. PREGUNTAS CONCEPTUALES -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">COSECHA · Comprensión conceptual</div>
+      <h2>Preguntas conceptuales</h2>
+      <p style="margin-bottom:16px">Sin calculadora. Aquí importa el razonamiento, no el número.</p>
+      <div id="conceptuales"></div>
+      <div class="tarjeta" style="margin-top:14px">
+        <h3>Pregunta abierta</h3>
+        <p style="margin-bottom:8px">Un caballo tira de una carreta. Alguien dice: "si la carreta tira del caballo con la misma fuerza (3ª ley), entonces nunca deberían moverse". Explica dónde está el error de ese razonamiento.</p>
+        <textarea id="r_abierta" placeholder="Desarrolla tu argumento…"></textarea>
+      </div>
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="revisarConceptos">Revisar respuestas conceptuales</button>
+        <span id="puntaje" style="align-self:center;font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--tinta-suave)"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. PREGUNTAS DE DESARROLLO -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">COSECHA · Argumentación</div>
+      <h2>Preguntas de desarrollo</h2>
+      <p style="margin-bottom:16px">Responde con tus palabras, en frases completas. No hay una única forma correcta de redactar: se evalúa que tu razonamiento físico sea correcto. Todas se incluyen en tu PDF de entrega.</p>
+
+      <div class="tarjeta" style="margin-bottom:14px">
+        <h3>1 · Fuerzas que no se cancelan</h3>
+        <p style="margin-bottom:8px">Si acción y reacción son iguales y opuestas, ¿por qué no se anulan entre sí? Explica usando la idea de que actúan sobre cuerpos distintos.</p>
+        <textarea id="d1" placeholder="Tu respuesta…"></textarea>
+      </div>
+
+      <div class="tarjeta" style="margin-bottom:14px">
+        <h3>2 · El cohete en el vacío</h3>
+        <p style="margin-bottom:8px">Un cohete puede avanzar en el espacio, donde no hay aire contra qué empujarse. Explica cómo lo logra usando la tercera ley de Newton.</p>
+        <textarea id="d2" placeholder="Tu respuesta…"></textarea>
+      </div>
+
+      <div class="tarjeta" style="margin-bottom:14px">
+        <h3>3 · Misma fuerza, distinta aceleración</h3>
+        <p style="margin-bottom:8px">Dos patinadores de distinta masa se empujan. Reciben la misma fuerza, pero uno sale más rápido. Explica combinando la 2ª y la 3ª ley de Newton.</p>
+        <textarea id="d3" placeholder="Tu respuesta…"></textarea>
+      </div>
+
+      <div class="tarjeta">
+        <h3>4 · Las tres leyes juntas</h3>
+        <p style="margin-bottom:8px">Describe una sola situación cotidiana (por ejemplo, caminar) donde puedas reconocer las <strong>tres</strong> leyes de Newton actuando. Explica dónde aparece cada una.</p>
+        <textarea id="d4" placeholder="Tu respuesta…"></textarea>
+      </div>
+
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn" id="registrarDesarrollo">Registrar mis respuestas</button>
+        <span id="avisoDesarrollo" style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--tinta-suave)"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. SÍNTESIS -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">Cierre de unidad · Síntesis</div>
+      <h2>Las tres leyes de Newton</h2>
+      <p style="margin-bottom:14px">Con esto cerramos la Unidad 2. Estas tres leyes explican, juntas, cómo y por qué se mueven los objetos.</p>
+      <div class="rejilla tres">
+        <div class="tarjeta">
+          <span class="chip"><b style="background:var(--verde)"></b> 1ª ley</span>
+          <h3 style="margin-top:8px">Inercia</h3>
+          <p>Un cuerpo mantiene su reposo o su MRU si la fuerza neta es cero.</p>
+          <div class="formula" style="margin-top:8px;font-size:14px">ΣF = 0 → v constante</div>
+        </div>
+        <div class="tarjeta">
+          <span class="chip"><b style="background:var(--azul)"></b> 2ª ley</span>
+          <h3 style="margin-top:8px">Fuerza y aceleración</h3>
+          <p>Una fuerza neta produce aceleración, proporcional a la fuerza e inversa a la masa.</p>
+          <div class="formula" style="margin-top:8px;font-size:14px">ΣF = m · a</div>
+        </div>
+        <div class="tarjeta">
+          <span class="chip"><b style="background:var(--rojo)"></b> 3ª ley</span>
+          <h3 style="margin-top:8px">Acción y reacción</h3>
+          <p>Toda fuerza viene en pares iguales y opuestos, sobre cuerpos distintos.</p>
+          <div class="formula" style="margin-top:8px;font-size:14px">F<sub>A→B</sub> = − F<sub>B→A</sub></div>
+        </div>
+      </div>
+      <div class="tarjeta" style="margin-top:14px">
+        <h3>Cierra la idea</h3>
+        <p style="margin-bottom:8px">En una frase, conecta las tres leyes: ¿cómo se relacionan entre sí para explicar el movimiento?</p>
+        <textarea id="r_sintesis" placeholder="Escribe tu síntesis de la unidad…"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12. CIERRE -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">Cierre metacognitivo</div>
+      <h2>Semáforo de aprendizaje</h2>
+      <p>¿Cómo te sientes identificando pares de acción-reacción y conectando las tres leyes de Newton?</p>
+      <div class="semaforo" id="semaforo">
+        <button class="luz" data-luz="Verde: lo domino"><i style="background:var(--verde)"></i><strong>Verde</strong><small>Puedo resolverlo solo y explicárselo a otro</small></button>
+        <button class="luz" data-luz="Amarillo: con ayuda"><i style="background:var(--ambar)"></i><strong>Amarillo</strong><small>Lo entiendo, pero necesito ver un ejemplo</small></button>
+        <button class="luz" data-luz="Rojo: necesito apoyo"><i style="background:var(--rojo)"></i><strong>Rojo</strong><small>Todavía confundo acción-reacción con equilibrio</small></button>
+      </div>
+      <div class="tarjeta" style="margin-top:16px">
+        <h3>Una idea que me llevo</h3>
+        <textarea id="r_cierre" placeholder="Escribe en una frase lo más importante de la clase de hoy."></textarea>
+      </div>
+      <div class="tarjeta" style="margin-top:16px;text-align:center">
+        <h3>Entrega tu trabajo</h3>
+        <p style="margin-bottom:12px">Se generará un PDF con tus respuestas y, si el profesor lo configuró, también se enviarán a su planilla de registro.</p>
+        <button class="btn ambar" id="exportar" style="padding:14px 24px;font-size:16px">Entregar (PDF + registro)</button>
+        <p class="aviso" id="estadoPdf"></p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<nav class="nav">
+  <button class="btn ghost" id="prev">← Atrás</button>
+  <div class="puntos" id="puntos"></div>
+  <button class="btn" id="next">Siguiente →</button>
+</nav>
+
+<button class="calc-fab" id="calcFab" aria-label="Abrir calculadora" title="Calculadora">÷</button>
+<div class="calc" id="calc" role="dialog" aria-label="Calculadora">
+  <div class="visor" id="visor">0</div>
+  <div class="teclas">
+    <button class="cl" data-k="C">C</button><button class="cl" data-k="←">←</button><button class="op" data-k="(">(</button><button class="op" data-k=")">)</button>
+    <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button class="op" data-k="/">÷</button>
+    <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button class="op" data-k="*">×</button>
+    <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button class="op" data-k="-">−</button>
+    <button data-k="0">0</button><button data-k=".">.</button><button class="eq" data-k="=">=</button><button class="op" data-k="+">+</button>
+  </div>
+  <div class="memo">Fórmulas: F = m · a · Newton (N)</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ============ ENVÍO A GOOGLE SHEET ============ */
+/*  PROFESOR: no necesitas editar código. En la portada, abre
+    «Configurar registro (profesor)» y pega ahí la URL /exec de tu Apps Script.
+    Cómo obtenerla:
+    1. Usa la plantilla «Registro_Newton3_2M.xlsx» (súbela a Drive y ábrela con Sheets),
+       o crea una Google Sheet nueva.
+    2. Extensiones → Apps Script → pega el contenido de «apps_script_registro.gs» → Guardar.
+       (Ese script escribe cada valor en su columna por nombre, así nunca se descuadra.)
+    3. Implementar → Nueva implementación → «Aplicación web» → acceso «Cualquier usuario».
+       Copia la URL que termina en /exec y pégala en el campo de la portada.
+    Puedes dejar una URL por defecto aquí abajo; el campo de la portada tiene prioridad.  */
+const SHEET_ENDPOINT_DEFECTO = "https://script.google.com/macros/s/AKfycbxHcpFMMDyGJGrgcfmvstYYI0I-C8orEvqM8qJF6lekWPe5i_5VWL2EiBE0wFywwpVx/exec";   // URL /exec por defecto
+
+const sheetUrlInput = document.getElementById('sheetUrl');
+const sheetEstado = document.getElementById('sheetEstado');
+
+// Recupera una URL guardada antes (si el navegador lo permite)
+(function cargarUrl(){
+  let guardada = '';
+  try { guardada = localStorage.getItem('sheetUrl') || ''; } catch(e){}
+  const url = guardada || SHEET_ENDPOINT_DEFECTO;
+  if (url){ sheetUrlInput.value = url; sheetEstado.textContent = 'Registro configurado. Las entregas se enviarán a tu planilla.'; }
+})();
+
+sheetUrlInput.addEventListener('input', () => {
+  const url = sheetUrlInput.value.trim();
+  try { localStorage.setItem('sheetUrl', url); } catch(e){}
+  sheetEstado.textContent = url
+    ? 'Registro configurado. Las entregas se enviarán a tu planilla.'
+    : 'Si lo dejas vacío, la entrega solo genera el PDF local.';
+});
+
+function endpointActual(){
+  return (sheetUrlInput.value.trim()) || SHEET_ENDPOINT_DEFECTO;
+}
+
+function enviarASheet(payload){
+  const url = endpointActual();
+  if (!url){ return Promise.resolve('sin-endpoint'); }
+  return fetch(url, {
+    method: 'POST',
+    mode: 'no-cors',                    // Apps Script no envía cabeceras CORS
+    body: JSON.stringify(payload)       // se lee como e.postData.contents
+  }).then(() => 'enviado').catch(() => 'error');
+}
+
+/* ============ FELIPESOS (gamificación global) ============ */
+let felipesos = 0;
+const yaPremiado = {};                 // evita pagar dos veces la misma tarea
+const saldoEl = document.getElementById('saldoFelipesos');
+const bancoEl = document.getElementById('banco');
+const toastEl = document.getElementById('toast');
+let toastT = null;
+
+function ganarFelipesos(n, motivo, clave){
+  if (clave){ if (yaPremiado[clave]) return; yaPremiado[clave] = true; }
+  felipesos += n;
+  saldoEl.textContent = felipesos;
+  bancoEl.classList.remove('late'); void bancoEl.offsetWidth; bancoEl.classList.add('late');
+  toastEl.innerHTML = '<span class="moneda">Ⓕ</span> +' + n + ' felipesos · ' + motivo;
+  toastEl.classList.add('ver');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => toastEl.classList.remove('ver'), 2200);
+}
+
+/* ============ NAVEGACIÓN ============ */
+const slides = Array.from(document.querySelectorAll('.slide'));
+const puntos = document.getElementById('puntos');
+let i = 0;
+document.getElementById('total').textContent = slides.length;
+
+slides.forEach((_, k) => {
+  const b = document.createElement('button');
+  b.className = 'punto'; b.type = 'button';
+  b.setAttribute('aria-label', 'Ir a la diapositiva ' + (k+1));
+  b.addEventListener('click', () => ir(k));
+  puntos.appendChild(b);
+});
+
+function ir(k){
+  i = Math.max(0, Math.min(slides.length - 1, k));
+  slides.forEach((s, n) => s.classList.toggle('activa', n === i));
+  Array.from(puntos.children).forEach((p, n) => p.classList.toggle('on', n === i));
+  document.getElementById('num').textContent = i + 1;
+  document.getElementById('barra').style.width = ((i + 1) / slides.length * 100) + '%';
+  slides[i].scrollTop = 0;
+}
+document.getElementById('next').addEventListener('click', () => ir(i + 1));
+document.getElementById('prev').addEventListener('click', () => ir(i - 1));
+document.addEventListener('keydown', e => {
+  const t = e.target.tagName;
+  if (t === 'INPUT' || t === 'TEXTAREA') return;
+  if (e.key === 'ArrowRight') ir(i + 1);
+  if (e.key === 'ArrowLeft') ir(i - 1);
+});
+let x0 = null;
+document.getElementById('deck').addEventListener('touchstart', e => x0 = e.touches[0].clientX, {passive:true});
+document.getElementById('deck').addEventListener('touchend', e => {
+  if (x0 === null) return;
+  const d = e.changedTouches[0].clientX - x0;
+  if (Math.abs(d) > 70) ir(d < 0 ? i + 1 : i - 1);
+  x0 = null;
+}, {passive:true});
+ir(0);
+
+/* ============ QR (con respaldos) ============ */
+const qrDiv = document.getElementById('qr');
+const qrTexto = document.getElementById('qrTexto');
+
+function enlaceVisible(txt){
+  return '<a href="' + txt + '" target="_blank" rel="noopener" style="display:block;margin-top:8px;font-size:12px;word-break:break-all;color:var(--azul)">' + txt + '</a>';
+}
+
+function pintarQR(){
+  qrDiv.innerHTML = '';
+  const txt = qrTexto.value.trim() || 'https://claude.ai';
+
+  // 1) Librería local (cdnjs) si cargó
+  if (typeof QRCode !== 'undefined'){
+    try {
+      new QRCode(qrDiv, {text: txt, width: 240, height: 240, colorDark:'#12263F', colorLight:'#FFFFFF', correctLevel: QRCode.CorrectLevel.M});
+      qrDiv.insertAdjacentHTML('beforeend', enlaceVisible(txt));
+      return;
+    } catch(e){ qrDiv.innerHTML = ''; }
+  }
+
+  // 2) Respaldo: servicio de imagen (necesita internet, pero no la librería)
+  const img = new Image();
+  img.width = 240; img.height = 240; img.alt = 'Código QR de la clase';
+  img.style.imageRendering = 'pixelated';
+  img.onload = () => { qrDiv.innerHTML = ''; qrDiv.appendChild(img); qrDiv.insertAdjacentHTML('beforeend', enlaceVisible(txt)); };
+  img.onerror = () => {
+    // 3) Sin red: solo enlace, bien visible
+    qrDiv.innerHTML = '<p style="font-size:13px;line-height:1.5">No se pudo generar la imagen del QR en este dispositivo. Abre o comparte este enlace:</p>' + enlaceVisible(txt);
+  };
+  img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=0&data=' + encodeURIComponent(txt);
+}
+
+window.addEventListener('load', pintarQR);
+qrTexto.addEventListener('input', () => { clearTimeout(qrTexto._t); qrTexto._t = setTimeout(pintarQR, 400); });
+
+/* ============ SIMULADOR: ACCIÓN Y REACCIÓN ============ */
+const el = id => document.getElementById(id);
+const HIELO = 250, CENTRO = 400, SEP = 10;   // separación inicial entre cuerpos
+let t = 0, corriendo = false, empujando = true, ultimo = performance.now();
+// posiciones (centro de cada cuerpo) y velocidades
+let xA = CENTRO - 40, xB = CENTRO + 40, vA = 0, vB = 0;
+
+// hielo rayado
+(function(){
+  let d = '';
+  for (let k = -10; k < 820; k += 18) d += 'M' + k + ',' + HIELO + ' L' + (k - 12) + ',' + (HIELO + 12) + ' ';
+  const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('d', d); p.setAttribute('stroke','#C9D3DE'); p.setAttribute('stroke-width','1.3');
+  el('hatch').appendChild(p);
+})();
+
+function flecha(id, tid, x1, y1, x2, y2, texto, tx, ty, anchor, mostrar){
+  const l = el(id), tt = el(tid);
+  const on = mostrar !== false && Math.hypot(x2 - x1, y2 - y1) > 6;
+  l.style.display = on ? '' : 'none';
+  tt.style.display = on ? '' : 'none';
+  if (!on) return;
+  l.setAttribute('x1', x1); l.setAttribute('y1', y1);
+  l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+  tt.setAttribute('x', tx); tt.setAttribute('y', ty);
+  if (anchor) tt.setAttribute('text-anchor', anchor);
+  tt.textContent = texto;
+}
+
+function datos(){
+  const F = +el('sF').value, ma = +el('sMa').value, mb = +el('sMb').value;
+  return { F, ma, mb, aA: F / ma, aB: F / mb };
+}
+
+function pintarLecturas(d){
+  el('oFa').textContent = d.F + ' N';
+  el('oFb').textContent = d.F + ' N';
+  el('oAa').textContent = d.aA.toFixed(1) + ' m/s²';
+  el('oAb').textContent = d.aB.toFixed(1) + ' m/s²';
+  el('oT').textContent = t.toFixed(1);
+  const ley = el('oLey'), pill = el('oPill');
+  if (d.ma === d.mb){ ley.textContent = 'Misma masa, misma a'; }
+  else { ley.textContent = (d.ma < d.mb ? 'A acelera más' : 'B acelera más'); }
+}
+
+function dibujar(now){
+  const dt = Math.min((now - ultimo) / 1000, 0.04); ultimo = now;
+  if (corriendo) avanzar(dt);
+  else { const d = datos(); pintarLecturas(d); pintarEscena(d); }
+  requestAnimationFrame(dibujar);
+}
+
+function avanzar(dt){
+  const d = datos();
+  // El empuje solo actúa durante el primer instante (mientras están en contacto)
+  if (empujando){
+    vA -= d.aA * dt;   // A sale hacia la izquierda
+    vB += d.aB * dt;   // B sale hacia la derecha
+  }
+  xA += vA * dt * 26; xB += vB * dt * 26;
+  // dejan de empujarse apenas se separan
+  if (xB - xA > 84) empujando = false;
+  // límites de la escena
+  if (xA < 40){ xA = 40; vA = 0; } if (xB > 760){ xB = 760; vB = 0; }
+  t += dt;
+  pintarLecturas(d); pintarEscena(d);
+}
+
+function pintarEscena(d){
+  const ladoA = 44 + d.ma * 1.1, ladoB = 44 + d.mb * 1.1;
+  const topA = HIELO - ladoA, topB = HIELO - ladoB;
+  el('cuerpoA').setAttribute('x', xA - ladoA/2); el('cuerpoA').setAttribute('y', topA);
+  el('cuerpoA').setAttribute('width', ladoA); el('cuerpoA').setAttribute('height', ladoA);
+  el('cuerpoB').setAttribute('x', xB - ladoB/2); el('cuerpoB').setAttribute('y', topB);
+  el('cuerpoB').setAttribute('width', ladoB); el('cuerpoB').setAttribute('height', ladoB);
+  el('etA').setAttribute('x', xA); el('etA').setAttribute('y', HIELO - ladoA/2 + 5);
+  el('etB').setAttribute('x', xB); el('etB').setAttribute('y', HIELO - ladoB/2 + 5);
+  el('etA').textContent = d.ma + ' kg'; el('etB').textContent = d.mb + ' kg';
+
+  // línea de contacto entre ambos
+  const medio = (xA + xB) / 2;
+  el('linea').setAttribute('x1', medio); el('linea').setAttribute('x2', medio);
+
+  // Fuerzas del par: iguales en largo, opuestas. Escala fija.
+  const H = 2.6, largo = d.F * H;
+  const yA = HIELO - ladoA/2, yB = HIELO - ladoB/2;
+  // fuerza sobre A: apunta a la izquierda desde el borde interno de A
+  flecha('vFa','tFa', xA, yA, xA - largo, yA, 'F = ' + d.F + ' N', xA - largo - 6, yA - 8, 'end', d.F > 0);
+  // fuerza sobre B: apunta a la derecha desde el borde interno de B
+  flecha('vFb','tFb', xB, yB, xB + largo, yB, 'F = ' + d.F + ' N', xB + largo + 6, yB - 8, 'start', d.F > 0);
+
+  // velocidades bajo el hielo
+  const lvA = Math.min(Math.abs(vA) * 16, 150) * (vA < 0 ? -1 : 1);
+  const lvB = Math.min(Math.abs(vB) * 16, 150) * (vB < 0 ? -1 : 1);
+  flecha('vVa','tVa', xA, 300, xA + lvA, 300, 'vA = ' + Math.abs(vA).toFixed(1), xA + lvA/2, 320, 'middle', Math.abs(vA) > 0.05);
+  flecha('vVb','tVb', xB, 300, xB + lvB, 300, 'vB = ' + Math.abs(vB).toFixed(1), xB + lvB/2, 320, 'middle', Math.abs(vB) > 0.05);
+}
+
+function reset(){ xA = CENTRO - 40; xB = CENTRO + 40; vA = 0; vB = 0; t = 0; empujando = true; }
+
+/* --- Transporte --- */
+const btnPlay = el('btnPlay'), icPlay = el('icPlay'), txtPlay = el('txtPlay');
+function play(estado){
+  corriendo = estado; ultimo = performance.now();
+  btnPlay.classList.toggle('corriendo', corriendo);
+  icPlay.textContent = corriendo ? '❚❚' : '▶';
+  txtPlay.textContent = corriendo ? 'Pausar' : 'Reproducir';
+}
+btnPlay.addEventListener('click', () => play(!corriendo));
+el('btnRebobinar').addEventListener('click', () => { reset(); play(false); });
+el('btnPaso').addEventListener('click', () => { play(false); avanzar(0.1); });
+el('btnValores').addEventListener('click', () => {
+  fijar('F', 30); fijar('Ma', 6); fijar('Mb', 3);
+  reset(); play(false);
+});
+document.addEventListener('keydown', e => {
+  const tg = e.target.tagName;
+  if (tg === 'INPUT' || tg === 'TEXTAREA') return;
+  if (e.code === 'Space' && el('escena').closest('.slide').classList.contains('activa')){
+    e.preventDefault(); play(!corriendo);
+  }
+});
+
+/* --- Valores editables --- */
+function fijar(clave, valor){
+  const r = el('s' + clave), n = el('n' + clave);
+  let x = parseFloat(String(valor).replace(',', '.'));
+  if (isNaN(x)) x = +r.value;
+  x = Math.min(+r.max, Math.max(+r.min, x));
+  r.value = x; n.value = x;
+  return x;
+}
+['F','Ma','Mb'].forEach(clave => {
+  const r = el('s' + clave), n = el('n' + clave);
+  r.addEventListener('input', () => { n.value = r.value; reset(); });
+  n.addEventListener('input', () => { const x = parseFloat(n.value.replace(',', '.')); if (!isNaN(x)) r.value = Math.min(+r.max, Math.max(+r.min, x)); reset(); });
+  n.addEventListener('change', () => { fijar(clave, n.value); reset(); });
+  n.addEventListener('keydown', e => { if (e.key === 'Enter') n.blur(); });
+});
+
+el('escena').addEventListener('dblclick', () => { reset(); play(false); });
+requestAnimationFrame(dibujar);
+
+/* ============ SIMULADOR LUNA-TIERRA ============ */
+(function luna(){
+  const CX = 400, CY = 210;
+  const svg = el('escenaLuna');
+  let ang = 0, corriendo = true, bamboleo = false, ult = performance.now();
+
+  // campo de estrellas
+  (function(){
+    let s = '';
+    for (let k = 0; k < 60; k++){
+      const x = Math.random() * 800, y = Math.random() * 420, r = Math.random() * 1.3 + 0.3;
+      s += '<circle cx="' + x.toFixed(0) + '" cy="' + y.toFixed(0) + '" r="' + r.toFixed(1) + '" fill="#FFFFFF" opacity="' + (Math.random() * 0.5 + 0.2).toFixed(2) + '"/>';
+    }
+    el('estrellas').innerHTML = s;
+  })();
+
+  function set(id, a){ const e = el(id); for (const k in a) e.setAttribute(k, a[k]); }
+
+  function pinta(){
+    const dist = +el('sDist').value;
+    el('orbita').setAttribute('r', dist);
+    // fuerza gravitacional simplificada ~ 1/dist² escalada a un valor "bonito"
+    const F = Math.round(2.25e6 / (dist * dist));
+    el('oFl').textContent = F; el('oFt').textContent = F; el('oFpar').textContent = F;
+
+    // La Tierra se bambolea alrededor del baricentro (razón de masas 81:1 → radio pequeño)
+    const rTierra = bamboleo ? dist / 81 : 0;
+    const tx = CX - rTierra * Math.cos(ang), ty = CY - rTierra * Math.sin(ang);
+    set('tierra', {cx: tx, cy: ty});
+
+    const lx = CX + dist * Math.cos(ang), ly = CY + dist * Math.sin(ang);
+    set('luna', {cx: lx, cy: ly});
+    set('etLuna', {x: lx, y: ly - 20});
+
+    // vector unitario Luna→Tierra
+    const dx = tx - lx, dy = ty - ly, L = Math.hypot(dx, dy) || 1;
+    const ux = dx / L, uy = dy / L;
+    const largo = Math.min(F * 0.35, 70);   // ambas flechas idénticas
+
+    // fuerza sobre la Luna: apunta hacia la Tierra (desde la Luna)
+    set('fTierra', {x1: lx, y1: ly, x2: lx + ux * largo, y2: ly + uy * largo});
+    set('tfTierra', {x: lx + ux * largo * 0.5 + 8, y: ly + uy * largo * 0.5});
+    el('tfTierra').textContent = 'F = ' + F;
+    // fuerza sobre la Tierra: apunta hacia la Luna (desde la Tierra), mismo largo
+    set('fLuna', {x1: tx, y1: ty, x2: tx - ux * largo, y2: ty - uy * largo});
+    set('tfLuna', {x: tx - ux * largo * 0.5 - 8, y: ty - uy * largo * 0.5});
+    el('tfLuna').textContent = 'F = ' + F;
+  }
+
+  function bucle(now){
+    const dt = Math.min((now - ult) / 1000, 0.05); ult = now;
+    if (corriendo) ang += dt * (+el('sVel').value) * 0.9;
+    pinta();
+    requestAnimationFrame(bucle);
+  }
+
+  const bp = el('btnPlayLuna');
+  bp.addEventListener('click', () => {
+    corriendo = !corriendo; ult = performance.now();
+    bp.classList.toggle('corriendo', corriendo);
+    el('icPlayLuna').textContent = corriendo ? '❚❚' : '▶';
+    el('txtPlayLuna').textContent = corriendo ? 'Pausar' : 'Reproducir';
+  });
+  bp.classList.add('corriendo');
+
+  el('btnBamboleo').addEventListener('click', () => {
+    bamboleo = !bamboleo;
+    el('btnBamboleo').textContent = bamboleo ? 'Ocultar bamboleo de la Tierra' : 'Ver bamboleo de la Tierra';
+    el('btnBamboleo').classList.toggle('corriendo', bamboleo);
+  });
+
+  // deslizador ↔ campo numérico
+  [['Dist'],['Vel']].forEach(([c]) => {
+    const r = el('s' + c), n = el('n' + c);
+    r.addEventListener('input', () => { n.value = r.value; });
+    n.addEventListener('input', () => { const x = parseFloat(n.value.replace(',', '.')); if (!isNaN(x)) r.value = Math.min(+r.max, Math.max(+r.min, x)); });
+    n.addEventListener('keydown', e => { if (e.key === 'Enter') n.blur(); });
+  });
+
+  requestAnimationFrame(bucle);
+})();
+
+/* ============ EJERCICIOS ============ */
+const ejercicios = {
+  1:{r:30, u:'N',    dato:'Niño empuja pared con 30 N (reacción)'},
+  2:{r:2,  u:'m/s²', dato:'Patinador 40 kg, fuerza 80 N'},
+  3:{r:4,  u:'m/s²', dato:'Persona 30 kg empujada con 120 N'},
+  4:{r:500,u:'N',    dato:'Cohete: gases 500 N (reacción)'},
+  5:{r:12, u:'m/s²', dato:'Salto: reacción 600 N, masa 50 kg'}
+};
+const premioEj = {1:10, 2:15, 3:20, 4:10, 5:15};
+const respEj = {};
+document.querySelectorAll('[data-check]').forEach(b => b.addEventListener('click', () => {
+  const k = b.dataset.check, val = document.getElementById('e'+k).value.replace(',', '.').trim();
+  const f = document.getElementById('f'+k), num = parseFloat(val);
+  respEj[k] = val;
+  if (isNaN(num)){ f.className='feedback no'; f.textContent='Escribe un número.'; return; }
+  if (Math.abs(num - ejercicios[k].r) < 0.06){
+    f.className='feedback ok'; f.textContent='Correcto: ' + ejercicios[k].r + ' ' + ejercicios[k].u + '.';
+    ganarFelipesos(premioEj[k], 'ejercicio ' + k + ' correcto', 'ej-' + k);
+  } else {
+    f.className='feedback no'; f.textContent='Todavía no. Revisa qué ley aplica: acción-reacción da igual módulo; para la aceleración usa a = F / m.';
+  }
+}));
+document.querySelectorAll('[data-pasos]').forEach(b => b.addEventListener('click', () => {
+  document.getElementById('p'+b.dataset.pasos).classList.toggle('ver');
+}));
+
+/* ============ PREGUNTAS CONCEPTUALES ============ */
+const conceptos = [
+  { q:'Según la tercera ley de Newton, si empujas una mesa con 40 N, la mesa te empuja a ti con:',
+    o:['40 N en sentido opuesto','40 N en el mismo sentido','80 N','Depende de tu masa'], c:0,
+    exp:'Acción y reacción son iguales en módulo (40 N) y opuestas en sentido.' },
+  { q:'¿Por qué acción y reacción no se cancelan entre sí?',
+    o:['Porque actúan sobre cuerpos distintos','Porque tienen distinto módulo','Porque una es mayor','Sí se cancelan siempre'], c:0,
+    exp:'Cada fuerza del par actúa sobre un cuerpo diferente, así que no se suman sobre el mismo objeto.' },
+  { q:'Dos patinadores de distinta masa se empujan. ¿Quién adquiere mayor aceleración?',
+    o:['El de menor masa','El de mayor masa','Ambos la misma','El que empuja primero'], c:0,
+    exp:'La fuerza es la misma para ambos, pero a = F/m: menor masa, mayor aceleración.' },
+  { q:'Un cohete avanza en el espacio vacío gracias a que:',
+    o:['Expulsa gases y estos lo empujan (reacción)','Se apoya en el aire','Usa la gravedad del Sol','Reduce su masa'], c:0,
+    exp:'El cohete empuja los gases y, por la 3ª ley, los gases lo empujan a él. No necesita aire.' },
+  { q:'La primera ley de Newton (inercia) afirma que, sin fuerza neta, un cuerpo:',
+    o:['Mantiene su velocidad (reposo o MRU)','Siempre se detiene','Siempre acelera','Cambia de dirección'], c:0,
+    exp:'Sin fuerza neta no hay aceleración: el cuerpo conserva su estado de movimiento.' }
+];
+const cont = document.getElementById('conceptuales');
+const respCon = {};
+conceptos.forEach((c, n) => {
+  const card = document.createElement('div');
+  card.className = 'tarjeta'; card.style.marginBottom = '12px';
+  card.innerHTML = '<h3>' + (n+1) + '. ' + c.q + '</h3><div class="opciones" id="op'+n+'"></div><div class="feedback" id="fc'+n+'"></div>';
+  cont.appendChild(card);
+  const cajaOp = card.querySelector('#op'+n);
+  c.o.forEach((txt, j) => {
+    const lab = document.createElement('label');
+    lab.className = 'opcion';
+    lab.innerHTML = '<input type="radio" name="c'+n+'" value="'+j+'"><span>'+txt+'</span>';
+    lab.addEventListener('click', () => {
+      respCon[n] = j;
+      cajaOp.querySelectorAll('.opcion').forEach(o => o.classList.remove('sel'));
+      lab.classList.add('sel');
+    });
+    cajaOp.appendChild(lab);
+  });
+});
+document.getElementById('revisarConceptos').addEventListener('click', () => {
+  let ok = 0;
+  conceptos.forEach((c, n) => {
+    const f = document.getElementById('fc'+n);
+    if (respCon[n] === undefined){ f.className='feedback no'; f.textContent='Sin responder.'; return; }
+    if (respCon[n] === c.c){ ok++; f.className='feedback ok'; f.textContent='Correcto. ' + c.exp; ganarFelipesos(8, 'concepto ' + (n+1), 'con-' + n); }
+    else { f.className='feedback no'; f.textContent='Revisa: ' + c.exp; }
+  });
+  document.getElementById('puntaje').textContent = ok + ' de ' + conceptos.length + ' correctas';
+});
+
+/* ============ PREGUNTAS DE DESARROLLO ============ */
+document.getElementById('registrarDesarrollo').addEventListener('click', () => {
+  const campos = ['d1','d2','d3','d4'];
+  const escritas = campos.filter(id => document.getElementById(id).value.trim().length >= 15).length;
+  const aviso = document.getElementById('avisoDesarrollo');
+  if (escritas === 0){ aviso.textContent = 'Escribe al menos una respuesta antes de registrar.'; return; }
+  aviso.textContent = escritas + ' de 4 respuestas registradas. Se incluirán en tu PDF.';
+  if (escritas === 4) ganarFelipesos(20, 'completaste el desarrollo', 'desarrollo-full');
+  else ganarFelipesos(escritas * 4, 'esfuerzo en desarrollo', 'desarrollo-parcial-' + escritas);
+});
+
+/* ============ SEMÁFORO ============ */
+let semaforo = '';
+document.querySelectorAll('.luz').forEach(l => l.addEventListener('click', () => {
+  document.querySelectorAll('.luz').forEach(o => o.classList.remove('sel'));
+  l.classList.add('sel'); semaforo = l.dataset.luz;
+}));
+
+/* ============ CALCULADORA ============ */
+const calc = document.getElementById('calc'), visor = document.getElementById('visor');
+let expr = '';
+document.getElementById('calcFab').addEventListener('click', () => calc.classList.toggle('abierta'));
+calc.querySelectorAll('.teclas button').forEach(b => b.addEventListener('click', () => {
+  const k = b.dataset.k;
+  if (k === 'C'){ expr = ''; }
+  else if (k === '←'){ expr = expr.slice(0, -1); }
+  else if (k === '='){
+    try {
+      if (!/^[0-9+\-*/(). ]+$/.test(expr)) throw 0;
+      const r = Function('"use strict";return (' + expr + ')')();
+      expr = (Math.round(r * 1e6) / 1e6).toString();
+    } catch(e){ expr = ''; visor.textContent = 'Error'; return; }
+  }
+  else expr += k;
+  visor.textContent = expr || '0';
+}));
+
+/* ============ EXPORTAR PDF ============ */
+function recolectar(){
+  return {
+    nombre: document.getElementById('nombre').value.trim() || 'Sin nombre',
+    curso: document.getElementById('curso').value.trim() || 'Sin curso',
+    tps: document.getElementById('r_tps').value.trim(),
+    sim: document.getElementById('r_sim').value.trim(),
+    luna: document.getElementById('r_luna').value.trim(),
+    steam: document.getElementById('r_steam').value.trim(),
+    abierta: document.getElementById('r_abierta').value.trim(),
+    cierre: document.getElementById('r_cierre').value.trim(),
+    semaforo: semaforo || 'No seleccionado',
+    d1: document.getElementById('d1').value.trim(),
+    d2: document.getElementById('d2').value.trim(),
+    d3: document.getElementById('d3').value.trim(),
+    d4: document.getElementById('d4').value.trim(),
+    sintesis: document.getElementById('r_sintesis').value.trim()
+  };
+}
+
+document.getElementById('exportar').addEventListener('click', () => {
+  const d = recolectar(), estado = document.getElementById('estadoPdf');
+  if (!window.jspdf || !window.jspdf.jsPDF){ estado.textContent = 'No se pudo cargar el generador de PDF. Se abrirá la vista de impresión: elige "Guardar como PDF".'; window.print(); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'letter'});
+  const M = 54, W = 612 - M*2;
+  let y = M;
+
+  const salto = h => { if (y + h > 730){ doc.addPage(); y = M; } };
+  const titulo = t => { salto(30); doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(18,38,63); doc.text(t, M, y); y += 6; doc.setDrawColor(201,211,222); doc.line(M, y, M + W, y); y += 14; };
+  const parrafo = (t, gris) => {
+    doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
+    doc.setTextColor(gris ? 120 : 40, gris ? 130 : 50, gris ? 145 : 65);
+    const ls = doc.splitTextToSize(t && t.length ? t : '(sin respuesta)', W);
+    ls.forEach(l => { salto(15); doc.text(l, M, y); y += 15; });
+    y += 6;
+  };
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(17); doc.setTextColor(18,38,63);
+  doc.text('Unidad 2 · Tercera ley de Newton: acción y reacción', M, y); y += 20;
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(100,110,125);
+  doc.text('Física · 2° Medio · Colegio San Agustín de Villa Alemana · OA 10', M, y); y += 24;
+  doc.setDrawColor(224,145,47); doc.setLineWidth(2); doc.line(M, y, M + W, y); doc.setLineWidth(1); y += 22;
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(18,38,63);
+  doc.text('Estudiante: ' + d.nombre + '     Curso: ' + d.curso, M, y); y += 16;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(110,120,135);
+  doc.text('Fecha de entrega: ' + new Date().toLocaleString('es-CL'), M, y); y += 16;
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(180,120,20);
+  doc.text('Felipesos ganados en la clase: ' + felipesos, M, y); y += 26;
+
+  titulo('1. Activación · Piensa, comparte, discute');
+  parrafo(d.tps);
+
+  titulo('2. Simulador patinadores · Pregunta guiada');
+  parrafo(d.sim);
+
+  titulo('2b. Simulador Luna-Tierra · Pregunta guiada');
+  parrafo(d.luna);
+
+  titulo('3. Ejercicios · Acción-reacción y 2ª ley');
+  let ejOk = 0;
+  const nivEj = {1:'Básico', 2:'Intermedio', 3:'Desafío', 4:'Básico', 5:'Intermedio'};
+  Object.keys(ejercicios).forEach(k => {
+    const dado = respEj[k] !== undefined ? respEj[k] : '';
+    const num = parseFloat(String(dado).replace(',', '.'));
+    const correcto = !isNaN(num) && Math.abs(num - ejercicios[k].r) < 0.06;
+    if (correcto) ejOk++;
+    salto(34);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(18,38,63);
+    doc.text(nivEj[k] + ' — ' + ejercicios[k].dato, M, y); y += 14;
+    doc.setFont('helvetica','normal'); doc.setTextColor(correcto ? 46 : 196, correcto ? 139 : 69, correcto ? 107 : 58);
+    doc.text('Respuesta del estudiante: ' + (dado || '(sin responder)') + '   ·   ' + (correcto ? 'Correcta' : 'Incorrecta') + '   ·   Esperada: ' + ejercicios[k].r + ' ' + ejercicios[k].u, M, y);
+    y += 20;
+  });
+
+  titulo('4. Conexión STEAM');
+  parrafo(d.steam);
+
+  titulo('5. Preguntas conceptuales');
+  let ok = 0;
+  conceptos.forEach((c, n) => {
+    const sel = respCon[n], acierto = sel === c.c;
+    if (acierto) ok++;
+    salto(50);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(18,38,63);
+    doc.splitTextToSize((n+1) + '. ' + c.q, W).forEach(l => { salto(14); doc.text(l, M, y); y += 14; });
+    doc.setFont('helvetica','normal'); doc.setTextColor(acierto ? 46 : 196, acierto ? 139 : 69, acierto ? 107 : 58);
+    const marca = sel === undefined ? '(sin responder)' : c.o[sel];
+    doc.splitTextToSize('Marcó: ' + marca + '  ·  ' + (sel === undefined ? '' : (acierto ? 'Correcta' : 'Incorrecta · Correcta: ' + c.o[c.c])), W).forEach(l => { salto(14); doc.text(l, M, y); y += 14; });
+    y += 6;
+  });
+  salto(20);
+  doc.setFont('helvetica','bold'); doc.setTextColor(18,38,63);
+  doc.text('Puntaje conceptual: ' + ok + '/' + conceptos.length + '   ·   Ejercicios correctos: ' + ejOk + '/5', M, y); y += 24;
+
+  titulo('6. Preguntas de desarrollo');
+  const desarrollo = [
+    ['Fuerzas que no se cancelan', d.d1],
+    ['El cohete en el vacío', d.d2],
+    ['Misma fuerza, distinta aceleración', d.d3],
+    ['Las tres leyes juntas', d.d4]
+  ];
+  desarrollo.forEach((par, n) => {
+    salto(20);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(18,38,63);
+    doc.text((n+1) + '. ' + par[0], M, y); y += 15;
+    parrafo(par[1]);
+  });
+
+  titulo('7. Pregunta abierta · El caballo y la carreta');
+  parrafo(d.abierta);
+
+  titulo('8. Síntesis · Las tres leyes de Newton');
+  parrafo(d.sintesis);
+
+  titulo('9. Cierre metacognitivo');
+  doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(18,38,63);
+  salto(16); doc.text('Semáforo: ' + d.semaforo, M, y); y += 18;
+  doc.setFont('helvetica','normal');
+  parrafo(d.cierre);
+
+  const total = doc.internal.getNumberOfPages();
+  for (let p = 1; p <= total; p++){
+    doc.setPage(p);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(150,158,170);
+    doc.text('Física 2° Medio · Unidad 2 · Tercera ley de Newton · Prof. Felipe Jiménez', M, 762);
+    doc.text(p + ' / ' + total, 612 - M, 762, {align:'right'});
+  }
+
+  const limpio = d.nombre.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_');
+  doc.save('U2_Newton3_' + limpio + '.pdf');
+
+  // Registro para el Google Sheet (una fila por estudiante)
+  const registro = {
+    fecha: new Date().toLocaleString('es-CL'),
+    nombre: d.nombre,
+    curso: d.curso,
+    felipesos: felipesos,
+    ejercicios_correctos: ejOk + '/5',
+    puntaje_conceptual: ok + '/' + conceptos.length,
+    semaforo: d.semaforo,
+    activacion: d.tps,
+    sim_patinadores: d.sim,
+    sim_luna: d.luna,
+    steam: d.steam,
+    desarrollo_1: d.d1,
+    desarrollo_2: d.d2,
+    desarrollo_3: d.d3,
+    desarrollo_4: d.d4,
+    pregunta_abierta: d.abierta,
+    sintesis: d.sintesis,
+    idea_final: d.cierre
+  };
+
+  if (!endpointActual()){
+    estado.textContent = 'PDF generado. (El envío a la planilla no está configurado.)';
+  } else {
+    estado.textContent = 'PDF generado. Enviando tus respuestas al profesor…';
+    enviarASheet(registro).then(r => {
+      estado.textContent = (r === 'error')
+        ? 'PDF generado. No se pudo enviar a la planilla; entrega el PDF directamente.'
+        : 'PDF generado y respuestas enviadas al profesor. ¡Listo!';
+    });
+  }
+});
+
+})();
+</script>
+</body>
+</html>
