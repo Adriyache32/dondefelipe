@@ -57,27 +57,39 @@ window.addEventListener('error', function (e) {
   /* Controles reposicionables: arriba (por defecto), a los costados o abajo.
      Se pueden ocultar. Arriba es el valor por defecto porque en el navegador de
      computador la UI del sistema ocupa el borde inferior. */
+  /* Base: aunque el JS no alcance a aplicar la clase, los controles YA quedan
+     colocados a la izquierda. Nunca deben caer sobre los visores de arriba. */
   #controles{
-    position:fixed;z-index:10;display:flex;gap:7px;flex-wrap:wrap;pointer-events:none;
-  }
-  #controles > *{pointer-events:auto;}
-  #controles.pos-arriba{
-    left:0;right:0;top:calc(50px + env(safe-area-inset-top,0));
-    justify-content:center;padding:8px 12px 16px;
-    background:linear-gradient(180deg,rgba(10,16,15,.45),rgba(10,16,15,0));
-  }
-  #controles.pos-abajo{
-    left:0;right:0;bottom:0;justify-content:center;
-    padding:14px 12px calc(14px + env(safe-area-inset-bottom,0));
-    background:linear-gradient(0deg,rgba(10,16,15,.5),rgba(10,16,15,0));
-  }
-  #controles.pos-izq, #controles.pos-der{
-    top:calc(92px + env(safe-area-inset-top,0));
+    position:fixed;z-index:10;display:flex;gap:7px;pointer-events:none;
+    left:0;top:calc(92px + env(safe-area-inset-top,0));
     flex-direction:column;width:auto;max-width:196px;
     max-height:calc(100vh - 180px);overflow-y:auto;padding:10px;
   }
-  #controles.pos-izq{left:0;align-items:flex-start;}
-  #controles.pos-der{right:0;align-items:flex-end;}
+  #controles > *{pointer-events:auto;}
+  /* Arriba y abajo: fila. Hay que revertir explícitamente lo que la base
+     define para la columna (dirección, ancho, alto y scroll). */
+  #controles.pos-arriba, #controles.pos-abajo{
+    left:0;right:0;flex-direction:row;flex-wrap:wrap;justify-content:center;
+    width:auto;max-width:none;max-height:none;overflow:visible;align-items:center;
+  }
+  #controles.pos-arriba{
+    top:calc(50px + env(safe-area-inset-top,0));bottom:auto;
+    padding:8px 12px 16px;
+    background:linear-gradient(180deg,rgba(10,16,15,.45),rgba(10,16,15,0));
+  }
+  #controles.pos-abajo{
+    bottom:0;top:auto;
+    padding:14px 12px calc(14px + env(safe-area-inset-bottom,0));
+    background:linear-gradient(0deg,rgba(10,16,15,.5),rgba(10,16,15,0));
+  }
+  /* Costados: columna con scroll propio */
+  #controles.pos-izq, #controles.pos-der{
+    top:calc(92px + env(safe-area-inset-top,0));bottom:auto;
+    flex-direction:column;flex-wrap:nowrap;width:auto;max-width:196px;
+    max-height:calc(100vh - 180px);overflow-y:auto;padding:10px;
+  }
+  #controles.pos-izq{left:0;right:auto;align-items:flex-start;}
+  #controles.pos-der{right:0;left:auto;align-items:flex-end;}
   #controles.pos-izq > *, #controles.pos-der > *{width:100%;text-align:left;}
   #controles.oculto{display:none;}
 
@@ -285,61 +297,6 @@ window.addEventListener('error', function (e) {
   @media (prefers-reduced-motion: reduce){ #ficha{transition:none;} }
 </style>
 
-<script>
-/* Disposición de los controles. Se guarda la preferencia en el navegador.
-   Por defecto van A LA IZQUIERDA, en columna: así el borde inferior queda
-   libre (ahí es donde el navegador de escritorio dibuja su propia barra) y
-   tampoco compiten con el título de arriba.
-   Siempre se pueden ocultar, desde el menú o con la tecla H. */
-(function () {
-  var POS = ['arriba', 'izq', 'der', 'abajo'];
-  var cont = document.getElementById('controles');
-  var btn  = document.getElementById('ctrl-btn');
-  var menu = document.getElementById('ctrl-menu');
-  var guardado, oculto;
-  // La clave lleva versión: al cambiar el valor por defecto, se aplica una vez
-  // aunque el equipo ya tuviera guardada una preferencia anterior.
-  try { guardado = localStorage.getItem('mundo_ctrl_pos_v2'); } catch (e) {}
-  try { oculto = localStorage.getItem('mundo_ctrl_oculto_v2') === '1'; } catch (e) {}
-  var pos = POS.indexOf(guardado) >= 0 ? guardado : 'izq';
-
-  function aplicar() {
-    POS.forEach(function (p) { cont.classList.remove('pos-' + p); });
-    cont.classList.add('pos-' + pos);
-    cont.classList.toggle('oculto', !!oculto);
-    Array.prototype.forEach.call(menu.querySelectorAll('button[data-pos]'), function (b) {
-      b.classList.toggle('activo', b.getAttribute('data-pos') === pos);
-    });
-    var bo = document.getElementById('ctrl-ocultar');
-    if (bo) bo.textContent = oculto ? 'Mostrar controles (H)' : 'Ocultar controles (H)';
-    try {
-      localStorage.setItem('mundo_ctrl_pos_v2', pos);
-      localStorage.setItem('mundo_ctrl_oculto_v2', oculto ? '1' : '0');
-    } catch (e) {}
-  }
-
-  btn.addEventListener('click', function (e) {
-    e.stopPropagation(); menu.classList.toggle('abierto');
-  });
-  document.addEventListener('click', function (e) {
-    if (!menu.contains(e.target) && e.target !== btn) menu.classList.remove('abierto');
-  });
-  menu.addEventListener('click', function (e) {
-    var b = e.target.closest('button'); if (!b) return;
-    if (b.hasAttribute('data-pos')) { pos = b.getAttribute('data-pos'); oculto = false; }
-    else if (b.id === 'ctrl-ocultar') { oculto = !oculto; }
-    aplicar();
-  });
-  // Atajo: H oculta o muestra (no interfiere al escribir en un campo)
-  window.addEventListener('keydown', function (e) {
-    var f = document.activeElement;
-    if (f && (f.tagName === 'INPUT' || f.tagName === 'TEXTAREA' || f.isContentEditable)) return;
-    if (e.key === 'h' || e.key === 'H') { oculto = !oculto; aplicar(); }
-  });
-  aplicar();
-})();
-</script>
-
 <script src="mundo.js"></script>
 </head>
 <body>
@@ -459,5 +416,67 @@ window.addEventListener('error', function (e) {
     });
   })();
 </script>
+<script>
+/* Disposición de los controles. Se guarda la preferencia en el navegador.
+   Por defecto van A LA IZQUIERDA, en columna: así el borde inferior queda
+   libre (ahí es donde el navegador de escritorio dibuja su propia barra) y
+   tampoco compiten con el título de arriba.
+   Siempre se pueden ocultar, desde el menú o con la tecla H. */
+function iniciarControles() {
+  var POS = ['arriba', 'izq', 'der', 'abajo'];
+  var cont = document.getElementById('controles');
+  // Si por cualquier motivo el DOM aún no está listo, reintentar al cargar.
+  if (!cont) { document.addEventListener('DOMContentLoaded', iniciarControles); return; }
+  var btn  = document.getElementById('ctrl-btn');
+  var menu = document.getElementById('ctrl-menu');
+  var guardado, oculto;
+  // La clave lleva versión: al cambiar el valor por defecto, se aplica una vez
+  // aunque el equipo ya tuviera guardada una preferencia anterior.
+  try { guardado = localStorage.getItem('mundo_ctrl_pos_v2'); } catch (e) {}
+  try { oculto = localStorage.getItem('mundo_ctrl_oculto_v2') === '1'; } catch (e) {}
+  var pos = POS.indexOf(guardado) >= 0 ? guardado : 'izq';
+
+  function aplicar() {
+    POS.forEach(function (p) { cont.classList.remove('pos-' + p); });
+    cont.classList.add('pos-' + pos);
+    cont.classList.toggle('oculto', !!oculto);
+    Array.prototype.forEach.call(menu.querySelectorAll('button[data-pos]'), function (b) {
+      b.classList.toggle('activo', b.getAttribute('data-pos') === pos);
+    });
+    var bo = document.getElementById('ctrl-ocultar');
+    if (bo) bo.textContent = oculto ? 'Mostrar controles (H)' : 'Ocultar controles (H)';
+    try {
+      localStorage.setItem('mundo_ctrl_pos_v2', pos);
+      localStorage.setItem('mundo_ctrl_oculto_v2', oculto ? '1' : '0');
+    } catch (e) {}
+  }
+
+  btn.addEventListener('click', function (e) {
+    e.stopPropagation(); menu.classList.toggle('abierto');
+  });
+  document.addEventListener('click', function (e) {
+    if (!menu.contains(e.target) && e.target !== btn) menu.classList.remove('abierto');
+  });
+  menu.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.hasAttribute('data-pos')) { pos = b.getAttribute('data-pos'); oculto = false; }
+    else if (b.id === 'ctrl-ocultar') { oculto = !oculto; }
+    aplicar();
+  });
+  // Atajo: H oculta o muestra (no interfiere al escribir en un campo)
+  window.addEventListener('keydown', function (e) {
+    var f = document.activeElement;
+    if (f && (f.tagName === 'INPUT' || f.tagName === 'TEXTAREA' || f.isContentEditable)) return;
+    if (e.key === 'h' || e.key === 'H') { oculto = !oculto; aplicar(); }
+  });
+  aplicar();
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', iniciarControles);
+} else {
+  iniciarControles();
+}
+</script>
+
 </body>
 </html>
