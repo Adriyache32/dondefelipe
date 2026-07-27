@@ -213,47 +213,205 @@ MUNDO.forma('galpon', function (H, color, b) {
 // REFUGIO: tres niveles habitables, escaleras y piezas. La estructura física
 // (pisos, muros, peldaños) se declara en el objeto; acá va solo lo visible.
 MUNDO.forma('refugio', function (H, color, b) {
-  var NIV = [0.15, 3.3, 6.5], AL = 3.15;
-  // losas de entrepiso visibles
-  NIV.forEach(function (y, i) {
-    if (i === 0) return;
-    H.pieza('caja', '#8a7a5e', 'solido', b, [0, y - 0.16, 0], [0,0,0], [14.2, 0.32, 12.2], 0);
-  });
-  // muros de piedra y madera por nivel
-  NIV.forEach(function (y, i) {
-    var col = i === 0 ? '#8f8272' : color;
+  /* Tres niveles pisables: 0.15 / 3.30 / 6.50. Los muros de cada nivel llegan
+     exactamente al nivel siguiente (sin costuras) y las losas de entrepiso se
+     dibujan EN TRAMOS, dejando abierto el hueco por donde sube cada escalera.
+     El vano de la puerta existe solo en la planta baja; arriba el frente es
+     macizo, salvo la salida al balcón del mirador. */
+  var Y0 = 0.15, Y1 = 3.30, Y2 = 6.50, Y3 = 9.70;
+  var NIV = [[Y0, Y1 - Y0], [Y1, Y2 - Y1], [Y2, Y3 - Y2]];
+
+  // ---- LOSAS DE ENTREPISO, en tramos que respetan el hueco de escalera ----
+  // Nivel 1: hueco en X 4..7, Z -4..5  (sube la primera escalera)
+  H.pieza('caja', '#8a7a5e', 'solido', b, [-1.5, Y1 - 0.16, 0],   [0,0,0], [11.2, 0.32, 12.2], 0);
+  H.pieza('caja', '#8a7a5e', 'solido', b, [5.5,  Y1 - 0.16, 5.5], [0,0,0], [3.2, 0.32, 1.2], 0);
+  H.pieza('caja', '#8a7a5e', 'solido', b, [5.5,  Y1 - 0.16, -5],  [0,0,0], [3.2, 0.32, 2.2], 0);
+  // Nivel 2: hueco en X -7..-4, Z -4..5 (sube la segunda escalera)
+  H.pieza('caja', '#8a7a5e', 'solido', b, [1.5,  Y2 - 0.16, 0],   [0,0,0], [11.2, 0.32, 12.2], 0);
+  H.pieza('caja', '#8a7a5e', 'solido', b, [-5.5, Y2 - 0.16, 5.5], [0,0,0], [3.2, 0.32, 1.2], 0);
+  H.pieza('caja', '#8a7a5e', 'solido', b, [-5.5, Y2 - 0.16, -5],  [0,0,0], [3.2, 0.32, 2.2], 0);
+  // barandas de seguridad alrededor de los dos huecos
+  H.pieza('caja', '#6d5236', 'solido', b, [3.9, Y1 + 0.55, 0.5],  [0,0,0], [0.1, 1.1, 9], 0);
+  H.pieza('caja', '#6d5236', 'solido', b, [-3.9, Y2 + 0.55, 0.5], [0,0,0], [0.1, 1.1, 9], 0);
+
+  // ---- MUROS POR NIVEL ----
+  NIV.forEach(function (n, i) {
+    var y = n[0], AL = n[1];
+    var col  = i === 0 ? '#8f8272' : color;
     var acab = i === 0 ? 'roca' : 'solido';
-    // trasero y laterales
-    H.pieza('caja', col, acab, b, [0, y + AL/2, -6], [0,0,0], [14, AL, 0.34], 0);
-    H.pieza('caja', col, acab, b, [-7, y + AL/2, 0], [0,0,0], [0.34, AL, 12], 0);
-    H.pieza('caja', col, acab, b, [7, y + AL/2, 0], [0,0,0], [0.34, AL, 12], 0);
-    // frente en dos paños, dejando el vano central
-    H.pieza('caja', col, acab, b, [-4.1, y + AL/2, 6], [0,0,0], [5.8, AL, 0.34], 0);
-    H.pieza('caja', col, acab, b, [4.1, y + AL/2, 6], [0,0,0], [5.8, AL, 0.34], 0);
-    // ventanas: al frente y a los costados
-    [-4.1, 4.1].forEach(function (dx) {
-      H.pieza('caja', '#3d5566', 'vidrio', b, [dx, y + 1.7, 6.02], [0,0,0], [2.2, 1.3, 0.1], 0);
+    // trasero y laterales: macizos en los tres niveles
+    H.pieza('caja', col, acab, b, [0,  y + AL/2, -6], [0,0,0], [14, AL, 0.34], 0);
+    H.pieza('caja', col, acab, b, [-7, y + AL/2, 0],  [0,0,0], [0.34, AL, 12], 0);
+    H.pieza('caja', col, acab, b, [7,  y + AL/2, 0],  [0,0,0], [0.34, AL, 12], 0);
+    // frente: con vano solo en planta baja (puerta) y en el mirador (balcón)
+    if (i === 1) {
+      H.pieza('caja', col, acab, b, [0, y + AL/2, 6], [0,0,0], [14, AL, 0.34], 0);
+    } else {
+      H.pieza('caja', col, acab, b, [-4.1, y + AL/2, 6], [0,0,0], [5.8, AL, 0.34], 0);
+      H.pieza('caja', col, acab, b, [4.1,  y + AL/2, 6], [0,0,0], [5.8, AL, 0.34], 0);
+      // dintel sobre el vano, para que el hueco sea una puerta y no un boquete
+      H.pieza('caja', col, acab, b, [0, y + AL - 0.35, 6], [0,0,0], [2.6, 0.7, 0.34], 0);
+    }
+    // ---- VENTANAS: marco de madera + vidrio, al frente y a los costados ----
+    var vent = [
+      [-4.1, 6.03, 2.4, 1.4, 0],    // frente izquierda
+      [4.1, 6.03, 2.4, 1.4, 0],     // frente derecha
+      [-7.03, -2, 2.6, 1.4, 90],    // costado oeste
+      [-7.03, 2.5, 2.6, 1.4, 90],   // costado oeste
+      [7.03, -2, 2.6, 1.4, 90],     // costado este
+      [7.03, 2.5, 2.6, 1.4, 90],    // costado este
+      [-3.5, -6.03, 2.2, 1.2, 0],   // trasera
+      [3.5, -6.03, 2.2, 1.2, 0]     // trasera
+    ];
+    vent.forEach(function (v) {
+      var esLado = v[4] === 90;
+      var dx = esLado ? v[0] : v[0], dz = esLado ? v[1] : v[1];
+      var an = esLado ? 0.12 : v[2], la = esLado ? v[2] : 0.12;
+      // marco
+      H.pieza('caja', '#6d5236', 'solido', b, [dx, y + 1.75, dz], [0,0,0],
+        [esLado ? 0.16 : v[2] + 0.24, v[3] + 0.24, esLado ? v[2] + 0.24 : 0.16], 0);
+      // vidrio
+      H.pieza('caja', '#3d5566', 'vidrio', b, [dx, y + 1.75, dz], [0,0,0], [an, v[3], la], 0);
+      // travesaño central
+      H.pieza('caja', '#6d5236', 'solido', b, [dx, y + 1.75, dz], [0,0,0],
+        [esLado ? 0.17 : 0.07, v[3], esLado ? 0.07 : 0.17], 0);
     });
-    H.pieza('caja', '#3d5566', 'vidrio', b, [-7.02, y + 1.7, -2], [0,0,0], [0.1, 1.3, 2.4], 0);
-    H.pieza('caja', '#3d5566', 'vidrio', b, [7.02, y + 1.7, 2], [0,0,0], [0.1, 1.3, 2.4], 0);
   });
-  // dintel sobre el vano de entrada (el hueco queda pasable)
-  H.pieza('caja', color, 'solido', b, [0, 2.75, 6], [0,0,0], [2.6, 0.7, 0.34], 0);
-  // tabiques interiores visibles
-  H.pieza('caja', '#c3b79c', 'solido', b, [-1, 1.7, -1.5], [0,0,0], [0.24, 3.1, 7], 0);
-  H.pieza('caja', '#c3b79c', 'solido', b, [1, 4.85, 0], [0,0,0], [0.24, 3.1, 8], 0);
-  H.pieza('caja', '#c3b79c', 'solido', b, [-1, 8, 2], [0,0,0], [8, 2.6, 0.24], 0);
-  // techo a dos aguas
-  H.pieza('caja', '#7a4634', 'solido', b, [0, 10.1, -3], [26,0,0], [14.8, 0.26, 7.4], 0);
-  H.pieza('caja', '#7a4634', 'solido', b, [0, 10.1, 3], [-26,0,0], [14.8, 0.26, 7.4], 0);
+
+  // ---- TABIQUES INTERIORES ----
+  H.pieza('caja', '#c3b79c', 'solido', b, [-1, Y0 + 1.57, -1.5], [0,0,0], [0.24, 3.15, 7], 0);
+  H.pieza('caja', '#c3b79c', 'solido', b, [1,  Y1 + 1.6, 0],     [0,0,0], [0.24, 3.2, 8], 0);
+  H.pieza('caja', '#c3b79c', 'solido', b, [-1, Y2 + 1.3, 2],     [0,0,0], [8, 2.6, 0.24], 0);
+
+  /* ======================= MUEBLES ======================= */
+  // --- PLANTA BAJA: cocina a leña (ala oeste) y comedor (ala este) ---
+  // mesón de cocina contra el muro oeste
+  H.pieza('caja', '#7a6248', 'solido', b, [-5.6, Y0 + 0.45, -1], [0,0,0], [2.4, 0.9, 5], 0);
+  H.pieza('caja', '#5c6a5a', 'solido', b, [-5.6, Y0 + 0.92, -1], [0,0,0], [2.5, 0.08, 5.1], 0);
+  // cocina a leña de fierro + tubo
+  H.pieza('caja', '#2e2e30', 'metal', b, [-5.2, Y0 + 0.42, 3], [0,0,0], [1.5, 0.85, 1.6], 0);
+  H.pieza('cilindro', '#3a3a3c', 'metal', b, [-5.2, Y0 + 1.9, 3], [0,0,0], [0.16, 2.1, 0.16], 0);
+  // estantería de despensa
+  H.pieza('caja', '#7a6248', 'solido', b, [-3, Y0 + 1, -5.4], [0,0,0], [3.4, 2, 0.4], 0);
+  for (var e = 0; e < 3; e++)
+    H.pieza('caja', '#8a7050', 'solido', b, [-3, Y0 + 0.5 + e*0.6, -5.2], [0,0,0], [3.2, 0.06, 0.7], 0);
+  // fogón de piedra interior, bajo la chimenea
+  H.pieza('caja', '#8f8272', 'roca', b, [-5, Y0 + 0.5, -5.2], [0,0,0], [2, 1, 1.2], 0);
+  H.pieza('cono', '#e8913a', 'brillo', b, [-5, Y0 + 0.5, -5.2], [0,0,0], [0.5, 0.6, 0.5], 0.2);
+  // mesa larga del comedor + bancas
+  H.pieza('caja', '#8a6a42', 'solido', b, [3.2, Y0 + 0.76, 1.5], [0,0,0], [2.2, 0.1, 5.5], 0);
+  [[2.3,-1.1],[2.3,1.1],[4.1,-1.1],[4.1,1.1]].forEach(function (q) {
+    H.pieza('caja', '#6d5236', 'solido', b, [q[0], Y0 + 0.38, 1.5 + q[1]*1.9], [0,0,0], [0.12, 0.76, 0.12], 0);
+  });
+  [1.8, 4.6].forEach(function (dx) {
+    H.pieza('caja', '#8a6a42', 'solido', b, [dx, Y0 + 0.44, 1.5], [0,0,0], [0.6, 0.08, 5], 0);
+    H.pieza('caja', '#6d5236', 'solido', b, [dx, Y0 + 0.22, 1.5], [0,0,0], [0.1, 0.44, 4.6], 0);
+  });
+  // lámpara colgante del comedor
+  H.pieza('cono', '#d8cbb0', 'brillo', b, [3.2, Y1 - 0.7, 1.5], [180,0,0], [0.6, 0.4, 0.6], 0.1);
+
+  // --- NIVEL 1: piezas de alojamiento a ambos lados del tabique ---
+  [[-4, -2.5], [-4, 2.5], [4, -2.5], [4, 2.5]].forEach(function (q) {
+    // catre con colchón y almohada
+    H.pieza('caja', '#6d5236', 'solido', b, [q[0], Y1 + 0.28, q[1]], [0,0,0], [1.5, 0.3, 2.2], 0);
+    H.pieza('caja', '#d8cfbc', 'solido', b, [q[0], Y1 + 0.5, q[1]], [0,0,0], [1.42, 0.2, 2.1], 0);
+    H.pieza('caja', '#7a9a8a', 'solido', b, [q[0], Y1 + 0.62, q[1] - 0.3], [0,0,0], [1.44, 0.06, 1.4], 0);
+    H.pieza('caja', '#f0ece0', 'solido', b, [q[0], Y1 + 0.66, q[1] + 0.85], [0,0,0], [0.9, 0.16, 0.4], 0);
+    // velador
+    H.pieza('caja', '#7a6248', 'solido', b, [q[0] + (q[0] < 0 ? 1.1 : -1.1), Y1 + 0.3, q[1] + 1.2],
+      [0,0,0], [0.5, 0.6, 0.5], 0);
+  });
+  // ropero
+  H.pieza('caja', '#7a6248', 'solido', b, [5.8, Y1 + 1.05, -5.2], [0,0,0], [1.6, 2.1, 0.6], 0);
+
+  // --- NIVEL 2: mirador con mesa de mapas y catalejo ---
+  H.pieza('caja', '#8a6a42', 'solido', b, [2.5, Y2 + 0.78, -2], [0,0,0], [3, 0.1, 2], 0);
+  [[-1.3,-0.8],[1.3,-0.8],[-1.3,0.8],[1.3,0.8]].forEach(function (q) {
+    H.pieza('caja', '#6d5236', 'solido', b, [2.5 + q[0], Y2 + 0.39, -2 + q[1]], [0,0,0], [0.1, 0.78, 0.1], 0);
+  });
+  H.pieza('caja', '#e8e2d0', 'solido', b, [2.5, Y2 + 0.84, -2], [0,0,0], [1.6, 0.02, 1.1], 0);
+  // catalejo apuntando al ventanal
+  H.pieza('cilindro', '#3a4750', 'metal', b, [4, Y2 + 1.25, 4], [70, 20, 0], [0.09, 1.1, 0.09], 0);
+  H.pieza('caja', '#6d5236', 'solido', b, [4, Y2 + 0.4, 4], [0,0,0], [0.14, 0.8, 0.14], 0);
+  // banca corrida bajo el ventanal
+  H.pieza('caja', '#8a6a42', 'solido', b, [3, Y2 + 0.44, 5.4], [0,0,0], [5, 0.1, 0.7], 0);
+  H.pieza('caja', '#6d5236', 'solido', b, [3, Y2 + 0.22, 5.4], [0,0,0], [4.6, 0.44, 0.1], 0);
+  // pizarra de la brigada
+  H.pieza('caja', '#2f3a34', 'solido', b, [-1, Y2 + 1.7, 1.86], [0,0,0], [3, 1.4, 0.06], 0);
+
+  // ---- TECHO A DOS AGUAS ----
+  H.pieza('caja', '#7a4634', 'solido', b, [0, Y3 + 0.4, -3], [26,0,0], [14.8, 0.26, 7.4], 0);
+  H.pieza('caja', '#7a4634', 'solido', b, [0, Y3 + 0.4, 3], [-26,0,0], [14.8, 0.26, 7.4], 0);
+  H.pieza('caja', '#6d5236', 'solido', b, [0, Y3 + 1.9, 0], [0,0,0], [14.8, 0.2, 0.3], 0);
   // chimenea de piedra
-  H.pieza('caja', '#8f8272', 'roca', b, [-5, 10.6, -3.5], [0,0,0], [1.1, 2.6, 1.1], 0);
-  // balcón-mirador del último nivel
-  H.pieza('caja', '#6d5236', 'solido', b, [0, 6.5, 7.4], [0,0,0], [9, 0.22, 2.8], 0);
+  H.pieza('caja', '#8f8272', 'roca', b, [-5, Y3 + 0.9, -3.5], [0,0,0], [1.1, 2.6, 1.1], 0);
+
+  // ---- BALCÓN-MIRADOR con baranda completa ----
+  H.pieza('caja', '#6d5236', 'solido', b, [0, Y2 - 0.11, 7.4], [0,0,0], [9, 0.22, 2.8], 0);
   for (var i = 0; i < 10; i++)
-    H.pieza('caja', '#6d5236', 'solido', b, [-4.2 + i*0.93, 7.05, 8.7], [0,0,0], [0.1, 1.1, 0.1], 0);
-  H.pieza('caja', '#6d5236', 'solido', b, [0, 7.6, 8.7], [0,0,0], [9, 0.12, 0.12], 0);
+    H.pieza('caja', '#6d5236', 'solido', b, [-4.2 + i*0.93, Y2 + 0.55, 8.7], [0,0,0], [0.1, 1.1, 0.1], 0);
+  H.pieza('caja', '#6d5236', 'solido', b, [0, Y2 + 1.1, 8.7], [0,0,0], [9, 0.12, 0.12], 0);
+  [-4.5, 4.5].forEach(function (dx) {
+    H.pieza('caja', '#6d5236', 'solido', b, [dx, Y2 + 1.1, 7.4], [0,0,0], [0.12, 0.12, 2.8], 0);
+    H.pieza('caja', '#6d5236', 'solido', b, [dx, Y2 + 0.55, 6.6], [0,0,0], [0.1, 1.1, 0.1], 0);
+    H.pieza('caja', '#6d5236', 'solido', b, [dx, Y2 + 0.55, 8.2], [0,0,0], [0.1, 1.1, 0.1], 0);
+  });
+  // pilares del balcón
+  [-4.2, 4.2].forEach(function (dx) {
+    H.pieza('tronco', '#6d5236', 'corteza', b, [dx, Y2/2, 8.4], [0,0,0], [0.18, Y2, 0.18], 0);
+  });
 }, 11);
+
+// Mini laguna: lámina de agua con orilla de barro. La quebrada desemboca acá.
+MUNDO.forma('laguna', function (H, color, b, ob) {
+  var A = (ob && ob.dim) ? ob.dim[0] : 16;
+  var L = (ob && ob.dim) ? ob.dim[1] : 12;
+  // cubeta de barro que enmarca el agua
+  H.pieza('cilindro', '#6b5c42', 'solido', b, [0, -0.12, 0], [0,0,0], [A*0.54, 0.34, L*0.54], 0);
+  // lámina de agua, en dos capas para dar profundidad
+  H.pieza('cilindro', '#3f6b74', 'vidrio', b, [0, 0.04, 0], [0,0,0], [A*0.5, 0.1, L*0.5], 0);
+  H.pieza('cilindro', '#5d9399', 'vidrio', b, [0, 0.07, 0], [0,0,0], [A*0.34, 0.04, L*0.34], 0);
+  // piedras de la orilla
+  for (var i = 0; i < 16; i++) {
+    var a = i / 16 * 6.2832;
+    H.pieza('roca', '#7c7364', 'roca', b,
+      [Math.cos(a)*A*0.5, 0.06, Math.sin(a)*L*0.5],
+      [0, H.azar(0,360), 0], [H.azar(0.3,0.7), H.azar(0.2,0.4), H.azar(0.3,0.7)], 0);
+  }
+}, 1);
+
+// Juncos y totoras de la orilla
+MUNDO.forma('junco', function (H, color, b) {
+  var n = 9;
+  for (var i = 0; i < n; i++) {
+    var alt = H.azar(0.9, 1.9);
+    H.pieza('cilindro', color, 'lamina', b,
+      [H.azar(-0.3,0.3), alt/2, H.azar(-0.3,0.3)],
+      [H.azar(-8,8), H.azar(0,360), H.azar(-8,8)], [0.03, alt, 0.03], 0.14);
+  }
+}, 2.2);
+
+// Mata de hierba: la capa herbácea que faltaba en el sotobosque
+MUNDO.forma('hierba', function (H, color, b) {
+  var n = 12;
+  for (var i = 0; i < n; i++) {
+    var a = i / n * 6.2832, alt = H.azar(0.25, 0.6);
+    H.pieza('hoja', color, 'lamina', b, [H.azar(-0.16,0.16), alt*0.45, H.azar(-0.16,0.16)],
+      [H.azar(52, 84), a*57.3, 0], [0.07, alt, 1], 0.11);
+  }
+}, 0.7);
+
+// Flor herbácea nativa (añañuca, huilli, alstroemeria del cerro)
+MUNDO.forma('herbacea', function (H, color, b) {
+  var alt = H.azar(0.3, 0.6);
+  H.pieza('cilindro', '#5f7a44', 'lamina', b, [0, alt/2, 0], [0,0,0], [0.03, alt, 0.03], 0.13);
+  for (var i = 0; i < 5; i++) {
+    var a = i / 5 * 6.2832;
+    H.pieza('hoja', color, 'lamina', b, [Math.cos(a)*0.07, alt, Math.sin(a)*0.07],
+      [58, a*57.3, 0], [0.09, 0.16, 1], 0.1);
+  }
+  H.pieza('esfera', '#e8d24a', 'brillo', b, [0, alt + 0.02, 0], [0,0,0], [0.045, 0.035, 0.045], 0.1);
+}, 0.8);
 
 // Fogón de piedra (acompaña a la luz local del refugio)
 MUNDO.forma('fogon', function (H, color, b) {
@@ -336,7 +494,9 @@ window.MUNDOS.bosque = {
       especies: [
         { forma: 'helecho', n: 26, color: '#3f6b34' },
         { forma: 'boldo', n: 10, color: '#6f8a5c', nombre: 'Boldo', choca: { r: 0.3, alto: 4 } },
-        { forma: 'molle', n: 12, color: '#5f7d4c', nombre: 'Molle', choca: { r: 0.28, alto: 4 } }
+        { forma: 'molle', n: 12, color: '#5f7d4c', nombre: 'Molle', choca: { r: 0.28, alto: 4 } },
+        { forma: 'hierba', n: 200, color: '#6f8a4e', nombre: 'Hierba del sotobosque' },
+        { forma: 'herbacea', n: 40, color: '#d8746a', nombre: 'Añañuca' }
       ]
     },
     {
@@ -349,7 +509,9 @@ window.MUNDOS.bosque = {
         { forma: 'palma',     n: 26, color: '#5f7a44', nombre: 'Palma chilena', choca: { r: 0.5, alto: 12 } },
         { forma: 'espino',    n: 22, color: '#818c5e', nombre: 'Espino', choca: { r: 0.24, alto: 3.5 } },
         { forma: 'colliguay', n: 34, color: '#6b7f4a', nombre: 'Colliguay' },
-        { forma: 'pasto',     n: 130, color: '#a09257', nombre: 'Pasto seco' }
+        { forma: 'pasto',     n: 130, color: '#a09257', nombre: 'Pasto seco' },
+        { forma: 'hierba',    n: 170, color: '#9a9459', nombre: 'Hierba seca' },
+        { forma: 'herbacea',  n: 30,  color: '#e0b048', nombre: 'Huilli' }
       ]
     },
     {
@@ -364,7 +526,10 @@ window.MUNDOS.bosque = {
         { forma: 'maiten',  n: 14, color: '#456b3e', nombre: 'Maitén', choca: { r: 0.3, alto: 6 } },
         { forma: 'maqui',   n: 30, color: '#3c5c38', nombre: 'Maqui' },
         { forma: 'helecho', n: 110, color: '#315a2c' },
-        { forma: 'costra',  n: 40, color: '#4a5c3a', nombre: 'Musgo' }
+        { forma: 'costra',  n: 40, color: '#4a5c3a', nombre: 'Musgo' },
+        { forma: 'hierba',  n: 230, color: '#4a7a3c', nombre: 'Hierba de sombra' },
+        { forma: 'herbacea', n: 34, color: '#c86ea8', nombre: 'Alstroemeria' },
+        { forma: 'junco',   n: 26, color: '#5f7a44', nombre: 'Junco del estero' }
       ]
     },
     {
@@ -380,6 +545,8 @@ window.MUNDOS.bosque = {
         { forma: 'columna',   n: 30, color: '#55703f', nombre: 'Quisco', choca: { r: 0.3, alto: 3.5 } },
         { forma: 'roseta',    n: 26, color: '#7d8b6a', nombre: 'Chagual' },
         { forma: 'colliguay', n: 30, color: '#7b8a52', nombre: 'Colliguay' },
+        { forma: 'hierba',    n: 150, color: '#a89a5c', nombre: 'Hierba seca' },
+        { forma: 'herbacea',  n: 22,  color: '#d89a3c', nombre: 'Flor de verano' },
         { forma: 'seco',      n: 26, color: '#9a8f7a', nombre: 'Árbol seco', choca: { r: 0.2, alto: 3 } }
       ]
     },
@@ -395,7 +562,9 @@ window.MUNDOS.bosque = {
         { forma: 'maqui',     n: 18, color: '#41613a', nombre: 'Maqui' },
         { forma: 'degu',      n: 16, color: '#9a8258', nombre: 'Degú' },
         { forma: 'zorro',     n: 3,  color: '#9a8464', nombre: 'Zorro chilla' },
-        { forma: 'pasto',     n: 150, color: '#a09257', nombre: 'Pasto seco' }
+        { forma: 'pasto',     n: 150, color: '#a09257', nombre: 'Pasto seco' },
+        { forma: 'hierba',    n: 180, color: '#9c9257', nombre: 'Hierba del matorral' },
+        { forma: 'junco',     n: 30,  color: '#6f8a4e', nombre: 'Junco de la laguna' }
       ]
     },
     {
@@ -406,6 +575,8 @@ window.MUNDOS.bosque = {
       especies: [
         { forma: 'seco',   n: 12, color: '#9a8f7a' },
         { forma: 'litreN', n: 10, color: '#5c7040' },
+        { forma: 'hierba', n: 160, color: '#8a9455', nombre: 'Pastizal' },
+        { forma: 'herbacea', n: 26, color: '#d8746a', nombre: 'Añañuca' },
         { forma: 'maiten', n: 6,  color: '#4d7043', nombre: 'Maitén', choca: { r: 0.3, alto: 6 } }
       ]
     }
@@ -498,15 +669,29 @@ window.MUNDOS.bosque = {
         { dx: -5.5, dz: 5, ancho: 2.8, largo: 9, alto: 3.2,  base: 3.3,  pasos: 16, color: '#a8894e' }
       ],
       choca: [
-        { dx: 0,    dz: -6,  ancho: 14,  largo: 0.34, base: 0, alto: 9.6 },
-        { dx: -7,   dz: 0,   ancho: 0.34, largo: 12,  base: 0, alto: 9.6 },
-        { dx: 7,    dz: 0,   ancho: 0.34, largo: 12,  base: 0, alto: 9.6 },
-        { dx: -4.1, dz: 6,   ancho: 5.8, largo: 0.34, base: 0, alto: 9.6 },
-        { dx: 4.1,  dz: 6,   ancho: 5.8, largo: 0.34, base: 0, alto: 9.6 },
-        { dx: -1,   dz: -1.5, ancho: 0.24, largo: 7,  base: 0,   alto: 3.1 },
-        { dx: 1,    dz: 0,   ancho: 0.24, largo: 8,   base: 3.3, alto: 3.1 },
-        { dx: -1,   dz: 2,   ancho: 8,   largo: 0.24, base: 6.5, alto: 2.6 },
-        { dx: 0,    dz: 8.7, ancho: 9,   largo: 0.14, base: 6.5, alto: 1.1 }
+        // envolvente: trasera y laterales, macizas de suelo a techo
+        { dx: 0,    dz: -6,  ancho: 14,   largo: 0.34, base: 0, alto: 9.7 },
+        { dx: -7,   dz: 0,   ancho: 0.34, largo: 12,   base: 0, alto: 9.7 },
+        { dx: 7,    dz: 0,   ancho: 0.34, largo: 12,   base: 0, alto: 9.7 },
+        // frente: los dos paños laterales, de suelo a techo
+        { dx: -4.1, dz: 6,   ancho: 5.8,  largo: 0.34, base: 0, alto: 9.7 },
+        { dx: 4.1,  dz: 6,   ancho: 5.8,  largo: 0.34, base: 0, alto: 9.7 },
+        // el vano central SOLO es puerta en la planta baja y salida al balcón
+        // arriba; el resto se cierra para que no queden boquetes en altura.
+        { dx: 0,    dz: 6,   ancho: 2.4,  largo: 0.34, base: 2.45, alto: 0.85 },
+        { dx: 0,    dz: 6,   ancho: 2.4,  largo: 0.34, base: 3.3,  alto: 3.2 },
+        { dx: 0,    dz: 6,   ancho: 2.4,  largo: 0.34, base: 9.0,  alto: 0.7 },
+        // tabiques interiores
+        { dx: -1,   dz: -1.5, ancho: 0.24, largo: 7,   base: 0.15, alto: 3.15 },
+        { dx: 1,    dz: 0,    ancho: 0.24, largo: 8,   base: 3.3,  alto: 3.2 },
+        { dx: -1,   dz: 2,    ancho: 8,    largo: 0.24, base: 6.5, alto: 2.6 },
+        // barandas de los huecos de escalera: no se cae quien camina distraído
+        { dx: 3.9,  dz: 0.5, ancho: 0.12, largo: 9,    base: 3.3, alto: 1.1 },
+        { dx: -3.9, dz: 0.5, ancho: 0.12, largo: 9,    base: 6.5, alto: 1.1 },
+        // baranda del balcón, en sus tres lados
+        { dx: 0,    dz: 8.7, ancho: 9,    largo: 0.14, base: 6.5, alto: 1.1 },
+        { dx: -4.5, dz: 7.4, ancho: 0.14, largo: 2.8,  base: 6.5, alto: 1.1 },
+        { dx: 4.5,  dz: 7.4, ancho: 0.14, largo: 2.8,  base: 6.5, alto: 1.1 }
       ] },
 
     // ---------- OTRAS VIVIENDAS DE LA COMUNIDAD ----------
@@ -520,10 +705,28 @@ window.MUNDOS.bosque = {
     { forma: 'galpon', color: '#b8a888', pos: [2, 0, -52], giro: 34,
       nombre: 'Galpón de leña', choca: [{ dx: 0, dz: 0, ancho: 6, largo: 4, alto: 2.6 }] },
     { forma: 'fogon', color: '#e8913a', pos: [-6, 0, -42],
-      nombre: 'Fogón', ficha: 'fogon', altoFicha: 2 }
+      nombre: 'Fogón', ficha: 'fogon', altoFicha: 2 },
+
+    /* ---------- LA LAGUNA ----------
+       Donde desemboca la quebrada. Es la reserva de agua de la comunidad y el
+       punto donde se ve mejor el efecto de la sequía: la marca de la orilla
+       antigua queda muy por encima del nivel actual. Caminar dentro cuesta
+       (zona lenta), como en el barro de verdad. */
+    { forma: 'laguna', color: '#3f6b74', pos: [14, -0.1, -30], dim: [22, 15],
+      nombre: 'Laguna de la quebrada', ficha: 'laguna', altoFicha: 2.6,
+      lento: { dx: 0, dz: 0, r: 6.5, factor: 0.45 } },
+    { forma: 'estacion', color: '#1f6f78', pos: [22, 0, -22],
+      nombre: 'La laguna', ficha: 'laguna', altoFicha: 3.6 }
   ],
 
   fichas: [
+    {
+      id: 'laguna', nombre: 'La laguna de la quebrada', rango: 'Agua, memoria y sequía',
+      texto: 'Aquí desemboca el agua que baja por la quebrada de umbría. Esta laguna es la reserva de la comunidad y también su registro histórico: mira la orilla y busca la marca del nivel antiguo, muy por encima del agua de hoy. Una laguna no es solo agua acumulada; es el resultado de todo lo que ocurre cerro arriba. Si el bosque de la quebrada se degrada, el suelo pierde su capacidad de retener e infiltrar, el agua escurre de golpe cuando llueve y se pierde en vez de recargar lentamente.',
+      vida: ['Recibe el agua de la quebrada de umbría', 'Juncos y totoras en la orilla filtran el agua', 'Bebedero de zorros, aves y ganado', 'La marca en la orilla muestra el nivel de años más lluviosos'],
+      reto: 'La laguna depende del bosque que está cerro arriba, no de la lluvia que cae sobre ella. Explica esa afirmación con lo que viste en la quebrada.',
+      actividad: 'Dibuja la laguna con dos líneas: el nivel actual y el nivel antiguo que marca la orilla. Calcula aproximadamente cuánta superficie de agua se perdió.'
+    },
     {
       id: 'resiliencia', nombre: 'Resiliencia: qué se recupera y qué no', rango: 'Idea central del recorrido',
       texto: 'Resiliencia es la capacidad de un ecosistema de volver a funcionar después de un golpe. Este bosque es muy resiliente frente a las perturbaciones con las que evolucionó: un verano seco, un incendio ocasional, un año malo. La mayoría de estos árboles rebrota de cepa —del tocón vuelve a salir el árbol— y por eso un bosque quemado puede recuperarse solo. Pero la resiliencia tiene un límite: si los golpes se repiten antes de que alcance a recuperarse, el sistema cruza un umbral y ya no vuelve al estado anterior. Queda convertido en otra cosa, casi siempre más pobre.',
