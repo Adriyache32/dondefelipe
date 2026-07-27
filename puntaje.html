@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saldo de Puntos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+
+  /* ============================================================
+     CONFIGURACIÓN — edita estos dos valores con los de tu Sheet
+     ============================================================ */
+
+  :root{
+    --paper: #ece6d6;
+    --paper-line: #d8d0b8;
+    --ink: #1c2b3a;
+    --ink-soft: #4a5a68;
+    --green: #2f5233;
+    --green-bg: #e3ead9;
+    --red: #9c3428;
+    --red-bg: #f3e2dd;
+    --gold: #a3823f;
+    --gold-dark: #7a6230;
+    --card: #f7f4ea;
+    --shadow: rgba(28, 43, 58, 0.14);
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0; padding:0; min-height:100%;
+  }
+
+  body{
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0px, transparent 33px,
+        var(--paper-line) 33px, var(--paper-line) 34px
+      ),
+      var(--paper);
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    padding: 48px 20px 80px;
+    display:flex;
+    justify-content:center;
+  }
+
+  .sheet{
+    width:100%;
+    max-width: 620px;
+  }
+
+  /* -------- Header -------- */
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold-dark);
+    margin: 0 0 6px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .eyebrow::before{
+    content:'';
+    width:20px; height:1px;
+    background: var(--gold-dark);
+    display:inline-block;
+  }
+
+  h1{
+    font-family:'Spectral', serif;
+    font-weight:600;
+    font-size: 34px;
+    margin: 0 0 6px;
+    line-height:1.15;
+  }
+
+  .subtitle{
+    font-size:14px;
+    color: var(--ink-soft);
+    margin: 0 0 32px;
+    max-width: 46ch;
+  }
+
+  /* -------- Buscador -------- */
+  .search-box{
+    background: var(--card);
+    border: 1px solid var(--paper-line);
+    border-radius: 3px;
+    box-shadow: 0 3px 10px var(--shadow);
+    padding: 6px;
+    display:flex;
+    gap:6px;
+    margin-bottom: 28px;
+  }
+
+  .search-box input{
+    flex:1;
+    border:none;
+    background:transparent;
+    padding: 12px 14px;
+    font-family:'Inter', sans-serif;
+    font-size: 15px;
+    color: var(--ink);
+    outline:none;
+  }
+  .search-box input::placeholder{ color:#9aa5ac; }
+
+  .search-box button{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.06em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--paper);
+    border:none;
+    border-radius:2px;
+    padding: 0 20px;
+    cursor:pointer;
+    transition: background .15s ease;
+  }
+  .search-box button:hover{ background:#2c4256; }
+
+  /* -------- Estado / mensajes -------- */
+  .status{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0 0 20px;
+  }
+  .status.error{ color: var(--red); }
+
+  /* -------- Tarjeta de resultado (libreta) -------- */
+  .passbook{
+    position:relative;
+    background: var(--card);
+    border-radius: 4px;
+    box-shadow: 0 8px 24px var(--shadow);
+    padding: 30px 28px 26px;
+    margin-bottom: 28px;
+    overflow:hidden;
+    animation: rise .35s ease;
+  }
+  @keyframes rise{
+    from{ opacity:0; transform: translateY(8px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+  .passbook::before{
+    content:'';
+    position:absolute;
+    top:0; left:0; right:0; height:8px;
+    background-image: radial-gradient(circle at 12px 0, transparent 6px, var(--paper) 6.5px);
+    background-size: 24px 8px;
+    background-repeat: repeat-x;
+  }
+
+  .passbook-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding-bottom:16px;
+    margin-bottom:16px;
+    border-bottom: 1px dashed var(--paper-line);
+  }
+
+  .passbook-name{
+    font-family:'Spectral', serif;
+    font-size: 22px;
+    font-weight:600;
+    margin:0;
+  }
+
+  .stamp{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    width: 74px; height:74px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    transform: rotate(-8deg);
+    flex-shrink:0;
+    line-height:1.2;
+    padding: 6px;
+  }
+  .stamp.ok{ color: var(--green); }
+  .stamp.warn{ color: var(--red); }
+
+  .passbook-rows.extra{
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--paper-line);
+    gap: 8px;
+  }
+  .passbook-rows.extra .value{
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .prow{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-size: 14px;
+  }
+  .prow .label{ color: var(--ink-soft); }
+  .prow .value{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:15px;
+  }
+  .prow.total{
+    margin-top:6px;
+    padding-top:14px;
+    border-top: 1px solid var(--paper-line);
+  }
+  .prow.total .label{
+    font-family:'Spectral', serif;
+    font-style:italic;
+    font-size:15px;
+    color: var(--ink);
+  }
+  .prow.total .value{
+    font-size: 26px;
+    font-weight:600;
+  }
+  .value.pos{ color: var(--green); }
+  .value.neg{ color: var(--red); }
+
+  /* -------- Toggle tabla completa -------- */
+  .toggle-all{
+    background:none;
+    border:none;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.06em;
+    text-transform: uppercase;
+    color: var(--gold-dark);
+    cursor:pointer;
+    padding: 0;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin: 0 0 14px;
+  }
+  .toggle-all::after{ content:'▾'; font-size:10px; transition: transform .15s ease; }
+  .toggle-all.open::after{ transform: rotate(180deg); }
+
+  table{
+    width:100%;
+    border-collapse: collapse;
+    background: var(--card);
+    border-radius:4px;
+    overflow:hidden;
+    box-shadow: 0 6px 16px var(--shadow);
+    font-size: 13px;
+  }
+  thead th{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    text-align:left;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 10px 12px;
+  }
+  thead th.num, td.num{ text-align:right; }
+  tbody td{
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--paper-line);
+    font-family:'IBM Plex Mono', monospace;
+  }
+  tbody td.name{ font-family:'Inter', sans-serif; }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr:hover{ background: #f1ecdd; }
+
+  .foot{
+    margin-top: 26px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+  .foot button{
+    background:none;
+    border:1px solid var(--paper-line);
+    border-radius:2px;
+    padding: 5px 10px;
+    color: var(--ink-soft);
+    cursor:pointer;
+    font-family:inherit;
+    font-size:11px;
+  }
+  .foot button:hover{ border-color: var(--gold); color: var(--gold-dark); }
+
+  .hidden{ display:none; }
+
+  @media (max-width: 480px){
+    h1{ font-size:27px; }
+    .passbook{ padding:22px 18px 20px; }
+    .passbook-top{ gap:12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <p class="eyebrow">Cuenta estudiantil</p>
+  <h1>Saldo de Puntos</h1>
+  <p class="subtitle">Busca tu nombre para ver tu saldo actual.</p>
+
+  <div class="search-box">
+    <input id="searchInput" type="text" placeholder="Escribe tu nombre" autocomplete="off">
+    <button id="searchBtn">Buscar</button>
+  </div>
+
+  <p id="status" class="status">Cargando datos…</p>
+
+  <div id="resultArea"></div>
+
+  <button id="toggleAll" class="toggle-all">Ver lista completa</button>
+  <div id="fullTable" class="hidden"></div>
+
+  <div class="foot">
+    <span id="lastUpdated">—</span>
+    <button id="refreshBtn">Actualizar</button>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   CONFIGURACIÓN
+   Enlace del Sheet publicado (Archivo → Compartir → Publicar en
+   la Web → CSV). Si vuelves a publicar y cambia el link, solo
+   reemplaza la URL de abajo.
+   ============================================================ */
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSpqTfvU0wptKhRwcahcGYaJBUSscFNsrTG1mduxgWI3yMI48xmidxldY1QaPtyvNRNsS7_qxBs0Pno/pub?output=csv";
+
+let records = [];
+
+function parseCSV(text){
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for(let i=0;i<text.length;i++){
+    const c = text[i], next = text[i+1];
+    if(inQuotes){
+      if(c === '"' && next === '"'){ field += '"'; i++; }
+      else if(c === '"'){ inQuotes = false; }
+      else { field += c; }
+    } else {
+      if(c === '"'){ inQuotes = true; }
+      else if(c === ','){ row.push(field); field=''; }
+      else if(c === '\r'){ /* skip */ }
+      else if(c === '\n'){ row.push(field); rows.push(row); row=[]; field=''; }
+      else { field += c; }
+    }
+  }
+  if(field.length || row.length){ row.push(field); rows.push(row); }
+  return rows;
+}
+
+function normalize(s){
+  return (s||'').replace(/\s+/g,' ').trim().toUpperCase();
+}
+
+function parseNumber(raw){
+  if(raw == null) return 0;
+  let s = String(raw).trim();
+  if(s === '' || s === '-') return 0;
+  const negative = /^\(.*\)$/.test(s) || s.startsWith('-');
+  s = s.replace(/[()]/g,'');
+  // Quita cualquier separador de miles (punto o coma) y símbolos, deja solo dígitos
+  s = s.replace(/[^0-9]/g,'');
+  let n = parseInt(s, 10);
+  if(isNaN(n)) n = 0;
+  return negative ? -Math.abs(n) : n;
+}
+
+function formatCLP(n){
+  return new Intl.NumberFormat('es-CL').format(Math.round(n));
+}
+
+async function loadData(){
+  const statusEl = document.getElementById('status');
+  statusEl.textContent = 'Cargando datos…';
+  statusEl.classList.remove('error');
+  try{
+    const res = await fetch(CSV_URL, { cache: 'no-store' });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    const rows = parseCSV(text);
+
+    // fila 0 = título, fila 1 y 2 = encabezados combinados, fila 3+ = datos
+    const headerTop = rows[1] || [];
+    const headerSub = rows[2] || [];
+    const nCols = Math.max(headerTop.length, headerSub.length);
+    const headers = [];
+    for(let c=0; c<nCols; c++){
+      headers[c] = normalize(headerSub[c]) || normalize(headerTop[c]);
+    }
+
+    const idxEstudiante = headers.findIndex(h => h === 'ESTUDIANTE');
+    const idxID = headers.findIndex(h => h === 'ID');
+    const idxTotalIng = headers.findIndex(h => h.includes('TOTAL') && h.includes('INGRES'));
+    const idxTotalDesc = headers.findIndex(h => h.includes('TOTAL') && h.includes('DESCUENT'));
+    const idxSaldo = headers.findIndex(h => h === 'SALDO');
+    const idxMinutoFeliz = headers.findIndex(h => h.includes('MINUTO') && h.includes('FELIZ'));
+    const idxEliminarFormativa = headers.findIndex(h => h.includes('ELIMINAR') && h.includes('FORMATIVA'));
+
+    if([idxEstudiante, idxID, idxTotalIng, idxTotalDesc, idxSaldo].includes(-1)){
+      throw new Error('No se reconocieron las columnas. Revisa que el Sheet mantenga los encabezados originales.');
+    }
+
+    records = [];
+    for(let r=3; r<rows.length; r++){
+      const row = rows[r];
+      if(!row) continue;
+      const nombre = (row[idxEstudiante] || '').trim();
+      if(!nombre || normalize(nombre) === 'TOTAL GENERAL') continue;
+      records.push({
+        estudiante: nombre,
+        id: (row[idxID] || '').trim(),
+        totalIngresos: parseNumber(row[idxTotalIng]),
+        totalDescuentos: parseNumber(row[idxTotalDesc]),
+        saldo: parseNumber(row[idxSaldo]),
+        minutoFeliz: idxMinutoFeliz > -1 ? (row[idxMinutoFeliz] || '').trim() : '',
+        eliminarFormativa: idxEliminarFormativa > -1 ? (row[idxEliminarFormativa] || '').trim() : '',
+      });
+    }
+
+    statusEl.textContent = `${records.length} estudiante(s) cargados. Escribe un nombre o ID para buscar.`;
+    document.getElementById('lastUpdated').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-CL');
+    renderFullTable();
+  } catch(err){
+    statusEl.textContent = 'No se pudo cargar el Sheet. Verifica que esté compartido como "Cualquier persona con el enlace" y que SHEET_ID / SHEET_NAME sean correctos.';
+    statusEl.classList.add('error');
+    console.error(err);
+  }
+}
+
+function renderResult(rec){
+  const area = document.getElementById('resultArea');
+  if(!rec){
+    area.innerHTML = '';
+    return;
+  }
+  const positivo = rec.saldo >= 0;
+  area.innerHTML = `
+    <div class="passbook">
+      <div class="passbook-top">
+        <p class="passbook-name">${rec.estudiante}</p>
+        <div class="stamp ${positivo ? 'ok' : 'warn'}">${positivo ? 'Al día' : 'En deuda'}</div>
+      </div>
+      <div class="passbook-rows">
+        <div class="prow"><span class="label">Total ingresos</span><span class="value pos">$${formatCLP(rec.totalIngresos)}</span></div>
+        <div class="prow"><span class="label">Total descuentos</span><span class="value neg">$${formatCLP(rec.totalDescuentos)}</span></div>
+        <div class="prow total"><span class="label">Saldo</span><span class="value ${positivo?'pos':'neg'}">$${formatCLP(rec.saldo)}</span></div>
+      </div>
+      ${(rec.minutoFeliz || rec.eliminarFormativa) ? `
+      <div class="passbook-rows extra">
+        <div class="prow"><span class="label">Minuto feliz</span><span class="value">${rec.minutoFeliz || '-'}</span></div>
+        <div class="prow"><span class="label">Eliminar formativa</span><span class="value">${rec.eliminarFormativa || '-'}</span></div>
+      </div>` : ''}
+    </div>
+  `;
+}
+
+function renderFullTable(){
+  const container = document.getElementById('fullTable');
+  const sorted = [...records].sort((a,b) => a.estudiante.localeCompare(b.estudiante, 'es'));
+  const rows = sorted.map(r => `
+    <tr>
+      <td class="name">${r.estudiante}</td>
+      <td class="num">$${formatCLP(r.totalIngresos)}</td>
+      <td class="num">$${formatCLP(r.totalDescuentos)}</td>
+      <td class="num" style="color:${r.saldo>=0?'var(--green)':'var(--red)'}">$${formatCLP(r.saldo)}</td>
+      <td class="num">${r.minutoFeliz || '-'}</td>
+      <td class="num">${r.eliminarFormativa || '-'}</td>
+    </tr>
+  `).join('');
+  container.innerHTML = `
+    <table>
+      <thead>
+        <tr><th>Estudiante</th><th class="num">Ingresos</th><th class="num">Descuentos</th><th class="num">Saldo</th><th class="num">Minuto feliz</th><th class="num">Eliminar formativa</th></tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function doSearch(){
+  const q = normalize(document.getElementById('searchInput').value);
+  if(!q){ renderResult(null); return; }
+  const found = records.find(r => normalize(r.estudiante).includes(q));
+  if(found){
+    renderResult(found);
+  } else {
+    document.getElementById('resultArea').innerHTML = `<p class="status error">No se encontró a "${document.getElementById('searchInput').value}".</p>`;
+  }
+}
+
+document.getElementById('searchBtn').addEventListener('click', doSearch);
+document.getElementById('searchInput').addEventListener('keydown', e => { if(e.key === 'Enter') doSearch(); });
+document.getElementById('refreshBtn').addEventListener('click', loadData);
+document.getElementById('toggleAll').addEventListener('click', function(){
+  const table = document.getElementById('fullTable');
+  const open = table.classList.toggle('hidden');
+  this.classList.toggle('open', !open);
+  this.textContent = open ? 'Ver lista completa' : 'Ocultar lista completa';
+});
+
+loadData();
+</script>
+
+</body>
+</html>

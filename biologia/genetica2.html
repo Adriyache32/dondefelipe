@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unidad 3 · Sesión 2 — Mitosis y Meiosis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B2340;
+    --navy-2:#123054;
+    --teal:#1F7A70;
+    --teal-dark:#155F58;
+    --mint-tint:#EAF7F5;
+    --page-bg:#F6FAF9;
+    --cream-tint:#FDF6EC;
+    --text:#233238;
+    --muted:#6B7A78;
+    --line:#DCEAE7;
+    --baseA:#E4572E;
+    --baseT:#2E86AB;
+    --baseG:#1F7A70;
+    --baseC:#E0A458;
+    --ok:#2E8B57;
+    --bad:#C0392B;
+    --shadow: 0 10px 26px rgba(11,35,64,0.08);
+    --radius: 18px;
+    --font-display:'Fraunces', Cambria, Georgia, serif;
+    --font-body:'Manrope', Calibri, Arial, sans-serif;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0; background:var(--page-bg); color:var(--text);
+    font-family:var(--font-body); line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{ font-family:var(--font-display); margin:0; color:var(--navy); }
+  p{ margin:0; }
+  button{ font-family:var(--font-body); cursor:pointer; }
+  button:focus-visible, .prog-step:focus-visible, .qr-toggle:focus-visible{
+    outline:3px solid var(--baseC); outline-offset:2px;
+  }
+
+  /* ---------- layout shell ---------- */
+  .app-shell{ min-height:100vh; display:flex; flex-direction:column; }
+
+  .progress-ladder{
+    position:fixed; top:0; left:0; right:0; z-index:40;
+    display:flex; gap:4px; padding:10px 14px;
+    background:rgba(246,250,249,0.88); backdrop-filter:blur(4px);
+    border-bottom:1px solid var(--line);
+  }
+  .prog-step{
+    flex:1; height:9px; border-radius:5px; border:1.5px solid #C9DEDA;
+    background:#fff; padding:0; transition:background .25s ease, border-color .25s ease;
+  }
+  .prog-step.done{ background:var(--teal); border-color:var(--teal); }
+  .prog-step.current{ border-color:var(--navy); box-shadow:0 0 0 2px rgba(11,35,64,0.15); }
+
+  .top-actions{
+    position:fixed; top:14px; right:14px; z-index:41;
+    display:flex; gap:8px;
+  }
+  .icon-btn{
+    background:var(--navy); color:#fff; border:none; border-radius:999px;
+    padding:9px 16px; font-size:13px; font-weight:700; display:flex; align-items:center; gap:6px;
+    box-shadow:var(--shadow);
+  }
+  .icon-btn:hover{ background:var(--teal-dark); }
+
+  .slide-viewport{ flex:1; padding-top:46px; padding-bottom:78px; }
+
+  .slide{
+    display:none; min-height:calc(100vh - 124px);
+    align-items:center; justify-content:center;
+    padding:32px 20px;
+  }
+  .slide.active{ display:flex; }
+  .slide-inner{ width:100%; max-width:1080px; margin:0 auto; }
+
+  .eyebrow{
+    display:inline-block; font-size:12px; font-weight:800; letter-spacing:1.2px;
+    color:var(--teal-dark); text-transform:uppercase; margin-bottom:10px;
+  }
+  .slide h2.title{ font-size:clamp(26px,4vw,40px); font-weight:700; margin-bottom:8px; }
+  .slide .subtitle{ font-size:clamp(15px,2vw,19px); color:var(--muted); font-style:italic; font-family:var(--font-display); margin-bottom:22px; }
+
+  .card{
+    background:#fff; border-radius:var(--radius); box-shadow:var(--shadow);
+    padding:22px 24px; border:1px solid var(--line);
+  }
+  .card.tint-mint{ background:var(--mint-tint); }
+  .card.tint-cream{ background:var(--cream-tint); }
+  .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  @media (max-width:760px){ .grid-2, .grid-3{ grid-template-columns:1fr; } }
+
+  .card-label{ font-size:11px; font-weight:800; letter-spacing:0.8px; color:var(--baseC); text-transform:uppercase; margin-bottom:8px; display:block; }
+  .card p, .card li{ font-size:15px; color:var(--text); }
+  .card ul{ margin:0; padding-left:20px; }
+  .card li{ margin-bottom:6px; }
+
+  .tag{
+    display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:700;
+    background:var(--mint-tint); color:var(--teal-dark); padding:6px 14px; border-radius:999px;
+    border:1px solid #CCEAE5;
+  }
+
+  /* ---------- nav ---------- */
+  .nav-fixed{
+    position:fixed; bottom:0; left:0; right:0; z-index:40;
+    display:flex; align-items:center; justify-content:center; gap:16px;
+    padding:12px 16px; background:rgba(246,250,249,0.92); backdrop-filter:blur(4px);
+    border-top:1px solid var(--line);
+  }
+  .nav-btn{
+    background:#fff; border:1.5px solid var(--teal); color:var(--teal-dark);
+    border-radius:999px; padding:9px 18px; font-weight:700; font-size:14px;
+  }
+  .nav-btn:disabled{ opacity:0.35; cursor:default; }
+  .nav-btn:not(:disabled):hover{ background:var(--teal); color:#fff; }
+  .nav-counter{ font-size:13px; color:var(--muted); font-weight:700; min-width:54px; text-align:center; }
+
+  /* ==================================================================
+     SLIDE 0 — PORTADA
+     ================================================================== */
+  .cover-grid{ display:grid; grid-template-columns:1.1fr 0.9fr; gap:34px; align-items:center; }
+  @media (max-width:900px){ .cover-grid{ grid-template-columns:1fr; } }
+
+  .cover-info{ display:flex; flex-wrap:wrap; gap:10px 22px; margin:18px 0 22px; }
+  .cover-info span{ font-size:13px; color:var(--muted); }
+  .cover-info b{ color:var(--navy); }
+
+  .cta-start{
+    background:var(--navy); color:#fff; border:none; border-radius:999px;
+    padding:13px 26px; font-weight:800; font-size:15px; box-shadow:var(--shadow);
+  }
+  .cta-start:hover{ background:var(--teal-dark); }
+
+  .helix-wrap{
+    width:150px; height:300px; margin:0 auto; position:relative; perspective:900px;
+  }
+  .helix-wrap::before, .helix-wrap::after{
+    content:""; position:absolute; top:0; bottom:0; width:4px; border-radius:3px;
+    background:linear-gradient(180deg, var(--teal), var(--navy));
+    opacity:0.55;
+  }
+  .helix-wrap::before{ left:16%; }
+  .helix-wrap::after{ right:16%; }
+  .helix-rung{
+    position:absolute; left:50%; width:104px; height:9px; margin-left:-52px;
+    border-radius:5px; top:0;
+    animation-name:helixSpin; animation-timing-function:linear; animation-iteration-count:infinite;
+  }
+  @keyframes helixSpin{
+    0%   { transform: translateY(var(--ty,0px)) rotateY(0deg)   scaleX(1);    opacity:1; }
+    25%  { transform: translateY(var(--ty,0px)) rotateY(90deg)  scaleX(0.12); opacity:0.45; }
+    50%  { transform: translateY(var(--ty,0px)) rotateY(180deg) scaleX(1);    opacity:1; }
+    75%  { transform: translateY(var(--ty,0px)) rotateY(270deg) scaleX(0.12); opacity:0.45; }
+    100% { transform: translateY(var(--ty,0px)) rotateY(360deg) scaleX(1);    opacity:1; }
+  }
+
+  .qr-panel{
+    background:var(--navy); border-radius:var(--radius); padding:20px; text-align:center;
+    box-shadow:var(--shadow); color:#fff;
+  }
+  .qr-panel p{ color:#CFE7E3; font-size:13px; margin-top:10px; }
+  .qr-panel .qr-box{ background:#fff; border-radius:12px; padding:10px; display:inline-block; }
+  #qrHero{ width:190px; height:190px; }
+  #qrHero img, #qrHero canvas, #qrHero table{ width:100% !important; height:100% !important; }
+  .qr-fallback{ color:#0B2340 !important; font-size:12px !important; max-width:170px; }
+  @media (min-width:900px){
+    #qrHero{ width:230px; height:230px; }
+  }
+
+  /* ==================================================================
+     SLIDE 1 — REPASO SESIÓN 1
+     ================================================================== */
+  .biblio-card{ text-align:center; }
+  .biblio-icon{
+    width:52px; height:52px; border-radius:50%; margin:0 auto 12px; display:flex;
+    align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:20px; color:#fff;
+  }
+
+  /* ==================================================================
+     SLIDE: cronograma mini
+     ================================================================== */
+  .timeline{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  @media (max-width:760px){ .timeline{ grid-template-columns:repeat(2,1fr); } }
+  .timeline .card{ text-align:center; padding:16px 10px; }
+  .timeline .mins{ color:var(--baseC); font-weight:800; font-size:13px; margin:4px 0; }
+  .timeline .step-n{
+    width:30px; height:30px; border-radius:50%; border:1.5px solid var(--teal); color:var(--teal-dark);
+    display:flex; align-items:center; justify-content:center; font-weight:800; margin:0 auto 8px;
+  }
+
+  /* ==================================================================
+     SIMULADOR 1 — MITOSIS
+     ================================================================== */
+  .sim-layout{ display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start; }
+  @media (max-width:860px){ .sim-layout{ grid-template-columns:1fr; } }
+
+  .phase-btns{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .phase-btn{
+    background:#fff; border:1.5px solid var(--line); color:var(--text);
+    border-radius:999px; padding:8px 14px; font-size:13px; font-weight:700;
+  }
+  .phase-btn.active{ background:var(--teal); border-color:var(--teal); color:#fff; }
+
+  .cell-stage{
+    position:relative; width:100%; max-width:340px; height:260px; margin:0 auto;
+    background:radial-gradient(circle at 50% 50%, #fff 55%, var(--mint-tint) 100%);
+    border:2.5px solid #BFE0DA; border-radius:50%;
+    overflow:hidden;
+  }
+  .membrane-pinch{
+    position:absolute; left:50%; top:0; bottom:0; width:6px; margin-left:-3px;
+    background:transparent; transition:background .6s ease;
+  }
+  .chromosome{
+    position:absolute; width:44px; height:9px; border-radius:5px;
+    top:50%; left:50%; transition:all .9s cubic-bezier(.4,0,.2,1);
+  }
+  .chromosome.c1{ background:var(--baseA); }
+  .chromosome.c2{ background:var(--baseT); }
+  .chromosome.c3{ background:var(--baseG); }
+  .chromosome.c4{ background:var(--baseC); }
+
+  /* Interfase: cromatina difusa (puntitos) */
+  .cell-stage[data-phase="interfase"] .chromosome{
+    width:10px; height:10px; border-radius:50%; opacity:.55;
+  }
+  .cell-stage[data-phase="interfase"] .c1{ transform:translate(-60px,-40px); }
+  .cell-stage[data-phase="interfase"] .c2{ transform:translate(-20px,30px); }
+  .cell-stage[data-phase="interfase"] .c3{ transform:translate(40px,-20px); }
+  .cell-stage[data-phase="interfase"] .c4{ transform:translate(70px,35px); }
+
+  /* Profase: condensados, dispersos */
+  .cell-stage[data-phase="profase"] .c1{ transform:translate(-70px,-46px) rotate(20deg); }
+  .cell-stage[data-phase="profase"] .c2{ transform:translate(-70px,26px) rotate(-15deg); }
+  .cell-stage[data-phase="profase"] .c3{ transform:translate(50px,-30px) rotate(10deg); }
+  .cell-stage[data-phase="profase"] .c4{ transform:translate(50px,36px) rotate(-20deg); }
+
+  /* Metafase: alineados al centro (ecuador) */
+  .cell-stage[data-phase="metafase"] .c1{ transform:translate(-24px,-14px); }
+  .cell-stage[data-phase="metafase"] .c2{ transform:translate(-24px,10px); }
+  .cell-stage[data-phase="metafase"] .c3{ transform:translate(4px,-14px); }
+  .cell-stage[data-phase="metafase"] .c4{ transform:translate(4px,10px); }
+
+  /* Anafase: separándose a los polos */
+  .cell-stage[data-phase="anafase"] .c1{ transform:translate(-95px,-14px); }
+  .cell-stage[data-phase="anafase"] .c2{ transform:translate(-95px,10px); }
+  .cell-stage[data-phase="anafase"] .c3{ transform:translate(75px,-14px); }
+  .cell-stage[data-phase="anafase"] .c4{ transform:translate(75px,10px); }
+
+  /* Telofase: en los polos, membrana comienza a pinchar */
+  .cell-stage[data-phase="telofase"] .c1{ transform:translate(-105px,-14px); }
+  .cell-stage[data-phase="telofase"] .c2{ transform:translate(-105px,10px); }
+  .cell-stage[data-phase="telofase"] .c3{ transform:translate(85px,-14px); }
+  .cell-stage[data-phase="telofase"] .c4{ transform:translate(85px,10px); }
+  .cell-stage[data-phase="telofase"] .membrane-pinch{
+    background:linear-gradient(180deg, transparent, var(--navy) 15%, var(--navy) 85%, transparent);
+    width:14px; margin-left:-7px;
+  }
+
+  .phase-caption{ min-height:92px; font-size:14.5px; color:var(--text); }
+  .phase-caption b{ color:var(--navy); }
+
+  /* ==================================================================
+     SIMULADOR 2 — MITOSIS VS MEIOSIS
+     ================================================================== */
+  .mm-toggle{ display:flex; gap:10px; margin-bottom:18px; }
+  .mm-btn{
+    flex:1; padding:12px; border-radius:12px; border:1.5px solid var(--line); background:#fff;
+    font-weight:800; font-size:14.5px; color:var(--muted);
+  }
+  .mm-btn.active{ border-color:var(--navy); background:var(--navy); color:#fff; }
+
+  .mm-diagram{
+    display:flex; align-items:center; justify-content:center; gap:16px;
+    min-height:200px; background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px;
+  }
+  .mm-start-cell{
+    width:56px; height:56px; border-radius:50%; border:2.5px solid var(--navy);
+    display:flex; align-items:center; justify-content:center; gap:3px; background:var(--mint-tint);
+    flex-shrink:0;
+  }
+  .mm-start-cell span{ width:7px; height:16px; border-radius:4px; }
+  .mm-arrow{ font-size:22px; color:var(--muted); flex-shrink:0; }
+  .mm-results{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .mm-result-cell{
+    width:44px; height:44px; border-radius:50%; border:2px solid var(--teal);
+    display:flex; align-items:center; justify-content:center; gap:2px; background:#fff;
+    transition:all .5s ease;
+  }
+  .mm-result-cell span{ width:5px; height:12px; border-radius:3px; }
+  .mm-result-cell.haploid{ border-color:var(--baseA); width:36px; height:36px; }
+  .mm-cross{ position:relative; }
+  .mm-cross::after{
+    content:"×"; position:absolute; top:-14px; right:-10px; font-size:13px; color:var(--baseA); font-weight:800;
+  }
+
+  .mm-info-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:16px; }
+  @media (max-width:600px){ .mm-info-grid{ grid-template-columns:1fr; } }
+  .mm-info-item{ background:var(--mint-tint); border-radius:10px; padding:10px 12px; font-size:13.5px; }
+  .mm-info-item b{ display:block; color:var(--teal-dark); font-size:11px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:3px; }
+
+  .compare-table{ width:100%; border-collapse:collapse; margin-top:18px; font-size:13.5px; }
+  .compare-table th, .compare-table td{ border:1px solid var(--line); padding:9px 10px; text-align:left; }
+  .compare-table th{ background:var(--navy); color:#fff; font-size:12.5px; text-transform:uppercase; letter-spacing:.4px; }
+  .compare-table td.answer{ filter:blur(5px); transition:filter .3s ease; cursor:pointer; }
+  .compare-table td.answer.revealed{ filter:none; }
+  .reveal-hint{ font-size:11.5px; color:var(--muted); margin-top:6px; }
+
+  /* ==================================================================
+     ACTIVIDAD MANUAL
+     ================================================================== */
+  .steps-list{ counter-reset:step; list-style:none; padding:0; margin:0; }
+  .steps-list li{
+    counter-increment:step; position:relative; padding-left:38px; margin-bottom:14px; font-size:14.5px;
+  }
+  .steps-list li::before{
+    content:counter(step); position:absolute; left:0; top:-2px; width:26px; height:26px; border-radius:50%;
+    background:var(--teal); color:#fff; font-weight:800; font-size:13px; display:flex; align-items:center; justify-content:center;
+  }
+
+  /* ==================================================================
+     QUIZ
+     ================================================================== */
+  .quiz-card{ margin-bottom:18px; }
+  .quiz-q{ font-weight:700; font-size:15.5px; margin-bottom:12px; color:var(--navy); }
+  .quiz-options{ display:grid; gap:8px; }
+  .opt-btn{
+    text-align:left; background:#fff; border:1.5px solid var(--line); border-radius:10px;
+    padding:10px 14px; font-size:14px; color:var(--text);
+  }
+  .opt-btn:hover:not(:disabled){ border-color:var(--teal); }
+  .opt-btn.correct{ background:#E8F6EE; border-color:var(--ok); color:var(--ok); font-weight:700; }
+  .opt-btn.incorrect{ background:#FBEAE8; border-color:var(--bad); color:var(--bad); font-weight:700; }
+  .opt-btn:disabled{ cursor:default; }
+  .score-badge{
+    position:sticky; top:56px; display:inline-block; background:var(--navy); color:#fff;
+    padding:8px 16px; border-radius:999px; font-weight:800; font-size:13.5px; margin-bottom:16px;
+  }
+
+  /* ==================================================================
+     DESARROLLO (AER)
+     ================================================================== */
+  .dev-card{ margin-bottom:16px; }
+  .dev-q{ font-weight:700; font-size:15px; margin-bottom:12px; }
+  .aer-label{ font-size:11.5px; font-weight:800; color:var(--teal-dark); text-transform:uppercase; letter-spacing:.5px; display:block; margin:10px 0 4px; }
+  textarea{
+    width:100%; border:1.5px solid var(--line); border-radius:10px; padding:10px 12px;
+    font-family:var(--font-body); font-size:14px; color:var(--text); resize:vertical; min-height:64px;
+  }
+  textarea:focus{ outline:none; border-color:var(--teal); }
+
+  /* ==================================================================
+     CIERRE
+     ================================================================== */
+  .qr-toggle{
+    background:#fff; border:1.5px solid var(--teal); color:var(--teal-dark); border-radius:999px;
+    padding:9px 16px; font-weight:700; font-size:13.5px;
+  }
+  #qrClosing{ margin-top:14px; width:120px; height:120px; }
+  #qrClosing img, #qrClosing canvas, #qrClosing table{ width:100% !important; height:100% !important; }
+
+  .footer-credit{ text-align:center; font-size:12px; color:var(--muted); margin-top:26px; }
+
+  /* ==================================================================
+     PRINT / EXPORT
+     ================================================================== */
+  @media print{
+    .progress-ladder, .top-actions, .nav-fixed{ display:none !important; }
+    body{ background:#fff !important; }
+    .slide{ display:block !important; min-height:auto !important; page-break-after:always; padding:14px 10px !important; }
+    .slide:last-of-type{ page-break-after:auto; }
+    .slide-viewport{ padding:0 !important; }
+    * { animation:none !important; transition:none !important; }
+    .card, .quiz-card, .dev-card{ box-shadow:none !important; }
+    .score-badge{ position:static !important; }
+    a[href]::after{ content:""; }
+  }
+  @page{ size: A4 landscape; margin:12mm; }
+
+  @media (prefers-reduced-motion: reduce){
+    .helix-rung{ animation:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <nav class="progress-ladder" id="progressLadder" aria-label="Progreso de la clase"></nav>
+
+  <div class="top-actions">
+    <button class="icon-btn" id="exportPdfBtn" title="Exportar esta clase a PDF">⤓ Exportar a PDF</button>
+  </div>
+
+  <main class="slide-viewport" id="slideViewport">
+
+    <!-- ================= SLIDE 0 — PORTADA ================= -->
+    <section class="slide active" data-title="Portada">
+      <div class="slide-inner">
+        <div class="cover-grid">
+          <div>
+            <span class="eyebrow">Unidad 3 · Genética · 2° Medio Biología</span>
+            <h2 class="title" style="font-size:clamp(30px,4.6vw,46px);">El código que se copia y se reparte</h2>
+            <p class="subtitle">Sesión 2 — Mitosis y Meiosis</p>
+            <div class="cover-info">
+              <span><b>Profesor(a):</b> Felipe Jiménez</span>
+              <span><b>Curso:</b> 2° Medio</span>
+              <span><b>Duración:</b> 90 minutos</span>
+            </div>
+            <div style="margin-bottom:22px; display:flex; gap:10px; flex-wrap:wrap;">
+              <span class="tag">OA 6</span>
+              <span class="tag">Nivel Bloom: Comprender / Aplicar</span>
+              <span class="tag">Incluye repaso breve de Sesión 1</span>
+            </div>
+            <button class="cta-start" id="startBtn">Iniciar clase →</button>
+          </div>
+
+          <div>
+            <div class="helix-wrap" id="helixWrap" aria-hidden="true"></div>
+            <div class="qr-panel">
+              <p style="color:#fff; font-weight:700; font-size:14px; margin-top:0;">Recursos de la clase</p>
+              <div class="qr-box"><div id="qrHero"></div></div>
+              <p>Escanea con tu celular o visita<br><span style="color:#fff;">fjimenez321-stack.github.io/dondefelipe</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 1 — REPASO SESIÓN 1 ================= -->
+    <section class="slide" data-title="Repaso Sesión 1">
+      <div class="slide-inner">
+        <span class="eyebrow">Repaso exprés · Sesión 1</span>
+        <h2 class="title">ADN, gen y cromosoma: la biblioteca genética</h2>
+        <p class="subtitle">Antes de dividir la información, recordemos dónde vive</p>
+        <div class="grid-3">
+          <div class="card biblio-card">
+            <div class="biblio-icon" style="background:var(--baseT);">ADN</div>
+            <p><b>El libro completo</b><br>de instrucciones de un organismo.</p>
+          </div>
+          <div class="card biblio-card">
+            <div class="biblio-icon" style="background:var(--baseG);">GEN</div>
+            <p><b>Un capítulo</b><br>del libro: una instrucción específica.</p>
+          </div>
+          <div class="card biblio-card">
+            <div class="biblio-icon" style="background:var(--baseA);">CR</div>
+            <p><b>El estante</b><br>que ordena y empaqueta varios "libros".</p>
+          </div>
+        </div>
+        <p style="margin-top:20px; font-size:14.5px; color:var(--muted); text-align:center;">
+          Hoy usaremos estas ideas para entender <b style="color:var(--navy);">cómo se reparte</b> esa información cuando la célula se divide.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 2 — OBJETIVO SESIÓN 2 ================= -->
+    <section class="slide" data-title="Objetivo de la sesión">
+      <div class="slide-inner">
+        <span class="eyebrow">Foco de la clase · Sesión 2</span>
+        <h2 class="title">Objetivo, OA e Indicador de Evaluación</h2>
+        <div class="grid-2" style="margin-bottom:22px;">
+          <div class="card tint-mint">
+            <span class="card-label">Eje Biología</span>
+            <h3 style="font-size:19px; margin-bottom:8px;">OA 6</h3>
+            <p>Investigar y argumentar, basándose en evidencias, que el material genético se transmite de generación en generación, considerando la comparación de la mitosis y la meiosis.</p>
+          </div>
+          <div class="card tint-cream">
+            <span class="card-label">Indicador de Evaluación (IE)</span>
+            <p>Argumentan que la información genética se transmite de generación en generación; establecen la relación entre ADN, cromosomas y proliferación celular; infieren que la meiosis forma células haploides.</p>
+          </div>
+        </div>
+        <div class="timeline">
+          <div class="card"><div class="step-n">1</div><b>Inicio</b><div class="mins">10 min</div><p style="font-size:12.5px;">Repaso Sesión 1</p></div>
+          <div class="card"><div class="step-n">2</div><b>Clásica</b><div class="mins">25 min</div><p style="font-size:12.5px;">Mitosis vs meiosis</p></div>
+          <div class="card"><div class="step-n">3</div><b>STEAM</b><div class="mins">35 min</div><p style="font-size:12.5px;">Modelo + simulación</p></div>
+          <div class="card"><div class="step-n">4</div><b>Cierre</b><div class="mins">20 min</div><p style="font-size:12.5px;">Quiz + AER</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 3 — SIMULADOR 1: MITOSIS ================= -->
+    <section class="slide" data-title="Simulador: Mitosis">
+      <div class="slide-inner">
+        <span class="eyebrow">Simulador 1 · CSS interactivo</span>
+        <h2 class="title">Mitosis paso a paso</h2>
+        <p class="subtitle">Toca cada fase para ver qué pasa con los cromosomas</p>
+        <div class="sim-layout">
+          <div>
+            <div class="phase-btns" id="phaseBtns">
+              <button class="phase-btn" data-phase="interfase">Interfase</button>
+              <button class="phase-btn" data-phase="profase">Profase</button>
+              <button class="phase-btn" data-phase="metafase">Metafase</button>
+              <button class="phase-btn" data-phase="anafase">Anafase</button>
+              <button class="phase-btn" data-phase="telofase">Telofase</button>
+            </div>
+            <div class="cell-stage" id="cellStage" data-phase="interfase">
+              <div class="membrane-pinch"></div>
+              <div class="chromosome c1"></div>
+              <div class="chromosome c2"></div>
+              <div class="chromosome c3"></div>
+              <div class="chromosome c4"></div>
+            </div>
+          </div>
+          <div class="card">
+            <span class="card-label">¿Qué está pasando?</span>
+            <p class="phase-caption" id="phaseCaption"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 4 — SIMULADOR 2: MITOSIS VS MEIOSIS ================= -->
+    <section class="slide" data-title="Simulador: Mitosis vs Meiosis">
+      <div class="slide-inner">
+        <span class="eyebrow">Simulador 2 · CSS interactivo</span>
+        <h2 class="title">Un mismo inicio, dos resultados distintos</h2>
+        <p class="subtitle">Compara qué ocurre con la misma célula según el tipo de división</p>
+        <div class="mm-toggle">
+          <button class="mm-btn active" data-mode="mitosis">Ver Mitosis</button>
+          <button class="mm-btn" data-mode="meiosis">Ver Meiosis</button>
+        </div>
+        <div class="mm-diagram" id="mmDiagram">
+          <div class="mm-start-cell"><span style="background:var(--baseA);"></span><span style="background:var(--baseT);"></span></div>
+          <span class="mm-arrow">→</span>
+          <div class="mm-results" id="mmResults"></div>
+        </div>
+        <div class="mm-info-grid" id="mmInfoGrid"></div>
+
+        <table class="compare-table">
+          <thead><tr><th>Característica</th><th>Mitosis</th><th>Meiosis</th></tr></thead>
+          <tbody>
+            <tr><td>N° de divisiones</td><td class="answer" onclick="this.classList.toggle('revealed')">1</td><td class="answer" onclick="this.classList.toggle('revealed')">2</td></tr>
+            <tr><td>Células resultantes</td><td class="answer" onclick="this.classList.toggle('revealed')">2</td><td class="answer" onclick="this.classList.toggle('revealed')">4</td></tr>
+            <tr><td>Dotación cromosómica</td><td class="answer" onclick="this.classList.toggle('revealed')">Diploide (2n)</td><td class="answer" onclick="this.classList.toggle('revealed')">Haploide (n)</td></tr>
+            <tr><td>Variabilidad genética</td><td class="answer" onclick="this.classList.toggle('revealed')">No genera</td><td class="answer" onclick="this.classList.toggle('revealed')">Sí, por recombinación</td></tr>
+          </tbody>
+        </table>
+        <p class="reveal-hint">Completa la tabla en pareja antes de tocar cada celda para revelar la respuesta.</p>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 5 — ACTIVIDAD MANUAL: CONSTRUCCIÓN ================= -->
+    <section class="slide" data-title="Actividad manual: construcción">
+      <div class="slide-inner">
+        <span class="eyebrow">Actividad manual · Cartulina e hilo</span>
+        <h2 class="title">Construyamos un modelo de cromosoma</h2>
+        <p class="subtitle">La actividad STEAM de la Sesión 1, hoy puesta en acción</p>
+        <div class="grid-2">
+          <div class="card tint-mint">
+            <span class="card-label">Materiales por pareja</span>
+            <ul>
+              <li>1 base de cartulina (aprox. 20×20 cm)</li>
+              <li>Hilo o lana de <b>dos colores distintos</b> (representan cromosomas homólogos)</li>
+              <li>Cuentas, botones o nudos de colores (representan genes/alelos)</li>
+              <li>Tijeras y pegamento</li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="card-label">Pasos</span>
+            <ol class="steps-list">
+              <li>Corten dos hebras de hilo del mismo largo, una de cada color.</li>
+              <li>Ubiquen cuentas o nudos a lo largo de cada hebra: cada una representa un gen.</li>
+              <li>Peguen ambas hebras sobre la cartulina, una junto a la otra: son un <b>par homólogo</b>.</li>
+              <li>Rotulen con una etiqueta: ADN, gen y cromosoma, señalando cada parte del modelo.</li>
+            </ol>
+          </div>
+        </div>
+        <p style="margin-top:18px; font-size:13.5px; color:var(--muted); text-align:center;">
+          Guarden su modelo: en la siguiente diapositiva lo usaremos para actuar la mitosis y la meiosis.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 6 — SIMULACIÓN KINESTÉSICA ================= -->
+    <section class="slide" data-title="Simulación kinestésica">
+      <div class="slide-inner">
+        <span class="eyebrow">Del modelo a la acción</span>
+        <h2 class="title">Actuemos la mitosis y la meiosis</h2>
+        <div class="grid-2">
+          <div class="card tint-mint">
+            <span class="card-label">Para mitosis</span>
+            <ol class="steps-list">
+              <li>Dibujen o marquen con cinta el "ecuador" de una célula imaginaria en el suelo.</li>
+              <li>Ubiquen su par homólogo de hilo justo en el ecuador (como en Metafase).</li>
+              <li>Separen las dos hebras hacia polos opuestos (Anafase) y "cierren" la membrana con las manos (Telofase).</li>
+              <li>Resultado esperado: <b>2 modelos idénticos</b>, uno a cada lado.</li>
+            </ol>
+          </div>
+          <div class="card tint-cream">
+            <span class="card-label">Para meiosis</span>
+            <ol class="steps-list">
+              <li>Repitan la separación de la mitosis una primera vez.</li>
+              <li>Antes de la segunda separación, intercambien un trozo pequeño de hilo entre los pares homólogos (esto representa la <b>recombinación genética</b>).</li>
+              <li>Separen nuevamente: deben quedar <b>4 modelos</b>, cada uno distinto entre sí.</li>
+            </ol>
+          </div>
+        </div>
+        <p style="margin-top:18px; font-size:13.5px; color:var(--muted); text-align:center;">
+          Comparen su actuación con los Simuladores 1 y 2: ¿coincide el número de células y su dotación cromosómica?
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 7 — QUIZ ALTERNATIVAS ================= -->
+    <section class="slide" data-title="Quiz de alternativas">
+      <div class="slide-inner">
+        <span class="eyebrow">Evaluación formativa · Alternativas</span>
+        <h2 class="title">Pon a prueba lo aprendido</h2>
+        <div class="score-badge" id="scoreBadge">Puntaje: 0 / 0</div>
+        <div id="quizContainer"></div>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 8 — PREGUNTAS DE DESARROLLO ================= -->
+    <section class="slide" data-title="Preguntas de desarrollo">
+      <div class="slide-inner">
+        <span class="eyebrow">Evaluación formativa · Desarrollo (AER)</span>
+        <h2 class="title">Argumenta con evidencia</h2>
+
+        <div class="card dev-card">
+          <p class="dev-q">1. ¿Por qué la meiosis genera variabilidad genética entre hermanos, mientras que la mitosis no lo hace? Apóyate en el simulador y en tu modelo de hilo.</p>
+          <label class="aer-label">Afirmación</label>
+          <textarea rows="2" aria-label="Afirmación pregunta 1"></textarea>
+          <label class="aer-label">Evidencia</label>
+          <textarea rows="2" aria-label="Evidencia pregunta 1"></textarea>
+          <label class="aer-label">Razonamiento</label>
+          <textarea rows="2" aria-label="Razonamiento pregunta 1"></textarea>
+        </div>
+
+        <div class="card dev-card">
+          <p class="dev-q">2. Un compañero afirma: "todas las células del cuerpo humano tienen el mismo número de cromosomas, incluidos los óvulos y espermatozoides". ¿Está en lo correcto? Argumenta.</p>
+          <textarea rows="3" aria-label="Respuesta pregunta 2"></textarea>
+        </div>
+
+        <div class="card dev-card">
+          <p class="dev-q">3. Describe qué momento de la actividad con hilos representó el instante de mayor variabilidad genética, y explica por qué.</p>
+          <textarea rows="3" aria-label="Respuesta pregunta 3"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 9 — CIERRE ================= -->
+    <section class="slide" data-title="Cierre">
+      <div class="slide-inner">
+        <span class="eyebrow">Síntesis y próximos pasos</span>
+        <h2 class="title">Lo que sabemos hoy sobre la división celular</h2>
+        <div class="grid-2" style="margin-bottom:18px;">
+          <div class="card tint-mint">
+            <span class="card-label">Hoy aprendimos</span>
+            <ul>
+              <li>Cómo se organiza el material genético (ADN, gen, cromosoma).</li>
+              <li>Las fases de la mitosis y su función de crecimiento/reparación.</li>
+              <li>Por qué la meiosis produce gametos haploides y variables.</li>
+            </ul>
+          </div>
+          <div class="card tint-cream">
+            <span class="card-label">Próxima clase — Semana 3</span>
+            <p>Anomalías de la división celular (trisomías, cáncer) y cierre del Bloque 1 con Kahoot de repaso.</p>
+          </div>
+        </div>
+
+        <button class="qr-toggle" id="qrToggleBtn">Mostrar QR de recursos</button>
+        <div id="qrClosing" style="display:none;"></div>
+
+        <p class="footer-credit">Unidad 3 · Genética — Sesión 2 · Prof. Felipe Jiménez · 2° Medio Biología</p>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="nav-fixed">
+    <button class="nav-btn" id="prevBtn">← Anterior</button>
+    <span class="nav-counter" id="navCounter">1 / 10</span>
+    <button class="nav-btn" id="nextBtn">Siguiente →</button>
+  </nav>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var QR_URL = "https://fjimenez321-stack.github.io/dondefelipe/#";
+
+  /* ---------------- Navegación de slides ---------------- */
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var total = slides.length;
+  var current = 0;
+
+  var ladder = document.getElementById("progressLadder");
+  slides.forEach(function(s, i){
+    var b = document.createElement("button");
+    b.className = "prog-step";
+    b.type = "button";
+    b.setAttribute("aria-label", "Ir a: " + (s.getAttribute("data-title") || ("Diapositiva " + (i+1))));
+    b.addEventListener("click", function(){ goTo(i); });
+    ladder.appendChild(b);
+  });
+  var progSteps = Array.prototype.slice.call(document.querySelectorAll(".prog-step"));
+
+  var prevBtn = document.getElementById("prevBtn");
+  var nextBtn = document.getElementById("nextBtn");
+  var navCounter = document.getElementById("navCounter");
+
+  function goTo(index){
+    if (index < 0) index = 0;
+    if (index > total - 1) index = total - 1;
+    slides[current].classList.remove("active");
+    current = index;
+    slides[current].classList.add("active");
+    progSteps.forEach(function(step, i){
+      step.classList.toggle("done", i <= current);
+      step.classList.toggle("current", i === current);
+    });
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+    navCounter.textContent = (current + 1) + " / " + total;
+    window.scrollTo(0, 0);
+  }
+
+  prevBtn.addEventListener("click", function(){ goTo(current - 1); });
+  nextBtn.addEventListener("click", function(){ goTo(current + 1); });
+  document.getElementById("startBtn").addEventListener("click", function(){ goTo(1); });
+
+  document.addEventListener("keydown", function(e){
+    if (e.key === "ArrowRight") goTo(current + 1);
+    if (e.key === "ArrowLeft") goTo(current - 1);
+  });
+
+  goTo(0);
+
+  /* ---------------- QR codes ---------------- */
+  function buildQR(elementId, size){
+    try{
+      new QRCode(document.getElementById(elementId), {
+        text: QR_URL,
+        width: size, height: size,
+        colorDark: "#0B2340",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    } catch(e){
+      var el = document.getElementById(elementId);
+      if (el) el.innerHTML = '<p class="qr-fallback">No se pudo cargar el QR (sin conexión). Visita:<br>' + QR_URL + '</p>';
+    }
+  }
+  buildQR("qrHero", 260);
+
+  var qrToggleBtn = document.getElementById("qrToggleBtn");
+  var qrClosingBuilt = false;
+  qrToggleBtn.addEventListener("click", function(){
+    var box = document.getElementById("qrClosing");
+    var showing = box.style.display !== "none";
+    if (!showing && !qrClosingBuilt){
+      buildQR("qrClosing", 120);
+      qrClosingBuilt = true;
+    }
+    box.style.display = showing ? "none" : "inline-block";
+    qrToggleBtn.textContent = showing ? "Mostrar QR de recursos" : "Ocultar QR de recursos";
+  });
+
+  /* ---------------- Hero DNA helix ---------------- */
+  var helixWrap = document.getElementById("helixWrap");
+  var baseColors = ["var(--baseA)", "var(--baseT)", "var(--baseG)", "var(--baseC)"];
+  var RUNGS = 16;
+  for (var i = 0; i < RUNGS; i++){
+    var rung = document.createElement("div");
+    rung.className = "helix-rung";
+    rung.style.setProperty("--ty", (i * 18) + "px");
+    rung.style.background = baseColors[i % 4];
+    rung.style.animationDuration = "5s";
+    rung.style.animationDelay = (i * -0.3) + "s";
+    helixWrap.appendChild(rung);
+  }
+
+  /* ---------------- Simulador 1: Mitosis ---------------- */
+  var phaseCaptions = {
+    interfase: "<b>Interfase:</b> la célula crece y duplica su ADN. La cromatina está descondensada (difusa) dentro del núcleo.",
+    profase:   "<b>Profase:</b> la cromatina se condensa en cromosomas visibles. Comienza a desaparecer la membrana nuclear.",
+    metafase:  "<b>Metafase:</b> los cromosomas se alinean en el ecuador (centro) de la célula, sujetos por el huso mitótico.",
+    anafase:   "<b>Anafase:</b> las cromátidas hermanas se separan y migran hacia polos opuestos de la célula.",
+    telofase:  "<b>Telofase y citocinesis:</b> se forman dos núcleos nuevos y la membrana se pincha, dando origen a dos células hijas idénticas."
+  };
+  var cellStage = document.getElementById("cellStage");
+  var phaseCaption = document.getElementById("phaseCaption");
+  var phaseButtons = Array.prototype.slice.call(document.querySelectorAll(".phase-btn"));
+
+  function setPhase(phase){
+    cellStage.setAttribute("data-phase", phase);
+    phaseButtons.forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-phase") === phase); });
+    phaseCaption.innerHTML = phaseCaptions[phase];
+  }
+  phaseButtons.forEach(function(b){
+    b.addEventListener("click", function(){ setPhase(b.getAttribute("data-phase")); });
+  });
+  setPhase("interfase");
+
+  /* ---------------- Simulador 2: Mitosis vs Meiosis ---------------- */
+  var mmButtons = Array.prototype.slice.call(document.querySelectorAll(".mm-btn"));
+  var mmResults = document.getElementById("mmResults");
+  var mmInfoGrid = document.getElementById("mmInfoGrid");
+
+  var mmData = {
+    mitosis: {
+      cells: [
+        {colors:["var(--baseA)","var(--baseT)"], haploid:false},
+        {colors:["var(--baseA)","var(--baseT)"], haploid:false}
+      ],
+      info: [
+        {label:"Divisiones", text:"1 sola división celular"},
+        {label:"Resultado", text:"2 células diploides (2n), idénticas entre sí"},
+        {label:"Función", text:"Crecimiento, reparación y regeneración de tejidos"},
+        {label:"Variabilidad", text:"No genera variabilidad genética"}
+      ]
+    },
+    meiosis: {
+      cells: [
+        {colors:["var(--baseA)"], haploid:true},
+        {colors:["var(--baseT)"], haploid:true},
+        {colors:["var(--baseA)"], haploid:true},
+        {colors:["var(--baseT)"], haploid:true}
+      ],
+      info: [
+        {label:"Divisiones", text:"2 divisiones sucesivas"},
+        {label:"Resultado", text:"4 células haploides (n), distintas entre sí"},
+        {label:"Función", text:"Formación de gametos (óvulos y espermatozoides)"},
+        {label:"Variabilidad", text:"Sí: por recombinación genética (entrecruzamiento)"}
+      ]
+    }
+  };
+
+  function renderMM(mode){
+    mmResults.innerHTML = "";
+    mmData[mode].cells.forEach(function(cell){
+      var div = document.createElement("div");
+      div.className = "mm-result-cell" + (cell.haploid ? " haploid" : "") + (mode === "meiosis" ? " mm-cross" : "");
+      cell.colors.forEach(function(c){
+        var bar = document.createElement("span");
+        bar.style.background = c;
+        div.appendChild(bar);
+      });
+      mmResults.appendChild(div);
+    });
+
+    mmInfoGrid.innerHTML = "";
+    mmData[mode].info.forEach(function(item){
+      var box = document.createElement("div");
+      box.className = "mm-info-item";
+      box.innerHTML = "<b>" + item.label + "</b>" + item.text;
+      mmInfoGrid.appendChild(box);
+    });
+
+    mmButtons.forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-mode") === mode); });
+  }
+  mmButtons.forEach(function(b){
+    b.addEventListener("click", function(){ renderMM(b.getAttribute("data-mode")); });
+  });
+  renderMM("mitosis");
+
+  /* ---------------- Quiz de alternativas ---------------- */
+  var quizData = [
+    {
+      q: "1. ¿Cuál secuencia ordena correctamente los niveles de organización del material genético, de menor a mayor?",
+      options: ["Cromosoma → ADN → Gen", "Gen → ADN → Cromosoma", "ADN → Gen → Cromosoma", "Cromosoma → Gen → ADN"],
+      correct: 1
+    },
+    {
+      q: "2. ¿Cuál es la principal diferencia entre mitosis y meiosis en cuanto al resultado final?",
+      options: [
+        "La mitosis genera 4 células haploides; la meiosis, 2 diploides.",
+        "Ambas generan el mismo número de células con la misma dotación cromosómica.",
+        "La mitosis genera 2 células diploides idénticas; la meiosis genera 4 células haploides distintas.",
+        "La meiosis solo ocurre en células vegetales; la mitosis, en animales."
+      ],
+      correct: 2
+    },
+    {
+      q: "3. ¿Por qué es necesario que los gametos sean haploides?",
+      options: [
+        "Porque así se duplican más rápido durante la fecundación.",
+        "Porque al unirse dos gametos haploides en la fecundación se restaura la dotación diploide de la especie.",
+        "Porque las células haploides no necesitan ADN.",
+        "Porque los gametos diploides no pueden moverse."
+      ],
+      correct: 1
+    },
+    {
+      q: "4. ¿En qué fase de la mitosis los cromosomas se alinean en el ecuador de la célula?",
+      options: ["Profase", "Metafase", "Anafase", "Telofase"],
+      correct: 1
+    },
+    {
+      q: "5. ¿Qué proceso, exclusivo de la meiosis, genera variabilidad genética entre los gametos?",
+      options: ["Citocinesis", "Duplicación del ADN", "Recombinación genética entre cromosomas homólogos", "Condensación de la cromatina"],
+      correct: 2
+    }
+  ];
+
+  var quizContainer = document.getElementById("quizContainer");
+  var scoreBadge = document.getElementById("scoreBadge");
+  var score = 0;
+  var answered = 0;
+
+  function updateScore(){ scoreBadge.textContent = "Puntaje: " + score + " / " + quizData.length; }
+
+  quizData.forEach(function(item, qi){
+    var card = document.createElement("div");
+    card.className = "card quiz-card";
+    var qEl = document.createElement("p");
+    qEl.className = "quiz-q";
+    qEl.textContent = item.q;
+    card.appendChild(qEl);
+    var optWrap = document.createElement("div");
+    optWrap.className = "quiz-options";
+
+    item.options.forEach(function(optText, oi){
+      var btn = document.createElement("button");
+      btn.className = "opt-btn";
+      btn.textContent = optText;
+      btn.addEventListener("click", function(){
+        var allBtns = optWrap.querySelectorAll(".opt-btn");
+        if (allBtns[0].disabled) return;
+        allBtns.forEach(function(b, bi){
+          b.disabled = true;
+          if (bi === item.correct) b.classList.add("correct");
+        });
+        if (oi === item.correct){
+          score++;
+        } else {
+          btn.classList.add("incorrect");
+        }
+        answered++;
+        updateScore();
+      });
+      optWrap.appendChild(btn);
+    });
+
+    card.appendChild(optWrap);
+    quizContainer.appendChild(card);
+  });
+  updateScore();
+
+  /* ---------------- Exportar a PDF ---------------- */
+  document.getElementById("exportPdfBtn").addEventListener("click", function(){
+    window.print();
+  });
+
+})();
+</script>
+</body>
+</html>

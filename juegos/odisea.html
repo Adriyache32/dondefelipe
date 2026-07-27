@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Odisea Cósmica · De Mercurio a la Nube de Oort</title>
+<style>
+  :root{
+    --papiro:#e7d6ac; --papiro-sombra:#d8c495; --tinta:#3a2a16; --tinta-suave:#6a5334;
+    --oro:#c8a24b; --lacre:#8f2f22;
+    --void:#05060e; --void2:#0a0d1c; --fosforo:#4de0e8; --ambar:#f2a93b;
+    --peligro:#ff4d57; --nave:#7cff6b; --oro-cristal:#ffd76b; --vel:#5bd6ff; --pow:#ff9a3b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#000;overflow:hidden;font-family:"Courier New",monospace;color:#fff}
+  #app{position:relative;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at 50% 30%, #0a1030 0%, #05060e 60%, #000 100%);}
+  #stage{position:relative;width:min(96vw, calc(96vh*0.62));height:min(96vh, calc(96vw/0.62));
+    max-width:760px;background:var(--void);border:3px solid var(--oro);border-radius:10px;overflow:hidden;
+    box-shadow:0 0 40px rgba(200,162,75,.25), inset 0 0 60px rgba(0,0,0,.6);
+    touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated;touch-action:none}
+  .crt::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+    background:repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,.16) 3px, rgba(0,0,0,0) 4px);mix-blend-mode:multiply;}
+  .crt::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:7;
+    background:radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(0,0,0,.45) 100%);}
+  .screen{position:absolute;inset:0;z-index:10;display:none;flex-direction:column;align-items:center;justify-content:center;padding:5% 7%;text-align:center;}
+  .screen.on{display:flex}
+
+  /* Pergamino */
+  .papiro{position:relative;width:100%;max-height:100%;overflow-y:auto;
+    background:radial-gradient(circle at 20% 15%, rgba(0,0,0,.05), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(0,0,0,.06), transparent 45%),
+      linear-gradient(180deg,var(--papiro),var(--papiro-sombra));
+    color:var(--tinta);border-radius:6px;padding:26px 24px 30px;
+    box-shadow:0 10px 40px rgba(0,0,0,.6), inset 0 0 60px rgba(120,90,40,.25);font-family:Georgia,"Times New Roman",serif;}
+  .papiro::before,.papiro::after{content:"";position:absolute;left:0;right:0;height:22px;background:linear-gradient(180deg,rgba(90,60,20,.35),transparent);}
+  .papiro::before{top:0;border-radius:6px 6px 0 0}
+  .papiro::after{bottom:0;transform:scaleY(-1);border-radius:0 0 6px 6px}
+  .sello{width:56px;height:56px;margin:0 auto 6px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #b8483a, var(--lacre));
+    box-shadow:0 3px 8px rgba(0,0,0,.4), inset 0 0 10px rgba(0,0,0,.4);
+    display:flex;align-items:center;justify-content:center;color:#f0d9a0;font-size:24px;font-family:Georgia,serif;font-style:italic;}
+  .papiro h1{font-size:clamp(20px,5vw,30px);letter-spacing:.5px;margin-bottom:4px;line-height:1.15;}
+  .papiro .sub{font-style:italic;color:var(--tinta-suave);margin-bottom:14px;font-size:clamp(12px,3vw,15px)}
+  .papiro p{font-size:clamp(13px,3.3vw,16px);line-height:1.55;margin:0 auto 12px;max-width:54ch;text-align:justify}
+  .papiro p .firma{display:block;text-align:right;font-style:italic;margin-top:8px;}
+  .divisor{width:60%;height:1px;margin:14px auto;background:linear-gradient(90deg,transparent,var(--oro),transparent)}
+
+  .btn{font-family:"Courier New",monospace;font-weight:bold;letter-spacing:1px;text-transform:uppercase;cursor:pointer;user-select:none;
+    background:var(--oro);color:#2a1e0c;border:none;padding:12px 22px;border-radius:4px;font-size:clamp(13px,3.4vw,16px);
+    box-shadow:0 4px 0 #8f6f22;transition:transform .05s, box-shadow .05s;margin-top:8px;}
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #8f6f22}
+  .btn.mini{padding:8px 14px;font-size:12px;box-shadow:0 3px 0 #8f6f22}
+  .btn.ghost{background:transparent;color:var(--fosforo);border:2px solid var(--fosforo);box-shadow:none}
+
+  .crt-title{font-family:"Courier New",monospace;color:var(--fosforo);text-shadow:0 0 12px rgba(77,224,232,.6)}
+  .crt-title h1{font-size:clamp(22px,6vw,40px);letter-spacing:2px;line-height:1.1;margin-bottom:6px}
+  .crt-title h1 .a{color:var(--ambar);text-shadow:0 0 12px rgba(242,169,59,.6)}
+  .crt-title .tag{color:#cfe;letter-spacing:1px;margin-bottom:12px;font-size:clamp(11px,3vw,15px);opacity:.9}
+
+  /* Nombre */
+  #nombre .box{width:100%;max-width:460px;background:var(--void2);border:2px solid var(--oro);border-radius:12px;padding:26px 22px;box-shadow:0 0 40px rgba(200,162,75,.25)}
+  #nombre h2{color:var(--oro-cristal);font-family:"Courier New",monospace;font-size:clamp(16px,4.4vw,22px);margin-bottom:6px;letter-spacing:1px}
+  #nombre p{color:#bcd;font-size:13px;margin-bottom:16px}
+  #nombre input{width:100%;padding:12px 14px;margin-bottom:10px;border-radius:6px;border:1px solid #33406e;background:#0f1430;color:#eaf;font-family:"Courier New",monospace;font-size:15px;text-align:center}
+  #nombre input:focus{outline:none;border-color:var(--fosforo)}
+
+  /* Pregunta */
+  #q-screen{background:rgba(3,4,10,.92);z-index:20}
+  .q-card{width:100%;max-width:560px;background:var(--void2);border:2px solid var(--oro-cristal);border-radius:10px;padding:22px 20px;box-shadow:0 0 40px rgba(255,215,107,.25);}
+  .q-card .marca{color:var(--oro-cristal);font-weight:bold;letter-spacing:2px;font-size:12px;margin-bottom:8px;text-transform:uppercase}
+  .q-card h2{color:#fff;font-size:clamp(15px,3.8vw,19px);line-height:1.35;margin-bottom:16px;font-family:"Courier New",monospace}
+  .opciones{display:grid;gap:10px}
+  .opcion{text-align:left;background:#12162b;color:#dfe6ff;border:1px solid #2a3358;padding:12px 14px;border-radius:6px;cursor:pointer;font-size:clamp(13px,3.3vw,15px);font-family:"Courier New",monospace;transition:.12s;}
+  .opcion:hover{border-color:var(--fosforo);background:#182046}
+  .opcion.correcta{background:#123d22;border-color:var(--nave);color:#c7ffbc}
+  .opcion.incorrecta{background:#3d1218;border-color:var(--peligro);color:#ffc7cc}
+  .opcion .k{display:inline-block;width:22px;color:var(--oro-cristal);font-weight:bold}
+  .q-feedback{margin-top:14px;font-size:clamp(12px,3.1vw,14px);line-height:1.5;color:#bcd;min-height:1em;font-family:"Courier New",monospace}
+
+  /* Podio entre misiones */
+  .podio-box{width:100%;max-width:420px;margin:6px auto 14px;background:rgba(10,13,28,.85);border:1px solid var(--oro);border-radius:10px;padding:12px 14px;text-align:left}
+  .podio-box h3{color:var(--oro-cristal);font-family:"Courier New",monospace;font-size:13px;letter-spacing:1px;text-align:center;margin-bottom:8px;text-transform:uppercase}
+  .podio-row{display:flex;justify-content:space-between;gap:8px;font-family:"Courier New",monospace;font-size:13px;padding:5px 6px;border-radius:4px}
+  .podio-row .nm{color:#dfe6ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .podio-row .sc{color:var(--fosforo);font-weight:bold}
+  .podio-row.me{background:rgba(200,162,75,.16);border:1px dashed var(--oro)}
+  .podio-row .med{width:20px;display:inline-block}
+  .podio-empty{color:#89a;font-size:12px;text-align:center;font-family:"Courier New",monospace}
+
+  #hud{position:absolute;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:center;
+    padding:8px 12px;font-family:"Courier New",monospace;font-weight:bold;color:var(--fosforo);font-size:clamp(11px,2.8vw,14px);letter-spacing:1px;text-shadow:0 0 8px rgba(77,224,232,.5);pointer-events:none;}
+  #hud .vidas{color:var(--peligro);letter-spacing:2px;text-shadow:0 0 8px rgba(255,77,87,.6)}
+  #hud .mision{color:var(--ambar);text-shadow:0 0 8px rgba(242,169,59,.5)}
+  #buffs{position:absolute;top:30px;left:12px;z-index:5;font-family:"Courier New",monospace;font-size:11px;font-weight:bold;pointer-events:none}
+  #buffs span{display:inline-block;margin-right:8px;padding:2px 6px;border-radius:4px}
+  .b-vel{background:rgba(91,214,255,.18);color:var(--vel);border:1px solid var(--vel)}
+  .b-pow{background:rgba(255,154,59,.18);color:var(--pow);border:1px solid var(--pow)}
+
+  #banner{position:absolute;top:42%;left:0;right:0;text-align:center;z-index:9;font-family:"Courier New",monospace;font-weight:bold;
+    font-size:clamp(16px,5vw,26px);letter-spacing:2px;opacity:0;transition:opacity .25s;pointer-events:none;text-shadow:0 0 16px currentColor}
+  #banner.show{opacity:1;animation:pip .5s steps(2) infinite}
+  @keyframes pip{50%{opacity:.55}}
+
+  #touch{position:absolute;inset:0;z-index:8;display:none;touch-action:none}
+  #touch.on{display:block}
+  .pad-move{position:absolute;left:16px;bottom:16px;display:flex;gap:12px}
+  .pad-btn{width:66px;height:66px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-family:"Courier New",monospace;font-size:26px;color:#dff;pointer-events:none;user-select:none;-webkit-user-select:none;
+    background:rgba(20,30,55,.40);border:2px solid rgba(120,200,220,.55);box-shadow:0 2px 12px rgba(0,0,0,.4);
+    transition:transform .05s, background .05s;touch-action:none}
+  .pad-btn.pressed{background:rgba(77,224,232,.4);border-color:var(--fosforo);transform:scale(.92)}
+  .pad-btn.fire{position:absolute;right:18px;bottom:18px;width:92px;height:92px;font-size:12px;font-weight:bold;
+    flex-direction:column;gap:2px;color:#ffd0a0;background:rgba(70,32,20,.42);border-color:rgba(255,150,90,.6)}
+  .pad-btn.fire b{font-size:24px;line-height:1}
+  .pad-btn.fire.pressed{background:rgba(255,120,60,.42);border-color:var(--pow)}
+  .hint{position:absolute;bottom:8px;left:0;right:0;text-align:center;color:#567;font-size:11px;z-index:5;font-family:"Courier New",monospace;pointer-events:none}
+  ::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:var(--oro);border-radius:4px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage" class="crt">
+    <canvas id="game"></canvas>
+
+    <div id="hud" style="display:none">
+      <div class="mision" id="hud-mision">MISIÓN 1</div>
+      <div class="puntos" id="hud-puntos">PTS 0</div>
+      <div class="vidas" id="hud-vidas">♥ ♥ ♥</div>
+    </div>
+    <div id="buffs"></div>
+    <div id="banner"></div>
+
+    <div id="touch">
+      <div class="pad-move">
+        <div class="pad-btn" id="t-left">◀</div>
+        <div class="pad-btn" id="t-right">▶</div>
+      </div>
+      <div class="pad-btn fire" id="t-fire"><b>▲</b>FUEGO</div>
+    </div>
+
+    <!-- BIENVENIDA (Galileo) -->
+    <div class="screen on" id="welcome">
+      <div class="papiro">
+        <div class="sello">G</div>
+        <h1>Códice del Cielo</h1>
+        <div class="sub">Anno Domini 1610 · de puño y letra de Galileo Galilei</div>
+        <p>Hola, soy Galileo. Escribo para las futuras generaciones que exploren lo que yo apenas comencé. Una noche del invierno de 1609 alcé mi anteojo hacia el firmamento y el universo dejó de ser una pintura fija: la Luna tenía montañas y valles, la Vía Láctea era un océano de estrellas, y alrededor de Júpiter vi danzar cuatro pequeñas lunas que hoy llevan mi nombre.</p>
+        <p>Me enseñaron que la Tierra era el centro inmóvil de todo. Pero mis ojos, mis cálculos y el coraje de Copérnico me susurraron otra verdad: somos <em>nosotros</em> quienes giramos en torno al Sol. Por decirlo en voz alta pagué un precio; por eso te confío lo que a mí me negaron: la libertad de mirar y comprender.</p>
+        <p>Te entrego mi nave. Viajarás desde Mercurio hasta la lejana Nube de Oort. Meteoritos, guardianes y sombras intentarán detenerte. Defiéndete con tu rayo, recoge potenciadores y, cuando el conocimiento lo exija, responde: el verdadero explorador no solo navega, <strong>comprende</strong>.<span class="firma">— Galileo Galilei</span></p>
+        <div class="divisor"></div>
+        <button class="btn" id="btn-comenzar">Emprender el viaje ▸</button>
+      </div>
+    </div>
+
+    <!-- NOMBRE -->
+    <div class="screen" id="nombre">
+      <div class="box">
+        <h2>¿Quién eres, explorador?</h2>
+        <p>Tu nombre quedará inscrito en el podio de navegantes.</p>
+        <input id="in-nombre" maxlength="18" placeholder="Tu nombre" autocomplete="off">
+        <input id="in-curso" maxlength="10" placeholder="Curso (opcional, ej: 4°M A)" autocomplete="off">
+        <button class="btn" id="btn-nombre">Comenzar la odisea ▸</button>
+      </div>
+    </div>
+
+    <!-- BRIEFING -->
+    <div class="screen" id="briefing">
+      <div class="papiro">
+        <div class="sello" id="brief-sello">1</div>
+        <h1 id="brief-titulo">Misión 1 · Mercurio</h1>
+        <div class="sub" id="brief-sub">Bitácora de Galileo</div>
+        <p id="brief-texto"></p>
+        <div class="divisor"></div>
+        <p style="text-align:center;font-family:'Courier New',monospace;font-size:12px;color:var(--tinta-suave)" id="brief-boss"></p>
+        <p style="text-align:center;font-family:'Courier New',monospace;font-size:12px;color:var(--tinta-suave)">◂ ▸ mover · ESPACIO disparar · recoge ⚡ velocidad y ✦ poder</p>
+        <button class="btn" id="btn-lanzar">Iniciar misión ▸</button>
+      </div>
+    </div>
+
+    <!-- MISIÓN CUMPLIDA + PODIO -->
+    <div class="screen" id="levelup">
+      <div class="crt-title">
+        <h1>MISIÓN <span class="a">CUMPLIDA</span></h1>
+        <div class="tag" id="lu-planeta">Mercurio explorado</div>
+      </div>
+      <div class="podio-box">
+        <h3>★ Mejores exploradores ★</h3>
+        <div id="lu-podio"></div>
+      </div>
+      <p class="tag" id="lu-dato" style="max-width:44ch;color:#9fb;font-family:'Courier New',monospace;font-size:12px"></p>
+      <button class="btn" id="btn-siguiente">Siguiente destino ▸</button>
+    </div>
+
+    <!-- PREGUNTA -->
+    <div class="screen" id="q-screen">
+      <div class="q-card">
+        <div class="marca">✦ Prueba de conocimiento · vida extra</div>
+        <h2 id="q-text">Pregunta</h2>
+        <div class="opciones" id="q-opciones"></div>
+        <div class="q-feedback" id="q-feedback"></div>
+      </div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div class="screen" id="gameover">
+      <div class="crt-title">
+        <h1 style="color:var(--peligro);text-shadow:0 0 14px rgba(255,77,87,.6)">FIN DEL VIAJE</h1>
+        <div class="tag" id="go-msg"></div>
+        <div class="tag" id="go-score" style="color:var(--fosforo)"></div>
+      </div>
+      <div class="podio-box"><h3>★ Podio ★</h3><div id="go-podio"></div></div>
+      <div>
+        <button class="btn mini" id="btn-copiar-go">📋 Copiar fila</button>
+        <button class="btn" id="btn-reintentar">Reintentar ▸</button>
+      </div>
+    </div>
+
+    <!-- VICTORIA -->
+    <div class="screen" id="victoria">
+      <div class="papiro">
+        <div class="sello">★</div>
+        <h1>Has llegado al confín</h1>
+        <div class="sub">Nube de Oort · el borde del reino del Sol</div>
+        <p>Lo lograste. Cruzaste los mundos, el Cinturón de Kuiper y alcanzaste la Nube de Oort, donde nacen los cometas y termina la influencia de nuestra estrella. Yo solo pude imaginarlo; tú lo has recorrido. El cielo ya no es un techo, sino un camino.<span class="firma">— Galileo</span></p>
+        <div class="tag" id="vic-score" style="color:var(--lacre);font-family:'Courier New',monospace;font-weight:bold"></div>
+        <div style="text-align:center">
+          <button class="btn mini" id="btn-copiar-vic">📋 Copiar fila</button>
+          <button class="btn" id="btn-otravez">Explorar de nuevo ▸</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint" id="hint" style="display:none">◂ ▸ mover · ESPACIO disparar · (móvil) desliza el dedo, dispara solo</div>
+  </div>
+</div>
+
+<script>
+/* ===== ODISEA CÓSMICA — arcade cosmología (Atari-like) ===== */
+
+/* ===================================================================
+   CONEXIÓN CON GOOGLE SHEETS  (podio compartido del curso)
+   -------------------------------------------------------------------
+   PASOS (ver archivo Code.gs · instrucciones completas):
+     1. Planilla > Extensiones > Apps Script > pega Code.gs
+     2. Implementar > Nueva implementación > App web
+        · Ejecutar como: Yo
+        · Quién tiene acceso: Cualquier usuario
+     3. Copia la URL que termina en /exec y pégala abajo.
+   Si SHEET_ENDPOINT queda vacío, el juego funciona igual con un
+   podio LOCAL (guardado solo en este navegador).
+   =================================================================== */
+const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycby6QkEawefQIFjXJzarfYf5s7XJN65rUa_TjpOCxivkJVrsIXI-r07cWBnNoHukme1P/exec";  // <-- pega aquí la URL .../exec
+
+/* Escribe un intento en la planilla.
+   'text/plain' evita la petición preflight de CORS y 'no-cors' permite
+   enviar incluso con el juego abierto como archivo local (file://). */
+async function pushToSheet(row){
+  if(!SHEET_ENDPOINT) return;
+  try{
+    await fetch(SHEET_ENDPOINT,{method:'POST',mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(row)});
+  }catch(e){ /* si falla la red, el podio local sigue funcionando */ }
+}
+
+/* Lee el Top del curso mediante JSONP: inserta un <script> apuntando al
+   Apps Script, que responde llamando a nuestra función. Así se evita el
+   bloqueo de CORS desde cualquier origen, incluido file://.
+   Devuelve [{nombre,curso,puntaje,planeta,mision}] o null si no hay conexión. */
+function fetchLeaderboard(){
+  return new Promise(res=>{
+    if(!SHEET_ENDPOINT){ res(null); return; }
+    const cb='__lb_'+Date.now()+Math.floor(Math.random()*9999);
+    const s=document.createElement('script');
+    let done=false;
+    const clean=()=>{ try{delete window[cb];}catch(_){window[cb]=undefined;} if(s.parentNode)s.parentNode.removeChild(s); };
+    const finish=v=>{ if(done)return; done=true; clearTimeout(t); clean(); res(v); };
+    const t=setTimeout(()=>finish(null),5000);
+    window[cb]=data=>finish((data&&data.top)?data.top:null);
+    s.onerror=()=>finish(null);
+    s.src=SHEET_ENDPOINT+(SHEET_ENDPOINT.indexOf('?')>=0?'&':'?')
+        +'action=top&limit=5&callback='+cb+'&t='+Date.now();
+    document.body.appendChild(s);
+  });
+}
+
+/* -------- SONIDO -------- */
+const Snd = (() => {
+  let ctx=null; const ensure=()=>{if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();return ctx;};
+  function tone(f,d,t='square',v=0.12,to=null){try{const c=ensure();const o=c.createOscillator(),g=c.createGain();
+    o.type=t;o.frequency.setValueAtTime(f,c.currentTime);if(to)o.frequency.exponentialRampToValueAtTime(to,c.currentTime+d);
+    g.gain.setValueAtTime(v,c.currentTime);g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+d);
+    o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+d);}catch(e){}}
+  return {unlock(){ensure();},
+    shoot(){tone(880,0.09,'square',0.06,240);},
+    explosion(){tone(160,0.26,'sawtooth',0.15,40);},
+    hit(){tone(90,0.4,'sawtooth',0.18,30);},
+    correct(){tone(523,0.12,'square',0.12);setTimeout(()=>tone(659,0.12,'square',0.12),110);setTimeout(()=>tone(784,0.2,'square',0.12),230);},
+    wrong(){tone(200,0.25,'square',0.14,120);},
+    levelup(){[392,523,659,784].forEach((f,i)=>setTimeout(()=>tone(f,0.16,'triangle',0.12),i*130));},
+    life(){tone(659,0.12,'triangle',0.13);setTimeout(()=>tone(988,0.2,'triangle',0.13),120);},
+    power(){tone(440,0.08,'square',0.1);setTimeout(()=>tone(660,0.12,'square',0.1),80);},
+    boss(){tone(70,0.5,'sawtooth',0.2,50);setTimeout(()=>tone(110,0.4,'square',0.15),200);},
+    event(){tone(300,0.2,'square',0.12,180);setTimeout(()=>tone(240,0.25,'square',0.12,140),160);}
+  };
+})();
+
+/* -------- PLANETAS / MISIONES -------- */
+const PLANETAS = [
+ { nombre:"Mercurio", color:"#b8b0a0", num:1, scene:"mercurio",
+   autor:{nombre:"Galileo", sello:"G"},
+   sub:"Bitácora de Galileo",
+   contexto:"Misión 1 · Mercurio. El mensajero de los dioses y el más veloz de todos: completa su órbita en apenas 88 días. No posee atmósfera que lo abrigue, así que su superficie es un desierto de cráteres golpeado por meteoritos y por el fuego del Sol cercano. Mirar de cerca al Sol siempre ha sido peligroso… yo lo sé bien. Despeja el camino y enfréntate a su guardián.",
+   dato:"Mercurio no tiene atmósfera y su año dura solo 88 días.",
+   meta:12, baseSpawn:1200, boss:{nombre:"Profesor Alex", hp:16, color:"#d9d2c2"} },
+
+ { nombre:"Venus", color:"#e0a648", num:2, scene:"venus",
+   autor:{nombre:"Nicolás Copérnico", sello:"C"},
+   sub:"Manuscrito de Nicolás Copérnico",
+   contexto:"Misión 2 · Venus. Escribo yo, Nicolás Copérnico, que me atreví a mover la Tierra de su trono y poner al Sol en el centro. Contempla a Venus, el lucero del alba: brilla tanto que muchos lo tomaron por estrella. Bajo su velo de nubes esconde un infierno, pues un efecto invernadero desbocado eleva su calor sobre los 460 °C —más que Mercurio— y gira al revés, tan lento que su día supera a su año. Su suelo es de roca volcánica y ríos de lava. La belleza engaña, joven navegante: desciende con cuidado.",
+   dato:"En Venus el efecto invernadero supera los 460 °C, más caliente que Mercurio.",
+   meta:14, baseSpawn:1100, boss:{nombre:"Vulcano, Centinela de Venus", hp:22, color:"#ff7b3b"} },
+
+ { nombre:"Tierra", color:"#4d9de0", num:3, scene:"space",
+   autor:{nombre:"Galileo", sello:"G"}, sub:"Bitácora de Galileo",
+   contexto:"Misión 3 · Tierra. Nuestro hogar, el punto azul pálido suspendido en un rayo de sol. El único mundo conocido con océanos líquidos y vida. Desde aquí desafié la idea de que fuéramos el centro inmóvil del cosmos; desde aquí tú continúas el viaje.",
+   dato:"La Tierra es el único mundo conocido con vida y agua líquida.",
+   meta:16, baseSpawn:1050, boss:{nombre:"Guardián Azul", hp:26, color:"#5bb0ff"} },
+
+ { nombre:"Marte", color:"#d1603a", num:4, scene:"space",
+   autor:{nombre:"Galileo", sello:"G"}, sub:"Bitácora de Galileo",
+   contexto:"Misión 4 · Marte. El planeta rojo, teñido por el óxido de hierro de su suelo. Alberga a Olympus Mons, el volcán más alto del sistema solar, y guarda huellas de antiguos cauces de agua. Ábrete paso entre sus tormentas herrumbrosas.",
+   dato:"El color rojo de Marte proviene del óxido de hierro de su superficie.",
+   meta:18, baseSpawn:1000, boss:{nombre:"Ares, Señor Rojo", hp:30, color:"#ff6a44"} },
+
+ { nombre:"Júpiter", color:"#d8a16b", num:5, scene:"space",
+   autor:{nombre:"Galileo", sello:"G"}, sub:"Bitácora de Galileo",
+   contexto:"Misión 5 · Júpiter. El gigante: cabrían más de mil Tierras en su interior. Su Gran Mancha Roja es una tormenta más ancha que nuestro mundo. Aquí vi por primera vez cuatro lunas girando a su alrededor —Ío, Europa, Ganímedes y Calisto—: la prueba de que no todo giraba en torno a la Tierra.",
+   dato:"Galileo descubrió las 4 lunas mayores de Júpiter, hoy llamadas galileanas.",
+   meta:20, baseSpawn:950, boss:{nombre:"Coloso de la Gran Mancha", hp:34, color:"#e0a86b"} },
+
+ { nombre:"Saturno", color:"#e8d59a", num:6, scene:"space",
+   autor:{nombre:"Galileo", sello:"G"}, sub:"Bitácora de Galileo",
+   contexto:"Misión 6 · Saturno. El señor de los anillos, formados por miles de millones de fragmentos de hielo y roca. Es tan poco denso que flotaría en un océano suficientemente grande. Navega con cuidado entre los escombros de sus anillos.",
+   dato:"Saturno es tan poco denso que flotaría en el agua; sus anillos son hielo y roca.",
+   meta:22, baseSpawn:900, boss:{nombre:"Guardián de los Anillos", hp:38, color:"#efd98f"} },
+
+ { nombre:"Urano", color:"#8fd3d8", num:7, scene:"space",
+   autor:{nombre:"Galileo", sello:"G"}, sub:"Bitácora de Galileo",
+   contexto:"Misión 7 · Urano. Un gigante de hielo verde-azulado por el metano de su atmósfera. Lo más extraño: gira acostado, con su eje inclinado casi 98°, como si rodara de lado por su órbita. El frío aquí es implacable.",
+   dato:"Urano gira 'acostado', con su eje inclinado unos 98°.",
+   meta:24, baseSpawn:870, boss:{nombre:"Centinela de Hielo", hp:42, color:"#9fe3e8"} },
+
+ { nombre:"Neptuno", color:"#3f5cd8", num:8, scene:"space",
+   autor:{nombre:"Galileo", sello:"G"}, sub:"Bitácora de Galileo",
+   contexto:"Misión 8 · Neptuno. El más ventoso, con vendavales sobre 2.000 km/h. Su hallazgo fue un triunfo de las matemáticas: primero se predijo su posición con lápiz y papel a partir de las anomalías de Urano, y solo después el telescopio lo confirmó.",
+   dato:"Neptuno fue predicho matemáticamente antes de ser observado con telescopio.",
+   meta:26, baseSpawn:840, boss:{nombre:"Tempestad Azul", hp:46, color:"#5a72e6"} },
+
+ { nombre:"Cinturón de Kuiper", color:"#9a86c4", num:9, scene:"space",
+   autor:{nombre:"Galileo", sello:"G"}, sub:"Bitácora de Galileo",
+   contexto:"Misión 9 · Cinturón de Kuiper. Más allá de Neptuno se abre un anillo helado de mundos pequeños y planetas enanos, entre ellos Plutón. Reliquia congelada de la formación del sistema solar. Dejas atrás los planetas conocidos.",
+   dato:"El Cinturón de Kuiper alberga a Plutón y otros planetas enanos.",
+   meta:28, baseSpawn:810, boss:{nombre:"Guardián Enano", hp:50, color:"#b19ad8"} },
+
+ { nombre:"Nube de Oort", color:"#c9d6ff", num:10, scene:"space",
+   autor:{nombre:"Galileo", sello:"G"}, sub:"Bitácora de Galileo",
+   contexto:"Misión 10 · Nube de Oort. La frontera final: una inmensa cáscara esférica de cuerpos helados que envuelve el sistema solar y de donde llegan los cometas de largo periodo. Aquí la influencia del Sol se desvanece. Un último esfuerzo: alcanza el confín.",
+   dato:"La Nube de Oort es la frontera del sistema solar y origen de cometas de largo periodo.",
+   meta:30, baseSpawn:780, boss:{nombre:"El Cometa Ancestral", hp:60, color:"#d8e2ff"} }
+];
+
+/* -------- PREGUNTAS (cosmología) -------- */
+const PREGUNTAS = [
+ {q:"En el modelo heliocéntrico de Copérnico y Galileo, ¿qué ocupa el centro?",o:["La Tierra","El Sol","La Luna","Júpiter"],c:1,e:"El heliocentrismo sitúa al Sol en el centro."},
+ {q:"Galileo descubrió con su telescopio cuatro lunas girando en torno a…",o:["Marte","Saturno","Júpiter","Venus"],c:2,e:"Las 4 lunas galileanas orbitan Júpiter."},
+ {q:"El 'corrimiento al rojo' (efecto Doppler) en galaxias lejanas indica que…",o:["se acercan","están quietas","se alejan","emiten sonido"],c:2,e:"El redshift indica alejamiento: base de la expansión del universo."},
+ {q:"¿Qué astrónomo propuso el modelo geocéntrico que dominó siglos?",o:["Copérnico","Ptolomeo","Newton","Kepler"],c:1,e:"Ptolomeo formalizó el geocentrismo."},
+ {q:"La ley de gravitación universal que explica las órbitas la formuló…",o:["Newton","Galileo","Aristóteles","Hubble"],c:0,e:"Newton unificó caída y órbitas en una sola ley."},
+ {q:"El planeta más cercano al Sol, con año de 88 días, es…",o:["Venus","Mercurio","Marte","La Tierra"],c:1,e:"Mercurio: el más cercano y veloz."},
+ {q:"¿Por qué Venus es más caliente que Mercurio pese a estar más lejos?",o:["Su núcleo","Efecto invernadero","Gira rápido","Sus anillos"],c:1,e:"Su densa atmósfera de CO₂ atrapa el calor (>460 °C)."},
+ {q:"El color rojizo de Marte se debe a…",o:["Lava activa","Óxido de hierro","Vegetación","Hielo teñido"],c:1,e:"El óxido de hierro le da su tono rojo."},
+ {q:"La expansión del universo se describe mejor como…",o:["Planetas que huyen del Sol","El espacio que se expande","La Luna alejándose","Ilusión óptica"],c:1,e:"Es la expansión del espacio entre galaxias."},
+ {q:"Neptuno destaca en la historia porque…",o:["Se vio a simple vista primero","Fue predicho con cálculos","Tiene vida","Es el más cercano"],c:1,e:"Su posición se predijo antes de observarlo."},
+ {q:"Los anillos de Saturno son principalmente…",o:["Gas caliente","Hielo y roca","Metal fundido","Nubes"],c:1,e:"Partículas de hielo y roca."},
+ {q:"La Nube de Oort es el origen de…",o:["Asteroides del cinturón","Cometas de largo periodo","Auroras","Eclipses"],c:1,e:"Cáscara helada que rodea el sistema solar."}
+];
+
+/* -------- CANVAS -------- */
+const cv=document.getElementById('game'), cx=cv.getContext('2d');
+let W=0,H=0,DPR=Math.min(window.devicePixelRatio||1,2);
+function resize(){const r=cv.getBoundingClientRect();W=r.width;H=r.height;cv.width=Math.floor(W*DPR);cv.height=Math.floor(H*DPR);cx.setTransform(DPR,0,0,DPR,0,0);}
+window.addEventListener('resize',resize);
+
+/* -------- ESTADO -------- */
+const state={scene:'welcome',level:0,score:0,lives:3,maxLives:5,nombre:'',curso:'',
+  ship:{x:0,y:0,w:34,h:24,speed:5,cd:0},
+  bullets:[],enemies:[],powerups:[],particles:[],stars:[],bossShots:[],
+  boss:null,bossPending:false,destroyed:0,spawnT:0,pending:false,
+  speedBuff:0,powerBuff:0,storm:0,eventT:0,nextEvent:9000,msgKilledBy:'',groundY:0,
+  pointerActive:false,touchX:0};
+const keys={left:false,right:false,fire:false};
+
+/* -------- PODIO LOCAL -------- */
+function loadLB(){try{return JSON.parse(localStorage.getItem('odisea_lb')||'[]');}catch(e){return (window.__lb||[]);}}
+function saveLB(arr){try{localStorage.setItem('odisea_lb',JSON.stringify(arr));}catch(e){window.__lb=arr;}}
+/* Registra el intento: siempre en local + envía al Sheet si está conectado. */
+async function registrarPuntaje(){
+  const p=PLANETAS[Math.min(state.level,PLANETAS.length-1)];
+  const row={nombre:state.nombre||'Anónimo',curso:state.curso||'',mision:p.num,
+    planeta:p.nombre,puntaje:state.score,fecha:new Date().toISOString().slice(0,10)};
+  const lb=loadLB(); lb.push(row); lb.sort((a,b)=>b.puntaje-a.puntaje); saveLB(lb.slice(0,20));
+  await pushToSheet(row);
+}
+async function renderPodio(elId, incluirActual){
+  const el=document.getElementById(elId); if(!el) return;
+  el.innerHTML='<div class="podio-empty">Consultando el podio…</div>';
+  let lb=await fetchLeaderboard();
+  const online=!!lb;
+  if(!lb) lb=loadLB();
+  lb=lb.slice().sort((a,b)=>b.puntaje-a.puntaje);
+  const med=['🥇','🥈','🥉','4','5'];
+  let html='';
+  const top=lb.slice(0,5);
+  if(top.length===0){ html='<div class="podio-empty">Aún no hay puntajes registrados.</div>'; }
+  top.forEach((r,i)=>{
+    const me=(r.nombre===state.nombre && Number(r.puntaje)===state.score);
+    html+=`<div class="podio-row ${me?'me':''}"><span class="nm"><span class="med">${med[i]||(i+1)}</span>${escapeHtml(r.nombre)}${r.curso?' · '+escapeHtml(r.curso):''}</span><span class="sc">${r.puntaje}</span></div>`;
+  });
+  if(incluirActual){
+    html+=`<div class="podio-row me"><span class="nm"><span class="med">▸</span>${escapeHtml(state.nombre||'TÚ')} (en curso)</span><span class="sc">${state.score}</span></div>`;
+  }
+  html+=`<div class="podio-empty" style="margin-top:6px;opacity:.7">${online?'🌐 Podio del curso':'💾 Podio local (sin conexión al Sheet)'}</div>`;
+  el.innerHTML=html;
+}
+function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+/* -------- PANTALLAS -------- */
+const screens=['welcome','nombre','briefing','levelup','q-screen','gameover','victoria'];
+function show(id){
+  screens.forEach(s=>{const el=document.getElementById(s);if(el)el.classList.toggle('on',s===id);});
+  document.getElementById('hud').style.display=(state.scene==='playing')?'flex':'none';
+  document.getElementById('hint').style.display=(state.scene==='playing')?'block':'none';
+  document.getElementById('buffs').style.display=(state.scene==='playing')?'block':'none';
+  document.getElementById('touch').classList.remove('on');
+  if(state.scene!=='playing'&&typeof clearPad==='function')clearPad();
+}
+
+/* -------- ESTRELLAS -------- */
+function initStars(){state.stars=[];for(let i=0;i<70;i++)state.stars.push({x:Math.random(),y:Math.random(),s:Math.random()*1.6+0.4,v:0.15+Math.random()*0.5});}
+
+/* -------- HUD -------- */
+function drawHUD(){
+  const p=PLANETAS[state.level];
+  document.getElementById('hud-mision').textContent='MISIÓN '+p.num+' · '+p.nombre.toUpperCase();
+  document.getElementById('hud-puntos').textContent='PTS '+state.score;
+  document.getElementById('hud-vidas').textContent=(state.lives>0?('♥ '.repeat(state.lives)).trim():'—');
+  let bh=''; if(state.speedBuff>0)bh+='<span class="b-vel">⚡ VEL '+Math.ceil(state.speedBuff/1000)+'</span>';
+  if(state.powerBuff>0)bh+='<span class="b-pow">✦ PODER '+Math.ceil(state.powerBuff/1000)+'</span>';
+  document.getElementById('buffs').innerHTML=bh;
+}
+
+/* -------- VELOCIDAD segun nivel -------- */
+function baseSpeed(){return 4.2+state.level*0.55;}
+
+/* -------- INICIO -------- */
+function startBriefing(){
+  const p=PLANETAS[state.level];
+  document.getElementById('brief-sello').textContent=p.autor.sello;
+  document.getElementById('brief-titulo').textContent='Misión '+p.num+' · '+p.nombre;
+  document.getElementById('brief-sub').textContent=p.sub;
+  document.getElementById('brief-texto').textContent=p.contexto;
+  document.getElementById('brief-boss').textContent='⚠ Guardián de la misión: '+p.boss.nombre;
+  state.scene='briefing';show('briefing');
+}
+function startLevel(){
+  const p=PLANETAS[state.level];resize();
+  state.scene='playing';
+  state.bullets=[];state.enemies=[];state.powerups=[];state.particles=[];state.bossShots=[];
+  state.boss=null;state.bossPending=false;state.destroyed=0;state.spawnT=0;state.pending=false;
+  state.speedBuff=0;state.powerBuff=0;state.storm=0;state.eventT=0;state.nextEvent=8000+Math.random()*4000;
+  state.ship.speed=baseSpeed();
+  state.groundY=(p.scene==='mercurio'||p.scene==='venus')?H*0.84:H+40;
+  state.ship.x=W/2-state.ship.w/2;
+  state.ship.y=Math.min(H-state.ship.h-14,state.groundY-state.ship.h-6);
+  initStars();drawHUD();show('playing');
+}
+
+/* -------- SPAWN -------- */
+function spawnEnemy(forceAlien){
+  const p=PLANETAS[state.level];
+  const meteor=forceAlien?false:(Math.random()<0.6);
+  const size=meteor?20+Math.random()*16:22;
+  const spd=(1.0+state.level*0.12)*(0.7+Math.random()*0.6);
+  state.enemies.push({x:20+Math.random()*(W-40-size),y:-size,w:size,h:size,vy:spd,
+    vx:(Math.random()-0.5)*1.2,type:meteor?'meteor':'alien',rot:0,vr:(Math.random()-0.5)*0.1,seed:Math.random()*6.28});
+}
+function spawnWave(){ // oleada de alienígenas en formación
+  const n=6, gap=W/(n+1);
+  for(let i=0;i<n;i++){
+    state.enemies.push({x:gap*(i+1)-11,y:-30-(i%2)*22,w:22,h:22,vy:1.1+state.level*0.1,
+      vx:0,type:'alien',rot:0,vr:0,seed:i});
+  }
+}
+function spawnPowerup(kind){
+  if(kind==='vida' && state.lives>=state.maxLives) kind='vel';
+  state.powerups.push({x:20+Math.random()*(W-56),y:-24,w:26,h:26,vy:1.5,t:0,kind});
+}
+
+/* -------- EVENTOS -------- */
+function triggerEvent(){
+  if(Math.random()<0.5){ state.storm=3500; announce('☄ TORMENTA DE METEORITOS','#f2a93b'); }
+  else { announce('🛸 OLEADA ENEMIGA','#ff6bd0'); spawnWave(); }
+  Snd.event();
+}
+function announce(t,c){const b=document.getElementById('banner');b.textContent=t;b.style.color=c;b.classList.add('show');clearTimeout(b._t);b._t=setTimeout(()=>b.classList.remove('show'),2400);}
+
+/* -------- DISPARO -------- */
+function fire(){
+  const rapid=state.powerBuff>0;
+  if(state.ship.cd>0)return;
+  state.ship.cd=rapid?7:13;
+  const bx=state.ship.x+state.ship.w/2-2,by=state.ship.y-6;
+  state.bullets.push({x:bx,y:by,w:4,h:12,vy:-9.5,vx:0});
+  if(rapid){state.bullets.push({x:bx-9,y:by+3,w:4,h:12,vy:-9.5,vx:-1.6});state.bullets.push({x:bx+9,y:by+3,w:4,h:12,vy:-9.5,vx:1.6});}
+  Snd.shoot();
+}
+
+/* -------- PARTICULAS -------- */
+function boom(x,y,color){for(let i=0;i<12;i++){const a=Math.random()*6.28,s=1+Math.random()*3.5;state.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,color});}}
+function hit(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
+
+/* -------- BOSS -------- */
+function spawnBoss(){
+  const p=PLANETAS[state.level];
+  state.enemies=[];
+  state.boss={name:p.boss.nombre,color:p.boss.color,x:W/2-34,y:H*0.14,w:68,h:52,
+    hp:p.boss.hp,maxhp:p.boss.hp,vx:2+state.level*0.2,cd:0,t:0};
+  announce('☠ JEFE: '+p.boss.nombre,'#ff4d57');Snd.boss();
+}
+function updateBoss(dt){
+  const b=state.boss;b.t+=dt;
+  b.x+=b.vx; if(b.x<8){b.x=8;b.vx*=-1;} if(b.x>W-b.w-8){b.x=W-b.w-8;b.vx*=-1;}
+  b.y=H*0.14+Math.sin(b.t*0.002)*18;
+  b.cd-=dt;
+  if(b.cd<=0){b.cd=760-state.level*20;
+    state.bossShots.push({x:b.x+b.w/2-4,y:b.y+b.h,w:8,h:14,vy:3.4+state.level*0.15});
+    if(state.level>=3){state.bossShots.push({x:b.x+8,y:b.y+b.h,w:8,h:14,vy:3.0});state.bossShots.push({x:b.x+b.w-16,y:b.y+b.h,w:8,h:14,vy:3.0});}
+  }
+  // balas del jugador contra boss
+  for(let i=state.bullets.length-1;i>=0;i--){
+    if(hit(state.bullets[i],b)){b.hp--;boom(state.bullets[i].x,state.bullets[i].y,b.color);state.bullets.splice(i,1);Snd.explosion();
+      state.score+=5;drawHUD();
+      if(b.hp<=0){boom(b.x+b.w/2,b.y+b.h/2,b.color);state.boss=null;state.bossShots=[];completeLevel();return;}}
+  }
+  // colisiones con la nave
+  if(hit(state.ship,b)){loseLife('el jefe '+b.name);}
+}
+
+/* -------- BUCLE -------- */
+let last=performance.now();
+function loop(now){const dt=Math.min(40,now-last);last=now;if(state.scene==='playing')update(dt);render();requestAnimationFrame(loop);}
+
+function update(dt){
+  const p=PLANETAS[state.level],sh=state.ship;
+  const spd=sh.speed*(state.speedBuff>0?1.6:1);
+  if(state.pointerActive){
+    const target=state.touchX-sh.w/2, step=Math.max(spd*2.6,9), d=target-sh.x;
+    sh.x += Math.abs(d)<=step ? d : (d<0?-step:step);
+  } else {
+    if(keys.left)sh.x-=spd; if(keys.right)sh.x+=spd;
+  }
+  sh.x=Math.max(6,Math.min(W-sh.w-6,sh.x));
+  if(keys.fire||state.pointerActive)fire(); if(sh.cd>0)sh.cd--;
+  if(state.speedBuff>0)state.speedBuff-=dt;
+  if(state.powerBuff>0)state.powerBuff-=dt;
+  if(state.speedBuff>0||state.powerBuff>0)drawHUD();
+
+  state.stars.forEach(s=>{s.y+=s.v*0.004;if(s.y>1){s.y=0;s.x=Math.random();}});
+
+  // spawn normal (solo si no hay boss)
+  if(!state.boss){
+    state.spawnT+=dt;
+    const rate=Math.max(420,p.baseSpawn-state.level*30);
+    if(state.spawnT>rate){state.spawnT=0;spawnEnemy();if(Math.random()<0.3)setTimeout(spawnEnemy,260);}
+    // tormenta de meteoritos
+    if(state.storm>0){state.storm-=dt; if(Math.random()<0.5)spawnEnemy(false);}
+    // eventos
+    state.eventT+=dt;
+    if(state.eventT>state.nextEvent){state.eventT=0;state.nextEvent=10000+Math.random()*6000;triggerEvent();}
+    // powerups
+    if(Math.random()<0.0018 && state.powerups.length<2){
+      const r=Math.random();spawnPowerup(r<0.4?'vida':(r<0.7?'vel':'pow'));
+    }
+    // disparar jefe al alcanzar meta
+    if(state.destroyed>=p.meta && !state.bossPending){state.bossPending=true;setTimeout(()=>{if(state.scene==='playing')spawnBoss();},600);}
+  }
+
+  // balas jugador
+  state.bullets.forEach(b=>{b.y+=b.vy;b.x+=(b.vx||0);});
+  state.bullets=state.bullets.filter(b=>b.y+b.h>0&&b.x>-10&&b.x<W+10);
+
+  // enemigos
+  state.enemies.forEach(e=>{e.y+=e.vy;e.x+=e.vx;e.rot+=e.vr;if(e.type==='alien')e.x+=Math.sin((e.y+e.seed)*0.04)*0.7;
+    if(e.x<6){e.x=6;e.vx=Math.abs(e.vx);}if(e.x>W-e.w-6){e.x=W-e.w-6;e.vx=-Math.abs(e.vx);}});
+
+  // powerups y disparos del jefe
+  state.powerups.forEach(pu=>{pu.y+=pu.vy;pu.t+=dt;});
+  state.bossShots.forEach(s=>s.y+=s.vy);
+  state.bossShots=state.bossShots.filter(s=>s.y<H+20);
+
+  // colisión bala-enemigo
+  for(let i=state.bullets.length-1;i>=0;i--){
+    for(let j=state.enemies.length-1;j>=0;j--){
+      if(hit(state.bullets[i],state.enemies[j])){const e=state.enemies[j];
+        boom(e.x+e.w/2,e.y+e.h/2,e.type==='meteor'?'#f2a93b':'#ff8bd0');Snd.explosion();
+        state.enemies.splice(j,1);state.bullets.splice(i,1);state.score+=10;state.destroyed++;drawHUD();break;}
+    }
+  }
+  // colisión nave-powerup (recoger)
+  for(let j=state.powerups.length-1;j>=0;j--){
+    if(hit(sh,state.powerups[j])){const k=state.powerups[j].kind;state.powerups.splice(j,1);
+      if(k==='vida'){openQuestion();return;}
+      if(k==='vel'){state.speedBuff=8000;Snd.power();announce('⚡ VELOCIDAD','#5bd6ff');}
+      if(k==='pow'){state.powerBuff=8000;Snd.power();announce('✦ PODER TRIPLE','#ff9a3b');}
+      drawHUD();
+    }
+  }
+  // colisión nave-enemigo
+  for(let j=state.enemies.length-1;j>=0;j--){
+    if(hit(sh,state.enemies[j])){const e=state.enemies[j];state.enemies.splice(j,1);
+      boom(sh.x+sh.w/2,sh.y,'#7cff6b');loseLife(e.type==='meteor'?'un meteorito':'un alienígena');return;}
+  }
+  // colisión nave-disparo jefe
+  for(let j=state.bossShots.length-1;j>=0;j--){
+    if(hit(sh,state.bossShots[j])){state.bossShots.splice(j,1);boom(sh.x+sh.w/2,sh.y,'#7cff6b');loseLife('el ataque del jefe');return;}
+  }
+  // limpiar
+  state.enemies=state.enemies.filter(e=>e.y<(state.groundY<H?state.groundY:H)+10);
+  state.powerups=state.powerups.filter(pu=>pu.y<H+30);
+
+  // partículas
+  state.particles.forEach(pt=>{pt.x+=pt.vx;pt.y+=pt.vy;pt.vy+=0.05;pt.life-=0.03;});
+  state.particles=state.particles.filter(pt=>pt.life>0);
+
+  if(state.boss)updateBoss(dt);
+}
+
+function loseLife(causa){
+  state.lives--;Snd.hit();drawHUD();
+  document.getElementById('stage').animate([{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}],{duration:180});
+  if(state.lives<=0){state.msgKilledBy=causa;gameOver();}
+}
+
+/* -------- PREGUNTA -------- */
+function openQuestion(){
+  state.scene='question';state.pending=true;
+  const q=PREGUNTAS[Math.floor(Math.random()*PREGUNTAS.length)];state.currentQ=q;
+  document.getElementById('q-text').textContent=q.q;
+  const cont=document.getElementById('q-opciones');cont.innerHTML='';
+  const L=['A','B','C','D'];
+  q.o.forEach((opt,idx)=>{const b=document.createElement('button');b.className='opcion';
+    b.innerHTML='<span class="k">'+L[idx]+'</span>'+opt;b.onclick=()=>answer(idx,b);cont.appendChild(b);});
+  document.getElementById('q-feedback').textContent='';show('q-screen');
+}
+function answer(idx,btn){
+  if(!state.pending)return;state.pending=false;const q=state.currentQ;
+  const ops=[...document.querySelectorAll('#q-opciones .opcion')];ops.forEach(o=>o.style.pointerEvents='none');
+  const fb=document.getElementById('q-feedback');
+  if(idx===q.c){btn.classList.add('correcta');if(state.lives<state.maxLives){state.lives++;Snd.life();}else Snd.correct();fb.innerHTML='✔ ¡Correcto! +1 vida. '+q.e;}
+  else{btn.classList.add('incorrecta');ops[q.c].classList.add('correcta');Snd.wrong();fb.innerHTML='✘ No es correcta. '+q.e;}
+  setTimeout(()=>{state.scene='playing';drawHUD();show('playing');},2200);
+}
+
+/* -------- COMPLETAR / FIN -------- */
+function completeLevel(){
+  state.scene='levelup';const p=PLANETAS[state.level];
+  document.getElementById('lu-planeta').textContent=p.nombre+' explorado · '+state.score+' pts';
+  document.getElementById('lu-dato').textContent='“'+p.dato+'”';
+  renderPodio('lu-podio',true);
+  Snd.levelup();show('levelup');
+}
+async function gameOver(){
+  state.scene='gameover';
+  document.getElementById('go-msg').textContent='La nave fue destruida por '+state.msgKilledBy+' cerca de '+PLANETAS[state.level].nombre+'.';
+  document.getElementById('go-score').textContent='Puntaje final: '+state.score+' pts';
+  show('gameover');
+  await registrarPuntaje();          // primero escribe el intento
+  setTimeout(()=>renderPodio('go-podio',false),700); // luego lee el podio ya actualizado
+}
+function victoria(){
+  state.scene='victoria';registrarPuntaje();
+  document.getElementById('vic-score').textContent='Puntaje final: '+state.score+' pts · 10/10 misiones';
+  show('victoria');
+}
+function filaPlanilla(){
+  const p=PLANETAS[Math.min(state.level,9)];
+  return [state.nombre||'Anónimo',state.curso||'',p.num,p.nombre,state.score,new Date().toISOString().slice(0,10)].join('\t');
+}
+function copiar(btn){
+  const txt=filaPlanilla();
+  const done=()=>{const o=btn.textContent;btn.textContent='✓ Copiado';setTimeout(()=>btn.textContent=o,1500);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,()=>fallback(txt,done));}
+  else fallback(txt,done);
+}
+function fallback(txt,done){const t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(t);done();}
+
+/* -------- RENDER -------- */
+function render(){
+  cx.clearRect(0,0,W,H);
+  const p=PLANETAS[Math.min(state.level,PLANETAS.length-1)];
+  if(state.scene==='playing'||state.scene==='question'){drawScene(p);}
+  else{cx.fillStyle='#05060e';cx.fillRect(0,0,W,H);
+    cx.fillStyle='#cddaff';state.stars.forEach(s=>{cx.globalAlpha=0.4+s.s*0.35;cx.fillRect(s.x*W,s.y*H,s.s,s.s);});cx.globalAlpha=1;}
+
+  if(state.scene==='playing'||state.scene==='question'){
+    // powerups
+    state.powerups.forEach(pu=>{drawPowerup(pu);});
+    // balas
+    state.bullets.forEach(b=>{cx.fillStyle='#baffb0';cx.fillRect(b.x,b.y,b.w,b.h);cx.fillStyle='rgba(124,255,107,.4)';cx.fillRect(b.x-1,b.y,b.w+2,b.h);});
+    // disparos del jefe
+    state.bossShots.forEach(s=>{cx.fillStyle='#ff6a6a';cx.fillRect(s.x,s.y,s.w,s.h);cx.fillStyle='rgba(255,80,80,.4)';cx.fillRect(s.x-2,s.y,s.w+4,s.h);});
+    // enemigos
+    state.enemies.forEach(e=>{e.type==='meteor'?drawMeteor(e):drawAlien(e);});
+    // boss
+    if(state.boss)drawBoss(state.boss);
+    // partículas
+    state.particles.forEach(pt=>{cx.globalAlpha=Math.max(0,pt.life);cx.fillStyle=pt.color;cx.fillRect(pt.x,pt.y,3,3);});cx.globalAlpha=1;
+    // nave
+    drawShip(state.ship);
+  }
+}
+
+/* -------- ESCENARIOS -------- */
+function drawScene(p){
+  if(p.scene==='mercurio'){
+    // cielo oscuro con resplandor solar
+    const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#1a1712');g.addColorStop(0.6,'#0d0b09');g.addColorStop(1,'#070605');
+    cx.fillStyle=g;cx.fillRect(0,0,W,H);
+    // sol intenso arriba a la derecha
+    const sx=W*0.82,sy=H*0.12,sr=Math.min(W,H)*0.09;
+    const sg=cx.createRadialGradient(sx,sy,2,sx,sy,sr*2.4);sg.addColorStop(0,'#fff7e0');sg.addColorStop(0.4,'#ffd27a');sg.addColorStop(1,'rgba(255,180,80,0)');
+    cx.fillStyle=sg;cx.beginPath();cx.arc(sx,sy,sr*2.4,0,6.28);cx.fill();
+    cx.fillStyle='#fff3d0';cx.beginPath();cx.arc(sx,sy,sr,0,6.28);cx.fill();
+    // estrellas tenues
+    cx.fillStyle='#cbb';state.stars.forEach(s=>{if(s.y<0.7){cx.globalAlpha=0.25+s.s*0.2;cx.fillRect(s.x*W,s.y*H,s.s,s.s);}});cx.globalAlpha=1;
+    drawSurface('#8a8375','#6b6558','#4a4640');
+  } else if(p.scene==='venus'){
+    // cielo sulfúrico anaranjado
+    const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#e8a24a');g.addColorStop(0.35,'#c96a2c');g.addColorStop(0.7,'#7d2f1c');g.addColorStop(1,'#2a0f0a');
+    cx.fillStyle=g;cx.fillRect(0,0,W,H);
+    // sol difuso tras la bruma
+    cx.fillStyle='rgba(255,220,150,0.18)';cx.beginPath();cx.arc(W*0.3,H*0.16,Math.min(W,H)*0.16,0,6.28);cx.fill();
+    // volcanes lejanos
+    cx.fillStyle='rgba(60,20,15,0.6)';
+    for(const vx of [W*0.18,W*0.55,W*0.8]){cx.beginPath();cx.moveTo(vx-40,state.groundY);cx.lineTo(vx,state.groundY-46);cx.lineTo(vx+40,state.groundY);cx.closePath();cx.fill();}
+    // suelo volcánico con lava
+    drawSurface('#4a221a','#331410','#1c0a08');
+    // grietas de lava
+    cx.strokeStyle='#ff7b2e';cx.lineWidth=2;cx.globalAlpha=0.85;
+    for(let i=0;i<5;i++){const bx=(i+1)*W/6;cx.beginPath();cx.moveTo(bx,state.groundY+6);
+      cx.lineTo(bx+8,H-24);cx.lineTo(bx-6,H-10);cx.stroke();}
+    cx.globalAlpha=1;
+    // bruma anaranjada
+    cx.fillStyle='rgba(255,150,60,0.06)';cx.fillRect(0,0,W,H);
+  } else {
+    // espacio + planeta destino
+    cx.fillStyle='#05060e';cx.fillRect(0,0,W,H);
+    cx.fillStyle='#cddaff';state.stars.forEach(s=>{cx.globalAlpha=0.4+s.s*0.35;cx.fillRect(s.x*W,s.y*H,s.s,s.s);});cx.globalAlpha=1;
+    const pr=Math.min(W,H)*0.16,px=W*0.5,py=H*0.16;
+    const g=cx.createRadialGradient(px-pr*0.3,py-pr*0.3,pr*0.1,px,py,pr);g.addColorStop(0,lighten(p.color,40));g.addColorStop(1,p.color);
+    cx.fillStyle=g;cx.beginPath();cx.arc(px,py,pr,0,6.28);cx.fill();
+    if(p.nombre==='Saturno'){cx.strokeStyle='rgba(232,213,154,.7)';cx.lineWidth=3;cx.save();cx.translate(px,py);cx.scale(1,0.32);cx.beginPath();cx.arc(0,0,pr*1.5,0,6.28);cx.stroke();cx.restore();}
+  }
+}
+function drawSurface(c1,c2,c3){
+  const gy=state.groundY;
+  cx.fillStyle=c1;cx.fillRect(0,gy,W,H-gy);
+  cx.fillStyle=c2;
+  // relieve
+  cx.beginPath();cx.moveTo(0,gy);
+  for(let x=0;x<=W;x+=W/10){cx.lineTo(x,gy-6+Math.sin(x*0.05)*5);}
+  cx.lineTo(W,gy+14);cx.lineTo(0,gy+14);cx.closePath();cx.fill();
+  // cráteres
+  cx.fillStyle=c3;
+  for(let i=0;i<6;i++){const cxp=(i*1.7+0.5)%1*W;const cyp=gy+12+((i*37)%Math.max(1,(H-gy-16)));
+    cx.beginPath();cx.ellipse((i+0.5)*W/6,gy+18+((i*13)%20),10,4,0,0,6.28);cx.fill();}
+}
+
+/* -------- SPRITES -------- */
+function drawShip(s){
+  const x=s.x,y=s.y,w=s.w,h=s.h;
+  cx.fillStyle=state.speedBuff>0?'#5bd6ff':'#ff8b3b';
+  cx.beginPath();cx.moveTo(x+w*0.5-4,y+h);cx.lineTo(x+w*0.5,y+h+8+Math.random()*4);cx.lineTo(x+w*0.5+4,y+h);cx.closePath();cx.fill();
+  cx.fillStyle=state.powerBuff>0?'#ffd76b':'#7cff6b';
+  cx.beginPath();cx.moveTo(x+w/2,y);cx.lineTo(x+w,y+h);cx.lineTo(x+w*0.68,y+h*0.78);cx.lineTo(x+w*0.32,y+h*0.78);cx.lineTo(x,y+h);cx.closePath();cx.fill();
+  cx.fillStyle='#0a1a08';cx.fillRect(x+w/2-3,y+h*0.35,6,7);
+}
+function drawMeteor(e){
+  cx.save();cx.translate(e.x+e.w/2,e.y+e.h/2);cx.rotate(e.rot);const r=e.w/2;
+  cx.fillStyle='#8a7a63';cx.beginPath();
+  for(let i=0;i<7;i++){const a=i/7*6.28;const rr=r*(0.75+((i*e.seed)%3)*0.12);cx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);}
+  cx.closePath();cx.fill();cx.fillStyle='#5c4f3e';
+  cx.beginPath();cx.arc(-r*0.25,-r*0.15,r*0.22,0,6.28);cx.fill();cx.beginPath();cx.arc(r*0.25,r*0.2,r*0.16,0,6.28);cx.fill();cx.restore();
+}
+function drawAlien(e){
+  const x=e.x,y=e.y,w=e.w,h=e.h;
+  cx.fillStyle='#ff6bd0';cx.beginPath();cx.arc(x+w/2,y+h*0.45,w*0.34,Math.PI,0);cx.fill();
+  cx.fillStyle='#c94ba8';cx.beginPath();cx.ellipse(x+w/2,y+h*0.55,w*0.5,h*0.22,0,0,6.28);cx.fill();
+  cx.fillStyle='#ffe66b';for(let i=-1;i<=1;i++)cx.fillRect(x+w/2+i*7-1.5,y+h*0.55-1.5,3,3);
+}
+function drawBoss(b){
+  // barra de vida + nombre
+  const barW=Math.min(W*0.7,260),bx=W/2-barW/2,by=H*0.075;
+  cx.fillStyle='rgba(0,0,0,.5)';cx.fillRect(bx-2,by-2,barW+4,10);
+  cx.fillStyle='#3a1015';cx.fillRect(bx,by,barW,6);
+  cx.fillStyle='#ff4d57';cx.fillRect(bx,by,barW*(b.hp/b.maxhp),6);
+  cx.fillStyle='#ffd0d4';cx.font='bold 12px Courier New';cx.textAlign='center';cx.fillText('☠ '+b.name,W/2,by-6);
+  // cuerpo (profesor volador con birrete)
+  const x=b.x,y=b.y,w=b.w,h=b.h;
+  cx.fillStyle=b.color;
+  cx.beginPath();cx.ellipse(x+w/2,y+h*0.6,w*0.5,h*0.4,0,0,6.28);cx.fill(); // platillo/cuerpo
+  cx.fillStyle=lighten(b.color,-30);cx.beginPath();cx.arc(x+w/2,y+h*0.45,w*0.28,Math.PI,0);cx.fill(); // domo/cabeza
+  // ojos
+  cx.fillStyle='#101018';cx.beginPath();cx.arc(x+w*0.42,y+h*0.42,3,0,6.28);cx.arc(x+w*0.58,y+h*0.42,3,0,6.28);cx.fill();
+  // birrete (mortarboard) => "profesor"
+  cx.fillStyle='#151515';cx.fillRect(x+w*0.36,y+h*0.2,w*0.28,5);
+  cx.save();cx.translate(x+w/2,y+h*0.18);cx.rotate(0.0);cx.fillRect(-w*0.22,-4,w*0.44,6);cx.restore();
+  cx.strokeStyle='#ffd76b';cx.lineWidth=1.5;cx.beginPath();cx.moveTo(x+w/2,y+h*0.16);cx.lineTo(x+w*0.66,y+h*0.05);cx.stroke();
+  cx.fillStyle='#ffd76b';cx.beginPath();cx.arc(x+w*0.66,y+h*0.05,2.5,0,6.28);cx.fill();
+}
+
+function lighten(hex,amt){const n=parseInt(hex.slice(1),16);let r=(n>>16)+amt,g=((n>>8)&255)+amt,b=(n&255)+amt;r=Math.max(0,Math.min(255,r));g=Math.max(0,Math.min(255,g));b=Math.max(0,Math.min(255,b));return 'rgb('+r+','+g+','+b+')';}
+function drawPowerup(pu){
+  const cxp=pu.x+pu.w/2,cyp=pu.y+pu.h/2,pulse=0.7+Math.sin(pu.t*0.01)*0.3;
+  let color='#ffd76b',ch='?';if(pu.kind==='vel'){color='#5bd6ff';ch='⚡';}if(pu.kind==='pow'){color='#ff9a3b';ch='✦';}
+  cx.save();cx.globalAlpha=pulse;cx.fillStyle=color;cx.font='bold 20px Courier New';cx.textAlign='center';cx.textBaseline='middle';
+  cx.shadowColor=color;cx.shadowBlur=14;cx.fillText(ch,cxp,cyp);cx.restore();cx.shadowBlur=0;
+  cx.strokeStyle=color;cx.globalAlpha=0.6;cx.lineWidth=1.5;cx.strokeRect(pu.x,pu.y,pu.w,pu.h);cx.globalAlpha=1;
+}
+
+/* -------- ENTRADA -------- */
+window.addEventListener('keydown',e=>{
+  if(['ArrowLeft','ArrowRight','ArrowUp',' ','Spacebar'].includes(e.key))e.preventDefault();
+  if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A')keys.left=true;
+  if(e.key==='ArrowRight'||e.key==='d'||e.key==='D')keys.right=true;
+  if(e.key===' '||e.key==='Spacebar'||e.key==='ArrowUp')keys.fire=true;
+});
+window.addEventListener('keyup',e=>{
+  if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A')keys.left=false;
+  if(e.key==='ArrowRight'||e.key==='d'||e.key==='D')keys.right=false;
+  if(e.key===' '||e.key==='Spacebar'||e.key==='ArrowUp')keys.fire=false;
+});
+/* CONTROL TÁCTIL: la nave sigue tu dedo y dispara sola mientras tocas.
+   Usa pointer events + setPointerCapture: funciona igual en Chrome, Safari,
+   Firefox y Edge, y en móvil/tablet/desktop. touch-action:none evita que el
+   navegador se quede con el gesto (causa típica de que "no responda"). */
+const isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0||(window.matchMedia&&matchMedia('(pointer:coarse)').matches);
+const stageEl=document.getElementById('stage');
+function stageX(clientX){const r=stageEl.getBoundingClientRect();return (clientX-r.left)/(r.width||1)*W;}
+let ctrlPtr=null;
+stageEl.addEventListener('pointerdown',e=>{
+  if(state.scene!=='playing')return;
+  ctrlPtr=e.pointerId; state.pointerActive=true; state.touchX=stageX(e.clientX);
+  try{stageEl.setPointerCapture(e.pointerId);}catch(_){}
+  e.preventDefault();
+},{passive:false});
+stageEl.addEventListener('pointermove',e=>{
+  if(!state.pointerActive||e.pointerId!==ctrlPtr)return;
+  state.touchX=stageX(e.clientX); e.preventDefault();
+},{passive:false});
+function endPtr(e){ if(ctrlPtr===null||e.pointerId===ctrlPtr){ state.pointerActive=false; ctrlPtr=null; } }
+stageEl.addEventListener('pointerup',endPtr);
+stageEl.addEventListener('pointercancel',endPtr);
+stageEl.addEventListener('lostpointercapture',endPtr);
+stageEl.addEventListener('contextmenu',e=>{ if(state.scene==='playing')e.preventDefault(); });
+window.addEventListener('blur',()=>{state.pointerActive=false;ctrlPtr=null;});
+
+/* -------- BOTONES -------- */
+document.getElementById('btn-comenzar').onclick=()=>{Snd.unlock();state.scene='nombre';show('nombre');setTimeout(()=>document.getElementById('in-nombre').focus(),50);};
+document.getElementById('btn-nombre').onclick=()=>{
+  const n=document.getElementById('in-nombre').value.trim();
+  if(!n){document.getElementById('in-nombre').style.borderColor='var(--peligro)';return;}
+  state.nombre=n;state.curso=document.getElementById('in-curso').value.trim();
+  state.level=0;state.score=0;state.lives=3;startBriefing();
+};
+document.getElementById('in-nombre').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btn-nombre').click();});
+document.getElementById('btn-lanzar').onclick=()=>{Snd.unlock();startLevel();};
+document.getElementById('btn-siguiente').onclick=()=>{state.level++;if(state.level>=PLANETAS.length){victoria();}else startBriefing();};
+document.getElementById('btn-reintentar').onclick=()=>{state.level=0;state.score=0;state.lives=3;startBriefing();};
+document.getElementById('btn-otravez').onclick=()=>{state.level=0;state.score=0;state.lives=3;state.scene='welcome';show('welcome');};
+document.getElementById('btn-copiar-go').onclick=function(){copiar(this);};
+document.getElementById('btn-copiar-vic').onclick=function(){copiar(this);};
+
+/* -------- ARRANQUE -------- */
+resize();initStars();state.scene='welcome';show('welcome');requestAnimationFrame(loop);
+</script>
+</body>
+</html>

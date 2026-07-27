@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fábrica Molecular · Replicación y Transcripción del ADN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#0a1512;
+    --paper:#f4efe1;
+    --paper-2:#ece4cf;
+    --ink:#1c231f;
+    --ink-soft:#4b564f;
+    --line:#d8cfb4;
+    --accent-urgent:#c0392b;
+    --accent-teal:#1fb6a0;
+    --base-a:#2f9e57;
+    --base-t:#c0392b;
+    --base-u:#c0392b;
+    --base-c:#2b6fc9;
+    --base-g:#c98a12;
+    --radius:14px;
+    --shadow-card: 0 18px 40px -18px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.25);
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    min-height:100dvh;
+    background:
+      radial-gradient(ellipse 900px 600px at 50% -10%, rgba(31,182,160,.14), transparent 60%),
+      radial-gradient(ellipse 1200px 800px at 90% 110%, rgba(192,57,43,.10), transparent 55%),
+      var(--bg-0);
+    color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  #app{max-width:980px;margin:0 auto;padding:18px 16px 70px;}
+
+  /* ---------- TOPBAR ---------- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand__mark{width:38px;height:38px;border-radius:10px;background:linear-gradient(145deg,var(--base-c),var(--base-a));display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:var(--shadow-card);flex-shrink:0;}
+  .brand__text{color:#eef4f0;}
+  .brand__text b{font-family:var(--font-display);font-size:15px;letter-spacing:.2px;display:block;}
+  .brand__text span{font-family:var(--font-mono);font-size:10.5px;color:#9db6ac;letter-spacing:.6px;text-transform:uppercase;}
+  .topbar__right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+
+  .timer-badge,.radicals-badge{font-family:var(--font-mono);font-weight:700;font-size:13px;background:#101a16;color:#eef4f0;border:1px solid #2a3a33;border-radius:999px;padding:8px 14px;display:none;align-items:center;gap:7px;}
+  .timer-badge.show,.radicals-badge.show{display:inline-flex;}
+  .timer-badge.low{border-color:var(--accent-urgent);color:#ffb4a8;}
+  .radicals-badge.danger{border-color:var(--accent-urgent);color:#ffb4a8;animation:pulseDanger 1s infinite;}
+  @keyframes pulseDanger{0%,100%{opacity:1;}50%{opacity:.5;}}
+
+  .btn{font-family:var(--font-body);font-weight:600;font-size:13.5px;border-radius:999px;border:1px solid transparent;cursor:pointer;padding:9px 18px;transition:transform .12s ease, box-shadow .12s ease, background .15s ease;display:inline-flex;align-items:center;gap:7px;touch-action:manipulation;}
+  .btn:active{transform:scale(.97);}
+  .btn--primary{background:var(--accent-teal);color:#04211c;box-shadow:0 8px 20px -8px rgba(31,182,160,.7);}
+  .btn--primary:hover{box-shadow:0 10px 24px -8px rgba(31,182,160,.9);}
+  .btn--primary:disabled{background:#3a463f;color:#7c8a82;box-shadow:none;cursor:not-allowed;}
+  .btn--ghost{background:transparent;border-color:#3a463f;color:#cfe0d8;}
+  .btn--ghost:hover{border-color:#5a6e63;}
+  .btn--small{padding:6px 13px;font-size:12px;}
+
+  /* ---------- STEPPER ---------- */
+  .stepper{display:flex;gap:6px;margin:0 0 20px;background:rgba(255,255,255,.04);border:1px solid #24312c;border-radius:12px;padding:6px;}
+  .stepper__node{flex:1;text-align:center;padding:8px 6px;border-radius:8px;font-family:var(--font-mono);font-size:10.5px;letter-spacing:.4px;color:#7c8a82;text-transform:uppercase;transition:.2s;}
+  .stepper__node.is-active{background:var(--accent-teal);color:#04211c;font-weight:700;}
+  .stepper__node.is-done{color:#bcd6cb;}
+
+  /* ---------- SCREENS ---------- */
+  .screen{display:none;}
+  .screen.active{display:block;animation:fadein .35s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  .card{background:var(--paper);border-radius:var(--radius);box-shadow:var(--shadow-card);padding:26px 26px 24px;position:relative;}
+
+  /* ---------- GRID DE TARJETAS (eventos / dificultad / elección) ---------- */
+  .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:6px;}
+  .pick-card{background:var(--paper-2);border:1px solid var(--line);border-radius:14px;padding:20px;cursor:pointer;transition:transform .15s ease, box-shadow .15s ease;text-align:left;touch-action:manipulation;}
+  .pick-card:hover{transform:translateY(-3px);box-shadow:0 14px 26px -14px rgba(0,0,0,.4);}
+  .pick-card .emoji{font-size:28px;}
+  .pick-card h3{font-family:var(--font-display);margin:9px 0 5px;font-size:17px;}
+  .pick-card p{margin:0;font-size:13px;color:#4a5148;}
+  .pick-card .spec{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.4px;margin-top:8px;display:block;}
+  .pick-card .purpose{margin-top:10px;font-size:12.5px;background:rgba(31,182,160,.12);border:1px solid rgba(31,182,160,.3);border-radius:8px;padding:8px 10px;color:#1d3b32;}
+
+  /* ---------- MISSION TICKET (intro) ---------- */
+  .ticket{background:var(--paper);border-radius:10px;box-shadow:var(--shadow-card);padding:0;overflow:hidden;position:relative;}
+  .ticket__stamp{position:absolute;top:22px;right:26px;border:3px solid var(--accent-urgent);color:var(--accent-urgent);font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:2px;padding:5px 12px;border-radius:6px;transform:rotate(8deg);opacity:.9;}
+  .ticket__head{background:var(--paper-2);padding:20px 26px;border-bottom:2px dashed var(--line);font-family:var(--font-mono);font-size:11.5px;color:var(--ink-soft);letter-spacing:.5px;text-transform:uppercase;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+  .ticket__body{padding:26px;}
+  .ticket__body h1{font-family:var(--font-display);font-size:clamp(22px,4vw,30px);margin:0 0 14px;color:var(--ink);}
+  .ticket__body p{margin:0 0 14px;color:#33392f;font-size:15.5px;}
+  .ticket__body p.lede{font-size:17px;font-weight:600;color:var(--accent-urgent);}
+  .ticket__foot{padding:20px 26px 26px;}
+
+  /* ---------- SEQUENCE / STRAND VISUALS ---------- */
+  .helix-wrap{overflow-x:auto;padding:6px 2px 12px;}
+  .strand-row{display:flex;gap:5px;width:max-content;margin:0 auto;}
+  .bond-row{display:flex;gap:5px;justify-content:center;margin:2px auto;width:max-content;}
+  .bond{width:38px;text-align:center;font-family:var(--font-mono);color:var(--ink-soft);font-size:11px;}
+  .strand-label{font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-soft);margin:0 0 6px;display:flex;align-items:center;gap:7px;justify-content:center;}
+  .strand-label .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-teal);display:inline-block;}
+
+  .tile{width:38px;height:38px;min-width:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:16px;color:#fff;box-shadow:0 3px 0 rgba(0,0,0,.18), 0 6px 12px -4px rgba(0,0,0,.35);user-select:none;flex-shrink:0;}
+  .tile.rna{border-radius:50%;}
+  .tile.fixed{opacity:.96;}
+  .tile.draggable{cursor:grab;touch-action:none;}
+  .tile.draggable.dragging{cursor:grabbing;box-shadow:0 10px 22px -6px rgba(0,0,0,.55);}
+  .tile.locked{box-shadow:0 2px 0 rgba(0,0,0,.15), 0 3px 8px -2px rgba(0,0,0,.3);}
+  .tile.disabled-tile{opacity:.35;cursor:not-allowed;}
+  .tile.base-A{background:var(--base-a);}
+  .tile.base-T{background:var(--base-t);}
+  .tile.base-U{background:var(--base-u);}
+  .tile.base-C{background:var(--base-c);}
+  .tile.base-G{background:var(--base-g);}
+
+  .slot{width:38px;height:38px;min-width:38px;border-radius:9px;border:2px dashed #b9ae8c;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;}
+  .slot.rna{border-radius:50%;}
+  .slot.filled{border-style:solid;border-color:transparent;padding:0;}
+  .slot.shake{animation:shake .4s ease;border-color:var(--accent-urgent);}
+  .slot.hover-target{border-color:var(--accent-teal);background:rgba(31,182,160,.14);}
+  @keyframes shake{10%,90%{transform:translateX(-2px);}20%,80%{transform:translateX(3px);}30%,50%,70%{transform:translateX(-5px);}40%,60%{transform:translateX(5px);}}
+
+  .tray{margin-top:14px;padding:14px;background:rgba(0,0,0,.035);border:1px solid var(--line);border-radius:12px;display:flex;flex-wrap:wrap;gap:8px;min-height:60px;}
+  .tray-label{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 0;}
+  .tray-hint{font-size:12px;color:var(--ink-soft);margin:4px 0 0;}
+
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin:14px 0 4px;font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);}
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .legend i{width:10px;height:10px;border-radius:3px;display:inline-block;}
+
+  /* ---------- KIT CARDS (enzimas) ---------- */
+  .kit{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:16px 0 6px;}
+  .kit-card{background:var(--paper-2);border:1px solid var(--line);border-radius:11px;padding:12px 13px;}
+  .kit-card summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px;font-family:var(--font-display);font-weight:600;font-size:13.5px;color:var(--ink);}
+  .kit-card summary::-webkit-details-marker{display:none;}
+  .kit-card summary .icon{font-size:19px;}
+  .kit-card summary .chev{margin-left:auto;font-size:11px;color:var(--ink-soft);}
+  .kit-card[open] summary .chev{transform:rotate(180deg);}
+  .kit-card p{margin:9px 0 0;font-size:12.5px;color:#4a5148;line-height:1.5;}
+  .kit-card button.trigger{margin-top:9px;font-size:12px;padding:6px 13px;}
+
+  .lock-overlay{display:flex;align-items:center;justify-content:center;gap:8px;padding:26px 10px;font-family:var(--font-mono);font-size:12.5px;color:var(--ink-soft);border:2px dashed var(--line);border-radius:12px;background:rgba(0,0,0,.03);}
+
+  /* ---------- SELLADO CON LIGASA ---------- */
+  .seal-target{flex:1;min-width:150px;border:2px dashed #b9ae8c;border-radius:12px;padding:14px 10px;text-align:center;font-size:12.5px;color:var(--ink-soft);transition:.2s;}
+  .seal-target .seal-icon{font-size:17px;display:block;margin-bottom:2px;}
+  .seal-target .seal-status{font-family:var(--font-mono);font-size:10.5px;display:block;margin-top:5px;}
+  .seal-target.sealed{border-style:solid;border-color:var(--base-a);background:#e4f3e8;color:#1d3b2c;}
+  .seal-target.shake{animation:shake .4s ease;border-color:var(--accent-urgent);}
+  .seal-target.hover-target{border-style:solid;border-color:var(--accent-teal);background:rgba(31,182,160,.14);}
+  .seal-row{display:flex;align-items:stretch;gap:14px;flex-wrap:wrap;margin-top:12px;}
+  .ligase-tile{width:58px;height:58px;min-width:58px;border-radius:50%;background:linear-gradient(145deg,#c98a12,#e6b23e);display:flex;align-items:center;justify-content:center;font-size:26px;cursor:grab;touch-action:none;box-shadow:0 4px 12px -3px rgba(0,0,0,.4);flex-shrink:0;user-select:none;align-self:center;}
+  .ligase-tile.dragging{cursor:grabbing;box-shadow:0 10px 24px -6px rgba(0,0,0,.55);}
+  .ligase-tile.disabled-tile{opacity:.35;cursor:not-allowed;}
+
+  /* ---------- CODONS / TRADUCCIÓN INTERACTIVA ---------- */
+  .codon-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0;}
+  .codon-block{display:flex;gap:3px;padding:6px;border-radius:10px;border:2px solid transparent;transition:.25s;flex-wrap:wrap;}
+  .codon-block.is-current{border-color:var(--accent-teal);background:rgba(31,182,160,.1);}
+  .codon-block.is-done{opacity:.55;}
+  .codon-tag{width:100%;text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--ink-soft);margin-top:4px;}
+  .codon-drop-zone{width:100%;margin-top:6px;padding:8px 4px;border:2px dashed var(--accent-teal);border-radius:8px;font-family:var(--font-mono);font-size:9.5px;color:var(--accent-teal);text-align:center;min-height:30px;display:flex;align-items:center;justify-content:center;}
+  .codon-drop-zone.matched{border-style:solid;border-color:var(--base-a);color:#1d3b2c;font-size:11px;font-weight:700;}
+  .codon-drop-zone.shake{animation:shake .4s ease;border-color:var(--accent-urgent);}
+  .codon-drop-zone.hover-target{background:rgba(31,182,160,.22);border-style:solid;}
+
+  .trna-tray{justify-content:center;}
+  .trna-tile{width:132px;padding:10px 8px;border-radius:12px;background:var(--paper-2);border:2px solid var(--line);text-align:center;cursor:grab;touch-action:none;flex-shrink:0;user-select:none;}
+  .trna-tile.dragging{cursor:grabbing;box-shadow:0 10px 22px -6px rgba(0,0,0,.5);}
+  .trna-tile.disabled-tile{opacity:.35;cursor:not-allowed;}
+  .trna-anticodon{font-family:var(--font-mono);font-weight:700;font-size:17px;letter-spacing:2px;color:var(--ink);}
+  .trna-amino{font-size:11.5px;color:#4a5148;margin-top:4px;}
+
+  .peptide-row{display:flex;gap:8px;align-items:center;justify-content:center;margin:18px 0 4px;min-height:46px;flex-wrap:wrap;}
+  .peptide-bead{width:44px;height:44px;border-radius:50%;background:var(--base-a);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:11px;box-shadow:0 4px 10px -3px rgba(0,0,0,.4);flex-shrink:0;}
+  .peptide-link{width:14px;height:2px;background:var(--ink-soft);opacity:.4;flex-shrink:0;}
+
+  /* ---------- MISC ---------- */
+  .callout{background:rgba(31,182,160,.09);border:1px solid rgba(31,182,160,.3);border-radius:10px;padding:12px 14px;font-size:13px;color:#22392f;margin-top:14px;}
+  .callout.warn{background:rgba(192,57,43,.08);border-color:rgba(192,57,43,.3);color:#4a2420;}
+  .callout.goal{background:rgba(201,138,18,.12);border-color:rgba(201,138,18,.4);color:#5a3d05;font-weight:600;}
+  .callout .btn{margin-top:8px;}
+  .section-title{font-family:var(--font-display);font-size:19px;margin:0 0 4px;}
+  .section-sub{font-size:13.5px;color:#5a6156;margin:0 0 4px;}
+  .end-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:#101a16;color:#eef4f0;padding:11px 18px;border-radius:999px;font-family:var(--font-body);font-weight:600;font-size:13.5px;box-shadow:0 14px 30px -10px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:.25s;z-index:2000;border:1px solid #2a3a33;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast.ok{border-color:var(--base-a);}
+  .toast.err{border-color:var(--accent-urgent);}
+
+  #hand-cursor{position:fixed;font-size:26px;pointer-events:none;z-index:1001;opacity:0;transform:translate(-6px,-4px);transition:opacity .1s;}
+  #hand-cursor.show{opacity:1;}
+
+  .app-footer{margin-top:26px;text-align:center;font-family:var(--font-mono);font-size:11px;letter-spacing:.4px;color:#4e6158;}
+
+  ::-webkit-scrollbar{height:8px;}
+  ::-webkit-scrollbar-thumb{background:#3a463f;border-radius:4px;}
+
+  /* En pantallas táctiles el dedo ya "es" la manito: mostrarla encima solo estorba la vista del casillero. */
+  @media (pointer: coarse){
+    #hand-cursor{display:none !important;}
+  }
+
+  /* ---------- OPTIMIZACIÓN PARA CELULAR ---------- */
+  @media (max-width:520px){
+    #app{padding:14px 12px 60px;}
+    .card{padding:18px 16px 16px;}
+    .brand__text span{display:none;}
+    .timer-badge,.radicals-badge{font-size:11.5px;padding:6px 10px;}
+    .btn{padding:8px 14px;font-size:13px;}
+    .seal-row{flex-direction:column;align-items:stretch;}
+    .ligase-tile{align-self:center;margin-bottom:4px;}
+    .seal-target{min-width:0;}
+    .trna-tile{width:auto;flex:1 1 130px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important; transition-duration:.001ms !important;}}
+/* --- MEJORAS UI/UX AÑADIDAS --- */
+
+/* Animación de destello positivo al encajar un nucleótido correctamente */
+@keyframes correctGlow {
+  0% { box-shadow: 0 0 0 0 rgba(31, 182, 160, 0.8); background-color: rgba(31,182,160,0.2); }
+  70% { box-shadow: 0 0 0 12px rgba(31, 182, 160, 0); background-color: transparent; }
+  100% { box-shadow: 0 0 0 0 rgba(31, 182, 160, 0); }
+}
+
+.slot.filled {
+  animation: correctGlow 0.6s ease-out;
+  border: 2px solid var(--accent-teal); /* Fija el color verde cuando está completo */
+  background-color: rgba(31, 182, 160, 0.05);
+}
+
+/* Mejora al diseño de los botones para exportar el PDF (llamados a la acción visuales) */
+#btn-rep-pdf, #btn-prot-pdf {
+  background: linear-gradient(135deg, #1fb6a0 0%, #178f7d 100%);
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  box-shadow: 0 6px 15px -4px rgba(31, 182, 160, 0.6);
+  transition: all 0.2s ease;
+}
+
+#btn-rep-pdf:hover, #btn-prot-pdf:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -5px rgba(31, 182, 160, 0.8);
+}</style>
+</head>
+<body>
+
+<div id="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand__mark">🧬</div>
+      <div class="brand__text">
+        <b>Fábrica Molecular</b>
+        <span>Simulador · Replicación &amp; Transcripción</span>
+      </div>
+    </div>
+    <div class="topbar__right">
+      <div class="radicals-badge" id="radicals-badge">☢️ <span id="radicals-text">0 / 4</span></div>
+      <div class="timer-badge" id="timer-badge">⏱ <span id="timer-text">--</span></div>
+      <button class="btn btn--ghost" id="btn-restart">↺ Reiniciar</button>
+    </div>
+  </div>
+
+  <div class="stepper" id="stepper">
+    <div class="stepper__node" data-node="0">① ADN molde</div>
+    <div class="stepper__node" data-node="1">② Proceso</div>
+    <div class="stepper__node" data-node="2">③ Resultado</div>
+  </div>
+
+  <!-- ================= SCREEN 0: ELEGIR EVENTO ================= -->
+  <section class="screen active" id="screen-events">
+    <div class="card">
+      <p class="section-title">Sala de casos</p>
+      <p class="section-sub">Elige una emergencia celular. Cada caso tiene su propio ADN (ficticio, pero con reglas reales de emparejamiento).</p>
+      <div class="card-grid" id="events-grid"></div>
+    </div>
+  </section>
+
+  <!-- ================= SCREEN 1: INTRO / MISIÓN ================= -->
+  <section class="screen" id="screen-intro">
+    <div class="ticket">
+      <div class="ticket__stamp" id="ticket-stamp">URGENTE</div>
+      <div class="ticket__head">
+        <span id="ticket-eyebrow">Ficha clínica</span>
+        <span id="ticket-filenum">N° 0000</span>
+      </div>
+      <div class="ticket__body">
+        <h1 id="ticket-title">Título del caso</h1>
+        <p class="lede" id="ticket-lede">Frase clave.</p>
+        <p id="ticket-narrative">Narrativa del caso.</p>
+        <p>Vas a trabajar con un fragmento de ADN <i>ficticio</i> (no corresponde al gen real), pero cada emparejamiento de bases que hagas debe respetar las reglas reales de complementariedad y el código genético real.</p>
+      </div>
+      <div class="ticket__foot">
+        <button class="btn btn--primary" id="btn-accept-mission">Aceptar la misión →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SCREEN 2: DIFICULTAD ================= -->
+  <section class="screen" id="screen-difficulty">
+    <div class="card">
+      <p class="section-title">Elige la dificultad</p>
+      <p class="section-sub">Afecta el largo de la secuencia y si trabajas contra el reloj. En todas, 4 errores de emparejamiento generan 4 radicales libres y pierdes el nivel.</p>
+      <div class="card-grid" id="difficulty-grid"></div>
+    </div>
+  </section>
+
+  <!-- ================= SCREEN 3: REVELAR SECUENCIA ================= -->
+  <section class="screen" id="screen-reveal">
+    <div class="card">
+      <p class="section-title">El fragmento de ADN molde</p>
+      <p class="section-sub">Esta es la doble hebra que vas a usar. Recuerda: A–T se unen con 2 puentes de hidrógeno, C–G con 3.</p>
+
+      <div class="helix-wrap">
+        <div class="strand-label"><span class="dot"></span>Hebra codificante (5'→3')</div>
+        <div class="strand-row" id="reveal-coding" style="justify-content:center;"></div>
+        <div class="bond-row" id="reveal-bonds"></div>
+        <div class="strand-row" id="reveal-template" style="justify-content:center;"></div>
+        <div class="strand-label" style="margin-top:6px;"><span class="dot" style="background:var(--base-c);"></span>Hebra molde (3'→5')</div>
+      </div>
+
+      <div class="legend">
+        <span><i style="background:var(--base-a);"></i>A · Adenina</span>
+        <span><i style="background:var(--base-t);"></i>T · Timina</span>
+        <span><i style="background:var(--base-c);"></i>C · Citosina</span>
+        <span><i style="background:var(--base-g);"></i>G · Guanina</span>
+      </div>
+
+      <div class="callout">En la replicación se copian <b>ambas</b> hebras. En la transcripción, la ARN polimerasa solo lee la <b>hebra molde</b> y fabrica un ARNm complementario (usando <b>U</b> en vez de <b>T</b>).</div>
+
+      <button class="btn btn--primary" id="btn-goto-choice" style="margin-top:20px;">Continuar →</button>
+    </div>
+  </section>
+
+  <!-- ================= SCREEN 4: ELEGIR PROCESO ================= -->
+  <section class="screen" id="screen-choice">
+    <div class="card">
+      <p class="section-title">¿Qué proceso vas a dirigir?</p>
+      <p class="section-sub">Cada uno cumple un objetivo distinto para este caso.</p>
+      <div class="card-grid">
+        <div class="pick-card" id="choice-replication">
+          <div class="emoji">🧬</div>
+          <h3>Replicación del ADN</h3>
+          <p>Duplica la molécula completa usando helicasa, ADN polimerasa y ligasa.</p>
+          <div class="purpose" id="choice-purpose-replication">Objetivo: —</div>
+        </div>
+        <div class="pick-card" id="choice-transcription">
+          <div class="emoji">📋</div>
+          <h3>Transcripción → Traducción</h3>
+          <p>Lee la hebra molde, arma el ARNm y tradúcelo en el ribosoma.</p>
+          <div class="purpose" id="choice-purpose-transcription">Objetivo: —</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SCREEN 5: REPLICACIÓN ================= -->
+  <section class="screen" id="screen-replication">
+    <div class="card">
+      <p class="section-title">Replicación semiconservativa</p>
+      <p class="section-sub">Cada hebra antigua sirve de molde para una hebra nueva. Sigue el orden de las enzimas.</p>
+      <div class="callout goal" id="rep-objective">🎯 Objetivo: —</div>
+
+      <div class="kit" id="kit-replication">
+        <details class="kit-card" id="kit-topo-card" style="display:none;">
+          <summary><span class="icon">🌀</span>Topoisomerasa<span class="chev">▾</span></summary>
+          <p>Corta y vuelve a unir el ADN para aliviar la tensión de superenrollamiento que genera la helicasa al avanzar.</p>
+          <button class="btn btn--primary trigger" id="btn-activar-topo">Activar topoisomerasa</button>
+        </details>
+        <details class="kit-card" id="kit-helicasa" open>
+          <summary><span class="icon">✂️</span>Helicasa<span class="chev">▾</span></summary>
+          <p>Rompe los puentes de hidrógeno y desenrolla la doble hélice, dejando ambas hebras expuestas.</p>
+          <button class="btn btn--primary trigger" id="btn-activar-helicasa">Activar helicasa</button>
+        </details>
+        <details class="kit-card">
+          <summary><span class="icon">🧩</span>ADN Polimerasa<span class="chev">▾</span></summary>
+          <p>Añade nucleótidos complementarios a cada hebra molde, en dirección 5'→3'. Arrastra una base hasta su casillero, o haz <b>doble clic</b> sobre ella para ubicarla automáticamente en el casillero correcto.</p>
+        </details>
+        <details class="kit-card">
+          <summary><span class="icon">🪡</span>Ligasa<span class="chev">▾</span></summary>
+          <p>Sella los cortes de la nueva hebra. Cuando termines de emparejar todos los nucleótidos, más abajo vas a poder <b>arrastrar la ligasa con la manito</b> sobre cada hebra nueva para sellarla.</p>
+        </details>
+      </div>
+
+      <div id="replication-locked" class="lock-overlay">🔒 ADN enrollado — activa la <b>helicasa</b> para comenzar</div>
+
+      <div id="replication-area" style="display:none;">
+        <p class="tray-label">Hebra 1 (molde antigua arriba, nueva hebra abajo)</p>
+        <div class="helix-wrap"><div class="strand-row" id="rep1-old"></div><div class="strand-row" id="rep1-new"></div></div>
+
+        <p class="tray-label" style="margin-top:22px;">Hebra 2 (molde antigua arriba, nueva hebra abajo)</p>
+        <div class="helix-wrap"><div class="strand-row" id="rep2-old"></div><div class="strand-row" id="rep2-new"></div></div>
+
+        <p class="tray-label">Nucleótidos disponibles</p>
+        <p class="tray-hint">💡 Arrastra una base hasta su casillero, o haz <b>doble clic</b> para ubicarla automáticamente. Si te equivocas al arrastrar, generas un radical libre.</p>
+        <div class="tray" id="rep-tray"></div>
+
+        <div class="ligase-zone" id="ligase-zone" style="display:none;">
+          <p class="tray-label" style="margin-top:22px;">Sellado final</p>
+          <p class="tray-hint">🪡 Todos los nucleótidos están en su lugar. Arrastra la ligasa con la manito 🖐️ hasta cada hebra nueva para sellarla.</p>
+          <div class="seal-row">
+            <div class="ligase-tile" id="ligase-tile" title="Ligasa">🪡</div>
+            <div class="seal-target" id="seal-target-1" data-target="1"><span class="seal-icon">🧬</span>Hebra 1 nueva<span class="seal-status">pendiente</span></div>
+            <div class="seal-target" id="seal-target-2" data-target="2"><span class="seal-icon">🧬</span>Hebra 2 nueva<span class="seal-status">pendiente</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout" id="rep-progress">0 / 0 nucleótidos correctamente emparejados.</div>
+      <div class="callout warn" id="rep-timeout" style="display:none;">⏱️ Se acabó el tiempo. El ADN volvió a enrollarse. <button class="btn btn--primary btn--small" id="btn-rep-retry">Reintentar nivel</button></div>
+      <div class="callout warn" id="rep-gameover" style="display:none;">💥 4 radicales libres dañaron la célula: no se pudo completar la replicación. <button class="btn btn--primary btn--small" id="btn-rep-gameover-retry">Reintentar nivel</button></div>
+    </div>
+  </section>
+
+  <!-- ================= SCREEN 6: FIN REPLICACIÓN ================= -->
+  <section class="screen" id="screen-replication-end">
+    <div class="card">
+      <p class="section-title">✅ Replicación completada</p>
+      <p class="section-sub">La ligasa selló ambas hebras nuevas.</p>
+      <div class="callout" id="rep-end-text">—</div>
+      <div class="callout">Obtuviste <b>dos moléculas de ADN</b>, cada una formada por una hebra antigua y una hebra nueva: por eso se llama <b>replicación semiconservativa</b>.</div>
+      <div class="end-actions">
+        <button class="btn btn--primary" id="btn-rep-to-choice">Probar el otro proceso →</button>
+        <button class="btn btn--ghost" id="btn-rep-pdf">📄 Descargar PDF resumen</button>
+        <button class="btn btn--ghost" id="btn-rep-other-case">🗂️ Elegir otro caso</button>
+        <button class="btn btn--ghost" id="btn-rep-restart">Reiniciar todo</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SCREEN 7: TRANSCRIPCIÓN (ARNm) ================= -->
+  <section class="screen" id="screen-transcription">
+    <div class="card">
+      <p class="section-title">Transcripción: fabricando el ARNm</p>
+      <p class="section-sub">Solo se lee la hebra molde. Frente a A va U, frente a T va A, frente a C va G, frente a G va C.</p>
+      <div class="callout goal" id="tr-objective">🎯 Objetivo: —</div>
+
+      <div class="kit" id="kit-transcription">
+        <details class="kit-card" open>
+          <summary><span class="icon">🧬</span>ARN Polimerasa<span class="chev">▾</span></summary>
+          <p>Reconoce el promotor, desenrolla localmente el ADN y sintetiza ARN mensajero complementario a la hebra molde, usando Uracilo en vez de Timina.</p>
+          <button class="btn btn--primary trigger" id="btn-activar-arnpol">Activar ARN polimerasa</button>
+        </details>
+        <details class="kit-card" id="kit-factores-card">
+          <summary><span class="icon">🔓</span>Factores de transcripción<span class="chev">▾</span></summary>
+          <p>Ayudan a la ARN polimerasa a reconocer el sitio exacto donde debe comenzar a transcribir.</p>
+          <button class="btn btn--primary trigger" id="btn-activar-factores" style="display:none;">Reclutar factores</button>
+        </details>
+      </div>
+
+      <div id="transcription-locked" class="lock-overlay">🔒 Promotor cerrado — activa la <b>ARN polimerasa</b></div>
+
+      <div id="transcription-area" style="display:none;">
+        <p class="tray-label">Hebra molde (ADN)</p>
+        <div class="helix-wrap"><div class="strand-row" id="tr-template"></div><div class="strand-row" id="tr-mrna"></div></div>
+
+        <p class="tray-label">Ribonucleótidos disponibles</p>
+        <p class="tray-hint">💡 Arrastra una base hasta su casillero, o haz <b>doble clic</b> para ubicarla automáticamente. Si te equivocas al arrastrar, generas un radical libre.</p>
+        <div class="tray" id="tr-tray"></div>
+      </div>
+
+      <div class="callout" id="tr-progress">0 / 0 bases del ARNm completadas.</div>
+      <div class="callout warn" id="tr-timeout" style="display:none;">⏱️ Se acabó el tiempo. Hay que reiniciar la lectura del ADN. <button class="btn btn--primary btn--small" id="btn-tr-retry">Reintentar nivel</button></div>
+      <div class="callout warn" id="tr-gameover" style="display:none;">💥 4 radicales libres dañaron la célula: no se pudo completar el proceso. <button class="btn btn--primary btn--small" id="btn-tr-gameover-retry">Reintentar nivel</button></div>
+      <button class="btn btn--primary" id="btn-goto-translation" style="margin-top:16px;display:none;">Continuar a traducción →</button>
+    </div>
+  </section>
+
+  <!-- ================= SCREEN 8: TRADUCCIÓN ================= -->
+  <section class="screen" id="screen-translation">
+    <div class="card">
+      <p class="section-title">Traducción en el ribosoma</p>
+      <p class="section-sub">Arrastra el ARNt con el anticodón correcto hasta el codón resaltado. Si sueltas uno equivocado, generas un radical libre.</p>
+      <div class="callout goal" id="tl-objective">🎯 Objetivo: —</div>
+
+      <div class="kit" id="kit-translation">
+        <details class="kit-card">
+          <summary><span class="icon">🧫</span>Ribosoma<span class="chev">▾</span></summary>
+          <p>Estructura de ARNr y proteínas que recorre el ARNm codón por codón y cataliza la unión de aminoácidos.</p>
+        </details>
+        <details class="kit-card">
+          <summary><span class="icon">🚚</span>ARNt<span class="chev">▾</span></summary>
+          <p>Transporta un aminoácido específico. Arrástralo con la manito hasta el recuadro del codón: solo encaja si su anticodón es complementario.</p>
+        </details>
+        <details class="kit-card">
+          <summary><span class="icon">🏁</span>Factor de liberación<span class="chev">▾</span></summary>
+          <p>Reconoce un codón de término (no codifica aminoácido) y libera la cadena polipeptídica terminada.</p>
+        </details>
+      </div>
+
+      <p class="tray-label">ARNm en el ribosoma</p>
+      <div class="codon-row" id="codon-row"></div>
+
+      <div id="translation-options"></div>
+
+      <p class="tray-label">Cadena polipeptídica en formación</p>
+      <div class="peptide-row" id="peptide-row"></div>
+    </div>
+  </section>
+
+  <!-- ================= SCREEN 9: FIN PROTEÍNA ================= -->
+  <section class="screen" id="screen-protein-end">
+    <div class="card">
+      <p class="section-title">✅ Proteína funcional obtenida</p>
+      <p class="section-sub" id="protein-end-chain">—</p>
+      <div class="callout" id="protein-end-insight">—</div>
+      <div class="callout warn" id="protein-end-outcome">—</div>
+      <div class="end-actions">
+        <button class="btn btn--primary" id="btn-prot-to-choice">Probar el otro proceso →</button>
+        <button class="btn btn--ghost" id="btn-prot-pdf">📄 Descargar PDF resumen</button>
+        <button class="btn btn--ghost" id="btn-prot-other-case">🗂️ Elegir otro caso</button>
+        <button class="btn btn--ghost" id="btn-prot-restart">Reiniciar todo</button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="app-footer">Diseñador: Profesor Felipe Jiménez</footer>
+
+</div>
+
+<div class="toast" id="toast"></div>
+<div id="hand-cursor">🖐️</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ============ CÓDIGO GENÉTICO ESTÁNDAR ============ */
+  var CODON_TABLE = {
+    UUU:{a:'Phe',es:'Fenilalanina'}, UUC:{a:'Phe',es:'Fenilalanina'}, UUA:{a:'Leu',es:'Leucina'}, UUG:{a:'Leu',es:'Leucina'},
+    CUU:{a:'Leu',es:'Leucina'}, CUC:{a:'Leu',es:'Leucina'}, CUA:{a:'Leu',es:'Leucina'}, CUG:{a:'Leu',es:'Leucina'},
+    AUU:{a:'Ile',es:'Isoleucina'}, AUC:{a:'Ile',es:'Isoleucina'}, AUA:{a:'Ile',es:'Isoleucina'}, AUG:{a:'Met',es:'Metionina'},
+    GUU:{a:'Val',es:'Valina'}, GUC:{a:'Val',es:'Valina'}, GUA:{a:'Val',es:'Valina'}, GUG:{a:'Val',es:'Valina'},
+    UCU:{a:'Ser',es:'Serina'}, UCC:{a:'Ser',es:'Serina'}, UCA:{a:'Ser',es:'Serina'}, UCG:{a:'Ser',es:'Serina'},
+    CCU:{a:'Pro',es:'Prolina'}, CCC:{a:'Pro',es:'Prolina'}, CCA:{a:'Pro',es:'Prolina'}, CCG:{a:'Pro',es:'Prolina'},
+    ACU:{a:'Thr',es:'Treonina'}, ACC:{a:'Thr',es:'Treonina'}, ACA:{a:'Thr',es:'Treonina'}, ACG:{a:'Thr',es:'Treonina'},
+    GCU:{a:'Ala',es:'Alanina'}, GCC:{a:'Ala',es:'Alanina'}, GCA:{a:'Ala',es:'Alanina'}, GCG:{a:'Ala',es:'Alanina'},
+    UAU:{a:'Tyr',es:'Tirosina'}, UAC:{a:'Tyr',es:'Tirosina'}, UAA:'STOP', UAG:'STOP',
+    CAU:{a:'His',es:'Histidina'}, CAC:{a:'His',es:'Histidina'}, CAA:{a:'Gln',es:'Glutamina'}, CAG:{a:'Gln',es:'Glutamina'},
+    AAU:{a:'Asn',es:'Asparagina'}, AAC:{a:'Asn',es:'Asparagina'}, AAA:{a:'Lys',es:'Lisina'}, AAG:{a:'Lys',es:'Lisina'},
+    GAU:{a:'Asp',es:'Aspartato'}, GAC:{a:'Asp',es:'Aspartato'}, GAA:{a:'Glu',es:'Glutamato'}, GAG:{a:'Glu',es:'Glutamato'},
+    UGU:{a:'Cys',es:'Cisteína'}, UGC:{a:'Cys',es:'Cisteína'}, UGA:'STOP', UGG:{a:'Trp',es:'Triptófano'},
+    CGU:{a:'Arg',es:'Arginina'}, CGC:{a:'Arg',es:'Arginina'}, CGA:{a:'Arg',es:'Arginina'}, CGG:{a:'Arg',es:'Arginina'},
+    AGU:{a:'Ser',es:'Serina'}, AGC:{a:'Ser',es:'Serina'}, AGA:{a:'Arg',es:'Arginina'}, AGG:{a:'Arg',es:'Arginina'},
+    GGU:{a:'Gly',es:'Glicina'}, GGC:{a:'Gly',es:'Glicina'}, GGA:{a:'Gly',es:'Glicina'}, GGG:{a:'Gly',es:'Glicina'}
+  };
+  var SENSE_CODONS = Object.keys(CODON_TABLE).filter(function(c){ return CODON_TABLE[c] !== 'STOP'; });
+
+  /* ============ EVENTOS (CASOS CLÍNICOS) ============ */
+  var EVENTS = [
+    {
+      id:'herida', icon:'🩹', title:'Herida en la piel', urgency:'URGENTE',
+      fileNumber:'N° 0417 — dermis',
+      lede:'El tejido conectivo está dañado y necesita repararse.',
+      narrative:'Los fibroblastos de la zona recibieron la alerta, pero no pueden actuar solos: necesitan que tú operes la maquinaria molecular de la célula.',
+      replicationPurpose:'Recuperar células epidérmicas perdidas: los queratinocitos deben dividirse para reponer el tejido destruido, y antes de dividirse deben duplicar su ADN.',
+      transcriptionPurpose:'Sintetizar colágeno: la proteína estructural que reconstruye la matriz del tejido dañado.',
+      proteinName:'Colágeno',
+      replicationResultText:'Los queratinocitos duplicaron su ADN y ya pueden dividirse para reponer el tejido perdido.',
+      proteinInsight:'El colágeno real está formado por un patrón repetido Gly-X-Y, donde cada tercer aminoácido es glicina. ¡Acabas de sintetizar ese patrón!',
+      proteinOutcome:'Con esta proteína, los fibroblastos reconstruyen la matriz del tejido: la herida comienza a cerrar.',
+      codons:{ basico:['GGU','CCU','GGC','UAA'], medio:['GGU','CCU','GGC','CCA','GGA','CCG','UAA'], dificil:['GGU','CCU','GGC','CCA','GGA','CCG','GGG','CCC','GCU','UAA'] }
+    },
+    {
+      id:'infeccion', icon:'🦠', title:'Infección respiratoria', urgency:'ALERTA',
+      fileNumber:'N° 2203 — vías respiratorias',
+      lede:'Un patógeno está invadiendo el tejido y el sistema inmune necesita refuerzos.',
+      narrative:'Los linfocitos detectaron al invasor, pero se necesitan más células y más anticuerpos para controlar la infección a tiempo.',
+      replicationPurpose:'Multiplicar linfocitos (proliferación clonal): cada división exige duplicar el ADN completo antes de repartirlo entre las células hijas.',
+      transcriptionPurpose:'Sintetizar un anticuerpo (inmunoglobulina) capaz de reconocer al patógeno.',
+      proteinName:'Anticuerpo',
+      replicationResultText:'Los linfocitos duplicaron su ADN: la proliferación clonal puede comenzar.',
+      proteinInsight:'Los anticuerpos son proteínas: sin transcripción ni traducción, el sistema inmune no podría fabricar ni una sola molécula de defensa.',
+      proteinOutcome:'Con este anticuerpo, el sistema inmune puede reconocer y marcar al patógeno para su eliminación.',
+      codons:{ basico:['GAA','UAC','AAA','UGA'], medio:['GAA','UAC','AAA','CAU','GGU','AAC','UAG'], dificil:['GAA','UAC','AAA','CAU','GGU','AAC','UGU','CCA','AGA','UAA'] }
+    },
+    {
+      id:'fractura', icon:'🦴', title:'Fractura ósea', urgency:'PRIORITARIO',
+      fileNumber:'N° 3391 — tejido óseo',
+      lede:'Un hueso se fracturó y la matriz ósea necesita reconstruirse.',
+      narrative:'Los osteoblastos deben reponer el tejido óseo perdido y fabricar la proteína que sostiene la mineralización del hueso.',
+      replicationPurpose:'Recuperar osteoblastos perdidos: deben dividirse para reponer el tejido óseo, duplicando su ADN antes de cada división.',
+      transcriptionPurpose:'Sintetizar colágeno tipo I, la proteína que forma el andamiaje de la matriz ósea.',
+      proteinName:'Colágeno tipo I',
+      replicationResultText:'Los osteoblastos duplicaron su ADN y están listos para dividirse y reparar el hueso.',
+      proteinInsight:'El colágeno tipo I es el más abundante del cuerpo humano y el principal componente proteico de la matriz ósea.',
+      proteinOutcome:'Con este colágeno, los osteoblastos empiezan a reconstruir el andamiaje del hueso fracturado.',
+      codons:{ basico:['GGA','GCU','GGC','UAA'], medio:['GGA','GCU','GGC','GCC','GGG','GCA','UAA'], dificil:['GGA','GCU','GGC','GCC','GGG','GCA','GGU','GCG','CCU','UAA'] }
+    },
+    {
+      id:'quemadura', icon:'☀️', title:'Quemadura solar', urgency:'PREVENCIÓN',
+      fileNumber:'N° 5028 — epidermis',
+      lede:'La radiación UV dañó células de la piel y falta protección.',
+      narrative:'La exposición al sol destruyó células basales y dejó a la piel sin suficiente pigmento protector.',
+      replicationPurpose:'Recuperar células basales dañadas por la radiación: deben dividirse para reponer la capa perdida, duplicando antes su ADN.',
+      transcriptionPurpose:'Sintetizar tirosinasa, la enzima que permite producir melanina protectora a partir de tirosina.',
+      proteinName:'Tirosinasa',
+      replicationResultText:'Las células basales duplicaron su ADN y pueden dividirse para reponer la epidermis dañada.',
+      proteinInsight:'Uno de los codones traducidos es UAC (Tirosina): el mismo aminoácido que la tirosinasa transforma en melanina.',
+      proteinOutcome:'Con esta enzima, la piel puede producir melanina y protegerse mejor de la radiación UV.',
+      codons:{ basico:['CAU','UAC','AAA','UAG'], medio:['CAU','UAC','AAA','GAU','UGU','CCA','UAG'], dificil:['CAU','UAC','AAA','GAU','UGU','CCA','GGC','ACU','AAU','UAG'] }
+    }
+  ];
+
+  /* ============ DIFICULTADES ============ */
+  var DIFFICULTIES = {
+    basico:  { key:'basico',  label:'Básico',  icon:'🌱', desc:'Secuencia corta, sin cronómetro. Ideal para tu primera vez.', codonCount:4,  timerSeconds:null, extraSteps:false },
+    medio:   { key:'medio',   label:'Medio',   icon:'⚙️', desc:'Secuencia más larga y un cronómetro que corre mientras trabajas.', codonCount:7,  timerSeconds:120, extraSteps:false },
+    dificil: { key:'dificil', label:'Difícil', icon:'🔥', desc:'Secuencia larga, cronómetro ajustado y un paso extra de enzimas antes de empezar.', codonCount:10, timerSeconds:100, extraSteps:true }
+  };
+
+  /* ============ ESTADO ACTIVO ============ */
+  var ACTIVE_EVENT = null;
+  var ACTIVE_DIFFICULTY = null;
+  var CODING_STRAND = [];
+  var TEMPLATE_STRAND = [];
+  var MRNA_STRAND = [];
+  var CODON_INFO = [];
+  var activeAttemptContext = null; // 'replication' | 'transcription' — usado por cronómetro y radicales libres
+
+  var sessionLog = { replication:null, translation:null };
+  function resetSessionLog(){ sessionLog.replication = null; sessionLog.translation = null; }
+
+  var ENZYME_DESCRIPTIONS = {
+    topoisomerasa:"Topoisomerasa: corta y vuelve a unir el ADN para aliviar la tensión de superenrollamiento que genera la helicasa al avanzar.",
+    helicasa:"Helicasa: rompe los puentes de hidrógeno y desenrolla la doble hélice, dejando ambas hebras expuestas.",
+    adnPolimerasa:"ADN Polimerasa: añade nucleótidos complementarios a cada hebra molde, en dirección 5' a 3'.",
+    ligasa:"Ligasa: sella los cortes de la nueva hebra una vez que todos los nucleótidos están bien emparejados.",
+    arnPolimerasa:"ARN Polimerasa: reconoce el promotor, desenrolla localmente el ADN y sintetiza ARN mensajero complementario a la hebra molde, usando Uracilo en vez de Timina.",
+    factoresTranscripcion:"Factores de transcripción: ayudan a la ARN polimerasa a reconocer el sitio exacto donde debe comenzar a transcribir.",
+    ribosoma:"Ribosoma: estructura de ARNr y proteínas que recorre el ARNm codón por codón y cataliza la unión de aminoácidos.",
+    arnt:"ARNt: transporta un aminoácido específico y lo entrega solo si su anticodón empareja con el codón del ARNm.",
+    factorLiberacion:"Factor de liberación: reconoce un codón de término (no codifica aminoácido) y libera la cadena polipeptídica terminada."
+  };
+
+  function dnaComplement(b){ return {A:'T',T:'A',C:'G',G:'C'}[b]; }
+  function rnaComplementOfTemplate(b){ return {A:'U',T:'A',C:'G',G:'C'}[b]; }
+  function rnaBaseComplement(b){ return {A:'U',U:'A',C:'G',G:'C'}[b]; }
+  function anticodonFromCodon(codon){ return codon.split('').map(rnaBaseComplement).join(''); }
+  function bondsBetween(b1){ return (b1==='A'||b1==='T') ? '••' : '•••'; }
+
+  function shuffle(arr){
+    var a = arr.slice();
+    for (var i=a.length-1;i>0;i--){
+      var j = Math.floor(Math.random()*(i+1));
+      var tmp=a[i]; a[i]=a[j]; a[j]=tmp;
+    }
+    return a;
+  }
+
+  function pickDistractors(correctCodon, n){
+    var pool = shuffle(SENSE_CODONS.filter(function(c){ return c!==correctCodon; }));
+    return pool.slice(0,n);
+  }
+
+  function buildEventData(event, difficultyKey){
+    var codonsRNA = event.codons[difficultyKey];
+    var mrna = codonsRNA.join('').split('');
+    var coding = mrna.map(function(b){ return b==='U' ? 'T' : b; });
+    var template = coding.map(dnaComplement);
+
+    var codonInfo = codonsRNA.map(function(codon){
+      var entry = CODON_TABLE[codon];
+      if (entry === 'STOP'){ return { codon:codon, stop:true }; }
+      var correctAnticodon = anticodonFromCodon(codon);
+      var options = [{ anticodon:correctAnticodon, amino: entry.es+' ('+entry.a+')', abbr:entry.a, correct:true }];
+      pickDistractors(codon,2).forEach(function(dc){
+        var dEntry = CODON_TABLE[dc];
+        options.push({ anticodon:anticodonFromCodon(dc), amino: dEntry.es+' ('+dEntry.a+')', abbr:dEntry.a, correct:false });
+      });
+      return { codon:codon, options:options, aminoAbbr:entry.a };
+    });
+
+    return { coding:coding, template:template, mrna:mrna, codonInfo:codonInfo };
+  }
+
+  /* ============ NAVEGACIÓN ============ */
+  function showScreen(id){
+    var all = document.querySelectorAll('.screen');
+    for (var i=0;i<all.length;i++){ all[i].classList.remove('active'); }
+    document.getElementById(id).classList.add('active');
+    window.scrollTo({top:0, behavior:'smooth'});
+    updateStepper(id);
+  }
+
+  function updateStepper(id){
+    var nodes = document.querySelectorAll('.stepper__node');
+    var map = {
+      'screen-events':0,'screen-intro':0,'screen-difficulty':0,'screen-reveal':0,'screen-choice':0,
+      'screen-replication':1,'screen-transcription':1,'screen-translation':1,
+      'screen-replication-end':2,'screen-protein-end':2
+    };
+    var stage = map[id] !== undefined ? map[id] : 0;
+    nodes[1].textContent = (id==='screen-replication'||id==='screen-replication-end') ? '② Replicación' :
+                            (id==='screen-transcription'||id==='screen-translation'||id==='screen-protein-end') ? '② Transcripción / Traducción' : '② Proceso';
+    nodes[2].textContent = (id==='screen-replication-end') ? '③ 2 ADN idénticos' :
+                            (id==='screen-protein-end') ? '③ Proteína funcional' : '③ Resultado';
+    for (var i=0;i<nodes.length;i++){
+      nodes[i].classList.toggle('is-active', i===stage);
+      nodes[i].classList.toggle('is-done', i<stage);
+    }
+  }
+
+  function toast(msg, type){
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + (type||'');
+    clearTimeout(toast._h);
+    toast._h = setTimeout(function(){ t.classList.remove('show'); }, 1600);
+  }
+
+  function makeTile(letter, extraClass, isRna){
+    var tile = document.createElement('div');
+    tile.className = 'tile ' + extraClass + ' base-' + letter + (isRna ? ' rna' : '');
+    tile.textContent = letter;
+    return tile;
+  }
+
+  /* ============ CRONÓMETRO ============ */
+  var timerState = { remaining:0, intervalId:null, active:false, onExpire:null };
+
+  function startTimer(seconds, onExpireCb){
+    stopTimer();
+    timerState.remaining = seconds;
+    timerState.onExpire = onExpireCb;
+    timerState.active = true;
+    renderTimerDisplay();
+    timerState.intervalId = setInterval(function(){
+      timerState.remaining--;
+      renderTimerDisplay();
+      if (timerState.remaining <= 0){
+        stopTimer();
+        if (timerState.onExpire) timerState.onExpire();
+      }
+    }, 1000);
+  }
+  function stopTimer(){
+    if (timerState.intervalId) clearInterval(timerState.intervalId);
+    timerState.intervalId = null;
+    timerState.active = false;
+    renderTimerDisplay();
+  }
+  function renderTimerDisplay(){
+    var badge = document.getElementById('timer-badge');
+    var txt = document.getElementById('timer-text');
+    if (!timerState.active){ badge.classList.remove('show'); return; }
+    badge.classList.add('show');
+    var m = Math.floor(timerState.remaining/60);
+    var s = timerState.remaining%60;
+    txt.textContent = m + ':' + (s<10?'0':'') + s;
+    badge.classList.toggle('low', timerState.remaining<=15);
+  }
+
+  /* ============ RADICALES LIBRES (errores) ============ */
+  var mistakesState = { count:0, max:4 };
+
+  function resetMistakes(){
+    mistakesState.count = 0;
+    document.getElementById('radicals-badge').classList.add('show');
+    renderRadicalsBadge();
+  }
+  function hideRadicalsBadge(){
+    document.getElementById('radicals-badge').classList.remove('show');
+  }
+  function renderRadicalsBadge(){
+    document.getElementById('radicals-text').textContent = mistakesState.count + ' / ' + mistakesState.max;
+    document.getElementById('radicals-badge').classList.toggle('danger', mistakesState.count >= mistakesState.max-1);
+  }
+  function registerMistake(){
+    mistakesState.count++;
+    renderRadicalsBadge();
+    if (mistakesState.count < mistakesState.max){
+      toast('☢️ Radical libre generado ('+mistakesState.count+'/'+mistakesState.max+')', 'err');
+    } else {
+      triggerGameOver();
+    }
+  }
+  function triggerGameOver(){
+    stopTimer();
+    toast('💥 4 radicales libres: la célula no resistió.', 'err');
+    if (activeAttemptContext === 'replication'){
+      lockAllIn('#screen-replication');
+      document.getElementById('rep-gameover').style.display='flex';
+    } else if (activeAttemptContext === 'transcription'){
+      showScreen('screen-transcription');
+      lockAllIn('#screen-transcription');
+      document.getElementById('tr-gameover').style.display='flex';
+    }
+  }
+  function lockAllIn(selector){
+    var tiles = document.querySelectorAll(selector + ' .tile.draggable, ' + selector + ' .trna-tile, ' + selector + ' .ligase-tile');
+    for (var i=0;i<tiles.length;i++){ tiles[i].classList.add('disabled-tile'); }
+  }
+  function onTimerExpire(){
+    toast('⏱️ Se acabó el tiempo', 'err');
+    if (activeAttemptContext === 'replication'){
+      document.getElementById('rep-timeout').style.display='flex';
+      lockAllIn('#screen-replication');
+    } else if (activeAttemptContext === 'transcription'){
+      showScreen('screen-transcription');
+      document.getElementById('tr-timeout').style.display='flex';
+      lockAllIn('#screen-transcription');
+    }
+  }
+
+  /* ============ DRAG & DROP DE BASES + DOBLE CLIC ============ */
+  var dragState = null;
+  var handCursor = document.getElementById('hand-cursor');
+
+  function positionHand(e){ handCursor.style.left=e.clientX+'px'; handCursor.style.top=e.clientY+'px'; }
+
+  /* Agrupa las actualizaciones visuales de arrastre en un solo requestAnimationFrame
+     por cuadro: más fluido y con menor consumo en equipos móviles. */
+  function scheduleDragUpdate(getCurrent, dragObj, applyFn){
+    if (dragObj.rafPending) return;
+    dragObj.rafPending = true;
+    requestAnimationFrame(function(){
+      dragObj.rafPending = false;
+      if (getCurrent() !== dragObj) return;
+      applyFn();
+    });
+  }
+  /* Resalta en vivo el casillero/zona sobre la que está el dedo o el mouse mientras se arrastra. */
+  function updateHoverHighlight(dragObj, e, tile, selector, hoverClass){
+    tile.style.pointerEvents='none';
+    var el = document.elementFromPoint(e.clientX, e.clientY);
+    tile.style.pointerEvents='';
+    var target = el ? el.closest(selector) : null;
+    if (dragObj.hoverEl && dragObj.hoverEl !== target){
+      dragObj.hoverEl.classList.remove(hoverClass);
+      dragObj.hoverEl = null;
+    }
+    if (target && target !== dragObj.hoverEl){
+      target.classList.add(hoverClass);
+      dragObj.hoverEl = target;
+    }
+  }
+  function clearHover(dragObj, hoverClass){
+    if (dragObj.hoverEl){
+      dragObj.hoverEl.classList.remove(hoverClass);
+      dragObj.hoverEl = null;
+    }
+  }
+
+  function makeDraggable(tile){
+    tile.addEventListener('pointerdown', onPointerDown);
+    tile.addEventListener('dblclick', onDoubleClick);
+  }
+
+  function onPointerDown(e){
+    var tile = e.currentTarget;
+    if (tile.classList.contains('locked') || tile.classList.contains('disabled-tile')) return;
+    e.preventDefault();
+    var rect = tile.getBoundingClientRect();
+    dragState = {
+      tile:tile,
+      startClientX:e.clientX, startClientY:e.clientY,
+      startParent:tile.parentElement,
+      hoverEl:null, rafPending:false
+    };
+    try { tile.setPointerCapture(e.pointerId); } catch(err){}
+    tile.classList.add('dragging');
+    tile.style.position='fixed';
+    tile.style.left = rect.left+'px';
+    tile.style.top = rect.top+'px';
+    tile.style.width = rect.width+'px';
+    tile.style.height = rect.height+'px';
+    tile.style.margin='0';
+    tile.style.zIndex=1000;
+    tile.style.transform='translate(0px,0px) scale(1.12)';
+    handCursor.classList.add('show');
+    positionHand(e);
+    tile.addEventListener('pointermove', onPointerMove);
+    tile.addEventListener('pointerup', onPointerUp);
+    tile.addEventListener('pointercancel', onPointerUp);
+  }
+  function onPointerMove(e){
+    if (!dragState) return;
+    var current = dragState;
+    current.lastEvent = e;
+    scheduleDragUpdate(function(){ return dragState; }, current, function(){
+      var ev = current.lastEvent;
+      var dx = ev.clientX - current.startClientX;
+      var dy = ev.clientY - current.startClientY;
+      current.tile.style.transform = 'translate('+dx+'px,'+dy+'px) scale(1.12)';
+      positionHand(ev);
+      updateHoverHighlight(current, ev, current.tile, '.slot:not(.filled)', 'hover-target');
+    });
+  }
+
+  function resetTileInlineStyles(tile){
+    tile.style.position='static'; tile.style.left=''; tile.style.top='';
+    tile.style.width=''; tile.style.height=''; tile.style.margin=''; tile.style.zIndex='';
+    tile.style.transform='';
+  }
+  function returnTileToTray(tile, tray){
+    resetTileInlineStyles(tile);
+    tray.appendChild(tile);
+  }
+  function lockTileIntoSlot(tile, slot){
+    resetTileInlineStyles(tile);
+    tile.classList.remove('draggable');
+    tile.classList.add('locked');
+    slot.innerHTML='';
+    slot.appendChild(tile);
+    slot.classList.add('filled');
+  }
+
+  function onPointerUp(e){
+    if (!dragState) return;
+    var tile = dragState.tile;
+    var startParent = dragState.startParent;
+    clearHover(dragState, 'hover-target');
+    tile.classList.remove('dragging');
+    try { tile.releasePointerCapture(e.pointerId); } catch(err){}
+    tile.removeEventListener('pointermove', onPointerMove);
+    tile.removeEventListener('pointerup', onPointerUp);
+    tile.removeEventListener('pointercancel', onPointerUp);
+    handCursor.classList.remove('show');
+
+    tile.style.pointerEvents='none';
+    var dropEl = document.elementFromPoint(e.clientX, e.clientY);
+    tile.style.pointerEvents='';
+
+    var slot = dropEl ? dropEl.closest('.slot') : null;
+
+    if (slot && !slot.classList.contains('filled')){
+      var expected = slot.dataset.answer;
+      var given = tile.dataset.base;
+      if (expected === given){
+        lockTileIntoSlot(tile, slot);
+        toast('¡Correcto! '+given+' empareja con '+expected, 'ok');
+        onSlotFilled();
+      } else {
+        slot.classList.add('shake');
+        setTimeout(function(){ slot.classList.remove('shake'); }, 400);
+        toast(given+' no es complementario aquí. Intenta de nuevo.', 'err');
+        registerMistake();
+        returnTileToTray(tile, startParent);
+      }
+    } else {
+      returnTileToTray(tile, startParent);
+    }
+    dragState = null;
+  }
+
+  function onDoubleClick(e){
+    var tile = e.currentTarget;
+    if (tile.classList.contains('locked') || tile.classList.contains('disabled-tile')) return;
+    var activeScreen = document.querySelector('.screen.active');
+    if (!activeScreen) return;
+    var given = tile.dataset.base;
+    var slots = activeScreen.querySelectorAll('.slot:not(.filled)');
+    var target = null;
+    for (var i=0;i<slots.length;i++){
+      if (slots[i].dataset.answer === given){ target = slots[i]; break; }
+    }
+    if (target){
+      lockTileIntoSlot(tile, target);
+      toast('¡Correcto! '+given+' ubicado automáticamente.', 'ok');
+      onSlotFilled();
+    } else {
+      toast('No queda ningún casillero pendiente para '+given+'.', 'err');
+    }
+  }
+  var onSlotFilled = function(){};
+
+  /* ============ DRAG DE LA LIGASA (SELLADO) ============ */
+  var ligaseDragState = null;
+
+  function onLigasePointerDown(e){
+    var tile = e.currentTarget;
+    if (tile.classList.contains('disabled-tile')) return;
+    e.preventDefault();
+    var rect = tile.getBoundingClientRect();
+    ligaseDragState = { tile:tile, startClientX:e.clientX, startClientY:e.clientY, homeParent:tile.parentElement, homeNext:tile.nextSibling, hoverEl:null, rafPending:false };
+    try { tile.setPointerCapture(e.pointerId); } catch(err){}
+    tile.classList.add('dragging');
+    tile.style.position='fixed';
+    tile.style.left=rect.left+'px'; tile.style.top=rect.top+'px';
+    tile.style.width=rect.width+'px'; tile.style.height=rect.height+'px';
+    tile.style.margin='0'; tile.style.zIndex=1000;
+    tile.style.transform='translate(0px,0px) scale(1.15)';
+    handCursor.classList.add('show');
+    positionHand(e);
+    tile.addEventListener('pointermove', onLigasePointerMove);
+    tile.addEventListener('pointerup', onLigasePointerUp);
+    tile.addEventListener('pointercancel', onLigasePointerUp);
+  }
+  function onLigasePointerMove(e){
+    if (!ligaseDragState) return;
+    var current = ligaseDragState;
+    current.lastEvent = e;
+    scheduleDragUpdate(function(){ return ligaseDragState; }, current, function(){
+      var ev = current.lastEvent;
+      var dx = ev.clientX - current.startClientX;
+      var dy = ev.clientY - current.startClientY;
+      current.tile.style.transform = 'translate('+dx+'px,'+dy+'px) scale(1.15)';
+      positionHand(ev);
+      updateHoverHighlight(current, ev, current.tile, '.seal-target:not(.sealed)', 'hover-target');
+    });
+  }
+  function onLigasePointerUp(e){
+    if (!ligaseDragState) return;
+    var tile = ligaseDragState.tile;
+    var home = ligaseDragState.homeParent;
+    var homeNext = ligaseDragState.homeNext;
+    clearHover(ligaseDragState, 'hover-target');
+    tile.classList.remove('dragging');
+    try { tile.releasePointerCapture(e.pointerId); } catch(err){}
+    tile.removeEventListener('pointermove', onLigasePointerMove);
+    tile.removeEventListener('pointerup', onLigasePointerUp);
+    tile.removeEventListener('pointercancel', onLigasePointerUp);
+    handCursor.classList.remove('show');
+
+    tile.style.pointerEvents='none';
+    var dropEl = document.elementFromPoint(e.clientX, e.clientY);
+    tile.style.pointerEvents='';
+
+    resetTileInlineStyles(tile);
+    if (homeNext) home.insertBefore(tile, homeNext); else home.appendChild(tile);
+
+    var target = dropEl ? dropEl.closest('.seal-target') : null;
+    if (target && !target.classList.contains('sealed')){
+      sealTarget(target);
+    }
+    ligaseDragState = null;
+  }
+  function sealTarget(target){
+    target.classList.add('sealed');
+    target.querySelector('.seal-status').textContent='✅ sellada';
+    var num = target.dataset.target;
+    if (num==='1') ligaseState.sealed1 = true;
+    if (num==='2') ligaseState.sealed2 = true;
+    toast('Hebra '+num+' sellada por la ligasa.', 'ok');
+    if (ligaseState.sealed1 && ligaseState.sealed2){
+      setTimeout(function(){
+        stopTimer();
+        hideRadicalsBadge();
+        renderReplicationEnd();
+        showScreen('screen-replication-end');
+      }, 500);
+    }
+  }
+  var ligaseState = { sealed1:false, sealed2:false };
+  function resetLigaseZone(){
+    ligaseState.sealed1 = false;
+    ligaseState.sealed2 = false;
+    document.getElementById('ligase-zone').style.display='none';
+    ['seal-target-1','seal-target-2'].forEach(function(id){
+      var t = document.getElementById(id);
+      t.classList.remove('sealed');
+      t.querySelector('.seal-status').textContent='pendiente';
+    });
+  }
+
+  /* ============ REPLICACIÓN ============ */
+  var repState = { topoDone:false };
+
+  function setupReplicationPanels(){
+    document.getElementById('rep1-old').innerHTML='';
+    document.getElementById('rep1-new').innerHTML='';
+    document.getElementById('rep2-old').innerHTML='';
+    document.getElementById('rep2-new').innerHTML='';
+    document.getElementById('rep-tray').innerHTML='';
+    updateRepProgress();
+
+    TEMPLATE_STRAND.forEach(function(b){ document.getElementById('rep1-old').appendChild(makeTile(b,'fixed',false)); });
+    CODING_STRAND.forEach(function(b){
+      var slot=document.createElement('div'); slot.className='slot'; slot.dataset.answer=b;
+      document.getElementById('rep1-new').appendChild(slot);
+    });
+    CODING_STRAND.forEach(function(b){ document.getElementById('rep2-old').appendChild(makeTile(b,'fixed',false)); });
+    TEMPLATE_STRAND.forEach(function(b){
+      var slot=document.createElement('div'); slot.className='slot'; slot.dataset.answer=b;
+      document.getElementById('rep2-new').appendChild(slot);
+    });
+
+    var needed = CODING_STRAND.concat(TEMPLATE_STRAND);
+    var shuffled = shuffle(needed);
+    var tray = document.getElementById('rep-tray');
+    shuffled.forEach(function(b,i){
+      var tile = makeTile(b,'draggable',false);
+      tile.dataset.base=b; tile.id='rep-tile-'+i;
+      makeDraggable(tile);
+      tray.appendChild(tile);
+    });
+  }
+  function repTotal(){ return CODING_STRAND.length + TEMPLATE_STRAND.length; }
+  function updateRepProgress(){
+    var filled = document.querySelectorAll('#screen-replication .slot.filled').length;
+    document.getElementById('rep-progress').textContent = filled + ' / ' + repTotal() + ' nucleótidos correctamente emparejados.';
+    if (filled === repTotal() && repTotal()>0){
+      document.getElementById('ligase-zone').style.display='block';
+      toast('Todos los nucleótidos correctos. ¡Arrastra la ligasa para sellar cada hebra!', 'ok');
+    }
+  }
+
+  function beginReplicationAttempt(){
+    activeAttemptContext = 'replication';
+    resetMistakes();
+    repState.topoDone = false;
+    document.getElementById('kit-topo-card').style.display = ACTIVE_DIFFICULTY.extraSteps ? 'block' : 'none';
+    document.getElementById('btn-activar-topo').disabled = false;
+    document.getElementById('replication-locked').style.display='flex';
+    document.getElementById('replication-area').style.display='none';
+    document.getElementById('rep-timeout').style.display='none';
+    document.getElementById('rep-gameover').style.display='none';
+    document.getElementById('rep-objective').textContent = '🎯 Objetivo: ' + ACTIVE_EVENT.replicationPurpose;
+    resetLigaseZone();
+    setupReplicationPanels();
+    if (ACTIVE_DIFFICULTY.timerSeconds){
+      startTimer(ACTIVE_DIFFICULTY.timerSeconds, onTimerExpire);
+    } else {
+      stopTimer();
+    }
+  }
+
+  /* ============ TRANSCRIPCIÓN (ARNm) ============ */
+  var trState = { factorsDone:false };
+
+  function setupTranscriptionPanel(){
+    document.getElementById('tr-template').innerHTML='';
+    document.getElementById('tr-mrna').innerHTML='';
+    document.getElementById('tr-tray').innerHTML='';
+    updateTrProgress();
+    document.getElementById('btn-goto-translation').style.display='none';
+
+    TEMPLATE_STRAND.forEach(function(b){ document.getElementById('tr-template').appendChild(makeTile(b,'fixed',false)); });
+    MRNA_STRAND.forEach(function(b){
+      var slot=document.createElement('div'); slot.className='slot rna'; slot.dataset.answer=b;
+      document.getElementById('tr-mrna').appendChild(slot);
+    });
+
+    var shuffled = shuffle(MRNA_STRAND);
+    var tray = document.getElementById('tr-tray');
+    shuffled.forEach(function(b,i){
+      var tile = makeTile(b,'draggable',true);
+      tile.dataset.base=b; tile.id='tr-tile-'+i;
+      makeDraggable(tile);
+      tray.appendChild(tile);
+    });
+  }
+  function updateTrProgress(){
+    var filled = document.querySelectorAll('#screen-transcription .slot.filled').length;
+    document.getElementById('tr-progress').textContent = filled + ' / ' + MRNA_STRAND.length + ' bases del ARNm completadas.';
+    if (filled === MRNA_STRAND.length && MRNA_STRAND.length>0){
+      document.getElementById('btn-goto-translation').style.display='inline-flex';
+      toast('ARNm completo. ¡Listo para el ribosoma!', 'ok');
+    }
+  }
+
+  function beginTranscriptionAttempt(){
+    activeAttemptContext = 'transcription';
+    resetMistakes();
+    trState.factorsDone = false;
+    var showFactorBtn = ACTIVE_DIFFICULTY.extraSteps;
+    document.getElementById('btn-activar-factores').style.display = showFactorBtn ? 'inline-flex' : 'none';
+    document.getElementById('btn-activar-factores').disabled = false;
+    document.getElementById('transcription-locked').style.display='flex';
+    document.getElementById('transcription-area').style.display='none';
+    document.getElementById('tr-timeout').style.display='none';
+    document.getElementById('tr-gameover').style.display='none';
+    document.getElementById('tr-objective').textContent = '🎯 Objetivo: ' + ACTIVE_EVENT.transcriptionPurpose;
+    setupTranscriptionPanel();
+    if (ACTIVE_DIFFICULTY.timerSeconds){
+      startTimer(ACTIVE_DIFFICULTY.timerSeconds, onTimerExpire);
+    } else {
+      stopTimer();
+    }
+  }
+
+  /* ============ TRADUCCIÓN (RIBOSOMA INTERACTIVO) ============ */
+  var currentCodonIndex = 0;
+  var peptideChain = [];
+  var trnaDragState = null;
+
+  function setupTranslation(){
+    currentCodonIndex = 0;
+    peptideChain = [];
+    document.getElementById('tl-objective').textContent = '🎯 Objetivo: ' + ACTIVE_EVENT.transcriptionPurpose;
+    renderCodonRow();
+    renderPeptideRow();
+    renderTranslationStep();
+  }
+  function renderCodonRow(){
+    var row = document.getElementById('codon-row');
+    row.innerHTML='';
+    CODON_INFO.forEach(function(info, idx){
+      var block=document.createElement('div');
+      block.className='codon-block'+(idx===currentCodonIndex?' is-current':(idx<currentCodonIndex?' is-done':''));
+      info.codon.split('').forEach(function(l){ block.appendChild(makeTile(l,'fixed',true)); });
+      var tag=document.createElement('div');
+      tag.className='codon-tag';
+      tag.textContent = info.stop ? 'STOP' : (idx<currentCodonIndex ? info.aminoAbbr : '···');
+      block.appendChild(tag);
+      if (idx===currentCodonIndex && !info.stop){
+        var dz=document.createElement('div');
+        dz.className='codon-drop-zone';
+        dz.id='codon-drop-zone';
+        dz.textContent='suelta el ARNt aquí';
+        block.appendChild(dz);
+      }
+      row.appendChild(block);
+    });
+  }
+  function renderPeptideRow(){
+    var row=document.getElementById('peptide-row');
+    row.innerHTML='';
+    peptideChain.forEach(function(short,i){
+      if (i>0){ var link=document.createElement('div'); link.className='peptide-link'; row.appendChild(link); }
+      var bead=document.createElement('div'); bead.className='peptide-bead'; bead.textContent=short;
+      row.appendChild(bead);
+    });
+    if (peptideChain.length===0){
+      var hint=document.createElement('div');
+      hint.style.fontFamily='var(--font-mono)'; hint.style.fontSize='11.5px'; hint.style.color='var(--ink-soft)';
+      hint.textContent='(vacía — aún no se ha unido ningún aminoácido)';
+      row.appendChild(hint);
+    }
+  }
+
+  function makeTrnaDraggable(tile){ tile.addEventListener('pointerdown', onTrnaPointerDown); }
+
+  function onTrnaPointerDown(e){
+    var tile = e.currentTarget;
+    if (tile.classList.contains('disabled-tile')) return;
+    e.preventDefault();
+    var rect = tile.getBoundingClientRect();
+    trnaDragState = { tile:tile, startClientX:e.clientX, startClientY:e.clientY, homeParent:tile.parentElement, hoverEl:null, rafPending:false };
+    try { tile.setPointerCapture(e.pointerId); } catch(err){}
+    tile.classList.add('dragging');
+    tile.style.position='fixed';
+    tile.style.left=rect.left+'px'; tile.style.top=rect.top+'px';
+    tile.style.width=rect.width+'px'; tile.style.height=rect.height+'px';
+    tile.style.margin='0'; tile.style.zIndex=1000;
+    tile.style.transform='translate(0px,0px) scale(1.08)';
+    handCursor.classList.add('show');
+    positionHand(e);
+    tile.addEventListener('pointermove', onTrnaPointerMove);
+    tile.addEventListener('pointerup', onTrnaPointerUp);
+    tile.addEventListener('pointercancel', onTrnaPointerUp);
+  }
+  function onTrnaPointerMove(e){
+    if (!trnaDragState) return;
+    var current = trnaDragState;
+    current.lastEvent = e;
+    scheduleDragUpdate(function(){ return trnaDragState; }, current, function(){
+      var ev = current.lastEvent;
+      var dx = ev.clientX - current.startClientX;
+      var dy = ev.clientY - current.startClientY;
+      current.tile.style.transform = 'translate('+dx+'px,'+dy+'px) scale(1.08)';
+      positionHand(ev);
+      updateHoverHighlight(current, ev, current.tile, '.codon-drop-zone', 'hover-target');
+    });
+  }
+  function onTrnaPointerUp(e){
+    if (!trnaDragState) return;
+    var tile = trnaDragState.tile;
+    var home = trnaDragState.homeParent;
+    clearHover(trnaDragState, 'hover-target');
+    tile.classList.remove('dragging');
+    try { tile.releasePointerCapture(e.pointerId); } catch(err){}
+    tile.removeEventListener('pointermove', onTrnaPointerMove);
+    tile.removeEventListener('pointerup', onTrnaPointerUp);
+    tile.removeEventListener('pointercancel', onTrnaPointerUp);
+    handCursor.classList.remove('show');
+
+    tile.style.pointerEvents='none';
+    var dropEl = document.elementFromPoint(e.clientX, e.clientY);
+    tile.style.pointerEvents='';
+
+    var zone = dropEl ? dropEl.closest('.codon-drop-zone') : null;
+
+    if (zone){
+      if (tile.dataset.correct === 'true'){
+        var amino = tile.dataset.amino;
+        tile.remove();
+        zone.classList.add('matched');
+        zone.textContent = '✅ '+amino;
+        toast('¡Anticodón complementario! Aminoácido añadido a la cadena.', 'ok');
+        peptideChain.push(amino);
+        setTimeout(function(){
+          currentCodonIndex++;
+          renderCodonRow(); renderPeptideRow(); renderTranslationStep();
+        }, 600);
+      } else {
+        zone.classList.add('shake');
+        setTimeout(function(){ zone.classList.remove('shake'); }, 400);
+        toast('Ese anticodón no es complementario a este codón.', 'err');
+        registerMistake();
+        resetTileInlineStyles(tile);
+        home.appendChild(tile);
+      }
+    } else {
+      resetTileInlineStyles(tile);
+      home.appendChild(tile);
+    }
+    trnaDragState = null;
+  }
+
+  function renderTranslationStep(){
+    var container=document.getElementById('translation-options');
+    container.innerHTML='';
+    var info = CODON_INFO[currentCodonIndex];
+    if (!info) return;
+
+    if (info.stop){
+      var wrap=document.createElement('div');
+      wrap.className='callout warn';
+      wrap.innerHTML='El codón <b>'+info.codon+'</b> es un codón de <b>término</b>: ningún ARNt lo reconoce. Aquí actúa el <b>factor de liberación</b>.';
+      container.appendChild(wrap);
+      var btn=document.createElement('button');
+      btn.className='btn btn--primary'; btn.style.marginTop='12px';
+      btn.textContent='Activar factor de liberación';
+      btn.addEventListener('click', function(){
+        stopTimer();
+        toast('¡Proteína liberada!', 'ok');
+        setTimeout(function(){ renderProteinEnd(); showScreen('screen-protein-end'); }, 500);
+      });
+      container.appendChild(btn);
+      return;
+    }
+
+    var hint=document.createElement('p');
+    hint.className='tray-hint';
+    hint.textContent='💡 Arrastra el ARNt con el anticodón correcto hasta el recuadro "suelta el ARNt aquí" del codón resaltado arriba.';
+    container.appendChild(hint);
+
+    var tray=document.createElement('div');
+    tray.className='tray trna-tray';
+    shuffle(info.options).forEach(function(opt){
+      var tile=document.createElement('div');
+      tile.className='trna-tile';
+      tile.dataset.correct = opt.correct ? 'true' : 'false';
+      tile.dataset.amino = opt.abbr;
+      tile.innerHTML = '<div class="trna-anticodon">'+opt.anticodon+'</div><div class="trna-amino">'+opt.amino+'</div>';
+      makeTrnaDraggable(tile);
+      tray.appendChild(tile);
+    });
+    container.appendChild(tray);
+  }
+
+  /* ============ RENDER PANTALLAS DE DATOS ============ */
+  function renderReveal(){
+    var codingEl=document.getElementById('reveal-coding');
+    var templateEl=document.getElementById('reveal-template');
+    var bondsEl=document.getElementById('reveal-bonds');
+    codingEl.innerHTML=''; templateEl.innerHTML=''; bondsEl.innerHTML='';
+    CODING_STRAND.forEach(function(b){ codingEl.appendChild(makeTile(b,'fixed',false)); });
+    TEMPLATE_STRAND.forEach(function(b){ templateEl.appendChild(makeTile(b,'fixed',false)); });
+    CODING_STRAND.forEach(function(b){
+      var d=document.createElement('div'); d.className='bond'; d.textContent=bondsBetween(b);
+      bondsEl.appendChild(d);
+    });
+  }
+
+  function renderEventsGrid(){
+    var grid=document.getElementById('events-grid');
+    grid.innerHTML='';
+    EVENTS.forEach(function(ev){
+      var card=document.createElement('div');
+      card.className='pick-card';
+      card.innerHTML='<div class="emoji">'+ev.icon+'</div><h3>'+ev.title+'</h3><p>'+ev.lede+'</p>';
+      card.addEventListener('click', function(){
+        ACTIVE_EVENT = ev;
+        renderIntroTicket(ev);
+        showScreen('screen-intro');
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  function renderIntroTicket(ev){
+    document.getElementById('ticket-stamp').textContent = ev.urgency;
+    document.getElementById('ticket-eyebrow').textContent = 'Ficha clínica · ' + ev.title;
+    document.getElementById('ticket-filenum').textContent = ev.fileNumber;
+    document.getElementById('ticket-title').textContent = ev.icon + ' ' + ev.title;
+    document.getElementById('ticket-lede').textContent = ev.lede;
+    document.getElementById('ticket-narrative').textContent = ev.narrative;
+  }
+
+  function renderDifficultyGrid(){
+    var grid=document.getElementById('difficulty-grid');
+    grid.innerHTML='';
+    ['basico','medio','dificil'].forEach(function(key){
+      var d = DIFFICULTIES[key];
+      var nt = d.codonCount*3;
+      var card=document.createElement('div');
+      card.className='pick-card';
+      var specParts = [nt+' nucleótidos ('+d.codonCount+' codones)'];
+      specParts.push(d.timerSeconds ? d.timerSeconds+' segundos de cronómetro' : 'sin cronómetro');
+      if (d.extraSteps) specParts.push('paso extra de enzimas');
+      card.innerHTML = '<div class="emoji">'+d.icon+'</div><h3>'+d.label+'</h3><p>'+d.desc+'</p><span class="spec">'+specParts.join(' · ')+'</span>';
+      card.addEventListener('click', function(){
+        ACTIVE_DIFFICULTY = d;
+        var data = buildEventData(ACTIVE_EVENT, key);
+        CODING_STRAND = data.coding; TEMPLATE_STRAND = data.template; MRNA_STRAND = data.mrna; CODON_INFO = data.codonInfo;
+        renderReveal();
+        showScreen('screen-reveal');
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  function renderChoiceScreen(){
+    document.getElementById('choice-purpose-replication').textContent = 'Objetivo: ' + ACTIVE_EVENT.replicationPurpose;
+    document.getElementById('choice-purpose-transcription').textContent = 'Objetivo: ' + ACTIVE_EVENT.transcriptionPurpose;
+    showScreen('screen-choice');
+  }
+
+  function renderReplicationEnd(){
+    document.getElementById('rep-end-text').textContent = ACTIVE_EVENT.replicationResultText;
+    sessionLog.replication = {
+      purpose: ACTIVE_EVENT.replicationPurpose,
+      resultText: ACTIVE_EVENT.replicationResultText,
+      usedExtraSteps: ACTIVE_DIFFICULTY.extraSteps
+    };
+  }
+
+  function renderProteinEnd(){
+    document.getElementById('protein-end-chain').textContent =
+      ACTIVE_EVENT.proteinName + ' obtenido — cadena: ' + peptideChain.join(' – ');
+    document.getElementById('protein-end-insight').textContent = ACTIVE_EVENT.proteinInsight;
+    document.getElementById('protein-end-outcome').textContent = ACTIVE_EVENT.proteinOutcome;
+    sessionLog.translation = {
+      purpose: ACTIVE_EVENT.transcriptionPurpose,
+      proteinName: ACTIVE_EVENT.proteinName,
+      chain: peptideChain.join(' – '),
+      mrna: MRNA_STRAND.join(''),
+      insight: ACTIVE_EVENT.proteinInsight,
+      outcome: ACTIVE_EVENT.proteinOutcome,
+      usedExtraSteps: ACTIVE_DIFFICULTY.extraSteps
+    };
+  }
+
+  /* ============ CÓDIGO ÚNICO Y PDF DE RESUMEN ============ */
+  function generateReportCode(){
+    var now = new Date();
+    var y = now.getFullYear();
+    var mo = String(now.getMonth()+1).padStart(2,'0');
+    var d = String(now.getDate()).padStart(2,'0');
+    var h = String(now.getHours()).padStart(2,'0');
+    var mi = String(now.getMinutes()).padStart(2,'0');
+    var goles = Math.floor(Math.random()*300)+50; // dato random ("goles del mundial") para dar singularidad al código
+    return 'FM-'+y+mo+d+'-'+h+mi+'-G'+goles;
+  }
+
+  function downloadSummaryPdf(){
+    if (!window.jspdf || !window.jspdf.jsPDF){
+      toast('No se pudo cargar el generador de PDF. Revisa tu internet.', 'err');
+      return;
+    }
+    var jsPDF = window.jspdf.jsPDF;
+    var doc = new jsPDF({ unit:'mm', format:'a4' });
+    var pageWidth = doc.internal.pageSize.getWidth();
+    var margin = 18;
+    var maxWidth = pageWidth - margin*2;
+    var y = 22;
+
+    // --- Colores y Estilos ---
+    var colorPrimary = [31, 182, 160]; // accent-teal
+    var colorDark = [10, 21, 18];
+    var colorText = [60, 60, 60];
+
+    function checkPageBreak(next){
+      if (y + next > 275){ doc.addPage(); y = 20; }
+    }
+    
+    // Función para dibujar una cabecera de color
+    function drawHeader(title){
+      doc.setFillColor(colorPrimary[0], colorPrimary[1], colorPrimary[2]);
+      doc.rect(0, 0, pageWidth, 25, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica','bold'); doc.setFontSize(16);
+      doc.text(title, margin, 16);
+      doc.setTextColor(colorText[0], colorText[1], colorText[2]);
+      y = 35;
+    }
+    
+    function h2(text, icon = ''){
+      checkPageBreak(12);
+      doc.setDrawColor(colorPrimary[0], colorPrimary[1], colorPrimary[2]);
+      doc.setLineWidth(0.5);
+      doc.line(margin, y+2, pageWidth-margin, y+2); // Línea separadora
+      doc.setTextColor(colorDark[0], colorDark[1], colorDark[2]);
+      doc.setFont('helvetica','bold'); doc.setFontSize(13);
+      doc.text(icon + ' ' + text, margin, y); 
+      y += 8;
+    }
+    
+    function p(text, isBold = false){
+      if(!text) return;
+      doc.setFont('helvetica', isBold ? 'bold' : 'normal'); 
+      doc.setFontSize(10.5);
+      doc.setTextColor(colorText[0], colorText[1], colorText[2]);
+      var lines = doc.splitTextToSize(text, maxWidth);
+      lines.forEach(function(line){
+        checkPageBreak(6);
+        doc.text(line, margin, y);
+        y += 6;
+      });
+      y += 2;
+    }
+
+    // Función para crear cajas de estudio para la evaluación
+    function studyBox(title, textArray){
+      checkPageBreak(12 + textArray.length * 6);
+      doc.setFillColor(245, 248, 246);
+      doc.setDrawColor(colorPrimary[0], colorPrimary[1], colorPrimary[2]);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(margin, y, maxWidth, 10 + textArray.length * 6, 3, 3, 'FD');
+      y += 7;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+      doc.text(title, margin + 4, y);
+      y += 5;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
+      textArray.forEach(function(txt){
+         doc.text('• ' + txt, margin + 4, y);
+         y += 5;
+      });
+      y += 4;
+    }
+
+    drawHeader('Fábrica Molecular — Reporte y Guía de Estudio');
+
+    doc.setFont('helvetica','italic'); doc.setFontSize(9.5);
+    doc.text('Fecha de generación: ' + new Date().toLocaleString('es-CL'), margin, y);
+    y += 8;
+
+    h2('1. Caso Clínico y Contexto', '📋');
+    p(ACTIVE_EVENT ? (ACTIVE_EVENT.title + ' (' + ACTIVE_EVENT.fileNumber + ')') : 'Sin caso asignado.');
+    if (ACTIVE_EVENT) p(ACTIVE_EVENT.narrative);
+
+    // --- REPORTE DE REPLICACIÓN ---
+    if (sessionLog.replication){
+      h2('2. Proceso Biológico: Replicación del ADN', '🧬');
+      p('Objetivo de la célula:', true); p(sessionLog.replication.purpose);
+      p('Resultado obtenido:', true); p(sessionLog.replication.resultText);
+      
+      // Caja de estudio pedagógica
+      studyBox('📌 Conceptos clave para la evaluación', [
+         'Replicación Semiconservativa: Ambas hebras originales sirven de molde.',
+         'Emparejamiento de bases de ADN: La Adenina (A) se une con la Timina (T).',
+         'Emparejamiento de bases de ADN: La Citosina (C) se une con la Guanina (G).'
+      ]);
+
+      h2('Enzimas involucradas', '⚙️');
+      var repEnzymes = [];
+      if (sessionLog.replication.usedExtraSteps) repEnzymes.push(ENZYME_DESCRIPTIONS.topoisomerasa);
+      repEnzymes.push(ENZYME_DESCRIPTIONS.helicasa, ENZYME_DESCRIPTIONS.adnPolimerasa, ENZYME_DESCRIPTIONS.ligasa);
+      repEnzymes.forEach(function(txt){ p('• ' + txt); });
+    }
+
+    // --- REPORTE DE TRANSCRIPCIÓN ---
+    if (sessionLog.translation){
+      h2('2. Proceso Biológico: Síntesis de Proteínas', '🔬');
+      p('Objetivo:', true); p(sessionLog.translation.purpose);
+      p('ARNm sintetizado:', true); doc.setFont('courier', 'bold'); p(sessionLog.translation.mrna); doc.setFont('helvetica', 'normal');
+      p('Cadena de aminoácidos obtenida:', true); p(sessionLog.translation.chain);
+      p('Análisis celular:', true); p(sessionLog.translation.insight + " " + sessionLog.translation.outcome);
+
+      // Caja de estudio pedagógica
+      studyBox('📌 Conceptos clave para la evaluación', [
+         'Transcripción: El ADN se usa de molde para crear ARN mensajero (ARNm).',
+         'Diferencia del ARN: En lugar de Timina (T), el ARN utiliza Uracilo (U).',
+         'Traducción: El ribosoma lee los codones (tripletes de ARNm) para unir aminoácidos.'
+      ]);
+
+      h2('Maquinaria celular involucrada', '⚙️');
+      var trEnzymes = [ENZYME_DESCRIPTIONS.arnPolimerasa];
+      if (sessionLog.translation.usedExtraSteps) trEnzymes.push(ENZYME_DESCRIPTIONS.factoresTranscripcion);
+      trEnzymes.push(ENZYME_DESCRIPTIONS.ribosoma, ENZYME_DESCRIPTIONS.arnt, ENZYME_DESCRIPTIONS.factorLiberacion);
+      trEnzymes.forEach(function(txt){ p('• ' + txt); });
+    }
+
+    // Firmas y código en el pie de página de cada hoja
+    var code = generateReportCode();
+    var pageCount = doc.internal.getNumberOfPages();
+    for (var i=1;i<=pageCount;i++){
+      doc.setPage(i);
+      doc.setFont('helvetica','normal'); doc.setFontSize(8);
+      doc.setTextColor(150,150,150);
+      doc.text('Código estudiante: ' + code, margin, 287);
+      doc.text('Colegio San Agustín | Prof. Felipe Jiménez', pageWidth-margin, 287, { align:'right' });
+    }
+
+    doc.save('Guia-Estudio-ADN.pdf');
+    toast('PDF generado con éxito. Listo para estudiar.', 'ok');
+}
+
+    function checkPageBreak(next){
+      if (y + next > 275){ doc.addPage(); y = 20; }
+    }
+    function h1(text){
+      doc.setFont('helvetica','bold'); doc.setFontSize(16);
+      doc.text(text, margin, y); y += 8;
+    }
+    function h2(text){
+      checkPageBreak(8);
+      doc.setFont('helvetica','bold'); doc.setFontSize(12);
+      doc.text(text, margin, y); y += 6;
+    }
+    function p(text){
+      doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
+      var lines = doc.splitTextToSize(text, maxWidth);
+      lines.forEach(function(line){
+        checkPageBreak(5);
+        doc.text(line, margin, y);
+        y += 5;
+      });
+      y += 2;
+    }
+
+    h1('Fábrica Molecular — Resumen de sesión');
+    doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
+    doc.text('Generado el ' + new Date().toLocaleString('es-CL'), margin, y);
+    y += 9;
+
+    h2('Caso clínico');
+    p(ACTIVE_EVENT ? (ACTIVE_EVENT.title + ' (' + ACTIVE_EVENT.fileNumber + ')') : 'No se seleccionó ningún caso.');
+    if (ACTIVE_EVENT) p(ACTIVE_EVENT.narrative);
+
+    h2('Nivel de dificultad');
+    p(ACTIVE_DIFFICULTY ? (ACTIVE_DIFFICULTY.label + ' — ' + (ACTIVE_DIFFICULTY.codonCount*3) + ' nucleótidos (' + ACTIVE_DIFFICULTY.codonCount + ' codones), ' + (ACTIVE_DIFFICULTY.timerSeconds ? ACTIVE_DIFFICULTY.timerSeconds + ' segundos de cronómetro' : 'sin cronómetro') + (ACTIVE_DIFFICULTY.extraSteps ? ', con paso extra de enzimas' : '')) : '—');
+
+    if (sessionLog.replication){
+      h2('Replicación del ADN — completada');
+      p('Objetivo: ' + sessionLog.replication.purpose);
+      p('Resultado: ' + sessionLog.replication.resultText);
+      h2('Enzimas involucradas');
+      var repEnzymes = [];
+      if (sessionLog.replication.usedExtraSteps) repEnzymes.push(ENZYME_DESCRIPTIONS.topoisomerasa);
+      repEnzymes.push(ENZYME_DESCRIPTIONS.helicasa, ENZYME_DESCRIPTIONS.adnPolimerasa, ENZYME_DESCRIPTIONS.ligasa);
+      repEnzymes.forEach(function(txt){ p('• ' + txt); });
+    }
+
+    if (sessionLog.translation){
+      h2('Transcripción y Traducción — completada');
+      p('Objetivo: ' + sessionLog.translation.purpose);
+      p('ARNm sintetizado: ' + sessionLog.translation.mrna);
+      p('Proteína obtenida: ' + sessionLog.translation.proteinName + ' — cadena de aminoácidos: ' + sessionLog.translation.chain);
+      p(sessionLog.translation.insight);
+      p(sessionLog.translation.outcome);
+      h2('Maquinaria involucrada');
+      var trEnzymes = [ENZYME_DESCRIPTIONS.arnPolimerasa];
+      if (sessionLog.translation.usedExtraSteps) trEnzymes.push(ENZYME_DESCRIPTIONS.factoresTranscripcion);
+      trEnzymes.push(ENZYME_DESCRIPTIONS.ribosoma, ENZYME_DESCRIPTIONS.arnt, ENZYME_DESCRIPTIONS.factorLiberacion);
+      trEnzymes.forEach(function(txt){ p('• ' + txt); });
+    }
+
+    if (!sessionLog.replication && !sessionLog.translation){
+      p('Aún no se completó ningún proceso en esta sesión.');
+    }
+
+    var code = generateReportCode();
+    var pageCount = doc.internal.getNumberOfPages();
+    for (var i=1;i<=pageCount;i++){
+      doc.setPage(i);
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+      doc.setTextColor(120,120,120);
+      doc.text('Código: ' + code, margin, 290);
+      doc.text('Diseñador: Profesor Felipe Jiménez', pageWidth-margin, 290, { align:'right' });
+      doc.setTextColor(0,0,0);
+    }
+
+    doc.save('resumen-fabrica-molecular.pdf');
+    toast('PDF generado y descargado.', 'ok');
+  }
+
+  /* ============ EVENTOS DE PANTALLA (listeners) ============ */
+  onSlotFilled = function(){
+    if (document.getElementById('screen-replication').classList.contains('active')){ updateRepProgress(); }
+    else if (document.getElementById('screen-transcription').classList.contains('active')){ updateTrProgress(); }
+  };
+
+  document.getElementById('ligase-tile').addEventListener('pointerdown', onLigasePointerDown);
+
+  document.getElementById('btn-accept-mission').addEventListener('click', function(){
+    renderDifficultyGrid();
+    showScreen('screen-difficulty');
+  });
+
+  document.getElementById('btn-goto-choice').addEventListener('click', function(){ renderChoiceScreen(); });
+
+  document.getElementById('choice-replication').addEventListener('click', function(){
+    beginReplicationAttempt();
+    showScreen('screen-replication');
+  });
+  document.getElementById('choice-transcription').addEventListener('click', function(){
+    beginTranscriptionAttempt();
+    showScreen('screen-transcription');
+  });
+
+  document.getElementById('btn-activar-topo').addEventListener('click', function(){
+    repState.topoDone = true;
+    document.getElementById('btn-activar-topo').disabled = true;
+    toast('Topoisomerasa activa: se alivió la tensión del ADN.', 'ok');
+  });
+  document.getElementById('btn-activar-helicasa').addEventListener('click', function(){
+    if (ACTIVE_DIFFICULTY.extraSteps && !repState.topoDone){
+      toast('Primero activa la topoisomerasa.', 'err');
+      return;
+    }
+    document.getElementById('replication-locked').style.display='none';
+    document.getElementById('replication-area').style.display='block';
+    toast('Helicasa activa: la doble hélice se desenrolló.', 'ok');
+  });
+
+  document.getElementById('btn-activar-factores').addEventListener('click', function(){
+    trState.factorsDone = true;
+    document.getElementById('btn-activar-factores').disabled = true;
+    toast('Factores de transcripción reclutados.', 'ok');
+  });
+  document.getElementById('btn-activar-arnpol').addEventListener('click', function(){
+    if (ACTIVE_DIFFICULTY.extraSteps && !trState.factorsDone){
+      toast('Primero recluta los factores de transcripción.', 'err');
+      return;
+    }
+    document.getElementById('transcription-locked').style.display='none';
+    document.getElementById('transcription-area').style.display='block';
+    toast('ARN polimerasa activa: comienza la transcripción local.', 'ok');
+  });
+  document.getElementById('btn-goto-translation').addEventListener('click', function(){
+    setupTranslation();
+    showScreen('screen-translation');
+  });
+
+  document.getElementById('btn-rep-retry').addEventListener('click', function(){
+    document.getElementById('rep-timeout').style.display='none';
+    beginReplicationAttempt();
+  });
+  document.getElementById('btn-tr-retry').addEventListener('click', function(){
+    document.getElementById('tr-timeout').style.display='none';
+    beginTranscriptionAttempt();
+  });
+  document.getElementById('btn-rep-gameover-retry').addEventListener('click', function(){
+    document.getElementById('rep-gameover').style.display='none';
+    beginReplicationAttempt();
+  });
+  document.getElementById('btn-tr-gameover-retry').addEventListener('click', function(){
+    document.getElementById('tr-gameover').style.display='none';
+    beginTranscriptionAttempt();
+  });
+
+  document.getElementById('btn-rep-to-choice').addEventListener('click', function(){ stopTimer(); hideRadicalsBadge(); renderChoiceScreen(); });
+  document.getElementById('btn-prot-to-choice').addEventListener('click', function(){ stopTimer(); hideRadicalsBadge(); renderChoiceScreen(); });
+  document.getElementById('btn-rep-other-case').addEventListener('click', function(){ stopTimer(); hideRadicalsBadge(); resetSessionLog(); showScreen('screen-events'); });
+  document.getElementById('btn-prot-other-case').addEventListener('click', function(){ stopTimer(); hideRadicalsBadge(); resetSessionLog(); showScreen('screen-events'); });
+
+  document.getElementById('btn-rep-pdf').addEventListener('click', downloadSummaryPdf);
+  document.getElementById('btn-prot-pdf').addEventListener('click', downloadSummaryPdf);
+
+  function restartAll(){ stopTimer(); hideRadicalsBadge(); resetSessionLog(); showScreen('screen-events'); }
+  document.getElementById('btn-rep-restart').addEventListener('click', restartAll);
+  document.getElementById('btn-prot-restart').addEventListener('click', restartAll);
+  document.getElementById('btn-restart').addEventListener('click', function(){
+    if (confirm('¿Reiniciar el simulador? Perderás el progreso actual.')){ restartAll(); }
+  });
+
+  /* ============ INICIO ============ */
+  renderEventsGrid();
+  updateStepper('screen-events');
+
+})();
+</script>
+</body>
+</html>

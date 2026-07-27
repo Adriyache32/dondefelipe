@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El mundo de Felipe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --noche:#0e1a1e;
+    --musgo:#1f3d34;
+    --hoja:#4a7c53;
+    --brote:#8fb96a;
+    --niebla:#cfe0dc;
+    --hueso:#f2efe6;
+    --papel:#f4f1e8;
+    --dorado:#e6b455;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    min-height:100vh;color:var(--papel);
+    font-family:"Inter",system-ui,sans-serif;
+    background:
+      radial-gradient(120% 80% at 50% -10%, #2a4a3e 0%, transparent 55%),
+      linear-gradient(180deg, #0e1a1e 0%, #14282a 40%, #1a3128 75%, #22331f 100%);
+    background-attachment:fixed;
+    overflow-x:hidden;
+  }
+
+  /* niebla atmosférica que respira */
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(80% 50% at 50% 100%, rgba(143,185,106,.10), transparent 70%);
+    animation:respira 14s ease-in-out infinite;
+  }
+  @keyframes respira{0%,100%{opacity:.6;}50%{opacity:1;}}
+
+  .lienzo{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:0 22px 80px;}
+
+  /* ---------- encabezado ---------- */
+  header{padding:72px 0 44px;text-align:center;}
+  .marca{
+    font-size:12px;letter-spacing:5px;text-transform:uppercase;
+    color:var(--brote);opacity:.85;margin-bottom:18px;font-weight:500;
+  }
+  h1{
+    font-family:"Fraunces",serif;font-weight:900;
+    font-size:clamp(42px,9vw,86px);line-height:.95;letter-spacing:-.02em;
+    color:var(--papel);
+  }
+  h1 em{font-style:italic;font-weight:400;color:var(--brote);}
+  .intro{
+    margin:22px auto 0;max-width:52ch;font-size:16px;line-height:1.6;
+    color:var(--niebla);opacity:.9;
+  }
+  /* línea de horizonte decorativa */
+  .horizonte{
+    width:100%;max-width:200px;height:1px;margin:34px auto 0;
+    background:linear-gradient(90deg,transparent,var(--brote),transparent);
+    position:relative;
+  }
+  .horizonte::after{
+    content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:7px;height:7px;border-radius:50%;background:var(--dorado);
+    box-shadow:0 0 12px var(--dorado);
+  }
+
+  /* ---------- rejilla de mundos ---------- */
+  .rejilla{
+    display:grid;gap:18px;margin-top:52px;
+    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  }
+  a.mundo{
+    position:relative;display:block;text-decoration:none;color:inherit;
+    padding:26px 24px 24px;border-radius:20px;overflow:hidden;
+    background:linear-gradient(160deg, rgba(31,61,52,.55), rgba(14,26,30,.5));
+    border:1px solid rgba(143,185,106,.16);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    transition:transform .35s cubic-bezier(.2,.7,.3,1), border-color .35s, box-shadow .35s;
+  }
+  /* banda de bioma: color propio de cada mundo */
+  a.mundo::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:4px;
+    background:var(--bioma,var(--hoja));transition:width .35s;
+  }
+  a.mundo:hover{
+    transform:translateY(-6px);
+    border-color:rgba(143,185,106,.4);
+    box-shadow:0 18px 44px rgba(0,0,0,.4), 0 0 0 1px rgba(143,185,106,.1);
+  }
+  a.mundo:hover::before{width:7px;}
+  a.mundo:focus-visible{outline:2px solid var(--dorado);outline-offset:3px;}
+
+  .glifo{
+    font-size:30px;line-height:1;margin-bottom:16px;display:block;
+    filter:saturate(1.1);
+  }
+  .meta{
+    font-size:10.5px;letter-spacing:2px;text-transform:uppercase;
+    color:var(--bioma,var(--brote));opacity:.9;margin-bottom:9px;font-weight:600;
+  }
+  a.mundo h2{
+    font-family:"Fraunces",serif;font-weight:600;font-size:22px;line-height:1.15;
+    letter-spacing:-.01em;margin-bottom:10px;color:var(--papel);
+  }
+  a.mundo p{font-size:14px;line-height:1.5;color:var(--niebla);opacity:.82;}
+  .ir{
+    margin-top:16px;font-size:12.5px;font-weight:600;letter-spacing:.3px;
+    color:var(--brote);display:inline-flex;align-items:center;gap:6px;
+    opacity:0;transform:translateX(-4px);transition:opacity .35s, transform .35s;
+  }
+  a.mundo:hover .ir{opacity:1;transform:none;}
+
+  .falta{opacity:.5;--bioma:#b45a5a;}
+  .falta h2{font-size:17px;}
+  .falta code{background:rgba(242,236,224,.12);padding:1px 6px;border-radius:4px;font-size:12px;}
+
+  /* entrada escalonada */
+  a.mundo{opacity:0;transform:translateY(16px);animation:surge .6s ease forwards;}
+  @keyframes surge{to{opacity:1;transform:none;}}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important;}
+    a.mundo{opacity:1;transform:none;}
+  }
+</style>
+</head>
+<body>
+<div class="lienzo">
+  <header>
+    <div class="marca">Ecosistemas para explorar</div>
+    <h1>El mundo<br>de <em>Felipe</em></h1>
+    <p class="intro">Territorios en tres dimensiones para recorrer con el curso —de la costa rocosa al bosque nativo, de la cordillera a los planetas Mercurio y Venus. Cada mundo se abre por separado.</p>
+    <div class="horizonte"></div>
+  </header>
+
+  <div class="rejilla" id="rejilla"></div>
+</div>
+
+<script>
+/* =============================================================================
+   Al agregar un mundo, escribe su nombre acá. Igual al archivo: 'costa' → mundos/costa.js
+   ============================================================================= */
+var CATALOGO = ['costa', 'bosque', 'andes', 'villa-alemana', 'mercurio', 'venus'];
+
+/* Identidad visual de cada bioma: color de banda y glifo */
+var BIOMA = {
+  'costa':         { color:'#2f89a8', glifo:'\uD83C\uDF0A' },
+  'bosque':        { color:'#4a7c53', glifo:'\uD83C\uDF3F' },
+  'andes':         { color:'#8a94a6', glifo:'\uD83C\uDFD4\uFE0F' },
+  'villa-alemana': { color:'#c98a3c', glifo:'\uD83C\uDFD8\uFE0F' },
+  'mercurio':      { color:'#b07850', glifo:'\uD83E\uDE90' },
+  'venus':         { color:'#cf7f34', glifo:'\uD83C\uDF0B' }
+};
+
+/* Maniquí para que los archivos de mundo no fallen al registrarse acá */
+var nada = function () {};
+var maniqui = { forma: nada, animar: nada, ficha: nada, iniciar: nada,
+                formas: {}, grupos: {}, clima: { viento: 1 }, version: 0 };
+window.MUNDO = window.MUNDO || (typeof Proxy !== 'undefined'
+  ? new Proxy(maniqui, { get: function (t, k) { return (k in t) ? t[k] : nada; } })
+  : maniqui);
+window.MUNDOS = window.MUNDOS || {};
+
+var rejilla = document.getElementById('rejilla');
+var pendientes = CATALOGO.length;
+
+function cargar(id, rutas, i) {
+  if (i >= rutas.length) { listo(); return; }
+  var s = document.createElement('script');
+  s.src = rutas[i];
+  s.onload = listo;
+  s.onerror = function () { cargar(id, rutas, i + 1); };
+  document.head.appendChild(s);
+}
+
+function listo() {
+  if (--pendientes > 0) return;
+  CATALOGO.forEach(function (id, n) {
+    var M = window.MUNDOS[id];
+    var bio = BIOMA[id] || { color: '#4a7c53', glifo: '\uD83C\uDF10' };
+    var a = document.createElement('a');
+    a.href = 'mundo.html#' + id;
+    a.style.setProperty('--bioma', bio.color);
+    a.style.animationDelay = (n * 0.08) + 's';
+    if (!M) {
+      a.className = 'mundo falta';
+      a.innerHTML =
+        '<span class="glifo">\u26A0\uFE0F</span>' +
+        '<div class="meta">No encontrado</div>' +
+        '<h2>' + id + '</h2>' +
+        '<p>Falta <code>mundos/' + id + '.js</code>, o la clave interna no es ' +
+        '<code>MUNDOS[\'' + id + '\']</code>.</p>';
+    } else {
+      a.className = 'mundo';
+      a.innerHTML =
+        '<span class="glifo">' + bio.glifo + '</span>' +
+        '<div class="meta">' + (M.materia || 'Mundo 3D') + '</div>' +
+        '<h2>' + (M.titulo || id) + '</h2>' +
+        '<p>' + (M.resumen || '') + '</p>' +
+        '<span class="ir">Entrar al mundo \u2192</span>';
+    }
+    rejilla.appendChild(a);
+  });
+}
+
+CATALOGO.forEach(function (id) {
+  cargar(id, ['mundos/' + id + '.js', id + '.js'], 0);
+});
+</script>
+</body>
+</html>

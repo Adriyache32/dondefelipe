@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sesión 5 · Calor y Temperatura</title>
+<style>
+  :root{
+    --navy:#1A3A5C;
+    --navy-dark:#102438;
+    --navy-tint:#E8EEF3;
+    --amber:#D4891A;
+    --amber-light:#F2B84D;
+    --amber-glow:#FFD98A;
+    --cold:#3E7CB1;
+    --hot:#C1442D;
+    --white:#FFFFFF;
+    --text:#1F2937;
+    --ok:#3A7D44;
+    --danger:#B23A3A;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;height:100%;
+    font-family:Arial, Helvetica, sans-serif;
+    background:var(--navy-dark);
+    color:var(--text);
+    overflow:hidden;
+  }
+  .deck{
+    position:relative;width:100vw;height:100vh;
+    display:flex;flex-direction:column;background:var(--navy-dark);
+  }
+  /* ---------- TOP BAR ---------- */
+  .topbar{
+    flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+    padding:10px 26px;background:var(--navy);color:var(--white);
+    border-bottom:3px solid var(--amber);
+  }
+  .topbar .brand{display:flex;align-items:center;gap:12px;}
+  .topbar .brand .badge{
+    background:var(--amber);color:var(--navy-dark);font-weight:700;font-size:12px;
+    letter-spacing:.04em;padding:4px 10px;border-radius:20px;text-transform:uppercase;
+  }
+  .topbar .brand .title{font-size:15px;font-weight:700;letter-spacing:.02em;}
+  .topbar .brand .sub{font-size:11.5px;opacity:.8;}
+  .progress-wrap{flex:1;max-width:340px;margin:0 22px;height:6px;background:rgba(255,255,255,.18);border-radius:4px;overflow:hidden;}
+  .progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--amber),var(--amber-light));transition:width .35s ease;}
+  .slide-counter{font-size:12.5px;font-variant-numeric:tabular-nums;opacity:.9;white-space:nowrap;}
+
+  /* ---------- SLIDES ---------- */
+  .slides{position:relative;flex:1 1 auto;overflow:hidden;}
+  .slide{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    padding:34px 56px 20px;opacity:0;visibility:hidden;pointer-events:none;
+    transform:translateX(24px);transition:opacity .38s ease, transform .38s ease;
+    background:linear-gradient(180deg, var(--navy-tint) 0%, #FFFFFF 55%);overflow-y:auto;
+  }
+  .slide.active{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(0);}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;color:var(--amber);font-weight:700;
+    font-size:13px;letter-spacing:.09em;text-transform:uppercase;margin-bottom:6px;
+  }
+  .eyebrow::before{content:"";width:22px;height:3px;background:var(--amber);border-radius:2px;display:inline-block;}
+  h1.slide-title{color:var(--navy);font-size:32px;margin:0 0 4px;line-height:1.15;}
+  h2.slide-sub{color:var(--navy);font-size:19px;margin:0 0 18px;font-weight:400;opacity:.85;}
+  .content-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:30px;flex:1;min-height:0;}
+  .content-grid.single{grid-template-columns:1fr;}
+  .card{background:var(--white);border:1px solid #DCE4EC;border-radius:var(--radius);padding:18px 20px;box-shadow:0 3px 10px rgba(16,36,56,.06);}
+  .card h3{margin:0 0 10px;color:var(--navy);font-size:16px;border-bottom:2px solid var(--navy-tint);padding-bottom:6px;}
+  .card ul{margin:0;padding-left:20px;}
+  .card li{margin-bottom:7px;font-size:14.5px;line-height:1.45;}
+  .pill{display:inline-block;background:var(--navy-tint);color:var(--navy);font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:20px;margin:2px 4px 2px 0;}
+  .pill.amber{background:#FBEBD6;color:var(--amber);}
+  .callout{background:#FFF7EA;border-left:4px solid var(--amber);padding:12px 16px;border-radius:8px;font-size:14.5px;line-height:1.5;}
+  .callout strong{color:var(--navy);}
+  footer.oa-strip{flex:0 0 auto;font-size:11.5px;color:var(--navy);opacity:.75;padding-top:8px;margin-top:auto;border-top:1px dashed #C7D2DC;}
+
+  /* ---------- NAV ---------- */
+  .controls{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:18px;padding:12px 10px;background:var(--navy);border-top:1px solid rgba(255,255,255,.08);}
+  .nav-btn{background:var(--amber);color:var(--navy-dark);border:none;width:40px;height:40px;border-radius:50%;font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s ease, background .15s ease;}
+  .nav-btn:hover{background:var(--amber-light);transform:scale(1.07);}
+  .nav-btn:disabled{opacity:.35;cursor:default;transform:none;}
+  .dots{display:flex;gap:7px;}
+  .dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer;border:none;padding:0;transition:background .2s ease, transform .2s ease;}
+  .dot.active{background:var(--amber);transform:scale(1.25);}
+
+  /* ---------- TITLE SLIDE ---------- */
+  .title-slide{align-items:center;justify-content:center;text-align:center;background:radial-gradient(ellipse at top, #24486e 0%, var(--navy-dark) 70%);}
+  .title-slide .unit-tag{color:var(--amber-light);font-size:14px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;margin-bottom:14px;}
+  .title-slide h1{color:var(--white);font-size:44px;margin:0 0 14px;line-height:1.2;max-width:900px;}
+  .title-slide h1 span{color:var(--amber-light);}
+  .title-slide p.desc{color:#C9D6E4;font-size:16.5px;max-width:640px;margin:0 auto 22px;line-height:1.5;}
+  .oa-card{display:inline-flex;gap:14px;align-items:flex-start;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:var(--radius);padding:16px 22px;max-width:720px;text-align:left;}
+  .oa-card .tag{background:var(--amber);color:var(--navy-dark);font-weight:800;font-size:13px;padding:6px 10px;border-radius:8px;white-space:nowrap;}
+  .oa-card p{color:#DCE6F0;font-size:14px;line-height:1.5;margin:0;}
+
+  /* ---------- QR BOX ---------- */
+  .qr-box{
+    position:absolute;top:22px;right:34px;background:#FFFFFF;border-radius:12px;
+    padding:12px 14px 10px;box-shadow:0 6px 18px rgba(0,0,0,.28);
+    display:flex;flex-direction:column;align-items:center;gap:6px;width:148px;z-index:6;
+  }
+  .qr-box img{width:116px;height:116px;display:block;border-radius:4px;}
+  .qr-box .qr-caption{font-size:11.5px;color:var(--navy);text-align:center;font-weight:700;line-height:1.35;}
+  .qr-box .qr-caption b{color:var(--amber);}
+  .qr-box .qr-url{font-size:8.5px;color:#5b6b7a;text-align:center;word-break:break-all;line-height:1.3;}
+  @media (max-width: 820px){ .qr-box{ display:none; } }
+
+  /* ---------- PARTICLE / KINETIC MODEL ---------- */
+  .kinetic-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;}
+  .particle-box{
+    position:relative;width:100%;max-width:300px;height:190px;border-radius:10px;
+    border:3px solid var(--navy);overflow:hidden;transition:background .4s ease;
+  }
+  .particle{position:absolute;width:16px;height:16px;border-radius:50%;box-shadow:0 0 4px rgba(0,0,0,.25);animation:jiggle var(--dur,1s) ease-in-out infinite alternate;}
+  @keyframes jiggle{ from{ transform:translate(0,0); } to{ transform:translate(var(--ax,6px), var(--ay,6px)); } }
+  .slider-row{display:flex;align-items:center;gap:12px;width:100%;max-width:320px;}
+  .slider-row input[type=range]{flex:1;accent-color:var(--amber);}
+  .temp-readout{font-size:14px;font-weight:700;color:var(--navy);min-width:130px;text-align:right;}
+  .temp-tag{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 10px;border-radius:20px;margin-top:4px;}
+
+  /* ---------- CALCULATORS / CONVERTER ---------- */
+  .calc-box{background:var(--white);border:1px solid #DCE4EC;border-radius:var(--radius);padding:18px 22px;}
+  .calc-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;}
+  .field-box{display:flex;flex-direction:column;gap:4px;min-width:110px;}
+  .field-box label{font-size:12px;font-weight:700;color:var(--navy);}
+  .field-box input,.field-box select{padding:8px 10px;border:2px solid #CBD8E3;border-radius:8px;font-size:15px;font-family:Arial,sans-serif;}
+  .radio-row{display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap;}
+  .radio-row label{font-size:13.5px;display:flex;align-items:center;gap:5px;cursor:pointer;}
+  .calc-btn{background:var(--amber);border:none;color:var(--navy-dark);font-weight:700;padding:9px 20px;border-radius:8px;cursor:pointer;font-size:14px;}
+  .calc-btn:hover{background:var(--amber-light);}
+  .calc-btn.secondary{background:var(--navy-tint);color:var(--navy);}
+  .result-box{margin-top:12px;padding:10px 14px;border-radius:8px;background:#F1F8F1;border-left:4px solid var(--ok);font-size:14px;min-height:18px;}
+  .result-box.error{background:#FBEEEE;border-left-color:var(--danger);color:var(--danger);}
+  .scale-table{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px;}
+  .scale-table td{padding:6px 8px;border:1px solid #DCE4EC;text-align:center;}
+  .scale-table td.label{background:var(--navy);color:var(--white);font-weight:700;text-align:left;}
+  .scale-table td.highlight{background:#FBEBD6;font-weight:700;color:var(--amber);}
+
+  /* ---------- EQUILIBRIUM SIMULATION ---------- */
+  .therm-wrap{display:flex;gap:26px;justify-content:center;align-items:flex-end;margin:10px 0;}
+  .therm-unit{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .therm-tube{position:relative;width:34px;height:150px;background:#EDF1F5;border:3px solid var(--navy);border-radius:16px;overflow:hidden;display:flex;align-items:flex-end;}
+  .therm-fill{width:100%;background:linear-gradient(180deg,var(--hot),var(--cold));transition:height .15s linear, background .15s linear;}
+  .therm-bulb{width:44px;height:44px;border-radius:50%;border:3px solid var(--navy);margin-top:-6px;transition:background .15s linear;}
+  .therm-label{font-size:12.5px;font-weight:700;color:var(--navy);}
+  .therm-value{font-size:15px;font-weight:800;color:var(--navy-dark);}
+  .eq-controls{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-top:6px;}
+  .eq-field{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--navy);font-weight:700;min-width:150px;}
+  .eq-field input[type=range]{accent-color:var(--amber);}
+  .eq-status{text-align:center;font-size:13.5px;background:var(--navy-tint);border-radius:8px;padding:8px 14px;color:var(--navy);font-weight:600;margin-top:8px;}
+
+  /* ---------- ACCORDION (síntesis) ---------- */
+  .acc-item{background:var(--white);border:1px solid #DCE4EC;border-radius:10px;margin-bottom:8px;overflow:hidden;}
+  .acc-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;font-size:14px;font-weight:700;color:var(--navy);}
+  .acc-head:hover{background:var(--navy-tint);}
+  .acc-head .arrow{transition:transform .2s ease;color:var(--amber);font-size:16px;}
+  .acc-item.open .arrow{transform:rotate(90deg);}
+  .acc-body{max-height:0;overflow:hidden;transition:max-height .25s ease;font-size:13.5px;padding:0 14px;color:var(--text);}
+  .acc-item.open .acc-body{max-height:120px;padding:0 14px 12px;}
+
+  table.data-table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  table.data-table th, table.data-table td{border:1px solid #DCE4EC;padding:6px 10px;text-align:left;}
+  table.data-table th{background:var(--navy);color:var(--white);}
+  table.data-table tr:nth-child(even){background:#F5F8FB;}
+  .compare-table td.win{background:#F1F8F1;font-weight:700;color:var(--ok);}
+
+  .steps-list{counter-reset:step;list-style:none;padding:0;margin:0;}
+  .steps-list li{counter-increment:step;position:relative;padding:10px 10px 10px 44px;margin-bottom:8px;background:var(--white);border:1px solid #DCE4EC;border-radius:10px;font-size:14px;line-height:1.4;}
+  .steps-list li::before{content:counter(step);position:absolute;left:10px;top:50%;transform:translateY(-50%);width:24px;height:24px;background:var(--navy);color:var(--white);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;}
+  .closing-q{background:var(--white);border:1px dashed var(--navy);border-radius:10px;padding:12px 16px;margin-bottom:10px;font-size:14.5px;}
+  .closing-q b{color:var(--amber);}
+  .check-item{display:flex;align-items:center;gap:8px;font-size:13.5px;margin-bottom:8px;cursor:pointer;}
+  .check-item input{width:16px;height:16px;accent-color:var(--amber);flex:0 0 auto;}
+  textarea.line{width:100%;border:none;border-bottom:1px solid #9AA9B8;background:transparent;font-family:Arial;font-size:13.5px;resize:none;height:20px;margin-top:4px;}
+
+  @media (max-width:880px){
+    .content-grid{grid-template-columns:1fr;}
+    h1.slide-title{font-size:24px;}
+    .title-slide h1{font-size:30px;}
+  }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="badge">OA 11 · Física</div>
+      <div>
+        <div class="title">Unidad 3: Electricidad y Calor</div>
+        <div class="sub">Sesión 5 · Calor y Temperatura</div>
+      </div>
+    </div>
+    <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="slide-counter"><span id="curNum">1</span> / <span id="totalNum">10</span></div>
+  </div>
+
+  <div class="slides" id="slides">
+
+    <!-- SLIDE 1 : PORTADA -->
+    <section class="slide title-slide">
+      <div class="qr-box">
+        <img src="data:image/png;base64,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" alt="Código QR hacia dondefelipe, sitio de apoyo del curso">
+        <div class="qr-caption">Escanea para más recursos<br>Dirígete a la sección <b>VIII Básico</b></div>
+        <div class="qr-url">fjimenez321-stack.github.io/dondefelipe</div>
+      </div>
+      <div class="unit-tag">8° Básico · Ciencias Naturales · Física</div>
+      <h1>Calor y <span>Temperatura</span>: ¿son lo mismo?</h1>
+      <p class="desc">Si tocas una baranda metálica y una de madera, ambas a la misma temperatura ambiente, ¿por qué el metal se siente más frío? Hoy construiremos modelos para explicar esta diferencia.</p>
+      <div class="oa-card">
+        <div class="tag">OA 11</div>
+        <p>Desarrollar modelos e investigaciones experimentales que expliquen el calor como un proceso de transferencia de energía térmica entre dos o más cuerpos a diferentes temperaturas, considerando su propagación, sus efectos, la cantidad de calor cedida y absorbida, y la diferencia entre calor y temperatura a nivel de partículas.</p>
+      </div>
+    </section>
+
+    <!-- SLIDE 2 : INICIO - ACTIVACIÓN -->
+    <section class="slide">
+      <div class="eyebrow">Inicio · Activación de conocimientos previos</div>
+      <h1 class="slide-title">¿Qué tan caliente está realmente?</h1>
+      <h2 class="slide-sub">Conflicto cognitivo: la sensación térmica puede engañarnos</h2>
+      <div class="content-grid">
+        <div class="card">
+          <h3>Actividad rápida (en silencio)</h3>
+          <ul>
+            <li>Anota, como si fuera un secreto, tu estimación de la temperatura de la sala.</li>
+            <li>Compártela con el curso y compárenla con un termómetro ambiental real.</li>
+            <li>¿Por qué hay diferencias entre lo que cada uno "sintió" y lo que midió el termómetro?</li>
+            <li>¿Por qué después de correr sentimos que el ambiente está "más caliente" que cuando estamos en reposo?</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Bitácora inicial — responde</h3>
+          <p style="font-size:14px;">1. Al tocar una baranda metálica y una de madera, ambas a la misma temperatura ambiente, ¿por qué el metal se siente más frío?</p>
+          <textarea class="line"></textarea>
+          <p style="font-size:14px;">2. ¿Crees que "calor" y "temperatura" significan exactamente lo mismo?</p>
+          <textarea class="line"></textarea>
+          <p style="font-size:14px;">3. Formula una predicción: si mezclas agua caliente con agua fría, ¿a qué temperatura quedará la mezcla?</p>
+          <textarea class="line"></textarea>
+        </div>
+      </div>
+      <footer class="oa-strip">Habilidades: OA a (observar y describir fenómenos) · OA c (formular y fundamentar predicciones)</footer>
+    </section>
+
+    <!-- SLIDE 3 : CONCEPTOS CLAVE -->
+    <section class="slide">
+      <div class="eyebrow">Desarrollo · Conceptos clave</div>
+      <h1 class="slide-title">Temperatura ≠ Calor</h1>
+      <h2 class="slide-sub">Dos conceptos relacionados, pero no iguales</h2>
+      <div class="content-grid">
+        <div class="card">
+          <h3>Temperatura</h3>
+          <ul>
+            <li>Es una medida del <b>promedio de energía cinética</b> de las partículas de un cuerpo.</li>
+            <li>Se mide con un <b>termómetro</b>, en escalas como Celsius, Fahrenheit o Kelvin.</li>
+            <li>Indica qué tan "agitadas" están las partículas: a mayor temperatura, mayor movimiento.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Calor</h3>
+          <ul>
+            <li>Es <b>energía térmica en tránsito</b> entre dos cuerpos que están a diferente temperatura.</li>
+            <li>Siempre fluye desde el cuerpo de <b>mayor</b> hacia el de <b>menor</b> temperatura.</li>
+            <li>No es algo que un cuerpo "tenga" almacenado: es un proceso de transferencia.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout" style="margin-top:14px;"><strong>Para discutir:</strong> ¿es correcto decir "hace calor" o "tengo mucho calor"? ¿En qué situaciones cotidianas usamos mal estos conceptos?</div>
+      <footer class="oa-strip">Habilidades: OA i (crear y ajustar modelos simples) · OA l (comunicar conocimientos de investigaciones científicas)</footer>
+    </section>
+
+    <!-- SLIDE 4 : MODELO CINÉTICO MOLECULAR -->
+    <section class="slide">
+      <div class="eyebrow">Desarrollo · Simulación 1</div>
+      <h1 class="slide-title">Modelo Cinético-Molecular</h1>
+      <h2 class="slide-sub">La temperatura a nivel de las partículas</h2>
+      <div class="content-grid">
+        <div class="card">
+          <h3>¿Qué estás viendo?</h3>
+          <ul>
+            <li>Cada punto representa una <b>partícula</b> del cuerpo.</li>
+            <li>Mueve el control deslizante y observa cómo cambia su movimiento.</li>
+            <li>A mayor temperatura, las partículas vibran <b>más rápido</b> (igual que un equipo "bailando" v/s uno "quieto").</li>
+          </ul>
+          <div class="callout"><strong>Relaciona:</strong> en la actividad de la sala, un equipo bailaba (partículas rápidas = mayor temperatura) y el otro estaba quieto (partículas lentas = menor temperatura). ¿Cuál grupo necesitaba más espacio para moverse?</div>
+        </div>
+        <div class="card kinetic-wrap">
+          <div class="particle-box" id="particleBox"></div>
+          <div class="slider-row">
+            <span style="font-size:12px;color:var(--navy);font-weight:700;">Frío</span>
+            <input type="range" id="tempSlider" min="0" max="100" value="30" oninput="updateKinetic(this.value)">
+            <span style="font-size:12px;color:var(--navy);font-weight:700;">Caliente</span>
+          </div>
+          <div class="temp-readout" id="tempReadout">30 / 100</div>
+          <span class="temp-tag" id="tempTag" style="background:#DCEBF7;color:var(--cold);">Frío</span>
+        </div>
+      </div>
+      <footer class="oa-strip">Habilidades: OA f (llevar a cabo un plan de investigación) · OA i (crear y ajustar modelos simples) · OA j (examinar resultados y plantear conclusiones)</footer>
+    </section>
+
+    <!-- SLIDE 5 : ESCALAS TERMOMÉTRICAS -->
+    <section class="slide">
+      <div class="eyebrow">Desarrollo · Escalas termométricas</div>
+      <h1 class="slide-title">Celsius, Fahrenheit y Kelvin</h1>
+      <h2 class="slide-sub">Distintas formas de medir lo mismo</h2>
+      <div class="content-grid">
+        <div class="card">
+          <h3>Puntos de referencia</h3>
+          <table class="scale-table">
+            <tr><td class="label">Evento</td><td>°C</td><td>°F</td><td>K</td></tr>
+            <tr><td class="label">Fusión del hielo</td><td>0</td><td>32</td><td>273,15</td></tr>
+            <tr><td class="label">Ebullición del agua (nivel del mar)</td><td>100</td><td>212</td><td>373,15</td></tr>
+          </table>
+          <p style="font-size:13px;margin-top:10px;">Fórmulas: <b>°F = °C × 9/5 + 32</b> &nbsp;|&nbsp; <b>K = °C + 273,15</b></p>
+          <div class="callout"><strong>Dato:</strong> la escala Kelvin es la más usada en ciencias porque su cero (0 K) corresponde al "cero absoluto": la menor temperatura posible, donde las partículas casi no se mueven.</div>
+        </div>
+        <div class="calc-box">
+          <h3 style="color:var(--navy);margin-top:0;">Conversor de temperatura</h3>
+          <div class="calc-row">
+            <div class="field-box">
+              <label>Valor</label>
+              <input type="number" id="tempValue" placeholder="ej: 37">
+            </div>
+            <div class="field-box">
+              <label>Escala de origen</label>
+              <select id="tempScale">
+                <option value="C">Celsius (°C)</option>
+                <option value="F">Fahrenheit (°F)</option>
+                <option value="K">Kelvin (K)</option>
+              </select>
+            </div>
+          </div>
+          <button class="calc-btn" onclick="convertTemp()">Convertir</button>
+          <button class="calc-btn secondary" onclick="resetTemp()">Limpiar</button>
+          <div class="result-box" id="tempResult">Ingresa un valor y elige su escala de origen.</div>
+        </div>
+      </div>
+      <footer class="oa-strip">Habilidades: OA e (planificar investigación documental) · OA i (crear y ajustar modelos simples) · OA k (evaluar la investigación)</footer>
+    </section>
+
+    <!-- SLIDE 6 : EQUILIBRIO TÉRMICO -->
+    <section class="slide">
+      <div class="eyebrow">Desarrollo · Simulación 2</div>
+      <h1 class="slide-title">Equilibrio Térmico</h1>
+      <h2 class="slide-sub">La hora del té: agua a 80°C en una taza a 20°C</h2>
+      <div class="content-grid">
+        <div class="card">
+          <h3>Predicción</h3>
+          <p style="font-size:14px;">La temperatura ambiente es de 20°C y la taza está a esa temperatura. Se vierte agua a 80°C dentro de ella.</p>
+          <div class="callout"><strong>¿Es correcto afirmar que el equilibrio térmico se producirá a 50°C?</strong> Ajusta la "cantidad relativa" de cada cuerpo en la simulación y compruébalo.</div>
+          <ul>
+            <li>El equilibrio térmico ocurre cuando <b>ambos cuerpos alcanzan la misma temperatura</b>.</li>
+            <li>El valor final depende de la temperatura inicial <b>y</b> de la cantidad de materia de cada cuerpo.</li>
+            <li>El tiempo que transcurre no cambia el valor final de equilibrio, aunque sí demora más o menos en alcanzarse.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="therm-wrap">
+            <div class="therm-unit">
+              <div class="therm-value" id="tempAReadout">80°C</div>
+              <div class="therm-tube"><div class="therm-fill" id="fillA" style="height:80%;"></div></div>
+              <div class="therm-bulb" id="bulbA" style="background:var(--hot);"></div>
+              <div class="therm-label">Agua caliente</div>
+            </div>
+            <div class="therm-unit">
+              <div class="therm-value" id="tempBReadout">20°C</div>
+              <div class="therm-tube"><div class="therm-fill" id="fillB" style="height:20%;"></div></div>
+              <div class="therm-bulb" id="bulbB" style="background:var(--cold);"></div>
+              <div class="therm-label">Taza + ambiente</div>
+            </div>
+          </div>
+          <div class="eq-controls">
+            <div class="eq-field">Cantidad relativa — Agua: <span id="massAVal">1</span>
+              <input type="range" id="massA" min="1" max="5" value="1" oninput="document.getElementById('massAVal').textContent=this.value">
+            </div>
+            <div class="eq-field">Cantidad relativa — Taza/ambiente: <span id="massBVal">3</span>
+              <input type="range" id="massB" min="1" max="5" value="3" oninput="document.getElementById('massBVal').textContent=this.value">
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:center;margin-top:10px;">
+            <button class="calc-btn" onclick="startEquilibrium()">Iniciar contacto térmico</button>
+            <button class="calc-btn secondary" onclick="resetEquilibrium()">Reiniciar</button>
+          </div>
+          <div class="eq-status" id="eqStatus">Ajusta las cantidades relativas y presiona "Iniciar contacto térmico".</div>
+        </div>
+      </div>
+      <footer class="oa-strip">Habilidades: OA c (formular y fundamentar predicciones) · OA h (organizar y presentar datos) · OA j (examinar resultados y plantear conclusiones)</footer>
+    </section>
+
+    <!-- SLIDE 7 : SÍNTESIS - AUTOCHEQUEO -->
+    <section class="slide">
+      <div class="eyebrow">Desarrollo · Síntesis</div>
+      <h1 class="slide-title">¿Hay calor en esta situación?</h1>
+      <h2 class="slide-sub">Haz clic en cada tarjeta para revisar tu respuesta</h2>
+      <div class="content-grid single">
+        <div class="card">
+          <div class="acc-item" onclick="toggleAcc(this)">
+            <div class="acc-head"><span>1. Una tetera con agua hirviendo, sobre el fuego encendido</span><span class="arrow">▶</span></div>
+            <div class="acc-body">Sí hay calor: el fuego transfiere energía térmica al agua, que está a menor temperatura que la llama.</div>
+          </div>
+          <div class="acc-item" onclick="toggleAcc(this)">
+            <div class="acc-head"><span>2. Un vaso con leche a la misma temperatura que el ambiente</span><span class="arrow">▶</span></div>
+            <div class="acc-body">No hay transferencia neta de calor: al estar a la misma temperatura que el entorno, ya se encuentran en equilibrio térmico.</div>
+          </div>
+          <div class="acc-item" onclick="toggleAcc(this)">
+            <div class="acc-head"><span>3. Un cubo de hielo derritiéndose en una bebida a temperatura ambiente</span><span class="arrow">▶</span></div>
+            <div class="acc-body">Sí hay calor: la bebida (mayor temperatura) transfiere energía térmica al hielo (menor temperatura), por eso se derrite.</div>
+          </div>
+          <div class="acc-item" onclick="toggleAcc(this)">
+            <div class="acc-head"><span>4. El interior de un iceberg, con temperatura estable bajo cero</span><span class="arrow">▶</span></div>
+            <div class="acc-body">No hay transferencia neta de calor en su interior: al estar en equilibrio térmico interno y estable, no hay diferencia de temperatura entre sus partes.</div>
+          </div>
+          <div class="acc-item" onclick="toggleAcc(this)">
+            <div class="acc-head"><span>5. Una persona "tomando sol" en la playa</span><span class="arrow">▶</span></div>
+            <div class="acc-body">Sí hay calor: la energía del sol (radiación) se transfiere hacia la piel de la persona, que está a menor temperatura.</div>
+          </div>
+        </div>
+      </div>
+      <footer class="oa-strip">Habilidades: OA i (crear y ajustar modelos simples) · OA l (comunicar conocimientos de investigaciones científicas)</footer>
+    </section>
+
+    <!-- SLIDE 8 : ACTIVIDAD EXPERIMENTAL -->
+    <section class="slide">
+      <div class="eyebrow">Desarrollo · Actividad práctica (E-E-E: Explorar–Explicar–Elaborar)</div>
+      <h1 class="slide-title">Igual temperatura, distinta masa</h1>
+      <h2 class="slide-sub">Trabajo en equipos de 4 estudiantes</h2>
+      <div class="content-grid">
+        <div class="card">
+          <h3>Materiales por equipo</h3>
+          <ul>
+            <li>2 recipientes iguales (vasos o beakers)</li>
+            <li>Agua caliente (misma temperatura inicial en ambos, distinta cantidad)</li>
+            <li>2 termómetros</li>
+            <li>Cronómetro</li>
+          </ul>
+          <div class="callout"><strong>Seguridad:</strong> manipular el agua caliente con supervisión del docente, sin superar los 60°C.</div>
+        </div>
+        <div class="card">
+          <h3>Procedimiento</h3>
+          <ol class="steps-list">
+            <li>Midan y registren la temperatura inicial del agua en ambos recipientes (debe ser igual).</li>
+            <li>Formulen una predicción: ¿cuál recipiente se enfriará más rápido, el de menor o el de mayor cantidad de agua?</li>
+            <li>Registren la temperatura de ambos recipientes cada 2 minutos, durante 10 minutos.</li>
+            <li>Grafiquen ambas curvas de enfriamiento en un mismo gráfico.</li>
+            <li>Comparen su predicción inicial con la evidencia obtenida.</li>
+            <li>Concluyan: ¿la masa de un cuerpo influye en la rapidez con que cambia su temperatura?</li>
+          </ol>
+        </div>
+      </div>
+      <footer class="oa-strip">Habilidades: OA d (planificar investigación experimental) · OA h (organizar y presentar datos) · OA j (examinar resultados y plantear conclusiones)</footer>
+    </section>
+
+    <!-- SLIDE 9 : INVESTIGACIÓN CONTEXTUALIZADA -->
+    <section class="slide">
+      <div class="eyebrow">Desarrollo · Investigación documental contextualizada</div>
+      <h1 class="slide-title">El fenómeno de El Niño: calor a escala planetaria</h1>
+      <h2 class="slide-sub">Cuando la transferencia de calor océano–atmósfera afecta a todo un continente</h2>
+      <div class="content-grid">
+        <div class="card">
+          <h3>¿Qué es El Niño?</h3>
+          <ul>
+            <li>Fenómeno climático en que las aguas superficiales del océano Pacífico central y oriental se <b>calientan por sobre lo habitual</b>.</li>
+            <li>Modifica la forma en que el océano <b>transfiere calor</b> hacia la atmósfera, alterando vientos, lluvias y temperaturas en gran parte del planeta — incluido Chile.</li>
+            <li>En nuestro país suele asociarse a <b>mayores precipitaciones en la zona centro-norte</b> y a <b>anomalías de temperatura</b> según la región.</li>
+          </ul>
+          <div class="callout"><strong>Conexión con hoy:</strong> un cambio de menos de 1°C en una masa de agua tan enorme como el océano Pacífico representa una cantidad gigantesca de energía térmica — el mismo principio de la simulación de equilibrio térmico, pero a escala planetaria.</div>
+        </div>
+        <div class="card">
+          <h3>Investiguen en equipo</h3>
+          <ol class="steps-list">
+            <li>¿Qué es el fenómeno de El Niño y cómo se produce la transferencia de calor entre el océano y la atmósfera?</li>
+            <li>¿Qué efectos ha tenido sobre la temperatura y las precipitaciones en tu región en años anteriores?</li>
+            <li>¿Cómo afecta a actividades humanas como la pesca, la agricultura o el suministro de agua?</li>
+            <li>Relacionen al menos dos conceptos de esta sesión (calor, temperatura, equilibrio térmico) con lo investigado.</li>
+          </ol>
+          <div class="callout"><strong>Fuentes sugeridas:</strong> Dirección Meteorológica de Chile (DMC), NOAA (Climate Prediction Center), CIIFEN. Prioricen fuentes oficiales y datos actualizados al momento de investigar.</div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px;">
+        <h3>Autoevaluación de la investigación</h3>
+        <label class="check-item"><input type="checkbox"> Usamos al menos dos fuentes confiables y las registramos.</label>
+        <label class="check-item"><input type="checkbox"> Explicamos la relación con la transferencia de calor.</label>
+        <label class="check-item"><input type="checkbox"> Presentamos datos organizados (tabla, gráfico o mapa).</label>
+        <label class="check-item"><input type="checkbox"> Nuestra conclusión responde a las 4 preguntas guía.</label>
+      </div>
+      <footer class="oa-strip">Habilidades: OA e (planificar investigación no experimental y/o documental) · OA h (organizar y presentar datos) · OA l (comunicar y explicar conocimientos científicos) · Actitud OA H (reconocer y valorar aportes al conocimiento científico)</footer>
+    </section>
+
+    <!-- SLIDE 10 : CIERRE -->
+    <section class="slide">
+      <div class="eyebrow">Cierre · Síntesis y metacognición</div>
+      <h1 class="slide-title">Bitácora de cierre</h1>
+      <h2 class="slide-sub">Vuelve a tu predicción inicial: ¿acertaste?</h2>
+      <div class="content-grid">
+        <div class="card">
+          <h3>Reflexiona y responde</h3>
+          <div class="closing-q"><b>1.</b> ¿Cómo explicarías ahora, usando el modelo cinético-molecular, por qué el metal se siente más frío que la madera a la misma temperatura?<textarea class="line"></textarea></div>
+          <div class="closing-q"><b>2.</b> ¿Por qué el equilibrio térmico no siempre se produce en el punto medio entre dos temperaturas?<textarea class="line"></textarea></div>
+          <div class="closing-q"><b>3.</b> ¿Qué pregunta te queda pendiente sobre calor y temperatura?<textarea class="line"></textarea></div>
+        </div>
+        <div class="card">
+          <h3>Lo que aprendimos hoy</h3>
+          <ul>
+            <li>Diferenciar calor (energía en tránsito) de temperatura (medida de agitación de partículas).</li>
+            <li>Explicar la temperatura a partir del modelo cinético-molecular.</li>
+            <li>Convertir temperaturas entre las escalas Celsius, Fahrenheit y Kelvin.</li>
+            <li>Predecir y comprobar cómo se alcanza el equilibrio térmico entre dos cuerpos.</li>
+            <li>Investigar un fenómeno real y contextualizado (El Niño) que evidencia la transferencia de calor a gran escala.</li>
+          </ul>
+          <div class="callout"><strong>Próxima sesión:</strong> exploraremos en estaciones experimentales cómo se propaga el calor — conducción, convección y radiación.</div>
+        </div>
+      </div>
+      <footer class="oa-strip">Habilidades trabajadas hoy: OA a, c, d, e, f, h, i, j, k, l · Actitudes: OA A, B, C, D, E</footer>
+    </section>
+
+  </div>
+
+  <div class="controls">
+    <button class="nav-btn" id="prevBtn" onclick="goTo(currentSlide-1)">‹</button>
+    <div class="dots" id="dots"></div>
+    <button class="nav-btn" id="nextBtn" onclick="goTo(currentSlide+1)">›</button>
+  </div>
+</div>
+
+<script>
+/* ---------------- NAVIGATION ---------------- */
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let currentSlide = 0;
+
+const dotsWrap = document.getElementById('dots');
+slides.forEach((s,i)=>{
+  const d = document.createElement('button');
+  d.className = 'dot';
+  d.setAttribute('aria-label', 'Ir a diapositiva '+(i+1));
+  d.onclick = ()=>goTo(i);
+  dotsWrap.appendChild(d);
+});
+
+function goTo(i){
+  if(i<0 || i>=total) return;
+  slides[currentSlide].classList.remove('active');
+  currentSlide = i;
+  slides[currentSlide].classList.add('active');
+  document.querySelectorAll('.dot').forEach((d,idx)=>d.classList.toggle('active', idx===currentSlide));
+  document.getElementById('curNum').textContent = currentSlide+1;
+  document.getElementById('progressBar').style.width = ((currentSlide+1)/total*100)+'%';
+  document.getElementById('prevBtn').disabled = currentSlide===0;
+  document.getElementById('nextBtn').disabled = currentSlide===total-1;
+}
+document.getElementById('totalNum').textContent = total;
+goTo(0);
+
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='ArrowRight' || e.key===' ') goTo(currentSlide+1);
+  if(e.key==='ArrowLeft') goTo(currentSlide-1);
+});
+
+/* ---------------- KINETIC MODEL (SLIDE 4) ---------------- */
+const particleBox = document.getElementById('particleBox');
+const N_PARTICLES = 16;
+const particles = [];
+for(let i=0;i<N_PARTICLES;i++){
+  const p = document.createElement('div');
+  p.className = 'particle';
+  const left = 8 + Math.random()*80;
+  const top = 8 + Math.random()*80;
+  const ax = (6 + Math.random()*10) * (Math.random()<0.5?-1:1);
+  const ay = (6 + Math.random()*10) * (Math.random()<0.5?-1:1);
+  p.style.left = left+'%';
+  p.style.top = top+'%';
+  p.style.setProperty('--ax', ax+'px');
+  p.style.setProperty('--ay', ay+'px');
+  p.style.animationDelay = (Math.random()*0.6)+'s';
+  particleBox.appendChild(p);
+  particles.push(p);
+}
+function lerpColor(c1,c2,t){
+  const a = c1.match(/\w\w/g).map(v=>parseInt(v,16));
+  const b = c2.match(/\w\w/g).map(v=>parseInt(v,16));
+  const r = a.map((v,i)=>Math.round(v+(b[i]-v)*t));
+  return '#'+r.map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+function updateKinetic(val){
+  const t = val/100;
+  const dur = 1.35 - t*1.05; // 1.35s (frío/lento) -> 0.3s (caliente/rápido)
+  particleBox.style.setProperty('--dur', dur.toFixed(2)+'s');
+  particles.forEach(p=>{ p.style.setProperty('--dur', dur.toFixed(2)+'s'); });
+  const particleColor = lerpColor('3e7cb1','c1442d', t);
+  particles.forEach(p=>{ p.style.background = particleColor; });
+  const boxBg = lerpColor('dbe7f0','f7ddd3', t);
+  particleBox.style.background = boxBg;
+  document.getElementById('tempReadout').textContent = val+' / 100';
+  const tagEl = document.getElementById('tempTag');
+  if(val < 33){ tagEl.textContent='Frío'; tagEl.style.background='#DCEBF7'; tagEl.style.color='#3E7CB1'; }
+  else if(val < 66){ tagEl.textContent='Templado'; tagEl.style.background='#FBEBD6'; tagEl.style.color='#D4891A'; }
+  else { tagEl.textContent='Caliente'; tagEl.style.background='#FBE1DC'; tagEl.style.color='#C1442D'; }
+}
+updateKinetic(30);
+
+/* ---------------- TEMPERATURE SCALE CONVERTER (SLIDE 5) ---------------- */
+function convertTemp(){
+  const raw = parseFloat(document.getElementById('tempValue').value);
+  const scale = document.getElementById('tempScale').value;
+  const resEl = document.getElementById('tempResult');
+  if(isNaN(raw)){
+    resEl.textContent = 'Ingresa un valor numérico.';
+    resEl.classList.add('error');
+    return;
+  }
+  let c;
+  if(scale==='C') c = raw;
+  else if(scale==='F') c = (raw-32)*5/9;
+  else c = raw-273.15;
+  const f = c*9/5+32;
+  const k = c+273.15;
+  if(k < 0){
+    resEl.textContent = 'Ese valor está por debajo del cero absoluto (0 K); no es una temperatura físicamente posible.';
+    resEl.classList.add('error');
+    return;
+  }
+  resEl.innerHTML = 'Celsius: <b>'+round2(c)+' °C</b> &nbsp;|&nbsp; Fahrenheit: <b>'+round2(f)+' °F</b> &nbsp;|&nbsp; Kelvin: <b>'+round2(k)+' K</b>';
+  resEl.classList.remove('error');
+}
+function resetTemp(){
+  document.getElementById('tempValue').value='';
+  document.getElementById('tempResult').textContent = 'Ingresa un valor y elige su escala de origen.';
+  document.getElementById('tempResult').classList.remove('error');
+}
+function round2(n){ return Math.round(n*100)/100; }
+
+/* ---------------- THERMAL EQUILIBRIUM SIMULATION (SLIDE 6) ---------------- */
+let eqRunning = false;
+let eqInterval = null;
+let TA = 80, TB = 20;
+const TA_INITIAL = 80, TB_INITIAL = 20;
+
+function renderTherm(){
+  const clamp = v => Math.max(0, Math.min(100, v));
+  document.getElementById('fillA').style.height = clamp(TA)+'%';
+  document.getElementById('fillB').style.height = clamp(TB)+'%';
+  const colorFor = t => lerpColor('3e7cb1','c1442d', clamp(t)/100);
+  document.getElementById('fillA').style.background = colorFor(TA);
+  document.getElementById('fillB').style.background = colorFor(TB);
+  document.getElementById('bulbA').style.background = colorFor(TA);
+  document.getElementById('bulbB').style.background = colorFor(TB);
+  document.getElementById('tempAReadout').textContent = round2(TA)+'°C';
+  document.getElementById('tempBReadout').textContent = round2(TB)+'°C';
+}
+renderTherm();
+
+function startEquilibrium(){
+  if(eqRunning) return;
+  eqRunning = true;
+  const mA = parseFloat(document.getElementById('massA').value);
+  const mB = parseFloat(document.getElementById('massB').value);
+  const Teq = (mA*TA + mB*TB)/(mA+mB);
+  document.getElementById('eqStatus').textContent = 'Corriente térmica en curso...';
+  let steps = 0;
+  eqInterval = setInterval(()=>{
+    TA += (Teq - TA) * 0.22;
+    TB += (Teq - TB) * 0.22;
+    renderTherm();
+    steps++;
+    if(Math.abs(TA-TB) < 0.3 || steps > 40){
+      clearInterval(eqInterval);
+      eqRunning = false;
+      TA = Teq; TB = Teq;
+      renderTherm();
+      const simple = (TA_INITIAL+TB_INITIAL)/2;
+      const note = Math.abs(Teq-simple) < 0.5
+        ? 'Como las cantidades relativas son iguales, el equilibrio coincide con el promedio simple.'
+        : 'El equilibrio NO fue el promedio simple (50°C): al haber más cantidad relativa en un cuerpo, este "arrastra" el resultado final hacia su propia temperatura.';
+      document.getElementById('eqStatus').textContent = 'Equilibrio alcanzado a '+round2(Teq)+'°C. '+note;
+    }
+  }, 140);
+}
+function resetEquilibrium(){
+  if(eqInterval) clearInterval(eqInterval);
+  eqRunning = false;
+  TA = TA_INITIAL; TB = TB_INITIAL;
+  renderTherm();
+  document.getElementById('eqStatus').textContent = 'Ajusta las cantidades relativas y presiona "Iniciar contacto térmico".';
+}
+
+/* ---------------- ACCORDION (SLIDE 7) ---------------- */
+function toggleAcc(el){
+  el.classList.toggle('open');
+}
+</script>
+</body>
+</html>

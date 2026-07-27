@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Cargando mundo…</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.7.1/aframe.min.js"></script>
+<script>
+if (typeof AFRAME === 'undefined') {
+  document.write('<scr' + 'ipt src="https://aframe.io/releases/1.7.1/aframe.min.js"><\/scr' + 'ipt>');
+}
+window.addEventListener('error', function (e) {
+  var d = document.getElementById('fallo');
+  if (!d && document.body) {
+    d = document.createElement('div');
+    d.id = 'fallo';
+    d.style.cssText = 'position:fixed;z-index:999;left:0;right:0;top:0;max-height:60vh;' +
+      'overflow:auto;padding:12px 14px;background:#7d2a2a;color:#fff;' +
+      'font:12px/1.45 monospace;white-space:pre-wrap;user-select:text;';
+    document.body.appendChild(d);
+  }
+  if (d) {
+    d.textContent = 'Error: ' + e.message + '\n' +
+      (e.filename || '') + ' línea ' + (e.lineno || '?') + '\n' +
+      (window.MUNDO ? 'Paso: ' + MUNDO.paso : '') + '\n' +
+      (e.error && e.error.stack ? '\n' + e.error.stack : '');
+  }
+});
+</script>
+
+<style>
+  :root{ --acento:#1c5f78; --tinta:#12211f; --papel:#f2ece0; }
+  html,body{margin:0;height:100%;overflow:hidden;
+    font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;}
+
+  #barra{
+    position:fixed;top:0;left:0;right:0;z-index:10;
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:calc(10px + env(safe-area-inset-top,0)) 16px 10px;
+    background:linear-gradient(180deg,rgba(10,16,15,.55),rgba(10,16,15,0));
+    color:var(--papel);pointer-events:none;
+  }
+  #titulo{margin:0;font-size:13.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+    background:rgba(28,42,40,.4);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    padding:6px 13px;border-radius:10px;border:1px solid rgba(242,236,224,.14);}
+  #nivel-lectura, #grav-lectura, #clima-real-lectura{
+    background:rgba(28,42,40,.4);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    padding:6px 12px;border-radius:10px;border:1px solid rgba(242,236,224,.12);}
+  #nivel-lectura{font-variant-numeric:tabular-nums;font-size:13px;opacity:.9;}
+  #volver{pointer-events:auto;margin-left:auto;color:var(--papel);opacity:.85;
+    font-size:12.5px;font-weight:600;text-decoration:none;
+    background:rgba(28,42,40,.4);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid rgba(242,236,224,.16);padding:7px 13px;border-radius:10px;}
+  #volver:hover{background:rgba(40,72,88,.5);}
+
+  /* Controles reposicionables: arriba (por defecto), a los costados o abajo.
+     Se pueden ocultar. Arriba es el valor por defecto porque en el navegador de
+     computador la UI del sistema ocupa el borde inferior. */
+  /* Base: aunque el JS no alcance a aplicar la clase, los controles YA quedan
+     colocados a la izquierda. Nunca deben caer sobre los visores de arriba. */
+  #controles{
+    position:fixed;z-index:10;display:flex;gap:7px;pointer-events:none;
+    left:0;top:calc(92px + env(safe-area-inset-top,0));
+    flex-direction:column;width:auto;max-width:196px;
+    max-height:calc(100vh - 180px);overflow-y:auto;padding:10px;
+  }
+  #controles > *{pointer-events:auto;}
+  /* Arriba y abajo: fila. Hay que revertir explícitamente lo que la base
+     define para la columna (dirección, ancho, alto y scroll). */
+  #controles.pos-arriba, #controles.pos-abajo{
+    left:0;right:0;flex-direction:row;flex-wrap:wrap;justify-content:center;
+    width:auto;max-width:none;max-height:none;overflow:visible;align-items:center;
+  }
+  #controles.pos-arriba{
+    top:calc(50px + env(safe-area-inset-top,0));bottom:auto;
+    padding:8px 12px 16px;
+    background:linear-gradient(180deg,rgba(10,16,15,.45),rgba(10,16,15,0));
+  }
+  #controles.pos-abajo{
+    bottom:0;top:auto;
+    padding:14px 12px calc(14px + env(safe-area-inset-bottom,0));
+    background:linear-gradient(0deg,rgba(10,16,15,.5),rgba(10,16,15,0));
+  }
+  /* Costados: columna con scroll propio */
+  #controles.pos-izq, #controles.pos-der{
+    top:calc(92px + env(safe-area-inset-top,0));bottom:auto;
+    flex-direction:column;flex-wrap:nowrap;width:auto;max-width:196px;
+    max-height:calc(100vh - 180px);overflow-y:auto;padding:10px;
+  }
+  #controles.pos-izq{left:0;right:auto;align-items:flex-start;}
+  #controles.pos-der{right:0;left:auto;align-items:flex-end;}
+  #controles.pos-izq > *, #controles.pos-der > *{width:100%;text-align:left;}
+  #controles.oculto{display:none;}
+
+  /* Botón y menú de disposición */
+  #ctrl-btn{pointer-events:auto;color:var(--papel);opacity:.85;font-size:12.5px;font-weight:600;
+    background:rgba(28,42,40,.4);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid rgba(242,236,224,.16);padding:7px 12px;border-radius:10px;cursor:pointer;}
+  #ctrl-btn:hover{background:rgba(40,72,88,.5);}
+  #ctrl-menu{position:fixed;z-index:41;display:none;
+    top:calc(52px + env(safe-area-inset-top,0));right:12px;
+    background:rgba(18,28,27,.94);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    border:1px solid rgba(242,236,224,.16);border-radius:12px;padding:9px;min-width:186px;
+    box-shadow:0 14px 40px rgba(0,0,0,.45);}
+  #ctrl-menu.abierto{display:block;}
+  #ctrl-menu .mtit{font-size:10px;letter-spacing:1.3px;text-transform:uppercase;
+    opacity:.55;margin:2px 4px 7px;color:var(--papel);}
+  #ctrl-menu button{display:block;width:100%;text-align:left;margin-bottom:5px;
+    font-size:12.5px;padding:8px 11px;border-radius:8px;}
+  #ctrl-menu button.activo{background:rgba(90,150,120,.45);border-color:rgba(143,216,176,.5);}
+  #ctrl-menu .msep{height:1px;background:rgba(242,236,224,.14);margin:7px 2px;}
+  button, select{
+    font:inherit;font-size:13px;font-weight:600;letter-spacing:.2px;
+    color:var(--papel);
+    background:rgba(28,42,40,.42);
+    border:1px solid rgba(242,236,224,.16);
+    border-radius:11px;padding:10px 15px;cursor:pointer;
+    backdrop-filter:blur(16px) saturate(1.3);
+    -webkit-backdrop-filter:blur(16px) saturate(1.3);
+    box-shadow:0 4px 16px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.08);
+    transition:background .18s, transform .1s, border-color .18s;
+  }
+  button:hover{background:rgba(40,72,88,.55);border-color:rgba(242,236,224,.3);}
+  button:active{transform:scale(.95);}
+  button[aria-pressed="true"]{
+    background:rgba(45,130,168,.62);border-color:rgba(242,236,224,.45);
+    box-shadow:0 4px 18px rgba(45,130,168,.4), inset 0 1px 0 rgba(255,255,255,.16);
+  }
+  button:focus-visible, select:focus-visible{outline:2px solid #f0c060;outline-offset:2px;}
+  .mover{user-select:none;-webkit-user-select:none;touch-action:none;font-size:14px;padding:11px 17px;}
+  .mover:active{background:rgba(45,130,168,.6);}
+
+  #pista{
+    position:fixed;z-index:9;left:50%;bottom:112px;transform:translateX(-50%);
+    background:rgba(28,42,40,.5);color:var(--papel);font-size:12.5px;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    padding:8px 14px;border-radius:11px;white-space:nowrap;
+    border:1px solid rgba(242,236,224,.14);
+    transition:opacity .5s;pointer-events:none;
+  }
+  #pista.oculta{opacity:0;}
+
+  #ficha{
+    position:fixed;z-index:10;right:12px;top:54px;width:min(330px,calc(100vw - 24px));
+    max-height:60vh;overflow:auto;background:var(--papel);color:var(--tinta);
+    border-radius:3px;border-left:5px solid var(--acento);padding:14px 16px;
+    box-shadow:0 8px 30px rgba(0,0,0,.35);
+    transform:translateX(120%);transition:transform .35s cubic-bezier(.2,.7,.3,1);
+  }
+  #ficha.visible{transform:none;}
+  #ficha h2{margin:0 0 2px;font-size:17px;line-height:1.2;}
+  #ficha .rango{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;
+    color:#6c6a60;margin-bottom:9px;}
+  #ficha p{margin:0 0 10px;font-size:13.5px;line-height:1.5;}
+  #ficha .lista{font-size:13px;line-height:1.6;margin:0 0 10px;padding-left:18px;}
+  #ficha .reto{background:#e6dcc7;border-left:3px solid #6b4a1f;
+    padding:9px 11px;font-size:13px;line-height:1.45;}
+  #ficha .reto b{display:block;font-size:10.5px;letter-spacing:1.3px;
+    text-transform:uppercase;color:#6b4a1f;margin-bottom:3px;}
+  #ficha .act{padding:9px 11px;font-size:13px;line-height:1.45;margin-bottom:8px;border-radius:3px;}
+  #ficha .act b{display:block;font-size:10.5px;letter-spacing:1.1px;text-transform:uppercase;margin-bottom:4px;}
+  #ficha .act ol{margin:4px 0 0;padding-left:20px;}
+  #ficha .act li{margin-bottom:4px;}
+  #ficha .act-hacer{background:#dce9dc;border-left:3px solid #2f6b45;}
+  #ficha .act-hacer b{color:#2f6b45;}
+  #ficha .act-dibujar{background:#e4e0ee;border-left:3px solid #5a4a8a;}
+  #ficha .act-dibujar b{color:#5a4a8a;}
+  #ficha .act-responder{background:#e9e2d0;border-left:3px solid #8a6a2c;}
+  #ficha .act-responder b{color:#8a6a2c;}
+  #ficha .est-num{text-align:right;font-size:10.5px;letter-spacing:1.5px;
+    text-transform:uppercase;color:#9a917f;margin-top:2px;}
+  #cerrar{position:absolute;top:8px;right:9px;background:none;border:none;
+    color:#6c6a60;font-size:20px;padding:2px 6px;line-height:1;}
+  #cerrar:hover{background:none;color:var(--tinta);}
+
+  /* A-Frame inserta su propia UI (barra de orientación / botón VR) abajo;
+     la reposicionamos para que no tape los controles */
+  .a-enter-vr, .a-enter-ar { right: 12px !important; bottom: auto !important; top: 54px !important; left: auto !important; }
+  .a-orientation-modal { display: none !important; }
+  .a-enter-vr-button { background-size: 90% 90% !important; }
+  a-scene .a-canvas { z-index: 0 !important; }
+
+  /* panel de mezcla de audio */
+  #mezcla-panel{
+    position:fixed;z-index:40;left:50%;bottom:78px;transform:translateX(-50%);
+    width:min(340px,calc(100vw - 24px));
+    background:rgba(20,32,30,.72);color:var(--papel);
+    backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);
+    border:1px solid rgba(242,236,224,.18);border-radius:16px;padding:16px 18px;
+    box-shadow:0 14px 40px rgba(0,0,0,.4);
+    font-family:system-ui,sans-serif;
+  }
+  #mezcla-panel .mz-cab{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  #mezcla-panel .mz-cab b{font-size:14px;letter-spacing:.4px;}
+  #mz-cerrar{background:none;border:none;color:var(--papel);font-size:22px;line-height:1;cursor:pointer;opacity:.7;padding:0 4px;}
+  #mz-cerrar:hover{opacity:1;}
+  #mezcla-panel .mz-fila{display:flex;align-items:center;gap:11px;margin-bottom:13px;}
+  #mezcla-panel .mz-txt{width:96px;flex:none;}
+  #mezcla-panel .mz-txt span{display:block;font-size:13px;font-weight:600;}
+  #mezcla-panel .mz-txt small{font-size:10.5px;opacity:.6;}
+  #mezcla-panel input[type=range]{
+    flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:3px;
+    background:rgba(242,236,224,.22);outline:none;
+  }
+  #mezcla-panel input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:17px;height:17px;border-radius:50%;
+    background:#8fb96a;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.4);
+  }
+  #mezcla-panel input[type=range]::-moz-range-thumb{
+    width:17px;height:17px;border:none;border-radius:50%;background:#8fb96a;cursor:pointer;
+  }
+  #mezcla-panel .mz-val{width:26px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums;opacity:.75;}
+  .mz-mute{width:100%;margin-top:4px;padding:9px;border-radius:10px;
+    background:rgba(242,236,224,.1);border:1px solid rgba(242,236,224,.2);
+    color:var(--papel);font-size:13px;font-weight:600;cursor:pointer;}
+  .mz-mute:hover{background:rgba(242,236,224,.16);}
+  .mz-mute.activo{background:rgba(180,90,90,.4);border-color:rgba(180,90,90,.6);}
+
+  /* barra de salud */
+  #salud{
+    position:fixed;z-index:11;left:16px;bottom:74px;width:180px;height:12px;display:none;
+    background:rgba(20,32,30,.6);border:1px solid rgba(242,236,224,.2);border-radius:8px;
+    overflow:hidden;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  }
+  #salud.on{display:block;}
+  #salud-relleno{height:100%;width:100%;border-radius:7px;
+    background:linear-gradient(90deg,#c4392f,#e0b455,#4a7c53);
+    background-size:180px 100%;transition:width .25s;}
+  #salud.golpe{animation:sacudir .18s;}
+  @keyframes sacudir{25%{transform:translateX(-4px);}75%{transform:translateX(4px);}}
+
+  /* pantalla de fin */
+  #fin{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;
+    background:rgba(8,6,6,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+  #fin.visible{display:flex;animation:aparece .6s ease;}
+  @keyframes aparece{from{opacity:0;}to{opacity:1;}}
+  #fin-caja{text-align:center;color:#f2ece0;padding:34px 40px;}
+  #fin-titulo{font-family:"Fraunces",Georgia,serif;font-size:38px;font-weight:900;
+    letter-spacing:1px;margin-bottom:10px;color:#e0685a;}
+  #fin-causa{font-size:15px;opacity:.8;margin-bottom:26px;}
+  #fin-revivir{background:rgba(242,236,224,.12);border:1px solid rgba(242,236,224,.3);
+    color:#f2ece0;font:600 14px/1 system-ui;padding:12px 24px;border-radius:12px;cursor:pointer;
+    backdrop-filter:blur(10px);}
+  #fin-revivir:hover{background:rgba(242,236,224,.2);}
+
+  /* avisos flotantes de atmósfera / mando */
+  #aviso-atm{position:fixed;z-index:40;left:50%;top:52px;transform:translateX(-50%);display:none;
+    background:rgba(28,42,40,.65);color:#f2ece0;font:600 13px/1 system-ui;padding:9px 16px;
+    border-radius:11px;border:1px solid rgba(242,236,224,.18);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);pointer-events:none;}
+
+  /* panel de atmósferas */
+  #atm-panel{position:fixed;z-index:40;left:50%;bottom:78px;transform:translateX(-50%);
+    width:min(300px,calc(100vw - 24px));background:rgba(20,32,30,.72);color:var(--papel);
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    border:1px solid rgba(242,236,224,.18);border-radius:16px;padding:16px 18px;
+    box-shadow:0 14px 40px rgba(0,0,0,.4);font-family:system-ui,sans-serif;}
+  #atm-panel .mz-cab{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  #atm-panel .mz-cab b{font-size:14px;}
+  #atm-cerrar{background:none;border:none;color:var(--papel);font-size:22px;cursor:pointer;opacity:.7;}
+  #atm-panel .atm-nota{font-size:11px;opacity:.55;margin-bottom:12px;}
+  .atm-op{display:flex;align-items:center;gap:10px;width:100%;text-align:left;margin-bottom:7px;
+    padding:9px 12px;border-radius:10px;background:rgba(242,236,224,.07);
+    border:1px solid rgba(242,236,224,.14);color:var(--papel);font-size:13.5px;font-weight:500;cursor:pointer;}
+  .atm-op:hover{background:rgba(242,236,224,.14);}
+  .atm-op.activo{border-color:var(--sw);background:rgba(242,236,224,.12);}
+  .atm-punto{width:16px;height:16px;border-radius:50%;background:var(--sw);flex:none;
+    border:1px solid rgba(255,255,255,.3);box-shadow:0 0 8px var(--sw);}
+
+  /* laboratorio */
+  #lab-panel{position:fixed;z-index:42;left:50%;bottom:78px;transform:translateX(-50%);
+    width:min(380px,calc(100vw - 24px));max-height:70vh;overflow-y:auto;
+    background:rgba(18,28,30,.82);color:var(--papel);
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    border:1px solid rgba(242,236,224,.18);border-radius:16px;padding:16px 18px;
+    box-shadow:0 14px 44px rgba(0,0,0,.5);font-family:system-ui,sans-serif;}
+  #lab-panel .mz-cab{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  #lab-panel .mz-cab b{font-size:14px;}
+  #lab-cerrar{background:none;border:none;color:var(--papel);font-size:22px;cursor:pointer;opacity:.7;}
+  .lab-vacio{font-size:13px;line-height:1.6;opacity:.7;padding:10px 4px;}
+  .lab-lista{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
+  .lab-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;
+    background:rgba(242,236,224,.08);border:1px solid rgba(242,236,224,.16);
+    color:var(--papel);font-size:12.5px;font-weight:500;cursor:pointer;}
+  .lab-item:hover{background:rgba(242,236,224,.15);}
+  .lab-item.activo{border-color:#5ad8a0;background:rgba(90,216,160,.15);}
+  .lab-tipo{width:13px;height:13px;border-radius:3px;flex:none;}
+  .lab-roca{background:#9a8f7a;} .lab-tierra{background:#8a6a3f;}
+  .lab-pegajosa{background:#4a7c53;} .lab-hielo{background:#c8d8e0;} .lab-metal{background:#b8bcc0;}
+  .lab-detalle{font-size:13px;line-height:1.55;background:rgba(242,236,224,.05);
+    border-radius:10px;padding:13px 14px;border:1px solid rgba(242,236,224,.1);}
+  .lab-detalle h4{font-family:"Fraunces",Georgia,serif;font-size:17px;margin-bottom:8px;color:#8fd8b0;}
+  #btn-lab #muestras-cont{display:inline-block;min-width:16px;text-align:center;
+    background:#5ad8a0;color:#123;border-radius:8px;font-size:11px;font-weight:700;padding:0 5px;margin-left:2px;}
+
+  @media (prefers-reduced-motion: reduce){ #ficha{transition:none;} }
+</style>
+
+<script src="mundo.js"></script>
+</head>
+<body>
+
+<div id="barra">
+  <h1 id="titulo">Cargando…</h1>
+  <span id="nivel-lectura"></span>
+  <span id="grav-lectura" style="font-variant-numeric:tabular-nums;font-size:13px;opacity:.85"></span>
+  <span id="clima-real-lectura" style="font-size:12.5px;opacity:.8"></span>
+  <button id="ctrl-btn" title="Disposición de los controles">Controles</button>
+  <a id="volver" href="index.html">Todos los mundos</a>
+</div>
+
+<div id="ctrl-menu" role="menu">
+  <div class="mtit">Dónde van los controles</div>
+  <button data-pos="arriba">Arriba</button>
+  <button data-pos="izq">A la izquierda</button>
+  <button data-pos="der">A la derecha</button>
+  <button data-pos="abajo">Abajo</button>
+  <div class="msep"></div>
+  <button id="ctrl-ocultar">Ocultar controles (H)</button>
+</div>
+
+<div id="ficha" role="dialog" aria-live="polite">
+  <button id="cerrar" aria-label="Cerrar ficha">&times;</button>
+  <div id="ficha-cuerpo"></div>
+</div>
+
+<div id="pista">Toca el suelo para desplazarte hasta ahí</div>
+<div id="controles"></div>
+<input type="file" id="archivo-guardado" accept="application/json,.json" style="display:none">
+
+<!-- barra de salud (solo visible si el mundo tiene peligros) -->
+<div id="salud"><div id="salud-relleno"></div></div>
+
+<!-- avisos flotantes -->
+<div id="aviso-atm"></div>
+
+<!-- pantalla de fin (muerte) -->
+<div id="fin">
+  <div id="fin-caja">
+    <div id="fin-titulo">Has muerto</div>
+    <div id="fin-causa">Fin del recorrido</div>
+    <button id="fin-revivir">Volver al inicio</button>
+  </div>
+</div>
+
+<a-scene id="escena" renderer="colorManagement:true; antialias:false"></a-scene>
+
+<script>
+/* Carga el mundo indicado en la dirección: mundo.html?m=costa
+   Prueba primero en la subcarpeta mundos/ y, si no está, en la misma carpeta.
+   Así funciona con cualquiera de las dos organizaciones de archivos. */
+(function () {
+  // Acepta mundo.html#costa y también mundo.html?m=costa
+  var id = (location.hash || '').replace('#', '').trim() ||
+           new URLSearchParams(location.search).get('m') || 'costa';
+  window.addEventListener('hashchange', function () { location.reload(); });
+  var rutas = ['mundos/' + id + '.js', id + '.js'];
+  var intento = 0;
+
+  function aviso(txt) { document.getElementById('titulo').textContent = txt; }
+
+  function cargar() {
+    if (intento >= rutas.length) {
+      aviso('No encontré el archivo del mundo. Busqué: ' + rutas.join('  y  '));
+      return;
+    }
+    var ruta = rutas[intento++];
+    var s = document.createElement('script');
+    s.src = ruta;
+    s.onload = function () {
+      if (window.MUNDOS && window.MUNDOS[id]) {
+        var escena = document.getElementById('escena');
+        var arrancar = function () {
+          MUNDO.iniciar(window.MUNDOS[id]);
+          if (MUNDO.informe) {
+            document.getElementById('nivel-lectura').textContent =
+              document.getElementById('nivel-lectura').textContent || MUNDO.informe;
+          }
+        };
+        if (escena.hasLoaded) { arrancar(); }
+        else { escena.addEventListener('loaded', arrancar); }
+      } else {
+        aviso('El archivo ' + ruta + ' se cargó pero no registró el mundo "' + id + '".');
+      }
+    };
+    s.onerror = cargar;
+    document.head.appendChild(s);
+  }
+
+  if (typeof MUNDO === 'undefined') {
+    aviso('Falta mundo.js: tiene que estar en la misma carpeta que mundo.html');
+    return;
+  }
+  if (!MUNDO.version || MUNDO.version < 10) {
+    aviso('mundo.js está desactualizado (versión ' + (MUNDO.version || 'antigua') +
+          ', se necesita la 10). Reemplázalo y recarga con Ctrl+Shift+R.');
+    return;
+  }
+  cargar();
+})();
+</script>
+<script>
+  (function () {
+    var inp = document.getElementById('archivo-guardado');
+    if (inp) inp.addEventListener('change', function (ev) {
+      var f = ev.target.files[0];
+      if (!f) return;
+      var lector = new FileReader();
+      lector.onload = function () {
+        try { window.MUNDO.importarEstado(JSON.parse(lector.result)); }
+        catch (e) { alert('No se pudo leer el archivo de guardado.'); }
+      };
+      lector.readAsText(f);
+      inp.value = '';
+    });
+  })();
+</script>
+<script>
+/* Disposición de los controles. Se guarda la preferencia en el navegador.
+   Por defecto van A LA IZQUIERDA, en columna: así el borde inferior queda
+   libre (ahí es donde el navegador de escritorio dibuja su propia barra) y
+   tampoco compiten con el título de arriba.
+   Siempre se pueden ocultar, desde el menú o con la tecla H. */
+function iniciarControles() {
+  var POS = ['arriba', 'izq', 'der', 'abajo'];
+  var cont = document.getElementById('controles');
+  // Si por cualquier motivo el DOM aún no está listo, reintentar al cargar.
+  if (!cont) { document.addEventListener('DOMContentLoaded', iniciarControles); return; }
+  var btn  = document.getElementById('ctrl-btn');
+  var menu = document.getElementById('ctrl-menu');
+  var guardado, oculto;
+  // La clave lleva versión: al cambiar el valor por defecto, se aplica una vez
+  // aunque el equipo ya tuviera guardada una preferencia anterior.
+  try { guardado = localStorage.getItem('mundo_ctrl_pos_v2'); } catch (e) {}
+  try { oculto = localStorage.getItem('mundo_ctrl_oculto_v2') === '1'; } catch (e) {}
+  var pos = POS.indexOf(guardado) >= 0 ? guardado : 'izq';
+
+  function aplicar() {
+    POS.forEach(function (p) { cont.classList.remove('pos-' + p); });
+    cont.classList.add('pos-' + pos);
+    cont.classList.toggle('oculto', !!oculto);
+    Array.prototype.forEach.call(menu.querySelectorAll('button[data-pos]'), function (b) {
+      b.classList.toggle('activo', b.getAttribute('data-pos') === pos);
+    });
+    var bo = document.getElementById('ctrl-ocultar');
+    if (bo) bo.textContent = oculto ? 'Mostrar controles (H)' : 'Ocultar controles (H)';
+    try {
+      localStorage.setItem('mundo_ctrl_pos_v2', pos);
+      localStorage.setItem('mundo_ctrl_oculto_v2', oculto ? '1' : '0');
+    } catch (e) {}
+  }
+
+  btn.addEventListener('click', function (e) {
+    e.stopPropagation(); menu.classList.toggle('abierto');
+  });
+  document.addEventListener('click', function (e) {
+    if (!menu.contains(e.target) && e.target !== btn) menu.classList.remove('abierto');
+  });
+  menu.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.hasAttribute('data-pos')) { pos = b.getAttribute('data-pos'); oculto = false; }
+    else if (b.id === 'ctrl-ocultar') { oculto = !oculto; }
+    aplicar();
+  });
+  // Atajo: H oculta o muestra (no interfiere al escribir en un campo)
+  window.addEventListener('keydown', function (e) {
+    var f = document.activeElement;
+    if (f && (f.tagName === 'INPUT' || f.tagName === 'TEXTAREA' || f.isContentEditable)) return;
+    if (e.key === 'h' || e.key === 'H') { oculto = !oculto; aplicar(); }
+  });
+  aplicar();
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', iniciarControles);
+} else {
+  iniciarControles();
+}
+</script>
+
+</body>
+</html>

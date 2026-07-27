@@ -1,0 +1,3202 @@
+/* =============================================================================
+   MUNDO.js — motor de mundos 3D por franjas
+   -----------------------------------------------------------------------------
+   Este archivo no sabe nada de costas, mareas ni choritos. Sabe dibujar
+   franjas de terreno pobladas de organismos, con texturas procedurales,
+   instanciación, viento, una superficie que sube y baja, fichas y navegación.
+
+   El contenido vive en mundos/<id>.js. Ver LEEME.md.
+   ============================================================================= */
+(function (global) {
+'use strict';
+
+var MUNDO = {
+  version: 28,
+  formas: {},
+  clima: { viento: 1 },
+  datos: null
+};
+
+/* ---------------------------------------------------------------- utilidades */
+// PRNG determinista sembrado por MUNDO.semilla: el mismo mundo con la misma
+// semilla reparte árboles, rocas y detalles igual cada vez. Si no hay semilla,
+// cae en Math.random (comportamiento aleatorio de siempre).
+var _rngEstado = 0;
+var _rngSembrado = false;
+function _sembrarRng() {
+  var sem = (window.MUNDO && MUNDO.semilla != null) ? MUNDO.semilla : null;
+  if (sem == null) { _rngSembrado = false; return; }
+  _rngEstado = sem >>> 0;
+  _rngSembrado = true;
+}
+function _rng() {
+  if (!_rngSembrado) return Math.random();
+  // mulberry32
+  _rngEstado |= 0; _rngEstado = (_rngEstado + 0x6D2B79F5) | 0;
+  var t = Math.imul(_rngEstado ^ (_rngEstado >>> 15), 1 | _rngEstado);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+var azar = function (a, b) { return a + _rng() * (b - a); };
+var rad = function (g) { return g * Math.PI / 180; };
+
+function nuevo(tag, attrs) {
+  var el = document.createElement(tag);
+  for (var k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+/* ---------------------------------------------------------------- texturas
+   Todo se dibuja en un canvas al cargar: sin archivos, sin CDN, sin peso.
+   De un mismo mapa de altura salen el color y el normal map, por eso el
+   relieve calza exacto con las manchas del color.                            */
+var MOVIL_TEX = !!(AFRAME.utils.device && AFRAME.utils.device.isMobile &&
+                   AFRAME.utils.device.isMobile());
+var TAM_TEX = MOVIL_TEX ? 512 : 1024;  // máxima nitidez
+var CACHE_TEX = {};
+
+function lienzoAltura(estilo, tam) {
+  var c = document.createElement('canvas');
+  c.width = c.height = tam;
+  var g = c.getContext('2d');
+  g.fillStyle = '#808080';
+  g.fillRect(0, 0, tam, tam);
+
+  function manchas(cant, radio, fuerza) {
+    for (var i = 0; i < cant; i++) {
+      var x = Math.random() * tam, y = Math.random() * tam, r = radio * azar(0.6, 1.4);
+      var claro = Math.random() > 0.5;
+      var gr = g.createRadialGradient(x, y, 0, x, y, r);
+      gr.addColorStop(0, claro ? 'rgba(255,255,255,' + fuerza + ')'
+                               : 'rgba(0,0,0,' + fuerza + ')');
+      gr.addColorStop(1, 'rgba(128,128,128,0)');
+      g.fillStyle = gr;
+      g.beginPath(); g.arc(x, y, r, 0, 6.2832); g.fill();
+    }
+  }
+
+  // grietas finas, para la roca
+  function vetas(cant, t) {
+    g.strokeStyle = 'rgba(0,0,0,0.22)';
+    for (var i = 0; i < cant; i++) {
+      var x = Math.random() * t, y = Math.random() * t;
+      g.lineWidth = azar(0.5, 1.6);
+      g.beginPath(); g.moveTo(x, y);
+      for (var j = 0; j < 5; j++) { x += azar(-t * 0.06, t * 0.06); y += azar(-t * 0.06, t * 0.06); g.lineTo(x, y); }
+      g.stroke();
+    }
+  }
+  // ondulaciones suaves, para la arena
+  function ondas(t, fuerza) {
+    var img = g.getImageData(0, 0, t, t);
+    for (var y = 0; y < t; y++) {
+      var d = Math.sin(y / t * 6.2832 * 7) * 255 * fuerza;
+      for (var x = 0; x < t; x++) {
+        var i = (y * t + x) * 4;
+        img.data[i] = Math.max(0, Math.min(255, img.data[i] + d));
+        img.data[i + 1] = img.data[i]; img.data[i + 2] = img.data[i];
+      }
+    }
+    g.putImageData(img, 0, 0);
+  }
+
+  if (estilo === 'baldosa') {
+    // cuadrícula de baldosas: las juntas se convierten en surcos del normal map
+    var paso = tam / 4;
+    manchas(10, tam * 0.30, 0.10);
+    g.strokeStyle = 'rgba(0,0,0,0.55)';
+    g.lineWidth = Math.max(1.5, tam / 64);
+    for (var q = 0; q <= 4; q++) {
+      g.beginPath(); g.moveTo(q * paso, 0); g.lineTo(q * paso, tam); g.stroke();
+      g.beginPath(); g.moveTo(0, q * paso); g.lineTo(tam, q * paso); g.stroke();
+    }
+    manchas(160, tam * 0.012, 0.18);
+    return c;
+  }
+  if (estilo === 'asfalto') { manchas(10, tam * 0.3, 0.14); manchas(900, tam * 0.014, 0.4); return c; }
+  if (estilo === 'pasto')   { manchas(14, tam * 0.22, 0.16); manchas(1800, tam * 0.010, 0.5); return c; }
+  // Más octavas = más niveles de detalle, de la mancha grande al poro
+  if (estilo === 'roca') {
+    manchas(14, tam * 0.34, 0.30); manchas(40, tam * 0.15, 0.26);
+    manchas(120, tam * 0.06, 0.24); manchas(420, tam * 0.022, 0.28);
+    manchas(1400, tam * 0.007, 0.26); vetas(26, tam);
+  } else if (estilo === 'arena') {
+    manchas(8, tam * 0.34, 0.09); manchas(70, tam * 0.07, 0.07);
+    manchas(4200, tam * 0.006, 0.42); ondas(tam, 0.06);
+  } else if (estilo === 'nieve') {
+    manchas(10, tam * 0.38, 0.07); manchas(300, tam * 0.05, 0.06);
+    manchas(1600, tam * 0.008, 0.10);
+  } else {
+    manchas(12, tam * 0.28, 0.22); manchas(90, tam * 0.06, 0.26);
+    manchas(360, tam * 0.02, 0.26); manchas(1500, tam * 0.007, 0.24);
+  }
+  return c;
+}
+
+function lienzoOlas(tam) {
+  var c = document.createElement('canvas');
+  c.width = c.height = tam;
+  var g = c.getContext('2d');
+  var img = g.createImageData(tam, tam);
+  for (var y = 0; y < tam; y++) {
+    for (var x = 0; x < tam; x++) {
+      var u = x / tam * 6.2832, v = y / tam * 6.2832;
+      var h = 128 + 45 * Math.sin(u * 3 + v * 1.2)
+                  + 34 * Math.sin(u * 1.4 - v * 4)
+                  + 20 * Math.sin((u + v) * 6);
+      var i = (y * tam + x) * 4;
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = h;
+      img.data[i + 3] = 255;
+    }
+  }
+  g.putImageData(img, 0, 0);
+  return c;
+}
+
+function normalDesde(altura, fuerza) {
+  var tam = altura.width;
+  var src = altura.getContext('2d').getImageData(0, 0, tam, tam).data;
+  var out = document.createElement('canvas');
+  out.width = out.height = tam;
+  var ctx = out.getContext('2d');
+  var img = ctx.createImageData(tam, tam);
+  function h(x, y) {
+    x = (x + tam) % tam; y = (y + tam) % tam;
+    return src[(y * tam + x) * 4] / 255;
+  }
+  for (var y = 0; y < tam; y++) {
+    for (var x = 0; x < tam; x++) {
+      var nx = (h(x - 1, y) - h(x + 1, y)) * fuerza;
+      var ny = (h(x, y - 1) - h(x, y + 1)) * fuerza;
+      var l = Math.sqrt(nx * nx + ny * ny + 1) || 1;
+      var i = (y * tam + x) * 4;
+      img.data[i]     = (nx / l * 0.5 + 0.5) * 255;
+      img.data[i + 1] = (ny / l * 0.5 + 0.5) * 255;
+      img.data[i + 2] = (1 / l * 0.5 + 0.5) * 255;
+      img.data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return out;
+}
+
+var ANISO = 0;
+function anisotropia() {
+  if (ANISO) return ANISO;
+  var esc = document.querySelector('a-scene');
+  var r = esc && esc.renderer;
+  ANISO = (r && r.capabilities && r.capabilities.getMaxAnisotropy) ?
+          Math.min(8, r.capabilities.getMaxAnisotropy()) : 1;
+  return ANISO;
+}
+
+function aTextura(canvas, reps, esColor) {
+  var t = new THREE.CanvasTexture(canvas);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(reps, reps);
+  t.generateMipmaps = true;
+  t.minFilter = THREE.LinearMipmapLinearFilter;
+  t.anisotropy = anisotropia();   // nitidez en ángulos rasantes: el suelo deja de verse borroso a lo lejos
+  if (esColor && THREE.SRGBColorSpace) t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function superficie(base, estilo, reps) {
+  var clave = base + '|' + estilo + '|' + reps;
+  if (CACHE_TEX[clave]) return CACHE_TEX[clave];
+  var altura = lienzoAltura(estilo, TAM_TEX);
+  var col = document.createElement('canvas');
+  col.width = col.height = TAM_TEX;
+  var g = col.getContext('2d');
+  g.fillStyle = base;
+  g.fillRect(0, 0, TAM_TEX, TAM_TEX);
+  g.globalAlpha = 0.55;
+  g.globalCompositeOperation = 'overlay';
+  g.drawImage(altura, 0, 0);
+  // oclusión falsa: multiplicar por el mapa de altura hunde las grietas
+  g.globalAlpha = 0.28;
+  g.globalCompositeOperation = 'multiply';
+  g.drawImage(altura, 0, 0);
+  g.globalAlpha = 1;
+  g.globalCompositeOperation = 'source-over';
+  var fuerza = { arena: 3.5, baldosa: 7, asfalto: 4, pasto: 4, nieve: 2.5 }[estilo] || 7;
+  var res = {
+    mapa: aTextura(col, reps, true),
+    normal: aTextura(normalDesde(altura, fuerza), reps, false),
+    rugosidad: aTextura(altura, reps, false)   // lo alto brilla distinto que lo hundido
+  };
+  CACHE_TEX[clave] = res;
+  return res;
+}
+
+// Textura de corteza: vetas verticales, grietas y parches de liquen
+var TEX_CORTEZA = {};
+function texturaCorteza(base) {
+  if (TEX_CORTEZA[base]) return TEX_CORTEZA[base];
+  var t = 256;
+  var c = document.createElement('canvas');
+  c.width = c.height = t;
+  var g = c.getContext('2d');
+  g.fillStyle = base;
+  g.fillRect(0, 0, t, t);
+  // vetas verticales
+  for (var i = 0; i < 60; i++) {
+    var x = Math.random() * t;
+    var w = azar(1, 4);
+    var oscuro = Math.random() > 0.5;
+    g.strokeStyle = oscuro ? 'rgba(30,22,14,0.28)' : 'rgba(210,195,170,0.18)';
+    g.lineWidth = w;
+    g.beginPath();
+    g.moveTo(x, 0);
+    var xx = x;
+    for (var y = 0; y < t; y += 12) { xx += azar(-3, 3); g.lineTo(xx, y); }
+    g.stroke();
+  }
+  // grietas horizontales cortas
+  for (var k = 0; k < 40; k++) {
+    g.strokeStyle = 'rgba(20,14,8,0.3)';
+    g.lineWidth = azar(0.5, 1.5);
+    var gx = Math.random()*t, gy = Math.random()*t, gw = azar(6, 20);
+    g.beginPath(); g.moveTo(gx, gy); g.lineTo(gx + gw, gy + azar(-3,3)); g.stroke();
+  }
+  // parches de liquen (verde grisáceo y ocre)
+  for (var l = 0; l < 22; l++) {
+    var lx = Math.random()*t, ly = Math.random()*t, lr = azar(4, 14);
+    g.fillStyle = Math.random() > 0.5 ? 'rgba(150,168,140,0.33)' : 'rgba(178,170,120,0.28)';
+    g.beginPath();
+    for (var p = 0; p < 8; p++) {
+      var a = p/8*6.2832, rr = lr*azar(0.6,1.1);
+      g.lineTo(lx + Math.cos(a)*rr, ly + Math.sin(a)*rr);
+    }
+    g.closePath(); g.fill();
+  }
+  var tx = new THREE.CanvasTexture(c);
+  tx.wrapS = tx.wrapT = THREE.RepeatWrapping;
+  tx.repeat.set(1, 3);
+  if (THREE.SRGBColorSpace) tx.colorSpace = THREE.SRGBColorSpace;
+  TEX_CORTEZA[base] = tx;
+  return tx;
+}
+
+var TEX_HOJAS = null;
+function texturaHojas() {
+  if (TEX_HOJAS) return TEX_HOJAS;
+  var t = MOVIL_TEX ? 256 : 384;   // más resolución
+  var c = document.createElement('canvas');
+  c.width = c.height = t;
+  var g = c.getContext('2d');
+  g.clearRect(0, 0, t, t);
+  var esc = t / 128;
+  // capa de sombra de fondo (racimos oscuros) para dar profundidad al follaje
+  for (var s0 = 0; s0 < 90; s0++) {
+    g.save();
+    g.globalAlpha = 0.5;
+    g.translate(Math.random() * t, Math.random() * t);
+    var rr = azar(5, 12) * esc;
+    var grad0 = g.createRadialGradient(0,0,0, 0,0,rr);
+    grad0.addColorStop(0, 'rgba(60,70,45,0.6)');
+    grad0.addColorStop(1, 'rgba(60,70,45,0)');
+    g.fillStyle = grad0;
+    g.beginPath(); g.arc(0,0,rr,0,6.2832); g.fill();
+    g.restore();
+  }
+  g.globalAlpha = 1;
+  // hojas individuales con forma de lanceta y gradiente de luz
+  var N = MOVIL_TEX ? 700 : 1100;
+  for (var i = 0; i < N; i++) {
+    g.save();
+    g.translate(Math.random() * t, Math.random() * t);
+    g.rotate(Math.random() * 6.2832);
+    var largo = azar(4, 11) * esc, ancho = azar(1.8, 4.2) * esc;
+    // gradiente: hoja más clara en la punta, más oscura en la base
+    var base = Math.floor(azar(70, 150));
+    var punta = Math.floor(azar(170, 255));
+    var grad = g.createLinearGradient(0, largo, 0, -largo);
+    grad.addColorStop(0, 'rgb(' + base + ',' + base + ',' + base + ')');
+    grad.addColorStop(1, 'rgb(' + punta + ',' + punta + ',' + punta + ')');
+    g.fillStyle = grad;
+    g.beginPath();
+    g.moveTo(0, -largo);
+    g.quadraticCurveTo(ancho, -largo*0.1, 0, largo);
+    g.quadraticCurveTo(-ancho, -largo*0.1, 0, -largo);
+    g.fill();
+    // vena central + un par de nervios laterales
+    g.strokeStyle = 'rgba(40,45,30,0.45)';
+    g.lineWidth = 0.5 * esc;
+    g.beginPath(); g.moveTo(0, -largo); g.lineTo(0, largo*0.8); g.stroke();
+    g.lineWidth = 0.3 * esc;
+    g.beginPath(); g.moveTo(0,0); g.lineTo(ancho*0.5, largo*0.35); g.moveTo(0,0); g.lineTo(-ancho*0.5, largo*0.35); g.stroke();
+    g.restore();
+  }
+  TEX_HOJAS = new THREE.CanvasTexture(c);
+  TEX_HOJAS.wrapS = TEX_HOJAS.wrapT = THREE.RepeatWrapping;
+  TEX_HOJAS.repeat.set(3, 3);
+  if (TEX_HOJAS.generateMipmaps !== undefined) TEX_HOJAS.generateMipmaps = true;
+  if (THREE.LinearMipmapLinearFilter) TEX_HOJAS.minFilter = THREE.LinearMipmapLinearFilter;
+  if (THREE.SRGBColorSpace) TEX_HOJAS.colorSpace = THREE.SRGBColorSpace;
+  return TEX_HOJAS;
+}
+
+/* ---------------------------------------------------------------- geometrías */
+var GEOS = {};
+function geo(clave) {
+  if (GEOS[clave]) return GEOS[clave];
+  var g;
+  switch (clave) {
+    case 'esfera':   g = new THREE.SphereGeometry(1, 8, 6); break;
+    case 'esferaB':  g = new THREE.SphereGeometry(1, 6, 5); break;
+    case 'cilindro': g = new THREE.CylinderGeometry(1, 1, 1, 7); break;
+    case 'cono':     g = new THREE.ConeGeometry(1, 1, 7); break;
+    case 'conoB':    g = new THREE.ConeGeometry(1, 1, 4); break;
+    case 'tronco':   g = new THREE.CylinderGeometry(0.75, 1, 1, 6); break;
+    case 'campana':  g = new THREE.CylinderGeometry(0.55, 1, 1, 7); break;
+    case 'plano':    g = new THREE.PlaneGeometry(1, 1); break;
+    case 'hoja':     g = new THREE.PlaneGeometry(1, 1); g.translate(0, 0.5, 0); break;
+    case 'poste':    g = new THREE.CylinderGeometry(1, 1, 1, 8); g.translate(0, 0.5, 0); break;
+    case 'circulo':  g = new THREE.CircleGeometry(1, 8); break;
+    case 'toro':     g = new THREE.TorusGeometry(1, 0.28, 6, 10); break;
+    default:         g = new THREE.BoxGeometry(1, 1, 1);
+  }
+  GEOS[clave] = g;
+  return g;
+}
+
+/* ---------------------------------------------------------------- instancias */
+var LOTES = {};
+var _p = new THREE.Vector3(), _e = new THREE.Euler(),
+    _q = new THREE.Quaternion(), _s = new THREE.Vector3(),
+    _m = new THREE.Matrix4();
+
+/* pieza(forma, color, acabado, base, offset, rotación°, escala, viento) */
+var giroActual = 0;    // grados en Y aplicados a toda la figura
+var escalaActual = [1, 1, 1];  // escala local (x,y,z) aplicada a toda la figura, antes del giro
+var grupoActual = null; // si tiene nombre, las piezas van a un grupo que puede moverse
+MUNDO.grupos = {};
+MUNDO.subgrupos = {};   // grupos hijos posicionables (hojas de puerta, etc.)
+
+function pieza(forma, color, acabado, b, off, rot, esc, viento, grupoForzado) {
+  var grp = grupoForzado || grupoActual;
+  var clave = (grp || '') + '|' + forma + '|' + color + '|' + acabado;
+  var lote = LOTES[clave];
+  if (!lote) lote = LOTES[clave] = { forma: forma, color: color, acabado: acabado,
+                                     grupo: grp, datos: [], viento: false };
+  if (viento) lote.viento = true;
+  var ox = off[0] * escalaActual[0], oz = off[2] * escalaActual[2];
+  if (giroActual) {
+    var co = Math.cos(rad(giroActual)), si = Math.sin(rad(giroActual));
+    var lx = ox, lz = oz;
+    ox = lx * co + lz * si;
+    oz = -lx * si + lz * co;
+  }
+  lote.datos.push({
+    x: b[0] + ox, y: b[1] + off[1] * escalaActual[1], z: b[2] + oz,
+    rx: rot[0], ry: rot[1] + giroActual, rz: rot[2],
+    sx: esc[0] * escalaActual[0], sy: esc[1] * escalaActual[1], sz: esc[2] * escalaActual[2],
+    v: viento || 0, fase: Math.random() * 6.2832
+  });
+}
+
+function materialDe(color, acabado) {
+  if (acabado === 'follaje') {
+    return new THREE.MeshStandardMaterial({
+      color: color, map: texturaHojas(), alphaTest: 0.4, roughness: 1, metalness: 0 });
+  }
+  if (acabado === 'corteza') {
+    return new THREE.MeshStandardMaterial({
+      color: color, map: texturaCorteza(color), roughness: 0.95, metalness: 0 });
+  }
+  if (acabado === 'lamina') {
+    return new THREE.MeshStandardMaterial({
+      color: color, side: THREE.DoubleSide, roughness: 0.95, metalness: 0 });
+  }
+  if (acabado === 'vidrio') {
+    return new THREE.MeshStandardMaterial({
+      color: color, side: THREE.DoubleSide, transparent: true, opacity: 0.32,
+      roughness: 0.08, metalness: 0.2 });
+  }
+  if (acabado === 'brillo') {   // no le afecta la luz: letreros, luminarias
+    return new THREE.MeshBasicMaterial({ color: color });
+  }
+  if (acabado === 'metal') {
+    return new THREE.MeshStandardMaterial({
+      color: color, roughness: 0.32, metalness: 0.75 });
+  }
+  if (acabado === 'domo') {   // opaco pero visible por dentro Y por fuera: cúpulas y techos
+    return new THREE.MeshStandardMaterial({
+      color: color, side: THREE.DoubleSide, roughness: 0.82, metalness: 0.02 });
+  }
+  return new THREE.MeshStandardMaterial({ color: color, roughness: 0.82, metalness: 0.02 });
+}
+
+var vivos = [];   // lotes que mueve el viento
+
+function volcarLotes(padre) {
+  var raiz = new THREE.Group();
+  padre.add(raiz);
+  Object.keys(LOTES).forEach(function (clave) {
+    var lote = LOTES[clave];
+    var n = lote.datos.length;
+    if (!n) return;
+    var malla = new THREE.InstancedMesh(geo(lote.forma), materialDe(lote.color, lote.acabado), n);
+    malla.frustumCulled = false;
+    for (var i = 0; i < n; i++) {
+      var d = lote.datos[i];
+      _p.set(d.x, d.y, d.z);
+      _e.set(rad(d.rx), rad(d.ry), rad(d.rz));
+      _q.setFromEuler(_e);
+      _s.set(d.sx, d.sy, d.sz);
+      malla.setMatrixAt(i, _m.compose(_p, _q, _s));
+    }
+    malla.instanceMatrix.needsUpdate = true;
+    var destino = raiz;
+    if (lote.grupo) {
+      var esHoja = lote.grupo.indexOf('_p') >= 0;
+      var tabla = esHoja ? MUNDO.subgrupos : MUNDO.grupos;
+      if (!tabla[lote.grupo] || tabla[lote.grupo] === true) {
+        tabla[lote.grupo] = new THREE.Group();
+        raiz.add(tabla[lote.grupo]);
+      }
+      destino = tabla[lote.grupo];
+    }
+    destino.add(malla);
+    if (lote.viento) vivos.push({ malla: malla, datos: lote.datos });
+  });
+}
+
+/* ---------------------------------------------------------------- viento */
+MUNDO.puertas = [];   // { grupo, x, z, radio, abierta, corre, eje }
+MUNDO.animaciones = [];
+MUNDO.animar = function (fn) { MUNDO.animaciones.push(fn); };
+
+/* Puerta automática: el motor mueve dos hojas (grupos) en sentidos opuestos
+   cuando el observador entra en el radio. Lo declara el mundo con "puerta". */
+MUNDO.puerta = function (def) { MUNDO.puertas.push(def); };
+
+var tViento = 0, ultimoV = performance.now(), _mv = new THREE.Matrix4();
+function soplar(ahora) {
+  requestAnimationFrame(soplar);
+  var dt = Math.min(60, ahora - ultimoV);
+  ultimoV = ahora;
+  tViento += dt / 1000;
+  var t = tViento;
+  for (var a = 0; a < MUNDO.animaciones.length; a++) {
+    try { MUNDO.animaciones[a](t, dt); } catch (e) { /* una animación rota no frena el resto */ }
+  }
+  // puertas automáticas
+  if (MUNDO.puertas.length && MUNDO.jugador) {
+    var jp = MUNDO.jugador.object3D.position;
+    for (var d = 0; d < MUNDO.puertas.length; d++) {
+      var pu = MUNDO.puertas[d];
+      var cx = pu.x, cz = pu.z;
+      if (pu.sigue) { var gp = pu.sigue.position; cx += gp.x; cz += gp.z; }
+      var cerca = (jp.x - cx) * (jp.x - cx) + (jp.z - cz) * (jp.z - cz) < pu.radio * pu.radio;
+      pu.ap = (pu.ap == null) ? 0 : pu.ap;
+      pu.ap += ((cerca ? 1 : 0) - pu.ap) * Math.min(1, dt / 260);
+      var d1 = pu.hojas[0], d2 = pu.hojas[1];
+      var corr = pu.abre * pu.ap;
+      if (pu.eje === 'x') {
+        if (d1) d1.position.x = -corr;
+        if (d2) d2.position.x = corr;
+      } else {
+        if (d1) d1.position.z = -corr;
+        if (d2) d2.position.z = corr;
+      }
+      // abre/cierra el paso físico
+      if (pu.choque) pu.choque.y1 = cerca ? -99 : pu.choque._y1;
+    }
+  }
+  if (!vivos.length || !MUNDO.clima.viento) return;
+  for (var k = 0; k < vivos.length; k++) {
+    var datos = vivos[k].datos, malla = vivos[k].malla;
+    for (var i = 0; i < datos.length; i++) {
+      var d = datos[i];
+      var rafaga = 0.6 + 0.4 * Math.sin(t * 0.45 + d.x * 0.06);
+      var a = d.v * MUNDO.clima.viento * rafaga;
+      _p.set(d.x + Math.sin(t * 1.5 + d.fase) * a,
+             d.y + Math.sin(t * 2.3 + d.fase) * a * 0.25,
+             d.z + Math.cos(t * 1.2 + d.fase) * a * 0.6);
+      _e.set(rad(d.rx), rad(d.ry), rad(d.rz + Math.sin(t * 1.5 + d.fase) * a * 12));
+      _q.setFromEuler(_e);
+      _s.set(d.sx, d.sy, d.sz);
+      malla.setMatrixAt(i, _mv.compose(_p, _q, _s));
+    }
+    malla.instanceMatrix.needsUpdate = true;
+  }
+}
+requestAnimationFrame(soplar);
+
+
+/* ---------------------------------------------------------------- colisiones
+   Volúmenes que el observador no puede atravesar. Hay dos tipos:
+   cajas (paredes, edificios, vagones) y cilindros (troncos, postes).
+   Se registran solos desde los datos del mundo:
+     especies: { choca:{ r:0.3, alto:4 } }            → un cilindro por individuo
+     objetos:  { choca:[ {dx,dz,ancho,largo,alto,base} ] }  → cajas propias
+   -------------------------------------------------------------------------- */
+var CHOQUES = [];
+var RADIO_CUERPO = 0.34;
+var ALTO_CUERPO = 1.65;
+var _choqueSector = null;   // si no es null, las colisiones nuevas se etiquetan con este sector
+MUNDO.choques = CHOQUES;
+MUNDO.fisica = true;
+MUNDO.gravedad = 9.81;   // m/s²  (Tierra por defecto)
+MUNDO.saltoV = 5.2;      // velocidad inicial de salto en m/s (Tierra)
+
+function chocaCaja(x, z, ancho, largo, y0, y1, giro) {
+  var g = rad(giro || 0);
+  CHOQUES.push({ t: 'c', x: x, z: z, ax: ancho / 2, az: largo / 2,
+                 y0: y0, y1: y1, co: Math.cos(g), si: Math.sin(g), sec: _choqueSector });
+}
+function chocaCilindro(x, z, r, y0, y1) {
+  CHOQUES.push({ t: 'r', x: x, z: z, r: r, y0: y0, y1: y1, sec: _choqueSector });
+}
+
+/* Empuja la posición fuera de cualquier volumen en el que haya entrado.
+   Se resuelve por el eje de menor penetración: así uno se desliza a lo
+   largo de la pared en vez de quedarse pegado. */
+function resolverChoques(p) {
+  if (!MUNDO.fisica || !CHOQUES.length) return;
+  var pies = p.y - ALTO_CUERPO;
+  for (var i = 0; i < CHOQUES.length; i++) {
+    var c = CHOQUES[i];
+    if (pies > c.y1 - 0.3) continue;          // se puede pasar por encima
+    if (pies + ALTO_CUERPO < c.y0) continue;  // se puede pasar por debajo
+    var dx = p.x - c.x, dz = p.z - c.z;
+    if (dx * dx + dz * dz > 400) continue;    // descarte rápido
+
+    if (c.t === 'r') {
+      var d2 = dx * dx + dz * dz, rr = c.r + RADIO_CUERPO;
+      if (d2 < rr * rr) {
+        var d = Math.sqrt(d2) || 0.0001;
+        p.x = c.x + dx / d * rr;
+        p.z = c.z + dz / d * rr;
+      }
+    } else {
+      var lx = dx * c.co - dz * c.si;
+      var lz = dx * c.si + dz * c.co;
+      var ex = c.ax + RADIO_CUERPO, ez = c.az + RADIO_CUERPO;
+      if (Math.abs(lx) < ex && Math.abs(lz) < ez) {
+        if (ex - Math.abs(lx) < ez - Math.abs(lz)) lx = (lx < 0 ? -ex : ex);
+        else lz = (lz < 0 ? -ez : ez);
+        p.x = c.x + lx * c.co + lz * c.si;
+        p.z = c.z - lx * c.si + lz * c.co;
+      }
+    }
+  }
+}
+MUNDO.resolver = resolverChoques;
+
+
+/* ---------------------------------------------------------------- peligros
+   Zonas de daño declaradas por el mundo en M.peligros o en objetos con
+   campo "peligro". El motor vigila la posición del jugador y aplica daño;
+   si la salud llega a 0, se activa la pantalla de fin. También hay caída
+   al vacío: si el jugador cae bajo cierta cota, muere. */
+MUNDO.peligros = [];
+MUNDO.salud = 100;
+MUNDO.vivo = true;
+MUNDO.cotaMuerte = -30;   // caer bajo esto = muerte
+
+MUNDO.zonaPeligro = function (def) { MUNDO.peligros.push(def); };
+
+// Zonas donde cuesta caminar (regolito profundo, lava viscosa…)
+MUNDO.pegajosas = [];
+MUNDO.zonaLenta = function (def) { MUNDO.pegajosas.push(def); };
+
+/* Zonas de luz: al entrar en una, la luz global vira suavemente hacia sus
+   valores. Sirve para que se SIENTA la diferencia entre una ladera de solana
+   y el fondo umbrío de una quebrada, sin cambiar de escena.
+   def: { x, z, r | ancho+largo, ambiente, intensidad, cielo, suelo, borde } */
+MUNDO.zonasLuz = [];
+MUNDO.zonaLuz = function (def) { MUNDO.zonasLuz.push(def); };
+
+// Factor de velocidad según dónde esté el jugador (1 = normal, <1 = lento)
+MUNDO.factorVel = function (x, z) {
+  if (!MUNDO.pegajosas.length) return 1;
+  for (var i = 0; i < MUNDO.pegajosas.length; i++) {
+    var q = MUNDO.pegajosas[i];
+    var dx = x - q.x, dz = z - q.z, dentro;
+    if (q.r != null) dentro = (dx*dx + dz*dz) < q.r*q.r;
+    else dentro = Math.abs(dx) < q.ancho/2 && Math.abs(dz) < q.largo/2;
+    if (dentro) return q.factor != null ? q.factor : 0.35;
+  }
+  return 1;
+};
+
+MUNDO.dano = function (cantidad, causa) {
+  if (!MUNDO.vivo) return;
+  MUNDO.salud = Math.max(0, MUNDO.salud - cantidad);
+  var barra = document.getElementById('salud-relleno');
+  if (barra) barra.style.width = MUNDO.salud + '%';
+  var cont = document.getElementById('salud');
+  if (cont) {
+    cont.classList.add('golpe');
+    setTimeout(function () { cont.classList.remove('golpe'); }, 180);
+  }
+  if (MUNDO.salud <= 0) MUNDO.morir(causa || 'Has caído');
+};
+
+MUNDO.curar = function (cantidad) {
+  if (!MUNDO.vivo) return;
+  MUNDO.salud = Math.min(100, MUNDO.salud + cantidad);
+  var barra = document.getElementById('salud-relleno');
+  if (barra) barra.style.width = MUNDO.salud + '%';
+};
+
+MUNDO.morir = function (causa) {
+  if (!MUNDO.vivo) return;
+  MUNDO.vivo = false;
+  if (MUNDO.sonido) MUNDO.sonido('muerte');
+  var ov = document.getElementById('fin');
+  if (ov) {
+    var msj = document.getElementById('fin-causa');
+    if (msj) msj.textContent = causa || 'Fin del recorrido';
+    ov.classList.add('visible');
+  }
+};
+
+MUNDO.revivir = function () {
+  MUNDO.salud = 100;
+  MUNDO.vivo = true;
+  var barra = document.getElementById('salud-relleno');
+  if (barra) barra.style.width = '100%';
+  var ov = document.getElementById('fin');
+  if (ov) ov.classList.remove('visible');
+  // volver al punto de inicio
+  var jug = MUNDO.jugador;
+  if (jug && MUNDO.datos && MUNDO.datos.inicio) {
+    var pi = MUNDO.datos.inicio.split(' ');
+    jug.object3D.position.set(parseFloat(pi[0]), parseFloat(pi[1]), parseFloat(pi[2]));
+  }
+};
+
+// Chequeo de peligros por frame (registrado como animación)
+var _acumPeligro = 0;
+MUNDO.animar(function (t, dt) {
+  if (!MUNDO.vivo || !MUNDO.jugador) return;
+  var p = MUNDO.jugador.object3D.position;
+  // caída al vacío
+  if (p.y < MUNDO.cotaMuerte) { MUNDO.morir('Caíste al vacío'); return; }
+  if (!MUNDO.peligros.length) return;
+  _acumPeligro += dt;
+  if (_acumPeligro < 250) return;   // chequear 4 veces por segundo
+  _acumPeligro = 0;
+  for (var i = 0; i < MUNDO.peligros.length; i++) {
+    var z = MUNDO.peligros[i];
+    var dx = p.x - z.x, dz = p.z - z.z;
+    var dentro;
+    if (z.r != null) dentro = (dx*dx + dz*dz) < z.r*z.r;
+    else dentro = Math.abs(dx) < z.ancho/2 && Math.abs(dz) < z.largo/2;
+    // rango vertical opcional
+    if (dentro && z.y != null) dentro = Math.abs(p.y - z.y) < (z.altoY || 3);
+    if (dentro) {
+      MUNDO.dano(z.dano || 10, z.causa || 'Zona peligrosa');
+      if (z.unaVez) { MUNDO.peligros.splice(i, 1); i--; }
+    }
+  }
+});
+
+
+/* ---------------------------------------------------------------- gamepad
+   Joystick genérico de PC (estándar). Stick izquierdo: caminar/lateral.
+   Stick derecho: girar la mirada. Botón inferior (A): saltar/teletransporte.
+   Se activa solo al detectar un mando conectado. */
+AFRAME.registerComponent('mando', {
+  init: function () {
+    this.hay = false;
+    this.ultBoton = false;
+    var self = this;
+    window.addEventListener('gamepadconnected', function () {
+      self.hay = true;
+      var av = document.getElementById('aviso-mando');
+      if (!av) {
+        av = document.createElement('div');
+        av.id = 'aviso-mando';
+        av.style.cssText = 'position:fixed;z-index:40;left:50%;top:14px;transform:translateX(-50%);' +
+          'background:rgba(28,42,40,.7);color:#f2ece0;font:600 13px/1 system-ui;padding:9px 15px;' +
+          'border-radius:11px;border:1px solid rgba(242,236,224,.18);backdrop-filter:blur(14px);pointer-events:none;';
+        document.body.appendChild(av);
+      }
+      av.textContent = '\uD83C\uDFAE Mando conectado';
+      av.style.display = 'block';
+      setTimeout(function () { if (av) av.style.display = 'none'; }, 3500);
+    });
+    window.addEventListener('gamepaddisconnected', function () { self.hay = false; });
+  },
+  tick: function (t, dt) {
+    if (!MUNDO.vivo) return;
+    var pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    var gp = null;
+    for (var i = 0; i < pads.length; i++) { if (pads[i]) { gp = pads[i]; break; } }
+    if (!gp) return;
+    var zm = 0.18;   // zona muerta
+
+    // stick izquierdo: movimiento
+    var ejeX = gp.axes[0] || 0, ejeY = gp.axes[1] || 0;
+    var p = this.el.object3D.position;
+    var cam = this.el.sceneEl.camera;
+    if (cam && (Math.abs(ejeX) > zm || Math.abs(ejeY) > zm)) {
+      var dir = new THREE.Vector3();
+      cam.getWorldDirection(dir); dir.y = 0; dir.normalize();
+      var lado = new THREE.Vector3(-dir.z, 0, dir.x);   // perpendicular
+      var fv = MUNDO.factorVel(p.x, p.z);
+      var vel = 4.2 * fv * dt / 1000;
+      p.addScaledVector(dir, -ejeY * vel);
+      p.addScaledVector(lado, ejeX * vel);
+      var lim = MUNDO.limites;
+      p.x = THREE.MathUtils.clamp(p.x, -lim.x, lim.x);
+      p.z = THREE.MathUtils.clamp(p.z, lim.zMin, lim.zMax);
+      MUNDO.resolver(p);
+    }
+
+    // stick derecho: girar la cámara (yaw y pitch)
+    var mirX = gp.axes[2] || 0, mirY = gp.axes[3] || 0;
+    var camEl = document.getElementById('camara');
+    if (camEl && (Math.abs(mirX) > zm || Math.abs(mirY) > zm)) {
+      var lc = camEl.getAttribute('rotation') || { x: 0, y: 0, z: 0 };
+      var ny = lc.y - mirX * 2.2;
+      var nx = Math.max(-85, Math.min(85, lc.x - mirY * 1.8));
+      camEl.setAttribute('rotation', { x: nx, y: ny, z: 0 });
+      // sincronizar look-controls para que no lo revierta
+      var comp = camEl.components && camEl.components['look-controls'];
+      if (comp) {
+        comp.pitchObject.rotation.x = nx * Math.PI / 180;
+        comp.yawObject.rotation.y = ny * Math.PI / 180;
+      }
+    }
+
+    // botón A (0): saltar; si estamos en VR-tp, dispara teletransporte
+    var botonA = gp.buttons[0] && gp.buttons[0].pressed;
+    if (botonA && !this.ultBoton && MUNDO.saltar) MUNDO.saltar();
+    this.ultBoton = botonA;
+  }
+});
+
+/* ---------------------------------------------------------------- componentes */
+AFRAME.registerComponent('mirar-camara', {
+  init: function () { this.v = new THREE.Vector3(); },
+  tick: function () {
+    var cam = this.el.sceneEl.camera;
+    if (!cam) return;
+    cam.getWorldPosition(this.v);
+    this.v.y = this.el.object3D.position.y;
+    this.el.object3D.lookAt(this.v);
+  }
+});
+
+AFRAME.registerComponent('caminar', {
+  schema: { dir: { default: 0 }, vel: { default: 4.2 } },
+  init: function () {
+    this.d = new THREE.Vector3();
+    this.mira = new THREE.Vector3();
+    this.origen = new THREE.Vector3();
+    this.rayo = new THREE.Raycaster();
+    this.cargando = 0;
+    this.pasoAcum = 0;
+    var self = this;
+    var esc = this.el.sceneEl;
+    // modo de movimiento en VR: 'tp' (teletransporte) | 'mirar' (avance continuo)
+    MUNDO.vrModo = 'tp';
+    MUNDO.vrCaminar = true;
+    esc.addEventListener('enter-vr', function () { self.enVR = true; MUNDO.mostrarVR && MUNDO.mostrarVR(); });
+    esc.addEventListener('exit-vr', function () { self.enVR = false; MUNDO.ocultarVR && MUNDO.ocultarVR(); });
+  },
+  tick: function (t, dt) {
+    if (!dt) return;
+    var cam = this.el.sceneEl.camera;
+    if (!cam) return;
+
+    // ---------- VR ----------
+    if (this.enVR) {
+      if (MUNDO.vrModo === 'tp') { this._teleport(cam, dt); return; }
+      // modo mirar: avance continuo (mirar al suelo detiene)
+      var mv = this.data.dir;
+      if (MUNDO.vrCaminar && mv === 0) {
+        cam.getWorldDirection(this.mira);
+        mv = this.mira.y > -0.55 ? 1 : 0;
+      }
+      if (mv) this._avanza(cam, mv, dt);
+      return;
+    }
+
+    // ---------- pantalla / teclado ----------
+    if (this.data.dir) this._avanza(cam, this.data.dir, dt);
+  },
+
+  _avanza: function (cam, mover, dt) {
+    if (!MUNDO.vivo) return;
+    cam.getWorldDirection(this.d);
+    this.d.y = 0;
+    if (this.d.lengthSq() < 0.0001) return;
+    this.d.normalize();
+    var p = this.el.object3D.position;
+    var lim = MUNDO.limites;
+    var fv = MUNDO.factorVel(p.x, p.z);
+    // sonido de pasos: un tic cada ~420 ms de caminata (más lento si va lento)
+    this.pasoAcum += dt * fv;
+    if (this.pasoAcum > 420 && MUNDO.sonido) { this.pasoAcum = 0; MUNDO.sonido('paso'); }
+    p.addScaledVector(this.d, mover * this.data.vel * fv * dt / 1000);
+    p.x = THREE.MathUtils.clamp(p.x, -lim.x, lim.x);
+    p.z = THREE.MathUtils.clamp(p.z, lim.zMin, lim.zMax);
+    MUNDO.resolver(p);
+  },
+
+  // Teletransporte: apunta con la mirada al suelo, marca el punto y salta
+  // tras mantener la mira (fuse). Sin desplazamiento continuo → sin mareo.
+  _teleport: function (cam, dt) {
+    var marca = document.getElementById('tp-marca');
+    cam.getWorldDirection(this.d);
+    // solo apuntar si se mira hacia abajo (al suelo)
+    if (this.d.y > -0.18) {
+      if (marca) marca.setAttribute('visible', false);
+      this.cargando = 0;
+      return;
+    }
+    cam.getWorldPosition(this.origen);
+    // intersección con el plano del suelo a la altura de los pies
+    var pies = this.origen.y - (this.data.altura || 1.65);
+    var tScal = (pies - this.origen.y) / this.d.y;
+    if (tScal <= 0) { if (marca) marca.setAttribute('visible', false); return; }
+    var tx = this.origen.x + this.d.x * tScal;
+    var tz = this.origen.z + this.d.z * tScal;
+    var lim = MUNDO.limites;
+    tx = THREE.MathUtils.clamp(tx, -lim.x, lim.x);
+    tz = THREE.MathUtils.clamp(tz, lim.zMin, lim.zMax);
+    this._tx = tx; this._tz = tz;
+
+    if (marca) {
+      marca.setAttribute('visible', true);
+      marca.setAttribute('position', tx + ' ' + (pies + 0.05) + ' ' + tz);
+    }
+    // fuse: mantener la mira ~1 s dispara el salto
+    this.cargando += dt;
+    if (marca) marca.setAttribute('scale', (0.5 + 0.5 * Math.min(1, this.cargando / 900)) + ' 1 ' +
+                                            (0.5 + 0.5 * Math.min(1, this.cargando / 900)));
+    if (this.cargando >= 900) {
+      this.cargando = 0;
+      var p = this.el.object3D.position;
+      p.x = tx; p.z = tz;
+      MUNDO.resolver(p);
+      if (marca) marca.setAttribute('visible', false);
+      if (MUNDO.sonido) MUNDO.sonido('teleport');
+    }
+  }
+});
+
+AFRAME.registerComponent('piso-adherido', {
+  schema: { altura: { default: 1.65 } },
+  init: function () {
+    this.ray = new THREE.Raycaster();
+    this.abajo = new THREE.Vector3(0, -1, 0);
+    this.origen = new THREE.Vector3();
+    this.mallas = [];
+    this.acum = 0;
+  },
+  tick: function (t, dt) {
+    this.acum += dt;
+    if (this.acum < 55) return;
+    var paso = this.acum;
+    this.acum = 0;
+    if (this.mallas.length === 0) {
+      this.mallas = Array.prototype.slice.call(document.querySelectorAll('.suelo'))
+        .map(function (e) { return e.getObject3D('mesh'); })
+        .filter(function (m) { return !!m; });
+      if (this.mallas.length === 0) return;
+    }
+    var p = this.el.object3D.position;
+    var pies = p.y - this.data.altura;
+    this.origen.set(p.x, p.y + 20, p.z);
+    this.ray.set(this.origen, this.abajo);
+    var golpes = this.ray.intersectObjects(this.mallas, false);
+    if (!golpes.length) return;
+
+    // superficie candidata: la más alta que no quede por encima de la cintura.
+    // Así uno puede subir peldaños (que están un poco más arriba de los pies)
+    // pero no atraviesa un piso que tiene sobre la cabeza.
+    var umbral = pies + 0.7;   // hasta 0,7 m de subida se considera "escalón"
+    var elegido = null;
+    for (var gi = 0; gi < golpes.length; gi++) {
+      var y = golpes[gi].point.y;
+      if (y <= umbral && (elegido === null || y > elegido)) elegido = y;
+    }
+    // si no hay nada bajo el umbral, tomar el más bajo (para caer, no atravesar)
+    if (elegido === null) {
+      elegido = golpes[golpes.length - 1].point.y;
+      for (var gj = 0; gj < golpes.length; gj++)
+        if (golpes[gj].point.y < elegido) elegido = golpes[gj].point.y;
+    }
+    var objetivo = elegido + this.data.altura;
+    // velocidad vertical limitada: nada de saltos bruscos
+    var maxSube = 0.09 * paso;   // ~5 m/s subiendo escaleras
+    var maxBaja = 0.16 * paso;
+    var dif = objetivo - p.y;
+    if (dif > maxSube) dif = maxSube;
+    if (dif < -maxBaja) dif = -maxBaja;
+    p.y += dif;
+  }
+});
+
+/* Gravedad y salto: el jugador tiene velocidad vertical propia. El suelo lo
+   detecta el mismo raycast que piso-adherido, pero acá decidimos si cae. */
+AFRAME.registerComponent('gravedad', {
+  init: function () {
+    this.vy = 0;
+    this.ray = new THREE.Raycaster();
+    this.abajo = new THREE.Vector3(0, -1, 0);
+    this.origen = new THREE.Vector3();
+    this.mallas = [];
+    this.enSuelo = false;
+    var self = this;
+    window.addEventListener('keydown', function (e) {
+      if ((e.code === 'Space' || e.key === ' ') && self.enSuelo) { self.vy = MUNDO.saltoV; self.enSuelo = false; if (MUNDO.sonido) MUNDO.sonido('salto'); }
+    });
+    // botón de salto táctil
+    MUNDO.saltar = function () { if (self.enSuelo) { self.vy = MUNDO.saltoV; self.enSuelo = false; if (MUNDO.sonido) MUNDO.sonido('salto'); } };
+  },
+  tick: function (t, dt) {
+    if (!dt) return;
+    dt = Math.min(dt, 50) / 1000;
+    var p = this.el.object3D.position;
+    var alt = this.data.altura || 1.65;
+
+    // refrescar la lista de suelos cada ~1 s (captura plataformas nuevas:
+    // andén, pisos de tren, sectores procedurales…)
+    this._refr = (this._refr || 0) + dt * 1000;
+    if (this.mallas.length === 0 || this._refr > 1000) {
+      this._refr = 0;
+      this.mallas = Array.prototype.slice.call(document.querySelectorAll('.suelo'))
+        .map(function (e) { return e.getObject3D('mesh'); }).filter(function (m) { return !!m; });
+    }
+    // suelo bajo los pies
+    var sueloY = 0;
+    if (this.mallas.length) {
+      this.origen.set(p.x, p.y + 20, p.z);
+      this.ray.set(this.origen, this.abajo);
+      var golpes = this.ray.intersectObjects(this.mallas, false);
+      // umbral de subida: hasta 1,3 m sobre los pies. Permite subir a andenes
+      // y pisos de tren (altura ~1 m) sin atravesar techos (a 2,4 m+).
+      var umbral = p.y - alt + 1.3, mejor = null;
+      for (var i = 0; i < golpes.length; i++) {
+        var y = golpes[i].point.y;
+        if (y <= umbral && (mejor === null || y > mejor)) mejor = y;
+      }
+      if (mejor === null && golpes.length) {
+        mejor = golpes[golpes.length - 1].point.y;
+        for (var j = 0; j < golpes.length; j++) if (golpes[j].point.y < mejor) mejor = golpes[j].point.y;
+      }
+      sueloY = (mejor === null ? 0 : mejor) + alt;
+    } else {
+      sueloY = alt;
+    }
+
+    // integrar gravedad
+    this.vy -= MUNDO.gravedad * dt;
+    p.y += this.vy * dt;
+
+    if (p.y <= sueloY) {
+      // aterrizaje: sonar si venía cayendo con cierta velocidad
+      if (!this.enSuelo && this.vy < -3 && MUNDO.sonido) MUNDO.sonido('aterrizar');
+      // subida suave a la plataforma (escalón alto): interpola en vez de saltar
+      if (sueloY - p.y > 0.05 && sueloY - p.y < 1.4) {
+        p.y += Math.min(sueloY - p.y, 0.12 * (dt * 1000));
+        if (p.y > sueloY) p.y = sueloY;
+      } else {
+        p.y = sueloY;
+      }
+      this.vy = 0;
+      this.enSuelo = true;
+    } else {
+      this.enSuelo = false;
+    }
+  }
+});
+
+/* Superficie que sube y baja: marea, línea de nieve, napa freática… */
+AFRAME.registerComponent('nivel', {
+  schema: {
+    modo: { default: 'ciclo' }, alto: { default: 2 }, bajo: { default: 0 },
+    periodo: { default: 30000 }, nombre: { default: 'Nivel' }, unidad: { default: 'm' }
+  },
+  init: function () { this.t = 0; this.acum = 0; },
+  tick: function (time, dt) {
+    if (!dt) return;
+    var d = this.data, destino;
+    if (d.modo === 'alta') destino = d.alto;
+    else if (d.modo === 'baja') destino = d.bajo;
+    else {
+      this.t += dt;
+      var f = (Math.sin(2 * Math.PI * this.t / d.periodo - Math.PI / 2) + 1) / 2;
+      destino = d.bajo + (d.alto - d.bajo) * f;
+    }
+    var p = this.el.object3D.position;
+    p.y += (destino - p.y) * Math.min(1, dt / 400);
+    this.acum += dt;
+    if (this.acum > 120) {
+      this.acum = 0;
+      var v = p.y - (d.alto + d.bajo) / 2;
+      var caja = document.getElementById('nivel-lectura');
+      if (caja) {
+        caja.textContent = d.nombre + ': ' + (v >= 0 ? '+' : '\u2212') +
+          Math.abs(v).toFixed(2).replace('.', ',') + ' ' + d.unidad;
+      }
+    }
+  }
+});
+
+AFRAME.registerComponent('oleaje', {
+  schema: { vel: { default: 0.02 }, relieve: { default: 0.55 } },
+  init: function () { this.listo = false; },
+  tick: function (t, dt) {
+    if (!dt) return;
+    if (!this.listo) {
+      var m = this.el.getObject3D('mesh');
+      if (!m || !m.material) return;
+      this.mat = m.material;
+      this.mat.normalMap = aTextura(normalDesde(lienzoOlas(TAM_TEX), 4), 9, false);
+      this.mat.normalScale.set(this.data.relieve, this.data.relieve);
+      this.mat.needsUpdate = true;
+      this.listo = true;
+    }
+    var n = this.mat.normalMap;
+    n.offset.x += this.data.vel * dt / 1000;
+    n.offset.y += this.data.vel * 0.55 * dt / 1000;
+  }
+});
+
+/* ---------------------------------------------------------------- formas
+   Un mundo nuevo puede registrar las suyas con MUNDO.forma(nombre, fn, alto). */
+var ALTO_NOMBRE = {};
+MUNDO.forma = function (nombre, fn, altoEtiqueta) {
+  MUNDO.formas[nombre] = fn;
+  ALTO_NOMBRE[nombre] = altoEtiqueta || 1;
+};
+
+var H = { pieza: pieza, azar: azar };
+
+var ARBOLES = {
+  quillay: { alto: [5, 7.6],   copa: [1.8, 2.6], aplana: 0.85, copas: 3, tronco: '#4d3b2a' },
+  peumo:   { alto: [3.8, 6],   copa: [2.0, 2.8], aplana: 1.05, copas: 3, tronco: '#463527' },
+  litre:   { alto: [2.6, 4.2], copa: [1.4, 2.2], aplana: 0.9,  copas: 2, tronco: '#52402d' },
+  espino:  { alto: [2.8, 4.6], copa: [2.2, 3.2], aplana: 0.4,  copas: 2, tronco: '#463c2c' }
+};
+Object.keys(ARBOLES).forEach(function (tipo) {
+  MUNDO.forma(tipo, function (H, color, b) {
+    var a = ARBOLES[tipo];
+    var alt = H.azar(a.alto[0], a.alto[1]), gr = alt * 0.05;
+    H.pieza('tronco', a.tronco, 'solido', b, [0, alt / 2, 0], [0, 0, 0], [gr, alt, gr], 0);
+    for (var i = 0; i < a.copas; i++) {
+      var r = H.azar(a.copa[0], a.copa[1]) * (i ? 0.78 : 1);
+      H.pieza('esfera', color, 'follaje', b,
+        [H.azar(-r * 0.5, r * 0.5), alt + H.azar(-0.25, r * 0.5), H.azar(-r * 0.5, r * 0.5)],
+        [0, H.azar(0, 360), 0], [r, r * a.aplana, r], 0.09);
+    }
+  }, { quillay: 8.6, peumo: 7.2, litre: 5, espino: 5.2 }[tipo]);
+});
+
+MUNDO.forma('columna', function (H, color, b) {          // quisco, cardón
+  var alt = H.azar(2, 4);
+  H.pieza('cilindro', color, 'solido', b, [0, alt / 2, 0], [0, 0, 0], [0.26, alt, 0.26], 0);
+  if (Math.random() > 0.4) {
+    var br = alt * 0.45;
+    H.pieza('cilindro', color, 'solido', b, [0.42, alt * 0.62, 0], [0, 0, 0], [0.19, br, 0.19], 0);
+  }
+}, 4.4);
+
+MUNDO.forma('roseta', function (H, color, b) {           // chagual, puya
+  var r = H.azar(1, 1.6);
+  for (var i = 0; i < 11; i++) {
+    H.pieza('conoB', color, 'solido', b, [0, r * 0.35, 0],
+      [H.azar(35, 70), i * 33 + H.azar(-8, 8), 0], [0.11, r, 0.11], 0.02);
+  }
+  if (Math.random() > 0.5) {
+    var t = H.azar(1.8, 2.8);
+    H.pieza('cilindro', '#6d7a4a', 'solido', b, [0, t / 2 + r * 0.3, 0], [0, 0, 0], [0.09, t, 0.09], 0.04);
+  }
+}, 3.4);
+
+MUNDO.forma('cojin', function (H, color, b) {            // llareta, doca
+  var r = H.azar(0.7, 1.4);
+  H.pieza('esferaB', color, 'solido', b, [0, r * 0.1, 0], [0, 0, 0], [r, r * 0.35, r], 0);
+}, 1.2);
+
+MUNDO.forma('flor', function (H, color, b) {
+  var r = H.azar(0.7, 1.4);
+  H.pieza('esferaB', color, 'solido', b, [0, r * 0.1, 0], [0, 0, 0], [r, r * 0.16, r], 0);
+  for (var i = 0; i < 3; i++) {
+    H.pieza('circulo', '#c2478c', 'lamina', b,
+      [H.azar(-r * 0.7, r * 0.7), r * 0.2, H.azar(-r * 0.7, r * 0.7)], [-90, 0, 0], [0.11, 0.11, 0.11], 0);
+  }
+}, 1.2);
+
+MUNDO.forma('pasto', function (H, color, b) {
+  var h = H.azar(0.4, 0.8);
+  for (var i = 0; i < 5; i++) {
+    H.pieza('plano', color, 'lamina', b,
+      [H.azar(-0.12, 0.12), h / 2, H.azar(-0.12, 0.12)],
+      [0, H.azar(0, 360), H.azar(-20, 20)], [0.07, h, 1], 0.06);
+  }
+}, 1.1);
+
+MUNDO.forma('campana', function (H, color, b) {          // picoroco
+  var t = H.azar(0.11, 0.2);
+  H.pieza('campana', color, 'solido', b, [0, t * 0.7, 0], [0, 0, 0], [t, t * 1.4, t], 0);
+}, 0.9);
+
+MUNDO.forma('valva', function (H, color, b) {            // chorito, mejillón
+  var t = H.azar(0.08, 0.13);
+  H.pieza('esfera', color, 'solido', b, [0, t * 0.5, 0], [0, H.azar(0, 360), 0], [t, t * 0.75, t * 1.8], 0);
+}, 0.9);
+
+MUNDO.forma('capuchon', function (H, color, b) {         // lapa
+  var t = H.azar(0.1, 0.16);
+  H.pieza('cono', color, 'solido', b, [0, t * 0.3, 0], [0, 0, 0], [t, t * 0.6, t], 0);
+}, 0.9);
+
+MUNDO.forma('caracol', function (H, color, b) {
+  var t = H.azar(0.05, 0.08);
+  H.pieza('esferaB', color, 'solido', b, [0, t, 0], [0, 0, 0], [t, t * 1.3, t], 0);
+}, 0.6);
+
+MUNDO.forma('costra', function (H, color, b) {           // liquen, alfombra
+  var t = H.azar(0.3, 0.7);
+  H.pieza('circulo', color, 'lamina', b, [0, 0.02, 0], [-90, 0, H.azar(0, 360)], [t, t, t], 0);
+}, 0.6);
+
+MUNDO.forma('anemona', function (H, color, b) {
+  var t = H.azar(0.11, 0.17);
+  H.pieza('cilindro', color, 'solido', b, [0, t * 0.6, 0], [0, 0, 0], [t * 0.7, t * 1.2, t * 0.7], 0);
+  H.pieza('toro', '#d4737a', 'solido', b, [0, t * 1.2, 0], [-90, 0, 0], [t, t, t], 0.02);
+}, 1.1);
+
+MUNDO.forma('saco', function (H, color, b) {             // piure
+  var t = H.azar(0.14, 0.21);
+  H.pieza('esfera', color, 'solido', b, [0, t * 0.6, 0], [0, 0, 0], [t, t * 0.8, t], 0);
+  H.pieza('cilindro', '#c25a3c', 'solido', b, [t * 0.3, t * 1.2, 0], [0, 0, 0], [t * 0.22, t * 0.5, t * 0.22], 0);
+}, 1.1);
+
+MUNDO.forma('lamina', function (H, color, b) {           // alga
+  var h = H.azar(0.35, 0.7);
+  H.pieza('plano', color, 'lamina', b, [0, h / 2, 0],
+    [0, H.azar(0, 360), H.azar(-14, 14)], [0.2, h, 1], 0.05);
+}, 1.2);
+
+MUNDO.forma('fronda', function (H, color, b) {           // huiro
+  var h = H.azar(1.8, 4);
+  H.pieza('cilindro', '#4a3a18', 'solido', b, [0, h / 2, 0], [0, 0, 0], [0.06, h, 0.06], 0.03);
+  for (var i = 0; i < 4; i++) {
+    H.pieza('plano', color, 'lamina', b, [0, h * H.azar(0.5, 0.98), 0],
+      [H.azar(-25, 25), H.azar(0, 360), H.azar(-30, 30)],
+      [H.azar(0.5, 0.95), H.azar(1, 1.8), 1], 0.16);
+  }
+}, 4.2);
+
+MUNDO.forma('erizo', function (H, color, b) {
+  var t = H.azar(0.14, 0.21);
+  H.pieza('esfera', color, 'solido', b, [0, t, 0], [0, 0, 0], [t, t, t], 0);
+  for (var i = 0; i < 10; i++) {
+    H.pieza('conoB', '#5d1f1f', 'solido', b, [0, t, 0],
+      [H.azar(-80, 80), H.azar(0, 360), H.azar(-80, 80)], [t * 0.1, t * 0.9, t * 0.1], 0);
+  }
+}, 1.1);
+
+MUNDO.forma('concha', function (H, color, b) {
+  var t = H.azar(0.06, 0.1);
+  H.pieza('cono', color, 'solido', b, [0, t * 0.2, 0],
+    [H.azar(-20, 20), H.azar(0, 360), H.azar(-20, 20)], [t, t * 0.4, t], 0);
+}, 0.6);
+
+MUNDO.forma('roca', function (H, color, b) {
+  var t = H.azar(0.3, 1.1);
+  H.pieza('esferaB', color, 'solido', b, [0, t * 0.3, 0],
+    [H.azar(0, 40), H.azar(0, 360), H.azar(0, 40)], [t, t * 0.7, t * H.azar(0.7, 1.3)], 0);
+}, 1.6);
+
+
+/* ---------------------------------------------------------------- personas
+   Figura humana genérica con rostro. La ropa, el tono de piel y la estatura
+   vienen del mundo, en el campo "cuerpo" del objeto:
+     { forma:'persona', pos:[…], cuerpo:{ piel, pelo, chaqueta, polera, pantalon, zapato, altura } }
+   -------------------------------------------------------------------------- */
+MUNDO.forma('persona', function (H, color, b, ob) {
+  var c = (ob && ob.cuerpo) || {};
+  var piel     = c.piel     || '#c88d6b';
+  var pelo     = c.pelo     || '#241b16';
+  var chaqueta = c.chaqueta || color || '#5b3a26';
+  var polera   = c.polera   || '#1b2430';
+  var pantalon = c.pantalon || '#15171b';
+  var zapato   = c.zapato   || '#0d0e10';
+  var ojo      = c.ojo      || '#2a2320';
+  var boca     = c.boca     || '#8c5a50';
+  var k = (c.altura || 1.75) / 1.75;   // todo escala con la estatura
+
+  function P(g, col, off, rot, esc) {
+    H.pieza(g, col, 'solido', b,
+      [off[0] * k, off[1] * k, off[2] * k], rot,
+      [esc[0] * k, esc[1] * k, esc[2] * k], 0);
+  }
+
+  // piernas y zapatos
+  [-0.15, 0.15].forEach(function (x) {
+    P('caja', pantalon, [x, 0.44, 0], [0, 0, 0], [0.23, 0.88, 0.25]);
+    P('caja', zapato,   [x, 0.05, 0.06], [0, 0, 0], [0.25, 0.11, 0.4]);
+  });
+
+  // torso: polera al centro, chaqueta abierta a los lados y espalda
+  P('caja', polera,   [0, 1.16, 0.02],  [0, 0, 0], [0.36, 0.64, 0.24]);
+  P('caja', chaqueta, [-0.21, 1.16, 0.01], [0, 0, 0], [0.21, 0.68, 0.31]);
+  P('caja', chaqueta, [0.21, 1.16, 0.01],  [0, 0, 0], [0.21, 0.68, 0.31]);
+  P('caja', chaqueta, [0, 1.16, -0.14], [0, 0, 0], [0.58, 0.68, 0.1]);
+  P('caja', chaqueta, [0, 1.52, 0],     [0, 0, 0], [0.36, 0.16, 0.31]);
+
+  // brazos
+  P('caja', chaqueta, [-0.37, 1.12, 0], [0, 0, 9],  [0.18, 0.68, 0.21]);
+  P('caja', chaqueta, [0.37, 1.12, 0],  [0, 0, -9], [0.18, 0.68, 0.21]);
+
+  // cabeza
+  P('caja',   piel, [0, 1.64, 0],  [0, 0, 0], [0.15, 0.13, 0.15]);
+  P('esfera', piel, [0, 1.83, 0],  [0, 0, 0], [0.155, 0.185, 0.155]);
+
+  // ---- rostro ----
+  [-0.058, 0.058].forEach(function (x) {
+    P('esferaB', '#f0ece6', [x, 1.856, 0.125], [0, 0, 0], [0.037, 0.027, 0.022]); // ojo
+    P('esferaB', ojo,       [x, 1.853, 0.138], [0, 0, 0], [0.019, 0.019, 0.016]); // pupila
+    P('caja',    pelo,      [x, 1.906, 0.129], [0, 0, x > 0 ? -7 : 7], [0.066, 0.015, 0.022]); // ceja
+    P('esferaB', piel,      [x * 2.62, 1.828, 0.008], [0, 0, 0], [0.022, 0.036, 0.024]); // oreja
+  });
+  P('caja',    piel, [0, 1.816, 0.138], [0, 0, 0], [0.032, 0.05, 0.038]);  // nariz
+  P('caja',    boca, [0, 1.757, 0.132], [0, 0, 0], [0.072, 0.015, 0.024]); // boca
+  P('caja',    piel, [0, 1.735, 0.126], [0, 0, 0], [0.09, 0.03, 0.03]);    // mentón
+
+  // pelo: casquete y flequillo
+  P('esfera', pelo, [0, 1.9, -0.012], [0, 0, 0], [0.164, 0.128, 0.169]);
+  if (!c.calvo) P('caja', pelo, [0, 1.918, 0.108], [10, 0, 0], [0.22, 0.05, 0.12]);
+
+  // barba: cubre mentón y mejillas
+  if (c.barba) {
+    var bc = c.barba === true ? '#241b16' : c.barba;
+    P('caja',    bc, [0, 1.742, 0.118], [0, 0, 0], [0.14, 0.075, 0.05]);
+    P('esferaB', bc, [0, 1.76, 0.06],   [0, 0, 0], [0.15, 0.11, 0.15]);
+    [-0.11, 0.11].forEach(function (x) {
+      P('caja', bc, [x, 1.8, 0.05], [0, 0, 0], [0.03, 0.13, 0.05]);
+    });
+    P('caja', bc, [0, 1.79, 0.128], [0, 0, 0], [0.09, 0.03, 0.04]);  // bigote
+  }
+
+  // lentes redondos
+  if (c.lentes) {
+    var lc = c.lentes === true ? '#2a2a2a' : c.lentes;
+    [-0.058, 0.058].forEach(function (x) {
+      P('toro', lc, [x, 1.856, 0.15], [0, 0, 0], [0.05, 0.05, 0.05]);
+    });
+    P('caja', lc, [0, 1.856, 0.15], [0, 0, 0], [0.05, 0.012, 0.02]);   // puente
+    P('caja', lc, [-0.11, 1.86, 0.09], [0, 40, 0], [0.09, 0.012, 0.012]); // patillas
+    P('caja', lc, [0.11, 1.86, 0.09], [0, -40, 0], [0.09, 0.012, 0.012]);
+  }
+
+  // gorro de polerón (capucha caída en la espalda)
+  if (c.capucha) {
+    P('esferaB', chaqueta, [0, 1.32, -0.2], [20, 0, 0], [0.24, 0.28, 0.16]);
+  }
+
+  // mochila
+  if (c.mochila) {
+    var mc = c.mochila === true ? '#3a4048' : c.mochila;
+    P('caja', mc, [0, 1.2, -0.26], [0, 0, 0], [0.42, 0.6, 0.18]);
+    P('caja', '#9a9088', [-0.16, 1.28, -0.02], [12, 0, 0], [0.06, 0.5, 0.05]);
+    P('caja', '#9a9088', [0.16, 1.28, -0.02], [12, 0, 0], [0.06, 0.5, 0.05]);
+  }
+}, 2.5);
+
+
+/* ---------------------------------------------------------------- clima
+   Lluvia con THREE.Points (una sola llamada de dibujo), nubes planas y
+   control de niebla. Todo se enciende desde MUNDO.clima o desde el mundo. */
+MUNDO.lluvia = null;
+function crearLluvia(escena, cantidad, area, alto) {
+  var geo = new THREE.BufferGeometry();
+  var pos = new Float32Array(cantidad * 3);
+  var vel = new Float32Array(cantidad);
+  for (var i = 0; i < cantidad; i++) {
+    pos[i*3]   = (Math.random() - 0.5) * area;
+    pos[i*3+1] = Math.random() * alto;
+    pos[i*3+2] = (Math.random() - 0.5) * area;
+    vel[i] = 12 + Math.random() * 10;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  var mat = new THREE.PointsMaterial({ color: '#9fb4c4', size: 0.08,
+              transparent: true, opacity: 0.5, depthWrite: false });
+  var pts = new THREE.Points(geo, mat);
+  pts.frustumCulled = false;
+  escena.object3D.add(pts);
+  return { pts: pts, pos: pos, vel: vel, n: cantidad, alto: alto, area: area, activa: false };
+}
+
+MUNDO.setClima = function (modo) {
+  var escena = document.getElementById('escena');
+  var L = MUNDO.lluvia;
+  if (L) L.activa = (modo === 'lluvia' || modo === 'tormenta');
+  var niebla = escena.getAttribute('fog');
+  // cielo y niebla según el clima
+  if (modo === 'lluvia' || modo === 'tormenta') {
+    escena.setAttribute('background', 'color:#6b7480');
+    document.querySelectorAll('a-sky').forEach(function(k){ k.setAttribute('color', '#6b7480'); });
+    if (niebla) escena.setAttribute('fog', 'type:linear; color:#7b8590; near:20; far:' + (modo==='tormenta'?90:140));
+    MUNDO.clima.viento = modo === 'tormenta' ? 2.2 : 1.2;
+  } else if (modo === 'nublado') {
+    escena.setAttribute('background', 'color:#9aa8b2');
+    document.querySelectorAll('a-sky').forEach(function(k){ k.setAttribute('color', '#9aa8b2'); });
+    MUNDO.clima.viento = 1;
+  } else {
+    var c = (MUNDO.datos && MUNDO.datos.cielo) || '#a8cbe4';
+    escena.setAttribute('background', 'color:' + c);
+    document.querySelectorAll('a-sky').forEach(function(k){ k.setAttribute('color', c); });
+    MUNDO.clima.viento = 1;
+  }
+  MUNDO.clima.modo = modo;
+  if (MUNDO.audioClima) MUNDO.audioClima(modo);
+};
+
+// animación de la lluvia
+MUNDO.animar(function (t, dt) {
+  var L = MUNDO.lluvia;
+  if (!L || !L.activa) return;
+  var cam = document.getElementById('camara');
+  var cx = 0, cz = 0;
+  if (cam && cam.object3D) { var wp = new THREE.Vector3(); cam.object3D.getWorldPosition(wp); cx = wp.x; cz = wp.z; }
+  var caida = dt / 1000;
+  for (var i = 0; i < L.n; i++) {
+    L.pos[i*3+1] -= L.vel[i] * caida;
+    if (L.pos[i*3+1] < 0) {
+      L.pos[i*3+1] = L.alto;
+      L.pos[i*3]   = cx + (Math.random() - 0.5) * L.area;
+      L.pos[i*3+2] = cz + (Math.random() - 0.5) * L.area;
+    }
+  }
+  L.pts.geometry.attributes.position.needsUpdate = true;
+});
+
+
+/* ---------------------------------------------------------------- clima real
+   Consulta el tiempo actual del lugar desde donde se visita el sitio (via
+   Open-Meteo, sin API key, CORS abierto) y lo traduce a un modo de clima.
+   Solo aplica a mundos terrestres: los del sistema solar lo ignoran. */
+
+// WMO weather code → modo de clima del motor
+function climaDesdeCodigo(code) {
+  if (code == null) return 'despejado';
+  if (code === 0) return 'despejado';
+  if (code >= 1 && code <= 3) return 'nublado';        // parcial a nublado
+  if (code >= 45 && code <= 48) return 'nublado';      // niebla
+  if (code >= 51 && code <= 67) return 'lluvia';       // llovizna y lluvia
+  if (code >= 71 && code <= 77) return 'lluvia';       // nieve (usamos lluvia)
+  if (code >= 80 && code <= 82) return 'lluvia';       // chubascos
+  if (code >= 95) return 'tormenta';                   // tormenta eléctrica
+  return 'nublado';
+}
+
+MUNDO.climaReal = function (lat, lon) {
+  var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat +
+            '&longitude=' + lon + '&current=weather_code,temperature_2m,is_day';
+  return fetch(url).then(function (r) { return r.json(); }).then(function (d) {
+    var c = d && d.current ? d.current : null;
+    if (!c) throw new Error('sin datos');
+    return {
+      modo: climaDesdeCodigo(c.weather_code),
+      temp: c.temperature_2m,
+      dia: c.is_day === 1,
+      code: c.weather_code
+    };
+  });
+};
+
+// Aplica el clima real: primero geolocaliza, si falla usa una ubicación por defecto
+MUNDO.aplicarClimaReal = function (opciones) {
+  opciones = opciones || {};
+  var fallback = opciones.fallback || { lat: -33.04, lon: -71.37 };  // Villa Alemana
+  function pedir(lat, lon, fuente) {
+    MUNDO.climaReal(lat, lon).then(function (info) {
+      MUNDO.setClima(info.modo);
+      var caja = document.getElementById('clima-real-lectura');
+      if (caja) {
+        caja.textContent = 'Tiempo real: ' + info.modo +
+          (info.temp != null ? ' · ' + Math.round(info.temp) + '°C' : '') + ' (' + fuente + ')';
+      }
+      // marcar el botón activo
+      document.querySelectorAll('[data-clima]').forEach(function (b) {
+        b.setAttribute('aria-pressed', b.dataset.clima === info.modo ? 'true' : 'false');
+      });
+    }).catch(function (e) {
+      var caja = document.getElementById('clima-real-lectura');
+      if (caja) caja.textContent = 'Tiempo real no disponible';
+    });
+  }
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function (pos) { pedir(pos.coords.latitude, pos.coords.longitude, 'tu ubicación'); },
+      function () { pedir(fallback.lat, fallback.lon, 'Villa Alemana'); },
+      { timeout: 6000, maximumAge: 600000 }
+    );
+  } else {
+    pedir(fallback.lat, fallback.lon, 'Villa Alemana');
+  }
+};
+
+
+/* ---------------------------------------------------------------- aves
+   El motor sabe volar: cada ave es un cuerpo + alas que baten, y se mueve
+   en círculos amplios con leve deriva. El mundo define las ESPECIES
+   (color, tamaño, altura de vuelo, cuántas) en M.aves. */
+
+var AVES = [];   // instancias vivas
+
+// Construye la geometría de un ave (cuerpo, cabeza, cola y dos alas móviles)
+function crearAve(esp) {
+  var g = new THREE.Group();
+  var esc = esp.tam || 1;
+  var matCuerpo = new THREE.MeshStandardMaterial({ color: esp.color || '#5a4a3a', roughness: 0.8 });
+  var matPecho = new THREE.MeshStandardMaterial({ color: esp.pecho || esp.color || '#8a7a6a', roughness: 0.8 });
+  var matAla = new THREE.MeshStandardMaterial({ color: esp.ala || esp.color || '#4a3a2a', roughness: 0.85, side: THREE.DoubleSide });
+
+  // cuerpo
+  var cuerpo = new THREE.Mesh(new THREE.SphereGeometry(0.16 * esc, 7, 6), matCuerpo);
+  cuerpo.scale.set(1, 0.85, 1.7);
+  g.add(cuerpo);
+  // pecho
+  var pecho = new THREE.Mesh(new THREE.SphereGeometry(0.12 * esc, 6, 5), matPecho);
+  pecho.scale.set(1, 0.9, 1.2); pecho.position.set(0, -0.03 * esc, 0.14 * esc);
+  g.add(pecho);
+  // cabeza
+  var cab = new THREE.Mesh(new THREE.SphereGeometry(0.1 * esc, 6, 5), matCuerpo);
+  cab.position.set(0, 0.06 * esc, 0.24 * esc);
+  g.add(cab);
+  // pico
+  var pico = new THREE.Mesh(new THREE.ConeGeometry(0.03 * esc, 0.1 * esc, 4), matAla);
+  pico.rotation.x = Math.PI / 2; pico.position.set(0, 0.05 * esc, 0.34 * esc);
+  g.add(pico);
+  // cola
+  var cola = new THREE.Mesh(new THREE.BoxGeometry(0.14 * esc, 0.02 * esc, 0.24 * esc), matCuerpo);
+  cola.position.set(0, 0, -0.28 * esc);
+  g.add(cola);
+  // alas (pivotan desde el cuerpo)
+  var alaGeo = new THREE.PlaneGeometry(0.5 * esc, 0.22 * esc);
+  var alaIzq = new THREE.Group(), alaDer = new THREE.Group();
+  var mIzq = new THREE.Mesh(alaGeo, matAla); mIzq.position.x = -0.25 * esc; mIzq.rotation.y = 0.2;
+  var mDer = new THREE.Mesh(alaGeo, matAla); mDer.position.x = 0.25 * esc; mDer.rotation.y = -0.2;
+  alaIzq.add(mIzq); alaDer.add(mDer);
+  g.add(alaIzq); g.add(alaDer);
+
+  return { g: g, alaIzq: alaIzq, alaDer: alaDer };
+}
+
+// Poblar el cielo con las aves del mundo
+function poblarAves(escena, lista) {
+  lista.forEach(function (esp) {
+    var n = esp.n || 3;
+    for (var i = 0; i < n; i++) {
+      var ave = crearAve(esp);
+      escena.object3D.add(ave.g);
+      AVES.push({
+        modelo: ave,
+        // trayectoria: círculo con centro, radio, altura y velocidad angular
+        cx: esp.centro ? esp.centro[0] : azar(-30, 30),
+        cz: esp.centro ? esp.centro[2] : azar(-30, 30),
+        r: azar(esp.radio ? esp.radio[0] : 8, esp.radio ? esp.radio[1] : 18),
+        alt: azar(esp.altura ? esp.altura[0] : 6, esp.altura ? esp.altura[1] : 14),
+        vel: (esp.vel || 0.25) * (Math.random() > 0.5 ? 1 : -1) * azar(0.7, 1.3),
+        fase: Math.random() * 6.2832,
+        bateo: azar(8, 14),           // velocidad del aleteo
+        planea: esp.planea || 0,      // 0 = siempre aletea, 1 = planea a ratos
+        nombre: esp.nombre
+      });
+    }
+  });
+}
+
+// Animar el vuelo (registrado como animación del motor)
+MUNDO.animar(function (t, dt) {
+  if (!AVES.length) return;
+  for (var i = 0; i < AVES.length; i++) {
+    var a = AVES[i];
+    var ang = a.fase + t * a.vel;
+    var x = a.cx + Math.cos(ang) * a.r;
+    var z = a.cz + Math.sin(ang) * a.r;
+    var y = a.alt + Math.sin(t * 0.6 + a.fase) * 1.5;   // sube y baja suave
+    var g = a.modelo.g;
+    g.position.set(x, y, z);
+    // orientar en la dirección del vuelo (tangente al círculo)
+    var tx = -Math.sin(ang) * a.vel, tz = Math.cos(ang) * a.vel;
+    g.rotation.y = Math.atan2(tx, tz);
+    // aleteo: planea a ratos si la especie lo hace
+    var planeando = a.planea && (Math.sin(t * 0.5 + a.fase) > 0.3);
+    var bat = planeando ? 0.1 : Math.sin(t * a.bateo + a.fase) * 0.9;
+    a.modelo.alaIzq.rotation.z = bat;
+    a.modelo.alaDer.rotation.z = -bat;
+  }
+});
+
+
+/* ---------------------------------------------------------------- sonido
+   Todo el audio se SINTETIZA con WebAudio: sin archivos, sin CDN.
+   - Ambiente (viento, lluvia): ruido filtrado, volumen según el clima.
+   - Puntual (teletransporte, clic): tonos cortos.
+   - Posicional: fuentes con posición; el volumen sube al acercarse.
+   Los navegadores bloquean el audio hasta el primer toque: lo desbloqueamos. */
+var AUDIO = { ctx: null, listo: false, master: null, fuentes: [], cola: [], buses: {} };
+
+// Volúmenes por categoría (0..1). Ajustables desde el panel de mezcla.
+MUNDO.mezcla = { ambiente: 0.5, naturaleza: 0.95, fauna: 1.0, efectos: 0.8 };
+
+// Encola una tarea de audio; se ejecuta ya si está listo, o al desbloquear.
+function alAudio(fn) {
+  if (AUDIO.listo) { try { fn(); } catch (e) { console.warn('audio:', e); } }
+  else AUDIO.cola.push(fn);
+}
+
+function iniAudio() {
+  if (AUDIO.ctx) return true;
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) { console.warn('WebAudio no soportado'); return false; }
+    AUDIO.ctx = new AC();
+    AUDIO.master = AUDIO.ctx.createGain();
+    AUDIO.master.gain.value = 0.7;
+    AUDIO.master.connect(AUDIO.ctx.destination);
+    // buses de categoría, cada uno con su ganancia
+    ['ambiente', 'naturaleza', 'fauna', 'efectos'].forEach(function (cat) {
+      var g = AUDIO.ctx.createGain();
+      g.gain.value = MUNDO.mezcla[cat];
+      g.connect(AUDIO.master);
+      AUDIO.buses[cat] = g;
+    });
+    return true;
+  } catch (e) { AUDIO.ctx = null; console.warn('audio init:', e); return false; }
+}
+
+// desbloqueo al primer gesto (no cancela el evento; deja pasar el resto)
+function desbloquearAudio() {
+  if (AUDIO.listo) return;
+  if (!iniAudio()) return;
+  var seguir = function () {
+    AUDIO.listo = true;
+    var c = AUDIO.cola; AUDIO.cola = [];
+    for (var i = 0; i < c.length; i++) { try { c[i](); } catch (e) { console.warn('audio cola:', e); } }
+  };
+  // resume puede devolver promesa; esperar a que realmente corra
+  if (AUDIO.ctx.state === 'suspended') {
+    var pr = AUDIO.ctx.resume();
+    if (pr && pr.then) pr.then(seguir, seguir); else seguir();
+  } else {
+    seguir();
+  }
+}
+// pasivos para no interferir con el teletransporte ni el clic
+window.addEventListener('pointerdown', desbloquearAudio, { passive: true, capture: true });
+window.addEventListener('touchstart', desbloquearAudio, { passive: true, capture: true });
+window.addEventListener('keydown', desbloquearAudio);
+window.addEventListener('click', desbloquearAudio, { capture: true });
+
+// diagnóstico: llamar MUNDO.audioEstado() en consola
+MUNDO.setMezcla = function (cat, v) {
+  MUNDO.mezcla[cat] = v;
+  if (AUDIO.buses[cat]) AUDIO.buses[cat].gain.setTargetAtTime(v, AUDIO.ctx.currentTime, 0.1);
+};
+
+MUNDO.audioEstado = function () {
+  return {
+    contexto: AUDIO.ctx ? AUDIO.ctx.state : 'sin crear',
+    listo: AUDIO.listo,
+    fuentes: AUDIO.fuentes.length,
+    enCola: AUDIO.cola.length,
+    master: AUDIO.master ? AUDIO.master.gain.value : null
+  };
+};
+
+// Buffer de ruido blanco reutilizable
+function bufferRuido() {
+  if (AUDIO._ruido) return AUDIO._ruido;
+  var n = AUDIO.ctx.sampleRate * 2;
+  var buf = AUDIO.ctx.createBuffer(1, n, AUDIO.ctx.sampleRate);
+  var d = buf.getChannelData(0);
+  for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  AUDIO._ruido = buf;
+  return buf;
+}
+
+// AMBIENTE: viento (ruido grave filtrado) y lluvia (ruido agudo)
+MUNDO.audioAmbiente = { viento: null, lluvia: null };
+function crearAmbiente() {
+  if (!AUDIO.ctx) return;
+  var ctx = AUDIO.ctx, ahora = ctx.currentTime;
+
+  /* ---------- VIENTO ----------
+     El viento sonaba a mar porque usaba la misma receta que las olas: ruido
+     pasa-bajos + un LFO senoidal lento subiendo y bajando el volumen (ese
+     vaivén rítmico ES una ola rompiendo). El viento real no tiene ritmo: tiene
+     un silbido en la banda media, ráfagas irregulares y siseo agudo sostenido.
+     Separo esas tres capas y muevo las ráfagas con dos LFO inconmensurables. */
+  var vGain = ctx.createGain(); vGain.gain.value = 0.07;   // audioClima() sube/baja esto
+  vGain.connect(AUDIO.buses.ambiente);
+  MUNDO.audioAmbiente.viento = vGain;
+
+  // Capa 1 — cuerpo grave (el empuje del aire). Estable, sin ritmo.
+  var cuerpo = ctx.createBufferSource(); cuerpo.buffer = bufferRuido(); cuerpo.loop = true;
+  var cuerpoLP = ctx.createBiquadFilter(); cuerpoLP.type = 'lowpass'; cuerpoLP.frequency.value = 500;
+  var cuerpoG = ctx.createGain(); cuerpoG.gain.value = 0.55;
+  cuerpo.connect(cuerpoLP); cuerpoLP.connect(cuerpoG); cuerpoG.connect(vGain);
+
+  // Capa 2 — SILBIDO (lo que el mar no tiene): banda media resonante que se
+  // barre con las ráfagas. Ruido → pasa-banda con Q alto = aire pasando por un borde.
+  var silbido = ctx.createBufferSource(); silbido.buffer = bufferRuido(); silbido.loop = true;
+  var silbidoBP = ctx.createBiquadFilter(); silbidoBP.type = 'bandpass';
+  silbidoBP.frequency.value = 550; silbidoBP.Q.value = 4.5;
+  var silbidoG = ctx.createGain(); silbidoG.gain.value = 0.32;
+  silbido.connect(silbidoBP); silbidoBP.connect(silbidoG); silbidoG.connect(vGain);
+
+  // Capa 3 — siseo agudo (turbulencia fina). Sostenido, da "aire".
+  var siseo = ctx.createBufferSource(); siseo.buffer = bufferRuido(); siseo.loop = true;
+  var siseoHP = ctx.createBiquadFilter(); siseoHP.type = 'highpass'; siseoHP.frequency.value = 3200;
+  var siseoG = ctx.createGain(); siseoG.gain.value = 0.12;
+  siseo.connect(siseoHP); siseoHP.connect(siseoG); siseoG.connect(vGain);
+
+  // RÁFAGAS irregulares: dos LFO de frecuencias inconmensurables (0.07 y 0.163
+  // Hz) que nunca se repiten igual. Modulan volumen y frecuencia del silbido.
+  var g1 = ctx.createOscillator(); g1.type = 'sine'; g1.frequency.value = 0.07;
+  var g2 = ctx.createOscillator(); g2.type = 'sine'; g2.frequency.value = 0.163;
+  var m1 = ctx.createGain(); m1.gain.value = 0.20; g1.connect(m1); m1.connect(silbidoG.gain);
+  var m2 = ctx.createGain(); m2.gain.value = 0.14; g2.connect(m2); m2.connect(silbidoG.gain);
+  var mf1 = ctx.createGain(); mf1.gain.value = 220; g1.connect(mf1); mf1.connect(silbidoBP.frequency);
+  var mf2 = ctx.createGain(); mf2.gain.value = 130; g2.connect(mf2); mf2.connect(silbidoBP.frequency);
+  var ms = ctx.createGain(); ms.gain.value = 0.05; g1.connect(ms); ms.connect(siseoG.gain);
+
+  cuerpo.start(ahora); silbido.start(ahora); siseo.start(ahora);
+  g1.start(ahora); g2.start(ahora);
+
+  /* ---------- LLUVIA (empieza en silencio, sube con el clima) ---------- */
+  var lFuente = ctx.createBufferSource(); lFuente.buffer = bufferRuido(); lFuente.loop = true;
+  var lFiltro = ctx.createBiquadFilter(); lFiltro.type = 'highpass'; lFiltro.frequency.value = 1800;
+  var lGain = ctx.createGain(); lGain.gain.value = 0;
+  lFuente.connect(lFiltro); lFiltro.connect(lGain); lGain.connect(AUDIO.buses.ambiente);
+  lFuente.start(ahora);
+  MUNDO.audioAmbiente.lluvia = lGain;
+}
+
+// Ajusta el ambiente según el modo de clima
+MUNDO.audioClima = function (modo) {
+  if (!AUDIO.ctx || !MUNDO.audioAmbiente.lluvia) return;
+  var t = AUDIO.ctx.currentTime;
+  var lluvia = 0, viento = 0.07;
+  if (modo === 'lluvia')  { lluvia = 0.2; viento = 0.1; }
+  if (modo === 'tormenta'){ lluvia = 0.32; viento = 0.16; }
+  if (modo === 'nublado') { viento = 0.08; }
+  MUNDO.audioAmbiente.lluvia.gain.setTargetAtTime(lluvia, t, 1.5);
+  MUNDO.audioAmbiente.viento.gain.setTargetAtTime(viento, t, 1.5);
+};
+
+// PUNTUAL: tono corto (teletransporte, clic, etc.)
+MUNDO.sonido = function (tipo) {
+  if (!AUDIO.ctx) { iniAudio(); }
+  if (!AUDIO.ctx) return;
+  if (AUDIO.ctx.state === 'suspended') AUDIO.ctx.resume();
+  var t = AUDIO.ctx.currentTime;
+  var osc = AUDIO.ctx.createOscillator();
+  var g = AUDIO.ctx.createGain();
+  var destino = (AUDIO.buses && AUDIO.buses.efectos) ? AUDIO.buses.efectos : AUDIO.master;
+  osc.connect(g); g.connect(destino);
+  if (tipo === 'paso') {
+    // paso: golpe seco y corto de ruido filtrado (no tono)
+    var fp = AUDIO.ctx.createBufferSource(); fp.buffer = bufferRuido();
+    var flp = AUDIO.ctx.createBiquadFilter(); flp.type = 'lowpass'; flp.frequency.value = 320; flp.Q.value = 1;
+    var gp = AUDIO.ctx.createGain();
+    fp.connect(flp); flp.connect(gp); gp.connect(destino);
+    gp.gain.setValueAtTime(0.09, t); gp.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+    fp.start(t); fp.stop(t + 0.1);
+    return;
+  } else if (tipo === 'salto') {
+    osc.type = 'sine'; osc.frequency.setValueAtTime(260, t);
+    osc.frequency.exponentialRampToValueAtTime(480, t + 0.14);
+    g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+    osc.start(t); osc.stop(t + 0.19);
+    return;
+  } else if (tipo === 'aterrizar') {
+    var fa = AUDIO.ctx.createBufferSource(); fa.buffer = bufferRuido();
+    var fla = AUDIO.ctx.createBiquadFilter(); fla.type = 'lowpass'; fla.frequency.value = 200;
+    var ga = AUDIO.ctx.createGain();
+    fa.connect(fla); fla.connect(ga); ga.connect(destino);
+    ga.gain.setValueAtTime(0.16, t); ga.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+    fa.start(t); fa.stop(t + 0.17);
+    return;
+  }
+  if (tipo === 'teleport') {
+    osc.type = 'sine'; osc.frequency.setValueAtTime(300, t);
+    osc.frequency.exponentialRampToValueAtTime(900, t + 0.18);
+    g.gain.setValueAtTime(0.18, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    osc.start(t); osc.stop(t + 0.26);
+  } else if (tipo === 'marca') {
+    osc.type = 'triangle'; osc.frequency.setValueAtTime(600, t);
+    g.gain.setValueAtTime(0.08, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+    osc.start(t); osc.stop(t + 0.13);
+  } else if (tipo === 'golpe') {
+    osc.type = 'square'; osc.frequency.setValueAtTime(140, t);
+    osc.frequency.exponentialRampToValueAtTime(70, t + 0.08);
+    g.gain.setValueAtTime(0.14, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    osc.start(t); osc.stop(t + 0.11);
+  } else if (tipo === 'moneda') {
+    osc.type = 'triangle'; osc.frequency.setValueAtTime(880, t);
+    osc.frequency.exponentialRampToValueAtTime(1320, t + 0.1);
+    g.gain.setValueAtTime(0.16, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    osc.start(t); osc.stop(t + 0.23);
+  } else if (tipo === 'muerte') {
+    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(400, t);
+    osc.frequency.exponentialRampToValueAtTime(60, t + 0.7);
+    g.gain.setValueAtTime(0.22, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
+    osc.start(t); osc.stop(t + 0.82);
+  } else if (tipo === 'ficha') {
+    osc.type = 'sine'; osc.frequency.setValueAtTime(520, t);
+    osc.frequency.exponentialRampToValueAtTime(680, t + 0.09);
+    g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    osc.start(t); osc.stop(t + 0.16);
+  }
+};
+
+/* POSICIONAL: una fuente con posición fija. El volumen depende de la
+   distancia al oyente (la cámara). refDist = donde suena a tope,
+   maxDist = donde deja de oírse. */
+MUNDO.audioFuente = function (def) {
+  function build() {
+    if (!AUDIO.ctx) return;
+    var bus = AUDIO.buses[def.cat || 'naturaleza'] || AUDIO.master;
+    var g = AUDIO.ctx.createGain(); g.gain.value = 0;   // ganancia por distancia
+    var reg = { x: def.pos[0], y: def.pos[1], z: def.pos[2],
+                ref: def.refDist || 4, max: def.maxDist || 22,
+                vol: def.vol != null ? def.vol : 0.3, g: g };
+
+    if (def.tipo === 'olas') {
+      // Olas: ruido filtrado + un vaivén rítmico (rompiente cada ~5 s).
+      var fuente = AUDIO.ctx.createBufferSource();
+      fuente.buffer = bufferRuido(); fuente.loop = true;
+      var filtro = AUDIO.ctx.createBiquadFilter();
+      filtro.type = 'lowpass'; filtro.frequency.value = def.freq || 650; filtro.Q.value = 0.6;
+      var vaiven = AUDIO.ctx.createGain(); vaiven.gain.value = 0.5;
+      // LFO lento que sube y baja el volumen: eso es lo que suena a "ola que rompe"
+      var lfo = AUDIO.ctx.createOscillator(); lfo.type = 'sine';
+      lfo.frequency.value = def.ritmo || 0.19;   // ~1 ola cada 5 s
+      var lfoG = AUDIO.ctx.createGain(); lfoG.gain.value = 0.42;
+      lfo.connect(lfoG); lfoG.connect(vaiven.gain);
+      // segundo filtro que abre en la cresta (espuma) para dar brillo variable
+      var bril = AUDIO.ctx.createBiquadFilter(); bril.type = 'highpass'; bril.frequency.value = 500;
+      fuente.connect(filtro); filtro.connect(vaiven); vaiven.connect(g); g.connect(bus);
+      fuente.start(); lfo.start();
+    } else {
+      var f2 = AUDIO.ctx.createBufferSource();
+      f2.buffer = bufferRuido(); f2.loop = true;
+      var flt = AUDIO.ctx.createBiquadFilter();
+      flt.type = def.filtro || 'bandpass'; flt.frequency.value = def.freq || 800; flt.Q.value = def.q || 1;
+      // trémolo suave para hojas y fauna (susurro/canto entrecortado)
+      if (def.tremolo) {
+        var trem = AUDIO.ctx.createGain(); trem.gain.value = 0.6;
+        var tl = AUDIO.ctx.createOscillator(); tl.type = 'sine'; tl.frequency.value = def.tremolo;
+        var tg = AUDIO.ctx.createGain(); tg.gain.value = 0.35;
+        tl.connect(tg); tg.connect(trem.gain);
+        f2.connect(flt); flt.connect(trem); trem.connect(g); g.connect(bus);
+        f2.start(); tl.start();
+      } else {
+        f2.connect(flt); flt.connect(g); g.connect(bus);
+        f2.start();
+      }
+    }
+    AUDIO.fuentes.push(reg);
+  }
+  alAudio(build);
+};
+
+// Actualizar volúmenes posicionales según la cámara (registrado como animación)
+var _wp = null;
+MUNDO.animar(function (t, dt) {
+  if (!AUDIO.ctx || !AUDIO.fuentes.length) return;
+  var cam = document.getElementById('camara');
+  if (!cam || !cam.object3D) return;
+  if (!_wp) _wp = new THREE.Vector3();
+  cam.object3D.getWorldPosition(_wp);
+  for (var i = 0; i < AUDIO.fuentes.length; i++) {
+    var f = AUDIO.fuentes[i];
+    var dx = _wp.x - f.x, dy = _wp.y - f.y, dz = _wp.z - f.z;
+    var d = Math.sqrt(dx*dx + dy*dy + dz*dz);
+    // atenuación lineal entre refDist (tope) y maxDist (silencio)
+    var vol;
+    if (d <= f.ref) vol = f.vol;
+    else if (d >= f.max) vol = 0;
+    else vol = f.vol * (1 - (d - f.ref) / (f.max - f.ref));
+    f.g.gain.setTargetAtTime(vol, AUDIO.ctx.currentTime, 0.15);
+  }
+});
+
+/* Panel de atmósferas: botones para cambiar el ambiente del hábitat */
+function crearPanelAtmosfera(lista) {
+  var ya = document.getElementById('atm-panel');
+  if (ya) { ya.remove(); return; }
+  var p = document.createElement('div');
+  p.id = 'atm-panel';
+  var html = '<div class="mz-cab"><b>Atmósfera del hábitat</b>' +
+             '<button id="atm-cerrar" aria-label="Cerrar">\u00d7</button></div>' +
+             '<div class="atm-nota">Se expande a toda la superficie del planeta</div>';
+  lista.forEach(function (a, i) {
+    html += '<button class="atm-op" data-i="' + i + '" style="--sw:' + (a.cielo || '#333') + '">' +
+            '<span class="atm-punto"></span>' + a.nombre + '</button>';
+  });
+  p.innerHTML = html;
+  document.body.appendChild(p);
+  p.querySelectorAll('.atm-op').forEach(function (b) {
+    b.onclick = function () {
+      MUNDO.setAtmosfera(lista[parseInt(b.dataset.i, 10)]);
+      p.querySelectorAll('.atm-op').forEach(function(o){o.classList.remove('activo');});
+      b.classList.add('activo');
+    };
+  });
+  document.getElementById('atm-cerrar').onclick = function () { p.remove(); };
+}
+
+/* Panel de mezcla de audio: un slider por categoría */
+function crearPanelMezcla() {
+  var ya = document.getElementById('mezcla-panel');
+  if (ya) { ya.remove(); return; }   // toggle
+  var CATS = [
+    { id: 'ambiente',   nombre: 'Ambiente',    desc: 'Viento y lluvia' },
+    { id: 'naturaleza', nombre: 'Naturaleza',  desc: 'Hojas, agua, olas' },
+    { id: 'fauna',      nombre: 'Fauna',       desc: 'Aves y animales' },
+    { id: 'efectos',    nombre: 'Efectos',     desc: 'Teletransporte, fichas' }
+  ];
+  var p = document.createElement('div');
+  p.id = 'mezcla-panel';
+  var html = '<div class="mz-cab"><b>Mezcla de sonido</b>' +
+             '<button id="mz-cerrar" aria-label="Cerrar">\u00d7</button></div>';
+  CATS.forEach(function (c) {
+    var v = Math.round((MUNDO.mezcla[c.id] != null ? MUNDO.mezcla[c.id] : 1) * 100);
+    html += '<div class="mz-fila">' +
+      '<div class="mz-txt"><span>' + c.nombre + '</span><small>' + c.desc + '</small></div>' +
+      '<input type="range" min="0" max="100" value="' + v + '" data-cat="' + c.id + '">' +
+      '<span class="mz-val" data-val="' + c.id + '">' + v + '</span></div>';
+  });
+  html += '<button id="mz-mute" class="mz-mute">Silenciar todo</button>';
+  p.innerHTML = html;
+  document.body.appendChild(p);
+
+  p.querySelectorAll('input[type=range]').forEach(function (sl) {
+    sl.oninput = function () {
+      var cat = sl.dataset.cat, v = parseInt(sl.value, 10) / 100;
+      MUNDO.setMezcla(cat, v);
+      var et = p.querySelector('[data-val="' + cat + '"]');
+      if (et) et.textContent = sl.value;
+    };
+  });
+  document.getElementById('mz-cerrar').onclick = function () { p.remove(); };
+  var muted = false;
+  document.getElementById('mz-mute').onclick = function () {
+    muted = !muted;
+    if (AUDIO.master) AUDIO.master.gain.setTargetAtTime(muted ? 0 : 0.7, AUDIO.ctx.currentTime, 0.1);
+    this.textContent = muted ? 'Activar sonido' : 'Silenciar todo';
+    this.classList.toggle('activo', muted);
+  };
+}
+
+
+/* ---------------------------------------------------------------- atmósferas
+   Cambia el ambiente visual del mundo en vivo: color de cielo, niebla y tinte.
+   Pensado para el hábitat de Mercurio (atmósfera terrestre, coloreada, etc.)
+   pero es genérico. Las define el mundo en M.atmosferas y se activan por botón. */
+
+/* Sonido ambiental de la atmósfera activa. Cada atmósfera puede definir su
+   propio carácter (viento denso, zumbido grave, silencio del vacío). */
+MUNDO._atmFuentes = null;
+MUNDO.audioAtmosfera = function (a) {
+  function build() {
+    if (!AUDIO.ctx) return;
+    // crear las fuentes de atmósfera una sola vez, luego solo ajustar ganancias
+    if (!MUNDO._atmFuentes) {
+      var mk = function (tipo, freq, q) {
+        var f = AUDIO.ctx.createBufferSource(); f.buffer = bufferRuido(); f.loop = true;
+        var flt = AUDIO.ctx.createBiquadFilter(); flt.type = tipo; flt.frequency.value = freq; flt.Q.value = q || 1;
+        var g = AUDIO.ctx.createGain(); g.gain.value = 0;
+        f.connect(flt); flt.connect(g); g.connect(AUDIO.buses.ambiente);
+        f.start();
+        return g;
+      };
+      MUNDO._atmFuentes = {
+        viento: mk('lowpass', 500, 0.7),     // silbido de aire
+        subsuelo: mk('lowpass', 90, 1.2),    // zumbido grave subterráneo
+        agudo: mk('highpass', 2600, 0.8)     // siseo tenue (aire denso)
+      };
+    }
+    var F = MUNDO._atmFuentes, t = AUDIO.ctx.currentTime;
+    // niveles según el "cuerpo" de la atmósfera (a.aire: 0 vacío … 1 densa)
+    var aire = a.aire != null ? a.aire : (a.niebla ? 0.6 : 0);
+    F.viento.gain.setTargetAtTime(aire * 0.22, t, 1.2);
+    F.subsuelo.gain.setTargetAtTime((a.subsuelo || 0) * 0.3, t, 1.2);
+    F.agudo.gain.setTargetAtTime(aire * 0.06, t, 1.2);
+  }
+  alAudio(build);
+};
+
+MUNDO.setAtmosfera = function (a) {
+  var escena = document.getElementById('escena');
+  if (!escena) return;
+  // cielo (cambiar color no recompila materiales, es seguro)
+  escena.setAttribute('background', 'color:' + (a.cielo || '#050608'));
+  document.querySelectorAll('a-sky').forEach(function (k) { k.setAttribute('color', a.cielo || '#050608'); });
+  // niebla: NO se quita nunca (quitarla causa un destello al recompilar los
+  // materiales). Si no se quiere, se empuja lejísimos con el color del cielo.
+  if (a.niebla) {
+    escena.setAttribute('fog', 'type:linear; color:' + a.niebla + '; near:' + (a.near || 8) + '; far:' + (a.far || 90));
+  } else {
+    escena.setAttribute('fog', 'type:linear; color:' + (a.cielo || '#050608') + '; near:400; far:1200');
+  }
+  // luz ambiental teñida
+  var amb = document.getElementById('luz-ambiente');
+  if (amb && a.luz) amb.setAttribute('light', 'type:ambient; color:' + a.luz + '; intensity:' + (a.intensidad || 0.6));
+  // sonido de la atmósfera
+  if (MUNDO.audioAtmosfera) MUNDO.audioAtmosfera(a);
+  MUNDO.atmActual = a.id;
+  // aviso breve
+  var av = document.getElementById('aviso-atm');
+  if (av && a.nombre) {
+    av.textContent = a.nombre;
+    av.style.display = 'block';
+    clearTimeout(MUNDO._atmT);
+    MUNDO._atmT = setTimeout(function () { av.style.display = 'none'; }, 2500);
+  }
+};
+
+
+/* ---------------------------------------------------------------- muestras
+   Recolección de muestras (roca, tierra, sustancia…) e inventario. El jugador
+   recoge cerca de puntos de muestra y luego las examina en el laboratorio.
+   Cada muestra tiene un id, nombre, tipo y un análisis (texto de laboratorio). */
+MUNDO.inventario = [];
+MUNDO.puntosMuestra = [];   // { x, z, id, nombre, tipo, analisis, tomada }
+
+MUNDO.puntoMuestra = function (def) {
+  if (def.pos) { def.x = def.pos[0]; def.z = def.pos[2]; }
+  MUNDO.puntosMuestra.push(def);
+};
+
+// Recolectar: revisa si hay un punto de muestra cerca y lo guarda
+MUNDO.recolectar = function () {
+  if (!MUNDO.jugador) return;
+  var p = MUNDO.jugador.object3D.position;
+  var mejor = null, mejorD = 9;   // radio de recolección
+  for (var i = 0; i < MUNDO.puntosMuestra.length; i++) {
+    var m = MUNDO.puntosMuestra[i];
+    if (m.tomada) continue;
+    var dx = p.x - m.x, dz = p.z - m.z, d = dx*dx + dz*dz;
+    if (d < mejorD) { mejorD = d; mejor = m; }
+  }
+  if (!mejor) { avisoMuestra('No hay muestras cerca'); return; }
+  mejor.tomada = true;
+  MUNDO.inventario.push({ id: mejor.id, nombre: mejor.nombre, tipo: mejor.tipo, analisis: mejor.analisis });
+  if (MUNDO.sonido) MUNDO.sonido('ficha');
+  avisoMuestra('Recolectado: ' + mejor.nombre);
+  actualizarContadorMuestras();
+  // ocultar el marcador visual si existe
+  var marca = document.getElementById('m-' + mejor.id);
+  if (marca && marca.parentNode) marca.setAttribute('visible', false);
+};
+
+function avisoMuestra(txt) {
+  var av = document.getElementById('aviso-muestra');
+  if (!av) {
+    av = document.createElement('div');
+    av.id = 'aviso-muestra';
+    av.style.cssText = 'position:fixed;z-index:41;left:50%;bottom:150px;transform:translateX(-50%);' +
+      'background:rgba(45,90,60,.8);color:#f2ece0;font:600 13px/1 system-ui;padding:10px 16px;' +
+      'border-radius:11px;border:1px solid rgba(242,236,224,.2);backdrop-filter:blur(14px);pointer-events:none;';
+    document.body.appendChild(av);
+  }
+  av.textContent = txt;
+  av.style.display = 'block';
+  clearTimeout(MUNDO._muestraT);
+  MUNDO._muestraT = setTimeout(function () { av.style.display = 'none'; }, 2200);
+}
+
+function actualizarContadorMuestras() {
+  var c = document.getElementById('muestras-cont');
+  if (c) c.textContent = MUNDO.inventario.length;
+}
+
+// Laboratorio: panel que lista lo recolectado y muestra el análisis
+MUNDO.abrirLaboratorio = function () {
+  var ya = document.getElementById('lab-panel');
+  if (ya) { ya.remove(); return; }
+  var p = document.createElement('div');
+  p.id = 'lab-panel';
+  var html = '<div class="mz-cab"><b>\uD83E\uDDEA Laboratorio de análisis</b>' +
+             '<button id="lab-cerrar" aria-label="Cerrar">\u00d7</button></div>';
+  if (!MUNDO.inventario.length) {
+    html += '<div class="lab-vacio">Aún no has recolectado muestras.<br>' +
+            'Acércate a los puntos marcados en la superficie y usa el botón <b>Recolectar</b>.</div>';
+  } else {
+    html += '<div class="lab-lista">';
+    MUNDO.inventario.forEach(function (m, i) {
+      html += '<button class="lab-item" data-i="' + i + '"><span class="lab-tipo lab-' + m.tipo + '"></span>' + m.nombre + '</button>';
+    });
+    html += '</div><div class="lab-detalle" id="lab-detalle">Selecciona una muestra para analizarla.</div>';
+  }
+  p.innerHTML = html;
+  document.body.appendChild(p);
+  p.querySelectorAll('.lab-item').forEach(function (b) {
+    b.onclick = function () {
+      p.querySelectorAll('.lab-item').forEach(function(o){o.classList.remove('activo');});
+      b.classList.add('activo');
+      var m = MUNDO.inventario[parseInt(b.dataset.i, 10)];
+      document.getElementById('lab-detalle').innerHTML =
+        '<h4>' + m.nombre + '</h4>' + (m.analisis || 'Sin datos de análisis.');
+      if (MUNDO.sonido) MUNDO.sonido('marca');
+    };
+  });
+  document.getElementById('lab-cerrar').onclick = function () { p.remove(); };
+};
+
+
+/* ---------------------------------------------------------------- monedas
+   Monedas que se obtienen rompiendo rocas a golpes. Sirven para un futuro
+   sistema de compras. El total se guarda en el estado del mundo. */
+MUNDO.monedas = 0;
+MUNDO.rompibles = [];   // { x, z, golpes, dados, monedas, el }
+
+MUNDO.setMonedas = function (n) {
+  MUNDO.monedas = n;
+  var c = document.getElementById('monedas-cont');
+  if (c) c.textContent = n;
+};
+MUNDO.sumarMonedas = function (n) { MUNDO.setMonedas(MUNDO.monedas + n); };
+
+// Registrar una roca rompible (el motor la vincula a su entidad visual)
+MUNDO.rocaRompible = function (def) {
+  if (def.pos) { def.x = def.pos[0]; def.z = def.pos[2]; }
+  def.dados = 0;
+  MUNDO.rompibles.push(def);
+};
+
+/* Golpear: busca la roca rompible más cercana y le pega. Cada golpe la
+   sacude; al llegar a "golpes" se rompe y suelta monedas. */
+MUNDO.golpear = function () {
+  if (!MUNDO.jugador || !MUNDO.vivo) return;
+  var p = MUNDO.jugador.object3D.position;
+  var mejor = null, mejorD = 12;   // alcance del golpe
+  for (var i = 0; i < MUNDO.rompibles.length; i++) {
+    var r = MUNDO.rompibles[i];
+    if (r.rota) continue;
+    var dx = p.x - r.x, dz = p.z - r.z, d = dx*dx + dz*dz;
+    if (d < mejorD) { mejorD = d; mejor = r; }
+  }
+  if (!mejor) { avisoMoneda('No hay nada que golpear cerca'); return; }
+  mejor.dados++;
+  if (MUNDO.sonido) MUNDO.sonido('golpe');
+  // sacudir la entidad
+  if (mejor.el && mejor.el.object3D) {
+    var o = mejor.el.object3D, gx = o.position.x;
+    o.position.x = gx + 0.12;
+    setTimeout(function () { if (o) o.position.x = gx; }, 70);
+  }
+  if (mejor.dados >= (mejor.golpes || 3)) {
+    mejor.rota = true;
+    if (mejor.el) mejor.el.setAttribute('visible', false);
+    var m = mejor.monedas || (1 + Math.floor(Math.random() * 3));
+    MUNDO.sumarMonedas(m);
+    if (MUNDO.sonido) MUNDO.sonido('moneda');
+    avisoMoneda('+' + m + ' \uD83E\uDE99');
+    if (MUNDO.marcarRoto) MUNDO.marcarRoto(mejor.id);   // para el guardado
+  } else {
+    avisoMoneda('\uD83E\uDEA8 ' + (mejor.golpes - mejor.dados) + ' golpes más');
+  }
+};
+
+function avisoMoneda(txt) {
+  var av = document.getElementById('aviso-moneda');
+  if (!av) {
+    av = document.createElement('div');
+    av.id = 'aviso-moneda';
+    av.style.cssText = 'position:fixed;z-index:41;left:50%;bottom:186px;transform:translateX(-50%);' +
+      'background:rgba(90,74,20,.82);color:#ffe9a8;font:700 14px/1 system-ui;padding:9px 16px;' +
+      'border-radius:11px;border:1px solid rgba(255,220,120,.3);backdrop-filter:blur(12px);pointer-events:none;';
+    document.body.appendChild(av);
+  }
+  av.textContent = txt;
+  av.style.display = 'block';
+  clearTimeout(MUNDO._monedaT);
+  MUNDO._monedaT = setTimeout(function () { av.style.display = 'none'; }, 1600);
+}
+
+
+/* ---------------------------------------------------------------- sectores
+   Expansión procedural: al acercarse al borde explorado, se generan sectores
+   nuevos con contenido determinista (misma semilla → mismo mundo). No es
+   relieve infinito tipo voxel, pero sí terreno que crece al explorar. */
+MUNDO.semilla = 12345;
+MUNDO.sectores = {};        // "gx,gz" → true (ya generado)
+MUNDO.TAM_SECTOR = 40;
+MUNDO.RADIO_SECTORES = 3;   // sectores de radio que se mantienen vivos; el resto se descarga
+MUNDO._sectorGrupo = {};    // "gx,gz" → a-entity contenedora del sector
+var _genSector = null;      // función que el mundo define para poblar un sector
+
+MUNDO.generador = function (fn) { _genSector = fn; };
+
+// PRNG determinista (mulberry32): misma entrada → misma salida
+function prng(semilla) {
+  var a = semilla >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    var t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+// hash de coordenadas de sector + semilla global → semilla local estable
+function semillaSector(gx, gz) {
+  return (MUNDO.semilla ^ (gx * 374761393) ^ (gz * 668265263)) >>> 0;
+}
+
+// Genera un sector si no existe. Cada sector vive dentro de UN grupo (a-entity),
+// así se puede descargar entero cuando el jugador se aleja.
+function generarSector(gx, gz) {
+  var clave = gx + ',' + gz;
+  if (MUNDO.sectores[clave]) return;
+  MUNDO.sectores[clave] = true;
+  if (!_genSector) return;
+  var rng = prng(semillaSector(gx, gz));
+  var cx = gx * MUNDO.TAM_SECTOR, cz = gz * MUNDO.TAM_SECTOR;
+  var terreno = document.getElementById('terreno');
+  // grupo propio del sector: todo lo del generador cuelga de aquí
+  var grupo = nuevo('a-entity', { id: 'sec_' + gx + '_' + gz });
+  terreno.appendChild(grupo);
+  MUNDO._sectorGrupo[clave] = grupo;
+  // las colisiones creadas ahora se etiquetan con este sector (para borrarlas al descargar)
+  _choqueSector = clave;
+  _genSector({ gx: gx, gz: gz, cx: cx, cz: cz, rng: rng, terreno: grupo,
+               nuevo: nuevo, pieza: pieza,
+               chocaCilindro: chocaCilindro, chocaCaja: chocaCaja });
+  _choqueSector = null;
+}
+
+// Descarga un sector: borra su grupo, sus colisiones y lo olvida. Como el terreno
+// es determinista (semilla), al volver se regenera idéntico; MUNDO.rotos conserva
+// lo que se rompió, así que lo roto sigue roto.
+function descargarSector(clave) {
+  var grupo = MUNDO._sectorGrupo[clave];
+  if (grupo && grupo.parentNode) grupo.parentNode.removeChild(grupo);
+  delete MUNDO._sectorGrupo[clave];
+  delete MUNDO.sectores[clave];
+  // quitar las colisiones que pertenecían a este sector
+  for (var i = CHOQUES.length - 1; i >= 0; i--) {
+    if (CHOQUES[i].sec === clave) CHOQUES.splice(i, 1);
+  }
+}
+
+// Vigilar la posición del jugador: generar lo cercano, descargar lo lejano.
+var _acumSector = 0;
+MUNDO.animar(function (t, dt) {
+  if (!_genSector || !MUNDO.jugador) return;
+  _acumSector += dt;
+  if (_acumSector < 500) return;   // chequear 2 veces por segundo
+  _acumSector = 0;
+  var p = MUNDO.jugador.object3D.position;
+  var gx = Math.round(p.x / MUNDO.TAM_SECTOR);
+  var gz = Math.round(p.z / MUNDO.TAM_SECTOR);
+  // generar el sector actual y los 8 vecinos
+  for (var dx = -1; dx <= 1; dx++)
+    for (var dz = -1; dz <= 1; dz++)
+      generarSector(gx + dx, gz + dz);
+
+  // descargar los que quedaron fuera del radio (distancia de Chebyshev)
+  var R = MUNDO.RADIO_SECTORES, hubo = false;
+  Object.keys(MUNDO._sectorGrupo).forEach(function (clave) {
+    var par = clave.split(',');
+    var sx = parseInt(par[0], 10), sz = parseInt(par[1], 10);
+    if (Math.max(Math.abs(sx - gx), Math.abs(sz - gz)) > R) {
+      descargarSector(clave); hubo = true;
+    }
+  });
+  // si se descargó algo: soltar rocas rompibles muertas y refrescar los suelos
+  // cacheados por el jugador (para no raycastear mallas fantasma)
+  if (hubo) {
+    if (MUNDO.rompibles) MUNDO.rompibles = MUNDO.rompibles.filter(function (r) {
+      return !r.el || r.el.isConnected;
+    });
+    var jug = MUNDO.jugador, cmp = jug && jug.components;
+    if (cmp) {
+      if (cmp['gravedad'])      cmp['gravedad'].mallas = [];
+      if (cmp['piso-adherido']) cmp['piso-adherido'].mallas = [];
+    }
+  }
+
+  // expandir los límites de movimiento a medida que se explora
+  var alcance = (Math.max(Math.abs(gx), Math.abs(gz)) + 2) * MUNDO.TAM_SECTOR;
+  if (MUNDO.limites) {
+    MUNDO.limites.x = Math.max(MUNDO.limites.x, alcance);
+    MUNDO.limites.zMin = Math.min(MUNDO.limites.zMin, -alcance);
+    MUNDO.limites.zMax = Math.max(MUNDO.limites.zMax, alcance);
+  }
+});
+
+/* ---------------------------------------------------------------- guardado
+   Guardar/cargar el estado del mundo como archivo .json descargable.
+   Guarda: semilla, monedas, muestras, rocas rotas, sectores vistos, posición. */
+MUNDO.rotos = {};   // ids de rocas ya rotas (para no repoblarlas al cargar)
+MUNDO.marcarRoto = function (id) { if (id) MUNDO.rotos[id] = true; };
+
+MUNDO.exportarEstado = function () {
+  var p = MUNDO.jugador ? MUNDO.jugador.object3D.position : { x: 0, y: 2, z: 0 };
+  var estado = {
+    mundo: MUNDO.datos ? MUNDO.datos.id : '',
+    version: MUNDO.version,
+    fecha: new Date().toISOString(),
+    semilla: MUNDO.semilla,
+    monedas: MUNDO.monedas,
+    salud: MUNDO.salud,
+    inventario: MUNDO.inventario,
+    rotos: MUNDO.rotos,
+    sectores: Object.keys(MUNDO.sectores),
+    posicion: { x: Math.round(p.x*100)/100, y: Math.round(p.y*100)/100, z: Math.round(p.z*100)/100 }
+  };
+  var blob = new Blob([JSON.stringify(estado, null, 2)], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'mercurio-' + (MUNDO.datos ? MUNDO.datos.id : 'mundo') + '-' +
+               new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+MUNDO.importarEstado = function (obj) {
+  try {
+    if (obj.semilla != null) MUNDO.semilla = obj.semilla;
+    if (obj.monedas != null) MUNDO.setMonedas(obj.monedas);
+    if (obj.salud != null) { MUNDO.salud = obj.salud; var b = document.getElementById('salud-relleno'); if (b) b.style.width = obj.salud + '%'; }
+    if (obj.inventario) { MUNDO.inventario = obj.inventario; actualizarContadorMuestras(); }
+    if (obj.rotos) MUNDO.rotos = obj.rotos;
+    // marcar rocas ya rotas como invisibles
+    MUNDO.rompibles.forEach(function (r) {
+      if (r.id && MUNDO.rotos[r.id]) { r.rota = true; if (r.el) r.el.setAttribute('visible', false); }
+    });
+    // regenerar sectores guardados
+    if (obj.sectores) obj.sectores.forEach(function (k) {
+      var pr = k.split(','); generarSector(parseInt(pr[0],10), parseInt(pr[1],10));
+    });
+    // teletransportar a la posición guardada
+    if (obj.posicion && MUNDO.jugador) {
+      MUNDO.jugador.object3D.position.set(obj.posicion.x, obj.posicion.y, obj.posicion.z);
+    }
+    avisoMoneda('Partida cargada');
+  } catch (e) { avisoMoneda('Archivo no válido'); }
+};
+
+/* ---------------------------------------------------------------- interfaz */
+function rotulo(texto) {
+  var e = nuevo('a-entity', { 'class': 'etiqueta', 'mirar-camara': '' });
+  var w = Math.max(1.4, texto.length * 0.3);
+  e.appendChild(nuevo('a-plane', {
+    width: w, height: 0.6, position: '0 0 -0.02',
+    material: 'color:#12211f; opacity:0.6; transparent:true; shader:flat' }));
+  e.appendChild(nuevo('a-text', {
+    value: texto, align: 'center', width: w * 1.9, color: '#f6f1e6', material: 'shader:flat' }));
+  return e;
+}
+
+function mostrarFicha(d) {
+  var cuerpo = document.getElementById('ficha-cuerpo');
+  cuerpo.innerHTML =
+    '<h2>' + d.nombre + '</h2>' +
+    (d.rango ? '<div class="rango">' + d.rango + '</div>' : '') +
+    '<p>' + d.texto + '</p>' +
+    (d.detalle ? d.detalle.map(function (q) { return '<p>' + q + '</p>'; }).join('') : '') +
+    (d.vida ? '<ul class="lista">' + d.vida.map(function (v) { return '<li>' + v + '</li>'; }).join('') + '</ul>' : '') +
+    (d.reto ? '<div class="reto"><b>Para observar</b>' + d.reto + '</div>' : '') +
+    (d.actividad ? '<div class="act act-hacer"><b>\u270D\uFE0F Actividad</b>' + d.actividad + '</div>' : '') +
+    (d.esquema ? '<div class="act act-dibujar"><b>\u270F\uFE0F En tu cuaderno</b>' + d.esquema + '</div>' : '') +
+    (d.pregunta ? '<div class="act act-responder"><b>\u2753 Responde</b>' + (d.pregunta.length ?
+        '<ol>' + d.pregunta.map(function(q){return '<li>'+q+'</li>';}).join('') + '</ol>' : d.pregunta) + '</div>' : '') +
+    (d.estacion ? '<div class="est-num">Estaci\u00f3n ' + d.estacion + '</div>' : '');
+  document.getElementById('ficha').classList.add('visible');
+}
+MUNDO.ficha = mostrarFicha;
+
+/* ---------------------------------------------------------------- diagnóstico */
+MUNDO.paso = 'sin empezar';
+function marcar(p) { MUNDO.paso = p; }
+
+function fallo(err) {
+  var d = document.getElementById('fallo');
+  if (!d) {
+    d = document.createElement('div');
+    d.id = 'fallo';
+    d.style.cssText = 'position:fixed;z-index:999;left:0;right:0;top:0;max-height:60vh;' +
+      'overflow:auto;padding:12px 14px;background:#7d2a2a;color:#fff;' +
+      'font:12px/1.45 monospace;white-space:pre-wrap;user-select:text;';
+    document.body.appendChild(d);
+  }
+  d.textContent =
+    'FALLÓ EN: ' + MUNDO.paso + '\n\n' +
+    (err && err.message ? err.message : String(err)) + '\n\n' +
+    (err && err.stack ? err.stack : '');
+  console.error(err);
+}
+MUNDO.fallo = fallo;
+
+
+/* ---------------------------------------------------------------- diálogos
+   Los personajes hablan, pero el texto lo pone cada mundo en su campo
+   "dialogos". El motor solo sabe recorrer nodos y dibujar el panel.        */
+var panelD = null;
+
+function estilosDialogo() {
+  if (document.getElementById('estilo-dialogo')) return;
+  var st = document.createElement('style');
+  st.id = 'estilo-dialogo';
+  st.textContent =
+    '#dialogo{position:fixed;z-index:11;left:50%;bottom:74px;transform:translateX(-50%) translateY(140%);' +
+      'width:min(560px,calc(100vw - 24px));background:#f2ece0;color:#12211f;border-radius:3px;' +
+      'border-left:5px solid #6b4a1f;padding:14px 16px 12px;box-shadow:0 10px 34px rgba(0,0,0,.4);' +
+      'transition:transform .3s cubic-bezier(.2,.7,.3,1);}' +
+    '#dialogo.visible{transform:translateX(-50%);}' +
+    '#dialogo .quien{font-size:11px;letter-spacing:1.3px;text-transform:uppercase;color:#6b4a1f;' +
+      'font-weight:700;margin-bottom:5px;}' +
+    '#dialogo .dice{margin:0 0 12px;font-size:14.5px;line-height:1.55;}' +
+    '#dialogo .ops{display:flex;flex-wrap:wrap;gap:7px;}' +
+    '#dialogo .ops button{font:inherit;font-size:13px;font-weight:600;color:#12211f;' +
+      'background:#e2d8c2;border:1px solid #c9bda0;border-radius:2px;padding:8px 12px;cursor:pointer;}' +
+    '#dialogo .ops button:hover{background:#d3c5a6;}';
+  document.head.appendChild(st);
+}
+
+function crearPanelDialogo() {
+  estilosDialogo();
+  panelD = document.createElement('div');
+  panelD.id = 'dialogo';
+  panelD.innerHTML = '<div class="quien"></div><p class="dice"></p><div class="ops"></div>';
+  document.body.appendChild(panelD);
+}
+
+MUNDO.callar = function () { if (panelD) panelD.classList.remove('visible'); };
+
+// Acciones que los diálogos pueden ejecutar. Algunas son del motor (abrir
+// laboratorio); otras las define el mundo en M.acciones.
+MUNDO.acciones = {
+  abrirLaboratorio: function () { if (MUNDO.abrirLaboratorio) MUNDO.abrirLaboratorio(); },
+  panelAtmosfera:   function () { if (MUNDO.datos && MUNDO.datos.atmosferas) crearPanelAtmosfera(MUNDO.datos.atmosferas); }
+};
+
+MUNDO.hablar = function (idDialogo, idNodo) {
+  var D = (MUNDO.datos && MUNDO.datos.dialogos) ? MUNDO.datos.dialogos[idDialogo] : null;
+  if (!D) { console.warn('No existe el diálogo: ' + idDialogo); return; }
+  var nodo = D.nodos[idNodo || D.inicio];
+  if (!nodo) { MUNDO.callar(); return; }
+  if (!panelD) crearPanelDialogo();
+
+  panelD.querySelector('.quien').textContent = D.nombre || '';
+  panelD.querySelector('.dice').innerHTML = nodo.texto;
+
+  var ops = panelD.querySelector('.ops');
+  ops.innerHTML = '';
+  var lista = nodo.opciones || [{ dice: 'Cerrar' }];
+  lista.forEach(function (op) {
+    var b = document.createElement('button');
+    b.textContent = op.dice;
+    b.onclick = function () {
+      if (op.ficha) {
+        var fichas = MUNDO.fichasIndice || {};
+        if (fichas[op.ficha]) mostrarFicha(fichas[op.ficha]);
+      }
+      if (op.accion && MUNDO.acciones && MUNDO.acciones[op.accion]) {
+        MUNDO.acciones[op.accion]();
+      }
+      if (op.va) MUNDO.hablar(idDialogo, op.va);
+      else if (!op.ficha && !op.accion) MUNDO.callar();
+      else if (op.accion && !op.va) MUNDO.callar();
+    };
+    ops.appendChild(b);
+  });
+  panelD.classList.add('visible');
+};
+
+/* ---------------------------------------------------------------- arranque */
+MUNDO.iniciar = function (M) {
+  try { arranque(M); } catch (err) { fallo(err); }
+};
+
+function arranque(M) {
+  marcar('leyendo los datos del mundo');
+  if (M.semilla != null) MUNDO.semilla = M.semilla;   // semilla temprana (reparto determinista)
+  MUNDO.datos = M;
+  var escena = document.getElementById('escena');
+  var movil = !!(AFRAME.utils.device && AFRAME.utils.device.isMobile && AFRAME.utils.device.isMobile());
+  var carga = M.carga != null ? M.carga : (movil ? 0.7 : 1);
+  var ancho = M.ancho || 110;
+  var anchoVida = M.anchoVida || (ancho - 36);
+
+  document.title = M.titulo;
+  document.getElementById('titulo').textContent = M.titulo;
+
+  // Límites de desplazamiento a partir de las franjas
+  var zMin = Infinity, zMax = -Infinity;
+  M.franjas.forEach(function (f) {
+    zMin = Math.min(zMin, f.z[0], f.z[1]);
+    zMax = Math.max(zMax, f.z[0], f.z[1]);
+  });
+  MUNDO.limites = { x: ancho / 2 - 3, zMin: zMin + 3, zMax: zMax - 2 };
+
+  marcar('creando cielo y luces');
+  // Cielo, niebla y luces
+  escena.setAttribute('background', 'color:' + (M.cielo || '#8fabb9'));
+  var rend = escena.renderer;
+  if (rend) {
+    rend.toneMapping = THREE.ACESFilmicToneMapping;
+    rend.toneMappingExposure = 1.05;
+    if (THREE.SRGBColorSpace) rend.outputColorSpace = THREE.SRGBColorSpace;
+  }
+  if (M.niebla) {
+    escena.setAttribute('fog', 'type:linear; color:' + M.niebla.color +
+      '; near:' + M.niebla.cerca + '; far:' + M.niebla.lejos);
+  } else if (M.atmosferas) {
+    // niebla lejana desde el inicio: así la primera atmósfera no recompila materiales
+    escena.setAttribute('fog', 'type:linear; color:' + (M.cielo || '#050608') + '; near:400; far:1200');
+  }
+  escena.appendChild(nuevo('a-sky', { color: M.cielo || '#9db8c4' }));
+  var luz = M.luz || {};
+  escena.appendChild(nuevo('a-light', {
+    id: 'luz-ambiente',
+    type: 'hemisphere', color: luz.cielo || '#cfe3ea',
+    groundColor: luz.suelo || '#8a7c5c', intensity: luz.ambiente || 0.85 }));
+  escena.appendChild(nuevo('a-light', {
+    id: 'luz-sol',
+    type: 'directional', color: luz.sol || '#fff0d4',
+    intensity: luz.intensidad || 0.7, position: luz.posicion || '-18 22 14' }));
+
+  // Luces locales del mundo: fogatas, lámparas, interiores.
+  (M.luces || []).forEach(function (lz) {
+    escena.appendChild(nuevo('a-light', {
+      type: lz.tipo || 'point', color: lz.color || '#ffd9a0',
+      intensity: lz.intensidad != null ? lz.intensidad : 0.6,
+      distance: lz.alcance || 12,
+      position: lz.pos[0] + ' ' + lz.pos[1] + ' ' + lz.pos[2] }));
+  });
+
+  // Zonas de luz declaradas por el mundo
+  (M.luzZonas || []).forEach(function (z) { MUNDO.zonaLuz(z); });
+
+  /* Motor de transición de luz: mezcla los valores base con los de la zona en
+     la que está el jugador. El peso cae suavemente en el borde, así el cambio
+     se percibe como caminar hacia la sombra, no como un interruptor. */
+  if (MUNDO.zonasLuz.length) {
+    var _baseL = { amb: luz.ambiente || 0.85, sol: luz.intensidad || 0.7 };
+    var _curL = { amb: _baseL.amb, sol: _baseL.sol };
+    var _accL = 0;
+    MUNDO.animar(function (t, dt) {
+      if (!MUNDO.jugador) return;
+      _accL += dt;
+      if (_accL < 90) return;
+      var paso = _accL; _accL = 0;
+      var p = MUNDO.jugador.object3D.position;
+      var tAmb = _baseL.amb, tSol = _baseL.sol, peso = 0;
+      for (var i = 0; i < MUNDO.zonasLuz.length; i++) {
+        var z = MUNDO.zonasLuz[i], w = 0;
+        var borde = z.borde || 6;
+        if (z.r) {
+          var d = Math.sqrt((p.x - z.x) * (p.x - z.x) + (p.z - z.z) * (p.z - z.z));
+          w = d <= z.r ? 1 : Math.max(0, 1 - (d - z.r) / borde);
+        } else {
+          var dx = Math.abs(p.x - z.x) - (z.ancho || 20) / 2;
+          var dz = Math.abs(p.z - z.z) - (z.largo || 20) / 2;
+          var dd = Math.max(dx, dz);
+          w = dd <= 0 ? 1 : Math.max(0, 1 - dd / borde);
+        }
+        if (w > peso) {
+          peso = w;
+          tAmb = _baseL.amb + ((z.ambiente != null ? z.ambiente : _baseL.amb) - _baseL.amb) * w;
+          tSol = _baseL.sol + ((z.intensidad != null ? z.intensidad : _baseL.sol) - _baseL.sol) * w;
+        }
+      }
+      var k = Math.min(1, paso / 700);   // suavizado temporal
+      _curL.amb += (tAmb - _curL.amb) * k;
+      _curL.sol += (tSol - _curL.sol) * k;
+      var ea = document.getElementById('luz-ambiente'), es = document.getElementById('luz-sol');
+      if (ea && ea.components && ea.components.light) ea.components.light.light.intensity = _curL.amb;
+      if (es && es.components && es.components.light) es.components.light.light.intensity = _curL.sol;
+    });
+  }
+
+  marcar('creando el observador');
+  // Observador
+  // Salto universal: TODOS los mundos usan gravedad. Por defecto, la terrestre.
+  // Solo los planetas (M.gravedad) cambian el valor y ofrecen el selector.
+  MUNDO.gravedad = 9.81;
+  MUNDO.saltoV = 5.2;
+  if (M.gravedad) {
+    MUNDO.gravedad = M.gravedad.valor != null ? M.gravedad.valor : 9.81;
+    MUNDO.saltoV = M.gravedad.salto != null ? M.gravedad.salto : 5.2;
+  }
+  var jugador = nuevo('a-entity', {
+    id: 'jugador', position: (M.inicio || '0 3.2 26'), caminar: '' });
+  jugador.setAttribute('gravedad', 'altura: 1.65');
+  jugador.setAttribute('mando', '');
+  var camara = nuevo('a-entity', {
+    id: 'camara', camera: 'active: true', 'look-controls': 'pointerLockEnabled:false' });
+  camara.appendChild(nuevo('a-entity', {
+    cursor: 'fuse:true; fuseTimeout:900', raycaster: 'objects:.punto; far:60',
+    position: '0 0 -1', geometry: 'primitive:ring; radiusInner:0.008; radiusOuter:0.012',
+    material: 'color:#f2ece0; shader:flat; opacity:0.55' }));
+  jugador.appendChild(camara);
+  escena.appendChild(jugador);
+  MUNDO.jugador = jugador;
+
+  // Panel de modo VR: botones grandes en el mundo 3D, visibles solo en VR
+  var panelVR = nuevo('a-entity', { id: 'panel-vr', visible: false });
+  var MODOS_VR = [
+    { id: 'tp',    txt: 'Teletransporte', x: -1.3 },
+    { id: 'mirar', txt: 'Avanzar mirando', x: 0 },
+    { id: 'stop',  txt: 'Quieto',          x: 1.3 }
+  ];
+  MODOS_VR.forEach(function (m) {
+    var btn = nuevo('a-entity', {
+      geometry: 'primitive:plane; width:1.15; height:0.4',
+      material: 'color:#12211f; opacity:0.72; transparent:true; shader:flat',
+      position: m.x + ' -0.7 -2.4', 'data-vrmodo': m.id, 'class': 'punto' });
+    btn.appendChild(nuevo('a-text', { value: m.txt, align: 'center', width: 2.4,
+      color: '#f2ece0', position: '0 0 0.01' }));
+    panelVR.appendChild(btn);
+  });
+  camara.appendChild(panelVR);   // el panel sigue a la cámara
+
+  MUNDO.mostrarVR = function () { panelVR.setAttribute('visible', true); };
+  MUNDO.ocultarVR = function () { panelVR.setAttribute('visible', false); };
+
+  // Aviso sobre el control en VR (mirar para avanzar, mirar al suelo para parar)
+  escena.addEventListener('enter-vr', function () {
+    var av = document.getElementById('aviso-vr');
+    if (!av) {
+      av = document.createElement('div');
+      av.id = 'aviso-vr';
+      av.style.cssText = 'position:fixed;z-index:30;left:50%;top:12px;transform:translateX(-50%);' +
+        'background:rgba(18,33,31,.82);color:#f2ece0;font:13px/1.4 system-ui;padding:8px 14px;' +
+        'border-radius:3px;text-align:center;pointer-events:none;max-width:80vw;';
+      document.body.appendChild(av);
+    }
+    av.textContent = 'Mira hacia donde quieras ir para avanzar. Mira al suelo para detenerte.';
+    av.style.display = 'block';
+    setTimeout(function () { if (av) av.style.display = 'none'; }, 6000);
+  });
+  escena.appendChild(nuevo('a-entity', {
+    cursor: 'rayOrigin:mouse', raycaster: 'objects:.punto, .suelo; far:120' }));
+
+  var marca = nuevo('a-ring', {
+    id: 'marca', 'radius-inner': 0.35, 'radius-outer': 0.5, rotation: '-90 0 0',
+    material: 'color:#f0c060; shader:flat; opacity:0', position: '0 -99 0' });
+  escena.appendChild(marca);
+
+  // marcador de teletransporte VR
+  var tp = nuevo('a-entity', { id: 'tp-marca', visible: false, position: '0 -99 0' });
+  tp.appendChild(nuevo('a-ring', { 'radius-inner': 0.4, 'radius-outer': 0.62, rotation: '-90 0 0',
+    material: 'color:#57c7ff; shader:flat; opacity:0.9; side:double' }));
+  tp.appendChild(nuevo('a-circle', { radius: 0.38, rotation: '-90 0 0',
+    material: 'color:#57c7ff; shader:flat; opacity:0.3; side:double' }));
+  escena.appendChild(tp);
+
+  var terreno = nuevo('a-entity', { id: 'terreno' });
+  escena.appendChild(terreno);
+
+  marcar('construyendo las franjas');
+  _sembrarRng();   // reparto determinista según MUNDO.semilla
+  M.franjas.forEach(function (f) {
+    marcar('franja: ' + f.id);
+    var z0 = f.z[0], z1 = f.z[1];
+    var largo = z0 - z1, centroZ = (z0 + z1) / 2, alto = 9;
+
+    var terraza = nuevo('a-box', {
+      'class': 'suelo', width: ancho, depth: largo, height: alto,
+      position: '0 ' + (f.y - alto / 2) + ' ' + centroZ,
+      material: 'color:' + f.color + '; roughness:0.95' });
+    (function (t, f) {
+      t.addEventListener('loaded', function () {
+        var malla = t.getObject3D('mesh');
+        if (!malla) return;
+        var estilo = f.superficie || 'roca';
+        var reps = { arena: 26, pasto: 30, baldosa: 6, asfalto: 20 }[estilo] || 16;
+        var piel = superficie(f.color, estilo, reps);
+        malla.material.map = piel.mapa;
+        malla.material.normalMap = piel.normal;
+        malla.material.roughnessMap = piel.rugosidad;
+        var k = estilo === 'arena' ? 0.7 : 1.1;
+        malla.material.normalScale.set(k, k);
+        malla.material.roughness = estilo === 'roca' ? 0.85 : 1;
+        malla.material.needsUpdate = true;
+      });
+    })(terraza, f);
+    terreno.appendChild(terraza);
+
+    (f.especies || []).forEach(function (sp) {
+      marcar('franja ' + f.id + ', especie: ' + sp.forma);
+      var fn = MUNDO.formas[sp.forma];
+      if (!fn) { console.warn('Forma desconocida: ' + sp.forma); return; }
+      var cant = Math.max(3, Math.round(sp.n * carga));
+      var hueco = sp.hueco != null ? sp.hueco : (f.hueco || 0);
+      for (var i = 0; i < cant; i++) {
+        var bx = azar(-anchoVida / 2, anchoVida / 2);
+        // hueco: pasillo central despejado
+        if (hueco) bx = (bx < 0 ? -1 : 1) * (hueco + Math.abs(bx) * (anchoVida / 2 - hueco) / (anchoVida / 2));
+        var b = [bx, f.y, azar(z1 + 0.5, z0 - 0.5)];
+        giroActual = 0;
+        fn(H, sp.color, b);
+        if (sp.choca) {
+          chocaCilindro(b[0], b[2], sp.choca.r || 0.3,
+                        b[1], b[1] + (sp.choca.alto || 3));
+        }
+        if (i === 0 && sp.nombre) {
+          var et = rotulo(sp.nombre);
+          et.setAttribute('position',
+            b[0] + ' ' + (f.y + (sp.alto || ALTO_NOMBRE[sp.forma] || 1)) + ' ' + b[2]);
+          terreno.appendChild(et);
+        }
+      }
+    });
+
+    var rz = nuevo('a-entity', {
+      position: (anchoVida / 2 + 4) + ' ' + (f.y + 3) + ' ' + centroZ, 'mirar-camara': '' });
+    rz.appendChild(nuevo('a-text', {
+      value: f.nombre.toUpperCase(), align: 'center', width: 22,
+      color: '#f6f1e6', material: 'shader:flat' }));
+    terreno.appendChild(rz);
+
+    var punto = nuevo('a-sphere', {
+      'class': 'punto', radius: 0.5,
+      position: (-anchoVida / 2 - 4) + ' ' + (f.y + 2.2) + ' ' + centroZ,
+      material: 'color:#f0c060; shader:flat; opacity:0.95',
+      animation: 'property:scale; to:1.35 1.35 1.35; dir:alternate; loop:true; dur:1100; easing:easeInOutSine' });
+    punto.dataset.ficha = f.id;
+    terreno.appendChild(punto);
+  });
+
+  marcar('colocando los objetos');
+  // Objetos con posición propia: faroles, bancas, edificios…
+  (M.objetos || []).forEach(function (ob) {
+    marcar('objeto: ' + ob.forma);
+    var fn = MUNDO.formas[ob.forma];
+    if (!fn) { console.warn('Forma desconocida: ' + ob.forma); return; }
+    giroActual = ob.giro || 0;
+    escalaActual = ob.esc || [1, 1, 1];
+    grupoActual = ob.grupo || null;
+    fn(H, ob.color, ob.pos, ob);
+    giroActual = 0;
+    escalaActual = [1, 1, 1];
+    grupoActual = null;
+    if (ob.lento) {
+      var lt = ob.lento;
+      MUNDO.zonaLenta({ x: ob.pos[0] + (lt.dx||0), z: ob.pos[2] + (lt.dz||0),
+        r: lt.r, ancho: lt.ancho, largo: lt.largo, factor: lt.factor });
+    }
+    if (ob.peligro) {
+      var pl = ob.peligro;
+      MUNDO.zonaPeligro({
+        x: ob.pos[0] + (pl.dx || 0), z: ob.pos[2] + (pl.dz || 0),
+        r: pl.r, ancho: pl.ancho, largo: pl.largo,
+        y: pl.y != null ? ob.pos[1] + pl.y : null, altoY: pl.altoY,
+        dano: pl.dano || 10, causa: pl.causa, unaVez: pl.unaVez
+      });
+    }
+    if (ob.choca) {
+      var lista = ob.choca.length ? ob.choca : [ob.choca];
+      var ga = rad(ob.giro || 0), co = Math.cos(ga), si = Math.sin(ga);
+      lista.forEach(function (q) {
+        var y0 = ob.pos[1] + (q.base || 0);
+        // desplazamiento local (dx,dz) rotado por el giro del objeto → mundo
+        var gx = ob.pos[0] + (q.dx || 0) * co + (q.dz || 0) * si;
+        var gz = ob.pos[2] - (q.dx || 0) * si + (q.dz || 0) * co;
+        if (q.r) {
+          chocaCilindro(gx, gz, q.r, y0, y0 + (q.alto || 3));
+        } else {
+          chocaCaja(gx, gz, q.ancho, q.largo, y0, y0 + (q.alto || 3), ob.giro || 0);
+        }
+      });
+    }
+
+    // escalones pisables: cada peldaño es una caja-suelo horizontal
+    (ob.escalones || []).forEach(function (es) {
+      var n = es.pasos || 10;
+      var subeH = es.alto / n, avanzaZ = es.largo / n;
+      var ga = rad(ob.giro || 0), co = Math.cos(ga), si = Math.sin(ga);
+      for (var k = 0; k < n; k++) {
+        var lx = es.dx || 0;
+        var lz = (es.dz || 0) - k * avanzaZ;
+        var gx = ob.pos[0] + lx * co + lz * si;
+        var gz = ob.pos[2] - lx * si + lz * co;
+        var yTop = ob.pos[1] + (es.base || 0) + (k + 1) * subeH;
+        // huella (pisable)
+        terreno.appendChild(nuevo('a-box', {
+          'class': 'suelo',
+          width: es.ancho, depth: avanzaZ + 0.06, height: 0.12,
+          position: gx + ' ' + (yTop - 0.06) + ' ' + gz,
+          rotation: '0 ' + (ob.giro || 0) + ' 0',
+          material: 'color:' + (es.color || '#d8c23a') + '; roughness:0.85'
+        }));
+        // contrahuella (vertical, decorativa)
+        terreno.appendChild(nuevo('a-box', {
+          width: es.ancho, depth: 0.05, height: subeH,
+          position: gx + ' ' + (yTop - subeH / 2) + ' ' + (gz + (avanzaZ/2) * co),
+          rotation: '0 ' + (ob.giro || 0) + ' 0',
+          material: 'color:#3a3a3a; roughness:0.9'
+        }));
+      }
+    });
+
+    // rampas y escaleras: planos inclinados que el piso-adherido sí sigue
+    (ob.rampas || []).forEach(function (rp) {
+      var ga = rad(ob.giro || 0), co = Math.cos(ga), si = Math.sin(ga);
+      var gx = ob.pos[0] + (rp.dx || 0) * co + (rp.dz || 0) * si;
+      var gz = ob.pos[2] - (rp.dx || 0) * si + (rp.dz || 0) * co;
+      terreno.appendChild(nuevo('a-box', {
+        'class': 'suelo',
+        width: rp.ancho, depth: rp.largo, height: 0.3,
+        position: gx + ' ' + (ob.pos[1] + (rp.base || 0)) + ' ' + gz,
+        rotation: (rp.pitch || 0) + ' ' + (ob.giro || 0) + ' 0',
+        material: 'color:' + (rp.color || '#b0aaa0') + '; roughness:0.9'
+      }));
+    });
+
+    // superficie pisable: andenes, pisos de vehículos, plataformas
+    // pisos múltiples: cada nivel es una superficie pisable con su propio dx/dz
+    (ob.pisos || []).forEach(function (pn) {
+      var gaP = rad(ob.giro || 0), coP = Math.cos(gaP), siP = Math.sin(gaP);
+      var gxP = ob.pos[0] + (pn.dx || 0) * coP + (pn.dz || 0) * siP;
+      var gzP = ob.pos[2] - (pn.dx || 0) * siP + (pn.dz || 0) * coP;
+      var espP = 0.3;
+      terreno.appendChild(nuevo('a-box', {
+        'class': 'suelo',
+        width: pn.ancho, depth: pn.largo, height: espP,
+        position: gxP + ' ' + (ob.pos[1] + pn.alto - espP / 2) + ' ' + gzP,
+        rotation: '0 ' + (ob.giro || 0) + ' 0',
+        material: 'color:' + (pn.color || '#b9b3a6') + '; roughness:0.9'
+      }));
+    });
+
+    if (ob.piso) {
+      var pz = ob.piso, esp = 0.3;
+      terreno.appendChild(nuevo('a-box', {
+        'class': 'suelo',
+        width: pz.ancho, depth: pz.largo, height: esp,
+        position: ob.pos[0] + ' ' + (ob.pos[1] + pz.alto - esp / 2) + ' ' + ob.pos[2],
+        rotation: '0 ' + (ob.giro || 0) + ' 0',
+        material: 'color:' + (pz.color || '#b9b3a6') + '; roughness:0.9'
+      }));
+    }
+    if (ob.ficha || ob.dialogo) {
+      var pt = nuevo('a-sphere', {
+        'class': 'punto', radius: 0.42,
+        position: ob.pos[0] + ' ' + (ob.pos[1] + (ob.altoFicha || 2.4)) + ' ' + ob.pos[2],
+        material: 'color:#f0c060; shader:flat; opacity:0.95',
+        animation: 'property:scale; to:1.35 1.35 1.35; dir:alternate; loop:true; dur:1100; easing:easeInOutSine' });
+      if (ob.dialogo) pt.dataset.dialogo = ob.dialogo;
+      else pt.dataset.ficha = ob.ficha;
+      terreno.appendChild(pt);
+    }
+    if (ob.nombre) {
+      var et = rotulo(ob.nombre);
+      et.setAttribute('position',
+        ob.pos[0] + ' ' + (ob.pos[1] + (ob.alto || ALTO_NOMBRE[ob.forma] || 2)) + ' ' + ob.pos[2]);
+      terreno.appendChild(et);
+    }
+  });
+
+  // Fondo bajo la última franja
+  if (M.fondo) {
+    terreno.appendChild(nuevo('a-box', {
+      'class': 'suelo', width: ancho * 1.8, depth: 90, height: 9,
+      position: '0 ' + M.fondo.y + ' ' + M.fondo.z,
+      material: 'color:' + M.fondo.color + '; roughness:1' }));
+  }
+
+  // Cuerpos en el cielo (luna, sol…) con ficha propia
+  (M.cielos || []).forEach(function (c) {
+    var s = nuevo('a-sphere', {
+      'class': 'punto', radius: c.radio || 1.5, position: c.posicion,
+      material: 'color:' + c.color + '; shader:flat' });
+    s.dataset.ficha = c.id;
+    escena.appendChild(s);
+  });
+
+  marcar('creando la superficie móvil');
+  // Superficie móvil
+  MUNDO.puertas = [];
+  (M.puertas || []).forEach(function (pu) { MUNDO.puerta(pu); });
+
+  // acciones propias del mundo (se suman a las del motor)
+  if (M.acciones) { for (var ak in M.acciones) MUNDO.acciones[ak] = M.acciones[ak]; }
+  MUNDO.oxigenoOn = false;
+
+  if (M.aves) {
+    poblarAves(escena, M.aves);
+  }
+
+  // peligros del mundo
+  MUNDO.peligros = [];
+  MUNDO.salud = 100; MUNDO.vivo = true;
+  if (M.cotaMuerte != null) MUNDO.cotaMuerte = M.cotaMuerte;
+  (M.peligros || []).forEach(function (z) { MUNDO.zonaPeligro(z); });
+  MUNDO.pegajosas = [];
+  (M.pegajosas || []).forEach(function (z) { MUNDO.zonaLenta(z); });
+
+  // monedas, rocas rompibles y expansión procedural
+  MUNDO.monedas = 0; MUNDO.rompibles = []; MUNDO.rotos = {};
+  MUNDO.sectores = {};
+  if (M.semilla != null) MUNDO.semilla = M.semilla;
+  if (M.generador) MUNDO.generador(M.generador);
+  (M.rompibles || []).forEach(function (rr) {
+    MUNDO.rocaRompible(rr);
+    // crear la entidad visual de la roca
+    var e = nuevo('a-entity', { position: rr.pos[0] + ' ' + rr.pos[1] + ' ' + rr.pos[2] });
+    e.setAttribute('geometry', 'primitive:dodecahedron; radius:' + (rr.radio || 1));
+    e.setAttribute('material', 'color:' + (rr.color || '#8a7f6a') + '; roughness:0.9; flatShading:true');
+    terreno.appendChild(e);
+    MUNDO.rompibles[MUNDO.rompibles.length - 1].el = e;
+    // brillo de veta (indica que tiene monedas)
+    if (rr.veta !== false) {
+      var v = nuevo('a-entity', { position: rr.pos[0] + ' ' + (rr.pos[1]+0.2) + ' ' + rr.pos[2] });
+      v.setAttribute('geometry', 'primitive:sphere; radius:0.18');
+      v.setAttribute('material', 'color:#f0c850; shader:flat; emissive:#f0c850');
+      terreno.appendChild(v);
+    }
+  });
+
+  // puntos de muestra
+  MUNDO.inventario = [];
+  MUNDO.puntosMuestra = [];
+  (M.muestras || []).forEach(function (m) {
+    MUNDO.puntoMuestra(m);
+    // marcador visual: anillo brillante flotante
+    var mk = nuevo('a-entity', { id: 'm-' + m.id, position: m.pos[0] + ' ' + (m.pos[1] + 0.6) + ' ' + m.pos[2] });
+    mk.appendChild(nuevo('a-ring', { 'radius-inner': 0.3, 'radius-outer': 0.42, rotation: '-90 0 0',
+      material: 'color:' + (m.color || '#5ad8a0') + '; shader:flat; opacity:0.85; side:double' }));
+    mk.appendChild(nuevo('a-text', { value: '\u25BC', align: 'center', width: 4,
+      color: m.color || '#5ad8a0', position: '0 0.8 0', rotation: '0 0 0' }));
+    terreno.appendChild(mk);
+  });
+  if (M.peligros || M.cotaMuerte != null) {
+    var barraS = document.getElementById('salud');
+    if (barraS) barraS.classList.add('on');
+    var rev = document.getElementById('fin-revivir');
+    if (rev) rev.onclick = function () { MUNDO.revivir(); };
+  }
+
+  // Audio: crear ambiente y fuentes posicionales tras el desbloqueo
+  if (M.sonido) {
+    var arrancarAudio = function () {
+      crearAmbiente();
+      MUNDO.audioClima(MUNDO.clima.modo || (M.clima && M.clima.inicial) || 'despejado');
+      (M.sonido.fuentes || []).forEach(function (f) { MUNDO.audioFuente(f); });
+      var av = document.getElementById('aviso-audio');
+      if (av) av.style.display = 'none';
+    };
+    alAudio(arrancarAudio);
+    // aviso "toca para sonido" mientras no esté desbloqueado
+    if (!AUDIO.listo) {
+      var av = document.createElement('div');
+      av.id = 'aviso-audio';
+      av.textContent = '\uD83D\uDD0A Toca la pantalla para activar el sonido';
+      av.style.cssText = 'position:fixed;z-index:40;left:50%;bottom:118px;transform:translateX(-50%);' +
+        'background:rgba(28,42,40,.6);color:#f2ece0;font:600 13px/1 system-ui;padding:10px 16px;' +
+        'border-radius:12px;border:1px solid rgba(242,236,224,.18);' +
+        'backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);pointer-events:none;';
+      document.body.appendChild(av);
+    }
+  }
+
+  if (M.nivel) {
+    var N = M.nivel;
+    var cont = nuevo('a-entity', {
+      id: 'nivel', position: '0 ' + N.bajo + ' 0',
+      nivel: 'alto:' + N.alto + '; bajo:' + N.bajo + '; periodo:' + (N.periodo || 30000) +
+             '; nombre:' + N.nombre + '; unidad:' + (N.unidad || 'm') });
+    var sup = nuevo('a-plane', {
+      rotation: '-90 0 0', width: ancho * 1.8, height: 220, position: '0 0 ' + (N.centroZ || -90),
+      material: 'color:' + N.color + '; opacity:' + (N.opacidad || 0.72) +
+                '; transparent:true; roughness:' + (N.aspereza || 0.25) });
+    if (N.oleaje) sup.setAttribute('oleaje', '');
+    cont.appendChild(sup);
+    if (N.brillo !== false) {
+      cont.appendChild(nuevo('a-plane', {
+        rotation: '-90 0 0', width: ancho * 1.8, height: 220,
+        position: '0 0.06 ' + (N.centroZ || -90),
+        material: 'color:#bcd7dd; opacity:0.15; transparent:true' }));
+    }
+    escena.appendChild(cont);
+  }
+
+  // clima: crear el sistema de lluvia y aplicar el modo inicial
+  if (M.clima) {
+    MUNDO.lluvia = crearLluvia(escena, MOVIL_TEX ? 900 : 2200, 60, 30);
+    if (M.clima.inicial) MUNDO.setClima(M.clima.inicial);
+    if (M.clima.real && M.clima.auto) {
+      setTimeout(function () { MUNDO.aplicarClimaReal({ fallback: M.clima.fallback }); }, 800);
+    }
+  }
+
+  marcar('volcando las instancias a la GPU');
+  if (terreno.object3D) {
+    MUNDO.setGravedad = function (v, saltoV) {
+    MUNDO.gravedad = v;
+    if (saltoV != null) MUNDO.saltoV = saltoV;
+    var caja = document.getElementById('grav-lectura');
+    if (caja) caja.textContent = 'Gravedad: ' + v.toFixed(2).replace('.', ',') + ' m/s²';
+  };
+
+  volcarLotes(terreno.object3D);
+  } else {
+    terreno.addEventListener('loaded', function () { volcarLotes(terreno.object3D); });
+  }
+  // enlazar las hojas de puerta a sus definiciones
+  MUNDO.puertas.forEach(function (pu) {
+    if (pu._id && pu._lado) {
+      // puertas del tren: id + lado (I/D) + A/B
+      pu.hojas = [ MUNDO.subgrupos[pu._id + '_p' + pu._lado + 'A'] || null,
+                   MUNDO.subgrupos[pu._id + '_p' + pu._lado + 'B'] || null ];
+    } else if (pu.id && !pu.hojas) {
+      // puertas simples: id_pA / id_pB
+      pu.hojas = [ MUNDO.subgrupos[pu.id + '_pA'] || null,
+                   MUNDO.subgrupos[pu.id + '_pB'] || null ];
+    }
+  });
+
+  marcar('armando la interfaz');
+  construirUI(M);
+  marcar('listo');
+  var lotes = Object.keys(LOTES).length, piezas = 0;
+  Object.keys(LOTES).forEach(function (k) { piezas += LOTES[k].datos.length; });
+  MUNDO.informe = M.franjas.length + ' franjas · ' + lotes + ' llamadas de dibujo · ' + piezas + ' piezas';
+  console.log('MUNDO listo: ' + MUNDO.informe);
+};
+
+/* ---------------------------------------------------------------- UI y eventos */
+function construirUI(M) {
+  var ctrl = document.getElementById('controles');
+  var fichas = {};
+  M.franjas.forEach(function (f) { fichas[f.id] = f; });
+  (M.fichas || []).forEach(function (f) { fichas[f.id] = f; });
+  MUNDO.fichasIndice = fichas;
+
+  // Botones del nivel
+  if (M.nivel && M.nivel.modos) {
+    M.nivel.modos.forEach(function (m, i) {
+      var b = nuevo('button', { 'data-modo': m.id, 'aria-pressed': i === 0 ? 'true' : 'false' });
+      b.textContent = m.etiqueta;
+      b.onclick = function () {
+        ctrl.querySelectorAll('[data-modo]').forEach(function (o) { o.setAttribute('aria-pressed', 'false'); });
+        b.setAttribute('aria-pressed', 'true');
+        document.getElementById('nivel').setAttribute('nivel', 'modo', m.id);
+      };
+      ctrl.appendChild(b);
+    });
+  }
+
+  // golpear rocas por monedas
+  if (M.rompibles || M.generador) {
+    var bgolpe = nuevo('button', { id: 'btn-golpe' });
+    bgolpe.textContent = '\uD83E\uDEA8 Golpear';
+    bgolpe.onclick = function () { MUNDO.golpear(); };
+    ctrl.appendChild(bgolpe);
+    var bmon = nuevo('button', { id: 'btn-monedas', disabled: 'true' });
+    bmon.innerHTML = '\uD83E\uDE99 <span id="monedas-cont">0</span>';
+    ctrl.appendChild(bmon);
+  }
+
+  // guardar / cargar partida
+  if (M.guardado) {
+    var bguar = nuevo('button', { id: 'btn-guardar' });
+    bguar.textContent = '\uD83D\uDCBE Guardar';
+    bguar.onclick = function () { MUNDO.exportarEstado(); };
+    ctrl.appendChild(bguar);
+    var bcarg = nuevo('button', { id: 'btn-cargar' });
+    bcarg.textContent = '\uD83D\uDCC2 Cargar';
+    bcarg.onclick = function () { document.getElementById('archivo-guardado').click(); };
+    ctrl.appendChild(bcarg);
+  }
+
+  // recolección de muestras y laboratorio
+  if (M.muestras) {
+    var brec = nuevo('button', { id: 'btn-recolectar' });
+    brec.textContent = '\u26CF\uFE0F Recolectar';
+    brec.onclick = function () { MUNDO.recolectar(); };
+    ctrl.appendChild(brec);
+    var blab = nuevo('button', { id: 'btn-lab' });
+    blab.innerHTML = '\uD83E\uDDEA Lab <span id="muestras-cont">0</span>';
+    blab.onclick = function () { MUNDO.abrirLaboratorio(); };
+    ctrl.appendChild(blab);
+  }
+
+  // panel de atmósferas (hábitat)
+  if (M.atmosferas) {
+    var batm = nuevo('button', { id: 'btn-atm' });
+    batm.textContent = '\uD83C\uDF08 Atmósfera';
+    batm.onclick = function () { crearPanelAtmosfera(M.atmosferas); };
+    ctrl.appendChild(batm);
+  }
+
+  // control de gravedad
+  // Botón de salto: en TODOS los mundos (el salto es universal)
+  var bs = nuevo('button', { 'class': 'mover' });
+  bs.textContent = '\u2191 Saltar';
+  ['pointerdown','touchstart'].forEach(function (ev) {
+    bs.addEventListener(ev, function (e) { e.preventDefault(); if (MUNDO.saltar) MUNDO.saltar(); }, { passive: false });
+  });
+  ctrl.appendChild(bs);
+
+  // Selector de gravedad: solo en planetas que lo definan
+  if (M.gravedad && M.gravedad.opciones) {
+    {
+      var sg = nuevo('select', { id: 'sel-grav' });
+      M.gravedad.opciones.forEach(function (op) {
+        var o = nuevo('option', { value: op.g + '|' + (op.salto || '') });
+        o.textContent = op.etiqueta;
+        if (op.g === M.gravedad.valor) o.setAttribute('selected', 'selected');
+        sg.appendChild(o);
+      });
+      sg.onchange = function () {
+        var partes = sg.value.split('|');
+        MUNDO.setGravedad(parseFloat(partes[0]), partes[1] ? parseFloat(partes[1]) : null);
+      };
+      ctrl.appendChild(sg);
+    }
+  }
+
+  // botones de clima
+  if (M.clima) {
+    var CLIMAS = [['despejado','Despejado'],['nublado','Nublado'],['lluvia','Lluvia'],['tormenta','Tormenta']];
+    CLIMAS.forEach(function (cl, i) {
+      var bc = nuevo('button', { 'data-clima': cl[0],
+        'aria-pressed': (M.clima.inicial || 'despejado') === cl[0] ? 'true' : 'false' });
+      bc.textContent = cl[1];
+      bc.onclick = function () {
+        ctrl.querySelectorAll('[data-clima]').forEach(function(o){ o.setAttribute('aria-pressed','false'); });
+        bc.setAttribute('aria-pressed','true');
+        MUNDO.setClima(cl[0]);
+      };
+      ctrl.appendChild(bc);
+    });
+    // botón de tiempo real (solo si el mundo lo permite)
+    if (M.clima.real) {
+      var br = nuevo('button', { id: 'btn-clima-real' });
+      br.textContent = '\uD83C\uDF10 Tiempo real';
+      br.onclick = function () { MUNDO.aplicarClimaReal({ fallback: M.clima.fallback }); };
+      ctrl.appendChild(br);
+    }
+  }
+
+  // botón de sonido: abre el panel de mezcla
+  if (M.sonido) {
+    var bmute = nuevo('button', { id: 'btn-mute' });
+    bmute.textContent = '\uD83D\uDD0A Sonido';
+    bmute.onclick = function () { crearPanelMezcla(); };
+    ctrl.appendChild(bmute);
+  }
+
+  var bn = nuevo('button', { id: 'nombres', 'aria-pressed': 'true' });
+  bn.textContent = 'Nombres';
+  bn.onclick = function () {
+    var ver = bn.getAttribute('aria-pressed') !== 'true';
+    bn.setAttribute('aria-pressed', ver ? 'true' : 'false');
+    document.querySelectorAll('.etiqueta').forEach(function (e) { e.setAttribute('visible', ver); });
+  };
+  ctrl.appendChild(bn);
+
+  var jugador = document.getElementById('jugador');
+  [['\u25BC Atr\u00E1s', -1], ['\u25B2 Caminar', 1]].forEach(function (par) {
+    var b = nuevo('button', { 'class': 'mover' });
+    b.textContent = par[0];
+    ['pointerdown', 'touchstart'].forEach(function (ev) {
+      b.addEventListener(ev, function (e) { e.preventDefault(); jugador.setAttribute('caminar', 'dir', par[1]); }, { passive: false });
+    });
+    ['pointerup', 'pointerleave', 'pointercancel', 'touchend', 'touchcancel'].forEach(function (ev) {
+      b.addEventListener(ev, function () { jugador.setAttribute('caminar', 'dir', 0); });
+    });
+    ctrl.appendChild(b);
+  });
+
+  if (M.vistas) {
+    var sel = nuevo('select', { id: 'vistas' });
+    sel.appendChild(nuevo('option', { value: '' }));
+    sel.firstChild.textContent = 'Ir a\u2026';
+    Object.keys(M.vistas).forEach(function (k) {
+      var o = nuevo('option', { value: k });
+      o.textContent = M.vistas[k].etiqueta;
+      sel.appendChild(o);
+    });
+    sel.onchange = function () {
+      var v = M.vistas[sel.value];
+      if (!v) return;
+      jugador.setAttribute('position', v.pos);
+      var lc = document.getElementById('camara').components['look-controls'];
+      if (lc) {
+        lc.pitchObject.rotation.x = rad(v.pitch || 0);
+        lc.yawObject.rotation.y = rad(v.yaw || 0);
+      }
+      sel.value = '';
+    };
+    ctrl.appendChild(sel);
+  }
+
+  // Teclado
+  var TECLAS = { w: 1, W: 1, ArrowUp: 1, s: -1, S: -1, ArrowDown: -1 };
+  window.addEventListener('keydown', function (e) {
+    if ((M.rompibles || M.generador) && (e.key === 'g' || e.key === 'G')) MUNDO.golpear();
+    if (M.muestras && (e.key === 'r' || e.key === 'R')) MUNDO.recolectar();
+    if (M.muestras && (e.key === 'l' || e.key === 'L')) MUNDO.abrirLaboratorio();
+    if (TECLAS[e.key]) jugador.setAttribute('caminar', 'dir', TECLAS[e.key]);
+  });
+  window.addEventListener('keyup', function (e) { if (TECLAS[e.key]) jugador.setAttribute('caminar', 'dir', 0); });
+
+  // Toque vs arrastre
+  var arrastro = false, px = 0, py = 0;
+  var escena = document.getElementById('escena');
+  escena.addEventListener('pointerdown', function (e) { arrastro = false; px = e.clientX; py = e.clientY; });
+  escena.addEventListener('pointerup', function (e) { arrastro = Math.hypot(e.clientX - px, e.clientY - py) > 12; });
+
+  var marca = document.getElementById('marca');
+  marca.setAttribute('animation__desvanece',
+    'property: material.opacity; to: 0; dur: 700; startEvents: aterriza; easing: easeOutQuad');
+
+  escena.addEventListener('click', function (ev) {
+    if (arrastro) return;
+    var el = (ev.detail && ev.detail.intersectedEl) ? ev.detail.intersectedEl : ev.target;
+    if (!el) return;
+    var vm = el.dataset ? el.dataset.vrmodo : null;
+    if (vm) {
+      if (vm === 'stop') { MUNDO.vrCaminar = false; MUNDO.vrModo = 'mirar'; }
+      else if (vm === 'mirar') { MUNDO.vrCaminar = true; MUNDO.vrModo = 'mirar'; }
+      else { MUNDO.vrModo = 'tp'; }
+      return;
+    }
+    var hab = el.dataset ? el.dataset.dialogo : null;
+    if (hab) { MUNDO.hablar(hab); return; }
+    var id = el.dataset ? el.dataset.ficha : null;
+    if (id && fichas[id]) { mostrarFicha(fichas[id]); if (MUNDO.sonido) MUNDO.sonido('ficha'); return; }
+    if (el.classList && el.classList.contains('suelo') && ev.detail && ev.detail.intersection) {
+      var p = ev.detail.intersection.point, lim = MUNDO.limites;
+      var actual = jugador.getAttribute('position');
+      var destino = new THREE.Vector3(
+        THREE.MathUtils.clamp(p.x, -lim.x, lim.x),
+        actual.y,
+        THREE.MathUtils.clamp(p.z, lim.zMin, lim.zMax));
+      MUNDO.resolver(destino);
+      jugador.setAttribute('position', { x: destino.x, y: destino.y, z: destino.z });
+      marca.setAttribute('position', p.x + ' ' + (p.y + 0.05) + ' ' + p.z);
+      marca.setAttribute('material', 'opacity', 0.9);
+      marca.emit('aterriza');
+      document.getElementById('pista').classList.add('oculta');
+      if (MUNDO.sonido) MUNDO.sonido('teleport');
+    }
+  });
+
+  document.getElementById('cerrar').onclick = function () {
+    document.getElementById('ficha').classList.remove('visible');
+  };
+  crearPanelDialogo();
+  setTimeout(function () { document.getElementById('pista').classList.add('oculta'); }, 9000);
+}
+
+global.MUNDO = MUNDO;
+})(window);

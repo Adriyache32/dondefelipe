@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ruta del ARN · Del Gen a la Proteína</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#160f2e; --bg-1:#211647; --surface:#2a1d54; --surface-2:#352471;
+    --line:rgba(160,140,235,.22); --ink:#f1ecff; --muted:#a99fd4; --muted-2:#7c6fb0;
+    --helix:#2dd4bf;
+    --t-q:#a78bfa; --t-premio:#34d399; --t-castigo:#fb7185; --t-accion:#fbbf24; --t-meta:#facc15;
+    --t-up:#34d399; --t-down:#fb7185;
+    --radius:16px; --shadow:0 18px 50px -20px rgba(0,0,0,.7);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:'Space Grotesk',system-ui,sans-serif; color:var(--ink);
+    background:
+      radial-gradient(1200px 700px at 15% -10%, rgba(45,212,191,.16), transparent 60%),
+      radial-gradient(1000px 600px at 100% 0%, rgba(167,139,250,.20), transparent 55%),
+      linear-gradient(160deg, var(--bg-0), var(--bg-1));
+    min-height:100vh; padding:22px clamp(12px,3vw,34px) 60px; -webkit-font-smoothing:antialiased;
+  }
+  header.top{max-width:1220px;margin:0 auto 20px}
+  .eyebrow{font-family:'JetBrains Mono',monospace;letter-spacing:.32em;text-transform:uppercase;font-size:.68rem;color:var(--helix);margin:0 0 8px}
+  h1{font-size:clamp(1.9rem,5vw,3.1rem);line-height:.98;margin:0;font-weight:700;letter-spacing:-.02em}
+  h1 .flow{color:var(--muted);font-weight:500}
+  h1 .A{color:#4ade80} h1 .R{color:#f87171} h1 .P{color:var(--helix)}
+  .sub{color:var(--muted);margin:.7rem 0 0;max-width:62ch;font-size:.98rem}
+
+  .stage{max-width:1220px;margin:0 auto;display:grid;grid-template-columns:1fr 350px;gap:22px;align-items:start}
+  @media(max-width:900px){.stage{grid-template-columns:1fr}}
+  .panel{background:linear-gradient(180deg,var(--surface),var(--bg-1));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+
+  /* ----- Board ----- */
+  #boardWrap{padding:16px}
+  #board{position:relative;display:grid;gap:11px}
+  #pathLayer{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:visible}
+  #pathBase{fill:none;stroke:rgba(45,212,191,.20);stroke-width:16;stroke-linecap:round;stroke-linejoin:round}
+  #pathGlow{fill:none;stroke:rgba(45,212,191,.10);stroke-width:26;stroke-linecap:round;stroke-linejoin:round}
+  #pathDash{fill:none;stroke:rgba(167,139,250,.55);stroke-width:3;stroke-linecap:round;stroke-dasharray:2 13}
+  .tile{
+    position:relative;z-index:1;aspect-ratio:1/1;border-radius:14px;border:1px solid rgba(120,95,190,.4);
+    background:linear-gradient(160deg,#f3eefc,#e4dcf6);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:4px;text-align:center;overflow:hidden;color:#241a42;
+    transition:box-shadow .2s, transform .2s, border-color .2s;
+  }
+  .tile .num{position:absolute;top:4px;left:6px;font-family:'JetBrains Mono',monospace;font-size:.66rem;color:#7a6bb3}
+  .tile .ic{font-size:clamp(1.15rem,3.6vw,1.9rem);line-height:1;color:#241a42}
+  .tile .cap{font-size:.62rem;line-height:1.1;color:#3a2c63;font-weight:500;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  @media(min-width:560px){.tile .cap{font-size:.68rem}}
+  .tile[data-type="inicio"]{border-color:#14b8a6;background:linear-gradient(160deg,#c7f2ea,#a5e5da)}
+  .tile[data-type="meta"]{border-color:#eab308;background:linear-gradient(160deg,#fdeeb0,#f9df86)}
+  .tile[data-type="pregunta"]{border-color:#8b5cf6;background:linear-gradient(160deg,#e9e0fb,#dbccf7)}
+  .tile[data-type="pregunta"] .ic{color:#6d28d9}
+  .tile[data-type="premioMove"],.tile[data-type="premioPts"]{border-color:#10b981;background:linear-gradient(160deg,#cbf3e1,#a9e8ca)}
+  .tile[data-type="premioMove"] .ic,.tile[data-type="premioPts"] .ic{color:#047857}
+  .tile[data-type="castigoMove"],.tile[data-type="castigoPts"]{border-color:#f43f5e;background:linear-gradient(160deg,#fbdae1,#f6bcc8)}
+  .tile[data-type="castigoMove"] .ic,.tile[data-type="castigoPts"] .ic{color:#be123c}
+  .tile[data-type="accion"]{border-color:#f59e0b;background:linear-gradient(160deg,#fdedc4,#fbdc95)}
+  .tile[data-type="accion"] .ic{color:#b45309}
+  .tile[data-type="atajo"][data-kind="up"]{border-color:#10b981;background:linear-gradient(160deg,#c3f0da,#98e2bf)}
+  .tile[data-type="atajo"][data-kind="down"]{border-color:#f43f5e;background:linear-gradient(160deg,#fbd2da,#f5b1bf)}
+  .tile[data-type="enroque"]{border-color:#3b82f6;background:linear-gradient(160deg,#d3e4fd,#b6d0fb)}
+  .tile[data-type="enroque"] .ic{color:#1d4ed8}
+  .tile[data-type="cero"]{border-color:#e11d48;background:linear-gradient(160deg,#fccdd6,#f7a6b6)}
+  .tile[data-type="cero"] .ic{color:#9f1239}
+  .tile.active{box-shadow:0 0 0 2px var(--helix),0 0 24px -2px var(--helix)}
+
+  #tokens{position:absolute;inset:0;pointer-events:none;z-index:5}
+  .token{
+    position:absolute;top:0;left:0;width:clamp(20px,4vw,30px);aspect-ratio:1;border-radius:50%;
+    box-shadow:0 3px 8px rgba(0,0,0,.5),inset 0 0 0 2px rgba(255,255,255,.4);
+    transition:transform .28s cubic-bezier(.34,1.4,.5,1);
+  }
+  .tk-in{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.8rem;color:#0b0820}
+
+  .legend{display:flex;flex-wrap:wrap;gap:8px 14px;padding:14px 16px 4px}
+  .legend span{display:inline-flex;align-items:center;gap:6px;font-size:.74rem;color:var(--muted)}
+  .legend b{width:11px;height:11px;border-radius:4px;display:inline-block}
+
+  .side{display:flex;flex-direction:column;gap:16px;position:sticky;top:16px}
+  .card{padding:16px;position:relative}
+  .card h2{margin:0 0 12px;font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .iconBtn{position:absolute;top:12px;right:12px;width:38px;height:38px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink);font-size:1rem;display:flex;align-items:center;justify-content:center}
+  .iconBtn:hover{border-color:var(--helix)}
+
+  .turnRow{display:flex;align-items:center;gap:14px;margin-bottom:14px;min-height:66px}
+  #diceArea{display:flex;gap:10px;align-items:center}
+  .whoseTurn{font-size:.72rem;color:var(--muted)}
+  .whoseTurn strong{display:block;font-size:1.15rem;color:var(--ink);margin-top:2px}
+  .dice{width:60px;height:60px;border-radius:14px;flex:none;background:linear-gradient(160deg,#fdfcff,#d9d3f0);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:9px;box-shadow:inset 0 -4px 8px rgba(0,0,0,.15),0 8px 18px -6px rgba(0,0,0,.6)}
+  .dice i{display:block;align-self:center;justify-self:center;width:10px;height:10px;border-radius:50%;background:#241a42;visibility:hidden}
+  #diceArea.many{gap:6px;flex-wrap:wrap;max-width:210px}
+  #diceArea.many .dice{width:44px;height:44px;padding:6px;border-radius:11px}
+  #diceArea.many .dice i{width:7px;height:7px}
+  .dice.rolling{animation:shake .5s ease}
+  @keyframes shake{0%,100%{transform:none}25%{transform:rotate(-9deg) translateY(-3px)}75%{transform:rotate(9deg) translateY(2px)}}
+  .realBox{display:flex;flex-direction:column;gap:5px}
+  .realBox input{width:88px;padding:12px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(160deg,#fdfcff,#d9d3f0);color:#241a42;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.6rem;text-align:center}
+  .realBox input:focus{outline:2px solid var(--helix)}
+  .realHint{font-size:.62rem;color:var(--muted-2);max-width:120px;line-height:1.25}
+  #rollResult{min-height:20px;margin-top:10px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:.9rem;color:var(--helix)}
+
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:12px;font-weight:600;transition:transform .12s,filter .2s,background .2s}
+  button:active{transform:translateY(1px)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .btn-primary{width:100%;padding:14px;font-size:1rem;color:#08121a;background:linear-gradient(135deg,var(--helix),#5eead4);box-shadow:0 10px 24px -10px var(--helix)}
+  .btn-primary:hover:not(:disabled){filter:brightness(1.06)}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--muted);padding:9px 12px;font-size:.8rem;width:100%}
+  .btn-ghost:hover{color:var(--ink);border-color:var(--helix)}
+
+  .scoreItem{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;margin-bottom:6px;background:rgba(255,255,255,.03);border:1px solid transparent}
+  .scoreItem.cur{border-color:var(--helix);background:rgba(45,212,191,.08)}
+  .chip{width:26px;height:26px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-weight:700;color:#0b0820;font-size:.8rem}
+  .scoreItem .nm{flex:1;min-width:0;font-size:.86rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .scoreItem .pts{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--helix)}
+  .scoreItem .cell{font-family:'JetBrains Mono',monospace;font-size:.66rem;color:var(--muted-2)}
+
+  .log{max-height:150px;overflow:auto;font-size:.76rem;color:var(--muted);line-height:1.5}
+  .log div{padding:2px 0;border-bottom:1px dashed var(--line)}
+  .log b{color:var(--ink);font-weight:600}
+
+  .overlay{position:fixed;inset:0;background:rgba(12,8,28,.72);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:18px;z-index:50}
+  .overlay[hidden]{display:none}
+  .modal{width:min(540px,100%);background:linear-gradient(180deg,var(--surface),var(--bg-1));border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:24px;animation:pop .28s cubic-bezier(.34,1.4,.5,1);max-height:90vh;overflow:auto}
+  @keyframes pop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal .tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;padding:4px 10px;border-radius:999px;margin-bottom:12px}
+  .modal h3{margin:0 0 6px;font-size:1.35rem;line-height:1.15}
+  .modal p{color:var(--muted);margin:.4rem 0 0;line-height:1.5}
+  .opts{display:grid;gap:9px;margin-top:16px}
+  .opt{text-align:left;padding:13px 15px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink);font-size:.92rem;font-weight:500;display:flex;gap:10px;align-items:center}
+  .opt:hover:not(:disabled){border-color:var(--helix)}
+  .opt .k{font-family:'JetBrains Mono',monospace;color:var(--muted-2);font-size:.8rem}
+  .opt.correct{background:rgba(52,211,153,.18);border-color:var(--t-premio);color:#eafff5}
+  .opt.wrong{background:rgba(251,113,133,.16);border-color:var(--t-castigo);color:#ffeef1}
+  .exp{margin-top:14px;padding:13px 15px;border-radius:12px;background:rgba(45,212,191,.09);border:1px solid var(--line);font-size:.86rem;color:var(--muted);line-height:1.5}
+  .exp b{color:var(--helix)}
+  .modalBtns{display:flex;gap:10px;margin-top:18px}
+  .modalBtns button{flex:1;padding:13px}
+  .btn-ok{background:linear-gradient(135deg,var(--t-premio),#6ee7b7);color:#052e1c}
+  .btn-no{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
+  .btn-go{background:linear-gradient(135deg,var(--helix),#5eead4);color:#08121a}
+
+  .setLabel{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2);margin:16px 0 6px}
+  .setup .row{display:flex;align-items:center;gap:10px;margin-top:8px}
+  .setup label{font-size:.8rem;color:var(--muted);width:96px;flex:none}
+  .setup input[type=text]{flex:1;padding:11px 13px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-family:inherit;font-size:.92rem}
+  .setup input[type=text]:focus{outline:2px solid var(--helix);outline-offset:1px}
+  .pcount{display:flex;gap:8px;flex-wrap:wrap}
+  .pcount button{flex:1;min-width:44px;padding:11px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);font-size:.86rem}
+  .pcount button.sel{background:linear-gradient(135deg,var(--helix),#5eead4);color:#08121a;border-color:transparent}
+  .winName{font-size:1.8rem;font-weight:700;margin:.3rem 0}
+
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+  ::-webkit-scrollbar{width:8px}
+  ::-webkit-scrollbar-thumb{background:var(--surface-2);border-radius:8px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <p class="eyebrow">Biología · Genética molecular</p>
+  <h1><span class="A">Ruta</span> del <span class="R">ARN</span><br><span class="flow">del gen a la proteína →</span> <span class="P">🧬</span></h1>
+  <p class="sub">Lanza el dado y recorre el camino del gen a la proteína: transcripción, maduración del ARN y traducción. Hay preguntas, premios, castigos, desafíos y atajos moleculares. Con 2 o más dados, si <b style="color:var(--helix)">todos caen en el mismo número</b>, ¡lanzas de nuevo!</p>
+</header>
+
+<div class="stage">
+  <section class="panel" id="boardWrap">
+    <div id="board">
+      <svg id="pathLayer"><path id="pathGlow"/><path id="pathBase"/><path id="pathDash"/></svg>
+      <div id="tokens"></div>
+    </div>
+    <div class="legend">
+      <span><b style="background:var(--helix)"></b> Inicio</span>
+      <span><b style="background:var(--t-q)"></b> Pregunta</span>
+      <span><b style="background:var(--t-premio)"></b> Premio</span>
+      <span><b style="background:var(--t-castigo)"></b> Castigo</span>
+      <span><b style="background:var(--t-accion)"></b> Desafío</span>
+      <span><b style="background:var(--t-up)"></b> Atajo ↑</span>
+      <span><b style="background:var(--t-down)"></b> Túnel ↓</span>
+      <span><b style="background:#3b82f6"></b> Enroque</span>
+      <span><b style="background:#e11d48"></b> Pierde puntos</span>
+      <span><b style="background:var(--t-meta)"></b> Meta</span>
+    </div>
+  </section>
+
+  <aside class="side">
+    <div class="panel card">
+      <button class="iconBtn" id="muteBtn" title="Silenciar / activar sonido">🔊</button>
+      <div class="turnRow">
+        <div id="diceArea"></div>
+        <div class="whoseTurn">Turno de<strong id="turnName">—</strong></div>
+      </div>
+      <button class="btn-primary" id="rollBtn">🎲 Lanzar el dado</button>
+      <div id="rollResult"></div>
+    </div>
+    <div class="panel card">
+      <h2>Marcador</h2>
+      <div id="scoreboard"></div>
+      <button class="btn-ghost" id="resetBtn" style="margin-top:10px">↺ Nueva partida</button>
+    </div>
+    <div class="panel card">
+      <h2>Bitácora de la célula</h2>
+      <div class="log" id="log"><div>Prepara a los jugadores para comenzar la transcripción…</div></div>
+    </div>
+  </aside>
+</div>
+
+<!-- SETUP -->
+<div class="overlay setup" id="setupOverlay">
+  <div class="modal">
+    <span class="tag" style="background:rgba(45,212,191,.16);color:var(--helix)">Preparar partida</span>
+    <h3>¿Quiénes van a transcribir?</h3>
+    <p>Escribe el nombre de cada jugador: en el tablero se identifican por su color y la inicial de su nombre. Elige la cantidad y el tipo de dado.</p>
+    <div class="setLabel">Jugadores</div>
+    <div class="pcount" id="pcount">
+      <button data-n="1">1</button><button data-n="2" class="sel">2</button>
+      <button data-n="3">3</button><button data-n="4">4</button>
+      <button data-n="5">5</button><button data-n="6">6</button>
+    </div>
+    <div class="setLabel">Dados</div>
+    <div class="pcount" id="diceModeSel">
+      <button data-m="one" class="sel">🎲 1 dado</button>
+      <button data-m="two">🎲 2 dados</button>
+      <button data-m="three">🎲 3 dados</button>
+      <button data-m="four">🎲 4 dados</button>
+      <button data-m="real">✋ Dados reales</button>
+    </div>
+    <div id="nameInputs"></div>
+    <div class="modalBtns"><button class="btn-go" id="startBtn">Comenzar transcripción →</button></div>
+  </div>
+</div>
+
+<!-- EVENT MODAL -->
+<div class="overlay" id="eventOverlay" hidden><div class="modal" id="eventModal"></div></div>
+
+<script>
+/* ============================================================
+   RUTA DEL ARN — juego de tablero de genética
+   ============================================================ */
+
+/* ---------- Motor de sonido (WebAudio, sin archivos) ---------- */
+const Sound = (()=>{
+  let ctx=null, muted=false;
+  function ensure(){
+    if(!ctx){ try{ ctx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+    if(ctx && ctx.state==='suspended') ctx.resume();
+  }
+  function tone(freq,dur,type='sine',vol=0.2,delay=0,slideTo=null){
+    if(!ctx||muted) return;
+    const t=ctx.currentTime+delay;
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.type=type; o.frequency.setValueAtTime(freq,t);
+    if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo,t+dur);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol,t+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g).connect(ctx.destination);
+    o.start(t); o.stop(t+dur+0.03);
+  }
+  function noise(dur,vol,delay,freq){
+    if(!ctx||muted) return;
+    const t=ctx.currentTime+delay;
+    const n=Math.floor(ctx.sampleRate*dur);
+    const buf=ctx.createBuffer(1,n,ctx.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+    const s=ctx.createBufferSource(); s.buffer=buf;
+    const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=freq||1400; f.Q.value=0.8;
+    const g=ctx.createGain(); g.gain.value=vol;
+    s.connect(f).connect(g).connect(ctx.destination); s.start(t);
+  }
+  return {
+    init:ensure,
+    toggle(){ muted=!muted; return muted; },
+    dice(){ ensure(); for(let i=0;i<5;i++) noise(0.055,0.12,i*0.055,900+Math.random()*700); },
+    step(){ ensure(); tone(560,0.07,'square',0.09,0,760); },
+    reward(){ ensure(); [523,659,784,1047].forEach((f,i)=>tone(f,0.16,'triangle',0.16,i*0.09)); },
+    penalty(){ ensure(); tone(320,0.42,'sawtooth',0.16,0,110); },
+    correct(){ ensure(); tone(660,0.12,'sine',0.18,0); tone(988,0.18,'sine',0.18,0.1); },
+    wrong(){ ensure(); tone(210,0.32,'square',0.15,0,150); },
+    shortcut(){ ensure(); tone(420,0.4,'sine',0.16,0,1500); noise(0.4,0.05,0,2500); },
+    tunnel(){ ensure(); tone(760,0.4,'sine',0.16,0,180); },
+    win(){ ensure(); [523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,0.28,'triangle',0.18,i*0.12)); },
+  };
+})();
+
+/* Fichas (hasta 6 jugadores) */
+const TOKENS = [
+  {name:'Adenina',  letter:'A', color:'#4ade80'},
+  {name:'Uracilo',  letter:'U', color:'#f87171'},
+  {name:'Guanina',  letter:'G', color:'#fbbf24'},
+  {name:'Citosina', letter:'C', color:'#60a5fa'},
+  {name:'Timina',   letter:'T', color:'#f472b6'},
+  {name:'Ribosa',   letter:'R', color:'#a78bfa'},
+];
+
+/* Tablero (40 casillas, 0–39) */
+const BOARD = [
+  /* 0  */ {type:'inicio', cap:'El Gen', ic:'🧬'},
+  /* 1  */ {type:'normal', cap:'Nucleótido', ic:'•'},
+  /* 2  */ {type:'pregunta'},
+  /* 3  */ {type:'premioMove', cap:'Promotor hallado', ic:'⏩', move:2, pts:25, msg:'Encuentras el promotor: la ARN polimerasa se ancla. Avanza 2 y suma 25 puntos.'},
+  /* 4  */ {type:'normal', cap:'Hebra molde', ic:'•'},
+  /* 5  */ {type:'pregunta'},
+  /* 6  */ {type:'accion', cap:'Resume', ic:'🎤', move:3, pts:50, msg:'En vivo: resume en 15 segundos un concepto visto en la clase de hoy. Si el curso lo aprueba, avanza 3 y suma 50 puntos.'},
+  /* 7  */ {type:'castigoMove', cap:'Error de lectura', ic:'⏪', move:-2, msg:'La polimerasa cometió un error de lectura. Retrocede 2 casillas.'},
+  /* 8  */ {type:'normal', cap:'Fosfato', ic:'•'},
+  /* 9  */ {type:'pregunta'},
+  /* 10 */ {type:'social', cap:'Abrazo', ic:'🤝', move:2, pts:30, msg:'Convivencia: dale un abrazo (o chócala) a {otro}.'},
+  /* 11 */ {type:'premioPts', cap:'Transcripción veloz', ic:'⭐', pts:75, msg:'¡Transcripción veloz! Ganas 75 puntos.'},
+  /* 12 */ {type:'pregunta'},
+  /* 13 */ {type:'enroque', cap:'Enroque', ic:'🔀'},
+  /* 14 */ {type:'normal', cap:'Desoxirribosa', ic:'•'},
+  /* 15 */ {type:'pregunta'},
+  /* 16 */ {type:'accion', cap:'Nombra bases', ic:'✍️', move:2, pts:40, msg:'Nombra las 4 bases nitrogenadas del ADN. Si aciertas, avanza 2 y suma 40 puntos.'},
+  /* 17 */ {type:'castigoMove', cap:'Mutación', ic:'⏪', move:-3, msg:'Mutación puntual en el gen. Retrocede 3 casillas.'},
+  /* 18 */ {type:'pregunta'},
+  /* 19 */ {type:'normal', cap:'Antiparalelo', ic:'•'},
+  /* 20 */ {type:'social', cap:'Cualidad', ic:'🤝', move:2, pts:40, msg:'Convivencia: indica una característica positiva de {otro}.'},
+  /* 21 */ {type:'pregunta'},
+  /* 22 */ {type:'accion', cap:'Chiste', ic:'🎤', move:2, pts:30, msg:'En vivo: cuenta un chiste al curso. Si logras que alguien se ría, avanza 2 y suma 30 puntos.'},
+  /* 23 */ {type:'premioMove', cap:'Elongación fluida', ic:'⏩', move:2, pts:25, msg:'La elongación fluye sin errores. Avanza 2 y suma 25 puntos.'},
+  /* 24 */ {type:'pregunta'},
+  /* 25 */ {type:'normal', cap:'Enlace', ic:'•'},
+  /* 26 */ {type:'castigoPts', cap:'T por U', ic:'⚠️', pts:-50, msg:'Confundiste la timina con el uracilo. Pierdes 50 puntos.'},
+  /* 27 */ {type:'pregunta'},
+  /* 28 */ {type:'accion', cap:'Diferencia', ic:'🗣️', move:3, pts:50, msg:'Explica una diferencia entre el ADN y el ARN. Si aciertas, avanza 3 y suma 50 puntos.'},
+  /* 29 */ {type:'cero', cap:'Pierde puntos', ic:'💥'},
+  /* 30 */ {type:'pregunta'},
+  /* 31 */ {type:'premioPts', cap:'Apareamiento correcto', ic:'⭐', pts:75, msg:'Apareamiento de bases perfecto. Suma 75 puntos.'},
+  /* 32 */ {type:'social', cap:'Anécdota', ic:'🤝', move:3, pts:50, msg:'Convivencia: cuéntale al curso una anécdota tuya de este mes.'},
+  /* 33 */ {type:'pregunta'},
+  /* 34 */ {type:'normal', cap:'Burbuja de transcripción', ic:'•'},
+  /* 35 */ {type:'accion', cap:'Dogma central', ic:'🎤', move:3, pts:50, msg:'En vivo: explica el dogma central (ADN→ARN→proteína) con mímica o un dibujo. Si el curso lo aprueba, avanza 3 y suma 50 puntos.'},
+  /* 36 */ {type:'pregunta'},
+  /* 37 */ {type:'enroque', cap:'Enroque', ic:'🔀'},
+  /* 38 */ {type:'castigoMove', cap:'ARNm degradado', ic:'⏪', move:-2, msg:'Parte del ARNm se degradó. Retrocede 2 casillas.'},
+  /* 39 */ {type:'pregunta'},
+  /* 40 */ {type:'accion', cap:'Dibuja', ic:'✍️', move:2, pts:40, msg:'Dibuja o describe el apareamiento A-T y G-C. Si es correcto, avanza 2 y suma 40 puntos.'},
+  /* 41 */ {type:'normal', cap:'Caperuza 5′', ic:'•'},
+  /* 42 */ {type:'pregunta'},
+  /* 43 */ {type:'premioMove', cap:'Caperuza añadida', ic:'⏩', move:2, pts:25, msg:'Se añade la caperuza 5′ que protege al ARNm. Avanza 2 y suma 25 puntos.'},
+  /* 44 */ {type:'social', cap:'Admiración', ic:'🤝', move:2, pts:40, msg:'Convivencia: dile a {otro} algo que admiras de él o ella.'},
+  /* 45 */ {type:'pregunta'},
+  /* 46 */ {type:'normal', cap:'Cola poli-A', ic:'•'},
+  /* 47 */ {type:'castigoMove', cap:'Splicing fallido', ic:'⏪', move:-3, msg:'El splicing falló y quedó un intrón. Retrocede 3 casillas.'},
+  /* 48 */ {type:'pregunta'},
+  /* 49 */ {type:'accion', cap:'3 conceptos', ic:'🎤', move:3, pts:50, msg:'En vivo: menciona 3 conceptos de genética que aprendiste. Si el curso lo aprueba, avanza 3 y suma 50 puntos.'},
+  /* 50 */ {type:'pregunta'},
+  /* 51 */ {type:'normal', cap:'Poro nuclear', ic:'•'},
+  /* 52 */ {type:'premioPts', cap:'ARNm maduro', ic:'⭐', pts:100, msg:'El ARNm madura y sale del núcleo. Suma 100 puntos.'},
+  /* 53 */ {type:'pregunta'},
+  /* 54 */ {type:'social', cap:'Gratitud', ic:'🤝', move:2, pts:30, msg:'Convivencia: agradécele a {otro} por algo, de verdad.'},
+  /* 55 */ {type:'normal', cap:'Citoplasma', ic:'•'},
+  /* 56 */ {type:'pregunta'},
+  /* 57 */ {type:'accion', cap:'Pregunta al curso', ic:'🎤', move:2, pts:40, msg:'En vivo: formula una buena pregunta sobre el tema al curso. Si el curso la aprueba, avanza 2 y suma 40 puntos.'},
+  /* 58 */ {type:'castigoMove', cap:'Codón mal leído', ic:'⏪', move:-2, msg:'El ribosoma leyó mal un codón. Retrocede 2 casillas.'},
+  /* 59 */ {type:'pregunta'},
+  /* 60 */ {type:'premioMove', cap:'Ribosoma se une', ic:'⏩', move:2, pts:25, msg:'El ribosoma se une al ARNm y comienza a leerlo. Avanza 2 y suma 25 puntos.'},
+  /* 61 */ {type:'enroque', cap:'Enroque', ic:'🔀'},
+  /* 62 */ {type:'pregunta'},
+  /* 63 */ {type:'normal', cap:'Codón AUG', ic:'•'},
+  /* 64 */ {type:'accion', cap:'Explica traducción', ic:'🗣️', move:3, pts:50, msg:'Explica qué es la traducción. Si el curso lo aprueba, avanza 3 y suma 50 puntos.'},
+  /* 65 */ {type:'pregunta'},
+  /* 66 */ {type:'cero', cap:'Pierde puntos', ic:'💥'},
+  /* 67 */ {type:'premioPts', cap:'ARNt correcto', ic:'⭐', pts:75, msg:'El ARNt trae el aminoácido correcto. Suma 75 puntos.'},
+  /* 68 */ {type:'pregunta'},
+  /* 69 */ {type:'social', cap:'Chócala', ic:'🤝', move:2, pts:40, msg:'Convivencia: choca los cinco con {otro} y dile su mejor cualidad.'},
+  /* 70 */ {type:'castigoPts', cap:'Término prematuro', ic:'⚠️', pts:-50, msg:'Apareció un codón de término prematuro. Pierdes 50 puntos.'},
+  /* 71 */ {type:'pregunta'},
+  /* 72 */ {type:'accion', cap:'Resume la clase', ic:'🎤', move:4, pts:60, msg:'En vivo: resume toda la clase de hoy en una sola frase. Si convence al curso, avanza 4 y suma 60 puntos.'},
+  /* 73 */ {type:'normal', cap:'Anticodón', ic:'•'},
+  /* 74 */ {type:'pregunta'},
+  /* 75 */ {type:'premioMove', cap:'Cadena crece', ic:'⏩', move:2, pts:25, msg:'La cadena polipeptídica se alarga. Avanza 2 y suma 25 puntos.'},
+  /* 76 */ {type:'pregunta'},
+  /* 77 */ {type:'accion', cap:'Enseña a un par', ic:'🎤', move:3, pts:50, msg:'En vivo: explícale un concepto de la clase a un compañero. Si lo logra repetir, avanza 3 y suma 50 puntos.'},
+  /* 78 */ {type:'normal', cap:'Elongación', ic:'•'},
+  /* 79 */ {type:'pregunta'},
+  /* 80 */ {type:'social', cap:'Algo bueno', ic:'🤝', move:2, pts:30, msg:'Convivencia: cuéntale al curso algo bueno que te pasó esta semana.'},
+  /* 81 */ {type:'castigoMove', cap:'Ribosoma se detiene', ic:'⏪', move:-2, msg:'El ribosoma se detiene un instante. Retrocede 2 casillas.'},
+  /* 82 */ {type:'pregunta'},
+  /* 83 */ {type:'premioPts', cap:'Plegamiento correcto', ic:'⭐', pts:100, msg:'La proteína se pliega correctamente. Suma 100 puntos.'},
+  /* 84 */ {type:'pregunta'},
+  /* 85 */ {type:'accion', cap:'Qué te gustó', ic:'🎤', move:2, pts:30, msg:'En vivo: cuenta qué fue lo que más te gustó de la clase. Avanza 2 y suma 30 puntos.'},
+  /* 86 */ {type:'normal', cap:'Túnel del ribosoma', ic:'•'},
+  /* 87 */ {type:'pregunta'},
+  /* 88 */ {type:'social', cap:'Inspiración', ic:'🤝', move:2, pts:40, msg:'Convivencia: dile a {otro} en qué te gustaría parecerte a él o ella.'},
+  /* 89 */ {type:'premioMove', cap:'Toque final', ic:'⏩', move:2, pts:25, msg:'Último impulso hacia la meta. Avanza 2 y suma 25 puntos.'},
+  /* 90 */ {type:'pregunta'},
+  /* 91 */ {type:'accion', cap:'Un aprendizaje', ic:'🎤', move:3, pts:50, msg:'En vivo: comparte un aprendizaje que te llevas de esta clase. Avanza 3 y suma 50 puntos.'},
+  /* 92 */ {type:'normal', cap:'Chaperona', ic:'•'},
+  /* 93 */ {type:'pregunta'},
+  /* 94 */ {type:'premioPts', cap:'Proteína activa', ic:'⭐', pts:100, msg:'La proteína alcanza su forma activa. Suma 100 puntos.'},
+  /* 95 */ {type:'meta', cap:'¡Proteína funcional!', ic:'🏁'},
+];
+const LAST = BOARD.length - 1;
+
+/* Atajos y túneles. from → to. Edítalos libremente. */
+const SHORTCUTS = {
+  8:  {to:21, kind:'up',   msg:'La caperuza 5′ protege al ARN y lo acelera. ¡Saltas de la 8 a la 21!'},
+  19: {to:33, kind:'up',   msg:'Splicing perfecto: se eliminan los intrones sin errores. ¡Saltas de la 19 a la 33!'},
+  46: {to:59, kind:'up',   msg:'Exportación exprés: el ARNm cruza el poro nuclear. Avanzas de la 46 a la 59.'},
+  86: {to:90, kind:'up',   msg:'Impulso final del ribosoma. Avanzas de la 86 a la 90.'},
+  25: {to:12, kind:'down', msg:'Intrón no eliminado: el ARNm queda defectuoso. Vuelves de la 25 a la 12.'},
+  51: {to:34, kind:'down', msg:'Fallo en la exportación: el ARNm vuelve al núcleo. Retrocedes de la 51 a la 34.'},
+  73: {to:60, kind:'down', msg:'El ribosoma se desacopla del ARNm. Retrocedes de la 73 a la 60.'},
+};
+
+/* Banco de preguntas */
+const QUESTIONS = [
+  {q:'¿Qué base se aparea con la adenina en el ADN?', o:['Timina','Uracilo','Guanina','Citosina'], c:0, e:'La adenina se une con la timina (A–T) mediante 2 puentes de hidrógeno. El uracilo solo reemplaza a la timina en el ARN.'},
+  {q:'En el ARN, ¿qué base ocupa el lugar de la timina?', o:['Uracilo','Guanina','Adenina','Citosina'], c:0, e:'El ARN utiliza uracilo (U) en lugar de la timina que aparece en el ADN.'},
+  {q:'¿Qué enzima sintetiza el ARN durante la transcripción?', o:['ARN polimerasa','ADN polimerasa','Ligasa','Helicasa'], c:0, e:'La ARN polimerasa lee la hebra molde de ADN y arma la molécula de ARN.'},
+  {q:'En una célula eucariota, ¿dónde ocurre la transcripción?', o:['Núcleo','Citoplasma','Ribosoma','Mitocondria'], c:0, e:'El ADN se ubica en el núcleo, por lo que allí se transcribe a ARN.'},
+  {q:'¿Qué azúcar forma parte del ARN?', o:['Ribosa','Desoxirribosa','Glucosa','Fructosa'], c:0, e:'El ARN contiene ribosa; el ADN contiene desoxirribosa (un oxígeno menos).'},
+  {q:'La hebra molde de ADN es 3′-TAC-5′. ¿Cuál es el ARNm resultante?', o:['5′-AUG-3′','5′-ATG-3′','5′-UAC-3′','5′-TAC-3′'], c:0, e:'El ARN es complementario y antiparalelo, y usa U en vez de T: T→A, A→U, C→G ⇒ 5′-AUG-3′.'},
+  {q:'¿Cuántas hebras tiene normalmente una molécula de ARN mensajero?', o:['Una','Dos','Tres','Cuatro'], c:0, e:'El ARNm es monocatenario (una sola hebra); el ADN es bicatenario (doble hélice).'},
+  {q:'El dogma central describe el flujo: ADN → ___ → Proteína.', o:['ARN','ADN','Lípido','Glúcido'], c:0, e:'El ADN se transcribe a ARN y luego el ARN se traduce a proteína.'},
+  {q:'¿Qué une las bases complementarias de las dos hebras del ADN?', o:['Puentes de hidrógeno','Enlaces peptídicos','Enlaces iónicos','Enlaces glucosídicos'], c:0, e:'Las bases se enlazan por puentes de hidrógeno: A–T con 2 y G–C con 3.'},
+  {q:'¿Cuántos puentes de hidrógeno forman la guanina y la citosina?', o:['Tres','Dos','Uno','Cuatro'], c:0, e:'El par G–C forma 3 puentes de hidrógeno, por eso es más estable que A–T (2 puentes).'},
+  {q:'¿Qué región del gen le indica a la ARN polimerasa dónde comenzar?', o:['Promotor','Terminador','Intrón','Codón'], c:0, e:'El promotor es la secuencia que marca el inicio de la transcripción.'},
+  {q:'¿Cómo se llama la hebra de ADN que sirve de patrón para el ARN?', o:['Hebra molde','Hebra codificante','Hebra líder','Hebra rezagada'], c:0, e:'La ARN polimerasa lee la hebra molde (o plantilla) para sintetizar el ARN.'},
+  {q:'¿Qué componentes forman el esqueleto del ADN?', o:['Fosfato y desoxirribosa','Bases nitrogenadas','Aminoácidos','Ribosa y uracilo'], c:0, e:'El esqueleto es una alternancia de grupos fosfato y azúcar; las bases se proyectan hacia el interior.'},
+  {q:'¿Cuál es el producto directo de la transcripción?', o:['ARN mensajero','Una proteína','ADN nuevo','Un aminoácido'], c:0, e:'La transcripción produce ARN; recién en la traducción se fabrica la proteína.'},
+  {q:'¿En qué dirección sintetiza la ARN polimerasa la nueva hebra de ARN?', o:['5′ → 3′','3′ → 5′','2′ → 5′','1′ → 3′'], c:0, e:'El ARN crece en dirección 5′→3′, mientras lee la hebra molde en sentido 3′→5′.'},
+  {q:'¿Cuál de estas bases es una PIRIMIDINA?', o:['Citosina','Adenina','Guanina','Ninguna'], c:0, e:'Pirimidinas (anillo simple): C, T y U. Purinas (doble anillo): A y G.'},
+  {q:'Completa la hebra de ADN opuesta a 5′-ATGC-3′.', o:['3′-TACG-5′','3′-UACG-5′','3′-ATGC-5′','3′-GCAT-5′'], c:0, e:'A–T, T–A, G–C, C–G. En el ADN se usa timina, nunca uracilo.'},
+  {q:'Durante la transcripción, ¿qué le ocurre a la doble hélice?', o:['Se separa localmente en la zona a transcribir','Se rompe por completo','Se duplica entera','No cambia'], c:0, e:'La ARN polimerasa abre una pequeña "burbuja" de transcripción para leer la hebra molde.'},
+  {q:'¿Cómo se llama el proceso de copiar la información del ADN a ARN?', o:['Transcripción','Traducción','Replicación','Mutación'], c:0, e:'La transcripción copia un gen del ADN a una molécula de ARN.'},
+  {q:'¿Cómo se llama el proceso de leer el ARN para fabricar una proteína?', o:['Traducción','Transcripción','Replicación','Duplicación'], c:0, e:'En la traducción, el ribosoma lee el ARNm y ensambla la proteína.'},
+  {q:'¿Dónde ocurre la traducción?', o:['En el ribosoma','En el núcleo','En la membrana','En el nucléolo'], c:0, e:'La traducción ocurre en los ribosomas, en el citoplasma.'},
+  {q:'¿Cuántos nucleótidos forman un codón?', o:['Tres','Uno','Dos','Cuatro'], c:0, e:'Cada codón está formado por 3 nucleótidos que codifican un aminoácido.'},
+  {q:'¿Qué molécula transporta los aminoácidos hasta el ribosoma?', o:['El ARN de transferencia (ARNt)','El ARN mensajero (ARNm)','El ADN','El ARN ribosómico'], c:0, e:'El ARNt lleva cada aminoácido y reconoce el codón mediante su anticodón.'},
+  {q:'¿Qué tipo de ARN forma parte de la estructura de los ribosomas?', o:['El ARN ribosómico (ARNr)','El ARN mensajero','El ARN de transferencia','El ADN'], c:0, e:'El ARNr, junto con proteínas, constituye los ribosomas.'},
+  {q:'¿Cuál es el codón de inicio de la traducción?', o:['AUG','UAA','GGG','TAC'], c:0, e:'AUG marca el inicio de la traducción y codifica metionina.'},
+  {q:'¿Qué aminoácido codifica normalmente el codón AUG?', o:['Metionina','Glicina','Lisina','Alanina'], c:0, e:'AUG codifica metionina, que suele ser el primer aminoácido de la cadena.'},
+  {q:'En un gen eucariota, ¿cómo se llaman las secuencias que se eliminan del ARN?', o:['Intrones','Exones','Codones','Promotores'], c:0, e:'Los intrones se eliminan por splicing; los exones se conservan.'},
+  {q:'¿Cómo se llaman las secuencias que permanecen en el ARNm maduro?', o:['Exones','Intrones','Terminadores','Anticodones'], c:0, e:'Los exones son las regiones que quedan tras eliminar los intrones.'},
+  {q:'Las dos hebras del ADN corren en sentidos opuestos; se dice que son:', o:['Antiparalelas','Paralelas','Idénticas','Perpendiculares'], c:0, e:'Una va 5′→3′ y la otra 3′→5′: son antiparalelas.'},
+  {q:'¿Quiénes propusieron el modelo de doble hélice del ADN en 1953?', o:['Watson y Crick','Mendel y Darwin','Pasteur y Koch','Hershey y Chase'], c:0, e:'James Watson y Francis Crick, apoyados en los datos de Rosalind Franklin.'},
+  {q:'¿Qué modificación estabiliza el extremo 3′ del ARNm en eucariotas?', o:['La cola poli-A','La caperuza 5′','Un intrón','Un codón de término'], c:0, e:'Se añade una cola de muchas adeninas (poli-A) que da estabilidad al ARNm.'},
+  {q:'¿Cuántos anillos tiene una base púrica como la adenina?', o:['Dos','Uno','Tres','Cuatro'], c:0, e:'Las purinas (A, G) tienen doble anillo; las pirimidinas (C, T, U) uno solo.'},
+  {q:'¿Qué secuencia del gen indica a la ARN polimerasa dónde detenerse?', o:['El terminador','El promotor','El codón AUG','El exón'], c:0, e:'El terminador marca el fin de la transcripción.'},
+  {q:'Un gen es, en esencia:', o:['Un segmento de ADN con la información de un producto','Una proteína completa','Un ribosoma','Un tipo de azúcar'], c:0, e:'Un gen es un fragmento de ADN que codifica un ARN o una proteína.'},
+];
+
+/* Estado */
+let players=[], current=0, busy=false, finished=false, diceMode='one', numPlayers=2;
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* Elementos */
+const boardEl=document.getElementById('board');
+const tokensEl=document.getElementById('tokens');
+const rollBtn=document.getElementById('rollBtn');
+const diceArea=document.getElementById('diceArea');
+const turnName=document.getElementById('turnName');
+const scoreboard=document.getElementById('scoreboard');
+const logEl=document.getElementById('log');
+const rollResult=document.getElementById('rollResult');
+const muteBtn=document.getElementById('muteBtn');
+const pathLayer=document.getElementById('pathLayer');
+const pathBase=document.getElementById('pathBase');
+const pathGlow=document.getElementById('pathGlow');
+const pathDash=document.getElementById('pathDash');
+let tileEls=[], tokenEls=[], tokenInnerEls=[];
+
+/* Columnas responsivas */
+function computeCols(){const w=window.innerWidth;if(w<=480)return 4;if(w<=700)return 5;if(w<=1000)return 6;return 7;}
+let COLS=computeCols();
+
+function buildBoard(){
+  BOARD.forEach((t,i)=>{
+    const el=document.createElement('div');
+    el.className='tile';
+    let type=t.type, ic=t.ic||iconFor(t.type), cap=t.cap||defaultCap(t.type);
+    const sc=SHORTCUTS[i];
+    if(sc){ type='atajo'; el.dataset.kind=sc.kind; ic=sc.kind==='up'?'🪜':'🌀'; cap=(sc.kind==='up'?'Atajo ↑ ':'Túnel ↓ ')+sc.to; }
+    el.dataset.type=type;
+    el.innerHTML=`<span class="num">${i}</span><span class="ic">${ic}</span><span class="cap">${cap}</span>`;
+    boardEl.appendChild(el);
+    tileEls[i]=el;
+  });
+  refreshBoard();
+}
+function placeTiles(cols){
+  boardEl.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  BOARD.forEach((t,i)=>{
+    const row=Math.floor(i/cols), inRow=i%cols;
+    const col=(row%2===0)?inRow:(cols-1-inRow);
+    tileEls[i].style.gridRow=row+1;
+    tileEls[i].style.gridColumn=col+1;
+  });
+}
+function applyWave(){
+  const h=tileEls[0].getBoundingClientRect().height||60;
+  const amp=Math.min(13,h*0.15);
+  BOARD.forEach((t,i)=>{ tileEls[i].style.top=(Math.sin(i*0.85)*amp).toFixed(1)+'px'; });
+}
+function smoothPath(pts){
+  if(pts.length<2)return'';
+  let d=`M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+  for(let i=0;i<pts.length-1;i++){
+    const p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||p2;
+    const c1x=p1.x+(p2.x-p0.x)/6, c1y=p1.y+(p2.y-p0.y)/6;
+    const c2x=p2.x-(p3.x-p1.x)/6, c2y=p2.y-(p3.y-p1.y)/6;
+    d+=` C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+  }
+  return d;
+}
+function drawPath(){
+  const br=boardEl.getBoundingClientRect();
+  const pts=tileEls.map(el=>{const r=el.getBoundingClientRect();return{x:r.left-br.left+r.width/2,y:r.top-br.top+r.height/2};});
+  const d=smoothPath(pts);
+  pathLayer.setAttribute('viewBox',`0 0 ${br.width.toFixed(0)} ${br.height.toFixed(0)}`);
+  pathLayer.setAttribute('width',br.width.toFixed(0));
+  pathLayer.setAttribute('height',br.height.toFixed(0));
+  pathBase.setAttribute('d',d); pathGlow.setAttribute('d',d); pathDash.setAttribute('d',d);
+}
+function refreshBoard(){
+  placeTiles(COLS); applyWave();
+  requestAnimationFrame(()=>{ drawPath(); layoutTokens(); });
+}
+function iconFor(type){return {pregunta:'❓',premioMove:'⏩',premioPts:'⭐',castigoMove:'⏪',castigoPts:'⚠️',accion:'🗣️',enroque:'🔀',cero:'💥',normal:'•'}[type]||'•';}
+function defaultCap(type){return {pregunta:'Pregunta',accion:'Desafío',enroque:'Enroque',cero:'Pierde puntos'}[type]||'';}
+
+/* Tokens */
+function initial(name){return ((name||'').trim()[0]||'?').toUpperCase();}
+function buildTokens(){
+  tokensEl.innerHTML=''; tokenEls=[]; tokenInnerEls=[];
+  players.forEach((p,i)=>{
+    const tk=document.createElement('div'); tk.className='token'; tk.style.background=TOKENS[p.tokenIdx].color;
+    const inner=document.createElement('span'); inner.className='tk-in'; inner.textContent=initial(p.name);
+    tk.appendChild(inner); tokensEl.appendChild(tk);
+    tokenEls[i]=tk; tokenInnerEls[i]=inner;
+  });
+  layoutTokens();
+}
+function layoutTokens(){
+  if(!tokenEls.length)return;
+  const br=boardEl.getBoundingClientRect();
+  const groups={};
+  players.forEach((p,i)=>{(groups[p.pos]=groups[p.pos]||[]).push(i);});
+  players.forEach((p,i)=>{
+    const tr=tileEls[p.pos].getBoundingClientRect();
+    const cx=tr.left-br.left+tr.width/2, cy=tr.top-br.top+tr.height/2;
+    const g=groups[p.pos]; let ox=0,oy=0;
+    if(g.length>1){const k=g.indexOf(i),n=g.length,ang=(k/n)*Math.PI*2-Math.PI/2,r=Math.min(tr.width,tr.height)*0.26;ox=Math.cos(ang)*r;oy=Math.sin(ang)*r;}
+    const tk=tokenEls[i], s=tk.offsetWidth||24;
+    tk.style.transform=`translate(${cx+ox-s/2}px, ${cy+oy-s/2}px)`;
+  });
+}
+function hop(pi){
+  if(reduce||!tokenInnerEls[pi])return;
+  tokenInnerEls[pi].animate(
+    [{transform:'translateY(0) scale(1)'},{transform:'translateY(-34%) scale(1.12)'},{transform:'translateY(0) scale(1)'}],
+    {duration:180,easing:'ease'}
+  );
+}
+let rz;
+window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{const nc=computeCols();if(nc!==COLS)COLS=nc;refreshBoard();},120);});
+
+/* Utilidades */
+const wait=ms=>new Promise(r=>setTimeout(r,reduce?Math.min(ms,60):ms));
+function log(html){const d=document.createElement('div');d.innerHTML=html;logEl.prepend(d);}
+
+/* Dados */
+const DICE_MAP={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+function makeDiceEl(){const d=document.createElement('div');d.className='dice';d.innerHTML='<i></i>'.repeat(9);return d;}
+function showDiceOn(el,v){el.querySelectorAll('i').forEach((dt,idx)=>dt.style.visibility=DICE_MAP[v].includes(idx)?'visible':'hidden');}
+function renderDiceArea(){
+  diceArea.innerHTML='';
+  if(diceMode==='real'){
+    diceArea.innerHTML='<div class="realBox"><input id="realVal" type="number" min="1" max="24" value="6"><span class="realHint">Tira tus dados y escribe el total</span></div>';
+    diceArea.classList.remove('many');
+    rollBtn.textContent='➡️ Avanzar';
+  }else{
+    const n=diceCount();
+    diceArea.classList.toggle('many', n>=3);
+    for(let i=0;i<n;i++){const d=makeDiceEl();diceArea.appendChild(d);showDiceOn(d,1);}
+    rollBtn.textContent=n>1?'🎲 Lanzar los dados':'🎲 Lanzar el dado';
+  }
+}
+function diceCount(){return {one:1,two:2,three:3,four:4}[diceMode]||1;}
+async function rollValue(){
+  if(diceMode==='real'){
+    let v=parseInt(document.getElementById('realVal').value,10);
+    if(isNaN(v))v=1; v=Math.max(1,Math.min(24,v));
+    return {total:v, allEqual:false, count:1};
+  }
+  Sound.dice();
+  const dice=[...diceArea.querySelectorAll('.dice')];
+  dice.forEach(d=>d.classList.add('rolling'));
+  const finals=dice.map(()=>1+Math.floor(Math.random()*6));
+  const frames=reduce?1:10;
+  for(let f=0;f<frames;f++){dice.forEach(d=>showDiceOn(d,1+Math.floor(Math.random()*6)));await wait(60);}
+  dice.forEach((d,i)=>{showDiceOn(d,finals[i]);d.classList.remove('rolling');});
+  const total=finals.reduce((a,b)=>a+b,0);
+  const allEqual=finals.length>=2 && finals.every(f=>f===finals[0]);
+  return {total, allEqual, count:finals.length, face:finals[0]};
+}
+
+/* Cámara: mantiene visible la casilla indicada (por defecto, el primer lugar) */
+function leaderPos(){return players.length?Math.max(...players.map(p=>p.pos)):0;}
+function cameraTo(index){
+  const tile=tileEls[index]; if(!tile)return;
+  const r=tile.getBoundingClientRect();
+  const vh=window.innerHeight;
+  const center=r.top+r.height/2;
+  if(Math.abs(center-vh/2) < vh*0.30) return;      /* ya está en zona cómoda */
+  const target=window.scrollY+center-vh/2;
+  window.scrollTo({top:Math.max(0,target),behavior:reduce?'auto':'smooth'});
+}
+
+/* Movimiento */
+function setActiveTile(i){tileEls.forEach(t=>t.classList.remove('active'));if(tileEls[i])tileEls[i].classList.add('active');}
+async function moveTo(pi,target){
+  const p=players[pi];
+  target=Math.max(0,Math.min(LAST,target));
+  const dir=target>p.pos?1:-1;
+  while(p.pos!==target){
+    p.pos+=dir; setActiveTile(p.pos); layoutTokens(); hop(pi); Sound.step(); cameraTo(p.pos);
+    await wait(210);
+  }
+}
+async function jumpTo(pi,to){
+  const p=players[pi];
+  p.pos=Math.max(0,Math.min(LAST,to));
+  tokenEls[pi].style.transition='transform .6s cubic-bezier(.5,-0.2,.3,1.4)';
+  setActiveTile(p.pos); layoutTokens(); cameraTo(p.pos);
+  await wait(660);
+  tokenEls[pi].style.transition='';
+}
+
+/* Turno */
+async function roll(){
+  if(busy||finished)return;
+  busy=true; rollBtn.disabled=true;
+  Sound.init();
+  rollResult.textContent='';
+  const rd=await rollValue();
+  const val=rd.total;
+  const p=players[current];
+  rollResult.textContent=`🎲 ${p.name} sacó ${val}`;
+  log(`<b>${p.name}</b> obtiene <b>${val}</b>.`);
+  await wait(diceMode==='real'?350:850);          /* pausa para leer el resultado */
+  await moveTo(current,p.pos+val);
+  if(p.pos===LAST)return win(p);
+
+  const sc=SHORTCUTS[p.pos];
+  if(sc){
+    await shortcutModal(sc);
+    if(sc.kind==='up')Sound.shortcut();else Sound.tunnel();
+    await jumpTo(current,sc.to);
+    log(`<b>${p.name}</b> ${sc.kind==='up'?'toma un atajo hasta la':'cae por un túnel a la'} #${sc.to}.`);
+    if(p.pos===LAST)return win(p);
+  }else{
+    await handleTile(current);
+    if(p.pos===LAST)return win(p);
+  }
+  updateScore();
+  cameraTo(leaderPos());                         /* la cámara descansa en el primer lugar */
+  /* Único caso de repetir turno: 2+ dados que caen todos en el mismo número */
+  if(rd.allEqual){
+    rollResult.textContent=`🎲 ¡Los ${rd.count} dados iguales (${rd.face})! ${p.name} lanza de nuevo`;
+    log(`<b>${p.name}</b> sacó todos los dados iguales y repite turno.`);
+    Sound.correct();
+  } else {
+    nextTurn();
+  }
+  busy=false; rollBtn.disabled=false;
+}
+function nextTurn(){
+  current=(current+1)%players.length;
+  turnName.textContent=players[current].name;
+  turnName.style.color=TOKENS[players[current].tokenIdx].color;
+  rollResult.textContent='';
+  updateScore();
+}
+
+/* Eventos de casilla */
+async function handleTile(pi){
+  const p=players[pi], t=BOARD[p.pos];
+  switch(t.type){
+    case 'pregunta':{
+      const ok=await askQuestion();
+      if(ok){p.score+=100;log(`<b>${p.name}</b> responde bien (+100).`);}
+      else log(`<b>${p.name}</b> falla la pregunta.`);
+      break;
+    }
+    case 'premioPts':{await simpleModal('premio','Premio',t.msg,'Continuar');Sound.reward();p.score+=t.pts;log(`<b>${p.name}</b>: premio (+${t.pts}).`);break;}
+    case 'premioMove':{await simpleModal('premio','Premio',t.msg,'Continuar');Sound.reward();if(t.pts)p.score+=t.pts;log(`<b>${p.name}</b> avanza ${t.move}${t.pts?` (+${t.pts})`:''}.`);await moveTo(pi,p.pos+t.move);break;}
+    case 'castigoPts':{await simpleModal('castigo','Castigo',t.msg,'Continuar');Sound.penalty();p.score+=t.pts;log(`<b>${p.name}</b>: castigo (${t.pts}).`);break;}
+    case 'castigoMove':{await simpleModal('castigo','Castigo',t.msg,'Continuar');Sound.penalty();log(`<b>${p.name}</b> retrocede ${Math.abs(t.move)}.`);await moveTo(pi,p.pos+t.move);break;}
+    case 'accion':{
+      const done=await actionModal(t.msg);
+      if(done){Sound.reward();if(t.pts)p.score+=t.pts;log(`<b>${p.name}</b> supera el desafío (avanza ${t.move}${t.pts?`, +${t.pts}`:''}).`);await moveTo(pi,p.pos+t.move);}
+      else log(`<b>${p.name}</b> no supera el desafío.`);
+      break;
+    }
+    case 'cero':{
+      await simpleModal('cero','Pierde todos tus puntos','💥 ¡Reacción catastrófica! Se pierden todos los puntos acumulados. Tu posición en el tablero no cambia.','Continuar');
+      Sound.penalty();
+      p.score=0;
+      log(`<b>${p.name}</b> pierde todos sus puntos.`);
+      break;
+    }
+    case 'enroque':{
+      const others=players.map((_,idx)=>idx).filter(idx=>idx!==pi);
+      if(others.length===0){
+        await simpleModal('enroque','Enroque','No hay otros jugadores para enrocar. Te quedas en tu lugar.','Continuar');
+        break;
+      }
+      const oIdx=others.length===1?others[0]:others[Math.floor(Math.random()*others.length)];
+      const o=players[oIdx];
+      await simpleModal('enroque','Enroque de jugadores',`🔀 ${p.name} intercambia su posición con <b>${o.name}</b>.`,'¡Cambio!');
+      const a=p.pos, b=o.pos;
+      p.pos=b; o.pos=a;
+      [pi,oIdx].forEach(idx=>{ if(tokenEls[idx]) tokenEls[idx].style.transition='transform .6s cubic-bezier(.5,-0.2,.3,1.4)'; });
+      layoutTokens(); Sound.shortcut(); cameraTo(leaderPos());
+      await wait(680);
+      [pi,oIdx].forEach(idx=>{ if(tokenEls[idx]) tokenEls[idx].style.transition=''; });
+      log(`<b>${p.name}</b> hace enroque con <b>${o.name}</b>.`);
+      break;
+    }
+    case 'social':{
+      let msg=t.msg;
+      if(msg.includes('{otro}')){
+        const others=players.filter((_,idx)=>idx!==pi);
+        if(others.length){const o=others[Math.floor(Math.random()*others.length)];msg=msg.replace(/\{otro\}/g,`<b>${o.name}</b>`);}
+        else msg=msg.replace(/\{otro\}/g,'un compañero del curso');
+      }
+      const ok=await socialModal(msg);
+      if(ok){Sound.reward();if(t.pts)p.score+=t.pts;log(`<b>${p.name}</b> cumple el reto de convivencia${t.pts?` (+${t.pts})`:''}.`);if(t.move)await moveTo(pi,p.pos+t.move);}
+      else log(`<b>${p.name}</b> no realiza el reto de convivencia.`);
+      break;
+    }
+    default:break;
+  }
+}
+
+/* Modales */
+const eventOverlay=document.getElementById('eventOverlay');
+const eventModal=document.getElementById('eventModal');
+function openModal(html){eventModal.innerHTML=html;eventOverlay.hidden=false;}
+function closeModal(){eventOverlay.hidden=true;}
+const TAGSTYLE={pregunta:'background:rgba(167,139,250,.18);color:var(--t-q)',premio:'background:rgba(52,211,153,.18);color:var(--t-premio)',castigo:'background:rgba(251,113,133,.18);color:var(--t-castigo)',enroque:'background:rgba(96,165,250,.20);color:#60a5fa',cero:'background:rgba(251,113,133,.22);color:var(--t-castigo)'};
+function kindIcon(k){return {premio:'⭐',castigo:'⚠️',enroque:'🔀',cero:'💥'}[k]||'';}
+function simpleModal(kind,title,body,btn){
+  return new Promise(res=>{
+    openModal(`<span class="tag" style="${TAGSTYLE[kind]}">${title}</span><h3>${kindIcon(kind)} ${title}</h3><p>${body}</p><div class="modalBtns"><button class="btn-go" id="mOk">${btn}</button></div>`);
+    document.getElementById('mOk').onclick=()=>{closeModal();res(true);};
+  });
+}
+function shortcutModal(sc){
+  const up=sc.kind==='up';
+  return new Promise(res=>{
+    openModal(`<span class="tag" style="${up?'background:rgba(52,211,153,.18);color:var(--t-up)':'background:rgba(251,113,133,.18);color:var(--t-down)'}">${up?'Atajo':'Túnel'}</span><h3>${up?'🪜 ¡Atajo molecular!':'🌀 Túnel hacia atrás'}</h3><p>${sc.msg}</p><div class="modalBtns"><button class="btn-go" id="scOk">Continuar</button></div>`);
+    document.getElementById('scOk').onclick=()=>{closeModal();res(true);};
+  });
+}
+function actionModal(body){
+  return new Promise(res=>{
+    openModal(`<span class="tag" style="background:rgba(251,191,36,.18);color:var(--t-accion)">Desafío</span><h3>🗣️ Desafío</h3><p>${body}</p><p style="font-size:.8rem;color:var(--muted-2);margin-top:10px">El profesor o el curso decide si se logró.</p><div class="modalBtns"><button class="btn-ok" id="aYes">✅ Lo logró</button><button class="btn-no" id="aNo">✖ No esta vez</button></div>`);
+    document.getElementById('aYes').onclick=()=>{closeModal();res(true);};
+    document.getElementById('aNo').onclick=()=>{closeModal();res(false);};
+  });
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function askQuestion(){
+  return new Promise(res=>{
+    const q=QUESTIONS[Math.floor(Math.random()*QUESTIONS.length)], L=['A','B','C','D'];
+    /* barajamos las alternativas: la correcta ya no queda siempre en A */
+    const opts=shuffle(q.o.map((text,idx)=>({text,correct:idx===q.c})));
+    const optsHtml=opts.map((o,i)=>`<button class="opt" data-i="${i}"><span class="k">${L[i]}</span><span>${o.text}</span></button>`).join('');
+    openModal(`<span class="tag" style="${TAGSTYLE.pregunta}">Pregunta de genética</span><h3>❓ ${q.q}</h3><div class="opts">${optsHtml}</div><div id="qExp"></div><div class="modalBtns" id="qBtns" style="display:none"><button class="btn-go" id="qCont">Continuar →</button></div>`);
+    let answered=false;
+    eventModal.querySelectorAll('.opt').forEach(btn=>{
+      btn.onclick=()=>{
+        if(answered)return; answered=true;
+        const i=+btn.dataset.i, correct=opts[i].correct;
+        correct?Sound.correct():Sound.wrong();
+        eventModal.querySelectorAll('.opt').forEach((b,bi)=>{b.disabled=true;if(opts[bi].correct)b.classList.add('correct');else if(bi===i)b.classList.add('wrong');});
+        document.getElementById('qExp').innerHTML=`<div class="exp"><b>${correct?'¡Correcto! (+100)':'Incorrecto.'}</b> ${q.e}</div>`;
+        document.getElementById('qBtns').style.display='flex';
+        document.getElementById('qCont').onclick=()=>{closeModal();res(correct);};
+      };
+    });
+  });
+}
+
+/* Fin */
+function win(p){
+  finished=true; setActiveTile(-1); updateScore(); Sound.win();
+  const ranking=[...players].sort((a,b)=>b.pos-a.pos||b.score-a.score);
+  const rows=ranking.map((r,i)=>`<div class="scoreItem${r===p?' cur':''}"><span class="chip" style="background:${TOKENS[r.tokenIdx].color}">${initial(r.name)}</span><span class="nm">${i+1}. ${r.name}</span><span class="pts">${r.score} pts</span></div>`).join('');
+  openModal(`<span class="tag" style="background:rgba(250,204,21,.18);color:var(--t-meta)">¡Meta!</span><h3>🏁 ¡Proteína sintetizada!</h3><div class="winName" style="color:${TOKENS[p.tokenIdx].color}">🏆 ${p.name}</div><p>completó el camino del gen a la proteína y llegó primero a la meta.</p><div style="margin-top:16px">${rows}</div><div class="modalBtns"><button class="btn-go" id="again">Jugar otra vez</button></div>`);
+  document.getElementById('again').onclick=()=>{closeModal();openSetup();};
+  busy=false;
+}
+
+/* Marcador */
+function updateScore(){
+  scoreboard.innerHTML=players.map((p,i)=>`<div class="scoreItem${i===current&&!finished?' cur':''}"><span class="chip" style="background:${TOKENS[p.tokenIdx].color}">${initial(p.name)}</span><span class="nm">${p.name}</span><span class="cell">${p.pos===LAST?'META':'#'+p.pos}</span><span class="pts">${p.score}</span></div>`).join('');
+}
+
+/* Setup */
+const setupOverlay=document.getElementById('setupOverlay');
+const pcount=document.getElementById('pcount');
+const diceModeSel=document.getElementById('diceModeSel');
+const nameInputs=document.getElementById('nameInputs');
+function renderNameInputs(){
+  let html='';
+  for(let i=0;i<numPlayers;i++){const b=TOKENS[i];html+=`<div class="row"><label><span style="color:${b.color}">●</span> Jugador ${i+1}</label><input type="text" id="pn${i}" placeholder="Escribe el nombre…" maxlength="16"></div>`;}
+  nameInputs.innerHTML=html;
+}
+pcount.querySelectorAll('button').forEach(b=>{b.onclick=()=>{pcount.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');numPlayers=+b.dataset.n;renderNameInputs();};});
+diceModeSel.querySelectorAll('button').forEach(b=>{b.onclick=()=>{diceModeSel.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');diceMode=b.dataset.m;};});
+function openSetup(){finished=false;busy=false;setupOverlay.hidden=false;renderNameInputs();}
+document.getElementById('startBtn').onclick=()=>{
+  Sound.init();
+  players=[];
+  for(let i=0;i<numPlayers;i++){const nm=(document.getElementById('pn'+i).value||'').trim()||('Jugador '+(i+1));players.push({name:nm,tokenIdx:i,pos:0,score:0});}
+  current=0;finished=false;busy=false;
+  setupOverlay.hidden=true;
+  logEl.innerHTML='<div>Comienza la transcripción. ¡Suerte!</div>';
+  rollResult.textContent='';
+  COLS=computeCols(); refreshBoard();
+  buildTokens(); renderDiceArea();
+  turnName.textContent=players[0].name;
+  turnName.style.color=TOKENS[players[0].tokenIdx].color;
+  updateScore(); rollBtn.disabled=false;
+  requestAnimationFrame(()=>{layoutTokens();cameraTo(0);});
+};
+
+/* Mute */
+muteBtn.onclick=()=>{const m=Sound.toggle();muteBtn.textContent=m?'🔇':'🔊';if(!m)Sound.init();};
+
+/* Init */
+rollBtn.addEventListener('click',roll);
+document.getElementById('resetBtn').addEventListener('click',openSetup);
+buildBoard();
+renderDiceArea();
+openSetup();
+</script>
+</body>
+</html>

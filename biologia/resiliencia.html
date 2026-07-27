@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sesión 4 — Resiliencia frente a eventos extremos | Biología de los Ecosistemas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#0F2A22;
+    --verde:#1B4332;
+    --verde-2:#25573F;
+    --crema:#F6F1E7;
+    --crema-2:#EFE7D6;
+    --oro:#C9A227;
+    --ascua:#E2572B;
+    --cielo:#3E7C8C;
+    --tinta:#132720;
+    --texto-claro:#F6F1E7;
+    --linea:rgba(19,39,32,0.14);
+    --sombra:0 20px 50px -20px rgba(15,42,34,0.45);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background:
+      radial-gradient(1200px 700px at 15% 10%, #163d30 0%, transparent 60%),
+      radial-gradient(1000px 600px at 90% 90%, #1e2a1f 0%, transparent 55%),
+      #0a1712;
+    font-family:'Inter', sans-serif; color:var(--tinta); padding:18px;
+  }
+  .marca{ font-family:'IBM Plex Mono', monospace; }
+
+  /* ================= DECK SHELL ================= */
+  .deck{
+    position:relative; width:min(1280px, 100%); aspect-ratio:16/9;
+    background:var(--crema); border-radius:18px; overflow:hidden;
+    box-shadow:var(--sombra); border:1px solid rgba(255,255,255,0.06);
+  }
+  .deck::before{
+    content:""; position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.055;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cg fill='%231B4332'%3E%3Cpath d='M15 10 Q25 5 30 15 Q25 25 15 20 Q10 15 15 10Z'/%3E%3Cpath d='M60 50 Q70 45 75 55 Q70 65 60 60 Q55 55 60 50Z' transform='rotate(40 67 55)'/%3E%3Cpath d='M35 70 Q45 65 50 75 Q45 85 35 80 Q30 75 35 70Z' transform='rotate(-25 42 75)'/%3E%3C/g%3E%3C/svg%3E");
+    background-size:90px 90px;
+  }
+  @media (max-width: 780px){ .deck{ aspect-ratio:auto; height:94vh; } }
+
+  .slides{ position:absolute; inset:0; z-index:1; }
+  .slide{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    padding:clamp(20px,4vw,56px) clamp(24px,5.5vw,72px);
+    opacity:0; transform:translateY(14px) scale(0.995); pointer-events:none;
+    transition:opacity .45s ease, transform .45s ease; overflow:auto;
+  }
+  .slide.activa{ opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:clamp(11px,1.1vw,13px);
+    letter-spacing:.14em; text-transform:uppercase; color:var(--oro); font-weight:600;
+  }
+  h1,h2,h3{ font-family:'Fraunces', serif; margin:0; color:var(--verde); }
+  h1{ font-size:clamp(28px,4.6vw,52px); line-height:1.03; font-weight:700; letter-spacing:-.01em;}
+  h2{ font-size:clamp(23px,3.2vw,36px); font-weight:700; line-height:1.08;}
+  h3{ font-size:clamp(16px,1.6vw,20px); font-weight:600; }
+  p{ line-height:1.5; }
+  .lead{ font-size:clamp(14px,1.5vw,18px); color:#2b453a; max-width:64ch; }
+
+  .pill{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:'IBM Plex Mono', monospace; font-size:11px; font-weight:600;
+    letter-spacing:.04em; text-transform:uppercase; padding:5px 11px; border-radius:99px;
+    border:1px solid var(--linea); color:var(--verde); background:rgba(27,67,50,0.06);
+  }
+  .pill--ascua{ color:#8f2c12; border-color:rgba(226,87,43,.35); background:rgba(226,87,43,0.1);}
+  .pill--oro{ color:#7a5f16; border-color:rgba(201,162,39,.4); background:rgba(201,162,39,0.12);}
+  .pill--cielo{ color:#1c4a56; border-color:rgba(62,124,140,.4); background:rgba(62,124,140,0.12);}
+
+  /* ================= NAV CHROME ================= */
+  .chrome-top{ position:absolute; top:0; left:0; right:0; height:5px; background:rgba(19,39,32,0.08); z-index:5;}
+  .chrome-top-bar{ height:100%; width:0%; background:linear-gradient(90deg,var(--oro),var(--ascua)); transition:width .4s ease;}
+  .chrome-bottom{
+    position:absolute; left:0; right:0; bottom:0; display:flex; align-items:center; justify-content:space-between;
+    gap:14px; padding:10px clamp(16px,3vw,34px);
+    background:linear-gradient(0deg, rgba(246,241,231,0.97), rgba(246,241,231,0.0)); z-index:6;
+  }
+  .nav-btn{
+    width:38px; height:38px; border-radius:50%; border:1.5px solid var(--verde); background:var(--crema);
+    color:var(--verde); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:background .2s, color .2s, transform .15s;
+  }
+  .nav-btn:hover:not(:disabled){ background:var(--verde); color:var(--texto-claro); }
+  .nav-btn:active:not(:disabled){ transform:scale(.92); }
+  .nav-btn:disabled{ opacity:.28; cursor:default; }
+  .dots{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center; max-width:46vw;}
+  .dot{ width:7px; height:7px; border-radius:50%; background:rgba(19,39,32,0.25); border:none; cursor:pointer; padding:0; transition:background .2s, transform .2s;}
+  .dot.activo{ background:var(--ascua); transform:scale(1.4); }
+  .contador{ font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--verde); min-width:44px; text-align:right;}
+
+  /* ================= FELIPESOS HUD + BOTÓN PDF ================= */
+  .hud-felipesos{
+    position:absolute; top:14px; right:16px; z-index:30;
+    display:flex; align-items:center; gap:8px;
+    background:var(--verde); color:var(--texto-claro);
+    border-radius:99px; padding:7px 14px 7px 8px;
+    box-shadow:0 8px 18px -10px rgba(19,39,32,.55);
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .moneda{
+    width:24px; height:24px; border-radius:50%; flex-shrink:0;
+    background:radial-gradient(circle at 32% 30%, #ffe9a8, var(--oro) 65%, #93761c 100%);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces', serif; font-weight:700; font-size:11px; color:#4a3a0e;
+    box-shadow:inset 0 -2px 3px rgba(0,0,0,.25), 0 2px 4px rgba(0,0,0,.3);
+  }
+  .hud-felipesos.pulso{ animation:pulso .5s ease; }
+  @keyframes pulso{ 0%{transform:scale(1);} 35%{transform:scale(1.12);} 100%{transform:scale(1);} }
+  #hudValor{ font-weight:600; font-size:13px; letter-spacing:.02em; }
+  .flotante{
+    position:absolute; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:13px;
+    color:var(--oro); pointer-events:none; z-index:40; animation:flotar 1s ease forwards;
+  }
+  @keyframes flotar{ 0%{ opacity:0; transform:translateY(0);} 15%{opacity:1;} 100%{ opacity:0; transform:translateY(-46px);} }
+
+  .btn-pdf{
+    position:absolute; top:60px; right:16px; z-index:29;
+    display:flex; align-items:center; gap:7px;
+    background:#FDFCF8; color:var(--verde); border:1px solid var(--linea);
+    border-radius:99px; padding:7px 14px 7px 10px;
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; font-weight:600;
+    cursor:pointer; box-shadow:0 8px 18px -10px rgba(19,39,32,.4);
+    transition:background .2s, color .2s, transform .15s;
+  }
+  .btn-pdf svg{ width:16px; height:16px; flex-shrink:0; }
+  .btn-pdf:hover{ background:var(--verde); color:var(--texto-claro); }
+  .btn-pdf:active{ transform:scale(.96); }
+  @media (max-width:780px){ .btn-pdf span{ display:none; } .btn-pdf{ padding:9px; top:58px; } }
+
+  .btn-sonido{
+    position:absolute; top:106px; right:16px; z-index:29;
+    width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+    background:#FDFCF8; color:var(--verde); border:1px solid var(--linea); border-radius:50%;
+    cursor:pointer; box-shadow:0 8px 18px -10px rgba(19,39,32,.4); transition:background .2s, color .2s, transform .15s;
+  }
+  .btn-sonido svg{ width:16px; height:16px; }
+  .btn-sonido:hover{ background:var(--verde); color:var(--texto-claro); }
+  .btn-sonido:active{ transform:scale(.92); }
+  .btn-sonido[aria-pressed="true"]{ color:var(--ascua); }
+  @media (max-width:780px){ .btn-sonido{ top:104px; } }
+
+  /* ================= CONTENT LAYOUTS ================= */
+  .cabecera-slide{ display:flex; flex-direction:column; gap:8px; margin-bottom:clamp(14px,2.4vw,26px); flex-shrink:0;}
+  .cuerpo-slide{ flex:1; min-height:0; }
+  .dos-columnas{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(14px,2.4vw,30px); height:100%; }
+  @media (max-width:780px){ .dos-columnas{ grid-template-columns:1fr; } }
+  .tarjeta{ background:#fff; border:1px solid var(--linea); border-radius:14px; padding:clamp(14px,1.8vw,20px); box-shadow:0 8px 22px -14px rgba(19,39,32,.35);}
+
+  /* -------- Portada -------- */
+  .slide--portada{
+    background:radial-gradient(1100px 500px at 80% -10%, #1c4433 0%, transparent 55%), var(--night);
+    color:var(--texto-claro); justify-content:center; padding-bottom:clamp(50px,7vw,80px) !important;
+  }
+  .hero-terreno{ position:absolute; inset:0; overflow:hidden; z-index:0; }
+  .hero-terreno svg{ position:absolute; bottom:0; left:0; width:100%; height:58%; }
+  .silueta-monte{ fill:#173b2c; }
+  .silueta-monte2{ fill:#0f2a20; }
+  .silueta-bosque{ fill:#081912; }
+  .hoja{
+    position:absolute; width:9px; height:9px; top:-4%;
+    background:linear-gradient(135deg, var(--oro), #8a6a1a);
+    border-radius:0 60% 0 60%;
+    opacity:0; animation-name:caerHoja; animation-timing-function:linear; animation-iteration-count:infinite;
+  }
+  @keyframes caerHoja{
+    0%{ transform:translate(0,0) rotate(0deg); opacity:0; }
+    8%{ opacity:.85; }
+    50%{ transform:translate(22px, 260%) rotate(160deg); }
+    92%{ opacity:.7; }
+    100%{ transform:translate(-12px, 560%) rotate(320deg); opacity:0; }
+  }
+  .textura-topo{
+    position:absolute; inset:0; opacity:.16; pointer-events:none;
+    background-image:
+      repeating-radial-gradient(circle at 82% 18%, transparent 0, transparent 26px, rgba(201,162,39,.5) 27px, transparent 28px, transparent 54px);
+  }
+  .brote{ position:absolute; width:5px; height:5px; border-radius:50%; background:var(--oro); box-shadow:0 0 8px 2px rgba(201,162,39,.6); bottom:8%; animation:crecer ease-in-out infinite; }
+  @keyframes crecer{ 0%{ transform:translateY(0) scale(.4); opacity:0;} 20%{opacity:1;} 60%{ transform:translateY(-60%) scale(1); opacity:1;} 100%{ transform:translateY(-90%) scale(.6); opacity:0;} }
+
+  .portada-contenido{ position:relative; z-index:2; max-width:760px; }
+  .slide--portada .eyebrow{ color:var(--oro); }
+  .slide--portada h1{ color:var(--texto-claro); margin-top:14px; }
+  .slide--portada h1 em{ font-style:normal; color:var(--oro); }
+  .slide--portada .lead{ color:#d9e6dd; margin-top:16px; }
+  .portada-footer{ margin-top:24px; display:flex; align-items:center; gap:10px; font-family:'IBM Plex Mono', monospace; font-size:12px; color:#a9c2b6;}
+  .portada-footer::before{ content:""; width:26px; height:1px; background:#a9c2b6;}
+
+  .qr-inicio{
+    position:relative; z-index:2; margin-top:26px; display:inline-flex; align-items:center; gap:12px;
+    background:rgba(246,241,231,0.08); border:1px solid rgba(246,241,231,0.22); border-radius:14px;
+    padding:10px 16px 10px 10px; backdrop-filter:blur(2px);
+  }
+  .qr-inicio .qr-caja{ background:#FDFCF8; border-radius:9px; padding:6px; display:flex; }
+  .qr-inicio .qr-svg{ width:54px; height:54px; display:block; color:var(--verde); }
+  .qr-inicio .qr-svg rect{ fill:currentColor; shape-rendering:crispEdges; }
+  .qr-inicio .qr-texto{ font-size:12px; color:#dbe8de; max-width:24ch; line-height:1.35; }
+  .qr-inicio .qr-texto strong{ color:var(--texto-claro); display:block; font-size:12.5px; margin-bottom:2px; }
+
+  /* -------- Agenda -------- */
+  .agenda-lista{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:0; counter-reset:paso;}
+  .agenda-lista li{ counter-increment:paso; display:grid; grid-template-columns:44px 1fr auto; align-items:center; gap:14px; padding:8px 4px; border-bottom:1px solid var(--linea); font-size:clamp(12.5px,1.25vw,15px);}
+  .agenda-lista li:last-child{ border-bottom:none; }
+  .agenda-lista li::before{ content:counter(paso,decimal-leading-zero); font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--oro); font-weight:600;}
+  .agenda-tag{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:#5b7266; }
+
+  /* -------- Marco / tarjetas conceptuales -------- */
+  .grid-cards3{ display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(10px,1.6vw,16px); height:100%; }
+  @media (max-width:780px){ .grid-cards3{ grid-template-columns:1fr; } }
+  .concepto-icono{
+    width:38px; height:38px; border-radius:11px; background:rgba(27,67,50,.1); color:var(--verde);
+    display:flex; align-items:center; justify-content:center; margin-bottom:10px;
+  }
+  .concepto-icono svg{ width:20px; height:20px; }
+  .concepto-icono--claro{ background:rgba(246,241,231,.16); color:var(--oro); }
+
+  /* -------- Tarjetas desplegables (marco conceptual) -------- */
+  .tarjeta-desplegable{ padding:0 !important; }
+  .despliegue-cabecera{
+    width:100%; display:flex; align-items:center; gap:12px; text-align:left;
+    background:none; border:none; cursor:pointer; padding:clamp(14px,1.8vw,18px);
+    font-family:'Inter',sans-serif; color:inherit; -webkit-tap-highlight-color:transparent;
+  }
+  .despliegue-cabecera .concepto-icono{ margin-bottom:0; }
+  .despliegue-titulo-caja{ flex:1; min-width:0; }
+  .despliegue-titulo-caja h3{ margin:0; }
+  .despliegue-hint{
+    display:block; font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:#5b7266;
+    margin-top:3px; text-transform:uppercase; letter-spacing:.03em; transition:opacity .2s;
+  }
+  .tarjeta-desplegable--oscura .despliegue-hint{ color:#b9cdc0; }
+  .despliegue-flecha{ width:18px; height:18px; flex-shrink:0; color:var(--verde); transition:transform .3s ease; }
+  .tarjeta-desplegable--oscura .despliegue-flecha{ color:var(--oro); }
+  .tarjeta-desplegable.abierta .despliegue-flecha{ transform:rotate(180deg); }
+  .tarjeta-desplegable.abierta .despliegue-hint{ opacity:.6; }
+  .despliegue-cuerpo{ max-height:0; overflow:hidden; transition:max-height .35s ease; }
+  .despliegue-contenido{ padding:0 clamp(14px,1.8vw,18px) clamp(14px,1.8vw,18px); }
+
+  .factor-desplegable{ background:#fff; border:1px solid var(--linea); border-radius:12px; margin-bottom:8px; }
+  .despliegue-cabecera--fila{ padding:10px 14px; gap:12px; }
+  .despliegue-cabecera--fila .despliegue-titulo-caja{ font-size:12.5px; color:var(--tinta); }
+  .despliegue-cabecera--fila + .despliegue-cuerpo .despliegue-contenido{ padding:0 14px 12px 58px; font-size:12.5px; color:#2b453a; line-height:1.45; }
+  .despliegue-cabecera--fila .factor-icono{ margin:0; }
+
+  /* -------- Recurso audiovisual -------- */
+  .video-embed-wrap{
+    position:relative; width:100%; max-width:720px; aspect-ratio:16/9;
+    border-radius:14px; overflow:hidden; border:1px solid var(--linea);
+    background:#0f1f19; box-shadow:0 10px 30px -16px rgba(19,39,32,.5);
+  }
+  .video-embed-wrap iframe{ width:100%; height:100%; border:0; display:block; }
+
+  /* -------- Tabla comparativa de ejemplos -------- */
+  .tabla-comparativa{ width:100%; border-collapse:collapse; background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 8px 22px -14px rgba(19,39,32,.35); }
+  .tabla-comparativa th{ background:var(--verde); color:var(--texto-claro); font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; padding:9px 12px; text-align:left; font-weight:600; }
+  .tabla-comparativa td{ padding:10px 12px; border-bottom:1px solid var(--linea); font-size:12px; vertical-align:top; }
+  .tabla-comparativa tr:last-child td{ border-bottom:none; }
+  .tabla-comparativa td:first-child{ font-weight:700; color:var(--verde); white-space:nowrap; }
+  .nivel{ display:inline-block; padding:3px 9px; border-radius:99px; font-size:11px; }
+  .nivel--alta{ background:rgba(27,67,50,.12); color:#1B4332; }
+  .nivel--media{ background:rgba(201,162,39,.16); color:#7a5f16; }
+  .nivel--baja{ background:rgba(226,87,43,.12); color:#8f2c12; }
+  @media (max-width:780px){ .tabla-comparativa{ font-size:11px; } .tabla-comparativa td, .tabla-comparativa th{ padding:7px 8px; } }
+
+  /* -------- Filas de factores (con ícono) -------- */
+  .factor-fila{ display:flex; align-items:flex-start; gap:12px; background:#fff; border:1px solid var(--linea); border-radius:12px; padding:10px 14px; margin-bottom:8px; font-size:12.5px; color:#2b453a; line-height:1.45; }
+  .factor-icono{ width:32px; height:32px; border-radius:9px; background:rgba(27,67,50,.1); color:var(--verde); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .factor-icono svg{ width:17px; height:17px; }
+  .factor-icono--ascua{ background:rgba(226,87,43,.12); color:var(--ascua); }
+
+  /* -------- Comparación restauración nativa/exótica -------- */
+  .comparacion-restauracion{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:780px){ .comparacion-restauracion{ grid-template-columns:1fr; } }
+
+  /* -------- Pasos de la actividad -------- */
+  .pasos-actividad{ list-style:none; margin:0; padding:0; counter-reset:pasoact; display:flex; flex-direction:column; gap:9px; }
+  .pasos-actividad li{
+    counter-increment:pasoact; position:relative; background:#fff; border:1px solid var(--linea);
+    border-radius:12px; padding:11px 14px 11px 46px; font-size:12.5px; color:#2b453a; line-height:1.5;
+  }
+  .pasos-actividad li::before{
+    content:counter(pasoact); position:absolute; left:12px; top:11px; width:22px; height:22px; border-radius:50%;
+    background:var(--verde); color:var(--texto-claro); font-family:'IBM Plex Mono',monospace; font-size:11px;
+    font-weight:700; display:flex; align-items:center; justify-content:center;
+  }
+
+  /* -------- Línea de tiempo Peñuelas -------- */
+  .linea-tiempo{ position:relative; display:flex; flex-direction:column; gap:0; height:100%; justify-content:center; }
+  .lt-pista{ position:relative; height:3px; background:var(--linea); border-radius:2px; margin:0 6px 18px; }
+  .lt-progreso{ position:absolute; left:0; top:0; height:100%; width:0%; background:linear-gradient(90deg,var(--verde),var(--ascua)); border-radius:2px; transition:width .3s ease; }
+  .lt-nodos{ display:flex; justify-content:space-between; margin:0 -2px; }
+  .lt-nodo{
+    width:16px; height:16px; border-radius:50%; background:#fff; border:2.5px solid var(--linea); cursor:pointer;
+    transform:translateY(-9px); transition:border-color .2s, background .2s, transform .2s; flex-shrink:0;
+  }
+  .lt-nodo.activo{ border-color:var(--ascua); background:var(--ascua); transform:translateY(-9px) scale(1.25); }
+  .lt-etiquetas{ display:flex; justify-content:space-between; margin-top:2px; }
+  .lt-etiqueta{ font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:#5b7266; text-align:center; width:16px; overflow:visible; white-space:nowrap; }
+  .lt-detalle{ margin-top:16px; background:#fff; border:1px solid var(--linea); border-radius:14px; padding:14px 16px; min-height:96px; }
+  .lt-detalle-cabecera{ display:flex; align-items:center; gap:10px; }
+  .lt-detalle-icono{ width:30px; height:30px; border-radius:9px; background:rgba(226,87,43,.12); color:var(--ascua); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .lt-detalle-icono svg{ width:16px; height:16px; }
+  .lt-detalle-anio{ font-family:'Fraunces',serif; font-weight:700; color:var(--ascua); font-size:18px; }
+  .lt-detalle-texto{ font-size:13px; color:#2b453a; margin-top:8px; line-height:1.45; }
+
+  /* -------- Aviso / logística -------- */
+  .aviso-caja{
+    background:#fff; border:1px solid rgba(226,87,43,.35); border-left:4px solid var(--ascua);
+    border-radius:12px; padding:12px 16px; margin-bottom:12px;
+    display:flex; gap:12px; align-items:flex-start;
+  }
+  .aviso-icono{
+    width:32px; height:32px; border-radius:9px; background:rgba(226,87,43,.12); color:var(--ascua);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .aviso-icono svg{ width:18px; height:18px; }
+  .aviso-caja .eyebrow{ color:#8f2c12; }
+  .aviso-caja p{ font-size:12.5px; color:#3a2a20; margin:4px 0 0; }
+  .lista-seguridad{ margin:0; padding-left:18px; font-size:12.5px; line-height:1.55; color:#2b453a; }
+  .lista-seguridad li{ margin-bottom:5px; }
+
+  /* -------- Checklist indicadores -------- */
+  .check-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; height:100%; }
+  @media (max-width:780px){ .check-grid{ grid-template-columns:1fr; } }
+  .check-col{ background:#fff; border:1px solid var(--linea); border-radius:14px; padding:14px 16px;}
+  .check-col h3{ margin-bottom:8px; }
+  .check-col ul{ margin:0; padding-left:4px; font-size:12.5px; line-height:1.55; color:#2b453a; list-style:none;}
+  .check-col ul li{ position:relative; padding-left:18px; }
+  .check-col ul li::before{
+    content:""; position:absolute; left:0; top:5px; width:9px; height:9px;
+    background:var(--verde); border-radius:0 60% 0 60%;
+  }
+  .check-col--pert ul li::before{ background:var(--ascua); }
+
+  /* -------- Ranita mascota -------- */
+  .rana-mascota{ width:26px; height:26px; flex-shrink:0; animation:ranaRespira 3.2s ease-in-out infinite; }
+  .rana-mascota svg{ width:100%; height:100%; display:block; }
+  .rana-cuerpo{ fill:#5EA35B; }
+  .rana-vientre{ fill:#EAE3C8; }
+  .rana-pata{ fill:#4A8A49; }
+  .rana-ojo{ fill:#EAE3C8; stroke:#3f7a40; stroke-width:.6; }
+  .rana-pupila{ fill:#132720; }
+  .rana-boca{ fill:none; stroke:#2f5c30; stroke-width:.9; stroke-linecap:round; }
+  @keyframes ranaRespira{
+    0%,100%{ transform:translateY(0) scaleY(1); }
+    50%{ transform:translateY(-1.5px) scaleY(1.05); }
+  }
+  .rana-mascota.rana-salta{ animation:ranaSalto .55s cubic-bezier(.3,1.6,.4,1); }
+  @keyframes ranaSalto{
+    0%{ transform:translateY(0) scaleX(1) scaleY(1); }
+    30%{ transform:translateY(-9px) scaleX(.9) scaleY(1.15); }
+    55%{ transform:translateY(-9px) scaleX(1) scaleY(1); }
+    75%{ transform:translateY(1px) scaleX(1.12) scaleY(.85); }
+    100%{ transform:translateY(0) scaleX(1) scaleY(1); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .rana-mascota, .rana-mascota.rana-salta{ animation:none !important; }
+  }
+  .check-col li{ margin-bottom:4px; }
+  .check-col--bio{ border-top:4px solid var(--verde); }
+  .check-col--pert{ border-top:4px solid var(--ascua); }
+  .check-col-cabecera{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .check-col-cabecera h3{ margin:0; }
+  .check-icono{ width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .check-icono svg{ width:17px; height:17px; }
+  .check-icono--bio{ background:rgba(27,67,50,.1); color:var(--verde); }
+  .check-icono--pert{ background:rgba(226,87,43,.12); color:var(--ascua); }
+
+  /* -------- Formulario / bitácora -------- */
+  .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:780px){ .form-grid{ grid-template-columns:1fr; } }
+  .campo{ margin-bottom:14px; }
+  .campo label{ display:block; font-size:12px; font-weight:600; color:var(--verde); margin-bottom:5px;}
+  .campo input[type="text"], .campo input[type="number"], .campo input[type="date"], .campo select, .campo textarea{
+    width:100%; padding:8px 10px; border-radius:10px; border:1.4px solid var(--linea);
+    font-family:'Inter',sans-serif; font-size:13px; background:#fff; color:var(--tinta);
+  }
+  .campo textarea{ min-height:56px; resize:vertical; }
+  .chips{ display:flex; gap:7px; flex-wrap:wrap; }
+  .chip{ position:relative; }
+  .chip input{ position:absolute; opacity:0; }
+  .chip span{
+    display:inline-block; padding:6px 11px; border-radius:99px; border:1.4px solid var(--linea);
+    font-size:11.5px; cursor:pointer; transition:background .2s,color .2s,border-color .2s; background:#fff;
+  }
+  .chip input:checked + span{ background:var(--verde); color:var(--texto-claro); border-color:var(--verde); }
+  .chip--pert input:checked + span{ background:var(--ascua); border-color:var(--ascua); }
+
+  /* -------- Preguntas de alternativas -------- */
+  .bloom-header{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .pregunta-bloque{ margin-bottom:16px; }
+  .pregunta-enunciado{ font-weight:700; font-size:clamp(13.5px,1.5vw,16px); margin-bottom:9px; color:var(--tinta);}
+  .opciones{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  @media (max-width:780px){ .opciones{ grid-template-columns:1fr; } }
+  .opcion{
+    text-align:left; padding:9px 12px; border-radius:11px; border:1.4px solid var(--linea); background:#fff;
+    cursor:pointer; font-size:12.5px; font-family:'Inter',sans-serif; color:var(--tinta);
+    transition:border-color .2s, background .2s, transform .12s;
+  }
+  .opcion:hover:not(:disabled){ border-color:var(--verde); }
+  .opcion:active:not(:disabled){ transform:scale(.98); }
+  .opcion.correcta{ background:rgba(27,67,50,.12); border-color:var(--verde); font-weight:600;}
+  .opcion.incorrecta{ background:rgba(226,87,43,.1); border-color:var(--ascua);}
+  .opcion:disabled{ cursor:default; }
+  .feedback{ margin-top:7px; font-size:12px; padding:7px 11px; border-radius:9px; background:var(--crema-2); display:none; color:#2b453a;}
+  .feedback.visible{ display:block; }
+
+  textarea{ width:100%; min-height:64px; border-radius:12px; border:1.4px solid var(--linea); padding:10px 12px; font-family:'Inter',sans-serif; font-size:13px; resize:vertical; color:var(--tinta); background:#fffdf8;}
+  .nota-discreta{ font-size:11.5px; color:#5b7266; margin-top:6px; }
+
+  /* -------- Respaldo en PDF -------- */
+  .respaldo-caja{ max-width:480px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:12px; padding:clamp(24px,3.4vw,36px); }
+  .respaldo-icono{
+    width:64px; height:64px; border-radius:18px; background:var(--verde); color:var(--texto-claro);
+    display:flex; align-items:center; justify-content:center; margin-bottom:4px;
+  }
+  .respaldo-icono svg{ width:30px; height:30px; }
+  .btn-accion{
+    display:inline-flex; align-items:center; gap:8px; border:none; border-radius:99px; padding:11px 22px;
+    font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:12.5px; cursor:pointer;
+    transition:transform .15s, filter .2s;
+  }
+  .btn-accion:active{ transform:scale(.97); }
+  .btn-accion:hover{ filter:brightness(1.08); }
+  .btn-accion--pdf2{ background:var(--verde); color:var(--texto-claro); margin-top:4px; }
+  .btn-accion svg{ width:16px; height:16px; }
+
+  /* -------- Cierre / Felipesos final -------- */
+  .cierre-wrap{ display:grid; grid-template-columns:1fr 1fr; gap:22px; height:100%; }
+  @media (max-width:780px){ .cierre-wrap{ grid-template-columns:1fr; } }
+  .marcador-final{
+    background:var(--verde); color:var(--texto-claro); border-radius:16px; padding:22px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center;
+  }
+  .marcador-moneda{ width:52px; height:52px; border-radius:50%; background:radial-gradient(circle at 32% 30%, #ffe9a8, var(--oro) 65%, #93761c 100%); display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-weight:700; font-size:20px; color:#4a3a0e; box-shadow:inset 0 -3px 5px rgba(0,0,0,.25), 0 3px 8px rgba(0,0,0,.35); margin-bottom:4px;}
+  .marcador-total{ font-family:'Fraunces',serif; font-weight:700; font-size:clamp(30px,4vw,46px); }
+  .marcador-rango{ font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--oro);}
+  .cierre-caja{ margin-top:12px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; background:#fff; border:1px solid var(--linea); border-radius:14px; padding:12px 16px;}
+  .cierre-caja p{ margin:2px 0 0; font-size:12.5px; color:#3a4f45; }
+
+  .cuerpo-slide::-webkit-scrollbar{ width:8px; }
+  .cuerpo-slide::-webkit-scrollbar-thumb{ background:rgba(19,39,32,.18); border-radius:8px; }
+
+  @media (prefers-reduced-motion: reduce){
+    .brote{ animation:none !important; opacity:0 !important; }
+    .slide{ transition:opacity .01s linear; }
+  }
+
+  /* ================= OPTIMIZACIÓN PARA CELULAR ================= */
+  @media (max-width:780px){
+    body{ padding:0; align-items:stretch; }
+    .deck{ width:100%; border-radius:0; }
+
+    /* Formularios: 16px evita el zoom automático de iOS al enfocar un campo */
+    .campo input[type="text"], .campo input[type="number"], .campo input[type="date"],
+    .campo select, .campo textarea, textarea, select{ font-size:16px; }
+
+    /* Objetivos táctiles más grandes */
+    .nav-btn{ width:44px; height:44px; font-size:20px; }
+    .opcion, .chip span, .btn-accion, .btn-pdf{ padding-top:12px; padding-bottom:12px; }
+    .chip span{ font-size:12.5px; }
+
+    /* Navegación inferior: los puntos ceden espacio al contador en pantallas angostas */
+    .dots{ display:none; }
+    .chrome-bottom{ justify-content:space-between; }
+    .contador{ position:static; font-size:13px; }
+
+    .hud-felipesos{ padding:6px 11px 6px 7px; }
+    .btn-pdf{ font-size:11px; }
+
+    h1{ font-size:clamp(26px,7vw,38px); }
+    h2{ font-size:clamp(20px,6vw,26px); }
+    .lead{ font-size:14px; }
+    .tarjeta, .aviso-caja, .check-col, .lt-detalle{ padding:14px; }
+    .respaldo-caja{ padding:26px 18px; }
+
+    .qr-inicio{ flex-direction:row; padding:9px 12px 9px 9px; }
+    .qr-inicio .qr-svg{ width:48px; height:48px; }
+  }
+
+  @media (max-width:420px){
+    .bloom-header .pill{ font-size:9.5px; padding:4px 8px; }
+    .chips{ gap:6px; }
+  }
+
+  /* ================= IMPRIMIBLE (exportador PDF vía impresión del navegador) ================= */
+  .imprimible{ display:none; }
+  @media screen{ .imprimible{ display:none !important; } }
+  @media print{
+    @page{ margin:16mm; }
+    html,body{ background:#fff !important; padding:0; margin:0; height:auto; display:block; }
+    .deck{ display:none !important; }
+    .imprimible{ display:block !important; color:#132720; font-family:'Inter', sans-serif; font-size:11.5pt; line-height:1.45; }
+    .imprimible h1,.imprimible h2,.imprimible h3{ font-family:'Fraunces', serif; color:#1B4332; margin:0 0 8px; }
+    .imprimible h1{ font-size:22pt; }
+    .imprimible h2{ font-size:15pt; margin-top:0; border-bottom:1.5pt solid #C9A227; padding-bottom:4px; }
+    .imprimible h3{ font-size:12.5pt; margin-top:14px; color:#8f2c12; }
+    .imp-pagina{ page-break-after:always; padding-top:4mm; }
+    .imp-pagina:last-child{ page-break-after:auto; }
+    .imp-eyebrow{ font-family:'IBM Plex Mono',monospace; font-size:9pt; letter-spacing:.08em; text-transform:uppercase; color:#8f2c12; }
+    .imp-portada{ text-align:center; padding-top:60mm; }
+    .imp-portada p{ font-size:11pt; color:#3a4f45; }
+    .imp-tabla{ width:100%; border-collapse:collapse; margin:8px 0 14px; font-size:10.5pt; }
+    .imp-tabla th,.imp-tabla td{ border:1px solid #C9C4B4; padding:4px 8px; text-align:left; }
+    .imp-tabla th{ background:#EFE7D6; }
+    .imp-lista{ margin:0 0 10px; padding-left:18px; }
+    .imp-lista li{ margin-bottom:4px; }
+    .imp-pregunta{ margin-bottom:12px; break-inside:avoid; }
+    .imp-enunciado{ font-weight:700; margin-bottom:4px; }
+    .imp-opciones{ list-style:none; margin:0; padding:0; }
+    .imp-opciones li{ margin-bottom:2px; }
+    .imp-opciones .letra{ display:inline-block; width:16px; height:16px; border:1px solid #132720; border-radius:50%; text-align:center; font-size:8.5pt; line-height:15px; margin-right:6px; }
+    .imp-campo-valor{ background:#EFE7D6; border-radius:6px; padding:5px 9px; margin:3px 0 9px; font-size:10.5pt; min-height:14px; }
+    .imp-campo-etiqueta{ font-weight:700; font-size:9.5pt; color:#1B4332; }
+    .imp-respuesta-caja{ background:#EFE7D6; border-left:3px solid #1B4332; padding:6px 10px; margin-top:14px; font-size:10.5pt; }
+    .imp-clave{ font-weight:700; color:#1B4332; }
+    .imp-retro{ color:#3a4f45; font-style:italic; }
+    .imp-nota-docente{ background:#1B4332; color:#F6F1E7; padding:6px 10px; border-radius:6px; font-family:'IBM Plex Mono',monospace; font-size:9pt; text-transform:uppercase; letter-spacing:.05em; display:inline-block; margin-bottom:10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+  <div class="chrome-top"><div class="chrome-top-bar" id="barraProgreso"></div></div>
+
+  <div class="hud-felipesos" id="hud">
+    <span class="moneda">F$</span>
+    <span id="hudValor">0 Felipesos</span>
+  </div>
+
+  <button class="btn-pdf" id="btnPdf" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l4 4v14a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M15 3v4h4"/><path d="M8 13h1.6a1.4 1.4 0 010 2.8H8V13z"/><path d="M12.2 13v4.6h.9a2.3 2.3 0 000-4.6h-.9z"/><path d="M16.8 13H19M16.8 13v4.6M16.8 15.3H18.6"/></svg>
+    <span>Descargar PDF</span>
+  </button>
+
+  <button class="btn-sonido" id="btnSonido" type="button" aria-label="Silenciar sonidos" aria-pressed="false">
+    <svg class="icono-sonido-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10v4h4l5 4V6l-5 4H4z"/><path d="M16.5 9a4.5 4.5 0 010 6"/><path d="M19 6.5a8 8 0 010 11"/></svg>
+    <svg class="icono-sonido-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="display:none;"><path d="M4 10v4h4l5 4V6l-5 4H4z"/><path d="M16 9l5 6M21 9l-5 6"/></svg>
+  </button>
+
+  <div class="slides" id="slides">
+
+    <!-- 0. PORTADA -->
+    <section class="slide slide--portada activa" data-titulo="Portada">
+      <div class="hero-terreno" aria-hidden="true">
+        <div class="textura-topo"></div>
+        <svg viewBox="0 0 800 260" preserveAspectRatio="none">
+          <polygon class="silueta-monte2" points="0,260 0,150 120,90 260,160 400,70 560,150 700,100 800,150 800,260"></polygon>
+          <polygon class="silueta-monte" points="0,260 0,190 150,140 300,200 480,120 650,190 800,160 800,260"></polygon>
+          <g class="silueta-bosque">
+            <rect x="70" y="200" width="6" height="38"/><ellipse cx="73" cy="195" rx="30" ry="24"/>
+            <rect x="190" y="190" width="6" height="48"/><ellipse cx="193" cy="182" rx="34" ry="27"/>
+            <rect x="330" y="205" width="6" height="33"/><ellipse cx="333" cy="200" rx="26" ry="21"/>
+            <rect x="460" y="185" width="6" height="53"/><ellipse cx="463" cy="176" rx="36" ry="29"/>
+            <rect x="590" y="200" width="6" height="38"/><ellipse cx="593" cy="195" rx="30" ry="24"/>
+            <rect x="710" y="195" width="6" height="43"/><ellipse cx="713" cy="188" rx="32" ry="26"/>
+          </g>
+        </svg>
+        <div id="capaBrotes"></div>
+        <div id="capaHojas"></div>
+      </div>
+      <div class="portada-contenido">
+        <span class="eyebrow marca">Biología de los Ecosistemas · 3° Medio · Unidad 3</span>
+        <h1>Sesión 4 — <em>resiliencia frente a eventos extremos</em></h1>
+        <p class="lead">Salimos a terreno a leer cómo un ecosistema local resiste, colapsa o se recupera — con la Reserva Lago Peñuelas como caso real.</p>
+        <div class="portada-footer">Colegio San Agustín Villa Alemana</div>
+      </div>
+      <div class="qr-inicio">
+        <div class="qr-caja">
+          <svg class="qr-svg" viewBox="0 0 33 33" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Código QR hacia el sitio del curso"><rect x="0" y="0" width="7" height="1"/><rect x="8" y="0" width="2" height="1"/><rect x="11" y="0" width="1" height="1"/><rect x="13" y="0" width="1" height="1"/><rect x="16" y="0" width="2" height="1"/><rect x="19" y="0" width="2" height="1"/><rect x="23" y="0" width="1" height="1"/><rect x="26" y="0" width="7" height="1"/><rect x="0" y="1" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/><rect x="8" y="1" width="3" height="1"/><rect x="13" y="1" width="1" height="1"/><rect x="18" y="1" width="1" height="1"/><rect x="23" y="1" width="2" height="1"/><rect x="26" y="1" width="1" height="1"/><rect x="32" y="1" width="1" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="2" y="2" width="3" height="1"/><rect x="6" y="2" width="1" height="1"/><rect x="9" y="2" width="1" height="1"/><rect x="12" y="2" width="1" height="1"/><rect x="17" y="2" width="1" height="1"/><rect x="24" y="2" width="1" height="1"/><rect x="26" y="2" width="1" height="1"/><rect x="28" y="2" width="3" height="1"/><rect x="32" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="2" y="3" width="3" height="1"/><rect x="6" y="3" width="1" height="1"/><rect x="8" y="3" width="5" height="1"/><rect x="14" y="3" width="3" height="1"/><rect x="20" y="3" width="1" height="1"/><rect x="22" y="3" width="1" height="1"/><rect x="24" y="3" width="1" height="1"/><rect x="26" y="3" width="1" height="1"/><rect x="28" y="3" width="3" height="1"/><rect x="32" y="3" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/><rect x="2" y="4" width="3" height="1"/><rect x="6" y="4" width="1" height="1"/><rect x="10" y="4" width="5" height="1"/><rect x="17" y="4" width="1" height="1"/><rect x="20" y="4" width="3" height="1"/><rect x="24" y="4" width="1" height="1"/><rect x="26" y="4" width="1" height="1"/><rect x="28" y="4" width="3" height="1"/><rect x="32" y="4" width="1" height="1"/><rect x="0" y="5" width="1" height="1"/><rect x="6" y="5" width="1" height="1"/><rect x="10" y="5" width="1" height="1"/><rect x="13" y="5" width="1" height="1"/><rect x="18" y="5" width="4" height="1"/><rect x="26" y="5" width="1" height="1"/><rect x="32" y="5" width="1" height="1"/><rect x="0" y="6" width="7" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/><rect x="12" y="6" width="1" height="1"/><rect x="14" y="6" width="1" height="1"/><rect x="16" y="6" width="1" height="1"/><rect x="18" y="6" width="1" height="1"/><rect x="20" y="6" width="1" height="1"/><rect x="22" y="6" width="1" height="1"/><rect x="24" y="6" width="1" height="1"/><rect x="26" y="6" width="7" height="1"/><rect x="8" y="7" width="2" height="1"/><rect x="12" y="7" width="1" height="1"/><rect x="14" y="7" width="1" height="1"/><rect x="17" y="7" width="1" height="1"/><rect x="20" y="7" width="1" height="1"/><rect x="23" y="7" width="2" height="1"/><rect x="0" y="8" width="1" height="1"/><rect x="2" y="8" width="2" height="1"/><rect x="5" y="8" width="3" height="1"/><rect x="9" y="8" width="2" height="1"/><rect x="12" y="8" width="1" height="1"/><rect x="14" y="8" width="1" height="1"/><rect x="17" y="8" width="5" height="1"/><rect x="23" y="8" width="1" height="1"/><rect x="26" y="8" width="1" height="1"/><rect x="29" y="8" width="1" height="1"/><rect x="31" y="8" width="2" height="1"/><rect x="2" y="9" width="2" height="1"/><rect x="7" y="9" width="1" height="1"/><rect x="9" y="9" width="1" height="1"/><rect x="11" y="9" width="1" height="1"/><rect x="14" y="9" width="1" height="1"/><rect x="16" y="9" width="1" height="1"/><rect x="18" y="9" width="4" height="1"/><rect x="23" y="9" width="1" height="1"/><rect x="26" y="9" width="2" height="1"/><rect x="29" y="9" width="2" height="1"/><rect x="32" y="9" width="1" height="1"/><rect x="0" y="10" width="2" height="1"/><rect x="3" y="10" width="2" height="1"/><rect x="6" y="10" width="3" height="1"/><rect x="11" y="10" width="1" height="1"/><rect x="14" y="10" width="1" height="1"/><rect x="16" y="10" width="2" height="1"/><rect x="23" y="10" width="3" height="1"/><rect x="27" y="10" width="3" height="1"/><rect x="31" y="10" width="2" height="1"/><rect x="0" y="11" width="1" height="1"/><rect x="5" y="11" width="1" height="1"/><rect x="8" y="11" width="1" height="1"/><rect x="10" y="11" width="1" height="1"/><rect x="13" y="11" width="2" height="1"/><rect x="16" y="11" width="1" height="1"/><rect x="18" y="11" width="3" height="1"/><rect x="22" y="11" width="1" height="1"/><rect x="24" y="11" width="4" height="1"/><rect x="29" y="11" width="1" height="1"/><rect x="31" y="11" width="2" height="1"/><rect x="1" y="12" width="1" height="1"/><rect x="3" y="12" width="1" height="1"/><rect x="6" y="12" width="1" height="1"/><rect x="8" y="12" width="1" height="1"/><rect x="10" y="12" width="1" height="1"/><rect x="12" y="12" width="1" height="1"/><rect x="18" y="12" width="2" height="1"/><rect x="22" y="12" width="4" height="1"/><rect x="27" y="12" width="3" height="1"/><rect x="31" y="12" width="2" height="1"/><rect x="2" y="13" width="2" height="1"/><rect x="5" y="13" width="1" height="1"/><rect x="8" y="13" width="2" height="1"/><rect x="11" y="13" width="1" height="1"/><rect x="16" y="13" width="3" height="1"/><rect x="24" y="13" width="1" height="1"/><rect x="27" y="13" width="1" height="1"/><rect x="29" y="13" width="3" height="1"/><rect x="1" y="14" width="2" height="1"/><rect x="4" y="14" width="3" height="1"/><rect x="8" y="14" width="1" height="1"/><rect x="10" y="14" width="1" height="1"/><rect x="12" y="14" width="2" height="1"/><rect x="15" y="14" width="2" height="1"/><rect x="24" y="14" width="1" height="1"/><rect x="26" y="14" width="2" height="1"/><rect x="29" y="14" width="1" height="1"/><rect x="0" y="15" width="3" height="1"/><rect x="4" y="15" width="1" height="1"/><rect x="7" y="15" width="1" height="1"/><rect x="13" y="15" width="2" height="1"/><rect x="16" y="15" width="1" height="1"/><rect x="19" y="15" width="4" height="1"/><rect x="25" y="15" width="2" height="1"/><rect x="28" y="15" width="3" height="1"/><rect x="2" y="16" width="3" height="1"/><rect x="6" y="16" width="2" height="1"/><rect x="9" y="16" width="1" height="1"/><rect x="11" y="16" width="5" height="1"/><rect x="18" y="16" width="6" height="1"/><rect x="25" y="16" width="2" height="1"/><rect x="28" y="16" width="3" height="1"/><rect x="0" y="17" width="3" height="1"/><rect x="4" y="17" width="1" height="1"/><rect x="7" y="17" width="2" height="1"/><rect x="10" y="17" width="1" height="1"/><rect x="13" y="17" width="1" height="1"/><rect x="15" y="17" width="1" height="1"/><rect x="17" y="17" width="1" height="1"/><rect x="23" y="17" width="4" height="1"/><rect x="28" y="17" width="2" height="1"/><rect x="31" y="17" width="2" height="1"/><rect x="0" y="18" width="2" height="1"/><rect x="5" y="18" width="2" height="1"/><rect x="8" y="18" width="1" height="1"/><rect x="13" y="18" width="1" height="1"/><rect x="15" y="18" width="3" height="1"/><rect x="20" y="18" width="3" height="1"/><rect x="25" y="18" width="1" height="1"/><rect x="27" y="18" width="2" height="1"/><rect x="30" y="18" width="1" height="1"/><rect x="4" y="19" width="1" height="1"/><rect x="7" y="19" width="1" height="1"/><rect x="9" y="19" width="1" height="1"/><rect x="15" y="19" width="2" height="1"/><rect x="20" y="19" width="1" height="1"/><rect x="22" y="19" width="2" height="1"/><rect x="26" y="19" width="1" height="1"/><rect x="28" y="19" width="1" height="1"/><rect x="0" y="20" width="1" height="1"/><rect x="2" y="20" width="1" height="1"/><rect x="6" y="20" width="1" height="1"/><rect x="11" y="20" width="1" height="1"/><rect x="14" y="20" width="1" height="1"/><rect x="18" y="20" width="6" height="1"/><rect x="29" y="20" width="3" height="1"/><rect x="0" y="21" width="2" height="1"/><rect x="3" y="21" width="3" height="1"/><rect x="8" y="21" width="1" height="1"/><rect x="11" y="21" width="5" height="1"/><rect x="18" y="21" width="1" height="1"/><rect x="23" y="21" width="1" height="1"/><rect x="26" y="21" width="1" height="1"/><rect x="29" y="21" width="1" height="1"/><rect x="32" y="21" width="1" height="1"/><rect x="2" y="22" width="3" height="1"/><rect x="6" y="22" width="2" height="1"/><rect x="9" y="22" width="1" height="1"/><rect x="12" y="22" width="1" height="1"/><rect x="16" y="22" width="1" height="1"/><rect x="21" y="22" width="1" height="1"/><rect x="23" y="22" width="1" height="1"/><rect x="25" y="22" width="2" height="1"/><rect x="30" y="22" width="3" height="1"/><rect x="1" y="23" width="1" height="1"/><rect x="3" y="23" width="3" height="1"/><rect x="7" y="23" width="1" height="1"/><rect x="9" y="23" width="1" height="1"/><rect x="11" y="23" width="2" height="1"/><rect x="16" y="23" width="1" height="1"/><rect x="18" y="23" width="2" height="1"/><rect x="22" y="23" width="7" height="1"/><rect x="31" y="23" width="1" height="1"/><rect x="0" y="24" width="1" height="1"/><rect x="6" y="24" width="2" height="1"/><rect x="9" y="24" width="4" height="1"/><rect x="15" y="24" width="1" height="1"/><rect x="17" y="24" width="1" height="1"/><rect x="20" y="24" width="1" height="1"/><rect x="24" y="24" width="5" height="1"/><rect x="8" y="25" width="2" height="1"/><rect x="11" y="25" width="1" height="1"/><rect x="13" y="25" width="5" height="1"/><rect x="19" y="25" width="6" height="1"/><rect x="28" y="25" width="2" height="1"/><rect x="0" y="26" width="7" height="1"/><rect x="8" y="26" width="2" height="1"/><rect x="14" y="26" width="1" height="1"/><rect x="16" y="26" width="1" height="1"/><rect x="19" y="26" width="1" height="1"/><rect x="21" y="26" width="1" height="1"/><rect x="23" y="26" width="2" height="1"/><rect x="26" y="26" width="1" height="1"/><rect x="28" y="26" width="1" height="1"/><rect x="0" y="27" width="1" height="1"/><rect x="6" y="27" width="1" height="1"/><rect x="8" y="27" width="1" height="1"/><rect x="10" y="27" width="2" height="1"/><rect x="14" y="27" width="1" height="1"/><rect x="16" y="27" width="1" height="1"/><rect x="19" y="27" width="1" height="1"/><rect x="21" y="27" width="4" height="1"/><rect x="28" y="27" width="4" height="1"/><rect x="0" y="28" width="1" height="1"/><rect x="2" y="28" width="3" height="1"/><rect x="6" y="28" width="1" height="1"/><rect x="10" y="28" width="2" height="1"/><rect x="15" y="28" width="1" height="1"/><rect x="17" y="28" width="1" height="1"/><rect x="20" y="28" width="1" height="1"/><rect x="23" y="28" width="6" height="1"/><rect x="30" y="28" width="3" height="1"/><rect x="0" y="29" width="1" height="1"/><rect x="2" y="29" width="3" height="1"/><rect x="6" y="29" width="1" height="1"/><rect x="8" y="29" width="1" height="1"/><rect x="10" y="29" width="2" height="1"/><rect x="13" y="29" width="2" height="1"/><rect x="17" y="29" width="4" height="1"/><rect x="22" y="29" width="1" height="1"/><rect x="24" y="29" width="1" height="1"/><rect x="27" y="29" width="1" height="1"/><rect x="29" y="29" width="2" height="1"/><rect x="32" y="29" width="1" height="1"/><rect x="0" y="30" width="1" height="1"/><rect x="2" y="30" width="3" height="1"/><rect x="6" y="30" width="1" height="1"/><rect x="8" y="30" width="1" height="1"/><rect x="10" y="30" width="2" height="1"/><rect x="13" y="30" width="2" height="1"/><rect x="17" y="30" width="3" height="1"/><rect x="26" y="30" width="2" height="1"/><rect x="29" y="30" width="1" height="1"/><rect x="0" y="31" width="1" height="1"/><rect x="6" y="31" width="1" height="1"/><rect x="11" y="31" width="9" height="1"/><rect x="22" y="31" width="7" height="1"/><rect x="32" y="31" width="1" height="1"/><rect x="0" y="32" width="7" height="1"/><rect x="8" y="32" width="6" height="1"/><rect x="15" y="32" width="3" height="1"/><rect x="20" y="32" width="4" height="1"/><rect x="28" y="32" width="1" height="1"/><rect x="30" y="32" width="1" height="1"/></svg>
+        </div>
+        <div class="qr-texto"><strong>Escanea para seguir</strong>Todo el material del curso, en tu celular.</div>
+      </div>
+    </section>
+
+    <!-- 1. JUEGO INICIAL -->
+    <section class="slide" data-titulo="Juego inicial">
+      <div class="cabecera-slide">
+        <div class="bloom-header">
+          <span class="eyebrow">Para romper la rutina</span>
+          <span class="pill pill--oro">+20 Felipesos c/u</span>
+        </div>
+        <h2>Calienta motores: ¿verdadero o falso?</h2>
+        <p class="lead" style="font-size:12.5px;">En voz alta, decidan como curso antes de que alguien haga clic en la respuesta.</p>
+      </div>
+      <div class="cuerpo-slide" id="bloqueVF"></div>
+    </section>
+
+    <!-- 2. ESTRUCTURA -->
+    <section class="slide" data-titulo="Estructura">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Estructura de la sesión</span>
+        <h2>Lo que vamos a recorrer</h2>
+      </div>
+      <div class="cuerpo-slide">
+        <ol class="agenda-lista">
+          <li><span>Juego de activación: verdadero o falso</span><span class="agenda-tag">5 min</span></li>
+          <li><span>Marco conceptual: definiciones, ejemplos y factores de resiliencia</span><span class="agenda-tag">12 min</span></li>
+          <li><span>Caso local: incendio y regeneración en Lago Peñuelas</span><span class="agenda-tag">14 min</span></li>
+          <li><span>Logística y seguridad para la salida a terreno</span><span class="agenda-tag">5 min</span></li>
+          <li><span>Protocolo de registro e instrucciones de la actividad</span><span class="agenda-tag">6 min</span></li>
+          <li><span><strong>Salida a terreno</strong> — bitácora de campo digital</span><span class="agenda-tag">variable</span></li>
+          <li><span>Preguntas de análisis post-visita</span><span class="agenda-tag">6 min</span></li>
+          <li><span>Preguntas abiertas y reflexión</span><span class="agenda-tag">5 min</span></li>
+          <li><span>Respaldo en PDF</span><span class="agenda-tag">3 min</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 3. MARCO CONCEPTUAL: DEFINICIONES -->
+    <section class="slide" data-titulo="Marco conceptual · definiciones">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Marco conceptual · 1 de 4</span>
+        <h2>Resistencia, resiliencia y umbral</h2>
+      </div>
+      <div class="cuerpo-slide grid-cards3">
+        <div class="tarjeta tarjeta-desplegable">
+          <button class="despliegue-cabecera" type="button" aria-expanded="false">
+            <div class="concepto-icono">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg>
+            </div>
+            <div class="despliegue-titulo-caja">
+              <h3>Resistencia</h3>
+              <span class="despliegue-hint">Toca para ver la definición</span>
+            </div>
+            <svg class="despliegue-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="despliegue-cuerpo">
+            <div class="despliegue-contenido">
+              <p class="lead" style="font-size:12.5px;">Capacidad de un ecosistema de <strong>no alterarse</strong> frente a una perturbación (ej. un suelo con buena cobertura vegetal que no se erosiona fácilmente ante una lluvia intensa).</p>
+            </div>
+          </div>
+        </div>
+        <div class="tarjeta tarjeta-desplegable">
+          <button class="despliegue-cabecera" type="button" aria-expanded="false">
+            <div class="concepto-icono">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21V10"/><path d="M12 10c0-4 3-6 6-6 0 4-2 6-6 6z"/><path d="M12 14c0-3-3-5-6-5 0 3 2 5 6 5z"/></svg>
+            </div>
+            <div class="despliegue-titulo-caja">
+              <h3>Resiliencia</h3>
+              <span class="despliegue-hint">Toca para ver la definición</span>
+            </div>
+            <svg class="despliegue-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="despliegue-cuerpo">
+            <div class="despliegue-contenido">
+              <p class="lead" style="font-size:12.5px;">Capacidad de un ecosistema de <strong>recuperarse</strong> y volver a un estado similar al original después de haber sido alterado (ej. un bosque que rebrota tras un incendio).</p>
+            </div>
+          </div>
+        </div>
+        <div class="tarjeta tarjeta-desplegable tarjeta-desplegable--oscura" style="background:var(--verde); border-color:var(--verde);">
+          <button class="despliegue-cabecera" type="button" aria-expanded="false">
+            <div class="concepto-icono concepto-icono--claro">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v7"/><path d="M12 10l-6 11h12z"/><path d="M8.5 17h7"/></svg>
+            </div>
+            <div class="despliegue-titulo-caja">
+              <h3 style="color:var(--texto-claro);">Umbral ecológico</h3>
+              <span class="despliegue-hint">Toca para ver la definición</span>
+            </div>
+            <svg class="despliegue-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="despliegue-cuerpo">
+            <div class="despliegue-contenido">
+              <p class="lead" style="font-size:12.5px; color:#dbe8de;">Punto crítico: si la perturbación lo sobrepasa, el ecosistema puede estabilizarse en un <strong>estado alternativo</strong> muy distinto al original, aunque la perturbación desaparezca.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3b. MARCO CONCEPTUAL: EJEMPLOS COMPARADOS -->
+    <section class="slide" data-titulo="Marco conceptual · ejemplos">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Marco conceptual · 2 de 4</span>
+        <h2>La misma idea, distintos ecosistemas</h2>
+      </div>
+      <div class="cuerpo-slide">
+        <table class="tabla-comparativa">
+          <tr><th>Ecosistema</th><th>Resistencia</th><th>Resiliencia</th></tr>
+          <tr>
+            <td>Bosque esclerófilo (Chile central)</td>
+            <td><span class="nivel nivel--alta">Alta a sequía</span></td>
+            <td><span class="nivel nivel--media">Media frente al fuego, si no compite con especies invasoras</span></td>
+          </tr>
+          <tr>
+            <td>Arrecife de coral</td>
+            <td><span class="nivel nivel--baja">Baja al calor extremo</span></td>
+            <td><span class="nivel nivel--baja">Decreciente: las olas de calor marino son ahora más frecuentes que el tiempo de recuperación del coral</span></td>
+          </tr>
+          <tr>
+            <td>Humedal costero de Valparaíso</td>
+            <td><span class="nivel nivel--media">Media a pulsos de inundación</span></td>
+            <td><span class="nivel nivel--media">Depende de mantener conectado su origen de agua</span></td>
+          </tr>
+          <tr>
+            <td>Reserva Lago Peñuelas</td>
+            <td><span class="nivel nivel--media">Media al fuego</span></td>
+            <td><span class="nivel nivel--media">En prueba activa ahora mismo — el caso que vamos a estudiar</span></td>
+          </tr>
+        </table>
+        <p class="nota-discreta" style="margin-top:10px;">Ningún ecosistema es "resiliente" en abstracto: siempre lo es frente a un tipo específico de perturbación.</p>
+      </div>
+    </section>
+
+    <!-- 3c. MARCO CONCEPTUAL: FACTORES -->
+    <section class="slide" data-titulo="Marco conceptual · factores">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Marco conceptual · 3 de 4</span>
+        <h2>¿Qué hace más resiliente a un ecosistema?</h2>
+      </div>
+      <div class="cuerpo-slide">
+        <div class="tarjeta-desplegable factor-desplegable">
+          <button class="despliegue-cabecera despliegue-cabecera--fila" type="button" aria-expanded="false">
+            <div class="factor-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7" cy="8" r="2.2"/><circle cx="17" cy="8" r="2.2"/><circle cx="12" cy="17" r="2.2"/><path d="M7 10v3M17 10v3M9 8h6"/></svg></div>
+            <div class="despliegue-titulo-caja"><strong>Diversidad biológica</strong></div>
+            <svg class="despliegue-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="despliegue-cuerpo">
+            <div class="despliegue-contenido"><p>Más especies significan más "redundancia funcional" — si una no puede cumplir su rol, otra puede reemplazarla.</p></div>
+          </div>
+        </div>
+        <div class="tarjeta-desplegable factor-desplegable">
+          <button class="despliegue-cabecera despliegue-cabecera--fila" type="button" aria-expanded="false">
+            <div class="factor-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 12l10-6M7 12l10 6"/></svg></div>
+            <div class="despliegue-titulo-caja"><strong>Conectividad del paisaje</strong></div>
+            <svg class="despliegue-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="despliegue-cuerpo">
+            <div class="despliegue-contenido"><p>Fragmentos aislados reciben menos semillas y menos individuos migrantes para repoblarse.</p></div>
+          </div>
+        </div>
+        <div class="tarjeta-desplegable factor-desplegable">
+          <button class="despliegue-cabecera despliegue-cabecera--fila" type="button" aria-expanded="false">
+            <div class="factor-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19l4-9 3 5 3-8 3 7 3-4"/></svg></div>
+            <div class="despliegue-titulo-caja"><strong>Frecuencia e intensidad de la perturbación</strong></div>
+            <svg class="despliegue-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="despliegue-cuerpo">
+            <div class="despliegue-contenido"><p>Un bosque puede recuperarse de un incendio cada 30 años, pero no de uno cada 3 años.</p></div>
+          </div>
+        </div>
+        <div class="tarjeta-desplegable factor-desplegable">
+          <button class="despliegue-cabecera despliegue-cabecera--fila" type="button" aria-expanded="false">
+            <div class="factor-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l2.5 6.5H21l-5.2 4 2 6.5L12 15l-5.8 4 2-6.5L3 8.5h6.5z"/></svg></div>
+            <div class="despliegue-titulo-caja"><strong>Especies clave (keystone)</strong></div>
+            <svg class="despliegue-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="despliegue-cuerpo">
+            <div class="despliegue-contenido"><p>La pérdida de una sola especie con un rol central puede desestabilizar todo el sistema.</p></div>
+          </div>
+        </div>
+        <div class="tarjeta-desplegable factor-desplegable">
+          <button class="despliegue-cabecera despliegue-cabecera--fila" type="button" aria-expanded="false">
+            <div class="factor-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21c4-3 7-6.5 7-11a7 7 0 00-14 0c0 4.5 3 8 7 11z"/><path d="M9.5 10l1.8 1.8L14.5 8"/></svg></div>
+            <div class="despliegue-titulo-caja"><strong>Intervención humana</strong></div>
+            <svg class="despliegue-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="despliegue-cuerpo">
+            <div class="despliegue-contenido"><p>Puede acelerar la recuperación (reforestación activa con especies nativas) o frenarla (plantaciones exóticas, urbanización).</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3d. MARCO CONCEPTUAL: ESTADOS ALTERNATIVOS -->
+    <section class="slide" data-titulo="Marco conceptual · umbral">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Marco conceptual · 4 de 4</span>
+        <h2>Cuando la resiliencia falla</h2>
+      </div>
+      <div class="cuerpo-slide dos-columnas">
+        <div class="tarjeta tarjeta-desplegable">
+          <button class="despliegue-cabecera" type="button" aria-expanded="false">
+            <div class="despliegue-titulo-caja">
+              <h3>Arrecife → pastizal de algas</h3>
+              <span class="despliegue-hint">Toca para ver el ejemplo completo</span>
+            </div>
+            <svg class="despliegue-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="despliegue-cuerpo">
+            <div class="despliegue-contenido">
+              <p class="lead" style="font-size:12.5px;">Cuando el blanqueamiento por calor se repite antes de que el coral logre recuperarse, algas oportunistas colonizan el sustrato. Aunque la temperatura del agua vuelva a bajar, el coral muchas veces ya no logra recolonizar: el arrecife queda atrapado en un nuevo estado.</p>
+            </div>
+          </div>
+        </div>
+        <div class="tarjeta tarjeta-desplegable">
+          <button class="despliegue-cabecera" type="button" aria-expanded="false">
+            <div class="despliegue-titulo-caja">
+              <h3>Bosque nativo → matorral degradado</h3>
+              <span class="despliegue-hint">Toca para ver el ejemplo completo</span>
+            </div>
+            <svg class="despliegue-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="despliegue-cuerpo">
+            <div class="despliegue-contenido">
+              <p class="lead" style="font-size:12.5px;">Si un bosque esclerófilo se quema repetidamente y especies invasoras de rápido crecimiento colonizan antes que las nativas puedan regenerarse, el sistema puede quedar atrapado como matorral, incluso décadas después — a menos que exista una intervención activa como la reforestación.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3e. RECURSO AUDIOVISUAL -->
+    <section class="slide" data-titulo="Recurso audiovisual">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Recurso audiovisual · Profundización</span>
+        <h2>Profundiza con este video</h2>
+      </div>
+      <div class="cuerpo-slide dos-columnas">
+        <div style="display:flex; align-items:center; justify-content:center;">
+          <div class="video-embed-wrap">
+            <iframe src="https://www.youtube.com/embed/a-qryS0JEn8" title="Recurso en video sobre resiliencia de ecosistemas" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+          </div>
+        </div>
+        <div class="tarjeta">
+          <h3>Preguntas guía</h3>
+          <p class="lead" style="font-size:12px; margin-bottom:8px;">Mientras ves el video, ten en cuenta:</p>
+          <ol class="pasos-actividad">
+            <li>Identifica al menos un ejemplo de resistencia, resiliencia o umbral ecológico que se muestre o se pueda inferir del video.</li>
+            <li>¿Qué relación encuentras entre el contenido del video y el caso de la Reserva Lago Peñuelas que estudiamos hoy?</li>
+            <li>Anota una idea o dato del video que te gustaría usar para argumentar en las preguntas de análisis o abiertas de esta sesión.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. CASO LOCAL: PEÑUELAS · LINEA DE TIEMPO -->
+    <section class="slide" data-titulo="Caso Peñuelas · línea de tiempo">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Caso local · 1 de 4</span>
+        <h2>Incendio y regeneración en Lago Peñuelas</h2>
+        <p class="lead" style="font-size:12px;">Toca cada punto de la línea de tiempo para ver qué ocurrió.</p>
+      </div>
+      <div class="cuerpo-slide linea-tiempo" id="lineaTiempo"></div>
+    </section>
+
+    <!-- 4b. CASO LOCAL: PEÑUELAS · CAUSAS -->
+    <section class="slide" data-titulo="Caso Peñuelas · causas">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Caso local · 2 de 4</span>
+        <h2>¿Por qué se intensificó tanto el incendio?</h2>
+      </div>
+      <div class="cuerpo-slide">
+        <div class="factor-fila">
+          <div class="factor-icono factor-icono--ascua"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c1 3-3 4-3 8a5 5 0 0010 0c0-2-1-3-2-4 0 2-1 3-2 2 1-3-1-4-3-6z"/></svg></div>
+          <div><strong>Megasequía:</strong> Chile central atraviesa la sequía más prolongada en al menos mil años según la Organización Meteorológica Mundial, con más de una década de duración hacia 2024.</div>
+        </div>
+        <div class="factor-fila">
+          <div class="factor-icono factor-icono--ascua"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4.5"/><path d="M12 3v2M12 19v2M4.2 12H2.2M21.8 12h-2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M17 7l1.4-1.4M5.6 18.4L7 17"/></svg></div>
+          <div><strong>Ola de calor, baja humedad y viento fuerte:</strong> el 2 de febrero de 2024 esta combinación permitió que el fuego avanzara sobre 5.500 hectáreas en solo 2 horas en la zona de Valparaíso.</div>
+        </div>
+        <div class="factor-fila">
+          <div class="factor-icono factor-icono--ascua"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21V11l5 3v-3l5 3V9l6 4v8H3z"/></svg></div>
+          <div><strong>Zonas de interfaz urbano-forestal:</strong> barrios construidos junto a vegetación acumulan una gran carga de combustible cerca de las viviendas.</div>
+        </div>
+        <div class="factor-fila">
+          <div class="factor-icono factor-icono--ascua"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21V4M12 4L8 8M12 4l4 4"/><path d="M6 21h12"/></svg></div>
+          <div><strong>Plantaciones exóticas de rápido crecimiento (pino, eucalipto):</strong> concentran gran biomasa inflamable; su extensión en el centro-sur de Chile ha sido señalada por CONAF y la comunidad científica como un factor que intensifica los incendios.</div>
+        </div>
+        <div class="aviso-caja" style="border-color:rgba(27,67,50,.3); border-left-color:var(--verde); margin-top:6px;">
+          <div class="aviso-icono" style="background:rgba(27,67,50,.12); color:var(--verde);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21c4-3 7-6.5 7-11a7 7 0 00-14 0c0 4.5 3 8 7 11z"/></svg></div>
+          <div>
+            <span class="eyebrow" style="color:var(--verde);">Un recordatorio</span>
+            <p style="color:#2b453a;">El incendio de febrero de 2024 fue una de las catástrofes más graves en la historia reciente de Chile: además de afectar a la Reserva Lago Peñuelas, causó pérdida de vidas humanas y miles de viviendas destruidas en la conurbación de Valparaíso. Entender qué hace resiliente —o vulnerable— a un territorio no es solo un ejercicio académico.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4c. CASO LOCAL: PEÑUELAS · RESTAURACIÓN -->
+    <section class="slide" data-titulo="Caso Peñuelas · restauración">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Caso local · 3 de 4</span>
+        <h2>La ciencia de reforestar con especies nativas</h2>
+      </div>
+      <div class="cuerpo-slide">
+        <div class="comparacion-restauracion">
+          <div class="tarjeta">
+            <span class="pill pill--ascua">Plantación exótica</span>
+            <p class="lead" style="font-size:12.5px; margin-top:8px;">Pino y eucalipto crecen rápido, pero acumulan mucha biomasa inflamable, sostienen poca biodiversidad nativa asociada y sus raíces están menos adaptadas al régimen hídrico local.</p>
+          </div>
+          <div class="tarjeta" style="background:var(--verde); border-color:var(--verde);">
+            <span class="pill pill--oro" style="background:rgba(201,162,39,.18); color:var(--oro); border-color:rgba(201,162,39,.5);">Bosque nativo</span>
+            <p class="lead" style="font-size:12.5px; margin-top:8px; color:#dbe8de;">Quillay, litre, molle y huingán crecen más lento, pero están adaptados al clima mediterráneo y al régimen de incendios histórico, sostienen más biodiversidad y mejoran la infiltración de agua en el suelo.</p>
+          </div>
+        </div>
+        <div class="tarjeta" style="margin-top:14px;">
+          <p class="lead" style="font-size:12.5px;">CONAF replanta con una densidad de <strong>750 árboles nativos por hectárea</strong>, en "casillas sistemáticas" sobre suelo subsolado (removido) para facilitar el enraizamiento. No cualquier reforestación construye resiliencia: la elección de especies importa tanto como la cantidad de árboles.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4d. CASO LOCAL: PEÑUELAS · AGUA -->
+    <section class="slide" data-titulo="Caso Peñuelas · agua">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Caso local · 4 de 4</span>
+        <h2>Resiliencia también en el agua</h2>
+      </div>
+      <div class="cuerpo-slide">
+        <div class="stat-grid" style="margin-bottom:14px;">
+          <div class="stat"><div class="stat-num">1.700 ha</div><div class="stat-label">superficie máxima histórica del lago artificial Peñuelas.</div></div>
+          <div class="stat"><div class="stat-num">0,01%</div><div class="stat-label">de su capacidad total llegó a tener durante la megasequía.</div></div>
+          <div class="stat"><div class="stat-num">170 ha</div><div class="stat-label">(10% del máximo) recuperadas tras lluvias más normales, con retorno de cisnes y flamencos.</div></div>
+        </div>
+        <div class="tarjeta">
+          <p class="lead" style="font-size:13px;">Esto también es resiliencia: el sistema puede recuperarse si las condiciones climáticas vuelven, pero maneja un margen estrecho. Varios años secos consecutivos más podrían empujarlo hacia un umbral distinto — la misma lógica que estudiamos con el bosque, aplicada ahora al recurso hídrico.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. LOGISTICA Y SEGURIDAD -->
+    <section class="slide" data-titulo="Logística y seguridad">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Antes de salir</span>
+        <h2>Logística y seguridad</h2>
+      </div>
+      <div class="cuerpo-slide">
+        <div class="aviso-caja">
+          <div class="aviso-icono">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 16a4 4 0 010-8 5.5 5.5 0 0110.5 1.5H18a3.5 3.5 0 010 7H7z"/><path d="M9 20l1.5-2M13 20l1.5-2M17 20l1.5-2"/></svg>
+          </div>
+          <div>
+            <span class="eyebrow">Verifica antes de partir</span>
+            <p>Al preparar esta guía (julio de 2026), la Reserva Nacional Lago Peñuelas informaba un cierre temporal por pronóstico de mal tiempo. Antes de la salida, confirma el estado de acceso actualizado en conaf.cl o Pases Parques, y ten un sitio alternativo (ej. humedal costero de Valparaíso) por si la reserva no está disponible.</p>
+          </div>
+        </div>
+        <div class="aviso-caja">
+          <div class="aviso-icono">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 15c3-5 7-6 9-6-1 2-1 3 0 4 2 0 6-1 9-5-1 6-6 10-11 10-3 0-5-1-7-3z"/><path d="M4 19l3-3"/></svg>
+          </div>
+          <div>
+            <span class="eyebrow">Alerta activa de influenza aviar (IAAP)</span>
+            <p>Chile mantiene un brote de influenza aviar de alta patogenicidad, con focos confirmados en aves silvestres en varias regiones, incluida Valparaíso. Por eso, en terreno:</p>
+          </div>
+        </div>
+        <ul class="lista-seguridad">
+          <li>Nunca tocar ni manipular aves enfermas o muertas; reportarlas de inmediato a un guardaparque.</li>
+          <li>Evitar el contacto con nidos, plumas, heces o aguas donde haya aves.</li>
+          <li>Desinfectar el calzado si hubo contacto con material orgánico, y lavar las manos al volver.</li>
+          <li>Trabajar siempre en grupo, dentro de los senderos habilitados, con calzado cerrado y protección solar.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 6. PROTOCOLO DE REGISTRO -->
+    <section class="slide" data-titulo="Protocolo de registro">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Antes de salir</span>
+        <h2>¿Qué vamos a registrar?</h2>
+      </div>
+      <div class="cuerpo-slide check-grid">
+        <div class="check-col check-col--bio">
+          <div class="check-col-cabecera">
+            <div class="check-icono check-icono--bio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21V10"/><path d="M12 10c0-4 3-6 6-6 0 4-2 6-6 6z"/><path d="M12 14c0-3-3-5-6-5 0 3 2 5 6 5z"/></svg></div>
+            <h3>Indicadores de biodiversidad</h3>
+          </div>
+          <ul>
+            <li>Especies vegetales nativas reconocibles (quillay, litre, molle, boldo, espino).</li>
+            <li>Aves observadas: posadas, en vuelo o cantando.</li>
+            <li>Señales de fauna: huellas, madrigueras, plumas.</li>
+            <li>Insectos polinizadores en flores.</li>
+            <li>Estado del cuerpo de agua (nivel, color, vegetación de ribera).</li>
+          </ul>
+        </div>
+        <div class="check-col check-col--pert">
+          <div class="check-col-cabecera">
+            <div class="check-icono check-icono--pert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c1 3-3 4-3 8a5 5 0 0010 0c0-2-1-3-2-4 0 2-1 3-2 2 1-3-1-4-3-6z"/></svg></div>
+            <h3>Señales de perturbación</h3>
+          </div>
+          <ul>
+            <li>Restos de incendio: troncos quemados, suelo carbonizado.</li>
+            <li>Erosión visible del suelo.</li>
+            <li>Especies exóticas o invasoras (ej. pino, eucalipto en regeneración espontánea).</li>
+            <li>Basura o intervención humana reciente.</li>
+            <li>Ausencia de sotobosque o de renovales.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6b. INSTRUCCIONES DE LA ACTIVIDAD -->
+    <section class="slide" data-titulo="Instrucciones de la actividad">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Antes de salir</span>
+        <h2>Instrucciones de la actividad</h2>
+        <p class="lead" style="font-size:12px;">Investigación de resiliencia en terreno, en grupos.</p>
+      </div>
+      <div class="cuerpo-slide">
+        <ol class="pasos-actividad">
+          <li><strong>Formen grupos de 3 a 4 personas</strong> y asignen roles: registrador/a de datos, observador/a de flora, observador/a de fauna y perturbaciones, y guía de tiempo/ruta.</li>
+          <li><strong>Cada grupo trabaja en una zona:</strong> sector con evidencia de incendio, sector en regeneración, sector no afectado, o ribera del lago/humedal.</li>
+          <li><strong>Permanezcan 15 a 20 minutos</strong> en su zona, recorriendo solo los senderos habilitados — sin salirse de ellos.</li>
+          <li><strong>Usen la checklist</strong> de la diapositiva anterior: cada integrante busca activamente los indicadores mientras el registrador anota los conteos en la bitácora digital.</li>
+          <li><strong>Discutan antes de registrar</strong> la evaluación de resiliencia: debe ser una decisión consensuada del grupo, no la opinión de una sola persona.</li>
+          <li><strong>Si el tiempo alcanza,</strong> comparen brevemente su zona con la de otro grupo que visitó una zona distinta — esa comparación será clave para las preguntas de análisis.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 7. BITACORA PARTE 1 -->
+    <section class="slide" data-titulo="Bitácora parte 1">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Bitácora de campo digital · 1 de 2</span>
+        <h2>Identificación y biodiversidad</h2>
+      </div>
+      <div class="cuerpo-slide">
+        <div class="form-grid">
+          <div class="campo">
+            <label>Nombre del grupo o integrantes *</label>
+            <input type="text" id="campoGrupo" placeholder="Ej. Grupo 3 — Fernanda, Tomás, Iván">
+          </div>
+          <div class="campo">
+            <label>Zona observada</label>
+            <select id="campoZona">
+              <option value="">Selecciona una zona</option>
+              <option value="Sector con evidencia de incendio 2024">Sector con evidencia de incendio 2024</option>
+              <option value="Sector en regeneración/reforestación">Sector en regeneración/reforestación</option>
+              <option value="Sector no afectado por el incendio">Sector no afectado por el incendio</option>
+              <option value="Ribera del lago / humedal">Ribera del lago / humedal</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>Fecha</label>
+            <input type="date" id="campoFecha">
+          </div>
+          <div class="campo">
+            <label>N° de especies vegetales nativas observadas</label>
+            <input type="number" id="campoPlantas" min="0" placeholder="0">
+          </div>
+          <div class="campo">
+            <label>N° de especies de aves observadas</label>
+            <input type="number" id="campoAves" min="0" placeholder="0">
+          </div>
+        </div>
+        <div class="campo">
+          <label>Fauna observada (marca todo lo que corresponda)</label>
+          <div class="chips">
+            <label class="chip"><input type="checkbox" name="fauna" value="Aves acuáticas"><span>Aves acuáticas</span></label>
+            <label class="chip"><input type="checkbox" name="fauna" value="Mamíferos o huellas"><span>Mamíferos o huellas</span></label>
+            <label class="chip"><input type="checkbox" name="fauna" value="Reptiles o anfibios"><span>Reptiles o anfibios</span></label>
+            <label class="chip"><input type="checkbox" name="fauna" value="Insectos polinizadores"><span>Insectos polinizadores</span></label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. BITACORA PARTE 2 -->
+    <section class="slide" data-titulo="Bitácora parte 2">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Bitácora de campo digital · 2 de 2</span>
+        <h2>Perturbación y evaluación de resiliencia</h2>
+      </div>
+      <div class="cuerpo-slide">
+        <div class="campo">
+          <label>Señales de perturbación observadas</label>
+          <div class="chips">
+            <label class="chip chip--pert"><input type="checkbox" name="perturbacion" value="Restos de incendio"><span>Restos de incendio</span></label>
+            <label class="chip chip--pert"><input type="checkbox" name="perturbacion" value="Erosión del suelo"><span>Erosión del suelo</span></label>
+            <label class="chip chip--pert"><input type="checkbox" name="perturbacion" value="Especies invasoras"><span>Especies invasoras</span></label>
+            <label class="chip chip--pert"><input type="checkbox" name="perturbacion" value="Basura"><span>Basura</span></label>
+            <label class="chip chip--pert"><input type="checkbox" name="perturbacion" value="Ninguna evidente"><span>Ninguna evidente</span></label>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="campo">
+            <label>¿Qué tan resiliente parece esta zona?</label>
+            <select id="campoResiliencia">
+              <option value="">Selecciona una evaluación</option>
+              <option value="Alta - fuerte regeneración visible">Alta — fuerte regeneración visible</option>
+              <option value="Media - regeneración parcial">Media — regeneración parcial</option>
+              <option value="Baja - poca recuperación visible">Baja — poca recuperación visible</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>Justifica tu evaluación</label>
+            <textarea id="campoJustificacion" placeholder="¿Qué evidencia observaste que respalda tu evaluación?"></textarea>
+          </div>
+        </div>
+        <div class="campo">
+          <label>Observaciones libres</label>
+          <textarea id="campoObservaciones" placeholder="Cualquier otro detalle relevante que hayan registrado en el grupo..."></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. PREGUNTAS ANALISIS -->
+    <section class="slide" data-titulo="Preguntas de análisis">
+      <div class="cabecera-slide">
+        <div class="bloom-header">
+          <span class="eyebrow">Preguntas de análisis</span>
+          <span class="pill pill--cielo">Post-visita</span>
+          <span class="pill pill--oro">+35 Felipesos c/u</span>
+        </div>
+        <h2>¿Qué relaciones identificaste?</h2>
+      </div>
+      <div class="cuerpo-slide" id="bloqueAnalisis"></div>
+    </section>
+
+    <!-- 10. PREGUNTAS ABIERTAS -->
+    <section class="slide" data-titulo="Preguntas abiertas">
+      <div class="cabecera-slide">
+        <div class="bloom-header">
+          <span class="eyebrow">Preguntas abiertas</span>
+          <span class="pill">Evaluar</span>
+          <span class="pill">Crear</span>
+        </div>
+        <h2>Argumenta con lo que observaste</h2>
+      </div>
+      <div class="cuerpo-slide">
+        <div class="campo">
+          <label>1. Describe una relación que observaste en terreno entre un componente vivo (ej. una planta o un animal) y uno no vivo (ej. agua, suelo o restos de incendio) del ecosistema visitado.</label>
+          <textarea id="abierta1" placeholder="Escribe aquí tu respuesta..."></textarea>
+        </div>
+        <div class="campo">
+          <label>2. Si tuvieras que diseñar una acción de restauración para la zona que visitaste, ¿qué harías primero y por qué?</label>
+          <textarea id="abierta2" placeholder="Escribe aquí tu propuesta..."></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. RESPALDO PDF -->
+    <section class="slide" data-titulo="Respaldo en PDF">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Recurso final</span>
+        <h2>Guarda tu bitácora</h2>
+      </div>
+      <div class="cuerpo-slide" style="display:flex; align-items:center; justify-content:center;">
+        <div class="tarjeta respaldo-caja">
+          <div class="respaldo-icono">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 3h9l4 4v14a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M15 3v4h4"/><path d="M9 13h6M9 16.5h6M9 9.5h2"/></svg>
+          </div>
+          <h3>Descarga tu registro completo</h3>
+          <p class="lead" style="font-size:13px;">Un PDF con el compilado de contenidos, tu bitácora de campo, tus respuestas y la hoja de respuestas para tu profesor — tu copia de seguridad si el cuaderno se moja o el celular se queda sin batería.</p>
+          <button class="btn-accion btn-accion--pdf2" id="btnPdf2" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+            Descargar PDF
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12. CIERRE -->
+    <section class="slide" data-titulo="Cierre">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Cierre</span>
+        <h2>Marcador final</h2>
+      </div>
+      <div class="cuerpo-slide cierre-wrap">
+        <div class="marcador-final">
+          <span class="marcador-moneda">F$</span>
+          <span class="marcador-total" id="marcadorTotal">0</span>
+          <span class="lead" style="color:#d9e6dd; font-size:12px;">Felipesos ganados hoy</span>
+          <span class="marcador-rango" id="marcadorRango">Observador/a novato/a</span>
+        </div>
+        <div>
+          <p class="pregunta-enunciado" style="font-size:13.5px;">Exit ticket: en una frase, ¿qué aprendiste hoy sobre cómo se recupera —o no— un ecosistema después de un evento extremo?</p>
+          <textarea placeholder="Escribe tu frase de cierre..."></textarea>
+          <div class="cierre-caja">
+            <div>
+              <strong style="font-size:12.5px; color:var(--verde);">Próxima sesión</strong>
+              <p>Analizaremos críticamente fuentes sobre las consecuencias del cambio climático en recursos naturales y comunidades humanas.</p>
+            </div>
+            <span class="pill pill--oro">OA 3 · Habilidades OA h y OA i</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="chrome-bottom">
+    <button class="nav-btn" id="btnPrev" aria-label="Diapositiva anterior">‹</button>
+    <div class="dots" id="dots"></div>
+    <button class="nav-btn" id="btnNext" aria-label="Siguiente diapositiva">›</button>
+  </div>
+  <div style="position:absolute; bottom:10px; right:clamp(16px,3vw,34px); z-index:6; display:flex; align-items:center; gap:7px;">
+    <div class="rana-mascota" id="ranaMascota" aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        <ellipse class="rana-pata" cx="5" cy="18.5" rx="2.6" ry="1.8"/>
+        <ellipse class="rana-pata" cx="19" cy="18.5" rx="2.6" ry="1.8"/>
+        <ellipse class="rana-cuerpo" cx="12" cy="15" rx="8.2" ry="6.2"/>
+        <ellipse class="rana-vientre" cx="12" cy="17" rx="4.6" ry="3"/>
+        <circle class="rana-ojo" cx="7.6" cy="8.6" r="3"/>
+        <circle class="rana-ojo" cx="16.4" cy="8.6" r="3"/>
+        <circle class="rana-pupila" cx="7.6" cy="8.6" r="1.15"/>
+        <circle class="rana-pupila" cx="16.4" cy="8.6" r="1.15"/>
+        <path class="rana-boca" d="M8 16.5q4 3 8 0"/>
+      </svg>
+    </div>
+    <span class="contador" id="contador">01 / 21</span>
+  </div>
+</div>
+
+<div class="imprimible" id="imprimible"></div>
+
+<script>
+(function(){
+
+  /* ============ Motor de sonido (tonos sintetizados, sin archivos externos) ============ */
+  var sonidoActivado = true;
+  var audioCtx = null;
+  var ACtor = window.AudioContext || window.webkitAudioContext;
+
+  function obtenerAudioCtx(){
+    if(!ACtor) return null;
+    if(!audioCtx){ audioCtx = new ACtor(); }
+    if(audioCtx.state === "suspended"){ audioCtx.resume(); }
+    return audioCtx;
+  }
+
+  function tono(frecuencia, duracion, tipo, volumen, demora){
+    if(!sonidoActivado) return;
+    var ctx = obtenerAudioCtx();
+    if(!ctx) return;
+    try{
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = tipo || "sine";
+      osc.frequency.value = frecuencia;
+      var inicio = ctx.currentTime + (demora || 0);
+      gain.gain.setValueAtTime(0.0001, inicio);
+      gain.gain.exponentialRampToValueAtTime(volumen || 0.1, inicio + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, inicio + duracion);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(inicio);
+      osc.stop(inicio + duracion + 0.02);
+    } catch(err){ /* Web Audio no disponible: se ignora silenciosamente */ }
+  }
+
+  function sonidoDesplegar(abrir){ tono(abrir ? 540 : 400, 0.11, "sine", 0.09); }
+  function sonidoNavegar(){ tono(340, 0.08, "triangle", 0.07); }
+  function sonidoCorrecto(){ tono(660, 0.11, "sine", 0.11); tono(880, 0.16, "sine", 0.11, 0.09); }
+  function sonidoIncorrecto(){ tono(190, 0.26, "sawtooth", 0.06); }
+  function sonidoAccion(){ tono(480, 0.09, "sine", 0.08); }
+
+  var btnSonido = document.getElementById("btnSonido");
+  var iconoSonidoOn = btnSonido.querySelector(".icono-sonido-on");
+  var iconoSonidoOff = btnSonido.querySelector(".icono-sonido-off");
+  btnSonido.addEventListener("click", function(){
+    sonidoActivado = !sonidoActivado;
+    btnSonido.setAttribute("aria-pressed", sonidoActivado ? "false" : "true");
+    iconoSonidoOn.style.display = sonidoActivado ? "" : "none";
+    iconoSonidoOff.style.display = sonidoActivado ? "none" : "";
+    if(sonidoActivado){ tono(500, 0.09, "sine", 0.09); }
+  });
+
+  /* ============ FELIPESOS: economía del juego ============ */
+  var felipesos = 0;
+  var hud = document.getElementById("hud");
+  var hudValor = document.getElementById("hudValor");
+
+  function otorgarFelipesos(cantidad, origenEl){
+    felipesos += cantidad;
+    hudValor.textContent = felipesos + " Felipesos";
+    hud.classList.remove("pulso");
+    void hud.offsetWidth;
+    hud.classList.add("pulso");
+    if(origenEl){
+      var rect = origenEl.getBoundingClientRect();
+      var deckRect = document.getElementById("deck").getBoundingClientRect();
+      var flot = document.createElement("div");
+      flot.className = "flotante";
+      flot.textContent = "+" + cantidad;
+      flot.style.left = (rect.left - deckRect.left + rect.width/2 - 10) + "px";
+      flot.style.top = (rect.top - deckRect.top - 6) + "px";
+      document.getElementById("deck").appendChild(flot);
+      setTimeout(function(){ flot.remove(); }, 1000);
+    }
+    actualizarCierre();
+  }
+
+  /* ============ Verdadero / Falso (juego inicial) ============ */
+  var preguntasVF = [
+    { enunciado:"Un ecosistema resiliente es aquel que nunca sufre ninguna perturbación.", respuesta:false,
+      retro:"Falso. La resiliencia es la capacidad de recuperarse después de una perturbación, no la ausencia de perturbaciones." },
+    { enunciado:"La Reserva Nacional Lago Peñuelas sufrió un megaincendio en febrero de 2024 que afectó cerca de 3.000 hectáreas.", respuesta:true,
+      retro:"Verdadero. El incendio del 2 de febrero de 2024 afectó aproximadamente 3.000 hectáreas de la reserva." },
+    { enunciado:"Si un ecosistema cruza un umbral crítico, puede estabilizarse en un estado completamente distinto al original, aunque desaparezca la perturbación.", respuesta:true,
+      retro:"Verdadero. Ese es el concepto de estado alternativo estable: el sistema no vuelve solo a como era antes." },
+    { enunciado:"Para restaurar el bosque de Peñuelas, CONAF ha plantado principalmente especies exóticas de rápido crecimiento como el pino.", respuesta:false,
+      retro:"Falso. CONAF ha replantado con especies nativas como quillay, litre, molle y huingán, propias del bosque esclerófilo." },
+    { enunciado:"Registrar señales de perturbación (como restos de incendio o especies invasoras) es tan importante como contar especies para evaluar la resiliencia de un ecosistema.", respuesta:true,
+      retro:"Verdadero. Cruzar ambos tipos de datos permite evaluar mejor las relaciones entre los componentes del sistema." }
+  ];
+
+  var contVF = document.getElementById("bloqueVF");
+  preguntasVF.forEach(function(p){
+    var bloque = document.createElement("div");
+    bloque.className = "tarjeta";
+    bloque.style.marginBottom = "12px";
+    bloque.style.padding = "12px 14px";
+    bloque.innerHTML =
+      '<p class="pregunta-enunciado" style="font-size:13px; margin-bottom:9px;">'+p.enunciado+'</p>' +
+      '<div class="opciones" style="grid-template-columns:1fr 1fr; max-width:280px;">' +
+        '<button class="opcion" data-val="true">VERDADERO</button>' +
+        '<button class="opcion" data-val="false">FALSO</button>' +
+      '</div>' +
+      '<div class="feedback">'+p.retro+'</div>';
+    contVF.appendChild(bloque);
+    var botones = bloque.querySelectorAll(".opcion");
+    var feedback = bloque.querySelector(".feedback");
+    botones.forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var elegido = btn.getAttribute("data-val") === "true";
+        botones.forEach(function(b){ b.disabled = true; });
+        if(elegido === p.respuesta){
+          btn.classList.add("correcta");
+          sonidoCorrecto();
+          otorgarFelipesos(20, btn);
+        } else {
+          btn.classList.add("incorrecta");
+          sonidoIncorrecto();
+          botones.forEach(function(b){
+            if((b.getAttribute("data-val")==="true") === p.respuesta){ b.classList.add("correcta"); }
+          });
+        }
+        feedback.classList.add("visible");
+      });
+    });
+  });
+
+  /* ============ Línea de tiempo: Reserva Lago Peñuelas ============ */
+  var iconosHito = {
+    agua: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c3 4 6 7.5 6 11a6 6 0 01-12 0c0-3.5 3-7 6-11z"/></svg>',
+    hoja: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 19C5 10 10 5 19 5c0 9-5 14-14 14z"/><path d="M5 19c3-3 6-6 10-10"/></svg>',
+    brote: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21V10"/><path d="M12 10c0-4 3-6 6-6 0 4-2 6-6 6z"/><path d="M12 14c0-3-3-5-6-5 0 3 2 5 6 5z"/></svg>',
+    fuego: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c1 3-3 4-3 8a5 5 0 0010 0c0-2-1-3-2-4 0 2-1 3-2 2 1-3-1-4-3-6z"/></svg>',
+    lupa: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.5-4.5"/></svg>'
+  };
+  var hitosLinea = [
+    { anio:"1900", icono:"agua", texto:"Se construye el embalse artificial Peñuelas para abastecer de agua potable a Valparaíso y Viña del Mar." },
+    { anio:"1985", icono:"hoja", texto:"El área se integra a la Reserva de la Biósfera La Campana–Peñuelas. Hoy protege cerca de 9.260 hectáreas, con más de 120 especies de aves y unas 150 especies de plantas nativas registradas." },
+    { anio:"2021–23", icono:"brote", texto:"CONAF reconvierte 479 hectáreas de plantaciones exóticas a bosque nativo dentro de la reserva." },
+    { anio:"Feb. 2024", icono:"fuego", texto:"Un megaincendio afecta cerca de 3.000 hectáreas de la reserva, incluyendo más de 170 hectáreas que estaban en proceso de reconversión a bosque nativo." },
+    { anio:"2024–26", icono:"brote", texto:"CONAF replanta decenas de miles de árboles nativos (quillay, litre, molle, huingán) para acelerar la regeneración y mejorar la resiliencia de los sectores afectados." },
+    { anio:"Hoy", icono:"lupa", texto:"El monitoreo continúa: la resiliencia se mide observando si vuelve la cobertura vegetal nativa, la fauna y el equilibrio del sistema — exactamente lo que ustedes registrarán en su bitácora." }
+  ];
+  var lineaTiempo = document.getElementById("lineaTiempo");
+  var pista = document.createElement("div");
+  pista.className = "lt-pista";
+  pista.innerHTML = '<div class="lt-progreso" id="ltProgreso"></div><div class="lt-nodos" id="ltNodos"></div>';
+  var etiquetas = document.createElement("div");
+  etiquetas.className = "lt-etiquetas";
+  etiquetas.id = "ltEtiquetas";
+  var detalle = document.createElement("div");
+  detalle.className = "lt-detalle";
+  detalle.innerHTML = '<div class="lt-detalle-cabecera"><div class="lt-detalle-icono" id="ltIcono"></div><div class="lt-detalle-anio" id="ltAnio"></div></div><div class="lt-detalle-texto" id="ltTexto"></div>';
+  lineaTiempo.appendChild(pista);
+  lineaTiempo.appendChild(etiquetas);
+  lineaTiempo.appendChild(detalle);
+
+  var ltNodos = document.getElementById("ltNodos");
+  var ltProgreso = document.getElementById("ltProgreso");
+  var ltIcono = document.getElementById("ltIcono");
+  var ltAnio = document.getElementById("ltAnio");
+  var ltTexto = document.getElementById("ltTexto");
+  var nodosEls = [];
+
+  function mostrarHito(idx){
+    hitosLinea.forEach(function(h, i){ nodosEls[i].classList.toggle("activo", i === idx); });
+    ltProgreso.style.width = (idx/(hitosLinea.length-1)*100) + "%";
+    ltIcono.innerHTML = iconosHito[hitosLinea[idx].icono];
+    ltAnio.textContent = hitosLinea[idx].anio;
+    ltTexto.textContent = hitosLinea[idx].texto;
+  }
+
+  hitosLinea.forEach(function(h, i){
+    var nodo = document.createElement("div");
+    nodo.className = "lt-nodo";
+    nodo.addEventListener("click", function(){ mostrarHito(i); });
+    ltNodos.appendChild(nodo);
+    nodosEls.push(nodo);
+
+    var etq = document.createElement("div");
+    etq.className = "lt-etiqueta";
+    etq.textContent = h.anio;
+    etiquetas.appendChild(etq);
+  });
+  mostrarHito(3); // arranca mostrando el incendio de 2024, el hito central del caso
+
+  /* ============ Preguntas de análisis (post-visita) ============ */
+  var preguntasAnalisis = [
+    {
+      enunciado:"1. ¿Cuál es la diferencia principal entre resistencia y resiliencia ecológica?",
+      opciones:[
+        {texto:"Son sinónimos, no hay diferencia", correcta:false},
+        {texto:"La resistencia es no cambiar frente a una perturbación; la resiliencia es recuperarse después de haber cambiado", correcta:true},
+        {texto:"La resiliencia solo aplica a especies animales", correcta:false},
+        {texto:"La resistencia mide la cantidad de especies presentes", correcta:false}
+      ],
+      retro:"La resistencia es la capacidad de no alterarse frente a una perturbación; la resiliencia es la capacidad de recuperarse una vez que ya fue alterado."
+    },
+    {
+      enunciado:"2. CONAF replantó cerca de 70.000 árboles nativos (quillay, litre, molle) en Peñuelas tras el incendio de 2024. ¿Qué relación entre componentes del sistema busca fortalecer principalmente esta acción?",
+      opciones:[
+        {texto:"Ninguna, es solo estética", correcta:false},
+        {texto:"La recuperación de la cobertura vegetal nativa, base de la que dependen otras especies del ecosistema", correcta:true},
+        {texto:"El aumento del nivel del lago artificial", correcta:false},
+        {texto:"La eliminación de todas las especies animales", correcta:false}
+      ],
+      retro:"La vegetación nativa es la base estructural del ecosistema: de ella dependen el suelo, la fauna y el ciclo del agua, por lo que restaurarla fortalece la resiliencia de todo el sistema."
+    },
+    {
+      enunciado:"3. Al registrar una bitácora de campo, ¿por qué es importante anotar tanto indicadores de biodiversidad como señales de perturbación?",
+      opciones:[
+        {texto:"Porque solo las señales de perturbación importan", correcta:false},
+        {texto:"Porque permiten construir una imagen más completa de las relaciones entre los componentes del ecosistema", correcta:true},
+        {texto:"Porque el profesor lo exige, sin relación con el aprendizaje", correcta:false},
+        {texto:"Porque los indicadores de biodiversidad reemplazan la necesidad de observar perturbaciones", correcta:false}
+      ],
+      retro:"Cruzar ambos tipos de datos —qué hay y qué lo amenaza— es lo que permite analizar relaciones entre componentes del sistema, la habilidad central de esta sesión (OA d)."
+    },
+    {
+      enunciado:"4. Si tras un incendio especies invasoras de rápido crecimiento colonizan un sector antes que las especies nativas puedan regenerarse, ¿qué concepto explica que ese sector podría no volver a ser bosque nativo, incluso después de muchos años?",
+      opciones:[
+        {texto:"Resistencia ecológica", correcta:false},
+        {texto:"Estado alternativo estable, tras cruzar un umbral ecológico", correcta:true},
+        {texto:"Productividad primaria", correcta:false},
+        {texto:"Efecto invernadero", correcta:false}
+      ],
+      retro:"Cuando un ecosistema cruza un umbral crítico y queda atrapado en una nueva configuración —como un matorral dominado por especies invasoras— decimos que alcanzó un estado alternativo estable, aunque la perturbación original ya no esté presente."
+    }
+  ];
+
+  var respuestasElegidas = { p1:"", p2:"", p3:"", p4:"" };
+  var clavesPregunta = ["p1","p2","p3","p4"];
+
+  function renderPreguntas(contenedorId, lista){
+    var cont = document.getElementById(contenedorId);
+    lista.forEach(function(p, qi){
+      var clave = clavesPregunta[qi];
+      var bloque = document.createElement("div");
+      bloque.className = "pregunta-bloque";
+      var opcionesHtml = "";
+      p.opciones.forEach(function(o){
+        opcionesHtml += '<button class="opcion" data-correcta="'+o.correcta+'">'+o.texto+'</button>';
+      });
+      bloque.innerHTML =
+        '<p class="pregunta-enunciado">'+p.enunciado+'</p>' +
+        '<div class="opciones">'+opcionesHtml+'</div>' +
+        '<div class="feedback">'+p.retro+'</div>';
+      cont.appendChild(bloque);
+
+      var botones = bloque.querySelectorAll(".opcion");
+      var feedback = bloque.querySelector(".feedback");
+      botones.forEach(function(btn){
+        btn.addEventListener("click", function(){
+          var esCorrecta = btn.getAttribute("data-correcta") === "true";
+          botones.forEach(function(b){ b.disabled = true; });
+          respuestasElegidas[clave] = btn.textContent + (esCorrecta ? " (correcta)" : " (incorrecta)");
+          if(esCorrecta){
+            btn.classList.add("correcta");
+            sonidoCorrecto();
+            otorgarFelipesos(35, btn);
+          } else {
+            btn.classList.add("incorrecta");
+            sonidoIncorrecto();
+            botones.forEach(function(b){
+              if(b.getAttribute("data-correcta") === "true"){ b.classList.add("correcta"); }
+            });
+          }
+          feedback.classList.add("visible");
+        });
+      });
+    });
+  }
+  renderPreguntas("bloqueAnalisis", preguntasAnalisis);
+
+  /* ============ Brotes ascendentes y hojas cayendo (portada) ============ */
+  var capaBrotes = document.getElementById("capaBrotes");
+  var capaHojas = document.getElementById("capaHojas");
+  var reducirMovimiento = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(!reducirMovimiento){
+    for(var j=0;j<10;j++){
+      var b = document.createElement("div");
+      b.className = "brote";
+      b.style.left = (6 + j*9.5) + "%";
+      b.style.animationDuration = (4.5 + Math.random()*3) + "s";
+      b.style.animationDelay = (Math.random()*5) + "s";
+      capaBrotes.appendChild(b);
+    }
+    for(var h=0;h<8;h++){
+      var hoja = document.createElement("div");
+      hoja.className = "hoja";
+      hoja.style.left = (4 + h*12) + "%";
+      hoja.style.animationDuration = (6 + Math.random()*4) + "s";
+      hoja.style.animationDelay = (Math.random()*7) + "s";
+      capaHojas.appendChild(hoja);
+    }
+  }
+
+  /* ============ Cierre: marcador y rango ============ */
+  var marcadorTotal = document.getElementById("marcadorTotal");
+  var marcadorRango = document.getElementById("marcadorRango");
+  function actualizarCierre(){
+    marcadorTotal.textContent = felipesos;
+    var rango;
+    if(felipesos < 80){ rango = "Observador/a novato/a"; }
+    else if(felipesos < 150){ rango = "Guardaparque en formación"; }
+    else if(felipesos < 200){ rango = "Investigador/a de resiliencia"; }
+    else { rango = "Ecólogo/a de terreno honorario/a"; }
+    marcadorRango.textContent = rango;
+  }
+  actualizarCierre();
+
+  /* ============ Recolección de respuestas (bitácora + preguntas) ============ */
+  function valoresMarcados(nombre){
+    var marcados = document.querySelectorAll('input[name="'+nombre+'"]:checked');
+    var textos = [];
+    marcados.forEach(function(el){ textos.push(el.value); });
+    return textos.join(", ");
+  }
+
+  function recopilarRespuestas(){
+    return {
+      grupo: document.getElementById("campoGrupo").value.trim(),
+      zona: document.getElementById("campoZona").value,
+      fecha: document.getElementById("campoFecha").value,
+      plantas: document.getElementById("campoPlantas").value,
+      aves: document.getElementById("campoAves").value,
+      fauna: valoresMarcados("fauna"),
+      perturbaciones: valoresMarcados("perturbacion"),
+      resiliencia: document.getElementById("campoResiliencia").value,
+      justificacion: document.getElementById("campoJustificacion").value.trim(),
+      observaciones: document.getElementById("campoObservaciones").value.trim(),
+      p1: respuestasElegidas.p1,
+      p2: respuestasElegidas.p2,
+      p3: respuestasElegidas.p3,
+      p4: respuestasElegidas.p4,
+      abierta1: document.getElementById("abierta1").value.trim(),
+      abierta2: document.getElementById("abierta2").value.trim(),
+      felipesos: felipesos
+    };
+  }
+
+  /* ============ Exportador PDF (impresión del navegador) ============ */
+  function construirImprimible(){
+    var cont = document.getElementById("imprimible");
+    var letras = ["A","B","C","D"];
+    var datos = recopilarRespuestas();
+    var html = "";
+
+    html += '<div class="imp-pagina imp-portada">' +
+      '<span class="imp-eyebrow">Biología de los Ecosistemas · 3° Medio · Unidad 3</span>' +
+      '<h1>Sesión 4<br>Resiliencia frente a eventos extremos</h1>' +
+      '<p>Guía compilada: contenidos, bitácora de campo, preguntas y hoja de respuestas.</p>' +
+      '<p>Colegio San Agustín Villa Alemana</p>' +
+      '</div>';
+
+    html += '<div class="imp-pagina">' +
+      '<span class="imp-eyebrow">OA 3 · Habilidad OA d</span>' +
+      '<h2>Compilado de contenidos</h2>' +
+      '<h3>Resistencia, resiliencia y umbral ecológico</h3>' +
+      '<ul class="imp-lista">' +
+        '<li><strong>Resistencia:</strong> capacidad de no alterarse frente a una perturbación.</li>' +
+        '<li><strong>Resiliencia:</strong> capacidad de recuperarse y volver a un estado similar al original tras una perturbación.</li>' +
+        '<li><strong>Umbral ecológico:</strong> punto crítico más allá del cual el sistema puede estabilizarse en un estado alternativo distinto al original (ej. arrecife → pastizal de algas; bosque nativo → matorral degradado).</li>' +
+      '</ul>' +
+      '<h3>Factores que afectan la resiliencia</h3>' +
+      '<ul class="imp-lista">' +
+        '<li>Diversidad biológica (redundancia funcional).</li>' +
+        '<li>Conectividad del paisaje.</li>' +
+        '<li>Frecuencia e intensidad de la perturbación.</li>' +
+        '<li>Presencia de especies clave (keystone).</li>' +
+        '<li>Intervención humana (puede acelerar o frenar la recuperación).</li>' +
+      '</ul>' +
+      '<h3>Caso local: Reserva Nacional Lago Peñuelas</h3>' +
+      '<ul class="imp-lista">' +
+        '<li>~9.260 hectáreas, parte de la Reserva de la Biósfera La Campana–Peñuelas desde 1985. Más de 120 especies de aves y ~150 especies de plantas nativas registradas.</li>' +
+        '<li>Megaincendio del 2 de febrero de 2024: afectó cerca de 3.000 hectáreas, incluidas más de 170 en proceso de reconversión a bosque nativo. Se intensificó por la megasequía, ola de calor, viento, zonas de interfaz urbano-forestal y plantaciones exóticas de rápido crecimiento.</li>' +
+        '<li>CONAF replanta ~750 árboles nativos/ha (quillay, litre, molle, huingán) en casillas sistemáticas sobre suelo subsolado, para acelerar la regeneración.</li>' +
+        '<li>El lago artificial pasó de 1.700 ha históricas a un 0,01% de su capacidad en la megasequía, recuperando 170 ha (10%) tras lluvias más normales: la misma lógica de resiliencia, aplicada al agua.</li>' +
+      '</ul>' +
+      '<h3>Logística y seguridad (verificar antes de la salida)</h3>' +
+      '<ul class="imp-lista">' +
+        '<li>Confirmar el estado de acceso actualizado en conaf.cl o Pases Parques.</li>' +
+        '<li>Chile mantenía una alerta activa por influenza aviar: no tocar aves enfermas o muertas; reportar a guardaparques.</li>' +
+        '<li>Desinfectar calzado tras contacto con material orgánico y lavar las manos al volver.</li>' +
+      '</ul>' +
+      '</div>';
+
+    html += '<div class="imp-pagina">' +
+      '<h2>Mi bitácora de campo</h2>' +
+      '<span class="imp-campo-etiqueta">Grupo / integrantes</span><div class="imp-campo-valor">' + (datos.grupo || "—") + '</div>' +
+      '<span class="imp-campo-etiqueta">Zona observada</span><div class="imp-campo-valor">' + (datos.zona || "—") + '</div>' +
+      '<span class="imp-campo-etiqueta">Fecha</span><div class="imp-campo-valor">' + (datos.fecha || "—") + '</div>' +
+      '<table class="imp-tabla"><tr><th>N° especies vegetales</th><th>N° especies de aves</th></tr>' +
+      '<tr><td>' + (datos.plantas || "—") + '</td><td>' + (datos.aves || "—") + '</td></tr></table>' +
+      '<span class="imp-campo-etiqueta">Fauna observada</span><div class="imp-campo-valor">' + (datos.fauna || "—") + '</div>' +
+      '<span class="imp-campo-etiqueta">Señales de perturbación</span><div class="imp-campo-valor">' + (datos.perturbaciones || "—") + '</div>' +
+      '<span class="imp-campo-etiqueta">Evaluación de resiliencia</span><div class="imp-campo-valor">' + (datos.resiliencia || "—") + '</div>' +
+      '<span class="imp-campo-etiqueta">Justificación</span><div class="imp-campo-valor">' + (datos.justificacion || "—") + '</div>' +
+      '<span class="imp-campo-etiqueta">Observaciones libres</span><div class="imp-campo-valor">' + (datos.observaciones || "—") + '</div>' +
+      '</div>';
+
+    html += '<div class="imp-pagina">' +
+      '<h2>Preguntas y mis respuestas</h2>' +
+      '<h3>Preguntas de análisis</h3>';
+    preguntasAnalisis.forEach(function(p, qi){
+      var clave = clavesPregunta[qi];
+      html += '<div class="imp-pregunta"><p class="imp-enunciado">' + p.enunciado + '</p><ul class="imp-opciones">' +
+        p.opciones.map(function(o, i){ return '<li><span class="letra">'+letras[i]+'</span>'+o.texto+'</li>'; }).join('') +
+        '</ul><div class="imp-campo-valor">Mi respuesta: ' + (datos[clave] || "sin responder") + '</div></div>';
+    });
+    html += '<h3>Preguntas abiertas</h3>' +
+      '<span class="imp-campo-etiqueta">1. Relación entre un componente vivo y uno no vivo</span><div class="imp-campo-valor">' + (datos.abierta1 || "—") + '</div>' +
+      '<span class="imp-campo-etiqueta">2. Propuesta de restauración</span><div class="imp-campo-valor">' + (datos.abierta2 || "—") + '</div>' +
+      '</div>';
+
+    html += '<div class="imp-pagina">' +
+      '<span class="imp-nota-docente">Hoja de respuestas — solo docente</span>' +
+      '<h2>Respuestas y retroalimentación</h2>' +
+      '<h3>Calienta motores</h3>';
+    preguntasVF.forEach(function(p, i){
+      html += '<div class="imp-respuesta-caja"><span class="imp-clave">' + (i+1) + '. ' + (p.respuesta ? "VERDADERO" : "FALSO") + '</span> — <span class="imp-retro">' + p.retro + '</span></div>';
+    });
+    html += '<h3>Preguntas de análisis</h3>';
+    preguntasAnalisis.forEach(function(p){
+      var idx = -1;
+      p.opciones.forEach(function(o, i){ if(o.correcta) idx = i; });
+      html += '<div class="imp-respuesta-caja"><span class="imp-clave">' + p.enunciado.match(/^(\d+)\./)[1] + '. Alternativa ' + letras[idx] + '</span> — <span class="imp-retro">' + p.retro + '</span></div>';
+    });
+    html += '</div>';
+
+    cont.innerHTML = html;
+  }
+
+  var btnPdf = document.getElementById("btnPdf");
+  var btnPdf2 = document.getElementById("btnPdf2");
+  function exportarPdf(){ sonidoAccion(); construirImprimible(); window.print(); }
+  btnPdf.addEventListener("click", exportarPdf);
+  btnPdf2.addEventListener("click", exportarPdf);
+
+  /* ============ Tarjetas desplegables (marco conceptual) ============ */
+  var panelesAbiertos = [];
+  document.querySelectorAll(".despliegue-cabecera").forEach(function(btn){
+    var tarjeta = btn.closest(".tarjeta-desplegable");
+    var cuerpo = tarjeta.querySelector(".despliegue-cuerpo");
+    var contenido = cuerpo.querySelector(".despliegue-contenido");
+    btn.addEventListener("click", function(){
+      var abierta = tarjeta.classList.toggle("abierta");
+      btn.setAttribute("aria-expanded", abierta ? "true" : "false");
+      sonidoDesplegar(abierta);
+      if(abierta){
+        cuerpo.style.maxHeight = contenido.scrollHeight + "px";
+        panelesAbiertos.push(cuerpo);
+      } else {
+        cuerpo.style.maxHeight = "0px";
+        panelesAbiertos = panelesAbiertos.filter(function(c){ return c !== cuerpo; });
+      }
+    });
+  });
+  window.addEventListener("resize", function(){
+    panelesAbiertos.forEach(function(cuerpo){
+      cuerpo.style.maxHeight = cuerpo.querySelector(".despliegue-contenido").scrollHeight + "px";
+    });
+  });
+
+  /* ============ Navegación del deck ============ */
+  var slides = document.querySelectorAll(".slide");
+  var total = slides.length;
+  var actual = 0;
+
+  var dotsCont = document.getElementById("dots");
+  for(var k=0;k<total;k++){
+    var d = document.createElement("button");
+    d.className = "dot" + (k===0 ? " activo" : "");
+    d.setAttribute("aria-label", "Ir a diapositiva " + (k+1));
+    d.addEventListener("click", (function(idx){ return function(){ irA(idx); }; })(k));
+    dotsCont.appendChild(d);
+  }
+  var dots = dotsCont.querySelectorAll(".dot");
+
+  var btnPrev = document.getElementById("btnPrev");
+  var btnNext = document.getElementById("btnNext");
+  var contador = document.getElementById("contador");
+  var barraProgreso = document.getElementById("barraProgreso");
+  var ranaMascota = document.getElementById("ranaMascota");
+  ranaMascota.addEventListener("animationend", function(e){
+    if(e.animationName === "ranaSalto"){ ranaMascota.classList.remove("rana-salta"); }
+  });
+
+  function pad(n){ return n < 10 ? "0"+n : ""+n; }
+
+  function irA(idx){
+    if(idx < 0 || idx >= total) return;
+    slides[actual].classList.remove("activa");
+    dots[actual].classList.remove("activo");
+    actual = idx;
+    slides[actual].classList.add("activa");
+    dots[actual].classList.add("activo");
+    contador.textContent = pad(actual+1) + " / " + pad(total);
+    barraProgreso.style.width = ((actual+1)/total*100) + "%";
+    btnPrev.disabled = actual === 0;
+    btnNext.disabled = actual === total-1;
+    slides[actual].scrollTop = 0;
+    sonidoNavegar();
+    ranaMascota.classList.remove("rana-salta");
+    void ranaMascota.offsetWidth;
+    ranaMascota.classList.add("rana-salta");
+  }
+
+  btnPrev.addEventListener("click", function(){ irA(actual-1); });
+  btnNext.addEventListener("click", function(){ irA(actual+1); });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "ArrowRight") irA(actual+1);
+    if(e.key === "ArrowLeft") irA(actual-1);
+  });
+
+  irA(0);
+})();
+</script>
+</body>
+</html>

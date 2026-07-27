@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciclos Biogeoquímicos</title>
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --secondary: #0277bd;
+            --bg-color: #f4f6f8;
+            --text-color: #333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .presentation {
+            width: 95vw;
+            max-width: 1100px;
+            height: 85vh;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slide {
+            flex: 1;
+            padding: 30px;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in-out;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 { color: var(--primary); margin-bottom: 15px; font-size: 2.2em; }
+        h2 { color: var(--secondary); margin-bottom: 10px; }
+        p { font-size: 1.1em; line-height: 1.5; max-width: 800px; margin-bottom: 15px; }
+
+        .qr-container {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff;
+            border: 2px dashed var(--primary);
+            border-radius: 10px;
+        }
+
+        /* ----- ESTILOS DEL SIMULADOR ----- */
+        .simulator-container {
+            display: flex;
+            flex-wrap: wrap;
+            width: 100%;
+            height: 100%;
+            max-height: 500px;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .controls-panel {
+            flex: 1;
+            min-width: 250px;
+            background: #f0f0f0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            text-align: left;
+            border-right: 2px solid #ddd;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label { font-weight: bold; font-size: 0.9em; }
+        
+        .btn-action {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-action:hover { background: #01579b; }
+
+        .visual-panel {
+            flex: 2;
+            min-width: 300px;
+            position: relative;
+            background: #87CEEB; /* Cielo por defecto */
+            transition: background 0.5s;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        #flash-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .ground {
+            height: 30%;
+            background: #8D6E63;
+            border-top: 5px solid #4CAF50;
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
+
+        .plant {
+            font-size: 40px;
+            position: absolute;
+            bottom: 80%; /* Para que repose sobre el suelo */
+            transition: transform 0.3s, font-size 0.3s;
+            transform-origin: bottom center;
+        }
+
+        .status-console {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255,255,255,0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            text-align: left;
+            z-index: 5;
+            font-family: monospace;
+        }
+
+        /* Botones generales de navegación */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 40px;
+            background: #fff;
+            border-top: 1px solid #eee;
+        }
+
+        button.nav-btn {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--primary);
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button.nav-btn:hover { background-color: #1b5e20; }
+        button.nav-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        @media (max-width: 768px) {
+            .qr-container { display: none; }
+            .simulator-container { flex-direction: column; }
+            .controls-panel { border-right: none; border-bottom: 2px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="presentation">
+        
+        <div class="slide active" id="slide-0">
+            <h1>Los Ciclos Biogeoquímicos</h1>
+            <p>El viaje de los elementos esenciales para la vida a través de la biosfera, litosfera, atmósfera e hidrosfera.</p>
+            <div class="qr-container">
+                <p>📲 Escanea para seguir la clase en tu celular:</p>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://fjimenez321-stack.github.io/dondefelipe/" alt="QR Code">
+            </div>
+        </div>
+
+        <div class="slide" id="slide-1">
+            <h2>Laboratorio de Ecosistema 🔬</h2>
+            <p>Altera las variables ambientales para observar cómo interactúan el Carbono y el Nitrógeno en el crecimiento vegetal.</p>
+            
+            <div class="simulator-container">
+                <div class="controls-panel">
+                    <div class="control-group">
+                        <label for="co2-slider">Nivel de CO2 (Atmósfera): <span id="co2-val">Normal</span></label>
+                        <input type="range" id="co2-slider" min="0" max="100" value="20" oninput="updateSimulation()">
+                    </div>
+                    <div class="control-group">
+                        <label>Ciclo del Nitrógeno:</label>
+                        <button class="btn-action" onclick="triggerLightning()">⚡ Generar Rayo (Fija N2)</button>
+                        <button class="btn-action" onclick="addBacteria()" style="background:#00796b;">🦠 Añadir Bacterias Nitrificantes</button>
+                    </div>
+                    <div class="control-group" style="margin-top: 10px;">
+                        <button class="btn-action" onclick="resetSim()" style="background:#d32f2f;">🔄 Reiniciar Ecosistema</button>
+                    </div>
+                </div>
+
+                <div class="visual-panel" id="sky-panel">
+                    <div id="flash-overlay"></div>
+                    <div class="status-console">
+                        <b>Monitor Biogeoquímico:</b><br>
+                        Nitrato en suelo: <span id="nitrate-val">Bajo</span><br>
+                        Estado de la planta: <span id="plant-status">Esperando nutrientes...</span>
+                    </div>
+                    <div class="plant" id="the-plant">🌱</div>
+                    <div class="ground"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide" id="slide-2">
+            <h2>¡Desafío Final! 🎮</h2>
+            <p>Pon a prueba tu conocimiento para subir de nivel.</p>
+            
+            <div style="background: #f1f8e9; padding: 20px; border-radius: 10px; width: 100%; max-width: 600px; text-align: left;">
+                <div style="margin-bottom: 15px; font-weight: bold;">¿Qué proceso permite a las plantas capturar CO2 de la atmósfera?</div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="btn-action" style="background: white; color: black; border: 2px solid var(--primary);" onclick="checkAnswer(false, this)">Condensación</button>
+                    <button class="btn-action" style="background: white; color: black; border: 2px solid var(--primary);" onclick="checkAnswer(true, this)">Fotosíntesis</button>
+                    <button class="btn-action" style="background: white; color: black; border: 2px solid var(--primary);" onclick="checkAnswer(false, this)">Precipitación</button>
+                </div>
+                <div id="game-feedback" style="margin-top: 20px; font-weight: bold; text-align: center; font-size: 1.2em;"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="prevBtn" class="nav-btn" onclick="changeSlide(-1)" disabled>◀ Anterior</button>
+            <span id="slide-counter" style="color: #666; font-weight: bold; line-height: 2.5;">1 / 3</span>
+            <button id="nextBtn" class="nav-btn" onclick="changeSlide(1)">Siguiente ▶</button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- NAVEGACIÓN DE DIAPOSITIVAS ---
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const counter = document.getElementById('slide-counter');
+
+        function changeSlide(direction) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide += direction;
+            if (currentSlide < 0) currentSlide = 0;
+            if (currentSlide >= totalSlides) currentSlide = totalSlides - 1;
+            slides[currentSlide].classList.add('active');
+            
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === totalSlides - 1;
+            counter.innerText = `${currentSlide + 1} / ${totalSlides}`;
+        }
+
+        // --- LÓGICA DEL SIMULADOR ---
+        let soilNitrates = 0;
+        let plantSize = 1;
+        let bacteriaActive = false;
+
+        function updateSimulation() {
+            const co2 = document.getElementById('co2-slider').value;
+            const sky = document.getElementById('sky-panel');
+            const co2Text = document.getElementById('co2-val');
+            const plant = document.getElementById('the-plant');
+            const plantStatus = document.getElementById('plant-status');
+
+            // Efecto del CO2 en la atmósfera (Efecto Invernadero / Smog)
+            if (co2 < 30) {
+                sky.style.background = '#87CEEB'; // Celeste limpio
+                co2Text.innerText = "Óptimo";
+            } else if (co2 < 70) {
+                sky.style.background = '#B0BEC5'; // Grisáceo
+                co2Text.innerText = "Elevado";
+            } else {
+                sky.style.background = '#FFCC80'; // Anaranjado smog
+                co2Text.innerText = "Peligroso (Efecto Invernadero)";
+            }
+
+            // Crecimiento de la planta (depende del nitrato y CO2 moderado)
+            if (co2 > 10 && co2 < 80 && soilNitrates > 20) {
+                plantSize = 1 + (soilNitrates / 100);
+                if (plantSize > 2.5) plantSize = 2.5;
+                plant.innerText = "🌳";
+                plantStatus.innerText = "Creciendo vigorosamente";
+            } else if (co2 >= 80) {
+                plant.innerText = "🥀";
+                plantSize = 1;
+                plantStatus.innerText = "Marchitándose por calor/smog";
+            } else if (soilNitrates <= 20) {
+                plant.innerText = "🌱";
+                plantSize = 1;
+                plantStatus.innerText = "Falta nitrógeno asimilable";
+            }
+
+            plant.style.transform = `scale(${plantSize})`;
+        }
+
+        function triggerLightning() {
+            // Efecto visual del rayo
+            const overlay = document.getElementById('flash-overlay');
+            overlay.style.opacity = 1;
+            setTimeout(() => { overlay.style.opacity = 0; }, 150);
+
+            // El rayo fija nitrógeno atmosférico a la tierra
+            soilNitrates += 15;
+            updateNitrateDisplay();
+            updateSimulation();
+        }
+
+        function addBacteria() {
+            if(!bacteriaActive) {
+                bacteriaActive = true;
+                // Las bacterias convierten materia constantemente en nitratos
+                setInterval(() => {
+                    if(soilNitrates < 100) {
+                        soilNitrates += 5;
+                        updateNitrateDisplay();
+                        updateSimulation();
+                    }
+                }, 2000);
+            }
+        }
+
+        function updateNitrateDisplay() {
+            const display = document.getElementById('nitrate-val');
+            if(soilNitrates < 20) display.innerText = "Bajo";
+            else if(soilNitrates < 60) display.innerText = "Medio (Suelo Fértil)";
+            else display.innerText = "Alto (Óptimo)";
+        }
+
+        function resetSim() {
+            soilNitrates = 0;
+            plantSize = 1;
+            document.getElementById('co2-slider').value = 20;
+            document.getElementById('the-plant').innerText = "🌱";
+            updateNitrateDisplay();
+            updateSimulation();
+            // Para un reinicio total de bacterias habría que limpiar el intervalo, 
+            // pero para esta demo recargar los valores visuales es suficiente.
+        }
+
+        // --- LÓGICA DEL MINIJUEGO ---
+        function checkAnswer(isCorrect, btnElement) {
+            const feedback = document.getElementById('game-feedback');
+            const allBtns = btnElement.parentElement.querySelectorAll('button');
+            
+            allBtns.forEach(btn => btn.disabled = true);
+
+            if (isCorrect) {
+                btnElement.style.backgroundColor = '#4caf50';
+                btnElement.style.color = 'white';
+                feedback.style.color = '#2e7d32';
+                feedback.innerText = '¡Excelente! Has ganado +100 XP. 🌟';
+            } else {
+                btnElement.style.backgroundColor = '#f44336';
+                btnElement.style.color = 'white';
+                feedback.style.color = '#c62828';
+                feedback.innerText = 'Casi... Es mediante la Fotosíntesis. ¡Sigue intentando!';
+            }
+        }
+    </script>
+</body>
+</html>

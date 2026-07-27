@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sesión 4 · Circuitos en Serie y en Paralelo</title>
+<style>
+  :root{
+    --navy:#1A3A5C;
+    --navy-dark:#102438;
+    --navy-tint:#E8EEF3;
+    --amber:#D4891A;
+    --amber-light:#F2B84D;
+    --amber-glow:#FFD98A;
+    --white:#FFFFFF;
+    --text:#1F2937;
+    --wire-off:#9AA9B8;
+    --danger:#B23A3A;
+    --ok:#3A7D44;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;height:100%;
+    font-family:Arial, Helvetica, sans-serif;
+    background:var(--navy-dark);
+    color:var(--text);
+    overflow:hidden;
+  }
+  .deck{
+    position:relative;
+    width:100vw;height:100vh;
+    display:flex;flex-direction:column;
+    background:var(--navy-dark);
+  }
+  /* ---------- TOP BAR ---------- */
+  .topbar{
+    flex:0 0 auto;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 26px;
+    background:var(--navy);
+    color:var(--white);
+    border-bottom:3px solid var(--amber);
+  }
+  .topbar .brand{display:flex;align-items:center;gap:12px;}
+  .topbar .brand .badge{
+    background:var(--amber);color:var(--navy-dark);
+    font-weight:700;font-size:12px;letter-spacing:.04em;
+    padding:4px 10px;border-radius:20px;
+    text-transform:uppercase;
+  }
+  .topbar .brand .title{
+    font-size:15px;font-weight:700;letter-spacing:.02em;
+  }
+  .topbar .brand .sub{
+    font-size:11.5px;opacity:.8;
+  }
+  .progress-wrap{
+    flex:1;max-width:340px;margin:0 22px;
+    height:6px;background:rgba(255,255,255,.18);
+    border-radius:4px;overflow:hidden;
+  }
+  .progress-bar{
+    height:100%;width:0%;
+    background:linear-gradient(90deg,var(--amber),var(--amber-light));
+    transition:width .35s ease;
+  }
+  .slide-counter{font-size:12.5px;font-variant-numeric:tabular-nums;opacity:.9;white-space:nowrap;}
+
+  /* ---------- SLIDES CONTAINER ---------- */
+  .slides{
+    position:relative;flex:1 1 auto;overflow:hidden;
+  }
+  .slide{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;
+    padding:34px 56px 20px;
+    opacity:0;visibility:hidden;pointer-events:none;
+    transform:translateX(24px);
+    transition:opacity .38s ease, transform .38s ease;
+    background:linear-gradient(180deg, var(--navy-tint) 0%, #FFFFFF 55%);
+    overflow-y:auto;
+  }
+  .slide.active{
+    opacity:1;visibility:visible;pointer-events:auto;
+    transform:translateX(0);
+  }
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    color:var(--amber);font-weight:700;font-size:13px;
+    letter-spacing:.09em;text-transform:uppercase;margin-bottom:6px;
+  }
+  .eyebrow::before{
+    content:"";width:22px;height:3px;background:var(--amber);border-radius:2px;display:inline-block;
+  }
+  h1.slide-title{
+    color:var(--navy);font-size:32px;margin:0 0 4px;line-height:1.15;
+  }
+  h2.slide-sub{
+    color:var(--navy);font-size:19px;margin:0 0 18px;font-weight:400;opacity:.85;
+  }
+  .content-grid{
+    display:grid;grid-template-columns:1.05fr .95fr;gap:30px;flex:1;min-height:0;
+  }
+  .content-grid.single{grid-template-columns:1fr;}
+  .card{
+    background:var(--white);border:1px solid #DCE4EC;border-radius:var(--radius);
+    padding:18px 20px;box-shadow:0 3px 10px rgba(16,36,56,.06);
+  }
+  .card h3{margin:0 0 10px;color:var(--navy);font-size:16px;border-bottom:2px solid var(--navy-tint);padding-bottom:6px;}
+  .card ul{margin:0;padding-left:20px;}
+  .card li{margin-bottom:7px;font-size:14.5px;line-height:1.45;}
+  .pill{
+    display:inline-block;background:var(--navy-tint);color:var(--navy);
+    font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:20px;margin:2px 4px 2px 0;
+  }
+  .pill.amber{background:#FBEBD6;color:var(--amber);}
+  .callout{
+    background:#FFF7EA;border-left:4px solid var(--amber);
+    padding:12px 16px;border-radius:8px;font-size:14.5px;line-height:1.5;
+  }
+  .callout strong{color:var(--navy);}
+  footer.oa-strip{
+    flex:0 0 auto;font-size:11.5px;color:var(--navy);opacity:.75;
+    padding-top:8px;margin-top:auto;border-top:1px dashed #C7D2DC;
+  }
+
+  /* ---------- NAV CONTROLS ---------- */
+  .controls{
+    flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:18px;
+    padding:12px 10px;background:var(--navy);border-top:1px solid rgba(255,255,255,.08);
+  }
+  .nav-btn{
+    background:var(--amber);color:var(--navy-dark);border:none;
+    width:40px;height:40px;border-radius:50%;font-size:20px;font-weight:700;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .nav-btn:hover{background:var(--amber-light);transform:scale(1.07);}
+  .nav-btn:disabled{opacity:.35;cursor:default;transform:none;}
+  .dots{display:flex;gap:7px;}
+  .dot{
+    width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.35);
+    cursor:pointer;border:none;padding:0;transition:background .2s ease, transform .2s ease;
+  }
+  .dot.active{background:var(--amber);transform:scale(1.25);}
+
+  /* ---------- TITLE SLIDE ---------- */
+  .title-slide{
+    align-items:center;justify-content:center;text-align:center;
+    background:radial-gradient(ellipse at top, #24486e 0%, var(--navy-dark) 70%);
+  }
+  .title-slide .unit-tag{
+    color:var(--amber-light);font-size:14px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;margin-bottom:14px;
+  }
+  .title-slide h1{
+    color:var(--white);font-size:44px;margin:0 0 14px;line-height:1.2;max-width:900px;
+  }
+  .title-slide h1 span{color:var(--amber-light);}
+  .title-slide p.desc{color:#C9D6E4;font-size:16.5px;max-width:640px;margin:0 auto 22px;line-height:1.5;}
+  .oa-card{
+    display:inline-flex;gap:14px;align-items:flex-start;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);
+    border-radius:var(--radius);padding:16px 22px;max-width:720px;text-align:left;
+  }
+  .oa-card .tag{
+    background:var(--amber);color:var(--navy-dark);font-weight:800;font-size:13px;
+    padding:6px 10px;border-radius:8px;white-space:nowrap;
+  }
+  .oa-card p{color:#DCE6F0;font-size:14px;line-height:1.5;margin:0;}
+  .bulb-deco{position:absolute;opacity:.12;pointer-events:none;}
+
+  /* ---------- CIRCUIT SVG ---------- */
+  .circuit-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;}
+  .circuit-wrap svg{width:100%;max-width:520px;height:auto;}
+  .wire{fill:none;stroke:var(--wire-off);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;}
+  .flow{fill:none;stroke:var(--amber);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;
+    stroke-dasharray:10 9;opacity:0;transition:opacity .25s ease;}
+  .flow.on{opacity:1;animation:dash 0.7s linear infinite;}
+  @keyframes dash{ to { stroke-dashoffset:-38; } }
+  .bulb-glass{fill:#F1F4F7;stroke:var(--navy);stroke-width:3;transition:fill .25s ease, filter .25s ease;}
+  .bulb-glass.lit{fill:var(--amber-light);filter:drop-shadow(0 0 7px var(--amber-glow)) drop-shadow(0 0 16px var(--amber-glow));}
+  .filament{stroke:#9AA9B8;stroke-width:2;fill:none;transition:stroke .25s ease;}
+  .filament.lit{stroke:#8A4B00;}
+  .bulb-x{stroke:var(--danger);stroke-width:3;stroke-linecap:round;opacity:0;transition:opacity .2s ease;}
+  .bulb-x.show{opacity:1;}
+  .battery-box{fill:var(--navy);stroke:var(--navy-dark);stroke-width:2;}
+  .battery-label{fill:var(--white);font-size:12px;font-weight:700;font-family:Arial,sans-serif;}
+  .term-label{fill:var(--navy);font-size:13px;font-weight:700;}
+  .diagram-label{fill:var(--navy);font-size:11.5px;font-family:Arial,sans-serif;}
+  .switch-lever{stroke:var(--navy);stroke-width:5;stroke-linecap:round;transform-box:fill-box;transition:transform .25s ease, stroke .25s ease;cursor:pointer;}
+  .switch-lever.closed{stroke:var(--ok);}
+  .switch-lever.open{stroke:var(--danger);}
+  .contact{fill:var(--navy);}
+  .clickable{cursor:pointer;}
+  .clickable:hover .bulb-glass{stroke:var(--amber);}
+  .status-line{
+    font-size:13.5px;background:var(--navy-tint);border-radius:8px;padding:8px 14px;
+    display:flex;gap:18px;flex-wrap:wrap;justify-content:center;color:var(--navy);font-weight:600;
+  }
+  .status-line span.dot-ind{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;}
+  .reset-btn{
+    background:var(--navy);color:var(--white);border:none;padding:7px 16px;border-radius:8px;
+    font-size:13px;cursor:pointer;font-weight:600;
+  }
+  .reset-btn:hover{background:#264d73;}
+  .hint{font-size:12px;color:#5b6b7a;text-align:center;}
+
+  /* ---------- CALCULATORS ---------- */
+  .calc-box{background:var(--white);border:1px solid #DCE4EC;border-radius:var(--radius);padding:18px 22px;}
+  .calc-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;}
+  .field-box{display:flex;flex-direction:column;gap:4px;min-width:110px;}
+  .field-box label{font-size:12px;font-weight:700;color:var(--navy);}
+  .field-box input{
+    padding:8px 10px;border:2px solid #CBD8E3;border-radius:8px;font-size:15px;font-family:Arial,sans-serif;
+  }
+  .field-box input:disabled{background:#F1F4F7;color:#94A3B8;}
+  .radio-row{display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap;}
+  .radio-row label{font-size:13.5px;display:flex;align-items:center;gap:5px;cursor:pointer;}
+  .calc-btn{
+    background:var(--amber);border:none;color:var(--navy-dark);font-weight:700;
+    padding:9px 20px;border-radius:8px;cursor:pointer;font-size:14px;
+  }
+  .calc-btn:hover{background:var(--amber-light);}
+  .calc-btn.secondary{background:var(--navy-tint);color:var(--navy);}
+  .result-box{
+    margin-top:12px;padding:10px 14px;border-radius:8px;background:#F1F8F1;border-left:4px solid var(--ok);
+    font-size:14px;min-height:18px;
+  }
+  .result-box.error{background:#FBEEEE;border-left-color:var(--danger);color:var(--danger);}
+
+  table.data-table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  table.data-table th, table.data-table td{border:1px solid #DCE4EC;padding:6px 10px;text-align:left;}
+  table.data-table th{background:var(--navy);color:var(--white);}
+  table.data-table tr:nth-child(even){background:#F5F8FB;}
+
+  .compare-table td.win{background:#F1F8F1;font-weight:700;color:var(--ok);}
+
+  .steps-list{counter-reset:step;list-style:none;padding:0;margin:0;}
+  .steps-list li{
+    counter-increment:step;position:relative;padding:10px 10px 10px 44px;margin-bottom:8px;
+    background:var(--white);border:1px solid #DCE4EC;border-radius:10px;font-size:14px;line-height:1.4;
+  }
+  .steps-list li::before{
+    content:counter(step);position:absolute;left:10px;top:50%;transform:translateY(-50%);
+    width:24px;height:24px;background:var(--navy);color:var(--white);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;
+  }
+  .closing-q{
+    background:var(--white);border:1px dashed var(--navy);border-radius:10px;padding:12px 16px;margin-bottom:10px;font-size:14.5px;
+  }
+  .closing-q b{color:var(--amber);}
+  textarea.line{width:100%;border:none;border-bottom:1px solid #9AA9B8;background:transparent;font-family:Arial;font-size:13.5px;resize:none;height:20px;margin-top:4px;}
+
+  @media (max-width:880px){
+    .content-grid{grid-template-columns:1fr;}
+    h1.slide-title{font-size:24px;}
+    .title-slide h1{font-size:30px;}
+  }
+
+  .qr-box{
+    position:absolute;top:22px;right:34px;
+    background:#FFFFFF;border-radius:12px;padding:12px 14px 10px;
+    box-shadow:0 6px 18px rgba(0,0,0,.28);
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    width:148px;z-index:6;
+  }
+  .qr-box img{width:116px;height:116px;display:block;border-radius:4px;}
+  .qr-box .qr-caption{font-size:11.5px;color:var(--navy);text-align:center;font-weight:700;line-height:1.35;}
+  .qr-box .qr-caption b{color:var(--amber);}
+  .qr-box .qr-url{font-size:8.5px;color:#5b6b7a;text-align:center;word-break:break-all;line-height:1.3;}
+  @media (max-width: 820px){
+    .qr-box{ display:none; } /* El código QR solo se muestra en la versión de escritorio/proyección, no en celulares */
+  }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="badge">OA 10 · Física</div>
+      <div>
+        <div class="title">Unidad 3: Electricidad y Calor</div>
+        <div class="sub">Sesión 4 · Circuitos en Serie y en Paralelo</div>
+      </div>
+    </div>
+    <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="slide-counter"><span id="curNum">1</span> / <span id="totalNum">10</span></div>
+  </div>
+
+  <div class="slides" id="slides">
+
+    <!-- SLIDE 1 : PORTADA -->
+    <section class="slide title-slide">
+            <div class="qr-box">
+        <img src="data:image/png;base64,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" alt="Código QR hacia dondefelipe, sitio de apoyo del curso">
+        <div class="qr-caption">Escanea para más recursos<br>Dirígete a la sección <b>VIII Básico</b></div>
+        <div class="qr-url">fjimenez321-stack.github.io/dondefelipe</div>
+      </div>
+      <div class="unit-tag">8° Básico · Ciencias Naturales · Física</div>
+      <h1>Circuitos Eléctricos: <span>Serie</span> y <span>Paralelo</span></h1>
+      <p class="desc">¿Por qué al fundirse una ampolleta del árbol de Navidad se apagan todas, y al fundirse una ampolleta de tu casa las demás siguen encendidas? Hoy lo descubriremos construyendo y simulando ambos tipos de circuito.</p>
+      <div class="oa-card">
+        <div class="tag">OA 10</div>
+        <p>Analizar un circuito eléctrico domiciliario y comparar experimentalmente los circuitos eléctricos en serie y en paralelo, en relación con la energía eléctrica, diferencia de potencial, intensidad de corriente, potencia eléctrica, resistencia eléctrica y eficiencia energética.</p>
+      </div>
+    </section>
+
+    <!-- SLIDE 2 : INICIO - ACTIVACIÓN -->
+    <section class="slide">
+      <div class="eyebrow">Inicio · Activación de conocimientos previos</div>
+      <h1 class="slide-title">¿Qué observas a tu alrededor?</h1>
+      <h2 class="slide-sub">Conflicto cognitivo antes de definir los conceptos</h2>
+      <div class="content-grid">
+        <div class="card">
+          <h3>Observa y piensa</h3>
+          <ul>
+            <li>La instalación eléctrica de tu casa: enchufes, ampolletas e interruptores independientes.</li>
+            <li>Una guirnalda de luces antigua: si una ampolleta se quema, ¿qué pasa con el resto?</li>
+            <li>Un poste de alumbrado público con varias luminarias encendidas al mismo tiempo.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Bitácora inicial — responde</h3>
+          <p style="font-size:14px;">1. ¿Crees que todas las ampolletas de tu casa dependen del mismo cable, sin posibilidad de apagarse una sin apagar las demás?</p>
+          <textarea class="line"></textarea>
+          <p style="font-size:14px;">2. ¿Qué circuito te parece más práctico para una casa: uno donde todo se conecta "en fila" o uno donde cada aparato tiene su propio camino?</p>
+          <textarea class="line"></textarea>
+          <p style="font-size:14px;">3. Formula una predicción: al sacar una ampolleta del circuito, ¿se apagan todas o solo una?</p>
+          <textarea class="line"></textarea>
+        </div>
+      </div>
+      <footer class="oa-strip">Habilidades: OA c (formular predicciones) · OA a (observar y plantear preguntas de investigación)</footer>
+    </section>
+
+    <!-- SLIDE 3 : CONCEPTOS CLAVE -->
+    <section class="slide">
+      <div class="eyebrow">Desarrollo · Conceptos clave</div>
+      <h1 class="slide-title">Componentes de un circuito eléctrico</h1>
+      <h2 class="slide-sub">Todo circuito necesita estos cuatro elementos para funcionar</h2>
+      <div class="content-grid">
+        <div class="card">
+          <h3>Elementos básicos</h3>
+          <ul>
+            <li><b>Fuente de energía:</b> pila o batería que entrega la diferencia de potencial (voltaje).</li>
+            <li><b>Conductores:</b> cables que permiten el paso de la corriente eléctrica.</li>
+            <li><b>Consumidor o resistencia:</b> ampolleta, motor u otro dispositivo que transforma la energía eléctrica.</li>
+            <li><b>Interruptor:</b> abre o cierra el paso de la corriente.</li>
+          </ul>
+          <div class="callout" style="margin-top:12px;"><strong>Idea clave:</strong> para que circule corriente, el circuito debe estar <b>cerrado</b> (formar un camino completo, sin cortes).</div>
+        </div>
+        <div class="card">
+          <h3>Vocabulario de la sesión</h3>
+          <span class="pill">Corriente eléctrica (I)</span>
+          <span class="pill">Diferencia de potencial (V)</span>
+          <span class="pill">Resistencia eléctrica (R)</span>
+          <span class="pill amber">Potencia eléctrica (P)</span>
+          <span class="pill amber">Eficiencia energética</span>
+          <p style="font-size:13.5px;margin-top:12px;">En las próximas diapositivas usaremos <b>simulaciones interactivas</b>: haz clic sobre el interruptor y sobre las ampolletas para ver qué ocurre.</p>
+        </div>
+      </div>
+      <footer class="oa-strip">Habilidad: OA i (crear, seleccionar y ajustar modelos simples)</footer>
+    </section>
+
+    <!-- SLIDE 4 : CIRCUITO EN SERIE -->
+    <section class="slide">
+      <div class="eyebrow">Desarrollo · Simulación 1</div>
+      <h1 class="slide-title">Circuito en Serie</h1>
+      <h2 class="slide-sub">Un solo camino para la corriente: todos los elementos, uno tras otro</h2>
+      <div class="content-grid">
+        <div class="card">
+          <h3>Características</h3>
+          <ul>
+            <li>Existe un <b>único camino</b> para la corriente eléctrica.</li>
+            <li>La <b>misma corriente</b> circula por todos los elementos.</li>
+            <li>Si un elemento se interrumpe (ampolleta quemada o interruptor abierto), <b>todo el circuito se abre</b>.</li>
+            <li>El voltaje de la fuente se reparte entre los consumidores.</li>
+          </ul>
+          <div class="callout"><strong>Predicción:</strong> ¿qué pasará si "quemas" la Ampolleta 1 en la simulación?</div>
+        </div>
+        <div class="card circuit-wrap">
+          <svg viewBox="0 0 480 220" id="seriesSvg">
+            <path class="wire" d="M45,110 L45,40 L128,40"></path>
+            <path class="wire" d="M172,40 L278,40"></path>
+            <path class="wire" d="M322,40 L435,40 L435,180 L260,180"></path>
+            <path class="wire" d="M220,180 L45,180 L45,135"></path>
+            <path class="flow" id="seriesFlow" d="M45,110 L45,40 L128,40 M172,40 L278,40 M322,40 L435,40 L435,180 L45,180 L45,135"></path>
+            <rect class="battery-box" x="20" y="85" width="50" height="50" rx="8"></rect>
+            <text class="battery-label" x="45" y="114" text-anchor="middle">PILA</text>
+            <text class="term-label" x="10" y="90">+</text>
+            <text class="term-label" x="10" y="150">−</text>
+            <g class="clickable" id="bulb1Group" onclick="toggleBulb('series','b1')">
+              <circle class="bulb-glass" id="bulb1Glass" cx="150" cy="40" r="22"></circle>
+              <path class="filament" id="bulb1Fil" d="M138,40 L144,30 L150,50 L156,30 L162,40"></path>
+              <line class="bulb-x" id="bulb1X" x1="136" y1="24" x2="164" y2="56"></line>
+              <line class="bulb-x" id="bulb1X2" x1="164" y1="24" x2="136" y2="56"></line>
+              <text class="diagram-label" x="150" y="78" text-anchor="middle">Ampolleta 1</text>
+            </g>
+            <g class="clickable" id="bulb2Group" onclick="toggleBulb('series','b2')">
+              <circle class="bulb-glass" id="bulb2Glass" cx="300" cy="40" r="22"></circle>
+              <path class="filament" id="bulb2Fil" d="M288,40 L294,30 L300,50 L306,30 L312,40"></path>
+              <line class="bulb-x" id="bulb2X" x1="286" y1="24" x2="314" y2="56"></line>
+              <line class="bulb-x" id="bulb2X2" x1="314" y1="24" x2="286" y2="56"></line>
+              <text class="diagram-label" x="300" y="78" text-anchor="middle">Ampolleta 2</text>
+            </g>
+            <g id="seriesSwitchGroup" onclick="toggleSwitch('series')">
+              <circle class="contact" cx="220" cy="180" r="4"></circle>
+              <circle class="contact" cx="260" cy="180" r="4"></circle>
+              <line class="switch-lever open" id="seriesSwitchLever" x1="220" y1="180" x2="255" y2="158"></line>
+              <text class="diagram-label" x="240" y="205" text-anchor="middle">Interruptor</text>
+            </g>
+          </svg>
+          <div class="status-line" id="seriesStatus"></div>
+          <p class="hint">Haz clic en el interruptor o en cada ampolleta para simular</p>
+          <button class="reset-btn" onclick="resetCircuit('series')">Reiniciar simulación</button>
+        </div>
+      </div>
+      <footer class="oa-strip">Habilidades: OA d (planificar investigación experimental) · OA j (examinar resultados y plantear conclusiones)</footer>
+    </section>
+
+    <!-- SLIDE 5 : CIRCUITO EN PARALELO -->
+    <section class="slide">
+      <div class="eyebrow">Desarrollo · Simulación 2</div>
+      <h1 class="slide-title">Circuito en Paralelo</h1>
+      <h2 class="slide-sub">Varios caminos independientes para la corriente</h2>
+      <div class="content-grid">
+        <div class="card">
+          <h3>Características</h3>
+          <ul>
+            <li>Existen <b>varios caminos (ramas)</b> para la corriente.</li>
+            <li>Cada rama puede funcionar de forma <b>independiente</b> de las demás.</li>
+            <li>Si un consumidor falla, <b>los demás siguen funcionando</b>.</li>
+            <li>Todos los consumidores reciben el <b>mismo voltaje</b> de la fuente.</li>
+            <li>Es el circuito usado en las instalaciones eléctricas domiciliarias.</li>
+          </ul>
+          <div class="callout"><strong>Predicción:</strong> ¿qué pasará ahora si "quemas" la Ampolleta 1?</div>
+        </div>
+        <div class="card circuit-wrap">
+          <svg viewBox="0 0 480 240" id="parallelSvg">
+            <path class="wire" d="M45,95 L45,30 L70,30"></path>
+            <path class="wire" d="M115,30 L140,30 L140,130"></path>
+            <path class="wire" d="M140,30 L248,30"></path>
+            <path class="wire" d="M292,30 L400,30 L400,130"></path>
+            <path class="wire" d="M140,130 L248,130"></path>
+            <path class="wire" d="M292,130 L400,130"></path>
+            <path class="wire" d="M400,130 L400,210 L45,210 L45,145"></path>
+            <path class="flow" id="parFlowSupply" d="M45,95 L45,30 L140,30"></path>
+            <path class="flow" id="parFlowA" d="M140,30 L248,30 M292,30 L400,30"></path>
+            <path class="flow" id="parFlowB" d="M140,130 L248,130 M292,130 L400,130"></path>
+            <path class="flow" id="parFlowReturn" d="M400,130 L400,210 L45,210 L45,145 M140,30 L140,130"></path>
+            <rect class="battery-box" x="20" y="95" width="50" height="50" rx="8"></rect>
+            <text class="battery-label" x="45" y="124" text-anchor="middle">PILA</text>
+            <text class="term-label" x="10" y="100">+</text>
+            <text class="term-label" x="10" y="160">−</text>
+            <circle class="contact" cx="140" cy="30" r="4"></circle>
+            <circle class="contact" cx="140" cy="130" r="4"></circle>
+            <circle class="contact" cx="400" cy="30" r="4"></circle>
+            <circle class="contact" cx="400" cy="130" r="4"></circle>
+            <g class="clickable" id="parBulbAGroup" onclick="toggleBulb('parallel','a')">
+              <circle class="bulb-glass" id="parBulbAGlass" cx="270" cy="30" r="22"></circle>
+              <path class="filament" id="parBulbAFil" d="M258,30 L264,20 L270,40 L276,20 L282,30"></path>
+              <line class="bulb-x" id="parBulbAX" x1="256" y1="14" x2="284" y2="46"></line>
+              <line class="bulb-x" id="parBulbAX2" x1="284" y1="14" x2="256" y2="46"></line>
+              <text class="diagram-label" x="270" y="10" text-anchor="middle">Ampolleta 1</text>
+            </g>
+            <g class="clickable" id="parBulbBGroup" onclick="toggleBulb('parallel','b')">
+              <circle class="bulb-glass" id="parBulbBGlass" cx="270" cy="130" r="22"></circle>
+              <path class="filament" id="parBulbBFil" d="M258,130 L264,120 L270,140 L276,120 L282,130"></path>
+              <line class="bulb-x" id="parBulbBX" x1="256" y1="114" x2="284" y2="146"></line>
+              <line class="bulb-x" id="parBulbBX2" x1="284" y1="114" x2="256" y2="146"></line>
+              <text class="diagram-label" x="270" y="168" text-anchor="middle">Ampolleta 2</text>
+            </g>
+            <g id="parSwitchGroup" onclick="toggleSwitch('parallel')">
+              <circle class="contact" cx="70" cy="30" r="4"></circle>
+              <circle class="contact" cx="115" cy="30" r="4"></circle>
+              <line class="switch-lever open" id="parSwitchLever" x1="70" y1="30" x2="105" y2="8"></line>
+              <text class="diagram-label" x="92" y="55" text-anchor="middle">Interruptor general</text>
+            </g>
+          </svg>
+          <div class="status-line" id="parallelStatus"></div>
+          <p class="hint">Haz clic en el interruptor general o en cada ampolleta para simular</p>
+          <button class="reset-btn" onclick="resetCircuit('parallel')">Reiniciar simulación</button>
+        </div>
+      </div>
+      <footer class="oa-strip">Habilidades: OA d (planificar investigación experimental) · OA j (examinar resultados y plantear conclusiones)</footer>
+    </section>
+
+    <!-- SLIDE 6 : COMPARACIÓN -->
+    <section class="slide">
+      <div class="eyebrow">Desarrollo · Síntesis</div>
+      <h1 class="slide-title">Serie vs. Paralelo: ¿cuál conviene en una casa?</h1>
+      <h2 class="slide-sub">Compara lo observado en ambas simulaciones</h2>
+      <div class="content-grid single">
+        <div class="card">
+          <table class="data-table compare-table">
+            <thead><tr><th>Criterio</th><th>Circuito en Serie</th><th>Circuito en Paralelo</th></tr></thead>
+            <tbody>
+              <tr><td>Camino de la corriente</td><td>Único</td><td class="win">Varios (independientes)</td></tr>
+              <tr><td>Si falla un consumidor</td><td>Se apagan todos</td><td class="win">Solo falla ese consumidor</td></tr>
+              <tr><td>Voltaje en cada consumidor</td><td>Se reparte entre todos</td><td class="win">Igual al de la fuente</td></tr>
+              <tr><td>Uso doméstico habitual</td><td>Poco práctico</td><td class="win">Es el que usa tu casa</td></tr>
+              <tr><td>Ejemplo cotidiano</td><td>Guirnalda de luces antigua</td><td>Enchufes e iluminación del hogar</td></tr>
+            </tbody>
+          </table>
+          <div class="callout" style="margin-top:14px;"><strong>Para discutir en equipo:</strong> ¿por qué crees que las instalaciones eléctricas domiciliarias en Chile se diseñan en paralelo y no en serie? Argumenta considerando seguridad y eficiencia energética.</div>
+        </div>
+      </div>
+      <footer class="oa-strip">Habilidad: OA D (manifestar pensamiento crítico y argumentar en base a evidencias)</footer>
+    </section>
+
+    <!-- SLIDE 7 : LEY DE OHM -->
+    <section class="slide">
+      <div class="eyebrow">Desarrollo · Ley de Ohm</div>
+      <h1 class="slide-title">Aplicando la Ley de Ohm</h1>
+      <h2 class="slide-sub">V = I × R — relación entre voltaje, corriente y resistencia</h2>
+      <div class="content-grid">
+        <div class="card">
+          <h3>La fórmula</h3>
+          <p style="font-size:26px;font-weight:700;color:var(--navy);text-align:center;margin:10px 0;">V = I · R</p>
+          <ul>
+            <li><b>V:</b> diferencia de potencial, en volts (V).</li>
+            <li><b>I:</b> intensidad de corriente, en amperes (A).</li>
+            <li><b>R:</b> resistencia eléctrica, en ohms (Ω).</li>
+          </ul>
+          <div class="callout"><strong>Ejemplo del programa de estudio:</strong> un calefactor conectado a la red de 220 V presenta una corriente de 10 A. ¿Cuál es su resistencia eléctrica?</div>
+          <button class="calc-btn secondary" style="margin-top:10px;" onclick="loadOhmExample()">Cargar este ejemplo en la calculadora →</button>
+        </div>
+        <div class="calc-box">
+          <h3 style="color:var(--navy);margin-top:0;">Calculadora Ley de Ohm</h3>
+          <div class="radio-row" id="ohmRadioRow">
+            <label><input type="radio" name="ohmUnknown" value="V"> Calcular V</label>
+            <label><input type="radio" name="ohmUnknown" value="I" checked> Calcular I</label>
+            <label><input type="radio" name="ohmUnknown" value="R"> Calcular R</label>
+          </div>
+          <div class="calc-row">
+            <div class="field-box"><label>V (Volts)</label><input type="number" id="ohmV" placeholder="ej: 220"></div>
+            <div class="field-box"><label>I (Amperes)</label><input type="number" id="ohmI" placeholder="ej: 10" disabled></div>
+            <div class="field-box"><label>R (Ohms)</label><input type="number" id="ohmR" placeholder="ej: 22"></div>
+          </div>
+          <button class="calc-btn" onclick="calcOhm()">Calcular</button>
+          <button class="calc-btn secondary" onclick="resetOhm()">Limpiar</button>
+          <div class="result-box" id="ohmResult">Ingresa dos valores y presiona Calcular.</div>
+        </div>
+      </div>
+      <footer class="oa-strip">Habilidades: OA h (organizar y presentar datos) · OA i (crear y ajustar modelos simples) · Vínculo con Matemática OA 2 y OA 8 (8° básico)</footer>
+    </section>
+
+    <!-- SLIDE 8 : POTENCIA ELÉCTRICA -->
+    <section class="slide">
+      <div class="eyebrow">Desarrollo · Potencia y consumo</div>
+      <h1 class="slide-title">Potencia Eléctrica y Eficiencia Energética</h1>
+      <h2 class="slide-sub">P = V × I — cuánta energía se consume en un tiempo determinado</h2>
+      <div class="content-grid">
+        <div class="card">
+          <h3>Consumo típico en el hogar</h3>
+          <table class="data-table">
+            <thead><tr><th>Artefacto</th><th>Potencia aprox. (W)</th></tr></thead>
+            <tbody>
+              <tr><td>10 ampolletas eficientes (LED)</td><td>14</td></tr>
+              <tr><td>Refrigerador</td><td>250</td></tr>
+              <tr><td>Televisor</td><td>250</td></tr>
+              <tr><td>Computador</td><td>200</td></tr>
+              <tr><td>Microondas</td><td>800</td></tr>
+              <tr><td>Lavadora</td><td>2000</td></tr>
+            </tbody>
+          </table>
+          <p style="font-size:12.5px;color:#5b6b7a;margin-top:8px;">Valores referenciales. La eficiencia energética busca obtener el mismo servicio (luz, frío, lavado) consumiendo menos energía.</p>
+        </div>
+        <div class="calc-box">
+          <h3 style="color:var(--navy);margin-top:0;">Calculadora de energía consumida</h3>
+          <p style="font-size:13px;">Fórmula: Energía (kWh) = Potencia (W) × Tiempo (h) ÷ 1000</p>
+          <div class="calc-row">
+            <div class="field-box"><label>Potencia (W)</label><input type="number" id="powP" placeholder="ej: 250"></div>
+            <div class="field-box"><label>Tiempo de uso (h)</label><input type="number" id="powT" placeholder="ej: 4"></div>
+          </div>
+          <button class="calc-btn" onclick="calcPower()">Calcular energía</button>
+          <button class="calc-btn secondary" onclick="resetPower()">Limpiar</button>
+          <div class="result-box" id="powResult">Ingresa la potencia y el tiempo de uso diario.</div>
+        </div>
+      </div>
+      <footer class="oa-strip">Habilidades: OA h (organizar y presentar datos cuantitativos) · Actitud OA G (proteger el entorno y usar eficientemente los recursos)</footer>
+    </section>
+
+    <!-- SLIDE 9 : ACTIVIDAD EXPERIMENTAL -->
+    <section class="slide">
+      <div class="eyebrow">Desarrollo · Actividad práctica (E-E-E: Explorar–Explicar–Elaborar)</div>
+      <h1 class="slide-title">Construyamos los circuitos</h1>
+      <h2 class="slide-sub">Trabajo en equipos de 4 estudiantes</h2>
+      <div class="content-grid">
+        <div class="card">
+          <h3>Materiales por equipo</h3>
+          <ul>
+            <li>2 porta pilas con 2 pilas AA cada uno</li>
+            <li>4 ampolletas de 3 V con sus porta ampolletas</li>
+            <li>2 interruptores simples</li>
+            <li>Alambre de timbre y un alicate</li>
+          </ul>
+          <div class="callout"><strong>Seguridad:</strong> nunca conectar experimentos a la red eléctrica domiciliaria. Trabajar solo con pilas.</div>
+        </div>
+        <div class="card">
+          <h3>Procedimiento (ABP)</h3>
+          <ol class="steps-list">
+            <li>Diseñen el esquema de un circuito en serie y otro en paralelo, cada uno con una batería, dos ampolletas y un interruptor.</li>
+            <li>Formulen una predicción: ¿en cuál circuito brillarán más las ampolletas?</li>
+            <li>Construyan ambos circuitos siguiendo su esquema.</li>
+            <li>Activen los circuitos y registren el brillo observado.</li>
+            <li>Retiren una ampolleta en cada circuito y registren qué ocurre.</li>
+            <li>Comparen su predicción inicial con la evidencia experimental obtenida.</li>
+          </ol>
+        </div>
+      </div>
+      <footer class="oa-strip">Habilidades: OA d (planificar investigación experimental) · OA g (organizar equipo y normas de seguridad) · OA f (llevar a cabo la investigación registrando evidencias)</footer>
+    </section>
+
+    <!-- SLIDE 10 : CIERRE -->
+    <section class="slide">
+      <div class="eyebrow">Cierre · Síntesis y metacognición</div>
+      <h1 class="slide-title">Bitácora de cierre</h1>
+      <h2 class="slide-sub">Vuelve a tu predicción inicial: ¿acertaste?</h2>
+      <div class="content-grid">
+        <div class="card">
+          <h3>Reflexiona y responde</h3>
+          <div class="closing-q"><b>1.</b> ¿Qué diferencia principal encontraste entre el circuito en serie y el circuito en paralelo?<textarea class="line"></textarea></div>
+          <div class="closing-q"><b>2.</b> ¿Por qué las casas usan circuitos en paralelo y no en serie?<textarea class="line"></textarea></div>
+          <div class="closing-q"><b>3.</b> ¿Qué fue lo más difícil de comprender hoy? ¿Qué pregunta te queda pendiente?<textarea class="line"></textarea></div>
+        </div>
+        <div class="card">
+          <h3>Lo que aprendimos hoy</h3>
+          <ul>
+            <li>Diferenciar circuitos en serie y en paralelo, y sus efectos ante una falla.</li>
+            <li>Aplicar la Ley de Ohm (V = I·R) en problemas simples.</li>
+            <li>Calcular potencia y energía eléctrica consumida (P = V·I).</li>
+            <li>Diseñar y comparar experimentalmente ambos tipos de circuito.</li>
+          </ul>
+          <div class="callout"><strong>Próxima sesión:</strong> seguiremos avanzando en OA 10 con el análisis de un circuito eléctrico domiciliario real.</div>
+        </div>
+      </div>
+      <footer class="oa-strip">Habilidades trabajadas hoy: OA a, c, d, f, g, h, i, j · Actitudes: OA D, OA G</footer>
+    </section>
+
+  </div>
+
+  <div class="controls">
+    <button class="nav-btn" id="prevBtn" onclick="goTo(currentSlide-1)">‹</button>
+    <div class="dots" id="dots"></div>
+    <button class="nav-btn" id="nextBtn" onclick="goTo(currentSlide+1)">›</button>
+  </div>
+</div>
+
+<script>
+/* ---------------- NAVIGATION ---------------- */
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let currentSlide = 0;
+
+const dotsWrap = document.getElementById('dots');
+slides.forEach((s,i)=>{
+  const d = document.createElement('button');
+  d.className = 'dot';
+  d.setAttribute('aria-label', 'Ir a diapositiva '+(i+1));
+  d.onclick = ()=>goTo(i);
+  dotsWrap.appendChild(d);
+});
+
+function goTo(i){
+  if(i<0 || i>=total) return;
+  slides[currentSlide].classList.remove('active');
+  currentSlide = i;
+  slides[currentSlide].classList.add('active');
+  document.querySelectorAll('.dot').forEach((d,idx)=>d.classList.toggle('active', idx===currentSlide));
+  document.getElementById('curNum').textContent = currentSlide+1;
+  document.getElementById('progressBar').style.width = ((currentSlide+1)/total*100)+'%';
+  document.getElementById('prevBtn').disabled = currentSlide===0;
+  document.getElementById('nextBtn').disabled = currentSlide===total-1;
+}
+document.getElementById('totalNum').textContent = total;
+goTo(0);
+
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='ArrowRight' || e.key===' ') goTo(currentSlide+1);
+  if(e.key==='ArrowLeft') goTo(currentSlide-1);
+});
+
+/* ---------------- CIRCUIT SIMULATIONS ---------------- */
+const state = {
+  series:   { switchClosed:false, b1Burned:false, b2Burned:false },
+  parallel: { switchClosed:false, aBurned:false, bBurned:false }
+};
+
+function toggleSwitch(circuit){
+  state[circuit].switchClosed = !state[circuit].switchClosed;
+  render(circuit);
+}
+function toggleBulb(circuit, which){
+  if(circuit==='series'){
+    if(which==='b1') state.series.b1Burned = !state.series.b1Burned;
+    if(which==='b2') state.series.b2Burned = !state.series.b2Burned;
+  } else {
+    if(which==='a') state.parallel.aBurned = !state.parallel.aBurned;
+    if(which==='b') state.parallel.bBurned = !state.parallel.bBurned;
+  }
+  render(circuit);
+}
+function resetCircuit(circuit){
+  if(circuit==='series'){ state.series = { switchClosed:false, b1Burned:false, b2Burned:false }; }
+  else { state.parallel = { switchClosed:false, aBurned:false, bBurned:false }; }
+  render(circuit);
+}
+
+function setBulbVisual(prefix, lit, burned){
+  document.getElementById(prefix+'Glass').classList.toggle('lit', lit);
+  document.getElementById(prefix+'Fil').classList.toggle('lit', lit);
+  document.getElementById(prefix+'X').classList.toggle('show', burned);
+  document.getElementById(prefix+'X2').classList.toggle('show', burned);
+}
+
+function render(circuit){
+  if(circuit==='series'){
+    const s = state.series;
+    const active = s.switchClosed && !s.b1Burned && !s.b2Burned;
+    document.getElementById('seriesSwitchLever').classList.toggle('closed', s.switchClosed);
+    document.getElementById('seriesSwitchLever').classList.toggle('open', !s.switchClosed);
+    document.getElementById('seriesSwitchLever').setAttribute('x2', s.switchClosed ? 260 : 255);
+    document.getElementById('seriesSwitchLever').setAttribute('y2', s.switchClosed ? 180 : 158);
+    setBulbVisual('bulb1', active, s.b1Burned);
+    setBulbVisual('bulb2', active, s.b2Burned);
+    document.getElementById('seriesFlow').classList.toggle('on', active);
+    const statusEl = document.getElementById('seriesStatus');
+    statusEl.innerHTML =
+      statusChip(s.switchClosed?'Interruptor: cerrado':'Interruptor: abierto', s.switchClosed) +
+      statusChip('Ampolleta 1: '+(s.b1Burned?'quemada':(active?'encendida':'apagada')), active && !s.b1Burned) +
+      statusChip('Ampolleta 2: '+(s.b2Burned?'quemada':(active?'encendida':'apagada')), active && !s.b2Burned);
+  } else {
+    const p = state.parallel;
+    const litA = p.switchClosed && !p.aBurned;
+    const litB = p.switchClosed && !p.bBurned;
+    document.getElementById('parSwitchLever').classList.toggle('closed', p.switchClosed);
+    document.getElementById('parSwitchLever').classList.toggle('open', !p.switchClosed);
+    document.getElementById('parSwitchLever').setAttribute('x2', p.switchClosed ? 115 : 105);
+    document.getElementById('parSwitchLever').setAttribute('y2', p.switchClosed ? 30 : 8);
+    setBulbVisual('parBulbA', litA, p.aBurned);
+    setBulbVisual('parBulbB', litB, p.bBurned);
+    document.getElementById('parFlowSupply').classList.toggle('on', p.switchClosed);
+    document.getElementById('parFlowA').classList.toggle('on', litA);
+    document.getElementById('parFlowB').classList.toggle('on', litB);
+    document.getElementById('parFlowReturn').classList.toggle('on', p.switchClosed && (litA || litB));
+    const statusEl = document.getElementById('parallelStatus');
+    statusEl.innerHTML =
+      statusChip(p.switchClosed?'Interruptor general: cerrado':'Interruptor general: abierto', p.switchClosed) +
+      statusChip('Ampolleta 1: '+(p.aBurned?'quemada':(litA?'encendida':'apagada')), litA) +
+      statusChip('Ampolleta 2: '+(p.bBurned?'quemada':(litB?'encendida':'apagada')), litB);
+  }
+}
+function statusChip(text, ok){
+  const color = ok ? '#3A7D44' : '#B23A3A';
+  return '<span><span class="dot-ind" style="background:'+color+'"></span>'+text+'</span>';
+}
+render('series');
+render('parallel');
+
+/* ---------------- OHM'S LAW CALCULATOR ---------------- */
+const ohmRadios = document.querySelectorAll('input[name="ohmUnknown"]');
+function applyOhmUnknown(){
+  const unknown = document.querySelector('input[name="ohmUnknown"]:checked').value;
+  ['V','I','R'].forEach(k=>{
+    const el = document.getElementById('ohm'+k);
+    el.disabled = (k===unknown);
+    if(k===unknown) el.value = '';
+  });
+}
+ohmRadios.forEach(r=>r.addEventListener('change', applyOhmUnknown));
+applyOhmUnknown();
+
+function calcOhm(){
+  const unknown = document.querySelector('input[name="ohmUnknown"]:checked').value;
+  const V = parseFloat(document.getElementById('ohmV').value);
+  const I = parseFloat(document.getElementById('ohmI').value);
+  const R = parseFloat(document.getElementById('ohmR').value);
+  const resEl = document.getElementById('ohmResult');
+  try{
+    if(unknown==='V'){
+      if(isNaN(I)||isNaN(R)) throw new Error('Ingresa I y R.');
+      const v = I*R;
+      document.getElementById('ohmV').value = round2(v);
+      resEl.textContent = 'V = I × R = '+round2(I)+' A × '+round2(R)+' Ω = '+round2(v)+' V';
+    } else if(unknown==='I'){
+      if(isNaN(V)||isNaN(R)) throw new Error('Ingresa V y R.');
+      if(R===0) throw new Error('R no puede ser 0.');
+      const i = V/R;
+      document.getElementById('ohmI').value = round2(i);
+      resEl.textContent = 'I = V ÷ R = '+round2(V)+' V ÷ '+round2(R)+' Ω = '+round2(i)+' A';
+    } else {
+      if(isNaN(V)||isNaN(I)) throw new Error('Ingresa V e I.');
+      if(I===0) throw new Error('I no puede ser 0.');
+      const r = V/I;
+      document.getElementById('ohmR').value = round2(r);
+      resEl.textContent = 'R = V ÷ I = '+round2(V)+' V ÷ '+round2(I)+' A = '+round2(r)+' Ω';
+    }
+    resEl.classList.remove('error');
+  }catch(err){
+    resEl.textContent = err.message;
+    resEl.classList.add('error');
+  }
+}
+function resetOhm(){
+  document.getElementById('ohmV').value='';
+  document.getElementById('ohmI').value='';
+  document.getElementById('ohmR').value='';
+  document.getElementById('ohmResult').textContent = 'Ingresa dos valores y presiona Calcular.';
+  document.getElementById('ohmResult').classList.remove('error');
+}
+function loadOhmExample(){
+  document.querySelector('input[name="ohmUnknown"][value="R"]').checked = true;
+  applyOhmUnknown();
+  document.getElementById('ohmV').value = 220;
+  document.getElementById('ohmI').value = 10;
+  calcOhm();
+}
+function round2(n){ return Math.round(n*100)/100; }
+
+/* ---------------- POWER / ENERGY CALCULATOR ---------------- */
+function calcPower(){
+  const P = parseFloat(document.getElementById('powP').value);
+  const T = parseFloat(document.getElementById('powT').value);
+  const resEl = document.getElementById('powResult');
+  if(isNaN(P) || isNaN(T)){
+    resEl.textContent = 'Ingresa la potencia (W) y el tiempo de uso (h).';
+    resEl.classList.add('error');
+    return;
+  }
+  const energy = (P*T)/1000;
+  resEl.textContent = 'Energía consumida = ('+round2(P)+' W × '+round2(T)+' h) ÷ 1000 = '+round2(energy)+' kWh por día';
+  resEl.classList.remove('error');
+}
+function resetPower(){
+  document.getElementById('powP').value='';
+  document.getElementById('powT').value='';
+  document.getElementById('powResult').textContent = 'Ingresa la potencia y el tiempo de uso diario.';
+  document.getElementById('powResult').classList.remove('error');
+}
+</script>
+</body>
+</html>

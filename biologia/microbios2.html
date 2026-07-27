@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Unidad 3 · La Vida Invisible · Sesión 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,500;1,9..144,600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a1220;
+  --bg-alt:#0e1a2c;
+  --panel:#142238;
+  --panel-2:#182a45;
+  --paper:#f6f1e3;
+  --paper-ink:#1a1712;
+  --ink:#eef3f8;
+  --muted:#93a6bd;
+  --line:rgba(255,255,255,.12);
+  --teal:#33d6c0;
+  --teal-ink:#06322c;
+  --amber:#f2b344;
+  --amber-ink:#3a2703;
+  --magenta:#ef5da8;
+  --magenta-ink:#3a0e24;
+  --violet:#9a8cf5;
+  --violet-ink:#20164a;
+  --good:#33d6a0;
+  --bad:#ef5d5d;
+  --radius:20px;
+  --shadow: 0 24px 60px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box;}
+html,body{
+  margin:0; padding:0; height:100%;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'IBM Plex Sans', sans-serif;
+  overflow:hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+body{
+  background:
+    radial-gradient(circle at 15% 8%, rgba(51,214,192,.10), transparent 45%),
+    radial-gradient(circle at 85% 92%, rgba(154,140,245,.10), transparent 45%),
+    radial-gradient(circle, rgba(255,255,255,.035) 1px, transparent 1.4px) 0 0/26px 26px,
+    var(--bg);
+}
+h1,h2,h3,.display{
+  font-family:'Fraunces', serif;
+  font-weight:700;
+  letter-spacing:-0.01em;
+  margin:0;
+}
+.mono{ font-family:'IBM Plex Mono', monospace; }
+#app{
+  position:relative;
+  width:100vw; height:100vh; height:100dvh;
+}
+.slide{
+  position:absolute; inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding: clamp(16px, 4vw, 56px);
+  opacity:0;
+  transform: translateY(14px) scale(.99);
+  transition: opacity .45s ease, transform .5s ease;
+}
+.slide.active{
+  display:flex;
+  opacity:1;
+  transform:none;
+}
+.slide-inner{
+  width:100%;
+  max-width:1080px;
+  max-height:100%;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding: 4px 4px 20px 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--panel-2) transparent;
+}
+.slide-inner::-webkit-scrollbar{ width:6px; }
+.slide-inner::-webkit-scrollbar-thumb{ background:var(--panel-2); border-radius:6px; }
+
+.eyebrow{
+  display:inline-flex; align-items:center; gap:8px;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:clamp(11px,1.6vw,13px);
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--teal);
+  margin-bottom:14px;
+}
+.eyebrow::before{
+  content:"";
+  width:7px; height:7px; border-radius:50%;
+  background:var(--teal);
+  box-shadow:0 0 12px var(--teal);
+}
+.title-xl{ font-size:clamp(30px, 5.4vw, 58px); line-height:1.04; }
+.title-lg{ font-size:clamp(24px, 3.6vw, 38px); line-height:1.1; }
+.subtitle{
+  font-size:clamp(14px, 1.9vw, 19px);
+  color:var(--muted);
+  margin-top:10px;
+  max-width:640px;
+  line-height:1.5;
+}
+.chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:22px; }
+.chip{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:clamp(10.5px,1.3vw,12.5px);
+  padding:7px 12px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.03);
+  color:var(--muted);
+  white-space:nowrap;
+}
+.chip.on{ color:var(--ink); border-color:rgba(51,214,192,.4); background:rgba(51,214,192,.08); }
+
+.panel{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:clamp(16px,2.6vw,28px);
+}
+.paper{
+  background:var(--paper);
+  color:var(--paper-ink);
+  border-radius:var(--radius);
+  padding:clamp(16px,2.6vw,26px);
+  box-shadow:var(--shadow);
+}
+
+/* ===== Lens / viewport signature element ===== */
+.viewport{
+  position:relative;
+  width:min(46vw, 300px); height:min(46vw,300px);
+  border-radius:50%;
+  margin:0 auto;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255,255,255,.16), transparent 55%),
+    #0c1729;
+  border:10px solid #0a1626;
+  box-shadow: inset 0 0 50px rgba(0,0,0,.65), 0 0 0 3px rgba(51,214,192,.28), var(--shadow);
+  overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+}
+.viewport::after{
+  content:"";
+  position:absolute; inset:0;
+  background: repeating-radial-gradient(circle, transparent 0 40px, rgba(255,255,255,.02) 41px 42px);
+  pointer-events:none;
+}
+.lens-badge{
+  position:fixed; right:18px; bottom:18px;
+  width:54px; height:54px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.18), transparent 60%), var(--panel);
+  border:2px solid rgba(51,214,192,.4);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--teal);
+  box-shadow:var(--shadow);
+  z-index:40;
+  cursor:pointer;
+  user-select:none;
+}
+
+/* ===== Nav controls ===== */
+.controls{
+  position:fixed; left:0; right:0; bottom:16px;
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  z-index:40; pointer-events:none;
+}
+.controls > *{ pointer-events:all; }
+.navbtn{
+  width:42px; height:42px; border-radius:50%;
+  border:1px solid var(--line);
+  background:rgba(20,34,56,.85);
+  backdrop-filter:blur(6px);
+  color:var(--ink); font-size:18px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:.2s;
+}
+.navbtn:hover{ background:var(--panel-2); border-color:var(--teal); color:var(--teal); }
+.dots{ display:flex; gap:6px; max-width:44vw; overflow-x:auto; padding:4px; }
+.dot{
+  width:7px; height:7px; border-radius:50%;
+  background:rgba(255,255,255,.18);
+  flex:none; cursor:pointer; transition:.2s;
+}
+.dot.active{ background:var(--teal); box-shadow:0 0 8px var(--teal); width:20px; border-radius:5px; }
+
+.topbar{
+  position:fixed; top:14px; left:18px; right:18px;
+  display:flex; justify-content:space-between; align-items:center;
+  z-index:40; font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted);
+}
+.topbar .brand{ letter-spacing:.08em; text-transform:uppercase; }
+.iconbtn{
+  background:rgba(20,34,56,.7); border:1px solid var(--line); color:var(--muted);
+  width:32px;height:32px;border-radius:9px; cursor:pointer; font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+}
+.iconbtn:hover{ color:var(--teal); border-color:var(--teal); }
+
+.menu-panel{
+  position:fixed; inset:0; background:rgba(6,11,20,.86); backdrop-filter:blur(6px);
+  z-index:60; display:none; align-items:center; justify-content:center;
+}
+.menu-panel.open{ display:flex; }
+.menu-list{
+  width:min(560px,92vw); max-height:80vh; overflow-y:auto;
+  background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:10px;
+}
+.menu-item{
+  display:flex; gap:12px; align-items:center;
+  padding:11px 14px; border-radius:12px; cursor:pointer;
+  color:var(--muted); font-size:14px;
+}
+.menu-item:hover{ background:var(--panel-2); color:var(--ink); }
+.menu-item .n{ font-family:'IBM Plex Mono',monospace; color:var(--teal); font-size:12px; width:22px; }
+
+/* ===== QR box (desktop only) ===== */
+.qr-box{
+  display:flex; gap:16px; align-items:center;
+  background:var(--paper); color:var(--paper-ink);
+  border-radius:18px; padding:16px 20px; margin-top:28px;
+  box-shadow:var(--shadow);
+  max-width:480px;
+}
+.qr-box img{ width:92px; height:92px; border-radius:8px; image-rendering:pixelated; }
+.qr-box .txt strong{ display:block; font-family:'Fraunces',serif; font-size:16px; margin-bottom:4px; }
+.qr-box .txt span{ font-size:12.5px; color:#5a5340; }
+.qr-box .url{ font-family:'IBM Plex Mono',monospace; font-size:11px; background:#eae4d2; padding:3px 7px; border-radius:6px; display:inline-block; margin-top:6px; }
+@media (max-width:860px){
+  .qr-box{ display:none !important; }
+}
+
+/* ===== Buttons ===== */
+.btn{
+  font-family:'IBM Plex Sans',sans-serif; font-weight:600; font-size:14px;
+  padding:11px 20px; border-radius:12px; border:1px solid var(--line);
+  background:var(--panel-2); color:var(--ink); cursor:pointer; transition:.2s;
+  display:inline-flex; align-items:center; gap:8px;
+}
+.btn:hover{ transform:translateY(-1px); border-color:var(--teal); }
+.btn.primary{ background:var(--teal); color:var(--teal-ink); border-color:var(--teal); }
+.btn.primary:hover{ filter:brightness(1.08); }
+.btn.ghost{ background:transparent; }
+.btn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+
+/* ===== Grid helpers ===== */
+.grid2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.grid3{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+@media (max-width:720px){ .grid2,.grid3{ grid-template-columns:1fr; } }
+
+/* ===== Flip cards ===== */
+.flip-card{ perspective:1200px; height:170px; cursor:pointer; }
+.flip-inner{
+  position:relative; width:100%; height:100%; transition:transform .5s;
+  transform-style:preserve-3d;
+}
+.flip-card.flipped .flip-inner{ transform:rotateY(180deg); }
+.flip-face{
+  position:absolute; inset:0; backface-visibility:hidden;
+  border-radius:16px; padding:16px; display:flex; flex-direction:column; justify-content:center;
+}
+.flip-front{ background:var(--panel-2); border:1px solid var(--line); text-align:center; }
+.flip-front .ic{ font-size:34px; margin-bottom:8px; }
+.flip-back{ background:var(--teal); color:var(--teal-ink); transform:rotateY(180deg); font-size:13.5px; line-height:1.45; }
+
+/* ===== Sorting game cards ===== */
+.sort-card{
+  background:var(--panel-2); border:1px solid var(--line); border-radius:16px;
+  padding:14px; text-align:center; transition:.2s;
+}
+.sort-card .ic{ font-size:38px; }
+.sort-card .name{ font-weight:600; margin:6px 0 10px; }
+.sort-card .choices{ display:flex; gap:6px; justify-content:center; }
+.sort-card.done{ opacity:.55; }
+.sort-card .choices button{
+  flex:1; font-size:12px; padding:7px 6px; border-radius:8px; border:1px solid var(--line);
+  background:transparent; color:var(--muted); cursor:pointer;
+}
+.sort-card .choices button:hover{ border-color:var(--teal); color:var(--ink); }
+.result-tag{ font-size:11px; font-family:'IBM Plex Mono',monospace; padding:3px 8px; border-radius:6px; display:inline-block; margin-top:6px;}
+.result-tag.ok{ background:rgba(51,214,160,.15); color:var(--good); }
+.result-tag.bad{ background:rgba(239,93,93,.15); color:var(--bad); }
+.result-tag.mid{ background:rgba(154,140,245,.18); color:var(--violet); }
+
+/* ===== Timer ===== */
+.timer{
+  font-family:'IBM Plex Mono',monospace; font-size:clamp(30px,5vw,44px);
+  letter-spacing:.05em; text-align:center;
+}
+.timer-box{ display:flex; flex-direction:column; align-items:center; gap:10px; }
+
+/* ===== Debate columns ===== */
+.debate-col{ border-radius:16px; padding:16px; }
+.debate-col.pro{ background:rgba(51,214,192,.09); border:1px solid rgba(51,214,192,.3); }
+.debate-col.con{ background:rgba(239,93,93,.08); border:1px solid rgba(239,93,93,.28); }
+.debate-col h4{ font-family:'Fraunces',serif; margin-bottom:8px; }
+.debate-col ul{ margin:0; padding-left:18px; font-size:13.5px; color:var(--muted); line-height:1.6; }
+
+/* ===== Hotspot diagram ===== */
+.diagram-wrap{ position:relative; }
+.hotspot{
+  position:absolute; width:22px; height:22px; border-radius:50%;
+  background:var(--amber); border:3px solid #1a1712; cursor:pointer;
+  transform:translate(-50%,-50%);
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(242,179,68,.5);} 50%{ box-shadow:0 0 0 8px rgba(242,179,68,0);} }
+.hotspot.active{ background:var(--magenta); }
+.info-panel{
+  min-height:96px;
+  background:var(--panel-2); border:1px solid var(--line); border-radius:14px; padding:14px; font-size:13.5px; color:var(--muted);
+}
+
+/* ===== Memory game ===== */
+.memo-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+@media (max-width:640px){ .memo-grid{ grid-template-columns:repeat(3,1fr); } }
+.memo-card{
+  aspect-ratio:1/1; border-radius:12px; cursor:pointer;
+  background:var(--panel-2); border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  font-size:11.5px; padding:6px; color:transparent; user-select:none;
+  transition:.2s;
+}
+.memo-card.flip{ background:var(--violet); color:#fff; }
+.memo-card.matched{ background:rgba(51,214,160,.18); border-color:var(--good); color:var(--good); }
+
+/* ===== Checklist / rubric ===== */
+.rubric-item{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 0; border-bottom:1px solid var(--line); }
+.rubric-item:last-child{ border-bottom:none; }
+.stars{ display:flex; gap:4px; }
+.star{ font-size:20px; cursor:pointer; color:rgba(255,255,255,.25); }
+.star.on{ color:var(--amber); }
+
+.check-item{ display:flex; gap:10px; align-items:flex-start; padding:8px 0; font-size:14px; }
+.check-item input{ margin-top:3px; accent-color:var(--teal); width:16px; height:16px; }
+
+.footnote{ font-size:12px; color:var(--muted); margin-top:16px; }
+.small-cap{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+
+/* svg helpers */
+svg text{ font-family:'IBM Plex Sans',sans-serif; }
+
+/* ===== Form fields (open questions, team members) ===== */
+.field{
+  width:100%; background:var(--panel-2); border:1px solid var(--line); border-radius:10px;
+  padding:10px 12px; color:var(--ink); font-family:'IBM Plex Sans',sans-serif; font-size:14px;
+}
+.field::placeholder{ color:var(--muted); }
+.field:focus{ outline:none; border-color:var(--teal); }
+textarea.field{ resize:vertical; min-height:78px; line-height:1.5; }
+label.field-label{ display:block; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+
+.toggle-group{ display:flex; gap:8px; flex-wrap:wrap; }
+.toggle-opt{
+  font-family:'IBM Plex Sans',sans-serif; font-weight:600; font-size:13px;
+  padding:10px 16px; border-radius:12px; border:1px solid var(--line);
+  background:transparent; color:var(--muted); cursor:pointer; transition:.2s;
+}
+.toggle-opt:hover{ border-color:var(--teal); }
+.toggle-opt.selected{ background:var(--teal); color:var(--teal-ink); border-color:var(--teal); }
+
+.export-btn{
+  background:var(--amber); color:var(--amber-ink); border-color:var(--amber);
+  font-size:16px; padding:16px 28px;
+}
+.export-btn:hover{ filter:brightness(1.06); }
+.export-hint{ font-size:12px; color:var(--muted); margin-top:10px; }
+
+/* ===== Printable report (hidden on screen, shown only when printing) ===== */
+#printReport{ display:none; }
+@media print{
+  #app{ display:none !important; }
+  html, body{ background:#fff !important; color:#111 !important; height:auto !important; overflow:visible !important; }
+  #printReport{
+    display:block !important;
+    font-family:'IBM Plex Sans',sans-serif; color:#171310; max-width:760px; margin:0 auto; padding:10px;
+  }
+  #printReport h1{ font-family:'Fraunces',serif; font-size:24px; margin:0 0 4px; }
+  #printReport h2{ font-family:'Fraunces',serif; font-size:17px; margin:26px 0 10px; border-bottom:2px solid #171310; padding-bottom:5px; page-break-after:avoid; }
+  #printReport .meta{ font-size:12.5px; color:#4a463f; margin-bottom:6px; }
+  #printReport .qa{ margin-bottom:12px; page-break-inside:avoid; }
+  #printReport .qa .q{ font-weight:600; font-size:13px; }
+  #printReport .qa .a{ margin-top:4px; padding:8px 10px; background:#f2efe6; border-left:3px solid #b8ac8a; font-size:13px; min-height:16px; white-space:pre-wrap; }
+  #printReport table{ width:100%; border-collapse:collapse; font-size:12px; margin-top:4px; page-break-inside:avoid; }
+  #printReport th, #printReport td{ border:1px solid #ccc4ae; padding:5px 8px; text-align:left; }
+  #printReport th{ background:#efe9d8; }
+  #printReport .tag-ok{ color:#0a7a4a; font-weight:700; }
+  #printReport .tag-bad{ color:#b3261e; font-weight:700; }
+  #printReport .tag-mid{ color:#6a4fd6; font-weight:700; }
+  #printReport .stars-print{ letter-spacing:2px; color:#b8860b; }
+  #printReport .rep-footer{ margin-top:26px; font-size:10.5px; color:#7a7466; border-top:1px solid #ccc4ae; padding-top:8px; }
+  #printReport .section-block{ page-break-inside:avoid; margin-bottom:8px; }
+}
+
+/* ===== Session 3 specific: experiment picker ===== */
+.exp-card{
+  border:2px solid var(--line); border-radius:16px; padding:16px; cursor:pointer;
+  transition:.2s; background:var(--panel-2);
+}
+.exp-card:hover{ border-color:var(--teal); }
+.exp-card.selected{ border-color:var(--teal); background:rgba(51,214,192,.09); box-shadow:0 0 0 2px rgba(51,214,192,.22) inset; }
+.exp-card h4{ font-family:'Fraunces',serif; margin:8px 0 4px; font-size:18px; }
+.exp-card ul{ margin:8px 0 0; padding-left:18px; font-size:13px; color:var(--muted); line-height:1.7; }
+.exp-card .tag-sel{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--teal); text-transform:uppercase; letter-spacing:.06em; }
+
+/* ===== Data table (predicciones) ===== */
+.data-table{ width:100%; border-collapse:collapse; margin-top:10px; }
+.data-table th, .data-table td{ border:1px solid var(--line); padding:9px; text-align:center; font-size:13px; }
+.data-table th{ background:var(--panel-2); color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; }
+.data-table input{ width:100%; background:transparent; border:none; color:var(--ink); text-align:center; font-family:'IBM Plex Sans',sans-serif; font-size:13px; }
+.data-table input:focus{ outline:1px solid var(--teal); border-radius:4px; }
+.data-table input::placeholder{ color:var(--muted); opacity:.6; }
+
+/* ===== Safety list ===== */
+.safety-item{ display:flex; gap:10px; align-items:flex-start; padding:7px 0; font-size:13.5px; color:var(--muted); }
+.safety-item .ic{ font-size:17px; flex:none; }
+
+/* ===== Sequencing game ===== */
+.seq-pool{ display:flex; flex-wrap:wrap; gap:8px; }
+.seq-chip{
+  padding:10px 15px; border-radius:10px; border:1px solid var(--line);
+  background:var(--panel-2); cursor:pointer; font-size:13.5px; transition:.2s;
+}
+.seq-chip:hover{ border-color:var(--teal); }
+.seq-chip.used{ opacity:.28; pointer-events:none; }
+.seq-slots{ display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; min-height:48px; }
+.seq-slot{
+  min-width:150px; padding:10px 15px; border-radius:10px; border:2px dashed var(--line);
+  font-size:13px; color:var(--muted); text-align:center;
+}
+.seq-slot.filled{ border-style:solid; border-color:var(--line); color:var(--ink); background:var(--panel-2); }
+.seq-slot.ok{ border-color:var(--good); background:rgba(51,214,160,.12); color:var(--good); }
+.seq-slot.bad{ border-color:var(--bad); background:rgba(239,93,93,.1); color:var(--bad); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="topbar">
+    <div class="brand">Unidad 3 · Sesiones 3 y 4</div>
+    <div style="display:flex; gap:8px;">
+      <button class="iconbtn" id="btnExportTop" title="Exportar mi trabajo a PDF">📄</button>
+      <button class="iconbtn" id="btnFull" title="Pantalla completa">⛶</button>
+      <button class="iconbtn" id="btnMenu" title="Ver índice">≡</button>
+    </div>
+  </div>
+
+  <div class="slides" id="slides">
+
+    <!-- 0 PORTADA -->
+    <section class="slide">
+      <div class="slide-inner" style="text-align:center;">
+        <div class="viewport" style="margin-bottom:26px;">
+          <svg width="70%" height="70%" viewBox="0 0 100 100">
+            <rect x="15" y="20" width="70" height="55" rx="10" fill="none" stroke="#f2b344" stroke-width="2.5"/>
+            <circle cx="35" cy="45" r="4" fill="#33d6c0" opacity=".85"/>
+            <circle cx="55" cy="38" r="3" fill="#33d6c0" opacity=".7"/>
+            <circle cx="65" cy="55" r="5" fill="#9a8cf5" opacity=".8"/>
+            <circle cx="42" cy="60" r="2.5" fill="#ef5da8" opacity=".8"/>
+          </svg>
+        </div>
+        <div class="eyebrow" style="justify-content:center;">Unidad 3 · Ciencias Naturales · 7° Básico</div>
+        <h1 class="title-xl">El laboratorio en tu cocina</h1>
+        <p class="subtitle" style="margin-left:auto;margin-right:auto;">Sesión 3 · Diseña tu propio experimento con moho y bacterias</p>
+        <div class="chips" style="justify-content:center;">
+          <span class="chip on">Diseño experimental · Hipótesis · Registro científico</span>
+        </div>
+
+        <div class="panel" style="margin-top:24px; max-width:520px; margin-left:auto; margin-right:auto; text-align:left;">
+          <label class="field-label" for="teamMembers">Integrantes del grupo</label>
+          <input type="text" class="field" id="teamMembers" placeholder="Ej: Ana Pérez, Diego Soto, Martina Rojas">
+          <p class="footnote" style="margin-top:8px; margin-bottom:0;">Completa esto antes de empezar: tu registro en PDF llevará estos nombres.</p>
+        </div>
+
+        <div class="qr-box" style="margin-left:auto;margin-right:auto;">
+          <img id="qrImg" alt="Código QR">
+          <div class="txt">
+            <strong>Sigue la clase desde tu celular 📱</strong>
+            <span>Escanea este código con la cámara de tu celular para abrir la página</span>
+            <span class="url">fjimenez321-stack.github.io/dondefelipe</span>
+          </div>
+        </div>
+
+        <p class="footnote">Usa las flechas ← → , desliza, o el botón ≡ para navegar</p>
+      </div>
+    </section>
+
+    <!-- 1 CRITERIOS DE EVALUACIÓN -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Antes de comenzar</div>
+        <h2 class="title-lg">¿Cómo te evaluarán hoy?</h2>
+        <p class="subtitle">Evaluación formativa: tu profesor circulará observando estos criterios mientras diseñas tu experimento.</p>
+        <div class="panel" style="margin-top:20px;">
+          <div class="small-cap" style="margin-bottom:10px;">Sesión 3 · Diseño experimental</div>
+          <div class="check-item">🔮 <span>Formulas una predicción/hipótesis antes de observar (OA c)</span></div>
+          <div class="check-item">🧪 <span>Planificas correctamente tu experimento: variables y materiales (OA d)</span></div>
+          <div class="check-item">📊 <span>Registras y organizas tus datos en tabla y bitácora fotográfica (OA h)</span></div>
+        </div>
+        <p class="footnote" style="margin-top:16px;">Estos criterios no reemplazan tu nota: son para que sepas en qué enfocarte hoy. Al cierre del bloque de Microorganismos jugaremos un Kahoot de repaso (no evaluado individualmente).</p>
+      </div>
+    </section>
+
+    <!-- 2 SESIÓN 3 PORTADA -->
+    <section class="slide">
+      <div class="slide-inner" style="text-align:center;">
+        <div class="eyebrow" style="justify-content:center;">Sesión 3 · 90 minutos</div>
+        <h2 class="title-xl">Cultivando hongos y bacterias en casa</h2>
+        <p class="subtitle" style="margin-left:auto;margin-right:auto;">Diseño experimental: hipótesis, variables y registro científico</p>
+        <div class="chips" style="justify-content:center;">
+          <span class="chip">OA5 · IE 4, 5</span>
+          <span class="chip">Indagación: OA c, OA d, OA h</span>
+          <span class="chip">Actitud: OA B, OA C</span>
+          <span class="chip on">Bloom: Aplicar / Analizar</span>
+        </div>
+        <div class="panel" style="margin-top:26px; max-width:560px; margin-left:auto; margin-right:auto; text-align:left;">
+          <div class="small-cap" style="margin-bottom:8px;">Materiales de la sesión</div>
+          <div style="font-size:14px; color:var(--muted); line-height:1.7;">🍞 Pan (3 tipos) &nbsp;·&nbsp; 🧊 Bolsas ziploc &nbsp;·&nbsp; 🥣 Caldo &nbsp;·&nbsp; 🧂 Sal &nbsp;·&nbsp; 🍶 Vinagre &nbsp;·&nbsp; 📷 Cámara de celular &nbsp;·&nbsp; 📓 Bitácora de registro</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 HOOK: LÍNEA DE TIEMPO DEL MOHO -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Antes de empezar</div>
+        <h2 class="title-lg">Desliza en el tiempo: ¿qué pasó en 7 días?</h2>
+        <p class="subtitle">Mueve el control y observa cómo cambia la bolsa de pan día a día. ¿Qué preguntas te surgen?</p>
+
+        <div style="display:flex; flex-wrap:wrap; gap:28px; align-items:center; margin-top:20px;">
+          <div class="viewport" id="moldView">
+            <svg id="moldSvg" width="78%" height="78%" viewBox="0 0 100 100"></svg>
+          </div>
+          <div style="flex:1; min-width:240px;">
+            <div class="panel">
+              <div class="small-cap">Día <span id="dayNum">0</span> / 7</div>
+              <input type="range" id="dayRange" min="0" max="7" value="0" step="1" style="width:100%; accent-color:#33d6c0; margin-top:8px;">
+              <p id="dayCaption" style="font-size:13.5px; color:var(--muted); margin-top:12px; min-height:56px;"></p>
+            </div>
+            <div class="panel" style="margin-top:12px;">
+              <div class="small-cap" style="margin-bottom:6px;">Para pensar en grupo</div>
+              <div style="font-size:13px; color:var(--muted); line-height:1.6;">
+                ¿Qué creen que causó este cambio?<br>
+                ¿Por qué en algunas bolsas el moho aparece antes que en otras?
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 CONTENIDO: TIPOS DE VARIABLES -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Sistematizando</div>
+        <h2 class="title-lg">3 tipos de variables en un experimento</h2>
+        <p class="subtitle">Haz clic en cada tarjeta para dar vuelta y leer la explicación.</p>
+        <div class="grid3" style="margin-top:20px;">
+          <div class="flip-card" data-flip>
+            <div class="flip-inner">
+              <div class="flip-face flip-front"><div class="ic">🎛️</div><div>Variable manipulada</div></div>
+              <div class="flip-face flip-back">Lo que tú decides cambiar a propósito. Ejemplo: la cantidad de luz que recibe cada bolsa, o la cantidad de sal en el caldo.</div>
+            </div>
+          </div>
+          <div class="flip-card" data-flip>
+            <div class="flip-inner">
+              <div class="flip-face flip-front"><div class="ic">⚖️</div><div>Variable controlada</div></div>
+              <div class="flip-face flip-back">Lo que mantienes igual en todos los grupos para que la comparación sea justa. Ejemplo: el mismo tipo de pan o el mismo volumen de caldo.</div>
+            </div>
+          </div>
+          <div class="flip-card" data-flip>
+            <div class="flip-inner">
+              <div class="flip-face flip-front"><div class="ic">📈</div><div>Variable de respuesta</div></div>
+              <div class="flip-face flip-back">Lo que mides u observas como resultado. Ejemplo: los días que tardó en aparecer moho, o el tamaño de la colonia.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 ELIGE TU EXPERIMENTO -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Diseño experimental</div>
+        <h2 class="title-lg">Elijan su experimento</h2>
+        <p class="subtitle">Toquen la tarjeta del experimento que su grupo va a realizar esta semana.</p>
+        <div class="grid2" style="margin-top:18px;">
+          <div class="exp-card" id="expPan" data-exp="Moho en pan">
+            <div class="tag-sel">Opción A</div>
+            <h4>🍞 Moho en pan</h4>
+            <ul>
+              <li>Variable manipulada: humedad o luz</li>
+              <li>Variable controlada: tipo de pan, tamaño de bolsa</li>
+              <li>Materiales: pan, bolsas ziploc, agua</li>
+            </ul>
+          </div>
+          <div class="exp-card" id="expCaldo" data-exp="Bacterias en caldo">
+            <div class="tag-sel">Opción B</div>
+            <h4>🧫 Bacterias en caldo</h4>
+            <ul>
+              <li>Variable manipulada: sal, vinagre o refrigeración</li>
+              <li>Variable controlada: volumen de caldo, tipo de frasco</li>
+              <li>Materiales: caldo, frascos, sal, vinagre</li>
+            </ul>
+          </div>
+        </div>
+        <p class="footnote" id="expChosenNote" style="margin-top:12px;">Aún no han elegido un experimento.</p>
+      </div>
+    </section>
+
+    <!-- 6 FORMULA TU HIPÓTESIS -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Predicción antes de observar</div>
+        <h2 class="title-lg">Formulen su hipótesis</h2>
+        <div class="panel" style="margin-top:16px;">
+          <div class="small-cap" style="margin-bottom:8px;">Plantilla sugerida</div>
+          <p style="font-size:13.5px; color:var(--muted); line-height:1.6;">"Si nuestra bolsa/frasco tiene <strong>(variable manipulada)</strong>, entonces esperamos que <strong>(variable de respuesta)</strong> ocurra, porque <strong>(justificación)</strong>."</p>
+          <label class="field-label" for="hypothesis" style="margin-top:12px;">Nuestra hipótesis</label>
+          <textarea class="field" id="hypothesis" placeholder='Si nuestra bolsa tiene más humedad, entonces esperamos que el moho aparezca antes, porque...'></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 PLAN DE REGISTRO Y BITÁCORA FOTOGRÁFICA -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Registro científico</div>
+        <h2 class="title-lg">Plan de registro y bitácora fotográfica</h2>
+
+        <div class="panel" style="margin-top:14px;">
+          <div class="small-cap" style="margin-bottom:8px;">Tabla de predicciones</div>
+          <table class="data-table">
+            <tr><th>Día 0</th><th>Día 2</th><th>Día 4</th><th>Día 7</th></tr>
+            <tr>
+              <td><input type="text" id="pred0" placeholder="Predicción..."></td>
+              <td><input type="text" id="pred2" placeholder="Predicción..."></td>
+              <td><input type="text" id="pred4" placeholder="Predicción..."></td>
+              <td><input type="text" id="pred7" placeholder="Predicción..."></td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="grid2" style="margin-top:14px;">
+          <div class="panel">
+            <div class="small-cap" style="margin-bottom:8px;">Tips para tu foto diaria</div>
+            <div class="check-item"><input type="checkbox" id="tip1"><span>Misma distancia y ángulo cada día</span></div>
+            <div class="check-item"><input type="checkbox" id="tip2"><span>Misma luz (idealmente luz natural)</span></div>
+            <div class="check-item"><input type="checkbox" id="tip3"><span>Fondo neutro, sin objetos alrededor</span></div>
+            <div class="check-item"><input type="checkbox" id="tip4"><span>Mismo horario aproximado todos los días</span></div>
+          </div>
+          <div class="panel">
+            <div class="small-cap" style="margin-bottom:8px;">Normas de seguridad</div>
+            <div class="safety-item"><span class="ic">🚫</span><span>No abran la bolsa o el frasco durante el experimento</span></div>
+            <div class="safety-item"><span class="ic">🧼</span><span>Lávense las manos después de manipular los materiales</span></div>
+            <div class="safety-item"><span class="ic">👃</span><span>Nunca huelan directamente el contenido</span></div>
+            <div class="safety-item"><span class="ic">🗑️</span><span>Eliminen el experimento sellado al terminar, sin abrirlo</span></div>
+            <div class="check-item" style="margin-top:8px;"><input type="checkbox" id="safetyAck"><span>Leímos y entendimos las normas de seguridad</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 CIERRE: BITÁCORA -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Cierre de la sesión</div>
+        <h2 class="title-lg">Bitácora de aprendizaje científico</h2>
+        <div class="panel" style="margin-top:16px;">
+          <label class="field-label" for="bitacora3">Sesión 3</label>
+          <textarea class="field" id="bitacora3" placeholder="¿Qué predices que pasará con tu experimento esta semana y por qué?"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9 AVISO: KAHOOT DE CIERRE DE BLOQUE -->
+    <section class="slide">
+      <div class="slide-inner" style="text-align:center;">
+        <div class="viewport" style="margin-bottom:20px;">
+          <span style="font-size:54px;">🎮</span>
+        </div>
+        <div class="eyebrow" style="justify-content:center;">Más adelante, en clases</div>
+        <h2 class="title-xl">Cierre de bloque: Kahoot en vivo</h2>
+        <p class="subtitle" style="margin-left:auto;margin-right:auto;">Cuando terminen sus observaciones de la semana, cerraremos todo el bloque de <strong>Microorganismos</strong> con un Kahoot en vivo, jugado en curso con tu profesor.</p>
+        <div class="panel" style="max-width:480px; margin:16px auto 0; text-align:left;">
+          <div class="small-cap" style="margin-bottom:8px;">Repasaremos</div>
+          <div style="font-size:14px; color:var(--muted); line-height:1.8;">🔎 Definiciones de microorganismos &nbsp;·&nbsp; 🧬 Tipos (bacterias, hongos, virus) &nbsp;·&nbsp; 🛡️ Prevención &nbsp;·&nbsp; 🌱 Beneficios</div>
+        </div>
+        <p class="footnote" style="margin-top:14px;">Este Kahoot es de repaso grupal y no se evalúa individualmente.</p>
+      </div>
+    </section>
+
+    <!-- 10 INTRO JUEGOS -->
+    <section class="slide">
+      <div class="slide-inner" style="text-align:center;">
+        <div class="eyebrow" style="justify-content:center;">Mientras esperamos que crezca el moho</div>
+        <h2 class="title-xl">¡Practiquemos! 🎮</h2>
+        <p class="subtitle" style="margin-left:auto;margin-right:auto;">Dos juegos para reforzar lo que aprendimos hoy</p>
+        <div class="grid2" style="margin-top:24px; text-align:left;">
+          <div class="panel">🔍 <strong>Juego 1</strong> · Detective de variables</div>
+          <div class="panel">🧭 <strong>Juego 2</strong> · Ordena el método científico</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11 JUEGO 1: DETECTIVE DE VARIABLES -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Juego 1</div>
+        <h2 class="title-lg">Detective de variables</h2>
+        <p class="subtitle">Antes que se acabe el tiempo, clasifica cada elemento del experimento.</p>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin:14px 0;">
+          <div class="mono" style="font-size:14px;">⏱ <span id="g1Time">75</span>s &nbsp; · &nbsp; ✅ <span id="g1Score">0</span> pts</div>
+          <button class="btn primary" id="g1Start">▶ Comenzar juego</button>
+        </div>
+        <div class="grid3" id="g1Grid"></div>
+        <div id="g1End" class="panel" style="margin-top:14px; display:none; text-align:center;"></div>
+      </div>
+    </section>
+
+    <!-- 12 JUEGO 2: ORDENA EL MÉTODO CIENTÍFICO -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Juego 2</div>
+        <h2 class="title-lg">Ordena el método científico</h2>
+        <p class="subtitle">Toca las etapas en el orden correcto, del inicio al final.</p>
+        <div class="panel" style="margin-top:16px;">
+          <div class="small-cap" style="margin-bottom:8px;">Etapas disponibles</div>
+          <div class="seq-pool" id="seqPool"></div>
+          <div class="small-cap" style="margin:16px 0 8px;">Tu secuencia</div>
+          <div class="seq-slots" id="seqSlots"></div>
+          <div style="display:flex; gap:8px; margin-top:14px;">
+            <button class="btn primary" id="seqCheck">Verificar</button>
+            <button class="btn" id="seqReset">↺ Reiniciar</button>
+          </div>
+          <div id="seqResult" class="footnote" style="margin-top:10px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13 FIN SESIÓN 3 -->
+    <section class="slide">
+      <div class="slide-inner" style="text-align:center;">
+        <div class="viewport" style="margin-bottom:20px;">
+          <span style="font-size:54px;">🔬</span>
+        </div>
+        <h2 class="title-xl">¡Su laboratorio está listo!</h2>
+        <div class="panel" style="max-width:560px; margin:18px auto 0; text-align:left;">
+          <div class="check-item">✅ <span>Distinguimos variables manipuladas, controladas y de respuesta</span></div>
+          <div class="check-item">✅ <span>Diseñamos nuestro experimento y formulamos una hipótesis</span></div>
+          <div class="check-item">✅ <span>Planificamos el registro fotográfico y las normas de seguridad</span></div>
+        </div>
+        <p class="subtitle" style="margin:18px auto 0;">Sigamos con la Sesión 4: microorganismos al rescate del planeta 🌍</p>
+      </div>
+    </section>
+
+    <!-- 14 CRITERIOS DE EVALUACIÓN SESIÓN 4 -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Antes de comenzar</div>
+        <h2 class="title-lg">¿Cómo te evaluarán en la Sesión 4?</h2>
+        <p class="subtitle">Evaluación formativa: tu ficha guía en el cuaderno es tu registro principal hoy.</p>
+        <div class="panel" style="margin-top:20px;">
+          <div class="small-cap" style="margin-bottom:10px;">Sesión 4 · Investigación documental</div>
+          <div class="check-item">📚 <span>Planificas tu investigación usando fuentes confiables (OA e)</span></div>
+          <div class="check-item">📊 <span>Examinas los datos y resultados con evidencia (OA j)</span></div>
+          <div class="check-item">✍️ <span>Completas tu ficha guía y citas tus fuentes en el cuaderno</span></div>
+        </div>
+        <p class="footnote" style="margin-top:16px;">Estos criterios no reemplazan tu nota: son para que sepas en qué enfocarte hoy.</p>
+      </div>
+    </section>
+
+    <!-- 15 SESIÓN 4 PORTADA -->
+    <section class="slide">
+      <div class="slide-inner" style="text-align:center;">
+        <div class="eyebrow" style="justify-content:center;">Sesión 4 · 90 minutos</div>
+        <h2 class="title-xl">Microorganismos al rescate</h2>
+        <p class="subtitle" style="margin-left:auto;margin-right:auto;">Biorremediación, biolixiviación y metanogénesis</p>
+        <div class="chips" style="justify-content:center;">
+          <span class="chip">OA6 · IE 7, 8, 9</span>
+          <span class="chip">Indagación: OA e, OA j</span>
+          <span class="chip">Actitud: OA G, OA D</span>
+          <span class="chip on">Bloom: Comprender / Analizar</span>
+        </div>
+        <div class="panel" style="margin-top:26px; max-width:560px; margin-left:auto; margin-right:auto; text-align:left;">
+          <div class="small-cap" style="margin-bottom:8px;">Materiales de la sesión</div>
+          <div style="font-size:14px; color:var(--muted); line-height:1.7;">📋 Fichas guía de investigación &nbsp;·&nbsp; 💻 Acceso a internet o textos escolares &nbsp;·&nbsp; 🧮 Calculadora &nbsp;·&nbsp; 📓 Cuaderno</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 16 HOOK: 3 PROBLEMAS, 3 HÉROES -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Antes de empezar</div>
+        <h2 class="title-lg">3 problemas del planeta... ¿pueden ayudar los microorganismos?</h2>
+        <p class="subtitle">Toca cada tarjeta y descubre el problema. ¿Se te ocurre cómo un microorganismo podría ayudar?</p>
+        <div class="grid3" style="margin-top:20px;">
+          <div class="flip-card" data-flip>
+            <div class="flip-inner">
+              <div class="flip-face flip-front"><div class="ic">🛢️</div><div>Derrame de petróleo en el mar</div></div>
+              <div class="flip-face flip-back">Ciertas bacterias marinas pueden "comerse" el petróleo, descomponiendo sus moléculas en sustancias menos dañinas. Esto se llama <strong>biorremediación</strong>.</div>
+            </div>
+          </div>
+          <div class="flip-card" data-flip>
+            <div class="flip-inner">
+              <div class="flip-face flip-front"><div class="ic">⛏️</div><div>Extraer cobre de una mina</div></div>
+              <div class="flip-face flip-back">Algunas bacterias pueden disolver el cobre desde la roca, sin hornos ni químicos agresivos. Esto se llama <strong>biolixiviación</strong> — muy usada en Chile.</div>
+            </div>
+          </div>
+          <div class="flip-card" data-flip>
+            <div class="flip-inner">
+              <div class="flip-face flip-front"><div class="ic">🗑️</div><div>Toneladas de basura orgánica</div></div>
+              <div class="flip-face flip-back">Microorganismos especiales transforman los desechos orgánicos en gas metano, que se puede usar como energía. Esto se llama <strong>metanogénesis</strong>.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 17 ESQUEMAS DE LOS 3 PROCESOS -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Conoce los procesos</div>
+        <h2 class="title-lg">3 microorganismos, 3 soluciones</h2>
+        <div style="display:flex; gap:8px; margin:14px 0; flex-wrap:wrap;" id="schemeToggle">
+          <button class="btn primary" data-scheme="bio">Biorremediación</button>
+          <button class="btn" data-scheme="lix">Biolixiviación</button>
+          <button class="btn" data-scheme="metano">Metanogénesis</button>
+        </div>
+        <div style="display:flex; gap:20px; flex-wrap:wrap;">
+          <div class="panel" style="flex:1; min-width:260px; display:flex; align-items:center; justify-content:center;">
+            <svg id="schemeSvg" viewBox="0 0 260 120" width="100%" style="max-width:340px;"></svg>
+          </div>
+          <div style="flex:1; min-width:240px;">
+            <div class="panel" id="schemeInfo"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 18 ESTACIONES ROTATIVAS -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Actividad clásica · Trabajo en estaciones</div>
+        <h2 class="title-lg">Investigación en estaciones rotativas</h2>
+        <p class="subtitle">Su grupo se instala en una estación —Biorremediación, Biolixiviación o Metanogénesis— e investiga usando fuentes confiables.</p>
+        <div class="grid2" style="margin-top:16px;">
+          <div class="panel">
+            <div class="small-cap" style="margin-bottom:8px;">Fuentes confiables</div>
+            <div class="safety-item"><span class="ic">✅</span><span>Sitios .gob, .edu, o textos escolares</span></div>
+            <div class="safety-item"><span class="ic">⚠️</span><span>Eviten usar Wikipedia como única fuente</span></div>
+            <div class="safety-item"><span class="ic">📝</span><span>Anoten el link o título exacto para citarlo después</span></div>
+            <p class="footnote" style="margin-top:10px;">Registren todo en su cuaderno usando la ficha guía (siguiente diapositiva).</p>
+          </div>
+          <div class="panel" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+            <div class="small-cap">Tiempo de investigación</div>
+            <div class="timer mono" id="stationTime" style="margin:10px 0;">15:00</div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn primary" id="stationStart">▶ Iniciar</button>
+              <button class="btn" id="stationReset">↺</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 19 FICHA GUÍA EN EL CUADERNO -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Registro en el cuaderno</div>
+        <h2 class="title-lg">Tu ficha guía: complétala en el cuaderno</h2>
+        <p class="subtitle">Copien esta estructura en su cuaderno y complétenla con lo investigado.</p>
+        <div class="paper" style="margin-top:14px;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:13px; line-height:2.1;">
+            1. Proceso investigado: ______________________<br>
+            2. ¿Qué problema ambiental resuelve? ______________________<br>
+            3. ¿Qué microorganismo(s) participan? ______________________<br>
+            4. ¿Cómo funciona? (dibujen su propio esquema) ______________________<br>
+            5. Fuente(s) consultada(s): ______________________<br>
+            6. Conclusión con evidencia: ______________________
+          </div>
+        </div>
+        <div class="panel" style="margin-top:14px;">
+          <div class="small-cap" style="margin-bottom:8px;">Antes de terminar, revisen su ficha</div>
+          <div class="check-item"><input type="checkbox" id="ficha1"><span>Nombramos el proceso y el problema que resuelve</span></div>
+          <div class="check-item"><input type="checkbox" id="ficha2"><span>Identificamos el o los microorganismos participantes</span></div>
+          <div class="check-item"><input type="checkbox" id="ficha3"><span>Dibujamos nuestro propio esquema del proceso</span></div>
+          <div class="check-item"><input type="checkbox" id="ficha4"><span>Anotamos y citamos nuestras fuentes</span></div>
+          <div class="check-item"><input type="checkbox" id="ficha5"><span>Escribimos una conclusión con evidencia</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 20 ANÁLISIS DE DATOS: PORCENTAJES -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Actividad STEAM</div>
+        <h2 class="title-lg">Analiza los datos: calcula el porcentaje</h2>
+        <div style="display:flex; gap:8px; margin:14px 0; flex-wrap:wrap;" id="dataToggle">
+          <button class="btn primary" data-data="bio">Biorremediación</button>
+          <button class="btn" data-data="lix">Biolixiviación</button>
+          <button class="btn" data-data="metano">Metanogénesis</button>
+        </div>
+        <div class="panel" id="dataPanel"></div>
+      </div>
+    </section>
+
+    <!-- 21 CIERRE SESIÓN 4: BITÁCORA -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Cierre de la sesión</div>
+        <h2 class="title-lg">Bitácora de aprendizaje científico</h2>
+        <div class="panel" style="margin-top:16px;">
+          <label class="field-label" for="bitacora4">Sesión 4</label>
+          <textarea class="field" id="bitacora4" placeholder="¿Cuál de los 3 procesos investigados te pareció más sorprendente? ¿Por qué?"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- 22 JUEGO: CONECTA EL PROCESO CON SU BENEFICIO -->
+    <section class="slide">
+      <div class="slide-inner">
+        <div class="eyebrow">Para reforzar</div>
+        <h2 class="title-lg">Conecta el proceso con su beneficio</h2>
+        <p class="subtitle">Toca un proceso y luego su beneficio correspondiente.</p>
+        <div class="grid2" style="margin-top:16px;">
+          <div>
+            <div class="small-cap" style="margin-bottom:8px;">Procesos</div>
+            <div id="matchLeft" style="display:flex; flex-direction:column; gap:8px;"></div>
+          </div>
+          <div>
+            <div class="small-cap" style="margin-bottom:8px;">Beneficios</div>
+            <div id="matchRight" style="display:flex; flex-direction:column; gap:8px;"></div>
+          </div>
+        </div>
+        <div id="matchResult" class="footnote" style="margin-top:12px;"></div>
+      </div>
+    </section>
+
+    <!-- 23 CIERRE GENERAL DEL ARCHIVO -->
+    <section class="slide">
+      <div class="slide-inner" style="text-align:center;">
+        <div class="viewport" style="margin-bottom:20px;">
+          <span style="font-size:54px;">🌍</span>
+        </div>
+        <h2 class="title-xl">¡Excelente trabajo en estas dos sesiones!</h2>
+        <div class="panel" style="max-width:560px; margin:18px auto 0; text-align:left;">
+          <div class="check-item">✅ <span>Diseñamos un experimento con hipótesis y variables (Sesión 3)</span></div>
+          <div class="check-item">✅ <span>Investigamos cómo los microorganismos resuelven problemas ambientales (Sesión 4)</span></div>
+          <div class="check-item">✅ <span>Analizamos datos reales y calculamos porcentajes</span></div>
+        </div>
+        <p class="subtitle" style="margin:18px auto 0;">Próxima sesión: microorganismos en tu cocina y en la farmacia — lanzamiento del proyecto "Biofábrica Escolar" 🍞🧫</p>
+
+        <button class="btn export-btn" id="btnExportBottom" style="margin-top:26px;">📄 Exportar mi trabajo a PDF</button>
+        <p class="export-hint">Se abrirá la ventana de impresión: elige "Guardar como PDF" como destino.</p>
+
+        <p class="footnote" style="margin-top:24px;">Ciencias Naturales · 7° Básico · Colegio San Agustín Villa Alemana · Prof. Felipe Jiménez</p>
+      </div>
+    </section>
+
+  </div>
+
+
+  <div class="lens-badge" id="lensBadge">1/24</div>
+
+  <div class="controls">
+    <button class="navbtn" id="prevBtn">←</button>
+    <div class="dots" id="dotsWrap"></div>
+    <button class="navbtn" id="nextBtn">→</button>
+  </div>
+
+  <div class="menu-panel" id="menuPanel">
+    <div class="menu-list" id="menuList"></div>
+  </div>
+
+</div>
+
+<div id="printReport"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ QR IMAGE ============ */
+  document.getElementById('qrImg').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAbwAAAG8AQAAAACNyy1yAAAC3klEQVR4nO2cS27rMAxFDx88l3aQ/S+rO5BWwDfQ104GRVrEkHqJoJAVHTgECJa6+pjzluV/73EgUKBAgfuD1i1iZmQjW+knm0X6Yx+2nI8C1wcPgJDKg5W/odYFPrUtpPOwhXwUuBXYsiWe8IQ9HCCbJwB6xLZhK/oocHHwuDxbz67UELWQrGXU33ijQIHv2TVWvURpNkIim1OL1d97o0CB71mN1ZNyFRI5OhDc2rd+HbaQjwI3AnOd3wOlHLWHW8QiBCe09jRsPR8FLg8eXJJq+b8PgLe2Z7sOW8lHgfuAXVY1M0+0mT40iRWo/bkprqv5KHB9cMqrwcmRKZ1aq1erZfPRuZCPAvcAD8DAc7SQbBL/4VQP1DGtHljKR4EbgcEJ7l/m7oA9vOpUwevC68MBi9SlgRt/qsC/Cx6Uf/o5evCu+ZfsOnSqUrLmOJUEC/kocA8Qdy/p1BNzo7QJXtvBy/JrRdJCPgrcAyyB11b8g9cPlM5uvbM+K1YFfhqk58+aOWsojp7y7RzPilWBN2pWVnaoAjl6jtAUqjJqEgR+/EaBAt+0S14dCTZxSrNwqg2UVwV+Ghx7Vzxb2awya6r0zYE5ejZCagLsQj4K3ANsmXOa6c8l65hVeZ12aW4l8CbwFIRt3kRvz8N6MaBYFXhjvdqDcMz94UX0jsZCPgrcAzzJ/vQVgUuaTUNuLSMVqwI/DtKjkXYw8EWl2q1rsIpVgZ8GD8rqfzkGCAxNNXrdBJiG0Eo/07qQjwL3AIcO0IuBnmZh2ljVCgDpAAJvBM8Xqky7AsIpdOvxq1t/qsA/DD7duxLSvBww+ufNgT96o0CBb1qfQw2VdZpwXVSssX1FNYDAu8FaBmSrZwHKQexHE1e/THMrgTeB13tXns3b53yvxUI+CtwDvN674v2synQ1UG9Zu+FqKR8F7gEe8Dosyy7WOZ2Wb4vcupSPAvcAnzdRf890B7tAgQIFvrb/GBgYBU/dUhoAAAAASUVORK5CYII=";
+
+  /* ============ SLIDE NAVIGATION ============ */
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var total = slides.length;
+  var current = 0;
+
+  var titles = [
+    "Portada", "Criterios de evaluación", "Sesión 3 · Portada", "Hook: Línea de tiempo del moho",
+    "Tipos de variables", "Elige tu experimento", "Formula tu hipótesis",
+    "Plan de registro y seguridad", "Bitácora Sesión 3", "Aviso: Kahoot de cierre de bloque",
+    "Intro juegos", "Juego 1: Detective de variables", "Juego 2: Ordena el método científico",
+    "Fin Sesión 3", "Criterios de evaluación Sesión 4", "Sesión 4 · Portada",
+    "Hook: 3 problemas, 3 héroes", "Esquemas de los 3 procesos", "Estaciones rotativas",
+    "Ficha guía en el cuaderno", "Análisis de datos: porcentajes", "Bitácora Sesión 4",
+    "Juego: Conecta el beneficio", "Cierre general"
+  ];
+
+  var dotsWrap = document.getElementById('dotsWrap');
+  titles.forEach(function(t, i){
+    var d = document.createElement('div');
+    d.className = 'dot' + (i===0 ? ' active' : '');
+    d.addEventListener('click', function(){ goTo(i); });
+    dotsWrap.appendChild(d);
+  });
+
+  var menuList = document.getElementById('menuList');
+  titles.forEach(function(t, i){
+    var item = document.createElement('div');
+    item.className = 'menu-item';
+    item.innerHTML = '<span class="n">' + String(i+1).padStart(2,'0') + '</span><span>' + t + '</span>';
+    item.addEventListener('click', function(){
+      goTo(i);
+      document.getElementById('menuPanel').classList.remove('open');
+    });
+    menuList.appendChild(item);
+  });
+
+  function render(){
+    slides.forEach(function(s, i){ s.classList.toggle('active', i === current); });
+    Array.prototype.forEach.call(dotsWrap.children, function(d, i){ d.classList.toggle('active', i === current); });
+    document.getElementById('lensBadge').textContent = (current+1) + '/' + total;
+    document.getElementById('prevBtn').disabled = current === 0;
+    document.getElementById('nextBtn').disabled = current === total-1;
+  }
+  function goTo(i){ current = Math.max(0, Math.min(total-1, i)); render(); }
+  function next(){ goTo(current+1); }
+  function prev(){ goTo(current-1); }
+
+  document.getElementById('nextBtn').addEventListener('click', next);
+  document.getElementById('prevBtn').addEventListener('click', prev);
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowRight' || e.key === ' ') next();
+    if (e.key === 'ArrowLeft') prev();
+    if (e.key === 'Escape') document.getElementById('menuPanel').classList.remove('open');
+  });
+
+  var touchX = null;
+  document.getElementById('app').addEventListener('touchstart', function(e){ touchX = e.changedTouches[0].clientX; }, {passive:true});
+  document.getElementById('app').addEventListener('touchend', function(e){
+    if (touchX === null) return;
+    var dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 50) { dx < 0 ? next() : prev(); }
+    touchX = null;
+  }, {passive:true});
+
+  document.getElementById('btnMenu').addEventListener('click', function(){
+    document.getElementById('menuPanel').classList.add('open');
+  });
+  document.getElementById('menuPanel').addEventListener('click', function(e){
+    if (e.target === this) this.classList.remove('open');
+  });
+  document.getElementById('btnFull').addEventListener('click', function(){
+    if (!document.fullscreenElement) { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); }
+    else { document.exitFullscreen && document.exitFullscreen(); }
+  });
+
+  render();
+
+  /* ============ SLIDE 3: HOOK — LÍNEA DE TIEMPO DEL MOHO ============ */
+  var moldCaptions = [
+    "Día 0: pan recién horneado, sin ninguna señal de moho.",
+    "Día 1: todavía no hay cambios visibles a simple vista.",
+    "Día 2: podría empezar a sentirse un poco más húmedo.",
+    "Día 3: primeras manchas diminutas, casi imperceptibles.",
+    "Día 4: pequeñas colonias empiezan a notarse en la superficie.",
+    "Día 5: las colonias crecen y se hacen más visibles.",
+    "Día 6: el moho cubre una porción considerable del pan.",
+    "Día 7: colonias de moho bien visibles cubriendo buena parte del pan."
+  ];
+  var dayRange = document.getElementById('dayRange');
+  var dayNum = document.getElementById('dayNum');
+  var dayCaption = document.getElementById('dayCaption');
+  var moldSvg = document.getElementById('moldSvg');
+
+  function drawMold(day){
+    var spots = [
+      {cx:30,cy:35,r:3}, {cx:55,cy:28,r:2.5}, {cx:70,cy:45,r:3.5}, {cx:40,cy:55,r:2.8},
+      {cx:60,cy:62,r:3.2}, {cx:22,cy:60,r:2.4}, {cx:78,cy:60,r:2.6}, {cx:50,cy:70,r:3}
+    ];
+    var visibleCount = Math.round((day/7) * spots.length);
+    var html = '<rect x="8" y="8" width="84" height="84" rx="12" fill="#e8d9b0" stroke="#c9a86b" stroke-width="2"/>';
+    for (var i=0;i<visibleCount;i++){
+      var s = spots[i];
+      var scale = Math.min(1, (day/7) + 0.15);
+      html += '<circle cx="'+s.cx+'" cy="'+s.cy+'" r="'+(s.r*scale*1.6)+'" fill="#6b8f3a" opacity="0.8"/>';
+      html += '<circle cx="'+s.cx+'" cy="'+s.cy+'" r="'+(s.r*scale*0.7)+'" fill="#3f5e22" opacity="0.7"/>';
+    }
+    moldSvg.innerHTML = html;
+  }
+  function updateMold(){
+    var day = parseInt(dayRange.value,10);
+    dayNum.textContent = day;
+    dayCaption.textContent = moldCaptions[day];
+    drawMold(day);
+  }
+  dayRange.addEventListener('input', updateMold);
+  updateMold();
+
+  /* ============ SLIDE 4: FLIP CARDS ============ */
+  document.querySelectorAll('[data-flip]').forEach(function(card){
+    card.addEventListener('click', function(){ card.classList.toggle('flipped'); });
+  });
+
+  /* ============ SLIDE 5: ELIGE TU EXPERIMENTO ============ */
+  var expChoice = "";
+  var expCards = document.querySelectorAll('.exp-card');
+  expCards.forEach(function(card){
+    card.addEventListener('click', function(){
+      expCards.forEach(function(c){ c.classList.remove('selected'); });
+      card.classList.add('selected');
+      expChoice = card.getAttribute('data-exp');
+      document.getElementById('expChosenNote').textContent = 'Experimento elegido: ' + expChoice;
+    });
+  });
+
+  /* ============ SLIDE 11: GAME 1 — DETECTIVE DE VARIABLES ============ */
+  var g1Items = [
+    { name:"Cantidad de luz recibida", emoji:"💡", answer:"Manipulada" },
+    { name:"Tamaño de la bolsa ziploc", emoji:"🧊", answer:"Controlada" },
+    { name:"Días hasta ver moho", emoji:"📅", answer:"Respuesta" },
+    { name:"Tamaño de la colonia", emoji:"🔬", answer:"Respuesta" },
+    { name:"Cantidad de sal agregada", emoji:"🧂", answer:"Manipulada" },
+    { name:"Volumen de caldo por frasco", emoji:"🥣", answer:"Controlada" }
+  ];
+  var g1Grid = document.getElementById('g1Grid');
+  var g1Score = 0, g1Time = 75, g1Interval = null, g1Playing = false, g1Played = false;
+
+  function buildG1(){
+    g1Grid.innerHTML = '';
+    g1Items.forEach(function(item){
+      var card = document.createElement('div');
+      card.className = 'sort-card';
+      card.innerHTML = '<div class="ic">'+item.emoji+'</div><div class="name">'+item.name+'</div>' +
+        '<div class="choices">' +
+          '<button data-c="Manipulada">Manipulada</button>' +
+          '<button data-c="Controlada">Controlada</button>' +
+          '<button data-c="Respuesta">Respuesta</button>' +
+        '</div>';
+      card.querySelectorAll('button').forEach(function(btn){
+        btn.style.fontSize = '10.5px';
+        btn.addEventListener('click', function(){
+          if (!g1Playing || card.classList.contains('done')) return;
+          card.classList.add('done');
+          var ok = btn.getAttribute('data-c') === item.answer;
+          if (ok) { g1Score += 10; document.getElementById('g1Score').textContent = g1Score; }
+          card.style.borderColor = ok ? 'var(--good)' : 'var(--bad)';
+        });
+      });
+      g1Grid.appendChild(card);
+    });
+  }
+  function g1UpdateTime(){ document.getElementById('g1Time').textContent = g1Time; }
+  document.getElementById('g1Start').addEventListener('click', function(){
+    clearInterval(g1Interval);
+    g1Score = 0; g1Time = 75; g1Playing = true; g1Played = true;
+    document.getElementById('g1Score').textContent = 0;
+    document.getElementById('g1End').style.display = 'none';
+    g1UpdateTime();
+    buildG1();
+    g1Interval = setInterval(function(){
+      g1Time--; g1UpdateTime();
+      if (g1Time<=0){
+        clearInterval(g1Interval); g1Playing = false;
+        var endBox = document.getElementById('g1End');
+        endBox.style.display = 'block';
+        endBox.innerHTML = '<strong style="font-size:20px;">¡Tiempo! Puntaje final: '+g1Score+' pts</strong><br><span class="footnote">'+(g1Score>=50?'¡Excelente ojo de detective científico! 🕵️':'¡Buen intento! Repasemos juntos los casos que faltaron.')+'</span>';
+      }
+    }, 1000);
+  });
+  buildG1();
+
+  /* ============ SLIDE 12: GAME 2 — ORDENA EL MÉTODO CIENTÍFICO ============ */
+  var seqCorrect = [
+    "Observación inicial", "Pregunta de investigación", "Hipótesis",
+    "Diseño experimental", "Recolección de datos", "Análisis y conclusión"
+  ];
+  var seqPool = document.getElementById('seqPool');
+  var seqSlots = document.getElementById('seqSlots');
+  var seqPlaced = [];
+
+  function shuffleArr(arr){
+    var a = arr.slice();
+    for (var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+    return a;
+  }
+  function buildSeq(){
+    seqPlaced = [];
+    document.getElementById('seqResult').textContent = '';
+    seqSlots.innerHTML = '';
+    for (var i=0;i<seqCorrect.length;i++){
+      var slot = document.createElement('div');
+      slot.className = 'seq-slot';
+      slot.textContent = '—';
+      seqSlots.appendChild(slot);
+    }
+    seqPool.innerHTML = '';
+    shuffleArr(seqCorrect).forEach(function(label){
+      var chip = document.createElement('div');
+      chip.className = 'seq-chip';
+      chip.textContent = label;
+      chip.addEventListener('click', function(){
+        if (chip.classList.contains('used') || seqPlaced.length >= seqCorrect.length) return;
+        chip.classList.add('used');
+        seqPlaced.push(label);
+        var slotEl = seqSlots.children[seqPlaced.length-1];
+        slotEl.textContent = label;
+        slotEl.classList.add('filled');
+      });
+      seqPool.appendChild(chip);
+    });
+  }
+  document.getElementById('seqCheck').addEventListener('click', function(){
+    if (seqPlaced.length < seqCorrect.length) {
+      document.getElementById('seqResult').textContent = 'Coloquen las ' + seqCorrect.length + ' etapas antes de verificar.';
+      return;
+    }
+    var correctCount = 0;
+    Array.prototype.forEach.call(seqSlots.children, function(slotEl, i){
+      slotEl.classList.remove('ok','bad');
+      if (seqPlaced[i] === seqCorrect[i]) { slotEl.classList.add('ok'); correctCount++; }
+      else { slotEl.classList.add('bad'); }
+    });
+    document.getElementById('seqResult').textContent = correctCount === seqCorrect.length
+      ? '¡Secuencia perfecta! 🎉'
+      : correctCount + ' de ' + seqCorrect.length + ' etapas en el orden correcto. Reintenten si quieren.';
+  });
+  document.getElementById('seqReset').addEventListener('click', buildSeq);
+  buildSeq();
+
+  /* ============ SLIDE 17: ESQUEMAS DE LOS 3 PROCESOS ============ */
+  var schemeData = {
+    bio: {
+      label: "Biorremediación",
+      input: "Petróleo derramado",
+      mid: "Bacterias degradadoras",
+      output: "CO₂ + agua + biomasa",
+      fact: "Se ha usado tras derrames de petróleo en el mar para acelerar su descomposición natural."
+    },
+    lix: {
+      label: "Biolixiviación",
+      input: "Roca con bajo % de cobre",
+      mid: "Bacterias oxidantes",
+      output: "Cobre disuelto, listo para extraer",
+      fact: "Chile es uno de los países que más utiliza esta técnica en la gran minería del cobre."
+    },
+    metano: {
+      label: "Metanogénesis",
+      input: "Materia orgánica sin oxígeno",
+      mid: "Arqueas metanogénicas",
+      output: "Biogás (metano) utilizable",
+      fact: "Se usa en rellenos sanitarios y plantas de tratamiento para generar electricidad."
+    }
+  };
+  var schemeSvg = document.getElementById('schemeSvg');
+  var schemeInfo = document.getElementById('schemeInfo');
+  function drawScheme(key){
+    var d = schemeData[key];
+    schemeSvg.innerHTML =
+      '<rect x="5" y="35" width="70" height="50" rx="10" fill="none" stroke="#f2b344" stroke-width="2.5"/>' +
+      '<text x="40" y="100" text-anchor="middle" font-size="9" fill="#93a6bd">'+d.input+'</text>' +
+      '<path d="M78 60 L112 60" stroke="#33d6c0" stroke-width="2.5" marker-end="url(#arrow)"/>' +
+      '<circle cx="130" cy="60" r="26" fill="#182a45" stroke="#33d6c0" stroke-width="2.5"/>' +
+      '<text x="130" y="64" text-anchor="middle" font-size="18">🦠</text>' +
+      '<text x="130" y="100" text-anchor="middle" font-size="8.5" fill="#93a6bd">'+d.mid+'</text>' +
+      '<path d="M158 60 L192 60" stroke="#33d6c0" stroke-width="2.5" marker-end="url(#arrow)"/>' +
+      '<rect x="195" y="35" width="60" height="50" rx="10" fill="none" stroke="#9a8cf5" stroke-width="2.5"/>' +
+      '<text x="225" y="100" text-anchor="middle" font-size="8" fill="#93a6bd">'+d.output+'</text>' +
+      '<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#33d6c0"/></marker></defs>';
+    schemeInfo.innerHTML = '<div class="small-cap" style="margin-bottom:8px;">'+d.label+'</div><p style="font-size:13.5px; color:var(--muted); line-height:1.6;">'+d.fact+'</p>';
+  }
+  document.querySelectorAll('#schemeToggle button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('#schemeToggle button').forEach(function(b){ b.classList.remove('primary'); });
+      btn.classList.add('primary');
+      drawScheme(btn.getAttribute('data-scheme'));
+    });
+  });
+  drawScheme('bio');
+
+  /* ============ SLIDE 18: STATION TIMER ============ */
+  (function(){
+    var timeLeft = 15*60;
+    var interval = null;
+    var display = document.getElementById('stationTime');
+    var startBtn = document.getElementById('stationStart');
+    function update(){
+      var m = Math.floor(timeLeft/60), s = timeLeft%60;
+      display.textContent = (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+    }
+    startBtn.addEventListener('click', function(){
+      if (interval) { clearInterval(interval); interval=null; startBtn.textContent='▶ Iniciar'; return; }
+      startBtn.textContent='⏸ Pausar';
+      interval = setInterval(function(){
+        timeLeft--; update();
+        if (timeLeft<=0){ clearInterval(interval); interval=null; startBtn.textContent='▶ Iniciar'; }
+      },1000);
+    });
+    document.getElementById('stationReset').addEventListener('click', function(){
+      clearInterval(interval); interval=null; timeLeft=15*60; update(); startBtn.textContent='▶ Iniciar';
+    });
+    update();
+  })();
+
+  /* ============ SLIDE 20: ANÁLISIS DE DATOS — PORCENTAJES ============ */
+  var dataSets = {
+    bio: {
+      label: "Biorremediación",
+      tableHtml: '<table class="data-table"><tr><th>Día</th><th>0</th><th>10</th><th>20</th><th>30</th></tr>' +
+        '<tr><th>% petróleo degradado</th><td>0%</td><td>25%</td><td>55%</td><td>80%</td></tr></table>',
+      question: '¿Qué porcentaje del petróleo aún NO se ha degradado al día 20?',
+      answer: 45,
+      unit: '%'
+    },
+    lix: {
+      label: "Biolixiviación",
+      tableHtml: '<table class="data-table"><tr><th>Roca procesada</th><th>Cobre obtenido</th></tr>' +
+        '<tr><td>100 toneladas</td><td>2 toneladas</td></tr></table>',
+      question: '¿Qué porcentaje de la roca procesada se convierte en cobre?',
+      answer: 2,
+      unit: '%'
+    },
+    metano: {
+      label: "Metanogénesis",
+      tableHtml: '<table class="data-table"><tr><th>Materia orgánica</th><th>% convertido en biogás</th></tr>' +
+        '<tr><td>50 kg</td><td>30%</td></tr></table>',
+      question: '¿Cuántos kilos de biogás se obtienen de esos 50 kg?',
+      answer: 15,
+      unit: 'kg'
+    }
+  };
+  var dataPanel = document.getElementById('dataPanel');
+  function drawData(key){
+    var d = dataSets[key];
+    dataPanel.innerHTML =
+      '<div class="small-cap" style="margin-bottom:8px;">'+d.label+' — datos de ejemplo</div>' +
+      d.tableHtml +
+      '<p style="font-size:13.5px; color:var(--muted); margin-top:14px;">'+d.question+'</p>' +
+      '<div style="display:flex; gap:8px; align-items:center;">' +
+        '<input type="number" class="field" id="dataAnswer" style="max-width:120px;" placeholder="0">' +
+        '<span class="mono" style="color:var(--muted);">'+d.unit+'</span>' +
+        '<button class="btn primary" id="dataCheck">Verificar</button>' +
+      '</div>' +
+      '<div id="dataFeedback" style="margin-top:8px; font-size:13px;"></div>';
+    document.getElementById('dataCheck').addEventListener('click', function(){
+      var val = parseFloat(document.getElementById('dataAnswer').value);
+      var fb = document.getElementById('dataFeedback');
+      if (isNaN(val)) { fb.innerHTML = '<span style="color:var(--muted);">Escribe un número primero.</span>'; return; }
+      if (Math.abs(val - d.answer) < 0.5) {
+        fb.innerHTML = '<span style="color:var(--good);">✓ ¡Correcto! Son '+d.answer+' '+d.unit+'.</span>';
+      } else {
+        fb.innerHTML = '<span style="color:var(--bad);">✗ Intenta de nuevo. Pista: revisa la tabla con cuidado.</span>';
+      }
+    });
+  }
+  document.querySelectorAll('#dataToggle button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('#dataToggle button').forEach(function(b){ b.classList.remove('primary'); });
+      btn.classList.add('primary');
+      drawData(btn.getAttribute('data-data'));
+    });
+  });
+  drawData('bio');
+
+  /* ============ SLIDE 22: MATCHING GAME ============ */
+  var matchPairs = [
+    { proc:"Biorremediación", benefit:"Descompone petróleo derramado en el mar" },
+    { proc:"Biolixiviación", benefit:"Extrae cobre de la roca sin hornos" },
+    { proc:"Metanogénesis", benefit:"Genera biogás a partir de basura orgánica" },
+    { proc:"Fermentación", benefit:"Produce pan, yogurt y otros alimentos" }
+  ];
+  var matchLeft = document.getElementById('matchLeft');
+  var matchRight = document.getElementById('matchRight');
+  var matchSelectedLeft = null, matchSelectedLeftEl = null, matchSolved = 0;
+
+  function buildMatch(){
+    matchSolved = 0; matchSelectedLeft = null; matchSelectedLeftEl = null;
+    document.getElementById('matchResult').textContent = '';
+    matchLeft.innerHTML = ''; matchRight.innerHTML = '';
+    matchPairs.forEach(function(p){
+      var l = document.createElement('div');
+      l.className = 'toggle-opt'; l.textContent = p.proc; l.dataset.proc = p.proc;
+      l.addEventListener('click', function(){
+        if (l.classList.contains('selected') && l.style.pointerEvents === 'none') return;
+        matchLeft.querySelectorAll('.toggle-opt').forEach(function(el){ if(el.style.pointerEvents!=='none') el.classList.remove('selected'); });
+        l.classList.add('selected');
+        matchSelectedLeft = p.proc;
+        matchSelectedLeftEl = l;
+      });
+      matchLeft.appendChild(l);
+    });
+    shuffleArr(matchPairs).forEach(function(p){
+      var r = document.createElement('div');
+      r.className = 'toggle-opt'; r.textContent = p.benefit; r.dataset.benefit = p.benefit; r.dataset.proc = p.proc;
+      r.style.textAlign = 'left';
+      r.addEventListener('click', function(){
+        if (!matchSelectedLeft || r.style.pointerEvents === 'none') return;
+        if (r.dataset.proc === matchSelectedLeft) {
+          r.style.pointerEvents = 'none'; matchSelectedLeftEl.style.pointerEvents = 'none';
+          r.style.borderColor = 'var(--good)'; r.style.color = 'var(--good)';
+          matchSelectedLeftEl.style.borderColor = 'var(--good)'; matchSelectedLeftEl.style.color = 'var(--good)';
+          matchSolved++;
+          matchSelectedLeft = null; matchSelectedLeftEl = null;
+          if (matchSolved === matchPairs.length) {
+            document.getElementById('matchResult').textContent = '¡Todos los pares conectados! 🎉';
+          }
+        } else {
+          r.style.borderColor = 'var(--bad)';
+          setTimeout(function(){ r.style.borderColor = ''; }, 500);
+        }
+      });
+      matchRight.appendChild(r);
+    });
+  }
+  buildMatch();
+
+  /* ============ EXPORT TO PDF (print-based) ============ */
+  function esc(str){
+    var d = document.createElement('div');
+    d.textContent = str == null ? '' : str;
+    return d.innerHTML;
+  }
+  function answerBlock(question, value, placeholderNote){
+    var v = (value || '').trim();
+    return '<div class="qa"><div class="q">'+esc(question)+'</div>' +
+      '<div class="a">'+(v ? esc(v) : '<em>'+(placeholderNote||'(sin responder)')+'</em>')+'</div></div>';
+  }
+
+  function buildReport(){
+    var members = document.getElementById('teamMembers').value.trim();
+    var dateStr = new Date().toLocaleDateString('es-CL', { year:'numeric', month:'long', day:'numeric' });
+
+    var html = '';
+    html += '<h1>Unidad 3 — Registro del estudiante</h1>';
+    html += '<div class="meta"><strong>Unidad 3 · Ciencias Naturales · 7° Básico</strong> — Sesiones 3 y 4</div>';
+    html += '<div class="meta">Integrantes: <strong>'+esc(members || '(sin registrar)')+'</strong></div>';
+    html += '<div class="meta">Fecha de exportación: '+esc(dateStr)+'</div>';
+
+    html += '<h2>Sesión 3 — Diseño experimental</h2>';
+    html += answerBlock('Experimento elegido', expChoice, '(sin elegir)');
+    html += answerBlock('Hipótesis del grupo', document.getElementById('hypothesis').value);
+
+    html += '<div class="section-block"><div class="q" style="margin-bottom:6px;">Tabla de predicciones</div><table><tr><th>Día 0</th><th>Día 2</th><th>Día 4</th><th>Día 7</th></tr>';
+    html += '<tr><td>'+esc(document.getElementById('pred0').value || '—')+'</td><td>'+esc(document.getElementById('pred2').value || '—')+'</td><td>'+esc(document.getElementById('pred4').value || '—')+'</td><td>'+esc(document.getElementById('pred7').value || '—')+'</td></tr>';
+    html += '</table></div>';
+
+    var tips = [1,2,3,4].map(function(n){ return document.getElementById('tip'+n).checked; });
+    html += '<div class="section-block"><div class="q" style="margin-bottom:6px;">Checklist fotográfico</div><table><tr><th>Ítem</th><th>¿Listo?</th></tr>';
+    var tipLabels = ["Misma distancia y ángulo","Misma luz","Fondo neutro","Mismo horario"];
+    tips.forEach(function(checked, i){
+      html += '<tr><td>'+tipLabels[i]+'</td><td>'+(checked?'<span class="tag-ok">Sí</span>':'No')+'</td></tr>';
+    });
+    html += '</table></div>';
+
+    var safetyOk = document.getElementById('safetyAck').checked;
+    html += answerBlock('Normas de seguridad', safetyOk ? 'Leyeron y entendieron las normas de seguridad' : 'Aún no confirman haber leído las normas', '(sin confirmar)');
+
+    html += answerBlock('Bitácora de aprendizaje científico — Sesión 3', document.getElementById('bitacora3').value);
+
+    html += '<h2>Juegos de repaso — Sesión 3</h2>';
+    html += '<div class="section-block"><div class="q">Juego 1 · Detective de variables</div>';
+    html += '<div class="a">'+(g1Played ? 'Puntaje obtenido: '+g1Score+' pts' : 'No jugado')+'</div></div>';
+    html += '<div class="section-block"><div class="q">Juego 2 · Ordena el método científico</div>';
+    var seqDone = seqPlaced.length === seqCorrect.length;
+    var seqCorrectCount = 0;
+    if (seqDone) { seqPlaced.forEach(function(v,i){ if (v===seqCorrect[i]) seqCorrectCount++; }); }
+    html += '<div class="a">'+(seqDone ? seqCorrectCount+' de '+seqCorrect.length+' etapas correctas' : 'No completado')+'</div></div>';
+
+    html += '<h2>Sesión 4 — Microorganismos al rescate</h2>';
+    var fichaLabels = ["Nombra el proceso y el problema","Identifica el/los microorganismo(s)","Dibujó su propio esquema","Anotó y citó sus fuentes","Escribió una conclusión con evidencia"];
+    html += '<div class="section-block"><div class="q" style="margin-bottom:6px;">Autorrevisión de la ficha guía (cuaderno)</div><table><tr><th>Ítem</th><th>¿Completado?</th></tr>';
+    [1,2,3,4,5].forEach(function(n, i){
+      var checked = document.getElementById('ficha'+n).checked;
+      html += '<tr><td>'+fichaLabels[i]+'</td><td>'+(checked?'<span class="tag-ok">Sí</span>':'No')+'</td></tr>';
+    });
+    html += '</table></div>';
+    html += '<p style="font-size:11.5px; color:#7a7466; font-style:italic;">La ficha guía completa (proceso, esquema dibujado, fuentes y conclusión) queda registrada en el cuaderno del estudiante, no en este PDF.</p>';
+
+    html += answerBlock('Bitácora de aprendizaje científico — Sesión 4', document.getElementById('bitacora4').value);
+
+    html += '<div class="section-block"><div class="q">Juego · Conecta el proceso con su beneficio</div>';
+    html += '<div class="a">'+(matchSolved > 0 ? matchSolved+' de '+matchPairs.length+' pares conectados' : 'No jugado')+'</div></div>';
+
+    html += '<div class="rep-footer">Ciencias Naturales · 7° Básico · Colegio San Agustín Villa Alemana · Prof. Felipe Jiménez</div>';
+
+    document.getElementById('printReport').innerHTML = html;
+  }
+
+  var originalTitle = document.title;
+  function slugify(str){
+    return str.trim()
+      .replace(/,/g, '_')
+      .replace(/\s+/g, '_')
+      .replace(/[^a-zA-Z0-9À-ÿ_]/g, '')
+      .slice(0, 70);
+  }
+
+  function exportPDF(){
+    var members = document.getElementById('teamMembers').value.trim();
+    if (!members) {
+      goTo(0);
+      alert('Antes de exportar, escribe los nombres de tu grupo en "Integrantes del grupo" (portada).');
+      return;
+    }
+    buildReport();
+    document.title = 'U3_Sesiones3y4_' + slugify(members);
+    window.print();
+  }
+  window.addEventListener('afterprint', function(){ document.title = originalTitle; });
+  document.getElementById('btnExportTop').addEventListener('click', exportPDF);
+  document.getElementById('btnExportBottom').addEventListener('click', exportPDF);
+
+})();
+</script>
+</body>
+</html>

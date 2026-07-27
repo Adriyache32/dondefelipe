@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Causas del Cambio Climático — Biología de los Ecosistemas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#0F2A22;
+    --verde:#1B4332;
+    --verde-2:#25573F;
+    --crema:#F6F1E7;
+    --crema-2:#EFE7D6;
+    --oro:#C9A227;
+    --ascua:#E2572B;
+    --cielo:#6C9FB0;
+    --tinta:#132720;
+    --texto-claro:#F6F1E7;
+    --linea:rgba(19,39,32,0.14);
+    --sombra:0 20px 50px -20px rgba(15,42,34,0.45);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(1200px 700px at 15% 10%, #163d30 0%, transparent 60%),
+      radial-gradient(1000px 600px at 90% 90%, #1e2a1f 0%, transparent 55%),
+      #0a1712;
+    font-family:'Inter', sans-serif;
+    color:var(--tinta);
+    padding:18px;
+  }
+
+  .marca{ font-family:'IBM Plex Mono', monospace; }
+
+  /* ================= DECK SHELL ================= */
+  .deck{
+    position:relative;
+    width:min(1280px, 100%);
+    aspect-ratio:16/9;
+    background:var(--crema);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:var(--sombra);
+    border:1px solid rgba(255,255,255,0.06);
+  }
+  @media (max-width: 780px){
+    .deck{ aspect-ratio:auto; height:94vh; }
+  }
+
+  .slides{
+    position:absolute; inset:0;
+  }
+
+  .slide{
+    position:absolute; inset:0;
+    display:flex;
+    flex-direction:column;
+    padding:clamp(20px,4vw,56px) clamp(24px,5.5vw,72px);
+    opacity:0;
+    transform:translateY(14px) scale(0.995);
+    pointer-events:none;
+    transition:opacity .45s ease, transform .45s ease;
+    overflow:auto;
+  }
+  .slide.activa{
+    opacity:1; transform:translateY(0) scale(1);
+    pointer-events:auto;
+  }
+
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:clamp(11px,1.1vw,13px);
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--oro);
+    font-weight:600;
+  }
+
+  h1,h2,h3{ font-family:'Fraunces', serif; margin:0; color:var(--verde); }
+  h1{ font-size:clamp(30px,5vw,58px); line-height:1.02; font-weight:700; letter-spacing:-.01em;}
+  h2{ font-size:clamp(24px,3.4vw,38px); font-weight:700; line-height:1.08;}
+  h3{ font-size:clamp(16px,1.6vw,20px); font-weight:600; }
+  p{ line-height:1.5; }
+  .lead{ font-size:clamp(14px,1.5vw,18px); color:#2b453a; max-width:62ch; }
+
+  .pill{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:'IBM Plex Mono', monospace; font-size:11px; font-weight:600;
+    letter-spacing:.04em; text-transform:uppercase;
+    padding:5px 11px; border-radius:99px;
+    border:1px solid var(--linea); color:var(--verde);
+    background:rgba(27,67,50,0.06);
+  }
+  .pill--ascua{ color:#8f2c12; border-color:rgba(226,87,43,.35); background:rgba(226,87,43,0.1);}
+  .pill--oro{ color:#7a5f16; border-color:rgba(201,162,39,.4); background:rgba(201,162,39,0.12);}
+
+  /* ================= NAV CHROME ================= */
+  .chrome-top{
+    position:absolute; top:0; left:0; right:0; height:5px;
+    background:rgba(19,39,32,0.08); z-index:5;
+  }
+  .chrome-top-bar{
+    height:100%; width:0%; background:linear-gradient(90deg,var(--oro),var(--ascua));
+    transition:width .4s ease;
+  }
+  .chrome-bottom{
+    position:absolute; left:0; right:0; bottom:0;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:14px; padding:10px clamp(16px,3vw,34px);
+    background:linear-gradient(0deg, rgba(246,241,231,0.97), rgba(246,241,231,0.0));
+    z-index:6;
+  }
+  .nav-btn{
+    width:38px; height:38px; border-radius:50%;
+    border:1.5px solid var(--verde); background:var(--crema);
+    color:var(--verde); font-size:18px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .2s, color .2s, transform .15s;
+  }
+  .nav-btn:hover:not(:disabled){ background:var(--verde); color:var(--texto-claro); }
+  .nav-btn:active:not(:disabled){ transform:scale(.92); }
+  .nav-btn:disabled{ opacity:.28; cursor:default; }
+
+  .dots{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center; max-width:56vw;}
+  .dot{
+    width:7px; height:7px; border-radius:50%;
+    background:rgba(19,39,32,0.25); border:none; cursor:pointer; padding:0;
+    transition:background .2s, transform .2s;
+  }
+  .dot.activo{ background:var(--ascua); transform:scale(1.4); }
+
+  .contador{ font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--verde); min-width:44px; text-align:right;}
+
+  /* ================= SLIDE 0 — PORTADA ================= */
+  .slide--portada{
+    background:radial-gradient(1100px 500px at 80% -10%, #1c4433 0%, transparent 55%), var(--night);
+    color:var(--texto-claro);
+    justify-content:center;
+    padding-bottom:clamp(60px,8vw,90px) !important;
+  }
+  .atmosfera{
+    position:absolute; inset:0; overflow:hidden; z-index:0;
+  }
+  .sol{
+    position:absolute; top:11%; right:23%;
+    width:64px; height:64px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #fff2c4, var(--oro) 70%);
+    box-shadow:0 0 60px 14px rgba(201,162,39,.35);
+  }
+  .capa-gases{
+    position:absolute; left:-5%; right:-5%; top:26%; height:60px;
+    background:linear-gradient(90deg, rgba(226,87,43,.16), rgba(201,162,39,.28), rgba(226,87,43,.16));
+    border-top:1px dashed rgba(246,241,231,.25);
+    border-bottom:1px dashed rgba(246,241,231,.25);
+    filter:blur(1px);
+  }
+  .suelo{
+    position:absolute; left:0; right:0; bottom:0; height:34%;
+    background:linear-gradient(180deg, transparent, rgba(9,20,15,.9));
+    border-top:2px solid rgba(201,162,39,.5);
+  }
+  .foton{
+    position:absolute; width:5px; height:5px; border-radius:50%;
+    top:6%;
+  }
+  .foton--solar{ background:#ffe9a8; box-shadow:0 0 6px 2px rgba(255,233,168,.7); animation:caer linear infinite; }
+  .foton--ir{ background:var(--ascua); box-shadow:0 0 6px 2px rgba(226,87,43,.65); bottom:6%; top:auto; animation:rebotar ease-in-out infinite; }
+
+  @keyframes caer{
+    0%{ transform:translateY(0); opacity:0; }
+    8%{ opacity:1; }
+    82%{ opacity:1; }
+    100%{ transform:translateY(560%); opacity:0; }
+  }
+  @keyframes rebotar{
+    0%{ transform:translateY(0); opacity:0; }
+    10%{ opacity:1;}
+    48%{ transform:translateY(-330%); opacity:1;}
+    62%{ transform:translateY(-270%); opacity:.9;}
+    100%{ transform:translateY(0); opacity:0;}
+  }
+
+  .portada-contenido{ position:relative; z-index:2; max-width:720px; }
+  .slide--portada .eyebrow{ color:var(--oro); }
+  .slide--portada h1{ color:var(--texto-claro); margin-top:14px; }
+  .slide--portada h1 em{ font-style:normal; color:var(--oro); }
+  .slide--portada .lead{ color:#d9e6dd; margin-top:16px; }
+  .portada-footer{
+    margin-top:28px; display:flex; align-items:center; gap:10px;
+    font-family:'IBM Plex Mono', monospace; font-size:12px; color:#a9c2b6;
+  }
+  .portada-footer::before{ content:""; width:26px; height:1px; background:#a9c2b6;}
+
+  /* ================= CONTENT LAYOUTS ================= */
+  .cabecera-slide{ display:flex; flex-direction:column; gap:8px; margin-bottom:clamp(14px,2.4vw,26px); flex-shrink:0;}
+  .cuerpo-slide{ flex:1; min-height:0; }
+  .dos-columnas{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(14px,2.4vw,30px); height:100%; }
+  @media (max-width:780px){ .dos-columnas{ grid-template-columns:1fr; } }
+
+  .tarjeta{
+    background:#fff; border:1px solid var(--linea); border-radius:14px;
+    padding:clamp(14px,1.8vw,20px); box-shadow:0 8px 22px -14px rgba(19,39,32,.35);
+  }
+
+  /* -------- Estructura (agenda) -------- */
+  .agenda-lista{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:0; counter-reset:paso;}
+  .agenda-lista li{
+    counter-increment:paso;
+    display:grid; grid-template-columns:44px 1fr auto; align-items:center; gap:14px;
+    padding:10px 4px; border-bottom:1px solid var(--linea);
+    font-size:clamp(13px,1.35vw,16px);
+  }
+  .agenda-lista li:last-child{ border-bottom:none; }
+  .agenda-lista li::before{
+    content:counter(paso,decimal-leading-zero);
+    font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--oro); font-weight:600;
+  }
+  .agenda-tag{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:#5b7266; }
+
+  /* -------- Activador toggle -------- */
+  .activador-wrap{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    height:100%; gap:26px; text-align:center;
+  }
+  .switch-box{ display:flex; align-items:center; gap:16px; font-family:'IBM Plex Mono',monospace; font-size:13px; }
+  .switch{ position:relative; width:64px; height:32px; }
+  .switch input{ opacity:0; width:100%; height:100%; margin:0; position:absolute; cursor:pointer; z-index:2;}
+  .switch-track{ position:absolute; inset:0; background:var(--cielo); border-radius:99px; transition:background .3s;}
+  .switch input:checked ~ .switch-track{ background:var(--ascua); }
+  .switch-thumb{ position:absolute; top:3px; left:3px; width:26px; height:26px; border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.25); transition:transform .3s;}
+  .switch input:checked ~ .switch-thumb{ transform:translateX(32px); }
+
+  .temp-display{ font-family:'Fraunces',serif; font-weight:700; font-size:clamp(60px,10vw,120px); line-height:1; color:var(--verde); transition:color .3s;}
+  .temp-display.frio{ color:var(--cielo); }
+  .temp-caption{ max-width:52ch; font-size:clamp(13px,1.4vw,16px); color:#2b453a; }
+
+  /* -------- Cards de gases (flip) -------- */
+  .grid-gases{ display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(10px,1.6vw,16px); height:100%; }
+  @media (max-width:780px){ .grid-gases{ grid-template-columns:repeat(2,1fr);} }
+  .gas-card{ perspective:1200px; min-height:0; }
+  .gas-card-inner{
+    position:relative; width:100%; height:100%; min-height:150px;
+    transform-style:preserve-3d; transition:transform .55s cubic-bezier(.2,.7,.3,1); cursor:pointer;
+  }
+  .gas-card.girada .gas-card-inner{ transform:rotateY(180deg); }
+  .gas-cara{
+    position:absolute; inset:0; backface-visibility:hidden;
+    border-radius:14px; border:1px solid var(--linea); padding:12px;
+    display:flex; flex-direction:column; justify-content:center; gap:6px;
+    background:#fff;
+  }
+  .gas-cara--front{ align-items:flex-start; }
+  .gas-cara--back{ transform:rotateY(180deg); background:var(--verde); color:var(--texto-claro); border-color:var(--verde);}
+  .gas-formula{ font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:clamp(18px,2vw,22px); color:var(--ascua);}
+  .gas-nombre{ font-weight:700; font-size:clamp(13px,1.4vw,15px); color:var(--verde);}
+  .gas-hint{ font-size:11px; color:#5b7266; margin-top:auto; }
+  .gas-cara--back .gas-hint{ color:#cfe0d6; }
+  .gas-back-titulo{ font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--oro);}
+  .gas-back-texto{ font-size:clamp(11.5px,1.25vw,13px); line-height:1.4; }
+
+  /* -------- Comparación natural vs antrópico -------- */
+  .comparacion{ display:grid; grid-template-columns:1fr 1fr; gap:18px; height:100%; }
+  @media (max-width:780px){ .comparacion{ grid-template-columns:1fr; } }
+  .comp-col{ border-radius:16px; padding:clamp(16px,2vw,26px); display:flex; flex-direction:column; gap:12px;}
+  .comp-col--natural{ background:linear-gradient(160deg,#eef4ee,#e2ede4); border:1px solid rgba(27,67,50,.18);}
+  .comp-col--antropico{ background:linear-gradient(160deg,#fbe9e2,#f7dccf); border:1px solid rgba(226,87,43,.28);}
+  .comp-col ul{ margin:0; padding-left:18px; font-size:clamp(12.5px,1.3vw,14.5px); line-height:1.55;}
+  .comp-col li{ margin-bottom:6px; }
+  .comp-numero{ font-family:'Fraunces',serif; font-weight:700; font-size:clamp(26px,2.6vw,34px); }
+  .comp-col--natural .comp-numero{ color:var(--verde); }
+  .comp-col--antropico .comp-numero{ color:var(--ascua); }
+
+  /* -------- Fuentes (grid de tarjetas con icono) -------- */
+  .grid-fuentes{ display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(10px,1.6vw,16px); }
+  @media (max-width:780px){ .grid-fuentes{ grid-template-columns:repeat(2,1fr);} }
+  .fuente-card{ display:flex; flex-direction:column; gap:8px; }
+  .fuente-icono{ width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; }
+  .fuente-icono svg{ width:20px; height:20px; }
+  .fuente-card--natural .fuente-icono{ background:rgba(27,67,50,.1); color:var(--verde); }
+  .fuente-card--artificial .fuente-icono{ background:rgba(226,87,43,.12); color:var(--ascua); }
+  .fuente-titulo{ font-weight:700; font-size:clamp(12.5px,1.35vw,14.5px); color:var(--verde); }
+  .fuente-texto{ font-size:clamp(11.5px,1.2vw,13px); color:#3a4f45; line-height:1.4; }
+
+  /* -------- Huella de carbono (calculadora) -------- */
+  .calc-wrap{ display:grid; grid-template-columns:1.1fr .9fr; gap:22px; height:100%; }
+  @media (max-width:780px){ .calc-wrap{ grid-template-columns:1fr; } }
+  .calc-campo{ margin-bottom:16px; }
+  .calc-campo label{ display:block; font-size:clamp(12px,1.3vw,14px); font-weight:600; margin-bottom:6px; color:var(--verde);}
+  .radio-fila{ display:flex; gap:8px; flex-wrap:wrap; }
+  .radio-chip{ position:relative; }
+  .radio-chip input{ position:absolute; opacity:0; }
+  .radio-chip span{
+    display:inline-block; padding:7px 12px; border-radius:99px; border:1.4px solid var(--linea);
+    font-size:12.5px; cursor:pointer; transition:background .2s,color .2s,border-color .2s;
+  }
+  .radio-chip input:checked + span{ background:var(--verde); color:var(--texto-claro); border-color:var(--verde); }
+  input[type="range"]{ width:100%; accent-color:var(--ascua); }
+  select{
+    width:100%; padding:8px 10px; border-radius:10px; border:1.4px solid var(--linea);
+    font-family:'Inter',sans-serif; font-size:13.5px; background:#fff; color:var(--tinta);
+  }
+  .medidor{
+    background:#fff; border:1px solid var(--linea); border-radius:16px; padding:20px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; height:100%;
+    text-align:center;
+  }
+  .medidor-barra{ width:100%; height:14px; border-radius:99px; background:#e5e2d6; overflow:hidden; }
+  .medidor-relleno{ height:100%; width:30%; border-radius:99px; background:linear-gradient(90deg,var(--verde),var(--oro),var(--ascua)); transition:width .4s ease; }
+  .medidor-etiqueta{ font-family:'Fraunces',serif; font-weight:700; font-size:clamp(20px,2.4vw,26px); color:var(--verde); }
+  .medidor-nota{ font-size:12px; color:#4a5f54; max-width:38ch; }
+
+  /* -------- Datos país (Chile / Latam) -------- */
+  .stat-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:16px;}
+  @media (max-width:780px){ .stat-grid{ grid-template-columns:1fr 1fr; } }
+  .stat{ background:#fff; border:1px solid var(--linea); border-radius:14px; padding:14px 16px; }
+  .stat-num{ font-family:'Fraunces',serif; font-weight:700; font-size:clamp(22px,2.6vw,32px); color:var(--ascua); line-height:1.05; }
+  .stat-label{ font-size:11.5px; color:#3a4f45; margin-top:4px; line-height:1.35; }
+
+  .barras{ display:flex; flex-direction:column; gap:10px; }
+  .barra-fila{ display:grid; grid-template-columns:120px 1fr 54px; align-items:center; gap:10px; font-size:12.5px; }
+  .barra-pista{ height:16px; background:#e7e2d3; border-radius:99px; overflow:hidden; }
+  .barra-relleno{ height:100%; border-radius:99px; background:var(--verde); }
+  .fuente-nota{ font-size:11px; color:#5b7266; margin-top:10px; font-family:'IBM Plex Mono',monospace;}
+
+  /* -------- Simulación PhET -------- */
+  .sim-layout{ display:grid; grid-template-columns:1fr 1.15fr; gap:22px; height:100%; }
+  @media (max-width:940px){ .sim-layout{ grid-template-columns:1fr; } }
+  .sim-frame-wrap{
+    position:relative; width:100%; border-radius:14px; overflow:hidden; border:1px solid var(--linea);
+    background:#0f1f19; box-shadow:0 10px 30px -16px rgba(19,39,32,.5);
+  }
+  .sim-frame-wrap iframe{ width:100%; max-width:100%; height:auto; aspect-ratio:4/3; display:block; border:0; }
+  .guia-caja{ background:#fff; border:1px solid var(--linea); border-radius:14px; padding:14px 16px; margin-bottom:12px; }
+  .guia-caja h3{ margin-bottom:6px; }
+  .guia-caja ol,.guia-caja ul{ margin:6px 0 0; padding-left:18px; font-size:12.8px; line-height:1.5; }
+  .pregunta-guia{ background:var(--verde); color:var(--texto-claro); border-radius:14px; padding:14px 16px; }
+  .pregunta-guia .eyebrow{ color:var(--oro); }
+  .pregunta-guia p{ margin:6px 0 0; font-size:13.5px; }
+
+  /* -------- Preguntas Bloom -------- */
+  .bloom-header{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .pregunta-bloque{ margin-bottom:18px; }
+  .pregunta-enunciado{ font-weight:700; font-size:clamp(14px,1.6vw,16.5px); margin-bottom:10px; color:var(--tinta); }
+  .opciones{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  @media (max-width:780px){ .opciones{ grid-template-columns:1fr; } }
+  .opcion{
+    text-align:left; padding:10px 13px; border-radius:11px; border:1.4px solid var(--linea);
+    background:#fff; cursor:pointer; font-size:13px; font-family:'Inter',sans-serif; color:var(--tinta);
+    transition:border-color .2s, background .2s, transform .12s;
+  }
+  .opcion:hover{ border-color:var(--verde); }
+  .opcion:active{ transform:scale(.98); }
+  .opcion.correcta{ background:rgba(27,67,50,.12); border-color:var(--verde); font-weight:600; }
+  .opcion.incorrecta{ background:rgba(226,87,43,.1); border-color:var(--ascua); }
+  .opcion:disabled{ cursor:default; }
+  .feedback{
+    margin-top:8px; font-size:12.5px; padding:8px 12px; border-radius:10px;
+    background:var(--crema-2); display:none; color:#2b453a;
+  }
+  .feedback.visible{ display:block; }
+
+  /* -------- Abiertas / exit ticket -------- */
+  .abierta-bloque{ margin-bottom:16px; }
+  textarea{
+    width:100%; min-height:64px; border-radius:12px; border:1.4px solid var(--linea);
+    padding:10px 12px; font-family:'Inter',sans-serif; font-size:13px; resize:vertical; color:var(--tinta);
+    background:#fffdf8;
+  }
+  .nota-discreta{ font-size:11.5px; color:#5b7266; margin-top:6px; }
+
+  .cierre-caja{
+    margin-top:auto; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+    background:var(--verde); color:var(--texto-claro); border-radius:14px; padding:14px 18px;
+  }
+  .cierre-caja p{ margin:2px 0 0; font-size:13px; color:#d9e6dd; }
+
+  /* Scrollbar sutil dentro de tarjetas largas */
+  .cuerpo-slide::-webkit-scrollbar{ width:8px; }
+  .cuerpo-slide::-webkit-scrollbar-thumb{ background:rgba(19,39,32,.18); border-radius:8px; }
+
+  @media (prefers-reduced-motion: reduce){
+    .foton{ animation:none !important; opacity:0 !important; }
+    .slide{ transition:opacity .01s linear; }
+  }
+
+  /* ================= QR — solo versión de escritorio ================= */
+  .qr-esquina{
+    position:absolute; top:14px; right:16px; z-index:30;
+  }
+  .qr-caja{
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    background:#FDFCF8; border:1px solid var(--linea); border-radius:10px;
+    padding:7px 8px 6px; box-shadow:0 8px 18px -10px rgba(19,39,32,.45);
+  }
+  .qr-svg{ width:60px; height:60px; display:block; color:var(--verde); }
+  .qr-svg rect{ fill:currentColor; shape-rendering:crispEdges; }
+  .qr-etiqueta{
+    font-family:'IBM Plex Mono', monospace; font-size:8.5px; letter-spacing:.03em;
+    text-transform:uppercase; color:#5b7266; white-space:nowrap;
+  }
+  /* Oculto en la versión para celular/tablet angosto */
+  @media (max-width:780px){
+    .qr-esquina{ display:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+  <div class="chrome-top"><div class="chrome-top-bar" id="barraProgreso"></div></div>
+
+  <div class="qr-esquina" aria-hidden="false">
+    <div class="qr-caja">
+      <svg class="qr-svg" viewBox="0 0 37 37" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Código QR hacia la versión web de esta presentación"><rect x="0" y="0" width="7" height="1"/><rect x="10" y="0" width="2" height="1"/><rect x="13" y="0" width="2" height="1"/><rect x="16" y="0" width="3" height="1"/><rect x="20" y="0" width="1" height="1"/><rect x="23" y="0" width="1" height="1"/><rect x="25" y="0" width="1" height="1"/><rect x="28" y="0" width="1" height="1"/><rect x="30" y="0" width="7" height="1"/><rect x="0" y="1" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/><rect x="10" y="1" width="1" height="1"/><rect x="12" y="1" width="5" height="1"/><rect x="18" y="1" width="2" height="1"/><rect x="24" y="1" width="2" height="1"/><rect x="27" y="1" width="2" height="1"/><rect x="30" y="1" width="1" height="1"/><rect x="36" y="1" width="1" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="2" y="2" width="3" height="1"/><rect x="6" y="2" width="1" height="1"/><rect x="8" y="2" width="2" height="1"/><rect x="12" y="2" width="5" height="1"/><rect x="19" y="2" width="5" height="1"/><rect x="30" y="2" width="1" height="1"/><rect x="32" y="2" width="3" height="1"/><rect x="36" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="2" y="3" width="3" height="1"/><rect x="6" y="3" width="1" height="1"/><rect x="8" y="3" width="3" height="1"/><rect x="12" y="3" width="6" height="1"/><rect x="19" y="3" width="1" height="1"/><rect x="23" y="3" width="3" height="1"/><rect x="27" y="3" width="2" height="1"/><rect x="30" y="3" width="1" height="1"/><rect x="32" y="3" width="3" height="1"/><rect x="36" y="3" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/><rect x="2" y="4" width="3" height="1"/><rect x="6" y="4" width="1" height="1"/><rect x="8" y="4" width="1" height="1"/><rect x="12" y="4" width="1" height="1"/><rect x="14" y="4" width="3" height="1"/><rect x="18" y="4" width="3" height="1"/><rect x="23" y="4" width="1" height="1"/><rect x="25" y="4" width="2" height="1"/><rect x="28" y="4" width="1" height="1"/><rect x="30" y="4" width="1" height="1"/><rect x="32" y="4" width="3" height="1"/><rect x="36" y="4" width="1" height="1"/><rect x="0" y="5" width="1" height="1"/><rect x="6" y="5" width="1" height="1"/><rect x="8" y="5" width="1" height="1"/><rect x="11" y="5" width="3" height="1"/><rect x="18" y="5" width="1" height="1"/><rect x="21" y="5" width="1" height="1"/><rect x="26" y="5" width="3" height="1"/><rect x="30" y="5" width="1" height="1"/><rect x="36" y="5" width="1" height="1"/><rect x="0" y="6" width="7" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/><rect x="12" y="6" width="1" height="1"/><rect x="14" y="6" width="1" height="1"/><rect x="16" y="6" width="1" height="1"/><rect x="18" y="6" width="1" height="1"/><rect x="20" y="6" width="1" height="1"/><rect x="22" y="6" width="1" height="1"/><rect x="24" y="6" width="1" height="1"/><rect x="26" y="6" width="1" height="1"/><rect x="28" y="6" width="1" height="1"/><rect x="30" y="6" width="7" height="1"/><rect x="8" y="7" width="1" height="1"/><rect x="14" y="7" width="3" height="1"/><rect x="19" y="7" width="3" height="1"/><rect x="23" y="7" width="2" height="1"/><rect x="27" y="7" width="2" height="1"/><rect x="0" y="8" width="1" height="1"/><rect x="2" y="8" width="5" height="1"/><rect x="9" y="8" width="3" height="1"/><rect x="18" y="8" width="3" height="1"/><rect x="22" y="8" width="1" height="1"/><rect x="24" y="8" width="4" height="1"/><rect x="30" y="8" width="5" height="1"/><rect x="2" y="9" width="1" height="1"/><rect x="5" y="9" width="1" height="1"/><rect x="7" y="9" width="2" height="1"/><rect x="14" y="9" width="4" height="1"/><rect x="22" y="9" width="3" height="1"/><rect x="28" y="9" width="1" height="1"/><rect x="31" y="9" width="1" height="1"/><rect x="33" y="9" width="3" height="1"/><rect x="1" y="10" width="8" height="1"/><rect x="12" y="10" width="1" height="1"/><rect x="14" y="10" width="1" height="1"/><rect x="17" y="10" width="1" height="1"/><rect x="20" y="10" width="1" height="1"/><rect x="22" y="10" width="1" height="1"/><rect x="25" y="10" width="1" height="1"/><rect x="27" y="10" width="6" height="1"/><rect x="35" y="10" width="2" height="1"/><rect x="0" y="11" width="1" height="1"/><rect x="10" y="11" width="4" height="1"/><rect x="16" y="11" width="1" height="1"/><rect x="21" y="11" width="1" height="1"/><rect x="23" y="11" width="1" height="1"/><rect x="26" y="11" width="1" height="1"/><rect x="36" y="11" width="1" height="1"/><rect x="0" y="12" width="3" height="1"/><rect x="4" y="12" width="3" height="1"/><rect x="9" y="12" width="1" height="1"/><rect x="11" y="12" width="2" height="1"/><rect x="17" y="12" width="2" height="1"/><rect x="22" y="12" width="4" height="1"/><rect x="27" y="12" width="1" height="1"/><rect x="29" y="12" width="2" height="1"/><rect x="32" y="12" width="1" height="1"/><rect x="34" y="12" width="3" height="1"/><rect x="0" y="13" width="1" height="1"/><rect x="2" y="13" width="2" height="1"/><rect x="5" y="13" width="1" height="1"/><rect x="13" y="13" width="2" height="1"/><rect x="16" y="13" width="4" height="1"/><rect x="21" y="13" width="1" height="1"/><rect x="23" y="13" width="1" height="1"/><rect x="25" y="13" width="2" height="1"/><rect x="28" y="13" width="1" height="1"/><rect x="31" y="13" width="1" height="1"/><rect x="2" y="14" width="1" height="1"/><rect x="5" y="14" width="2" height="1"/><rect x="12" y="14" width="1" height="1"/><rect x="14" y="14" width="4" height="1"/><rect x="21" y="14" width="2" height="1"/><rect x="27" y="14" width="1" height="1"/><rect x="31" y="14" width="3" height="1"/><rect x="35" y="14" width="2" height="1"/><rect x="1" y="15" width="1" height="1"/><rect x="7" y="15" width="1" height="1"/><rect x="9" y="15" width="1" height="1"/><rect x="11" y="15" width="1" height="1"/><rect x="13" y="15" width="1" height="1"/><rect x="15" y="15" width="5" height="1"/><rect x="21" y="15" width="1" height="1"/><rect x="24" y="15" width="1" height="1"/><rect x="26" y="15" width="1" height="1"/><rect x="28" y="15" width="5" height="1"/><rect x="36" y="15" width="1" height="1"/><rect x="2" y="16" width="3" height="1"/><rect x="6" y="16" width="1" height="1"/><rect x="9" y="16" width="2" height="1"/><rect x="12" y="16" width="5" height="1"/><rect x="22" y="16" width="1" height="1"/><rect x="24" y="16" width="3" height="1"/><rect x="29" y="16" width="4" height="1"/><rect x="34" y="16" width="2" height="1"/><rect x="1" y="17" width="3" height="1"/><rect x="7" y="17" width="1" height="1"/><rect x="9" y="17" width="1" height="1"/><rect x="11" y="17" width="1" height="1"/><rect x="15" y="17" width="1" height="1"/><rect x="17" y="17" width="2" height="1"/><rect x="20" y="17" width="2" height="1"/><rect x="23" y="17" width="1" height="1"/><rect x="28" y="17" width="1" height="1"/><rect x="31" y="17" width="1" height="1"/><rect x="33" y="17" width="1" height="1"/><rect x="35" y="17" width="1" height="1"/><rect x="1" y="18" width="2" height="1"/><rect x="4" y="18" width="1" height="1"/><rect x="6" y="18" width="4" height="1"/><rect x="11" y="18" width="1" height="1"/><rect x="13" y="18" width="1" height="1"/><rect x="15" y="18" width="3" height="1"/><rect x="19" y="18" width="1" height="1"/><rect x="22" y="18" width="1" height="1"/><rect x="25" y="18" width="1" height="1"/><rect x="27" y="18" width="2" height="1"/><rect x="31" y="18" width="1" height="1"/><rect x="33" y="18" width="1" height="1"/><rect x="35" y="18" width="2" height="1"/><rect x="0" y="19" width="1" height="1"/><rect x="2" y="19" width="1" height="1"/><rect x="5" y="19" width="1" height="1"/><rect x="8" y="19" width="1" height="1"/><rect x="10" y="19" width="1" height="1"/><rect x="13" y="19" width="1" height="1"/><rect x="15" y="19" width="1" height="1"/><rect x="19" y="19" width="6" height="1"/><rect x="32" y="19" width="1" height="1"/><rect x="36" y="19" width="1" height="1"/><rect x="0" y="20" width="2" height="1"/><rect x="4" y="20" width="3" height="1"/><rect x="9" y="20" width="7" height="1"/><rect x="17" y="20" width="1" height="1"/><rect x="19" y="20" width="1" height="1"/><rect x="22" y="20" width="1" height="1"/><rect x="24" y="20" width="2" height="1"/><rect x="27" y="20" width="1" height="1"/><rect x="29" y="20" width="2" height="1"/><rect x="32" y="20" width="3" height="1"/><rect x="1" y="21" width="2" height="1"/><rect x="4" y="21" width="2" height="1"/><rect x="7" y="21" width="1" height="1"/><rect x="10" y="21" width="3" height="1"/><rect x="16" y="21" width="1" height="1"/><rect x="18" y="21" width="3" height="1"/><rect x="23" y="21" width="1" height="1"/><rect x="25" y="21" width="2" height="1"/><rect x="28" y="21" width="1" height="1"/><rect x="33" y="21" width="1" height="1"/><rect x="0" y="22" width="1" height="1"/><rect x="4" y="22" width="4" height="1"/><rect x="11" y="22" width="2" height="1"/><rect x="15" y="22" width="1" height="1"/><rect x="18" y="22" width="1" height="1"/><rect x="20" y="22" width="3" height="1"/><rect x="24" y="22" width="1" height="1"/><rect x="26" y="22" width="3" height="1"/><rect x="30" y="22" width="4" height="1"/><rect x="35" y="22" width="2" height="1"/><rect x="1" y="23" width="2" height="1"/><rect x="7" y="23" width="2" height="1"/><rect x="10" y="23" width="1" height="1"/><rect x="12" y="23" width="1" height="1"/><rect x="15" y="23" width="2" height="1"/><rect x="20" y="23" width="3" height="1"/><rect x="26" y="23" width="4" height="1"/><rect x="31" y="23" width="2" height="1"/><rect x="35" y="23" width="2" height="1"/><rect x="0" y="24" width="7" height="1"/><rect x="8" y="24" width="2" height="1"/><rect x="11" y="24" width="2" height="1"/><rect x="15" y="24" width="1" height="1"/><rect x="18" y="24" width="1" height="1"/><rect x="20" y="24" width="1" height="1"/><rect x="22" y="24" width="1" height="1"/><rect x="24" y="24" width="4" height="1"/><rect x="29" y="24" width="2" height="1"/><rect x="32" y="24" width="1" height="1"/><rect x="34" y="24" width="3" height="1"/><rect x="0" y="25" width="1" height="1"/><rect x="2" y="25" width="1" height="1"/><rect x="4" y="25" width="2" height="1"/><rect x="7" y="25" width="1" height="1"/><rect x="11" y="25" width="3" height="1"/><rect x="15" y="25" width="2" height="1"/><rect x="23" y="25" width="1" height="1"/><rect x="28" y="25" width="1" height="1"/><rect x="31" y="25" width="1" height="1"/><rect x="0" y="26" width="1" height="1"/><rect x="2" y="26" width="2" height="1"/><rect x="6" y="26" width="4" height="1"/><rect x="14" y="26" width="1" height="1"/><rect x="20" y="26" width="2" height="1"/><rect x="27" y="26" width="2" height="1"/><rect x="32" y="26" width="1" height="1"/><rect x="35" y="26" width="2" height="1"/><rect x="0" y="27" width="1" height="1"/><rect x="2" y="27" width="4" height="1"/><rect x="7" y="27" width="1" height="1"/><rect x="10" y="27" width="4" height="1"/><rect x="16" y="27" width="1" height="1"/><rect x="18" y="27" width="1" height="1"/><rect x="21" y="27" width="2" height="1"/><rect x="24" y="27" width="1" height="1"/><rect x="26" y="27" width="1" height="1"/><rect x="28" y="27" width="4" height="1"/><rect x="33" y="27" width="1" height="1"/><rect x="35" y="27" width="1" height="1"/><rect x="0" y="28" width="1" height="1"/><rect x="5" y="28" width="3" height="1"/><rect x="12" y="28" width="1" height="1"/><rect x="17" y="28" width="1" height="1"/><rect x="20" y="28" width="1" height="1"/><rect x="22" y="28" width="2" height="1"/><rect x="25" y="28" width="1" height="1"/><rect x="28" y="28" width="9" height="1"/><rect x="8" y="29" width="4" height="1"/><rect x="13" y="29" width="1" height="1"/><rect x="16" y="29" width="5" height="1"/><rect x="22" y="29" width="2" height="1"/><rect x="27" y="29" width="2" height="1"/><rect x="32" y="29" width="2" height="1"/><rect x="0" y="30" width="7" height="1"/><rect x="11" y="30" width="2" height="1"/><rect x="15" y="30" width="1" height="1"/><rect x="17" y="30" width="1" height="1"/><rect x="21" y="30" width="2" height="1"/><rect x="28" y="30" width="1" height="1"/><rect x="30" y="30" width="1" height="1"/><rect x="32" y="30" width="1" height="1"/><rect x="34" y="30" width="3" height="1"/><rect x="0" y="31" width="1" height="1"/><rect x="6" y="31" width="1" height="1"/><rect x="8" y="31" width="2" height="1"/><rect x="12" y="31" width="3" height="1"/><rect x="16" y="31" width="3" height="1"/><rect x="21" y="31" width="1" height="1"/><rect x="23" y="31" width="2" height="1"/><rect x="26" y="31" width="1" height="1"/><rect x="28" y="31" width="1" height="1"/><rect x="32" y="31" width="2" height="1"/><rect x="0" y="32" width="1" height="1"/><rect x="2" y="32" width="3" height="1"/><rect x="6" y="32" width="1" height="1"/><rect x="8" y="32" width="1" height="1"/><rect x="10" y="32" width="1" height="1"/><rect x="12" y="32" width="1" height="1"/><rect x="14" y="32" width="1" height="1"/><rect x="16" y="32" width="1" height="1"/><rect x="19" y="32" width="1" height="1"/><rect x="21" y="32" width="1" height="1"/><rect x="24" y="32" width="9" height="1"/><rect x="34" y="32" width="3" height="1"/><rect x="0" y="33" width="1" height="1"/><rect x="2" y="33" width="3" height="1"/><rect x="6" y="33" width="1" height="1"/><rect x="8" y="33" width="3" height="1"/><rect x="13" y="33" width="3" height="1"/><rect x="17" y="33" width="2" height="1"/><rect x="20" y="33" width="2" height="1"/><rect x="23" y="33" width="1" height="1"/><rect x="25" y="33" width="2" height="1"/><rect x="29" y="33" width="2" height="1"/><rect x="32" y="33" width="1" height="1"/><rect x="34" y="33" width="1" height="1"/><rect x="36" y="33" width="1" height="1"/><rect x="0" y="34" width="1" height="1"/><rect x="2" y="34" width="3" height="1"/><rect x="6" y="34" width="1" height="1"/><rect x="8" y="34" width="1" height="1"/><rect x="10" y="34" width="1" height="1"/><rect x="12" y="34" width="6" height="1"/><rect x="19" y="34" width="1" height="1"/><rect x="21" y="34" width="2" height="1"/><rect x="24" y="34" width="1" height="1"/><rect x="26" y="34" width="1" height="1"/><rect x="28" y="34" width="1" height="1"/><rect x="34" y="34" width="3" height="1"/><rect x="0" y="35" width="1" height="1"/><rect x="6" y="35" width="1" height="1"/><rect x="10" y="35" width="4" height="1"/><rect x="15" y="35" width="1" height="1"/><rect x="19" y="35" width="3" height="1"/><rect x="26" y="35" width="3" height="1"/><rect x="30" y="35" width="1" height="1"/><rect x="32" y="35" width="1" height="1"/><rect x="36" y="35" width="1" height="1"/><rect x="0" y="36" width="7" height="1"/><rect x="8" y="36" width="1" height="1"/><rect x="11" y="36" width="3" height="1"/><rect x="15" y="36" width="1" height="1"/><rect x="17" y="36" width="1" height="1"/><rect x="19" y="36" width="1" height="1"/><rect x="22" y="36" width="1" height="1"/><rect x="25" y="36" width="3" height="1"/><rect x="29" y="36" width="2" height="1"/><rect x="32" y="36" width="5" height="1"/></svg>
+      <span class="qr-etiqueta">Ver en el celular</span>
+    </div>
+  </div>
+
+  <div class="slides" id="slides">
+
+    <!-- 0. PORTADA -->
+    <section class="slide slide--portada activa" data-titulo="Portada">
+      <div class="atmosfera" aria-hidden="true">
+        <div class="sol"></div>
+        <div class="capa-gases"></div>
+        <div id="capaFotones"></div>
+        <div class="suelo"></div>
+      </div>
+      <div class="portada-contenido">
+        <span class="eyebrow marca">Biología de los Ecosistemas · 3° Medio · Unidad 3</span>
+        <h1>Causas del<br><em>cambio climático</em></h1>
+        <p class="lead">Gases de efecto invernadero, huellas de carbono y el equilibrio entre los procesos naturales y la acción humana.</p>
+        <div class="portada-footer">Colegio San Agustín Villa Alemana</div>
+      </div>
+    </section>
+
+    <!-- 1. ESTRUCTURA -->
+    <section class="slide" data-titulo="Estructura">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Estructura de la clase</span>
+        <h2>Lo que vamos a recorrer hoy</h2>
+      </div>
+      <div class="cuerpo-slide">
+        <ol class="agenda-lista">
+          <li><span>Activación: un planeta sin atmósfera</span><span class="agenda-tag">2 min</span></li>
+          <li><span>Marco conceptual: el efecto invernadero natural</span><span class="agenda-tag">5 min</span></li>
+          <li><span>Los gases de efecto invernadero (GEI)</span><span class="agenda-tag">6 min</span></li>
+          <li><span>Efecto invernadero natural vs. intensificado</span><span class="agenda-tag">5 min</span></li>
+          <li><span>Fuentes naturales y fuentes artificiales de GEI</span><span class="agenda-tag">8 min</span></li>
+          <li><span>Huella de carbono: ¿qué la compone?</span><span class="agenda-tag">6 min</span></li>
+          <li><span>Chile y Latinoamérica en cifras</span><span class="agenda-tag">7 min</span></li>
+          <li><span>Simulación: radiación y moléculas (PhET)</span><span class="agenda-tag">8 min</span></li>
+          <li><span>Preguntas de cierre (niveles de Bloom)</span><span class="agenda-tag">8 min</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 2. ACTIVADOR -->
+    <section class="slide" data-titulo="Activador">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Activador</span>
+        <h2>¿Qué pasaría sin efecto invernadero?</h2>
+      </div>
+      <div class="cuerpo-slide activador-wrap">
+        <div class="switch-box">
+          <span>Sin atmósfera de GEI</span>
+          <label class="switch">
+            <input type="checkbox" id="switchClima">
+            <span class="switch-track"></span>
+            <span class="switch-thumb"></span>
+          </label>
+          <span>Con efecto invernadero natural</span>
+        </div>
+        <div>
+          <div class="temp-display frio" id="tempValor">-18°C</div>
+          <p class="temp-caption" id="tempTexto">Es la temperatura media que tendría la Tierra si no existiera el efecto invernadero natural: un planeta helado, sin agua líquida estable en la superficie.</p>
+        </div>
+        <p class="lead" style="text-align:center;">Con pareja o grupo: ¿por qué esos <strong>33°C</strong> de diferencia hacen posible la vida tal como la conocemos?</p>
+      </div>
+    </section>
+
+    <!-- 3. MARCO CONCEPTUAL -->
+    <section class="slide" data-titulo="Marco conceptual">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Marco conceptual</span>
+        <h2>El efecto invernadero natural</h2>
+      </div>
+      <div class="cuerpo-slide dos-columnas">
+        <div class="tarjeta">
+          <h3>1. Entra radiación de onda corta</h3>
+          <p class="lead" style="font-size:13.5px;">El Sol emite radiación visible y ultravioleta que atraviesa la atmósfera con poca absorción y calienta la superficie terrestre.</p>
+        </div>
+        <div class="tarjeta">
+          <h3>2. La Tierra reemite calor (onda larga)</h3>
+          <p class="lead" style="font-size:13.5px;">La superficie calentada emite radiación infrarroja hacia el espacio. Esta es la energía que los GEI pueden absorber.</p>
+        </div>
+        <div class="tarjeta">
+          <h3>3. Los GEI absorben y reemiten</h3>
+          <p class="lead" style="font-size:13.5px;">Moléculas como CO₂, CH₄ y H₂O absorben parte de esa radiación infrarroja y la reemiten en todas direcciones, incluyendo hacia la superficie.</p>
+        </div>
+        <div class="tarjeta" style="background:var(--verde); border-color:var(--verde);">
+          <h3 style="color:var(--texto-claro);">4. El resultado: +15°C de media</h3>
+          <p class="lead" style="font-size:13.5px; color:#dbe8de;">Ese calor "reciclado" es lo que mantiene la temperatura media global habitable. Es un proceso natural, presente desde hace miles de millones de años.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. GASES DE EFECTO INVERNADERO -->
+    <section class="slide" data-titulo="Gases GEI">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Marco conceptual</span>
+        <h2>Los principales gases de efecto invernadero</h2>
+        <p class="lead" style="font-size:13px;">Toca cada tarjeta para ver su origen principal y su potencia relativa de calentamiento.</p>
+      </div>
+      <div class="cuerpo-slide grid-gases" id="gridGases"></div>
+    </section>
+
+    <!-- 5. NATURAL VS ANTROPICO -->
+    <section class="slide" data-titulo="Natural vs antrópico">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Marco conceptual</span>
+        <h2>Efecto invernadero natural vs. intensificado</h2>
+      </div>
+      <div class="cuerpo-slide comparacion">
+        <div class="comp-col comp-col--natural">
+          <span class="pill">Proceso natural</span>
+          <div class="comp-numero">~280 ppm</div>
+          <p class="lead" style="font-size:13px;">Concentración aproximada de CO₂ antes de la Revolución Industrial (nivel estable durante miles de años).</p>
+          <ul>
+            <li>Existe desde hace miles de millones de años.</li>
+            <li>Mantiene la temperatura media en equilibrio dinámico.</li>
+            <li>Los GEI provienen de ciclos biogeoquímicos (respiración, volcanes, descomposición).</li>
+          </ul>
+        </div>
+        <div class="comp-col comp-col--antropico">
+          <span class="pill pill--ascua">Efecto intensificado</span>
+          <div class="comp-numero">&gt; 425 ppm</div>
+          <p class="lead" style="font-size:13px;">Concentración actual de CO₂ medida en el observatorio de Mauna Loa, y sigue en aumento cada año.</p>
+          <ul>
+            <li>Se acelera desde mediados del siglo XVIII (uso masivo de combustibles fósiles).</li>
+            <li>Suma GEI adicionales a un sistema que ya estaba en equilibrio.</li>
+            <li>Los GEI provienen principalmente de actividad humana: energía, transporte, agricultura, industria.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. FUENTES NATURALES -->
+    <section class="slide" data-titulo="Fuentes naturales">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Desarrollo temático</span>
+        <h2>Fuentes naturales de GEI</h2>
+      </div>
+      <div class="cuerpo-slide grid-fuentes" id="gridNaturales"></div>
+    </section>
+
+    <!-- 7. FUENTES ARTIFICIALES -->
+    <section class="slide" data-titulo="Fuentes artificiales">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Desarrollo temático</span>
+        <h2>Fuentes artificiales (antrópicas) de GEI</h2>
+      </div>
+      <div class="cuerpo-slide grid-fuentes" id="gridArtificiales"></div>
+    </section>
+
+    <!-- 8. HUELLA DE CARBONO -->
+    <section class="slide" data-titulo="Huella de carbono">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Desarrollo temático</span>
+        <h2>¿Qué compone tu huella de carbono?</h2>
+      </div>
+      <div class="cuerpo-slide calc-wrap">
+        <div>
+          <div class="calc-campo">
+            <label>Tu transporte más frecuente</label>
+            <div class="radio-fila" id="grupoTransporte">
+              <label class="radio-chip"><input type="radio" name="transporte" value="0"><span>Caminar / bicicleta</span></label>
+              <label class="radio-chip"><input type="radio" name="transporte" value="1"><span>Transporte público</span></label>
+              <label class="radio-chip"><input type="radio" name="transporte" value="2" checked><span>Auto particular</span></label>
+            </div>
+          </div>
+          <div class="calc-campo">
+            <label>Consumo de carne roja (veces por semana): <span id="valorCarne">3</span></label>
+            <input type="range" id="rangoCarne" min="0" max="7" value="3">
+          </div>
+          <div class="calc-campo">
+            <label>Energía eléctrica de tu hogar</label>
+            <select id="selectEnergia">
+              <option value="2">Principalmente convencional (red mixta con alto uso fósil)</option>
+              <option value="1">Mixta / no lo sé con certeza</option>
+              <option value="0">Con paneles solares u origen mayoritariamente renovable</option>
+            </select>
+          </div>
+          <p class="nota-discreta">Esta calculadora es una estimación educativa y simplificada. Para un cálculo real, revisa el programa <strong>HuellaChile</strong> del Ministerio del Medio Ambiente.</p>
+        </div>
+        <div class="medidor">
+          <span class="eyebrow">Estimación de tu huella</span>
+          <div class="medidor-barra"><div class="medidor-relleno" id="medidorRelleno"></div></div>
+          <div class="medidor-etiqueta" id="medidorEtiqueta">Huella media</div>
+          <p class="medidor-nota" id="medidorNota">Cada elección diaria —cómo te mueves, qué comes y de dónde viene tu energía— suma o resta a tu huella de carbono.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. CHILE EN CIFRAS -->
+    <section class="slide" data-titulo="Chile en cifras">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Conexión local</span>
+        <h2>Chile frente al cambio climático</h2>
+      </div>
+      <div class="cuerpo-slide">
+        <div class="stat-grid">
+          <div class="stat">
+            <div class="stat-num">~0,2%</div>
+            <div class="stat-label">de las emisiones globales de GEI provienen de Chile.</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">4,3–4,8 t</div>
+            <div class="stat-label">de CO₂ por habitante al año: una de las huellas per cápita más altas de Latinoamérica.</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">2°</div>
+            <div class="stat-label">lugar en emisiones per cápita de la región, solo detrás de Venezuela; duplica a Brasil.</div>
+          </div>
+        </div>
+        <div class="tarjeta">
+          <h3>Emisiones de GEI de Chile por sector</h3>
+          <div class="barras" id="barrasChile" style="margin-top:10px;"></div>
+          <p class="fuente-nota">Fuente: Inventario Nacional de Gases de Efecto Invernadero (INGEI), Ministerio del Medio Ambiente.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. LATINOAMERICA -->
+    <section class="slide" data-titulo="Latinoamérica">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Conexión regional</span>
+        <h2>Latinoamérica: la Amazonía como pieza clave</h2>
+      </div>
+      <div class="cuerpo-slide dos-columnas">
+        <div class="tarjeta">
+          <h3>Deforestación amazónica (2024)</h3>
+          <div class="comp-numero" style="color:var(--ascua); margin:6px 0;">1,7 millones ha</div>
+          <p class="lead" style="font-size:13px;">Quinta cifra más alta desde 2002; un aumento de 34% respecto a 2023.</p>
+          <div class="barras" id="barrasAmazonia" style="margin-top:8px;"></div>
+        </div>
+        <div class="tarjeta">
+          <h3>¿Por qué importa para el clima?</h3>
+          <p class="lead" style="font-size:13.5px;">Los bosques tropicales capturan grandes cantidades de CO₂. Al talarlos o quemarlos, ese carbono almacenado vuelve a la atmósfera.</p>
+          <p class="lead" style="font-size:13.5px;">Los incendios forestales amazónicos de 2024 liberaron cerca de <strong>791 millones de toneladas de CO₂ equivalente</strong>, más que las emisiones totales anuales de un país industrializado como Alemania.</p>
+          <span class="pill pill--ascua" style="margin-top:6px;">Bosque esclerófilo de Chile central: mismo principio, otra escala</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. SIMULACION PHET -->
+    <section class="slide" data-titulo="Simulación">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Actividad interactiva</span>
+        <h2>¿Cómo interactúan los gases con la radiación?</h2>
+      </div>
+      <div class="cuerpo-slide sim-layout">
+        <div>
+          <div class="guia-caja">
+            <h3>Antes de explorar</h3>
+            <ol>
+              <li>Elige una molécula: N₂ o O₂ (aire normal), luego CO₂, CH₄, H₂O y N₂O.</li>
+              <li>Activa el fotón infrarrojo y observa qué le ocurre a cada molécula.</li>
+              <li>Anota en qué moléculas la luz "pasa de largo" y en cuáles la molécula vibra o gira.</li>
+            </ol>
+          </div>
+          <div class="pregunta-guia">
+            <span class="eyebrow">Pregunta guía</span>
+            <p>¿Qué diferencia observas entre cómo interactúa la radiación infrarroja con el N₂ (gas mayoritario del aire) y con el CO₂? ¿Cómo se relaciona esto con el efecto invernadero?</p>
+          </div>
+        </div>
+        <div class="sim-frame-wrap">
+          <iframe src="https://phet.colorado.edu/sims/html/molecules-and-light/latest/molecules-and-light_en.html"
+                  width="800"
+                  height="600"
+                  allowfullscreen>
+          </iframe>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12. PREGUNTAS 1: RECORDAR / COMPRENDER -->
+    <section class="slide" data-titulo="Preguntas · Recordar y Comprender">
+      <div class="cabecera-slide">
+        <div class="bloom-header">
+          <span class="eyebrow">Banco de preguntas</span>
+          <span class="pill pill--oro">Recordar</span>
+          <span class="pill pill--oro">Comprender</span>
+        </div>
+        <h2>Antes de seguir, revisemos lo básico</h2>
+      </div>
+      <div class="cuerpo-slide" id="bloqueP1"></div>
+    </section>
+
+    <!-- 13. PREGUNTAS 2: APLICAR / ANALIZAR -->
+    <section class="slide" data-titulo="Preguntas · Aplicar y Analizar">
+      <div class="cabecera-slide">
+        <div class="bloom-header">
+          <span class="eyebrow">Banco de preguntas</span>
+          <span class="pill pill--ascua">Aplicar</span>
+          <span class="pill pill--ascua">Analizar</span>
+        </div>
+        <h2>Ahora, un paso más allá</h2>
+      </div>
+      <div class="cuerpo-slide" id="bloqueP2"></div>
+    </section>
+
+    <!-- 14. PREGUNTAS ABIERTAS: EVALUAR / CREAR -->
+    <section class="slide" data-titulo="Preguntas abiertas">
+      <div class="cabecera-slide">
+        <div class="bloom-header">
+          <span class="eyebrow">Preguntas abiertas</span>
+          <span class="pill">Evaluar</span>
+          <span class="pill">Crear</span>
+        </div>
+        <h2>Argumenta y propone</h2>
+      </div>
+      <div class="cuerpo-slide">
+        <div class="abierta-bloque">
+          <p class="pregunta-enunciado">1. Evalúa: considerando el sector energético en Chile y la deforestación en la Amazonía, ¿cuál de los dos problemas te parece más urgente de abordar en la próxima década? Argumenta con al menos dos datos vistos en esta clase.</p>
+          <textarea placeholder="Escribe aquí tu respuesta..."></textarea>
+        </div>
+        <div class="abierta-bloque">
+          <p class="pregunta-enunciado">2. Crea: diseña una propuesta breve (tecnológica o comunicacional) para reducir la huella de carbono de tu hogar o de tu colegio, considerando al menos dos fuentes de GEI trabajadas hoy.</p>
+          <textarea placeholder="Escribe aquí tu propuesta..."></textarea>
+        </div>
+        <p class="nota-discreta">Estas respuestas no se guardan automáticamente: compártelas con tu profesor o con tu grupo de investigación.</p>
+      </div>
+    </section>
+
+    <!-- 15. EXIT TICKET -->
+    <section class="slide" data-titulo="Exit ticket">
+      <div class="cabecera-slide">
+        <span class="eyebrow">Exit ticket</span>
+        <h2>Para cerrar, en tus palabras</h2>
+      </div>
+      <div class="cuerpo-slide">
+        <div class="abierta-bloque">
+          <p class="pregunta-enunciado">En una frase: ¿qué diferencia hay entre el efecto invernadero natural y el efecto invernadero intensificado por el ser humano?</p>
+          <textarea placeholder="Escribe tu frase de cierre..."></textarea>
+        </div>
+        <div class="cierre-caja">
+          <div>
+            <strong>Próxima sesión</strong>
+            <p>Analizaremos gráficos reales del IPCC para describir patrones y tendencias del cambio climático.</p>
+          </div>
+          <span class="pill pill--oro" style="background:rgba(201,162,39,.18); color:var(--oro); border-color:rgba(201,162,39,.5);">OA 3 · Habilidad OA c</span>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="chrome-bottom">
+    <button class="nav-btn" id="btnPrev" aria-label="Diapositiva anterior">‹</button>
+    <div class="dots" id="dots"></div>
+    <button class="nav-btn" id="btnNext" aria-label="Siguiente diapositiva">›</button>
+  </div>
+  <div style="position:absolute; bottom:12px; right:clamp(16px,3vw,34px); z-index:6;">
+    <span class="contador" id="contador">01 / 16</span>
+  </div>
+</div>
+
+<script>
+(function(){
+
+  /* ============ DATOS: gases GEI ============ */
+  var gases = [
+    { formula:"CO₂", nombre:"Dióxido de carbono", origen:"Combustión de combustibles fósiles, deforestación, respiración y volcanes.", potencia:"Referencia base (potencial de calentamiento = 1)." },
+    { formula:"CH₄", nombre:"Metano", origen:"Ganadería, arrozales, rellenos sanitarios, extracción de gas y petróleo.", potencia:"Unas 28 veces más potente que el CO₂ en 100 años." },
+    { formula:"N₂O", nombre:"Óxido nitroso", origen:"Fertilizantes nitrogenados, quema de biomasa, algunos procesos industriales.", potencia:"Cerca de 265 veces más potente que el CO₂ en 100 años." },
+    { formula:"H₂O", nombre:"Vapor de agua", origen:"Evaporación natural de océanos y cuerpos de agua.", potencia:"El GEI más abundante, pero actúa sobre todo como retroalimentación, no como causa directa." },
+    { formula:"O₃", nombre:"Ozono troposférico", origen:"Reacciones químicas entre contaminantes del tránsito vehicular e industria.", potencia:"Gas de efecto invernadero de vida corta, relevante a nivel local y regional." },
+    { formula:"HFC / SF₆", nombre:"Gases fluorados", origen:"Refrigerantes, aires acondicionados y ciertos procesos industriales.", potencia:"Desde cientos hasta más de 20.000 veces más potentes que el CO₂." }
+  ];
+
+  var gridGases = document.getElementById("gridGases");
+  gases.forEach(function(g){
+    var card = document.createElement("div");
+    card.className = "gas-card";
+    card.innerHTML =
+      '<div class="gas-card-inner">' +
+        '<div class="gas-cara gas-cara--front">' +
+          '<span class="gas-formula">'+g.formula+'</span>' +
+          '<span class="gas-nombre">'+g.nombre+'</span>' +
+          '<span class="gas-hint">Toca para ver su origen →</span>' +
+        '</div>' +
+        '<div class="gas-cara gas-cara--back">' +
+          '<span class="gas-back-titulo">Origen principal</span>' +
+          '<span class="gas-back-texto">'+g.origen+'</span>' +
+          '<span class="gas-back-titulo" style="margin-top:6px;">Potencia relativa</span>' +
+          '<span class="gas-back-texto">'+g.potencia+'</span>' +
+        '</div>' +
+      '</div>';
+    card.addEventListener("click", function(){ card.classList.toggle("girada"); });
+    gridGases.appendChild(card);
+  });
+
+  /* ============ DATOS: fuentes naturales / artificiales ============ */
+  var iconos = {
+    volcan: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20l6-13 2 4 2-4 6 13H4z"/><circle cx="12" cy="6" r="1.4" fill="currentColor" stroke="none"/></svg>',
+    hoja: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 19C5 10 10 5 19 5c0 9-5 14-14 14z"/><path d="M5 19c3-3 6-6 10-10"/></svg>',
+    ola: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 15c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2"/><path d="M3 10c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2"/></svg>',
+    fuego: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c1 3-3 4-3 8a5 5 0 0010 0c0-2-1-3-2-4 0 2-1 3-2 2 1-3-1-4-3-6z"/></svg>',
+    hielo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M4 7l16 10M20 7L4 17"/></svg>',
+    fabrica: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21V11l5 3v-3l5 3V9l6 4v8H3z"/><path d="M6 17v-3M11 17v-3M16 17v-3"/></svg>',
+    auto: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16l1.5-5A2 2 0 017.4 9.5h9.2A2 2 0 0118.5 11L20 16"/><rect x="3" y="16" width="18" height="4" rx="1.4"/><circle cx="8" cy="20" r="1.3" fill="currentColor" stroke="none"/><circle cx="16" cy="20" r="1.3" fill="currentColor" stroke="none"/></svg>',
+    vaca: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="13" rx="8" ry="5.5"/><circle cx="8" cy="9" r="1.6"/><circle cx="16" cy="9" r="1.6"/><path d="M9 18v2M15 18v2"/></svg>',
+    basura: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13"/></svg>',
+    arbolCortado: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20h16M9 20l3-8 3 8M12 12V4"/><path d="M8 8l4-4 4 4"/></svg>'
+  };
+
+  var fuentesNaturales = [
+    { icono:"volcan", titulo:"Actividad volcánica", texto:"Los volcanes liberan CO₂ y otros gases desde el interior de la Tierra durante erupciones y desgasificación." },
+    { icono:"hoja", titulo:"Respiración y descomposición", texto:"Seres vivos y materia orgánica en descomposición liberan CO₂ y CH₄ como parte de los ciclos biogeoquímicos." },
+    { icono:"ola", titulo:"Intercambio océano–atmósfera", texto:"Los océanos liberan y absorben CO₂ de forma natural según la temperatura y las corrientes marinas." },
+    { icono:"fuego", titulo:"Incendios naturales", texto:"Rayos y otras causas no humanas provocan incendios que liberan carbono almacenado en la vegetación." },
+    { icono:"hielo", titulo:"Deshielo de permafrost", texto:"Al descongelarse, el suelo helado libera CH₄ y CO₂ acumulados durante miles de años." },
+    { icono:"ola", titulo:"Vapor de agua atmosférico", texto:"La evaporación natural mantiene al vapor de agua como el GEI más abundante de la atmósfera." }
+  ];
+
+  var fuentesArtificiales = [
+    { icono:"fabrica", titulo:"Generación de energía", texto:"Quema de carbón, petróleo y gas para electricidad e industria: la mayor fuente de GEI en Chile (~75%)." },
+    { icono:"auto", titulo:"Transporte", texto:"Combustión en vehículos, camiones, barcos y aviones libera grandes volúmenes de CO₂." },
+    { icono:"vaca", titulo:"Agricultura y ganadería", texto:"Fermentación entérica del ganado (CH₄) y uso de fertilizantes nitrogenados (N₂O)." },
+    { icono:"arbolCortado", titulo:"Deforestación", texto:"Talar o quemar bosques libera el carbono almacenado y reduce la capacidad de absorción futura." },
+    { icono:"fabrica", titulo:"Procesos industriales", texto:"Producción de cemento, químicos y metales libera GEI por reacciones y uso de energía." },
+    { icono:"basura", titulo:"Residuos", texto:"La descomposición anaeróbica de basura en rellenos sanitarios genera metano." }
+  ];
+
+  function renderFuentes(contenedorId, lista, tipo){
+    var cont = document.getElementById(contenedorId);
+    lista.forEach(function(f){
+      var div = document.createElement("div");
+      div.className = "fuente-card fuente-card--"+tipo;
+      div.innerHTML =
+        '<div class="fuente-icono">'+iconos[f.icono]+'</div>' +
+        '<span class="fuente-titulo">'+f.titulo+'</span>' +
+        '<span class="fuente-texto">'+f.texto+'</span>';
+      cont.appendChild(div);
+    });
+  }
+  renderFuentes("gridNaturales", fuentesNaturales, "natural");
+  renderFuentes("gridArtificiales", fuentesArtificiales, "artificial");
+
+  /* ============ Barras: Chile por sector ============ */
+  var sectoresChile = [
+    { nombre:"Energía", valor:75 },
+    { nombre:"Agricultura", valor:11 },
+    { nombre:"Residuos", valor:7 },
+    { nombre:"Procesos ind.", valor:7 }
+  ];
+  var contBarrasChile = document.getElementById("barrasChile");
+  sectoresChile.forEach(function(s){
+    var fila = document.createElement("div");
+    fila.className = "barra-fila";
+    fila.innerHTML =
+      '<span>'+s.nombre+'</span>' +
+      '<div class="barra-pista"><div class="barra-relleno" style="width:'+s.valor+'%;"></div></div>' +
+      '<span>'+s.valor+'%</span>';
+    contBarrasChile.appendChild(fila);
+  });
+
+  var deforestacionAmazonia = [
+    { nombre:"Brasil", valor:54.7 },
+    { nombre:"Bolivia", valor:27.3 },
+    { nombre:"Perú", valor:8.1 },
+    { nombre:"Colombia", valor:4.7 }
+  ];
+  var contBarrasAmz = document.getElementById("barrasAmazonia");
+  deforestacionAmazonia.forEach(function(s){
+    var fila = document.createElement("div");
+    fila.className = "barra-fila";
+    fila.innerHTML =
+      '<span>'+s.nombre+'</span>' +
+      '<div class="barra-pista"><div class="barra-relleno" style="width:'+s.valor+'%; background:var(--ascua);"></div></div>' +
+      '<span>'+s.valor+'%</span>';
+    contBarrasAmz.appendChild(fila);
+  });
+
+  /* ============ Activador: switch temperatura ============ */
+  var switchClima = document.getElementById("switchClima");
+  var tempValor = document.getElementById("tempValor");
+  var tempTexto = document.getElementById("tempTexto");
+  switchClima.addEventListener("change", function(){
+    if(switchClima.checked){
+      tempValor.textContent = "+15°C";
+      tempValor.classList.remove("frio");
+      tempTexto.textContent = "Es la temperatura media real de la Tierra gracias al efecto invernadero natural: suficiente calor para mantener agua líquida y sostener la vida.";
+    } else {
+      tempValor.textContent = "-18°C";
+      tempValor.classList.add("frio");
+      tempTexto.textContent = "Es la temperatura media que tendría la Tierra si no existiera el efecto invernadero natural: un planeta helado, sin agua líquida estable en la superficie.";
+    }
+  });
+
+  /* ============ Calculadora de huella ============ */
+  var rangoCarne = document.getElementById("rangoCarne");
+  var valorCarne = document.getElementById("valorCarne");
+  var selectEnergia = document.getElementById("selectEnergia");
+  var medidorRelleno = document.getElementById("medidorRelleno");
+  var medidorEtiqueta = document.getElementById("medidorEtiqueta");
+  var medidorNota = document.getElementById("medidorNota");
+
+  function actualizarHuella(){
+    valorCarne.textContent = rangoCarne.value;
+    var transporteEl = document.querySelector('input[name="transporte"]:checked');
+    var transporte = transporteEl ? parseInt(transporteEl.value,10) : 2;
+    var carne = parseInt(rangoCarne.value,10);
+    var energia = parseInt(selectEnergia.value,10);
+
+    // puntaje simple 0-100 (estimación educativa, no científica)
+    var puntaje = Math.round( (transporte/2)*40 + (carne/7)*35 + (energia/2)*25 );
+    medidorRelleno.style.width = puntaje + "%";
+
+    var etiqueta, nota;
+    if(puntaje <= 33){
+      etiqueta = "Huella baja";
+      nota = "Tus elecciones actuales de transporte, alimentación y energía generan pocas emisiones en comparación con el promedio.";
+    } else if(puntaje <= 66){
+      etiqueta = "Huella media";
+      nota = "Vas a mitad de camino: pequeños cambios en transporte o alimentación pueden bajar bastante tu huella.";
+    } else {
+      etiqueta = "Huella alta";
+      nota = "Tu combinación actual de elecciones genera una huella comparativamente alta. Piensa: ¿qué cambiarías primero?";
+    }
+    medidorEtiqueta.textContent = etiqueta;
+    medidorNota.textContent = nota;
+  }
+  rangoCarne.addEventListener("input", actualizarHuella);
+  selectEnergia.addEventListener("change", actualizarHuella);
+  document.querySelectorAll('input[name="transporte"]').forEach(function(r){
+    r.addEventListener("change", actualizarHuella);
+  });
+  actualizarHuella();
+
+  /* ============ Preguntas Bloom (alternativas) ============ */
+  var preguntasP1 = [
+    {
+      enunciado:"1. (Recordar) ¿Cuál es el principal gas liberado por la quema de combustibles fósiles (carbón, petróleo y gas)?",
+      opciones:[
+        {texto:"Oxígeno (O₂)", correcta:false},
+        {texto:"Dióxido de carbono (CO₂)", correcta:true},
+        {texto:"Nitrógeno (N₂)", correcta:false},
+        {texto:"Argón (Ar)", correcta:false}
+      ],
+      retro:"El CO₂ es el gas liberado en mayor volumen al quemar combustibles fósiles, ya que libera el carbono que estaba almacenado en ellos."
+    },
+    {
+      enunciado:"2. (Comprender) ¿Por qué el efecto invernadero natural es indispensable para la vida en la Tierra?",
+      opciones:[
+        {texto:"Porque bloquea toda la radiación solar y evita el calentamiento", correcta:false},
+        {texto:"Porque mantiene una temperatura media compatible con la vida", correcta:true},
+        {texto:"Porque elimina el vapor de agua de la atmósfera", correcta:false},
+        {texto:"Porque reduce la cantidad de oxígeno disponible", correcta:false}
+      ],
+      retro:"Sin este efecto, la temperatura media global sería de aproximadamente -18°C en lugar de los +15°C actuales."
+    }
+  ];
+
+  var preguntasP2 = [
+    {
+      enunciado:"3. (Aplicar) Una familia reemplaza el auto particular por transporte público y reduce su consumo de carne roja. ¿Qué componentes de su huella se reducen más directamente?",
+      opciones:[
+        {texto:"Solo el componente de vivienda", correcta:false},
+        {texto:"El componente de transporte y el de alimentación", correcta:true},
+        {texto:"Solo el componente de compras", correcta:false},
+        {texto:"Ninguno: estas acciones no afectan la huella", correcta:false}
+      ],
+      retro:"El transporte reduce emisiones por combustión de fósiles, y el menor consumo de carne roja reduce el metano asociado a la ganadería."
+    },
+    {
+      enunciado:"4. (Analizar) Chile emite solo ~0,2% de los GEI globales, pero tiene una de las huellas per cápita más altas de Latinoamérica. ¿Cuál explicación es más consistente con la evidencia vista en clase?",
+      opciones:[
+        {texto:"Chile tiene una población muy alta comparada con el resto de la región", correcta:false},
+        {texto:"Su matriz energética depende de combustibles fósiles, repartida entre una población pequeña", correcta:true},
+        {texto:"Chile no cuenta con inventarios de gases de efecto invernadero", correcta:false},
+        {texto:"El sector agrícola chileno es el mayor emisor del país", correcta:false}
+      ],
+      retro:"Un país puede tener baja participación mundial y, a la vez, una huella individual alta si su matriz energética es intensiva en fósiles y su población es comparativamente pequeña."
+    }
+  ];
+
+  function renderPreguntas(contenedorId, lista){
+    var cont = document.getElementById(contenedorId);
+    lista.forEach(function(p, idx){
+      var bloque = document.createElement("div");
+      bloque.className = "pregunta-bloque";
+      var opcionesHtml = "";
+      p.opciones.forEach(function(o, i){
+        opcionesHtml += '<button class="opcion" data-correcta="'+o.correcta+'">'+o.texto+'</button>';
+      });
+      bloque.innerHTML =
+        '<p class="pregunta-enunciado">'+p.enunciado+'</p>' +
+        '<div class="opciones">'+opcionesHtml+'</div>' +
+        '<div class="feedback">'+p.retro+'</div>';
+      cont.appendChild(bloque);
+
+      var botones = bloque.querySelectorAll(".opcion");
+      var feedback = bloque.querySelector(".feedback");
+      botones.forEach(function(btn){
+        btn.addEventListener("click", function(){
+          var esCorrecta = btn.getAttribute("data-correcta") === "true";
+          botones.forEach(function(b){ b.disabled = true; });
+          if(esCorrecta){
+            btn.classList.add("correcta");
+          } else {
+            btn.classList.add("incorrecta");
+            botones.forEach(function(b){
+              if(b.getAttribute("data-correcta") === "true"){ b.classList.add("correcta"); }
+            });
+          }
+          feedback.classList.add("visible");
+        });
+      });
+    });
+  }
+  renderPreguntas("bloqueP1", preguntasP1);
+  renderPreguntas("bloqueP2", preguntasP2);
+
+  /* ============ Fotones animados (portada) ============ */
+  var capaFotones = document.getElementById("capaFotones");
+  var reducirMovimiento = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(!reducirMovimiento){
+    for(var i=0;i<9;i++){
+      var solar = document.createElement("div");
+      solar.className = "foton foton--solar";
+      solar.style.left = (8 + i*10) + "%";
+      solar.style.animationDuration = (4 + Math.random()*2.5) + "s";
+      solar.style.animationDelay = (Math.random()*4) + "s";
+      capaFotones.appendChild(solar);
+    }
+    for(var j=0;j<6;j++){
+      var ir = document.createElement("div");
+      ir.className = "foton foton--ir";
+      ir.style.left = (14 + j*13) + "%";
+      ir.style.animationDuration = (5 + Math.random()*2) + "s";
+      ir.style.animationDelay = (Math.random()*5) + "s";
+      capaFotones.appendChild(ir);
+    }
+  }
+
+  /* ============ Navegación del deck ============ */
+  var slides = document.querySelectorAll(".slide");
+  var total = slides.length;
+  var actual = 0;
+
+  var dotsCont = document.getElementById("dots");
+  for(var k=0;k<total;k++){
+    var d = document.createElement("button");
+    d.className = "dot" + (k===0 ? " activo" : "");
+    d.setAttribute("aria-label", "Ir a diapositiva " + (k+1));
+    d.addEventListener("click", (function(idx){ return function(){ irA(idx); }; })(k));
+    dotsCont.appendChild(d);
+  }
+  var dots = dotsCont.querySelectorAll(".dot");
+
+  var btnPrev = document.getElementById("btnPrev");
+  var btnNext = document.getElementById("btnNext");
+  var contador = document.getElementById("contador");
+  var barraProgreso = document.getElementById("barraProgreso");
+
+  function pad(n){ return n < 10 ? "0"+n : ""+n; }
+
+  function irA(idx){
+    if(idx < 0 || idx >= total) return;
+    slides[actual].classList.remove("activa");
+    dots[actual].classList.remove("activo");
+    actual = idx;
+    slides[actual].classList.add("activa");
+    dots[actual].classList.add("activo");
+    contador.textContent = pad(actual+1) + " / " + pad(total);
+    barraProgreso.style.width = ((actual+1)/total*100) + "%";
+    btnPrev.disabled = actual === 0;
+    btnNext.disabled = actual === total-1;
+    slides[actual].scrollTop = 0;
+  }
+
+  btnPrev.addEventListener("click", function(){ irA(actual-1); });
+  btnNext.addEventListener("click", function(){ irA(actual+1); });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "ArrowRight") irA(actual+1);
+    if(e.key === "ArrowLeft") irA(actual-1);
+  });
+
+  irA(0);
+})();
+</script>
+</body>
+</html>

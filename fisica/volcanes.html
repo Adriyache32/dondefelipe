@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NERV·CIENCIAS // U2·S3 · Actividad Volcánica</title>
+<style>
+:root{
+  --bg:#070809; --bg2:#0d1013; --panel:#0f1216; --panel2:#12161b;
+  --orange:#ff6a00; --amber:#ffb02e; --cyan:#00e5ff; --cyan-d:#0097a7;
+  --red:#ff3b30; --green:#2fe08a; --violet:#b892ff;
+  --ink:#e9eef3; --muted:#7f8b98; --line:rgba(255,106,0,.30); --grid:rgba(0,229,255,.05);
+  --mono:"Consolas","Courier New",ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--mono);overflow:hidden;-webkit-font-smoothing:antialiased;letter-spacing:.3px}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.5;
+  background:linear-gradient(var(--grid) 1px,transparent 1px) 0 0/44px 44px,
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/44px 44px,
+    repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 2px,transparent 2px 4px)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+#hud{position:fixed;top:0;left:0;right:0;height:52px;z-index:40;display:flex;align-items:center;gap:14px;padding:0 16px;background:linear-gradient(180deg,rgba(7,8,9,.96),rgba(7,8,9,.72));border-bottom:1px solid var(--line);backdrop-filter:blur(4px)}
+.hud-tag{font-size:11px;color:var(--orange);letter-spacing:2px;white-space:nowrap}
+.hud-tag b{color:var(--cyan)}
+#missionBar{flex:1;height:10px;background:#0a0d10;border:1px solid var(--line);border-radius:2px;overflow:hidden;min-width:60px}
+#missionFill{height:100%;width:0;background:linear-gradient(90deg,var(--orange),var(--amber));transition:width .5s}
+.xp-box{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.xp-box .lab{font-size:10px;color:var(--muted);letter-spacing:1px}
+#xpVal{font-size:20px;color:var(--amber);font-weight:bold;text-shadow:0 0 12px rgba(255,176,46,.5);min-width:44px;text-align:right}
+#rankTag{font-size:10px;color:var(--cyan);border:1px solid var(--cyan-d);padding:2px 6px;border-radius:2px;white-space:nowrap}
+#badges{display:flex;gap:4px}
+.badge{width:22px;height:22px;border:1px solid #223;border-radius:3px;display:grid;place-items:center;font-size:12px;filter:grayscale(1) opacity(.25);transition:.4s}
+.badge.on{filter:none;border-color:var(--amber);box-shadow:0 0 10px rgba(255,176,46,.5);animation:pop .5s}
+@keyframes pop{0%{transform:scale(.4)}60%{transform:scale(1.35)}100%{transform:scale(1)}}
+#hudOp{font-size:10px;color:var(--cyan);letter-spacing:1px;max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hudOp b{color:var(--amber)}
+#muteBtn{background:transparent;border:1px solid var(--line);color:var(--ink);width:34px;height:30px;border-radius:4px;font-size:15px;cursor:pointer;transition:.2s}
+#muteBtn:hover{border-color:var(--orange)}
+#muteBtn.off{color:var(--muted);border-color:#223}
+@media(max-width:820px){.labword{display:none}}
+
+#deck{position:fixed;inset:52px 0 60px 0;overflow:hidden}
+.slide{position:absolute;inset:0;padding:26px clamp(16px,4vw,60px);display:none;flex-direction:column;justify-content:center;gap:14px;overflow-y:auto;animation:slidein .5s ease}
+.slide.active{display:flex}
+@keyframes slidein{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.eyebrow{font-size:12px;letter-spacing:4px;color:var(--orange);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.eyebrow .n{color:var(--bg);background:var(--orange);padding:1px 8px;border-radius:2px;font-weight:bold}
+.eyebrow .ph{color:var(--cyan);border:1px solid var(--cyan-d);padding:1px 8px;border-radius:2px;font-size:11px}
+h1{font-size:clamp(26px,5.4vw,58px);line-height:1.04;letter-spacing:.5px}
+h2{font-size:clamp(20px,3.6vw,38px);line-height:1.1}
+h3{font-size:clamp(15px,2vw,20px);color:var(--cyan)}
+.sub{color:var(--muted);font-size:clamp(12px,1.6vw,15px);line-height:1.5;max-width:900px}
+.accent{color:var(--amber)} .cy{color:var(--cyan)} .og{color:var(--orange)}
+mark{background:rgba(255,106,0,.18);color:var(--amber);padding:0 4px;border-radius:2px}
+.panel{background:linear-gradient(160deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:6px;padding:16px 18px;position:relative}
+.panel::after{content:"";position:absolute;top:-1px;right:-1px;width:16px;height:16px;border-top:2px solid var(--cyan);border-right:2px solid var(--cyan);opacity:.6}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.row{display:flex;gap:14px;flex-wrap:wrap;align-items:stretch}
+@media(max-width:820px){.grid2,.grid3{grid-template-columns:1fr}}
+.tap{cursor:pointer;user-select:none;transition:transform .15s,box-shadow .25s,border-color .2s}
+.tap:hover{transform:translateY(-3px);border-color:var(--orange);box-shadow:0 6px 22px rgba(255,106,0,.18)}
+.tap:active{transform:translateY(0)}
+.tap.done{border-color:var(--green);box-shadow:0 0 0 1px rgba(47,224,138,.35) inset}
+.reveal-hidden{color:var(--muted);font-style:italic}
+.hint{font-size:11px;color:var(--cyan);letter-spacing:1px}
+.icon{font-size:26px}
+.kpi{font-size:clamp(22px,4vw,40px);color:var(--amber);font-weight:bold}
+.small{font-size:12px;color:var(--muted)}
+button,.btn{font-family:var(--mono);cursor:pointer}
+.btn{background:transparent;border:1px solid var(--orange);color:var(--orange);padding:10px 18px;border-radius:3px;font-size:14px;letter-spacing:1px;transition:.2s;text-decoration:none;display:inline-block}
+.btn:hover{background:var(--orange);color:var(--bg);box-shadow:0 0 18px rgba(255,106,0,.4)}
+.btn.cy{border-color:var(--cyan);color:var(--cyan)}
+.btn.cy:hover{background:var(--cyan);color:var(--bg);box-shadow:0 0 18px rgba(0,229,255,.4)}
+.btn:focus-visible,.tap:focus-visible,.opt:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+
+.hero{align-items:flex-start;text-align:left}
+.hero-flex{display:flex;gap:34px;align-items:center;width:100%;flex-wrap:wrap}
+.hero-txt{flex:1;min-width:280px}
+.qr-panel{width:250px;flex-shrink:0;text-align:center}
+.qr-card{background:#fff;padding:12px;border-radius:6px;border:2px solid var(--orange);box-shadow:0 0 24px rgba(255,106,0,.25)}
+.qr-card img{width:100%;display:block;image-rendering:pixelated}
+.qr-lab{font-size:11px;color:var(--cyan);letter-spacing:2px;margin-top:8px}
+.qr-url{font-size:10px;color:var(--muted);word-break:break-all;margin-top:4px}
+@media(max-width:820px){.qr-panel{display:none!important}}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.chip{font-size:11px;border:1px solid var(--line);padding:3px 9px;border-radius:20px;color:var(--muted);letter-spacing:1px}
+.namebox{margin-top:16px;max-width:460px}
+.namebox label{font-size:11px;letter-spacing:2px;color:var(--cyan);display:block;margin-bottom:6px}
+.namebox input{width:100%;background:#0a0d10;border:1px solid var(--orange);color:var(--ink);font-family:var(--mono);padding:12px 14px;border-radius:4px;font-size:15px;letter-spacing:1px}
+.namebox input:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 14px rgba(0,229,255,.25)}
+
+.route{display:flex;gap:6px;flex-wrap:wrap}
+.step{flex:1;min-width:96px;border:1px solid var(--line);border-radius:4px;padding:8px;text-align:center;font-size:11px}
+.step b{display:block;color:var(--cyan);font-size:13px;margin-bottom:2px}
+.step span{color:var(--muted)}
+
+/* volcano parts list */
+.earth{display:flex;flex-direction:column;gap:6px;max-width:560px;margin:auto;width:100%}
+.layer{border:1px solid var(--line);border-radius:4px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;transition:.2s}
+.layer:hover{border-color:var(--orange)}
+.layer .lname{font-weight:bold}
+.layer .ldesc{font-size:11px;color:var(--muted);max-width:58%;text-align:right;display:none}
+.layer.open .ldesc{display:block;animation:slidein .3s}
+.l1{background:linear-gradient(90deg,rgba(255,106,0,.14),transparent)}
+.l2{background:linear-gradient(90deg,rgba(255,59,48,.13),transparent)}
+.l3{background:linear-gradient(90deg,rgba(255,176,46,.13),transparent)}
+.l4{background:linear-gradient(90deg,rgba(0,229,255,.12),transparent)}
+.l5{background:linear-gradient(90deg,rgba(184,146,255,.12),transparent)}
+
+.hypo{display:grid;grid-template-columns:auto 1fr;gap:8px 12px;align-items:center}
+.hypo .tag{color:var(--orange);font-weight:bold;font-size:13px;letter-spacing:1px}
+.hypo input{width:100%;background:#0a0d10;border:1px solid var(--line);color:var(--ink);font-family:var(--mono);padding:8px 10px;border-radius:3px;font-size:13px}
+.hypo input:focus{outline:none;border-color:var(--cyan)}
+.poll{display:flex;gap:10px;flex-wrap:wrap}
+.opt{flex:1;min-width:120px;background:#0a0d10;border:1px solid var(--line);color:var(--ink);padding:12px;border-radius:4px;font-size:13px;text-align:left;position:relative;overflow:hidden;transition:.2s}
+.opt:hover{border-color:var(--orange)}
+.opt .barfill{position:absolute;inset:0;background:rgba(0,229,255,.14);width:0;transition:width .6s;z-index:0}
+.opt .pct{position:absolute;right:10px;top:10px;color:var(--cyan);font-size:12px;z-index:2;opacity:0}
+.opt span.t{position:relative;z-index:2}
+.opt.voted .pct{opacity:1}
+
+.cuaderno{background:repeating-linear-gradient(180deg,#0c1013 0 27px,rgba(0,229,255,.06) 27px 28px);border:1px solid var(--cyan-d);border-left:4px solid var(--cyan);border-radius:4px;padding:16px 18px;position:relative}
+.cuaderno::before{content:"✍️ EN TU CUADERNO";position:absolute;top:-11px;left:14px;background:var(--bg);color:var(--cyan);font-size:11px;letter-spacing:2px;padding:0 8px}
+.check{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.check li{display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;color:var(--ink);transition:.15s}
+.check li .bx{width:18px;height:18px;border:1px solid var(--orange);border-radius:3px;flex-shrink:0;display:grid;place-items:center;font-size:12px;color:var(--green);margin-top:1px}
+.check li.on{color:var(--muted);text-decoration:line-through}
+.check li.on .bx{background:rgba(47,224,138,.15);border-color:var(--green)}
+.check li:hover{color:var(--amber)}
+.cuad-note{font-size:12px;color:var(--muted);margin-top:10px;font-style:italic}
+
+.videoframe{position:relative;width:100%;max-width:820px;margin:0 auto;aspect-ratio:16/9;border:1px solid var(--orange);border-radius:6px;overflow:hidden;box-shadow:0 0 26px rgba(255,106,0,.18)}
+.videoframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+
+.sem{display:flex;gap:14px;flex-wrap:wrap}
+.light{flex:1;min-width:150px;border:1px solid var(--line);border-radius:6px;padding:14px;text-align:center;cursor:pointer;transition:.2s}
+.light .ball{width:34px;height:34px;border-radius:50%;margin:0 auto 8px;opacity:.35;transition:.3s}
+.light:hover{transform:translateY(-3px)}
+.light.sel{border-width:2px}
+.r .ball{background:var(--red)} .r.sel{border-color:var(--red);box-shadow:0 0 18px rgba(255,59,48,.35)} .r.sel .ball{opacity:1}
+.y .ball{background:var(--amber)} .y.sel{border-color:var(--amber);box-shadow:0 0 18px rgba(255,176,46,.35)} .y.sel .ball{opacity:1}
+.g .ball{background:var(--green)} .g.sel{border-color:var(--green);box-shadow:0 0 18px rgba(47,224,138,.35)} .g.sel .ball{opacity:1}
+.note{background:#0a0d10;border-left:3px solid var(--cyan);padding:12px 14px;border-radius:0 4px 4px 0;font-size:13px}
+textarea.bit{width:100%;background:#0a0d10;border:1px solid var(--line);color:var(--ink);font-family:var(--mono);padding:10px;border-radius:4px;font-size:13px;resize:vertical;min-height:70px}
+textarea.bit:focus{outline:none;border-color:var(--cyan)}
+
+.game-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.game-pill{font-size:11px;letter-spacing:2px;color:var(--bg);background:var(--cyan);padding:2px 10px;border-radius:20px;font-weight:bold}
+.qbox .q{font-size:clamp(15px,2.4vw,22px);margin:6px 0 12px}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:640px){.answers{grid-template-columns:1fr}}
+.ans{background:#0a0d10;border:1px solid var(--line);color:var(--ink);padding:14px;border-radius:5px;font-size:14px;text-align:left;transition:.15s}
+.ans:hover{border-color:var(--orange);background:#12161b}
+.ans.ok{border-color:var(--green);background:rgba(47,224,138,.15);color:var(--green)}
+.ans.no{border-color:var(--red);background:rgba(255,59,48,.13);color:var(--red)}
+.ans.sel{border-color:var(--cyan);background:rgba(0,229,255,.12);color:var(--cyan)}
+.ans:disabled{cursor:default}
+.qmeta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px}
+.feedback{min-height:20px;font-size:13px;margin-top:10px}
+.scenario{background:#0a0d10;border:1px solid var(--line);border-radius:5px;padding:16px;font-size:clamp(14px,2.2vw,18px);text-align:center;min-height:70px;display:grid;place-items:center}
+.clf-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+@media(max-width:640px){.clf-btns{grid-template-columns:1fr}}
+.match-cols{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media(max-width:640px){.match-cols{gap:10px}}
+.mcol{display:flex;flex-direction:column;gap:8px}
+.mcard{background:#0a0d10;border:1px solid var(--line);color:var(--ink);padding:12px;border-radius:5px;font-size:13px;text-align:left;transition:.15s}
+.mcard:hover{border-color:var(--orange)}
+.mcard.sel{border-color:var(--cyan);box-shadow:0 0 12px rgba(0,229,255,.3)}
+.mcard.matched{border-color:var(--green);background:rgba(47,224,138,.12);color:var(--green);cursor:default;opacity:.65}
+
+/* simulador */
+.simopts{display:flex;flex-direction:column;gap:8px}
+.verdict{border-radius:6px;padding:16px 18px;margin-top:14px;border:1px solid var(--line);animation:slidein .4s}
+.verdict h3{font-size:clamp(20px,4vw,30px);margin-bottom:6px;color:var(--ink)}
+.v-ok{border-color:var(--green);background:rgba(47,224,138,.10)} .v-ok h3{color:var(--green)}
+.v-mid{border-color:var(--amber);background:rgba(255,176,46,.10)} .v-mid h3{color:var(--amber)}
+.v-bad{border-color:var(--red);background:rgba(255,59,48,.10)} .v-bad h3{color:var(--red)}
+.rolls{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0}
+.roll{font-size:12px;border:1px solid var(--line);border-radius:20px;padding:4px 10px;color:var(--cyan)}
+.roll b{color:var(--amber)}
+.calc{font-size:12px;color:var(--muted);margin-top:6px;letter-spacing:.5px}
+.sci{font-size:13px;color:var(--ink);margin-top:8px;line-height:1.5}
+.tsunami{background:rgba(0,229,255,.10);border-left:3px solid var(--cyan);padding:8px 12px;border-radius:0 4px 4px 0;margin-top:10px;font-size:13px}
+.safety{background:rgba(255,59,48,.08);border-left:3px solid var(--red);padding:8px 12px;border-radius:0 4px 4px 0;margin-top:10px;font-size:12px;color:var(--muted)}
+.joke{font-size:13px;color:var(--amber);margin-top:8px;font-style:italic}
+
+/* simulador tectónico (SVG) */
+.tec-wrap{width:100%;max-width:860px;margin:0 auto;border:1px solid var(--orange);border-radius:8px;overflow:hidden;background:#05070a;box-shadow:0 0 26px rgba(255,106,0,.14)}
+.tec-svg{display:block;width:100%;height:auto}
+.tec-label{font-family:var(--mono);font-size:12px;font-weight:bold;fill:var(--ink)}
+.tec-sub{font-family:var(--mono);font-size:10px;fill:var(--muted)}
+.tec-controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:12px;justify-content:center}
+.tec-slider{display:flex;flex-direction:column;gap:4px;min-width:240px;flex:1;max-width:420px}
+.tec-slider label{font-size:11px;letter-spacing:1px;color:var(--cyan)}
+input[type=range].rng{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:6px;background:linear-gradient(90deg,var(--cyan),var(--orange),var(--red));outline:none;border:1px solid var(--line)}
+input[type=range].rng::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:var(--amber);border:2px solid #000;cursor:pointer;box-shadow:0 0 10px rgba(255,176,46,.6)}
+input[type=range].rng::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--amber);border:2px solid #000;cursor:pointer}
+.tec-readout{background:#0a0d10;border-left:3px solid var(--orange);border-radius:0 4px 4px 0;padding:10px 14px;margin-top:12px;font-size:13px;min-height:44px;line-height:1.5;transition:.3s}
+.tec-phase{color:var(--amber);font-weight:bold;letter-spacing:1px}
+/* magma pulse + eruption */
+.magma-blob{opacity:0;transition:opacity .3s,transform .3s}
+#tecSlab{transition:stroke-dashoffset .15s linear}
+#tecAsh{opacity:0}
+#tecLava{opacity:0}
+.tec-svg.erupting #tecAsh{animation:ashUp 2.4s ease-out}
+.tec-svg.erupting #tecLava{animation:lavaFlow 2.4s ease-out}
+.tec-svg.erupting #tecGlow{animation:glowPulse 2.4s ease-out}
+@keyframes ashUp{0%{opacity:0;transform:translateY(10px) scale(.5)}25%{opacity:.9}100%{opacity:0;transform:translateY(-70px) scale(1.8)}}
+@keyframes lavaFlow{0%{opacity:0}20%{opacity:1}100%{opacity:.85}}
+@keyframes glowPulse{0%,100%{opacity:0}40%{opacity:1}}
+
+.final{align-items:center;text-align:center}
+.rankbig{font-size:clamp(26px,5vw,50px);color:var(--amber);text-shadow:0 0 24px rgba(255,176,46,.4)}
+.badgewall{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin:10px 0}
+.bw{width:64px;height:64px;border:1px solid #223;border-radius:8px;display:grid;place-items:center;font-size:26px;filter:grayscale(1) opacity(.25)}
+.bw.on{filter:none;border-color:var(--amber);box-shadow:0 0 16px rgba(255,176,46,.4)}
+
+#nav{position:fixed;bottom:0;left:0;right:0;height:60px;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:linear-gradient(0deg,rgba(7,8,9,.96),rgba(7,8,9,.6));border-top:1px solid var(--line)}
+.dots{display:flex;gap:5px;flex-wrap:wrap;max-width:60%;justify-content:center}
+.dot{width:9px;height:9px;border-radius:50%;border:1px solid var(--line);background:transparent;cursor:pointer;padding:0;transition:.2s}
+.dot.on{background:var(--orange);border-color:var(--orange);box-shadow:0 0 8px var(--orange)}
+.dot.section{border-color:var(--cyan)}
+.navbtn{background:transparent;border:1px solid var(--line);color:var(--ink);width:44px;height:38px;border-radius:4px;font-size:18px;transition:.2s}
+.navbtn:hover{border-color:var(--orange);color:var(--orange)}
+.slideno{font-size:11px;color:var(--muted);letter-spacing:1px}
+#toast{position:fixed;top:64px;left:50%;transform:translateX(-50%) translateY(-16px);z-index:70;background:var(--panel);border:1px solid var(--amber);color:var(--amber);padding:8px 16px;border-radius:4px;font-size:13px;opacity:0;pointer-events:none;transition:.35s;box-shadow:0 6px 24px rgba(0,0,0,.5)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.xpfloat{position:fixed;z-index:75;color:var(--amber);font-weight:bold;font-size:18px;pointer-events:none;text-shadow:0 0 10px rgba(255,176,46,.7);animation:xpf 1s ease forwards}
+@keyframes xpf{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-46px)}}
+.tick{color:var(--green)}
+.blink{animation:bl 1.1s steps(2) infinite}
+@keyframes bl{50%{opacity:.35}}
+.corner{position:absolute;bottom:8px;right:14px;font-size:10px;color:var(--muted);letter-spacing:2px}
+</style>
+</head>
+<body>
+
+<div id="hud">
+  <div class="hud-tag">ネルフ NERV·CIENCIAS <b>//</b> U2·S3</div>
+  <div id="missionBar"><div id="missionFill"></div></div>
+  <div id="badges" title="Insignias">
+    <div class="badge" data-b="hipotesis">🧪</div>
+    <div class="badge" data-b="partes">🌋</div>
+    <div class="badge" data-b="andes">🏔️</div>
+    <div class="badge" data-b="riesgo">🚨</div>
+    <div class="badge" data-b="trivia">🎯</div>
+    <div class="badge" data-b="vulcanologo">🥼</div>
+    <div class="badge" data-b="maestro">🏆</div>
+  </div>
+  <div class="xp-box">
+    <span class="lab">🪙 <span class="labword">FELIPESOS</span></span><span id="xpVal">0</span>
+    <span id="rankTag">RECLUTA</span>
+  </div>
+  <span id="hudOp"></span>
+  <button id="muteBtn" title="Activar/silenciar sonido" onclick="toggleMute()">🔊</button>
+</div>
+
+<div id="deck">
+
+  <!-- 0 PORTADA -->
+  <section class="slide active hero" data-title="Portada">
+    <div class="hero-flex">
+      <div class="hero-txt">
+        <div class="eyebrow"><span class="n">UNIDAD 02 · SESIÓN 03</span> CIENCIAS DE LA TIERRA <span class="ph">OA 10</span></div>
+        <h1>ACTIVIDAD<br><span class="og">VOLCÁNICA</span> 🌋</h1>
+        <p class="sub" style="margin-top:10px">Chile vive sobre uno de los territorios más volcánicos del mundo. Hoy descubrirás <span class="cy">cómo funciona un volcán por dentro</span>, por qué la cordillera arde y cómo la ciencia nos protege.</p>
+        <div class="meta">
+          <span class="chip">PROF. FELIPE JIMÉNEZ</span><span class="chip">7° BÁSICO</span><span class="chip">COLEGIO SAN AGUSTÍN · VILLA ALEMANA</span>
+        </div>
+        <div class="namebox">
+          <label>▸ REGISTRO DE OPERADOR/A</label>
+          <input id="nameInput" maxlength="40" placeholder="Escribe tu nombre (o el del equipo)..." onkeydown="if(event.key==='Enter')startMission()">
+        </div>
+        <div style="margin-top:18px" class="row">
+          <button class="btn" onclick="startMission()">▶ INICIAR MISIÓN</button>
+          <span class="hint blink" style="align-self:center">// gana felipesos en cada interacción</span>
+        </div>
+      </div>
+      <div class="qr-panel">
+        <div class="qr-card">
+          <img alt="Código QR de acceso" src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=6&data=https%3A%2F%2Ffjimenez321-stack.github.io%2Fdondefelipe%2F" onerror="this.parentNode.innerHTML='<div style=color:%23111;font-size:12px;padding:20px>Abre el enlace:<br>fjimenez321-stack.github.io/dondefelipe</div>'">
+        </div>
+        <div class="qr-lab">▚ ESCANEA CON TU CELULAR</div>
+        <div class="qr-url">https://fjimenez321-stack.github.io/dondefelipe/</div>
+      </div>
+    </div>
+    <div class="corner">SISTEMA MAGI · ONLINE</div>
+  </section>
+
+  <!-- 1 BRIEFING -->
+  <section class="slide" data-title="Briefing / OA">
+    <div class="eyebrow"><span class="n">BRIEFING</span> OBJETIVO DE LA MISIÓN</div>
+    <h2>¿Qué vamos a lograr?</h2>
+    <div class="panel">
+      <h3>▸ OA 10</h3>
+      <p class="sub" style="margin-top:6px">Explicar, sobre la base de evidencias y con modelos, la <mark>actividad volcánica</mark> y sus <span class="og">consecuencias en la naturaleza y la sociedad</span>: estructura de un volcán, cómo se forma, tipos de erupción y su relación con la <span class="cy">tectónica de placas</span>.</p>
+    </div>
+    <h3>▸ Ruta de indagación</h3>
+    <div class="route">
+      <div class="step"><b>1 OBSERVAR</b><span>Detectar el fenómeno</span></div>
+      <div class="step"><b>2 EXPLORAR</b><span>Preguntar y probar</span></div>
+      <div class="step"><b>3 INVESTIGAR</b><span>Buscar evidencia</span></div>
+      <div class="step"><b>4 ANALIZAR</b><span>Interpretar datos</span></div>
+      <div class="step"><b>5 CONCLUIR</b><span>Explicar con modelo</span></div>
+      <div class="step"><b>6 COMUNICAR</b><span>Compartir hallazgo</span></div>
+    </div>
+    <div class="panel tap" onclick="award(this,10,'reglas','Reglas aceptadas · +10 felipesos')">
+      <h3>▸ Reglas del juego <span class="hint">(toca para aceptar)</span></h3>
+      <p class="sub" style="margin-top:4px">Cada tarjeta, respuesta correcta y reto suma <span class="accent">felipesos</span>. Hay <span class="og">6 insignias</span> escondidas y al final desbloqueas tu rango. <span class="reveal-hidden">✔ Aceptado — ¡a la cordillera!</span></p>
+    </div>
+  </section>
+
+  <!-- 2 INICIO -->
+  <section class="slide" data-title="Inicio · Observar">
+    <div class="eyebrow"><span class="n">INICIO</span> <span class="ph">OBSERVAR</span> 15 min</div>
+    <h2>Chile, tierra de fuego 🔥</h2>
+    <p class="sub">A lo largo de la cordillera hay más de 90 volcanes activos: Villarrica, Llaima, Osorno, Chaitén, Láscar... <span class="accent">¿Por qué justo aquí?</span></p>
+    <div class="panel">
+      <h3>▸ Vota tu idea previa</h3>
+      <p class="small" style="margin:4px 0 10px">¿Por qué crees que Chile tiene tantos volcanes? (activación de ideas previas)</p>
+      <div class="poll" id="poll1">
+        <button class="opt" onclick="vote(this,'poll1')"><span class="t">A · Por la subducción de la placa de Nazca</span><span class="pct"></span><i class="barfill"></i></button>
+        <button class="opt" onclick="vote(this,'poll1')"><span class="t">B · Porque hace mucho calor</span><span class="pct"></span><i class="barfill"></i></button>
+        <button class="opt" onclick="vote(this,'poll1')"><span class="t">C · Por la altura de la cordillera</span><span class="pct"></span><i class="barfill"></i></button>
+        <button class="opt" onclick="vote(this,'poll1')"><span class="t">D · Es solo casualidad</span><span class="pct"></span><i class="barfill"></i></button>
+      </div>
+      <p class="hint" style="margin-top:8px">// no hay respuesta mala: es tu hipótesis inicial</p>
+    </div>
+    <div class="panel">
+      <h3>▸ Formula tu hipótesis</h3>
+      <div class="hypo" style="margin-top:8px">
+        <span class="tag">SI</span><input placeholder="la placa de Nazca se hunde bajo Chile..." />
+        <span class="tag">ENTONCES</span><input placeholder="entonces se genera magma y volcanes..." />
+        <span class="tag">PORQUE</span><input placeholder="porque la roca se funde en profundidad..." />
+      </div>
+      <button class="btn cy" style="margin-top:12px" onclick="award(this,15,'hipotesis','¡Hipótesis registrada! +15 felipesos','hipotesis')">✔ REGISTRAR EN BITÁCORA</button>
+    </div>
+  </section>
+
+  <!-- 3 VIDEO -->
+  <section class="slide" data-title="🎬 Video">
+    <div class="eyebrow"><span class="n">RECURSO</span> <span class="ph">EXPLORAR</span></div>
+    <h2>Miremos juntos 🎬</h2>
+    <p class="sub">Observa el video y anota en tu cuaderno <span class="accent">2 ideas nuevas</span> y <span class="accent">1 pregunta</span> que te surja sobre los volcanes.</p>
+    <div class="videoframe">
+      <iframe src="https://www.youtube-nocookie.com/embed/ghVYRIom3QQ?rel=0" title="Recurso: qué es un volcán y cómo se origina" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe>
+    </div>
+    <div class="row" style="justify-content:center">
+      <a class="btn cy" href="https://www.youtube.com/watch?v=ghVYRIom3QQ" target="_blank" rel="noopener">▸ ABRIR EN YOUTUBE</a>
+      <button class="btn" onclick="award(this,10,'video','¡Video visto! +10 felipesos')">✔ YA LO VIMOS</button>
+    </div>
+  </section>
+
+  <!-- 4 ESTRUCTURA -->
+  <section class="slide" data-title="Partes del volcán">
+    <div class="eyebrow"><span class="n">DESARROLLO</span> <span class="ph">EXPLORAR</span></div>
+    <h2>Un volcán por dentro 🌋</h2>
+    <p class="sub">Un volcán es una grieta por donde sale material del interior de la Tierra. Toca cada parte para desbloquear su función.</p>
+    <div class="earth">
+      <div class="layer l3 tap" onclick="openLayer(this)"><span class="lname">🌋 CRÁTER</span><span class="ldesc">Abertura en la cima por donde salen lava, gases y piroclastos.</span><span class="hint">▸ abrir</span></div>
+      <div class="layer l1 tap" onclick="openLayer(this)"><span class="lname">⛰️ CONO VOLCÁNICO</span><span class="ldesc">Montaña formada por la acumulación de lava y materiales de erupciones anteriores.</span><span class="hint">▸ abrir</span></div>
+      <div class="layer l2 tap" onclick="openLayer(this)"><span class="lname">🕳️ CHIMENEA</span><span class="ldesc">Conducto que conecta la cámara magmática con el cráter; por ahí asciende el magma.</span><span class="hint">▸ abrir</span></div>
+      <div class="layer l5 tap" onclick="openLayer(this)"><span class="lname">🔴 CÁMARA MAGMÁTICA</span><span class="ldesc">Depósito profundo donde se almacena el magma (roca fundida + gases).</span><span class="hint">▸ abrir</span></div>
+      <div class="layer l4 tap" onclick="openLayer(this)"><span class="lname">💨 FUMAROLA</span><span class="ldesc">Emisión de gases y vapor por grietas; una señal de que el volcán está activo.</span><span class="hint">▸ abrir</span></div>
+    </div>
+    <p class="hint" style="text-align:center" id="earthProg">// partes abiertas: 0 / 5 · abre las 5 para la insignia 🌋</p>
+  </section>
+
+  <!-- 5 CUADERNO 1 -->
+  <section class="slide" data-title="✍️ Cuaderno · Volcán">
+    <div class="eyebrow"><span class="n">ACTIVIDAD</span> <span class="ph">MODELAR</span></div>
+    <h2>Esquema de un volcán ✍️</h2>
+    <p class="sub">En tu cuaderno dibuja un <mark>corte de un volcán</mark> y rotula cada parte con su función. Toca cada ítem cuando lo tengas listo.</p>
+    <div class="cuaderno">
+      <p class="small">Tu esquema debe incluir, rotulado:</p>
+      <ul class="check" id="chkVolcan">
+        <li onclick="checkItem(this)"><span class="bx">✔</span> <b>Cámara magmática</b> — almacena el magma</li>
+        <li onclick="checkItem(this)"><span class="bx">✔</span> <b>Chimenea</b> — conducto de ascenso del magma</li>
+        <li onclick="checkItem(this)"><span class="bx">✔</span> <b>Cráter</b> — abertura de salida</li>
+        <li onclick="checkItem(this)"><span class="bx">✔</span> <b>Cono volcánico</b> y la <b>lava</b> bajando por la ladera</li>
+        <li onclick="checkItem(this)"><span class="bx">✔</span> <b>Piroclastos</b> (ceniza, lapilli, bombas) y una <b>fumarola</b></li>
+      </ul>
+      <p class="cuad-note">Consejo: usa flechas para mostrar el ascenso del magma desde la cámara hasta el cráter.</p>
+    </div>
+    <p class="hint" style="text-align:center" id="chkVolcanProg">// ítems logrados: 0 / 5 · completa los 5 para +15 felipesos</p>
+  </section>
+
+  <!-- 6 FORMACIÓN -->
+  <section class="slide" data-title="¿Cómo se forman?">
+    <div class="eyebrow"><span class="n">DESARROLLO</span> <span class="ph">EXPLORAR</span></div>
+    <h2>Del choque de placas al fuego</h2>
+    <p class="sub">Los volcanes de Chile no están al azar: forman un <mark>arco volcánico</mark> a lo largo de los Andes. Toca cada tarjeta.</p>
+    <div class="grid3">
+      <div class="panel tap" onclick="award(this,8,'f1','+8 felipesos')">
+        <div class="icon">⬇️</div><h3 style="margin-top:4px">1 · Subducción</h3>
+        <p class="sub reveal-hidden" style="margin-top:4px">La placa de Nazca se hunde bajo la Sudamericana y arrastra agua y roca a gran profundidad. ✔</p>
+      </div>
+      <div class="panel tap" onclick="award(this,8,'f2','+8 felipesos')">
+        <div class="icon">🔥</div><h3 style="margin-top:4px">2 · Fusión</h3>
+        <p class="sub reveal-hidden" style="margin-top:4px">El agua y el calor hacen que la roca del manto se funda y forme magma, menos denso que la roca sólida. ✔</p>
+      </div>
+      <div class="panel tap" onclick="award(this,8,'f3','+8 felipesos','andes')">
+        <div class="icon">🏔️</div><h3 style="margin-top:4px">3 · Ascenso</h3>
+        <p class="sub reveal-hidden" style="margin-top:4px">El magma sube por grietas y forma volcanes: el arco volcánico de los Andes. ✔</p>
+      </div>
+    </div>
+    <div class="note">🇨🇱 Por eso Chile pertenece al <b>Cinturón de Fuego del Pacífico</b>: la misma subducción que causa nuestros sismos alimenta nuestros volcanes.</div>
+  </section>
+
+  <!-- 7 SIMULADOR TECTÓNICO -->
+  <section class="slide" data-title="🧭 Simulador de placas">
+    <div class="eyebrow"><span class="n">SIMULADOR</span> <span class="ph">MODELAR · Chile</span></div>
+    <h2>De la subducción al volcán 🌋</h2>
+    <p class="sub">Mueve el control para <mark>empujar la placa de Nazca</mark> bajo la Sudamericana y observa cómo nace un volcán del arco andino. Luego provoca la erupción.</p>
+    <div class="tec-wrap">
+      <svg viewBox="0 0 860 460" class="tec-svg" id="tecSvg" role="img" aria-label="Corte transversal de la subducción en Chile">
+        <defs>
+          <linearGradient id="gMantle" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#1a1005"/><stop offset="0.6" stop-color="#2a1204"/><stop offset="1" stop-color="#5a1d06"/>
+          </linearGradient>
+          <linearGradient id="gOcean" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#0a2f4a"/><stop offset="1" stop-color="#06405e"/>
+          </linearGradient>
+          <linearGradient id="gCrustC" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#6b5236"/><stop offset="1" stop-color="#3c2c1c"/>
+          </linearGradient>
+          <radialGradient id="gMagma" cx="0.5" cy="0.5" r="0.6">
+            <stop offset="0" stop-color="#ffd24a"/><stop offset="0.5" stop-color="#ff7a00"/><stop offset="1" stop-color="#c81f10"/>
+          </radialGradient>
+          <linearGradient id="gLava" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#ffd24a"/><stop offset="1" stop-color="#e02207"/>
+          </linearGradient>
+        </defs>
+
+        <!-- mantle & sky -->
+        <rect x="0" y="0" width="860" height="460" fill="url(#gMantle)"/>
+        <rect x="0" y="0" width="860" height="70" fill="#0a0f16"/>
+
+        <!-- continental crust (Sudamericana) -->
+        <path d="M360,92 L556,54 L624,74 L860,96 L860,214 L360,214 Z" fill="url(#gCrustC)" stroke="#7a5f3e" stroke-width="1"/>
+
+        <!-- ocean water -->
+        <rect x="0" y="70" width="360" height="44" fill="url(#gOcean)"/>
+        <line x1="0" y1="70" x2="360" y2="70" stroke="#2aa9d6" stroke-width="1.2" opacity=".7"/>
+
+        <!-- Nazca oceanic plate (moves on convergence) -->
+        <g id="tecNazca">
+          <path d="M-30,112 L350,124 L350,142 L-30,130 Z" fill="#2b3f57" stroke="#42627f" stroke-width="1"/>
+          <text class="tec-sub" x="70" y="139" fill="#bcd4e6">→ 7 cm/año</text>
+        </g>
+
+        <!-- subducting slab (animated draw) -->
+        <path id="tecSlab" d="M350,134 C 432,156 500,250 630,404" fill="none" stroke="#2b3f57" stroke-width="22" stroke-linecap="round" opacity=".92"/>
+        <path id="tecSlabEdge" d="M350,134 C 432,156 500,250 630,404" fill="none" stroke="#42627f" stroke-width="2" stroke-linecap="round" opacity=".6"/>
+
+        <!-- melt zone magma blobs -->
+        <g id="tecMelt">
+          <circle class="magma-blob" cx="540" cy="300" r="10" fill="url(#gMagma)" data-th="42" data-y0="300" data-y1="212"/>
+          <circle class="magma-blob" cx="556" cy="290" r="8"  fill="url(#gMagma)" data-th="50" data-y0="290" data-y1="205"/>
+          <circle class="magma-blob" cx="524" cy="296" r="7"  fill="url(#gMagma)" data-th="58" data-y0="296" data-y1="210"/>
+        </g>
+
+        <!-- magma chamber + conduit -->
+        <rect id="tecConduit" x="554" y="62" width="12" height="130" rx="4" fill="url(#gMagma)" opacity="0"/>
+        <ellipse id="tecChamber" cx="560" cy="192" rx="48" ry="22" fill="url(#gMagma)" opacity="0"/>
+
+        <!-- volcano cone -->
+        <g id="tecVolcano" opacity="0">
+          <polygon points="520,96 548,58 560,66 572,58 600,96" fill="#4a3826" stroke="#7a5f3e" stroke-width="1"/>
+          <path id="tecLava" d="M560,64 L580,96 L600,124" fill="none" stroke="url(#gLava)" stroke-width="7" stroke-linecap="round"/>
+          <circle id="tecGlow" cx="560" cy="60" r="9" fill="#ff8a00"/>
+          <g id="tecAsh">
+            <circle cx="560" cy="40" r="11" fill="#8a8078" opacity=".85"/>
+            <circle cx="546" cy="28" r="9"  fill="#9a9088" opacity=".8"/>
+            <circle cx="574" cy="26" r="10" fill="#7a7068" opacity=".8"/>
+            <circle cx="560" cy="16" r="8"  fill="#aaa098" opacity=".7"/>
+          </g>
+        </g>
+
+        <!-- labels -->
+        <text class="tec-sub" x="14" y="90">OCÉANO PACÍFICO</text>
+        <text class="tec-label" x="40" y="126" fill="#bcd4e6">PLACA DE NAZCA</text>
+        <text class="tec-sub" x="40" y="112">oceánica · densa</text>
+        <text class="tec-label" x="646" y="150" fill="#e7d6bd">PLACA SUDAMERICANA</text>
+        <text class="tec-sub" x="646" y="166">continental · 🇨🇱 CHILE</text>
+        <text class="tec-sub" x="300" y="108">FOSA ▾</text>
+        <text class="tec-label" x="600" y="46" fill="#ffb02e">ANDES 🌋</text>
+        <text class="tec-sub" x="500" y="252" fill="#ffcaa0" transform="rotate(34 500 252)">SUBDUCCIÓN ↘</text>
+        <text class="tec-sub" id="tecChamberLbl" x="500" y="238" opacity="0" fill="#ffd24a">CÁMARA MAGMÁTICA (magma)</text>
+        <text class="tec-sub" x="150" y="360" fill="#d59a72">MANTO · ASTENÓSFERA</text>
+      </svg>
+    </div>
+    <div class="tec-controls">
+      <div class="tec-slider">
+        <label>▸ CONVERGENCIA DE PLACAS · <span id="tecPct">0%</span></label>
+        <input type="range" class="rng" id="tecRange" min="0" max="100" value="0" oninput="simTecUpdate(this.value)">
+      </div>
+      <button class="btn" onclick="simTecPlay()">▶ EMPUJAR PLACA</button>
+      <button class="btn cy" id="tecErupt" onclick="simTecErupt()">🌋 ERUPCIÓN</button>
+      <button class="btn" onclick="simTecReset()">↻ REINICIAR</button>
+    </div>
+    <div class="tec-readout" id="tecReadout"><span class="tec-phase">FASE 0 ·</span> Las placas están en reposo. Mueve el control para iniciar la convergencia.</div>
+  </section>
+
+  <!-- 7 VOLCANES ACTIVOS -->
+  <section class="slide" data-title="Volcanes activos">
+    <div class="eyebrow"><span class="n">INVESTIGAR</span> <span class="ph">Chile y el mundo</span></div>
+    <h2>Volcanes famosos 🌎</h2>
+    <p class="sub">Toca cada volcán para descubrir su dato clave.</p>
+    <div class="grid3">
+      <div class="panel tap" onclick="award(this,6,'v1','+6 felipesos')"><h3>🇨🇱 Villarrica</h3><p class="sub reveal-hidden" style="margin-top:4px">Uno de los más activos de Sudamérica; tiene un lago de lava y glaciar en la cima. ✔</p></div>
+      <div class="panel tap" onclick="award(this,6,'v2','+6 felipesos')"><h3>🇨🇱 Chaitén</h3><p class="sub reveal-hidden" style="margin-top:4px">Su erupción de 2008 sorprendió tras miles de años inactivo y cubrió de ceniza la zona. ✔</p></div>
+      <div class="panel tap" onclick="award(this,6,'v3','+6 felipesos')"><h3>🇨🇱 Láscar</h3><p class="sub reveal-hidden" style="margin-top:4px">En el norte; sus fumarolas son visibles y es monitoreado constantemente. ✔</p></div>
+      <div class="panel tap" onclick="award(this,6,'v4','+6 felipesos')"><h3>🌍 Vesubio</h3><p class="sub reveal-hidden" style="margin-top:4px">Sepultó Pompeya en el año 79 d.C.; ejemplo clásico de erupción explosiva. ✔</p></div>
+      <div class="panel tap" onclick="award(this,6,'v5','+6 felipesos')"><h3>🌍 Eyjafjallajökull</h3><p class="sub reveal-hidden" style="margin-top:4px">En 2010 su ceniza paralizó los vuelos en toda Europa. ✔</p></div>
+      <div class="panel tap" onclick="award(this,6,'v6','+6 felipesos')"><h3>🌍 Yellowstone</h3><p class="sub reveal-hidden" style="margin-top:4px">Un "supervolcán" bajo un parque de EE.UU., vigilado por su enorme potencial. ✔</p></div>
+    </div>
+  </section>
+
+  <!-- 8 TIPOS DE ERUPCIÓN -->
+  <section class="slide" data-title="Tipos de erupción">
+    <div class="eyebrow"><span class="n">ANALIZAR</span> <span class="ph">Clasificar</span></div>
+    <h2>Efusiva vs. explosiva</h2>
+    <p class="sub">Lo que decide el tipo de erupción es el <mark>magma</mark>: su viscosidad y su gas. Toca cada tipo.</p>
+    <div class="grid2">
+      <div class="panel tap" onclick="award(this,8,'e1','+8 felipesos')">
+        <div class="icon">🌋</div><h3 style="margin-top:4px">Efusiva</h3>
+        <p class="sub" style="margin-top:4px">Magma <b>fluido</b> (basáltico) con <b>poco gas</b>. La lava sale tranquila y corre por las laderas. Ej.: estilo hawaiano.</p>
+      </div>
+      <div class="panel tap" onclick="award(this,8,'e2','+8 felipesos')">
+        <div class="icon">💥</div><h3 style="margin-top:4px">Explosiva</h3>
+        <p class="sub" style="margin-top:4px">Magma <b>viscoso</b> (riolítico) con <b>mucho gas</b> atrapado. La presión estalla lanzando ceniza y piroclastos. Ej.: estilo peleano/vulcaniano.</p>
+      </div>
+    </div>
+    <div class="panel tap" onclick="award(this,8,'piro','¡Piroclastos! +8 felipesos','partes')">
+      <h3>▸ Piroclastos <span class="hint">(toca)</span></h3>
+      <p class="sub" style="margin-top:4px">Fragmentos que lanza el volcán, según tamaño: <span class="reveal-hidden"><b>ceniza</b> (los más finos) → <b>lapilli</b> (medianos) → <b>bombas</b> (los más grandes). ✔</span></p>
+    </div>
+  </section>
+
+  <!-- 9 RIESGO -->
+  <section class="slide" data-title="Riesgo y monitoreo">
+    <div class="eyebrow"><span class="n">DESARROLLO</span> <span class="ph">Sociedad</span></div>
+    <h2>Peligro, riesgo y alerta 🚨</h2>
+    <p class="sub">La ciencia no evita las erupciones, pero <mark>salva vidas</mark> monitoreando y avisando a tiempo. Toca para desbloquear.</p>
+    <div class="grid2">
+      <div class="panel tap" onclick="award(this,8,'r1','+8 felipesos')">
+        <h3>▸ Conceptos clave</h3>
+        <p class="sub reveal-hidden" style="margin-top:4px"><b>Peligro</b>: el fenómeno que puede dañar. <b>Riesgo</b>: la probabilidad de daño a personas o bienes. <b>Alerta</b>: aviso oficial (verde–amarilla–naranja–roja). ✔</p>
+      </div>
+      <div class="panel tap" onclick="award(this,8,'r2','+8 felipesos','riesgo')">
+        <h3>▸ ¿Quién vigila en Chile?</h3>
+        <p class="sub reveal-hidden" style="margin-top:4px"><b>SERNAGEOMIN</b> monitorea los volcanes y <b>SENAPRED</b> coordina la protección civil y las evacuaciones. ✔</p>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="panel tap" onclick="award(this,6,'pos','+6 felipesos')">
+        <h3 style="color:var(--green)">▸ Efectos positivos</h3>
+        <p class="sub reveal-hidden" style="margin-top:4px">Suelos muy fértiles, energía geotérmica (géiseres/termas), y yacimientos minerales. ✔</p>
+      </div>
+      <div class="panel tap" onclick="award(this,6,'neg','+6 felipesos')">
+        <h3 style="color:var(--red)">▸ Efectos negativos</h3>
+        <p class="sub reveal-hidden" style="margin-top:4px">Caída de ceniza, gases tóxicos y <b>lahares</b> (flujos de barro cuando la nieve/glaciar se derrite). ✔</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 CUADERNO 2 -->
+  <section class="slide" data-title="✍️ Cuaderno · Efectos">
+    <div class="eyebrow"><span class="n">ACTIVIDAD</span> <span class="ph">ORGANIZAR</span></div>
+    <h2>Tabla de efectos ✍️</h2>
+    <p class="sub">En tu cuaderno haz una <mark>tabla de dos columnas</mark>: efectos positivos y negativos de la actividad volcánica. Incluye al menos estos ítems.</p>
+    <div class="cuaderno">
+      <p class="small">Tu tabla debe incluir:</p>
+      <ul class="check" id="chkEfectos">
+        <li onclick="checkItem(this)"><span class="bx">✔</span> Positivo: <b>suelos fértiles</b> para la agricultura</li>
+        <li onclick="checkItem(this)"><span class="bx">✔</span> Positivo: <b>energía geotérmica</b> (ERNC) y termas</li>
+        <li onclick="checkItem(this)"><span class="bx">✔</span> Positivo: formación de <b>yacimientos minerales</b></li>
+        <li onclick="checkItem(this)"><span class="bx">✔</span> Negativo: <b>caída de ceniza</b> y gases</li>
+        <li onclick="checkItem(this)"><span class="bx">✔</span> Negativo: <b>lahares</b> y peligro para poblaciones</li>
+      </ul>
+      <p class="cuad-note">Esta tabla te servirá para el debate: ¿conviene o no vivir cerca de un volcán?</p>
+    </div>
+    <p class="hint" style="text-align:center" id="chkEfectosProg">// ítems logrados: 0 / 5 · completa los 5 para +15 felipesos</p>
+  </section>
+
+  <!-- 11 CIERRE -->
+  <section class="slide" data-title="Cierre">
+    <div class="eyebrow"><span class="n">CIERRE</span> <span class="ph">CONCLUIR</span> 10 min</div>
+    <h2>Semáforo de aprendizaje 🚦</h2>
+    <p class="sub">¿Cómo te sientes con lo de hoy? Toca tu color (autoevaluación honesta, sin nota).</p>
+    <div class="sem" id="sem1">
+      <div class="light g" onclick="semaforo(this,'sem1')"><div class="ball"></div><b>VERDE</b><p class="small">Puedo explicar cómo funciona un volcán</p></div>
+      <div class="light y" onclick="semaforo(this,'sem1')"><div class="ball"></div><b>AMARILLO</b><p class="small">Tengo algunas dudas</p></div>
+      <div class="light r" onclick="semaforo(this,'sem1')"><div class="ball"></div><b>ROJO</b><p class="small">Necesito repasar</p></div>
+    </div>
+    <div class="panel">
+      <h3>▸ Ticket de salida</h3>
+      <p class="sub" style="margin:6px 0">Con tus palabras: <span class="accent">¿por qué hay tantos volcanes en Chile y qué hace que una erupción sea explosiva?</span></p>
+      <textarea class="bit" placeholder="Escribe aquí tu respuesta..."></textarea>
+      <button class="btn cy" style="margin-top:10px" onclick="award(this,12,'exit','¡Ticket entregado! +12 felipesos')">✔ ENTREGAR TICKET</button>
+    </div>
+    <div class="note">🎬 Para profundizar: SERNAGEOMIN (volcanes de Chile), PhET, Veritasium y Khan Academy en Español. ¡Nos vemos en la zona de juegos!</div>
+  </section>
+
+  <!-- 12 JUEGOS INTRO -->
+  <section class="slide final" data-title="▶ Juegos">
+    <div class="eyebrow" style="justify-content:center"><span class="n">ZONA DE JUEGOS</span> ゲーム</div>
+    <h1>PRUEBA DE <span class="og">CAMPO</span> 🎮</h1>
+    <p class="sub" style="max-width:640px">Cuatro desafíos para poner a prueba tu dominio de los volcanes. Cada juego suma felipesos hacia tu rango final. ¡Que empiece la competencia!</p>
+    <div class="row" style="justify-content:center;margin-top:6px">
+      <div class="chip">🎯 TRIVIA MAGI</div>
+      <div class="chip">⚡ CLASIFICADOR DE ERUPCIONES</div>
+      <div class="chip">🧠 PAREO VOLCÁNICO</div>
+      <div class="chip">🌋 SIMULADOR DE ERUPCIÓN</div>
+    </div>
+    <button class="btn" style="margin-top:18px" onclick="next()">▶ JUGAR</button>
+  </section>
+
+  <!-- 13 TRIVIA -->
+  <section class="slide" data-title="🎯 Trivia">
+    <div class="game-head"><span class="game-pill">JUEGO 01</span><h2>🎯 Trivia MAGI</h2></div>
+    <div class="panel qbox" id="trivia">
+      <div class="qmeta"><span id="trIdx">Pregunta 1 / 5</span><span id="trScore">Aciertos: 0 · Racha: 0</span></div>
+      <div class="q" id="trQ">—</div>
+      <div class="answers" id="trAns"></div>
+      <div class="feedback" id="trFb"></div>
+    </div>
+    <div class="row" style="justify-content:center">
+      <button class="btn cy" id="trNext" style="display:none" onclick="trNext()">SIGUIENTE ▸</button>
+      <button class="btn" id="trRestart" style="display:none" onclick="trStart()">↻ JUGAR DE NUEVO</button>
+    </div>
+  </section>
+
+  <!-- 14 CLASIFICADOR -->
+  <section class="slide" data-title="⚡ Clasificador">
+    <div class="game-head"><span class="game-pill">JUEGO 02</span><h2>⚡ Clasificador de erupciones</h2></div>
+    <p class="sub">Lee el escenario y decide qué tipo de erupción es.</p>
+    <div class="panel">
+      <div class="qmeta"><span id="clfIdx">Caso 1 / 5</span><span id="clfScore">Aciertos: 0</span></div>
+      <div class="scenario" id="clfScn">—</div>
+      <div class="clf-btns">
+        <button class="ans" onclick="clfPick('efu',this)">🌋 EFUSIVA</button>
+        <button class="ans" onclick="clfPick('exp',this)">💥 EXPLOSIVA</button>
+        <button class="ans" onclick="clfPick('fre',this)">💨 FREÁTICA</button>
+      </div>
+      <div class="feedback" id="clfFb"></div>
+    </div>
+    <div class="row" style="justify-content:center">
+      <button class="btn cy" id="clfNext" style="display:none" onclick="clfNextCase()">SIGUIENTE ▸</button>
+      <button class="btn" id="clfRestart" style="display:none" onclick="clfStart()">↻ JUGAR DE NUEVO</button>
+    </div>
+  </section>
+
+  <!-- 15 PAREO -->
+  <section class="slide" data-title="🧠 Pareo">
+    <div class="game-head"><span class="game-pill">JUEGO 03</span><h2>🧠 Pareo volcánico</h2></div>
+    <p class="sub">Toca un concepto y luego su definición para unirlos. Encuentra los 5 pares.</p>
+    <div class="qmeta"><span id="mScore">Pares: 0 / 5</span><span id="mErr">Intentos fallidos: 0</span></div>
+    <div class="match-cols">
+      <div class="mcol" id="mLeft"></div>
+      <div class="mcol" id="mRight"></div>
+    </div>
+    <div class="feedback" id="mFb" style="text-align:center"></div>
+    <div class="row" style="justify-content:center">
+      <button class="btn" id="mRestart" style="display:none" onclick="mStart()">↻ JUGAR DE NUEVO</button>
+    </div>
+  </section>
+
+  <!-- 16 SIMULADOR -->
+  <section class="slide" data-title="🌋 Simulador">
+    <div class="game-head"><span class="game-pill">JUEGO 04</span><h2>🌋 Simulador de erupción</h2></div>
+    <p class="sub">Eres vulcanólogo/a de un volcán chileno. Elige las 3 variables. Al simular, el sistema <mark>mezcla variables al azar</mark> (viento y glaciar) y dicta el veredicto.</p>
+    <div class="grid3">
+      <div class="panel">
+        <h3>▸ 1 · Magma</h3>
+        <div class="simopts">
+          <button class="ans" onclick="simPick('vis',this,1)">Basáltico · muy fluido</button>
+          <button class="ans" onclick="simPick('vis',this,3)">Andesítico · intermedio</button>
+          <button class="ans" onclick="simPick('vis',this,5)">Riolítico · muy viscoso</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>▸ 2 · Gas atrapado</h3>
+        <div class="simopts">
+          <button class="ans" onclick="simPick('gas',this,0)">Poco gas</button>
+          <button class="ans" onclick="simPick('gas',this,2)">Gas moderado</button>
+          <button class="ans" onclick="simPick('gas',this,4)">Mucho gas</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>▸ 3 · Preparación de la comunidad</h3>
+        <div class="simopts">
+          <button class="ans" onclick="simPick('prep',this,2)">🚫 Sin monitoreo</button>
+          <button class="ans" onclick="simPick('prep',this,7)">📡 Alerta temprana</button>
+          <button class="ans" onclick="simPick('prep',this,12)">🗺️ Plan de evacuación</button>
+        </div>
+      </div>
+    </div>
+    <div class="row" style="justify-content:center">
+      <button class="btn" onclick="simRun(this)">🎲 MEZCLAR Y SIMULAR</button>
+      <button class="btn cy" id="simAgain" style="display:none" onclick="simReset()">↻ OTRA ERUPCIÓN</button>
+    </div>
+    <div id="simResult"></div>
+  </section>
+
+  <!-- 17 FINAL -->
+  <section class="slide final" data-title="🏆 Rango final">
+    <div class="eyebrow" style="justify-content:center"><span class="n">FIN DE MISIÓN</span> ミッション完了</div>
+    <h2>Tu resultado</h2>
+    <div class="rankbig" id="finalRank">—</div>
+    <p class="kpi" id="finalXP">0 felipesos</p>
+    <p class="sub" id="finalMsg" style="max-width:600px"></p>
+    <div class="badgewall" id="finalBadges">
+      <div class="bw" data-b="hipotesis">🧪</div>
+      <div class="bw" data-b="partes">🌋</div>
+      <div class="bw" data-b="andes">🏔️</div>
+      <div class="bw" data-b="riesgo">🚨</div>
+      <div class="bw" data-b="trivia">🎯</div>
+      <div class="bw" data-b="vulcanologo">🥼</div>
+      <div class="bw" data-b="maestro">🏆</div>
+    </div>
+    <div class="qr-panel" style="width:210px">
+      <div class="qr-card"><img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=6&data=https%3A%2F%2Ffjimenez321-stack.github.io%2Fdondefelipe%2F" onerror="this.parentNode.innerHTML='<div style=color:%23111;font-size:11px;padding:16px>fjimenez321-stack.github.io/dondefelipe</div>'"></div>
+      <div class="qr-lab">▚ SIGUE PRACTICANDO</div>
+    </div>
+    <button class="btn" style="margin-top:8px" onclick="go(0)">↻ REINICIAR MISIÓN</button>
+  </section>
+
+</div>
+
+<div id="nav">
+  <button class="navbtn" onclick="prev()" aria-label="Anterior">◀</button>
+  <div class="dots" id="dots"></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="slideno" id="slideno">01</span>
+    <button class="navbtn" onclick="next()" aria-label="Siguiente">▶</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ============ STATE ============ */
+let xp=0, cur=0;
+const claimed=new Set();
+const badges=new Set();
+const slides=[...document.querySelectorAll('.slide')];
+const sectionStarts=[2,13];
+let operator="";
+const trDone=new Set(), clfDone=new Set(), mDone=new Set();
+let mBonusDone=false;
+
+/* ============ SOUND ============ */
+let AC=null, muted=false;
+function ensureAudio(){ if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){AC=null;}} if(AC&&AC.state==='suspended')AC.resume(); }
+function tone(freq,dur,type,vol,when){
+  if(!AC||muted)return;
+  const t0=AC.currentTime+(when||0);
+  const o=AC.createOscillator(),g=AC.createGain();
+  o.type=type||'sine';o.frequency.setValueAtTime(freq,t0);
+  g.gain.setValueAtTime(0.0001,t0);
+  g.gain.exponentialRampToValueAtTime(vol||0.18,t0+0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  o.connect(g).connect(AC.destination);o.start(t0);o.stop(t0+dur+0.02);
+}
+function sfx(kind){
+  ensureAudio(); if(!AC||muted)return;
+  switch(kind){
+    case 'click':tone(420,0.06,'square',0.10);break;
+    case 'xp':tone(660,0.09,'triangle',0.15);tone(990,0.10,'triangle',0.13,0.06);break;
+    case 'correct':tone(523,0.10,'sine',0.18);tone(784,0.14,'sine',0.18,0.09);tone(1046,0.16,'sine',0.15,0.19);break;
+    case 'wrong':tone(200,0.18,'sawtooth',0.14);tone(150,0.22,'sawtooth',0.12,0.05);break;
+    case 'badge':[523,659,784,1046].forEach((f,i)=>tone(f,0.16,'triangle',0.16,i*0.08));break;
+    case 'start':tone(330,0.12,'sine',0.16);tone(494,0.12,'sine',0.16,0.10);tone(660,0.20,'sine',0.16,0.20);break;
+    case 'select':tone(560,0.05,'sine',0.10);break;
+  }
+}
+function toggleMute(){ muted=!muted; const b=document.getElementById('muteBtn'); b.textContent=muted?'🔇':'🔊'; b.classList.toggle('off',muted); if(!muted){ensureAudio();sfx('click');} }
+document.addEventListener('click',e=>{ const el=e.target.closest('.tap,.opt,.ans,.mcard,.light,.btn,.navbtn,.dot,.check li'); if(el){ensureAudio();sfx('click');} },true);
+
+/* ============ NOMBRE ============ */
+function startMission(){
+  const v=(document.getElementById('nameInput').value||'').trim();
+  operator=v;
+  document.getElementById('hudOp').innerHTML = operator ? ('OP: <b>'+operator.replace(/</g,'&lt;')+'</b>') : '';
+  ensureAudio(); sfx('start');
+  if(operator) toast('¡Bienvenido/a, '+operator+'! Misión iniciada 🌋');
+  next();
+}
+
+/* ============ NAV ============ */
+function buildDots(){
+  const d=document.getElementById('dots');
+  slides.forEach((s,i)=>{ const b=document.createElement('button'); b.className='dot'+(sectionStarts.includes(i)?' section':''); b.title=s.dataset.title||('Slide '+(i+1)); b.onclick=()=>go(i); d.appendChild(b); });
+}
+function render(){
+  slides.forEach((s,i)=>s.classList.toggle('active',i===cur));
+  document.querySelectorAll('#dots .dot').forEach((d,i)=>d.classList.toggle('on',i===cur));
+  document.getElementById('slideno').textContent=String(cur+1).padStart(2,'0');
+  document.getElementById('missionFill').style.width=((cur)/(slides.length-1)*100)+'%';
+  const act=slides[cur]; if(act) act.scrollTop=0;
+  if(cur===7 && !window._tecReady){ window._tecReady=true; tecInit(); }
+  if(cur===slides.length-1) renderFinal();
+}
+function go(i){cur=Math.max(0,Math.min(slides.length-1,i));render();}
+function next(){go(cur+1);}
+function prev(){go(cur-1);}
+document.addEventListener('keydown',e=>{ if(e.key==='ArrowRight'||e.key==='PageDown')next(); if(e.key==='ArrowLeft'||e.key==='PageUp')prev(); });
+let tx=0,ty=0;
+document.getElementById('deck').addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+document.getElementById('deck').addEventListener('touchend',e=>{ const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty; if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)){dx<0?next():prev();} },{passive:true});
+
+/* ============ FELIPESOS / BADGES ============ */
+function ranks(x){
+  if(x>=400) return 'COMANDANTE MAGI';
+  if(x>=280) return 'VULCANÓLOGO/A DE ÉLITE';
+  if(x>=170) return 'EXPLORADOR/A DE CAMPO';
+  if(x>=80)  return 'CADETE GEOCIENTÍFICO';
+  return 'RECLUTA';
+}
+function updateXP(){ document.getElementById('xpVal').textContent=xp; document.getElementById('rankTag').textContent=ranks(xp); }
+function xpFloat(el,amt){
+  const r=(el&&el.getBoundingClientRect)?el.getBoundingClientRect():{left:innerWidth/2,top:120,width:0};
+  const f=document.createElement('div'); f.className='xpfloat'; f.textContent='+'+amt+' 🪙';
+  f.style.left=(r.left+r.width/2)+'px'; f.style.top=(r.top-6)+'px';
+  document.body.appendChild(f); setTimeout(()=>f.remove(),1000);
+}
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),1800); }
+function addXP(amt,el,silent){ xp+=amt; updateXP(); if(el)xpFloat(el,amt); if(!silent) sfx('xp'); }
+function grantBadge(id){
+  if(!id||badges.has(id))return; badges.add(id);
+  const b=document.querySelector('#badges .badge[data-b="'+id+'"]'); if(b)b.classList.add('on');
+  sfx('badge'); toast('🏅 ¡Insignia desbloqueada!');
+  if(badges.size>=5) grantBadge('maestro');
+}
+function award(el,amt,key,msg,badge){
+  if(claimed.has(key))return;
+  claimed.add(key); addXP(amt,el); el.classList.add('done');
+  const hid=el.querySelector('.reveal-hidden'); if(hid)hid.classList.remove('reveal-hidden');
+  if(msg)toast(msg); if(badge)grantBadge(badge);
+}
+
+/* ============ INTERACTIONS ============ */
+function vote(btn,pollId){
+  const poll=document.getElementById(pollId);
+  if(poll.dataset.voted)return; poll.dataset.voted='1';
+  const opts=[...poll.querySelectorAll('.opt')]; const base=[58,10,26,6];
+  opts.forEach((o,i)=>{ o.classList.add('voted'); o.querySelector('.barfill').style.width=base[i]+'%'; o.querySelector('.pct').textContent=base[i]+'%'; });
+  btn.style.borderColor='var(--cyan)'; addXP(8,btn); toast('Voto registrado · +8 felipesos');
+}
+function openLayer(el){
+  if(el.classList.contains('open'))return;
+  el.classList.add('open','done'); addXP(6,el);
+  const opened=document.querySelectorAll('.earth .layer.open').length;
+  document.getElementById('earthProg').textContent='// partes abiertas: '+opened+' / 5'+(opened>=5?' ✔ ¡completo!':' · abre las 5 para la insignia 🌋');
+  if(opened>=5){ toast('🌋 ¡Volcán completo! +6 felipesos'); grantBadge('partes'); } else toast('+6 felipesos');
+}
+function semaforo(el,id){
+  const wrap=document.getElementById(id);
+  wrap.querySelectorAll('.light').forEach(l=>l.classList.remove('sel'));
+  el.classList.add('sel');
+  if(!wrap.dataset.done){wrap.dataset.done='1'; addXP(6,el); toast('Autoevaluación registrada · +6 felipesos');}
+}
+function checkItem(li){
+  if(li.classList.contains('on'))return;
+  li.classList.add('on'); addXP(3,li);
+  const ul=li.parentNode; const total=ul.children.length, done=ul.querySelectorAll('li.on').length;
+  const prog=document.getElementById(ul.id==='chkVolcan'?'chkVolcanProg':'chkEfectosProg');
+  if(prog) prog.textContent='// ítems logrados: '+done+' / '+total+(done>=total?' ✔ ¡completo!':' · completa los '+total+' para +15 felipesos');
+  if(done>=total && !ul.dataset.done){ ul.dataset.done='1'; addXP(15,li); sfx('correct'); toast('✍️ ¡Actividad completa! +15 felipesos'); }
+}
+
+/* ============ GAME 1 · TRIVIA ============ */
+const TRIVIA=[
+ {q:"¿Qué parte del volcán almacena el magma?",a:["El cráter","La cámara magmática","La chimenea","El cono"],c:1},
+ {q:"Los volcanes de los Andes se forman principalmente por...",a:["El viento","La subducción de la placa de Nazca","La lluvia","La erosión"],c:1},
+ {q:"¿Qué hace que una erupción sea MÁS explosiva?",a:["Magma fluido y sin gas","Magma viscoso con mucho gas","Poca temperatura","Un cráter grande"],c:1},
+ {q:"¿Qué organismo monitorea los volcanes en Chile?",a:["SERNAGEOMIN","La Municipalidad","La NASA","Bomberos"],c:0},
+ {q:"Los piroclastos más pequeños que lanza un volcán se llaman:",a:["Bombas","Lapilli","Ceniza","Lava"],c:2}
+];
+let trI=0,trHits=0,trStreak=0;
+function trStart(){ trI=0;trHits=0;trStreak=0; document.getElementById('trRestart').style.display='none'; loadTr(); }
+function loadTr(){
+  const t=TRIVIA[trI];
+  document.getElementById('trIdx').textContent='Pregunta '+(trI+1)+' / '+TRIVIA.length;
+  document.getElementById('trScore').textContent='Aciertos: '+trHits+' · Racha: '+trStreak;
+  document.getElementById('trQ').textContent=(trI+1)+' · '+t.q;
+  document.getElementById('trFb').textContent=''; document.getElementById('trNext').style.display='none';
+  const wrap=document.getElementById('trAns'); wrap.innerHTML='';
+  t.a.forEach((txt,i)=>{ const b=document.createElement('button'); b.className='ans'; b.textContent=txt; b.onclick=()=>trPick(i,b); wrap.appendChild(b); });
+}
+function trPick(i,btn){
+  const t=TRIVIA[trI]; const wrap=document.getElementById('trAns');
+  [...wrap.children].forEach(b=>b.disabled=true);
+  if(i===t.c){
+    btn.classList.add('ok'); trHits++; trStreak++;
+    const bonus=trStreak>=3?10:0; let gained=0;
+    if(!trDone.has(trI)){ trDone.add(trI); gained=15+bonus; addXP(gained,btn,true); }
+    sfx('correct');
+    document.getElementById('trFb').innerHTML='<span class="tick">✔ ¡Correcto!'+(gained?' +'+gained+' felipesos'+(bonus?' (bonus racha 🔥)':''):' (ya cobrado)')+'</span>';
+  }else{
+    btn.classList.add('no'); trStreak=0; sfx('wrong');
+    [...wrap.children][t.c].classList.add('ok');
+    document.getElementById('trFb').innerHTML='<span style="color:var(--red)">✘ La correcta estaba marcada en verde.</span>';
+  }
+  document.getElementById('trScore').textContent='Aciertos: '+trHits+' · Racha: '+trStreak;
+  if(trI<TRIVIA.length-1) document.getElementById('trNext').style.display='inline-block'; else trFinish();
+}
+function trNext(){trI++;loadTr();}
+function trFinish(){
+  document.getElementById('trFb').innerHTML+='<br><span class="cy">FIN · '+trHits+'/'+TRIVIA.length+' aciertos.</span>';
+  document.getElementById('trRestart').style.display='inline-block';
+  if(trHits>=4) grantBadge('trivia');
+}
+
+/* ============ GAME 2 · CLASSIFIER ============ */
+const CASES=[
+ {t:"Magma basáltico muy fluido con poco gas: la lava sale tranquila y corre por la ladera.",c:'efu'},
+ {t:"Magma riolítico viscoso con mucho gas atrapado: estalla lanzando una columna de ceniza.",c:'exp'},
+ {t:"El agua subterránea toca el magma caliente y estalla en una explosión de vapor.",c:'fre'},
+ {t:"El Villarrica muestra su lago de lava y desborda lava fluida por el borde del cráter.",c:'efu'},
+ {t:"El Chaitén lanza una enorme nube de ceniza y piroclastos varios kilómetros hacia arriba.",c:'exp'}
+];
+const CNAME={efu:'EFUSIVA',exp:'EXPLOSIVA',fre:'FREÁTICA'};
+let clfI=0,clfHits=0;
+function clfStart(){clfI=0;clfHits=0;document.getElementById('clfRestart').style.display='none';loadClf();}
+function loadClf(){
+  const cse=CASES[clfI];
+  document.getElementById('clfIdx').textContent='Caso '+(clfI+1)+' / '+CASES.length;
+  document.getElementById('clfScore').textContent='Aciertos: '+clfHits;
+  document.getElementById('clfScn').textContent=cse.t;
+  document.getElementById('clfFb').textContent=''; document.getElementById('clfNext').style.display='none';
+  document.querySelectorAll('.clf-btns .ans').forEach(b=>{b.disabled=false;b.classList.remove('ok','no');});
+}
+function clfPick(choice,btn){
+  const cse=CASES[clfI];
+  document.querySelectorAll('.clf-btns .ans').forEach(b=>b.disabled=true);
+  if(choice===cse.c){btn.classList.add('ok');clfHits++;let g=0;if(!clfDone.has(clfI)){clfDone.add(clfI);g=12;addXP(12,btn,true);}sfx('correct');document.getElementById('clfFb').innerHTML='<span class="tick">✔ ¡Correcto! Es '+CNAME[cse.c]+'.'+(g?' +12 felipesos':' (ya cobrado)')+'</span>';}
+  else{btn.classList.add('no');sfx('wrong');document.getElementById('clfFb').innerHTML='<span style="color:var(--red)">✘ Era '+CNAME[cse.c]+'. (sin felipesos)</span>';}
+  document.getElementById('clfScore').textContent='Aciertos: '+clfHits;
+  if(clfI<CASES.length-1)document.getElementById('clfNext').style.display='inline-block';
+  else{document.getElementById('clfRestart').style.display='inline-block';document.getElementById('clfFb').innerHTML+=' <span class="cy">· FIN: '+clfHits+'/'+CASES.length+'</span>';if(clfHits>=4)grantBadge('riesgo');}
+}
+function clfNextCase(){clfI++;loadClf();}
+
+/* ============ GAME 3 · MATCH ============ */
+const PAIRS=[
+ {k:"Cámara magmática",v:"Almacena el magma en profundidad"},
+ {k:"Chimenea",v:"Conducto por donde asciende el magma"},
+ {k:"Lahar",v:"Flujo de barro al derretirse nieve o glaciar"},
+ {k:"Piroclastos",v:"Fragmentos sólidos: ceniza, lapilli y bombas"},
+ {k:"SERNAGEOMIN",v:"Organismo que monitorea los volcanes de Chile"}
+];
+let mSel=null,mMatched=0,mErr=0;
+function shuffle(a){return a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(p=>p[1]);}
+function mStart(){
+  mSel=null;mMatched=0;mErr=0;
+  document.getElementById('mScore').textContent='Pares: 0 / '+PAIRS.length;
+  document.getElementById('mErr').textContent='Intentos fallidos: 0';
+  document.getElementById('mFb').textContent=''; document.getElementById('mRestart').style.display='none';
+  const L=document.getElementById('mLeft'),R=document.getElementById('mRight'); L.innerHTML='';R.innerHTML='';
+  PAIRS.forEach((p,i)=>{ const l=document.createElement('button');l.className='mcard';l.textContent=p.k;l.dataset.id=i;l.dataset.side='k';l.onclick=()=>mPick(l);L.appendChild(l); });
+  shuffle(PAIRS.map((p,i)=>({...p,i}))).forEach(p=>{ const r=document.createElement('button');r.className='mcard';r.textContent=p.v;r.dataset.id=p.i;r.dataset.side='v';r.onclick=()=>mPick(r);R.appendChild(r); });
+}
+function mPick(card){
+  if(card.classList.contains('matched'))return;
+  if(!mSel){mSel=card;card.classList.add('sel');return;}
+  if(mSel===card){card.classList.remove('sel');mSel=null;return;}
+  if(mSel.dataset.side===card.dataset.side){mSel.classList.remove('sel');mSel=card;card.classList.add('sel');return;}
+  if(mSel.dataset.id===card.dataset.id){
+    mSel.classList.remove('sel');mSel.classList.add('matched');card.classList.add('matched');
+    mMatched++; const pid=card.dataset.id; let mg=0;
+    if(!mDone.has(pid)){mDone.add(pid);mg=10;addXP(10,card,true);}
+    sfx('correct');
+    document.getElementById('mScore').textContent='Pares: '+mMatched+' / '+PAIRS.length;
+    document.getElementById('mFb').innerHTML='<span class="tick">✔ ¡Par correcto!'+(mg?' +10 felipesos':' (ya cobrado)')+'</span>';
+    if(mMatched>=PAIRS.length){
+      if(!mBonusDone){mBonusDone=true;addXP(20,card,true);document.getElementById('mFb').innerHTML='<span class="cy">🏆 ¡Todos los pares! Bono +20 felipesos</span>';}
+      else document.getElementById('mFb').innerHTML='<span class="cy">🏆 ¡Completado de nuevo! (felipesos ya cobrados)</span>';
+      document.getElementById('mRestart').style.display='inline-block'; grantBadge('maestro');
+    }
+  }else{
+    const a=mSel,b=card; a.classList.add('no');b.classList.add('no'); sfx('wrong');
+    mErr++; document.getElementById('mErr').textContent='Intentos fallidos: '+mErr;
+    document.getElementById('mFb').innerHTML='<span style="color:var(--red)">✘ No coinciden, intenta otra vez.</span>';
+    setTimeout(()=>{a.classList.remove('sel','no');b.classList.remove('sel','no');},650);
+  }
+  mSel=null;
+}
+
+/* ============ GAME 4 · SIMULADOR DE ERUPCIÓN ============ */
+let simSel={vis:null,gas:null,prep:null};
+let simRanOnce=false, simWinDone=false;
+function simPick(k,btn,val){ const grp=btn.parentNode; grp.querySelectorAll('.ans').forEach(b=>b.classList.remove('sel')); btn.classList.add('sel'); simSel[k]=val; sfx('select'); }
+function simReset(){ simSel={vis:null,gas:null,prep:null}; document.querySelectorAll('.simopts .ans').forEach(b=>b.classList.remove('sel')); document.getElementById('simResult').innerHTML=''; document.getElementById('simAgain').style.display='none'; }
+function simRun(btn){
+  if(simSel.vis===null||simSel.gas===null||simSel.prep===null){ toast('Elige magma, gas y preparación primero'); sfx('wrong'); return; }
+  const winds=[
+    {n:'Viento hacia la ciudad',m:2,why:'la ceniza cae sobre la población y contamina el aire'},
+    {n:'Viento hacia el mar',m:0,why:'la ceniza se dispersa lejos de la ciudad'}
+  ];
+  const caps=[
+    {n:'Cima con glaciar',m:2,why:'el calor derrite el hielo y puede generar lahares (flujos de barro)'},
+    {n:'Cima sin glaciar',m:0,why:'sin hielo, disminuye el riesgo de lahares'}
+  ];
+  const wind=winds[Math.floor(Math.random()*winds.length)];
+  const cap=caps[Math.floor(Math.random()*caps.length)];
+  const explos=simSel.vis+simSel.gas;                 // explosividad por magma+gas
+  const hazard=explos+wind.m+cap.m;                   // peligro total
+  const prep=simSel.prep;                             // preparación de la comunidad
+  const margin=prep-hazard;
+  const style = explos<=3 ? 'efusiva (lava fluida)' : (explos<=6 ? 'mixta' : 'explosiva (columna de ceniza)');
+  let verdict,cls,advice;
+  if(margin>=2){verdict='🏙️ COMUNIDAD A SALVO';cls='v-ok';advice='La alerta temprana funcionó y la gente evacuó a tiempo. La ciencia salva vidas. ¡Buen trabajo, vulcanólogo/a!';}
+  else if(margin>=-2){verdict='⚠️ DAÑOS MODERADOS';cls='v-mid';advice='Caída de ceniza y sustos. Activa el plan, reparte mascarillas y aleja a la gente de quebradas y ríos.';}
+  else{verdict='🌋 ERUPCIÓN SORPRESIVA';cls='v-bad';advice='Faltó preparación: mejora el monitoreo (SERNAGEOMIN) y el plan de evacuación (SENAPRED).';}
+  const lahar=(cap.m>0);
+  const jokes=[
+    '🚗 La ceniza dejó todos los autos color gris. La lavada de autos hizo su agosto.',
+    '📸 Un turista intentó una selfie con el volcán de fondo. Su mamá no estuvo de acuerdo.',
+    '🐔 Las gallinas se confundieron y creyeron que anochecía por la nube de ceniza.',
+    '🌭 El kiosco vendió empanadas "sabor humito" durante la evacuación.',
+    '📺 El volcán salió en las noticias internacionales. Fama, pero de la incómoda.'
+  ];
+  const joke=jokes[Math.floor(Math.random()*jokes.length)];
+
+  let html='<div class="verdict '+cls+'"><h3>'+verdict+'</h3>';
+  html+='<div class="rolls"><span class="roll">Estilo: <b>'+style+'</b></span><span class="roll">🎲 '+wind.n+'</span><span class="roll">🎲 '+cap.n+'</span></div>';
+  html+='<div class="calc">Explosividad = '+explos+'  ·  Peligro total = '+hazard+'  ·  Preparación = '+prep+'  ·  Margen = '+(margin>=0?'+':'')+margin+'</div>';
+  html+='<p class="sci">'+advice+'</p>';
+  html+='<p class="sci"><b>Por qué:</b> un magma más viscoso y con más gas produce erupciones más explosivas. '+wind.why+'; '+cap.why+'.</p>';
+  if(lahar) html+='<div class="tsunami">🌊 <b>Riesgo de lahar:</b> el volcán tiene glaciar. Al derretirse puede bajar un flujo de barro por los ríos. Protocolo real: alejarse de quebradas y cauces.</div>';
+  html+='<div class="safety">🛟 <b>Dato real de seguridad:</b> ante una alerta volcánica, sigue las indicaciones de SENAPRED, ten un kit de emergencia, usa mascarilla si cae ceniza y evita las quebradas.</div>';
+  html+='<p class="joke">'+joke+'</p></div>';
+  document.getElementById('simResult').innerHTML=html;
+  document.getElementById('simAgain').style.display='inline-block';
+  sfx(cls==='v-bad'?'wrong':'correct');
+
+  if(!simRanOnce){ simRanOnce=true; addXP(10,btn,true); toast('¡Primera simulación! +10 felipesos'); }
+  if(cls==='v-ok' && !simWinDone){ simWinDone=true; addXP(15,btn,true); toast('🥼 ¡Comunidad a salvo! +15 felipesos'); grantBadge('vulcanologo'); }
+}
+
+/* ============ SIMULADOR TECTÓNICO ============ */
+let tecV=0, tecFormedDone=false, tecEruptDone=false, tecPlaying=false, tecSlabLen=0;
+function tecInit(){
+  const slab=document.getElementById('tecSlab');
+  if(slab){ tecSlabLen=slab.getTotalLength();
+    [slab,document.getElementById('tecSlabEdge')].forEach(s=>{ s.style.strokeDasharray=tecSlabLen; s.style.strokeDashoffset=tecSlabLen; });
+  }
+  simTecUpdate(0);
+}
+function cl01(x){return Math.max(0,Math.min(1,x));}
+function simTecUpdate(v){
+  v=+v; tecV=v;
+  const R=document.getElementById('tecRange'); if(R && +R.value!==v) R.value=v;
+  document.getElementById('tecPct').textContent=Math.round(v)+'%';
+  // Nazca avanza
+  document.getElementById('tecNazca').setAttribute('transform','translate('+(v*0.32)+',0)');
+  // slab desciende (se "dibuja")
+  const drawn=cl01((v-12)/78);
+  ['tecSlab','tecSlabEdge'].forEach(id=>{ const s=document.getElementById(id); if(s) s.style.strokeDashoffset=tecSlabLen*(1-drawn); });
+  // magma en zona de fusión
+  document.querySelectorAll('#tecMelt .magma-blob').forEach(b=>{
+    const th=+b.dataset.th,y0=+b.dataset.y0,y1=+b.dataset.y1; const p=cl01((v-th)/26);
+    b.setAttribute('cy', y0+(y1-y0)*p); b.setAttribute('opacity', v>th?Math.min(1,p+0.25):0);
+  });
+  // cámara + conducto
+  const ch=cl01((v-58)/22);
+  document.getElementById('tecChamber').setAttribute('opacity',ch);
+  document.getElementById('tecConduit').setAttribute('opacity',cl01((v-70)/20));
+  document.getElementById('tecChamberLbl').setAttribute('opacity',ch);
+  // volcán
+  document.getElementById('tecVolcano').setAttribute('opacity',cl01((v-52)/26));
+  // erupción disponible
+  document.getElementById('tecErupt').style.opacity = v>=80?'1':'.4';
+  // lectura por fase
+  const ph=document.getElementById('tecReadout');
+  let f,txt;
+  if(v<15){f='FASE 0';txt='Las placas están en reposo. La de Nazca (oceánica y densa) empieza a avanzar ~7 cm/año.';}
+  else if(v<42){f='FASE 1 · SUBDUCCIÓN';txt='La placa de Nazca se hunde en la fosa bajo la Sudamericana. Se forma la <b>fosa oceánica</b> frente a la costa de Chile.';}
+  else if(v<70){f='FASE 2 · GENERACIÓN DE MAGMA';txt='A ~100 km de profundidad, el agua que baja con el slab funde el manto → se genera <b>magma</b>.';}
+  else if(v<95){f='FASE 3 · ASCENSO';txt='El magma, menos denso, asciende por grietas y llena la <b>cámara magmática</b> bajo la cordillera.';}
+  else {f='FASE 4 · VOLCÁN LISTO';txt='Se formó un volcán del <b>arco andino</b>. Pulsa 🌋 ERUPCIÓN para ver salir la <b>lava</b>.';}
+  ph.innerHTML='<span class="tec-phase">'+f+' ·</span> '+txt;
+  if(v>=95 && !tecFormedDone){ tecFormedDone=true; addXP(10,document.getElementById('tecErupt'),true); toast('🌋 ¡Volcán formado! +10 felipesos'); }
+}
+function simTecPlay(){
+  if(tecPlaying)return; tecPlaying=true;
+  const start=tecV<100?tecV:0; if(tecV>=100){simTecUpdate(0);}
+  let v=tecV; const t0=performance.now(), from=v, to=100, dur=2400;
+  function step(now){
+    const p=cl01((now-t0)/dur); simTecUpdate(from+(to-from)*p);
+    if(p<1){requestAnimationFrame(step);} else {tecPlaying=false; sfx('correct');}
+  }
+  requestAnimationFrame(step);
+}
+function simTecErupt(){
+  if(tecV<80){ toast('Primero empuja la placa hasta formar el volcán'); sfx('wrong'); return; }
+  const svg=document.getElementById('tecSvg');
+  svg.classList.remove('erupting'); void svg.offsetWidth; svg.classList.add('erupting');
+  sfx('correct'); toast('🌋 ¡Erupción! La lava (magma en superficie) baja por la ladera');
+  setTimeout(()=>svg.classList.remove('erupting'),2500);
+  if(!tecEruptDone){ tecEruptDone=true; addXP(12,document.getElementById('tecErupt'),true); toast('+12 felipesos · ¡ciclo completo!'); grantBadge('andes'); }
+}
+function simTecReset(){ tecPlaying=false; document.getElementById('tecSvg').classList.remove('erupting'); simTecUpdate(0); }
+
+/* ============ FINAL ============ */
+function renderFinal(){
+  document.getElementById('finalXP').textContent=xp+' felipesos';
+  document.getElementById('finalRank').textContent=(operator?operator+' — ':'')+ranks(xp);
+  const msgs={
+    'RECLUTA':'Buen comienzo. Vuelve a recorrer la sesión y abre más tarjetas para subir de rango.',
+    'CADETE GEOCIENTÍFICO':'Vas bien encaminado/a. Ya manejas las ideas base de los volcanes.',
+    'EXPLORADOR/A DE CAMPO':'¡Sólido! Distingues las partes del volcán y los tipos de erupción.',
+    'VULCANÓLOGO/A DE ÉLITE':'Excelente dominio de la actividad volcánica y su relación con Chile.',
+    'COMANDANTE MAGI':'¡Máximo rango! Explicas los volcanes como todo un/a científico/a. 🏆'
+  };
+  document.getElementById('finalMsg').textContent=msgs[ranks(xp)]||'';
+  document.querySelectorAll('#finalBadges .bw').forEach(b=>b.classList.toggle('on',badges.has(b.dataset.b)));
+}
+
+/* ============ INIT ============ */
+buildDots(); updateXP(); render(); trStart(); clfStart(); mStart();
+</script>
+</body>
+</html>
