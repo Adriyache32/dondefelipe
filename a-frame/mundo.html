@@ -29,16 +29,6 @@ window.addEventListener('error', function (e) {
 });
 </script>
 
-<script>
-/* ¿El equipo tiene un visor de VR? Solo entonces mostramos el botón de A-Frame.
-   En un PC de escritorio normal esto no se cumple y el botón queda oculto. */
-if (navigator.xr && navigator.xr.isSessionSupported) {
-  navigator.xr.isSessionSupported('immersive-vr').then(function (ok) {
-    if (ok) document.documentElement.classList.add('tiene-vr');
-  }).catch(function () {});
-}
-</script>
-
 <style>
   :root{ --acento:#1c5f78; --tinta:#12211f; --papel:#f2ece0; }
   html,body{margin:0;height:100%;overflow:hidden;
@@ -64,14 +54,50 @@ if (navigator.xr && navigator.xr.isSessionSupported) {
     border:1px solid rgba(242,236,224,.16);padding:7px 13px;border-radius:10px;}
   #volver:hover{background:rgba(40,72,88,.5);}
 
+  /* Controles reposicionables: arriba (por defecto), a los costados o abajo.
+     Se pueden ocultar. Arriba es el valor por defecto porque en el navegador de
+     computador la UI del sistema ocupa el borde inferior. */
   #controles{
-    position:fixed;left:0;right:0;bottom:0;z-index:10;
-    display:flex;gap:7px;justify-content:center;flex-wrap:wrap;
-    padding:14px 12px calc(14px + env(safe-area-inset-bottom,0));
-    background:linear-gradient(0deg,rgba(10,16,15,.5),rgba(10,16,15,0));
-    pointer-events:none;
+    position:fixed;z-index:10;display:flex;gap:7px;flex-wrap:wrap;pointer-events:none;
   }
   #controles > *{pointer-events:auto;}
+  #controles.pos-arriba{
+    left:0;right:0;top:calc(50px + env(safe-area-inset-top,0));
+    justify-content:center;padding:8px 12px 16px;
+    background:linear-gradient(180deg,rgba(10,16,15,.45),rgba(10,16,15,0));
+  }
+  #controles.pos-abajo{
+    left:0;right:0;bottom:0;justify-content:center;
+    padding:14px 12px calc(14px + env(safe-area-inset-bottom,0));
+    background:linear-gradient(0deg,rgba(10,16,15,.5),rgba(10,16,15,0));
+  }
+  #controles.pos-izq, #controles.pos-der{
+    top:calc(92px + env(safe-area-inset-top,0));
+    flex-direction:column;width:auto;max-width:196px;
+    max-height:calc(100vh - 180px);overflow-y:auto;padding:10px;
+  }
+  #controles.pos-izq{left:0;align-items:flex-start;}
+  #controles.pos-der{right:0;align-items:flex-end;}
+  #controles.pos-izq > *, #controles.pos-der > *{width:100%;text-align:left;}
+  #controles.oculto{display:none;}
+
+  /* Botón y menú de disposición */
+  #ctrl-btn{pointer-events:auto;color:var(--papel);opacity:.85;font-size:12.5px;font-weight:600;
+    background:rgba(28,42,40,.4);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid rgba(242,236,224,.16);padding:7px 12px;border-radius:10px;cursor:pointer;}
+  #ctrl-btn:hover{background:rgba(40,72,88,.5);}
+  #ctrl-menu{position:fixed;z-index:41;display:none;
+    top:calc(52px + env(safe-area-inset-top,0));right:12px;
+    background:rgba(18,28,27,.94);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    border:1px solid rgba(242,236,224,.16);border-radius:12px;padding:9px;min-width:186px;
+    box-shadow:0 14px 40px rgba(0,0,0,.45);}
+  #ctrl-menu.abierto{display:block;}
+  #ctrl-menu .mtit{font-size:10px;letter-spacing:1.3px;text-transform:uppercase;
+    opacity:.55;margin:2px 4px 7px;color:var(--papel);}
+  #ctrl-menu button{display:block;width:100%;text-align:left;margin-bottom:5px;
+    font-size:12.5px;padding:8px 11px;border-radius:8px;}
+  #ctrl-menu button.activo{background:rgba(90,150,120,.45);border-color:rgba(143,216,176,.5);}
+  #ctrl-menu .msep{height:1px;background:rgba(242,236,224,.14);margin:7px 2px;}
   button, select{
     font:inherit;font-size:13px;font-weight:600;letter-spacing:.2px;
     color:var(--papel);
@@ -136,16 +162,11 @@ if (navigator.xr && navigator.xr.isSessionSupported) {
     color:#6c6a60;font-size:20px;padding:2px 6px;line-height:1;}
   #cerrar:hover{background:none;color:var(--tinta);}
 
-  /* A-Frame inyecta un botón VR/AR (recuadro blanco) que en un PC sin visor
-     solo tapa los controles. Lo ocultamos por defecto y lo mostramos únicamente
-     si el dispositivo soporta VR real (ver el script <html class="tiene-vr">). */
-  .a-enter-vr, .a-enter-ar { display: none !important; }
-  html.tiene-vr .a-enter-vr {
-    display: block !important;
-    right: 12px !important; bottom: auto !important; top: 54px !important; left: auto !important;
-  }
-  html.tiene-vr .a-enter-vr-button { background-size: 90% 90% !important; }
+  /* A-Frame inserta su propia UI (barra de orientación / botón VR) abajo;
+     la reposicionamos para que no tape los controles */
+  .a-enter-vr, .a-enter-ar { right: 12px !important; bottom: auto !important; top: 54px !important; left: auto !important; }
   .a-orientation-modal { display: none !important; }
+  .a-enter-vr-button { background-size: 90% 90% !important; }
   a-scene .a-canvas { z-index: 0 !important; }
 
   /* panel de mezcla de audio */
@@ -264,6 +285,57 @@ if (navigator.xr && navigator.xr.isSessionSupported) {
   @media (prefers-reduced-motion: reduce){ #ficha{transition:none;} }
 </style>
 
+<script>
+/* Disposición de los controles. Se guarda la preferencia en el navegador.
+   Por defecto van ARRIBA: en el navegador de escritorio el borde inferior
+   suele quedar tapado por la interfaz del sistema. */
+(function () {
+  var POS = ['arriba', 'izq', 'der', 'abajo'];
+  var cont = document.getElementById('controles');
+  var btn  = document.getElementById('ctrl-btn');
+  var menu = document.getElementById('ctrl-menu');
+  var guardado, oculto;
+  try { guardado = localStorage.getItem('mundo_ctrl_pos'); } catch (e) {}
+  try { oculto = localStorage.getItem('mundo_ctrl_oculto') === '1'; } catch (e) {}
+  var pos = POS.indexOf(guardado) >= 0 ? guardado : 'arriba';
+
+  function aplicar() {
+    POS.forEach(function (p) { cont.classList.remove('pos-' + p); });
+    cont.classList.add('pos-' + pos);
+    cont.classList.toggle('oculto', !!oculto);
+    Array.prototype.forEach.call(menu.querySelectorAll('button[data-pos]'), function (b) {
+      b.classList.toggle('activo', b.getAttribute('data-pos') === pos);
+    });
+    var bo = document.getElementById('ctrl-ocultar');
+    if (bo) bo.textContent = oculto ? 'Mostrar controles (H)' : 'Ocultar controles (H)';
+    try {
+      localStorage.setItem('mundo_ctrl_pos', pos);
+      localStorage.setItem('mundo_ctrl_oculto', oculto ? '1' : '0');
+    } catch (e) {}
+  }
+
+  btn.addEventListener('click', function (e) {
+    e.stopPropagation(); menu.classList.toggle('abierto');
+  });
+  document.addEventListener('click', function (e) {
+    if (!menu.contains(e.target) && e.target !== btn) menu.classList.remove('abierto');
+  });
+  menu.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.hasAttribute('data-pos')) { pos = b.getAttribute('data-pos'); oculto = false; }
+    else if (b.id === 'ctrl-ocultar') { oculto = !oculto; }
+    aplicar();
+  });
+  // Atajo: H oculta o muestra (no interfiere al escribir en un campo)
+  window.addEventListener('keydown', function (e) {
+    var f = document.activeElement;
+    if (f && (f.tagName === 'INPUT' || f.tagName === 'TEXTAREA' || f.isContentEditable)) return;
+    if (e.key === 'h' || e.key === 'H') { oculto = !oculto; aplicar(); }
+  });
+  aplicar();
+})();
+</script>
+
 <script src="mundo.js"></script>
 </head>
 <body>
@@ -273,7 +345,18 @@ if (navigator.xr && navigator.xr.isSessionSupported) {
   <span id="nivel-lectura"></span>
   <span id="grav-lectura" style="font-variant-numeric:tabular-nums;font-size:13px;opacity:.85"></span>
   <span id="clima-real-lectura" style="font-size:12.5px;opacity:.8"></span>
+  <button id="ctrl-btn" title="Disposición de los controles">Controles</button>
   <a id="volver" href="index.html">Todos los mundos</a>
+</div>
+
+<div id="ctrl-menu" role="menu">
+  <div class="mtit">Dónde van los controles</div>
+  <button data-pos="arriba">Arriba</button>
+  <button data-pos="izq">A la izquierda</button>
+  <button data-pos="der">A la derecha</button>
+  <button data-pos="abajo">Abajo</button>
+  <div class="msep"></div>
+  <button id="ctrl-ocultar">Ocultar controles (H)</button>
 </div>
 
 <div id="ficha" role="dialog" aria-live="polite">

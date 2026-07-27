@@ -460,6 +460,23 @@ window.MUNDOS.bosque = {
     { forma: 'estacion', color: '#5a4a8a', pos: [-4, 0, -40],
       nombre: 'Estación 8', ficha: 'e5', altoFicha: 3.6 },
 
+    /* ---------- ESTACIONES TEMÁTICAS ----------
+       Recorren el hilo conceptual del mundo: biodiversidad → sequía →
+       refugios climáticos → fuego → resiliencia → acción. Van en teal para
+       distinguirlas de las estaciones numeradas de la guía. */
+    { forma: 'estacion', color: '#1f6f78', pos: [-8, 0.1, 48],
+      nombre: 'Biodiversidad', ficha: 'diversidad', altoFicha: 3.6 },
+    { forma: 'estacion', color: '#1f6f78', pos: [-20, -0.3, 16],
+      nombre: 'Refugios climáticos', ficha: 'refugios', altoFicha: 3.6 },
+    { forma: 'estacion', color: '#1f6f78', pos: [22, 0.2, -6],
+      nombre: 'La megasequía', ficha: 'sequia', altoFicha: 3.6 },
+    { forma: 'estacion', color: '#1f6f78', pos: [14, 0.1, -18],
+      nombre: 'El fuego', ficha: 'incendio', altoFicha: 3.6 },
+    { forma: 'estacion', color: '#1f6f78', pos: [-2, 0.1, -28],
+      nombre: 'Resiliencia', ficha: 'resiliencia', altoFicha: 3.6 },
+    { forma: 'estacion', color: '#c07a2c', pos: [-10, 0, -52],
+      nombre: '¿Qué podemos hacer?', ficha: 'accion', altoFicha: 3.6 },
+
     /* ---------- EL REFUGIO: tres niveles, escaleras y piezas ----------
        Toda la física va acá: 'pisos' son las superficies pisables de cada
        nivel (dejando el hueco de la caja de escala), 'escalones' los dos
@@ -507,6 +524,48 @@ window.MUNDOS.bosque = {
   ],
 
   fichas: [
+    {
+      id: 'resiliencia', nombre: 'Resiliencia: qué se recupera y qué no', rango: 'Idea central del recorrido',
+      texto: 'Resiliencia es la capacidad de un ecosistema de volver a funcionar después de un golpe. Este bosque es muy resiliente frente a las perturbaciones con las que evolucionó: un verano seco, un incendio ocasional, un año malo. La mayoría de estos árboles rebrota de cepa —del tocón vuelve a salir el árbol— y por eso un bosque quemado puede recuperarse solo. Pero la resiliencia tiene un límite: si los golpes se repiten antes de que alcance a recuperarse, el sistema cruza un umbral y ya no vuelve al estado anterior. Queda convertido en otra cosa, casi siempre más pobre.',
+      vida: ['Rebrote de cepa: del tocón sale el árbol nuevo', 'La resiliencia depende del TIEMPO entre golpes, no solo de su tamaño', 'Cruzado el umbral, el sistema no vuelve: cambia de estado', 'Espinal y matorral suelen ser bosque que cruzó ese umbral'],
+      reto: '¿Por qué un incendio cada 50 años puede ser tolerable y uno cada 5 años ser destructivo, aunque cada incendio sea del mismo tamaño? Tu respuesta debe usar la palabra "tiempo".',
+      actividad: 'Compara la ladera de solana con la quebrada. Anota cuál crees que se recuperaría más rápido de un incendio y por qué. Después revisa la ficha de la umbría para contrastar tu hipótesis.'
+    },
+    {
+      id: 'incendio', nombre: 'Fuego: el golpe que más cambió', rango: 'Perturbación y umbral',
+      texto: 'El bosque esclerófilo conoce el fuego, pero no este fuego. Casi todos los incendios de Chile central son causados por personas, y con la sequía prolongada la vegetación llega al verano con menos agua en los tejidos: arde más fácil, más rápido y más caliente. Un incendio muy caliente ya no solo quema la parte aérea: mata la cepa bajo tierra, que es justamente la estructura de la que el bosque rebrota. Ahí se pierde la capacidad de recuperación.',
+      vida: ['La mayoría de los incendios son de origen humano', 'La sequía hace que la misma vegetación arda más intensamente', 'Si muere la cepa subterránea, ya no hay rebrote', 'Tras el fuego repetido suele instalarse pasto seco y espino'],
+      reto: 'Explica esta cadena con tus palabras: menos lluvia → plantas más secas → fuego más caliente → muere la cepa → no hay rebrote. ¿En qué eslabón sería más efectivo intervenir?',
+      actividad: 'Recorre la ladera de solana y cuenta los árboles secos en pie. Imagina un incendio ahí y otro en la quebrada húmeda: describe las dos escenas.'
+    },
+    {
+      id: 'sequia', nombre: 'La megasequía', rango: 'El golpe lento',
+      texto: 'Desde 2010 Chile central vive un déficit de lluvias sostenido, sin precedentes en el registro instrumental: es lo que se llama la megasequía. A diferencia de un incendio, es un golpe lento y por eso más difícil de ver. Sus marcas están a la vista: árboles secos en pie, límite del bosque que retrocede ladera abajo, y vertientes que bajan su caudal cada año. Un bosque debilitado por años de sequía es además más vulnerable a plagas y a incendios: los golpes se suman.',
+      vida: ['Déficit de lluvias sostenido desde 2010', 'El límite del bosque retrocede hacia las zonas más húmedas', 'La sequía debilita y hace al bosque más vulnerable a otros golpes', 'Las quebradas de umbría funcionan como refugio climático'],
+      reto: 'La sequía no mata al bosque directamente: lo debilita. Explica por qué eso puede ser peor que un golpe único y fuerte.',
+      actividad: 'Busca tres árboles secos en pie y anota en qué franja está cada uno. ¿Se reparten al azar o hay un patrón?'
+    },
+    {
+      id: 'refugios', nombre: 'Refugios climáticos', rango: 'Dónde sobrevive el bosque',
+      texto: 'No todo el paisaje se calienta igual. Las quebradas de umbría —las que miran al sur, con menos horas de sol— conservan humedad cuando todo alrededor se seca. Funcionan como refugios climáticos: lugares donde las especies más exigentes en agua, como el belloto del norte, pueden aguantar mientras el clima general empeora. Son las piezas del paisaje que más conviene proteger, porque desde ahí puede volver a expandirse el bosque si las condiciones mejoran.',
+      vida: ['Las quebradas de umbría retienen humedad todo el verano', 'Ahí sobreviven las especies que necesitan más agua', 'Son fuente de semillas para recolonizar cuando mejora el clima', 'Proteger una quebrada rinde más que plantar en la ladera seca'],
+      reto: 'Si tuvieras recursos para proteger solo una parte de este cerro, ¿elegirías la ladera de solana o la quebrada de umbría? Justifica pensando en el futuro, no en el presente.',
+      actividad: 'Camina de la solana a la umbría y fíjate en el cambio de luz. Anota qué sientes distinto y qué especies aparecen y desaparecen.'
+    },
+    {
+      id: 'diversidad', nombre: 'Por qué importa la diversidad', rango: 'Biodiversidad y seguro',
+      texto: 'Chile central es un punto caliente de biodiversidad mundial: una zona con muchísimas especies que no existen en ningún otro lugar y que además está muy amenazada. Un bosque con muchas especies es más resiliente que uno con pocas, y la razón es sencilla: cada especie responde distinto al mismo golpe. Si llega una sequía, unas mueren y otras aguantan; el sistema pierde piezas pero sigue funcionando. Un bosque de una sola especie no tiene ese seguro: si el golpe le pega a esa especie, se cae entero.',
+      vida: ['Chile central es uno de los 36 puntos calientes del planeta', 'Alta proporción de especies endémicas: solo viven aquí', 'Más especies = más respuestas distintas al mismo golpe', 'La diversidad funciona como un seguro frente a la incertidumbre'],
+      reto: 'Compara una plantación de pinos con este bosque nativo frente a una sequía. ¿Cuál se recupera mejor y por qué? Usa la idea de "seguro".',
+      actividad: 'Anota todas las especies distintas que reconozcas en el recorrido. Después marca cuáles viven solo en Chile: esa es la parte irremplazable.'
+    },
+    {
+      id: 'accion', nombre: 'Qué se puede hacer', rango: 'Cierre del recorrido',
+      texto: 'Frente a un problema global es fácil sentir que nada de lo local sirve. Pero la resiliencia se juega justamente en la escala local: proteger las quebradas de umbría, evitar el fuego en los meses críticos, dejar que el bosque rebrote en vez de despejar el terreno, mantener conectados los parches de vegetación para que la fauna pueda moverse. Ninguna de esas acciones detiene el cambio climático, pero todas aumentan el tiempo que este bosque tiene para adaptarse.',
+      vida: ['Proteger los refugios de umbría, que son fuente de semillas', 'Cuidar el rebrote en vez de despejar el terreno quemado', 'Mantener corredores entre parches para la fauna', 'Prevención de incendios en los meses de mayor riesgo'],
+      reto: 'De estas cuatro acciones, ¿cuál crees que tendría más efecto en este cerro concreto? Defiende tu elección con lo que observaste en el recorrido.',
+      actividad: 'Escribe una propuesta de media página dirigida a la comunidad del refugio: qué harías tú primero y con qué argumento los convencerías.'
+    },
     {
       id: 'palmar', nombre: 'La palma chilena', rango: 'Emblema de la Región de Valparaíso',
       texto: 'La palma chilena (<i>Jubaea chilensis</i>) es la palmera que crece más al sur del planeta y el árbol emblema de esta región. Es endémica de Chile central: no existe de forma natural en ningún otro lugar del mundo. Crece muy lento y puede superar los 500 años, pero su tronco no se ramifica: si se corta, no rebrota.',
