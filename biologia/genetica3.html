@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Unidad 3 · Sesión 3 — Ficha de Respuestas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B2340; --navy-2:#123054; --teal:#1F7A70; --teal-dark:#155F58;
+    --mint-tint:#EAF7F5; --page-bg:#F6FAF9; --cream-tint:#FDF6EC;
+    --text:#233238; --muted:#6B7A78; --line:#DCEAE7;
+    --baseA:#E4572E; --baseT:#2E86AB; --baseG:#1F7A70; --baseC:#E0A458;
+    --ok:#2E8B57; --bad:#C0392B;
+    --shadow: 0 10px 26px rgba(11,35,64,0.08); --radius: 18px;
+    --font-display:'Fraunces', Cambria, Georgia, serif;
+    --font-body:'Manrope', Calibri, Arial, sans-serif;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html{ scroll-behavior:smooth; }
+  body{ margin:0; background:var(--page-bg); color:var(--text); font-family:var(--font-body); line-height:1.5; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+  h1,h2,h3{ font-family:var(--font-display); margin:0; color:var(--navy); }
+  p{ margin:0; }
+  button{ font-family:var(--font-body); cursor:pointer; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible, .prog-step:focus-visible{ outline:3px solid var(--baseC); outline-offset:2px; }
+
+  .app-shell{ min-height:100vh; display:flex; flex-direction:column; }
+
+  .progress-ladder{ position:fixed; top:0; left:0; right:0; z-index:40; display:flex; gap:4px; padding:10px 14px; background:rgba(246,250,249,0.9); backdrop-filter:blur(4px); border-bottom:1px solid var(--line); }
+  .prog-step{ flex:1; height:9px; border-radius:5px; border:1.5px solid #C9DEDA; background:#fff; padding:0; transition:background .25s ease, border-color .25s ease; }
+  .prog-step.done{ background:var(--teal); border-color:var(--teal); }
+  .prog-step.current{ border-color:var(--navy); box-shadow:0 0 0 2px rgba(11,35,64,0.15); }
+  .prog-step:disabled{ cursor:not-allowed; opacity:.5; }
+
+  .top-actions{ position:fixed; top:14px; right:14px; z-index:41; display:flex; gap:8px; align-items:center; }
+  .status-badge{ font-size:11.5px; font-weight:700; padding:7px 12px; border-radius:999px; background:#fff; border:1.5px solid var(--line); color:var(--muted); box-shadow:var(--shadow); }
+  .status-badge.ok{ border-color:var(--ok); color:var(--ok); }
+  .status-badge.warn{ border-color:var(--baseC); color:#8a5a1c; }
+
+  .slide-viewport{ flex:1; padding-top:46px; padding-bottom:78px; }
+  .slide{ display:none; min-height:calc(100vh - 124px); align-items:center; justify-content:center; padding:32px 16px; }
+  .slide.active{ display:flex; }
+  .slide-inner{ width:100%; max-width:900px; margin:0 auto; }
+
+  .eyebrow{ display:inline-block; font-size:12px; font-weight:800; letter-spacing:1.2px; color:var(--teal-dark); text-transform:uppercase; margin-bottom:10px; }
+  .slide h2.title{ font-size:clamp(24px,4vw,36px); font-weight:700; margin-bottom:8px; }
+  .slide .subtitle{ font-size:clamp(14px,2vw,17px); color:var(--muted); font-style:italic; font-family:var(--font-display); margin-bottom:20px; }
+
+  .card{ background:#fff; border-radius:var(--radius); box-shadow:var(--shadow); padding:20px 22px; border:1px solid var(--line); }
+  .card.tint-mint{ background:var(--mint-tint); }
+  .card.tint-cream{ background:var(--cream-tint); }
+  .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:760px){ .grid-2{ grid-template-columns:1fr; } }
+  .card-label{ font-size:11px; font-weight:800; letter-spacing:0.8px; color:var(--baseC); text-transform:uppercase; margin-bottom:8px; display:block; }
+  .card p, .card li{ font-size:14.5px; color:var(--text); }
+  .card ul{ margin:0; padding-left:20px; }
+  .card li{ margin-bottom:6px; }
+  .tag{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; background:var(--mint-tint); color:var(--teal-dark); padding:6px 13px; border-radius:999px; border:1px solid #CCEAE5; }
+
+  .nav-fixed{ position:fixed; bottom:0; left:0; right:0; z-index:40; display:flex; align-items:center; justify-content:center; gap:14px; padding:12px 16px; background:rgba(246,250,249,0.92); backdrop-filter:blur(4px); border-top:1px solid var(--line); }
+  .nav-btn{ background:#fff; border:1.5px solid var(--teal); color:var(--teal-dark); border-radius:999px; padding:9px 16px; font-weight:700; font-size:13.5px; }
+  .nav-btn:disabled{ opacity:0.35; cursor:default; }
+  .nav-btn:not(:disabled):hover{ background:var(--teal); color:#fff; }
+  .nav-counter{ font-size:12.5px; color:var(--muted); font-weight:700; min-width:50px; text-align:center; }
+
+  /* portada */
+  .helix-wrap{ width:110px; height:220px; margin:0 auto 6px; position:relative; perspective:900px; }
+  .helix-wrap::before, .helix-wrap::after{ content:""; position:absolute; top:0; bottom:0; width:4px; border-radius:3px; background:linear-gradient(180deg, var(--teal), var(--navy)); opacity:0.5; }
+  .helix-wrap::before{ left:16%; } .helix-wrap::after{ right:16%; }
+  .helix-rung{ position:absolute; left:50%; width:76px; height:8px; margin-left:-38px; top:0; border-radius:4px; animation-name:helixSpin; animation-timing-function:linear; animation-iteration-count:infinite; }
+  @keyframes helixSpin{
+    0%{ transform: translateY(var(--ty,0px)) rotateY(0deg) scaleX(1); opacity:1; }
+    25%{ transform: translateY(var(--ty,0px)) rotateY(90deg) scaleX(0.12); opacity:0.45; }
+    50%{ transform: translateY(var(--ty,0px)) rotateY(180deg) scaleX(1); opacity:1; }
+    75%{ transform: translateY(var(--ty,0px)) rotateY(270deg) scaleX(0.12); opacity:0.45; }
+    100%{ transform: translateY(var(--ty,0px)) rotateY(360deg) scaleX(1); opacity:1; }
+  }
+
+  .field-label{ font-size:12.5px; font-weight:800; color:var(--teal-dark); text-transform:uppercase; letter-spacing:.5px; display:block; margin-bottom:6px; }
+  input[type="text"]{ width:100%; border:1.5px solid var(--line); border-radius:10px; padding:12px 14px; font-family:var(--font-body); font-size:15px; color:var(--text); }
+  input[type="text"]:focus{ outline:none; border-color:var(--teal); }
+  .field-error{ color:var(--bad); font-size:12.5px; font-weight:700; margin-top:6px; display:none; }
+  .field-error.show{ display:block; }
+
+  .cta-start{ background:var(--navy); color:#fff; border:none; border-radius:999px; padding:13px 24px; font-weight:800; font-size:14.5px; box-shadow:var(--shadow); margin-top:16px; }
+  .cta-start:hover{ background:var(--teal-dark); }
+
+  /* quiz */
+  .quiz-card{ margin-bottom:16px; }
+  .quiz-q{ font-weight:700; font-size:15px; margin-bottom:11px; color:var(--navy); }
+  .quiz-options{ display:grid; gap:8px; }
+  .opt-btn{ text-align:left; background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:10px 14px; font-size:13.5px; color:var(--text); }
+  .opt-btn:hover:not(:disabled){ border-color:var(--teal); }
+  .opt-btn.correct{ background:#E8F6EE; border-color:var(--ok); color:var(--ok); font-weight:700; }
+  .opt-btn.incorrect{ background:#FBEAE8; border-color:var(--bad); color:var(--bad); font-weight:700; }
+  .opt-btn:disabled{ cursor:default; }
+  .score-badge{ display:inline-block; background:var(--navy); color:#fff; padding:8px 15px; border-radius:999px; font-weight:800; font-size:13px; margin-bottom:16px; }
+
+  /* forms */
+  .case-card{ margin-bottom:16px; }
+  .case-vignette{ background:var(--cream-tint); border-radius:12px; padding:12px 14px; font-size:13.5px; font-style:italic; color:var(--navy); margin-bottom:14px; }
+  .aer-label{ font-size:11px; font-weight:800; color:var(--teal-dark); text-transform:uppercase; letter-spacing:.5px; display:block; margin:9px 0 4px; }
+  textarea{ width:100%; border:1.5px solid var(--line); border-radius:10px; padding:9px 11px; font-family:var(--font-body); font-size:13.5px; color:var(--text); resize:vertical; min-height:56px; }
+  textarea:focus{ outline:none; border-color:var(--teal); }
+
+  .radio-row{ display:flex; gap:10px; margin-top:8px; }
+  .radio-opt{ flex:1; text-align:center; padding:11px; border-radius:10px; border:1.5px solid var(--line); background:#fff; font-weight:700; font-size:13.5px; color:var(--muted); }
+  .radio-opt.active{ border-color:var(--teal); background:var(--mint-tint); color:var(--teal-dark); }
+
+  /* submit slide */
+  .submit-box{ text-align:center; }
+  .btn-submit{ background:var(--teal); color:#fff; border:none; border-radius:999px; padding:15px 34px; font-weight:800; font-size:16px; box-shadow:var(--shadow); }
+  .btn-submit:hover{ background:var(--teal-dark); }
+  .btn-submit:disabled{ opacity:.5; cursor:default; }
+  .submit-msg{ margin-top:16px; font-size:14px; font-weight:700; min-height:22px; }
+  .submit-msg.ok{ color:var(--ok); }
+  .submit-msg.err{ color:var(--bad); }
+  .fallback-box{ display:none; margin-top:16px; text-align:left; }
+  .fallback-box.show{ display:block; }
+  #fallbackText{ width:100%; min-height:140px; font-size:12px; font-family:monospace; }
+  .copy-btn{ margin-top:8px; background:#fff; border:1.5px solid var(--teal); color:var(--teal-dark); border-radius:999px; padding:8px 16px; font-weight:700; font-size:13px; }
+
+  .footer-credit{ text-align:center; font-size:11.5px; color:var(--muted); margin-top:24px; }
+
+  @media (prefers-reduced-motion: reduce){ .helix-rung{ animation:none !important; } }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <nav class="progress-ladder" id="progressLadder" aria-label="Progreso de la ficha"></nav>
+
+  <div class="top-actions">
+    <span class="status-badge" id="statusBadge">Verificando conexión…</span>
+  </div>
+
+  <main class="slide-viewport" id="slideViewport">
+
+    <!-- ================= SLIDE 0 — PORTADA + NOMBRE ================= -->
+    <section class="slide active" data-title="Portada">
+      <div class="slide-inner" style="text-align:center;">
+        <div class="helix-wrap" id="helixWrap" aria-hidden="true"></div>
+        <span class="eyebrow">Unidad 3 · Genética · Sesión 3</span>
+        <h2 class="title">Ficha de Respuestas</h2>
+        <p class="subtitle">Anomalías de la división celular</p>
+        <div style="margin-bottom:18px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+          <span class="tag">OA 6</span>
+          <span class="tag">Tus respuestas se envían a tu profesor(a)</span>
+        </div>
+
+        <div class="card" style="max-width:420px; margin:0 auto; text-align:left;">
+          <label class="field-label" for="studentName">Nombre completo</label>
+          <input type="text" id="studentName" placeholder="Ej: Ana Pérez">
+          <p class="field-error" id="nameError">Por favor escribe tu nombre antes de continuar.</p>
+        </div>
+
+        <button class="cta-start" id="startBtn">Comenzar →</button>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 1 — INSTRUCCIONES ================= -->
+    <section class="slide" data-title="Instrucciones">
+      <div class="slide-inner">
+        <span class="eyebrow">Antes de empezar</span>
+        <h2 class="title">¿Cómo funciona esta ficha?</h2>
+        <div class="card tint-mint">
+          <ul>
+            <li>Responderás un breve quiz, dos casos de análisis, tres preguntas de reflexión y un reporte de tu actividad manual.</li>
+            <li>Puedes avanzar y retroceder con los botones de abajo o con la escalera de progreso.</li>
+            <li>Al final presionarás <b>"Enviar mis respuestas"</b>: se guardarán en la planilla de tu profesor(a), junto a tu nombre.</li>
+            <li>Si en algún momento no tienes conexión a internet, la ficha te avisará y podrás copiar tus respuestas para entregarlas de otra forma.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 2 — QUIZ ================= -->
+    <section class="slide" data-title="Quiz">
+      <div class="slide-inner">
+        <span class="eyebrow">Chequeo rápido</span>
+        <h2 class="title">¿Quedó claro?</h2>
+        <div class="score-badge" id="scoreBadge">Puntaje: 0 / 0</div>
+        <div id="quizContainer"></div>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 3 — CASOS AER ================= -->
+    <section class="slide" data-title="Ficha de trabajo: casos">
+      <div class="slide-inner">
+        <span class="eyebrow">Preguntas de trabajo · Análisis AER</span>
+        <h2 class="title">Investiguemos dos casos</h2>
+        <div class="grid-2">
+          <div class="card case-card">
+            <span class="card-label">Caso 1</span>
+            <p class="case-vignette">"Un cariotipo prenatal muestra 47 cromosomas en total, con tres copias del cromosoma 21 en lugar de dos."</p>
+            <label class="aer-label">Afirmación: ¿qué anomalía está presente?</label>
+            <textarea id="caso1_afirmacion" rows="2"></textarea>
+            <label class="aer-label">Evidencia del cariotipo</label>
+            <textarea id="caso1_evidencia" rows="2"></textarea>
+            <label class="aer-label">Razonamiento: ¿cómo lo explica la no disyunción?</label>
+            <textarea id="caso1_razonamiento" rows="2"></textarea>
+          </div>
+          <div class="card case-card">
+            <span class="card-label">Caso 2</span>
+            <p class="case-vignette">"Un lunar en la piel crece de forma irregular y rápida, con bordes poco definidos. El dermatólogo indica que esas células se dividen sin control."</p>
+            <label class="aer-label">Afirmación: ¿qué falla a nivel celular?</label>
+            <textarea id="caso2_afirmacion" rows="2"></textarea>
+            <label class="aer-label">Evidencia del caso</label>
+            <textarea id="caso2_evidencia" rows="2"></textarea>
+            <label class="aer-label">Razonamiento: relación con el daño al ADN por UV</label>
+            <textarea id="caso2_razonamiento" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 4 — REFLEXIÓN ================= -->
+    <section class="slide" data-title="Preguntas de reflexión">
+      <div class="slide-inner">
+        <span class="eyebrow">Preguntas de trabajo · Reflexión</span>
+        <h2 class="title">¿Por qué importa regular la división celular?</h2>
+        <div class="card case-card">
+          <p style="font-weight:700; font-size:14.5px; margin-bottom:10px;">1. Explica con tus palabras la relación entre la pérdida de control del ciclo celular y la formación de un tumor.</p>
+          <textarea id="reflexion1" rows="3"></textarea>
+        </div>
+        <div class="card case-card">
+          <p style="font-weight:700; font-size:14.5px; margin-bottom:10px;">2. ¿Por qué detectar tempranamente una anomalía cromosómica puede ser importante para las familias y los equipos de salud? Argumenta considerando aspectos éticos.</p>
+          <textarea id="reflexion2" rows="3"></textarea>
+        </div>
+        <div class="card case-card">
+          <p style="font-weight:700; font-size:14.5px; margin-bottom:10px;">3. Si el cuerpo tiene mecanismos de control tan precisos, ¿por qué crees que a veces fallan? Relaciona con factores internos (mutaciones) y externos (radiación UV, entre otros).</p>
+          <textarea id="reflexion3" rows="3"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 5 — ACTIVIDAD MANUAL: AUTORREPORTE ================= -->
+    <section class="slide" data-title="Actividad manual">
+      <div class="slide-inner">
+        <span class="eyebrow">Actividad STEAM</span>
+        <h2 class="title">Cuéntanos sobre tu infografía</h2>
+        <div class="card">
+          <span class="card-label">¿Completaste la infografía grupal de tu anomalía asignada?</span>
+          <div class="radio-row" id="actividadRadio">
+            <button type="button" class="radio-opt" data-value="Sí">Sí, la completé</button>
+            <button type="button" class="radio-opt" data-value="Parcial">La empecé, no la terminé</button>
+            <button type="button" class="radio-opt" data-value="No">No alcancé a empezarla</button>
+          </div>
+          <label class="field-label" style="margin-top:18px;">¿Qué anomalía trabajó tu grupo?</label>
+          <input type="text" id="actividadAnomalia" placeholder="Ej: Trisomía 21, Síndrome de Turner, Klinefelter, Cáncer...">
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 6 — ENVIAR ================= -->
+    <section class="slide" data-title="Enviar">
+      <div class="slide-inner submit-box">
+        <span class="eyebrow">Último paso</span>
+        <h2 class="title">Enviemos tus respuestas</h2>
+        <p class="subtitle">Se guardarán junto a tu nombre en la planilla de tu profesor(a)</p>
+        <button class="btn-submit" id="submitBtn">Enviar mis respuestas</button>
+        <p class="submit-msg" id="submitMsg"></p>
+
+        <div class="fallback-box" id="fallbackBox">
+          <p style="font-size:13px; color:var(--muted); margin-bottom:8px;">No se pudo enviar automáticamente. Copia el siguiente resumen y envíaselo a tu profesor(a) por otro medio:</p>
+          <textarea id="fallbackText" readonly></textarea>
+          <button class="copy-btn" id="copyBtn">Copiar resumen</button>
+        </div>
+
+        <p class="footer-credit">Unidad 3 · Genética — Sesión 3 · Prof. Felipe Jiménez · 2° Medio Biología</p>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="nav-fixed">
+    <button class="nav-btn" id="prevBtn">← Anterior</button>
+    <span class="nav-counter" id="navCounter">1 / 7</span>
+    <button class="nav-btn" id="nextBtn">Siguiente →</button>
+  </nav>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ======================================================================
+     CONFIGURACIÓN — pega aquí la URL de tu Apps Script (termina en /exec)
+     ====================================================================== */
+  var SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbwaDLuaG6db2IRLWvCQJ1ofoP4uPLLrCIOye3-YDnQQzNDUCE8tuxipwv013-Za4Igj/exec";
+
+  var statusBadge = document.getElementById("statusBadge");
+  var endpointConfigured = SHEET_ENDPOINT.indexOf("https://script.google.com") === 0;
+  if (endpointConfigured){
+    statusBadge.textContent = "🟢 Conectado a la planilla";
+    statusBadge.classList.add("ok");
+  } else {
+    statusBadge.textContent = "🟠 Falta configurar SHEET_ENDPOINT";
+    statusBadge.classList.add("warn");
+  }
+
+  /* ---------------- Navegación de slides ---------------- */
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var total = slides.length;
+  var current = 0;
+  var nameConfirmed = false;
+
+  var ladder = document.getElementById("progressLadder");
+  slides.forEach(function(s, i){
+    var b = document.createElement("button");
+    b.className = "prog-step";
+    b.type = "button";
+    b.setAttribute("aria-label", "Ir a: " + (s.getAttribute("data-title") || ("Diapositiva " + (i+1))));
+    if (i > 0) b.disabled = true; // se habilitan tras ingresar el nombre
+    b.addEventListener("click", function(){ if (!b.disabled) goTo(i); });
+    ladder.appendChild(b);
+  });
+  var progSteps = Array.prototype.slice.call(document.querySelectorAll(".prog-step"));
+
+  var prevBtn = document.getElementById("prevBtn");
+  var nextBtn = document.getElementById("nextBtn");
+  var navCounter = document.getElementById("navCounter");
+
+  function goTo(index){
+    if (!nameConfirmed && index > 0) index = 0;
+    if (index < 0) index = 0;
+    if (index > total - 1) index = total - 1;
+    slides[current].classList.remove("active");
+    current = index;
+    slides[current].classList.add("active");
+    progSteps.forEach(function(step, i){
+      step.classList.toggle("done", i <= current);
+      step.classList.toggle("current", i === current);
+    });
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+    navCounter.textContent = (current + 1) + " / " + total;
+    window.scrollTo(0, 0);
+  }
+
+  prevBtn.addEventListener("click", function(){ goTo(current - 1); });
+  nextBtn.addEventListener("click", function(){
+    if (current === 0 && !nameConfirmed){ tryConfirmName(); return; }
+    goTo(current + 1);
+  });
+
+  document.addEventListener("keydown", function(e){
+    if (e.key === "ArrowRight") { if (current === 0 && !nameConfirmed){ tryConfirmName(); } else { goTo(current + 1); } }
+    if (e.key === "ArrowLeft") goTo(current - 1);
+  });
+
+  /* ---------------- Nombre del estudiante ---------------- */
+  var studentNameInput = document.getElementById("studentName");
+  var nameError = document.getElementById("nameError");
+  var startBtn = document.getElementById("startBtn");
+
+  function tryConfirmName(){
+    var val = studentNameInput.value.trim();
+    if (val.length < 2){
+      nameError.classList.add("show");
+      studentNameInput.focus();
+      return;
+    }
+    nameError.classList.remove("show");
+    nameConfirmed = true;
+    progSteps.forEach(function(step){ step.disabled = false; });
+    goTo(1);
+  }
+  startBtn.addEventListener("click", tryConfirmName);
+  studentNameInput.addEventListener("keydown", function(e){ if (e.key === "Enter") tryConfirmName(); });
+
+  goTo(0);
+
+  /* ---------------- Hero DNA helix ---------------- */
+  var helixWrap = document.getElementById("helixWrap");
+  var baseColors = ["var(--baseA)", "var(--baseT)", "var(--baseG)", "var(--baseC)"];
+  var RUNGS = 11;
+  for (var i = 0; i < RUNGS; i++){
+    var rung = document.createElement("div");
+    rung.className = "helix-rung";
+    rung.style.setProperty("--ty", (i * 18) + "px");
+    rung.style.background = baseColors[i % 4];
+    rung.style.animationDuration = "5s";
+    rung.style.animationDelay = (i * -0.3) + "s";
+    helixWrap.appendChild(rung);
+  }
+
+  /* ---------------- Quiz ---------------- */
+  var quizData = [
+    { q: "1. ¿Qué es la \"no disyunción\" durante la meiosis?",
+      options: ["La duplicación correcta del ADN antes de dividirse.","La falla en la separación de cromosomas homólogos, que resulta en gametos con un número anormal de cromosomas.","La fusión de dos células somáticas.","El proceso normal de formación de gametos."],
+      correct: 1 },
+    { q: "2. La Trisomía 21 (Síndrome de Down) se caracteriza por:",
+      options: ["La ausencia total del cromosoma 21.","La presencia de una copia extra del cromosoma 21 (tres en total).","Una mutación puntual en un solo gen del cromosoma 21.","La fusión de los cromosomas 21 y 18."],
+      correct: 1 },
+    { q: "3. ¿Qué relación existe entre el descontrol del ciclo celular y el cáncer?",
+      options: ["El cáncer ocurre cuando las células dejan de dividirse por completo.","El cáncer surge cuando fallan los mecanismos que regulan cuándo y cuánto debe dividirse una célula.","El cáncer es causado exclusivamente por la meiosis.","El cáncer solo afecta a células que ya completaron la mitosis."],
+      correct: 1 },
+    { q: "4. El Síndrome de Turner (monosomía X0) afecta:",
+      options: ["Solo a hombres, duplicando el cromosoma Y.","A mujeres, que presentan un solo cromosoma X en lugar de dos.","A ambos sexos por igual, duplicando el cromosoma 21.","Únicamente el número de autosomas, no los cromosomas sexuales."],
+      correct: 1 },
+    { q: "5. ¿Por qué es importante que el cuerpo regule estrictamente la división celular?",
+      options: ["Porque dividir células gasta demasiada energía y no aporta beneficios.","Porque una división descontrolada puede originar tumores y otras anomalías que afectan la salud.","Porque las células solo deben dividirse una vez en la vida.","Porque la regulación solo importa durante la etapa fetal."],
+      correct: 1 }
+  ];
+
+  var quizContainer = document.getElementById("quizContainer");
+  var scoreBadge = document.getElementById("scoreBadge");
+  var score = 0;
+  var quizAnswers = quizData.map(function(){ return { texto: "", correcta: "No respondida" }; });
+
+  function updateScore(){ scoreBadge.textContent = "Puntaje: " + score + " / " + quizData.length; }
+
+  quizData.forEach(function(item, qi){
+    var card = document.createElement("div");
+    card.className = "card quiz-card";
+    var qEl = document.createElement("p");
+    qEl.className = "quiz-q";
+    qEl.textContent = item.q;
+    card.appendChild(qEl);
+    var optWrap = document.createElement("div");
+    optWrap.className = "quiz-options";
+
+    item.options.forEach(function(optText, oi){
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "opt-btn";
+      btn.textContent = optText;
+      btn.addEventListener("click", function(){
+        var allBtns = optWrap.querySelectorAll(".opt-btn");
+        if (allBtns[0].disabled) return;
+        allBtns.forEach(function(b, bi){
+          b.disabled = true;
+          if (bi === item.correct) b.classList.add("correct");
+        });
+        var isCorrect = oi === item.correct;
+        if (isCorrect) score++; else btn.classList.add("incorrect");
+        quizAnswers[qi] = { texto: optText, correcta: isCorrect ? "Sí" : "No" };
+        updateScore();
+      });
+      optWrap.appendChild(btn);
+    });
+
+    card.appendChild(optWrap);
+    quizContainer.appendChild(card);
+  });
+  updateScore();
+
+  /* ---------------- Actividad manual: radio ---------------- */
+  var actividadValue = "";
+  var actividadButtons = Array.prototype.slice.call(document.querySelectorAll("#actividadRadio .radio-opt"));
+  actividadButtons.forEach(function(b){
+    b.addEventListener("click", function(){
+      actividadButtons.forEach(function(x){ x.classList.remove("active"); });
+      b.classList.add("active");
+      actividadValue = b.getAttribute("data-value");
+    });
+  });
+
+  /* ---------------- Envío a Google Sheets ---------------- */
+  var submitBtn = document.getElementById("submitBtn");
+  var submitMsg = document.getElementById("submitMsg");
+  var fallbackBox = document.getElementById("fallbackBox");
+  var fallbackText = document.getElementById("fallbackText");
+  var copyBtn = document.getElementById("copyBtn");
+
+  function val(id){ var el = document.getElementById(id); return el ? el.value.trim() : ""; }
+
+  function buildPayload(){
+    var totalScore = score + " / " + quizData.length;
+    return {
+      nombre: studentNameInput.value.trim(),
+      q1_respuesta: quizAnswers[0].texto, q1_correcta: quizAnswers[0].correcta,
+      q2_respuesta: quizAnswers[1].texto, q2_correcta: quizAnswers[1].correcta,
+      q3_respuesta: quizAnswers[2].texto, q3_correcta: quizAnswers[2].correcta,
+      q4_respuesta: quizAnswers[3].texto, q4_correcta: quizAnswers[3].correcta,
+      q5_respuesta: quizAnswers[4].texto, q5_correcta: quizAnswers[4].correcta,
+      puntaje: totalScore,
+      caso1_afirmacion: val("caso1_afirmacion"), caso1_evidencia: val("caso1_evidencia"), caso1_razonamiento: val("caso1_razonamiento"),
+      caso2_afirmacion: val("caso2_afirmacion"), caso2_evidencia: val("caso2_evidencia"), caso2_razonamiento: val("caso2_razonamiento"),
+      reflexion1: val("reflexion1"), reflexion2: val("reflexion2"), reflexion3: val("reflexion3"),
+      actividad_completada: actividadValue,
+      actividad_anomalia: val("actividadAnomalia")
+    };
+  }
+
+  function buildFallbackSummary(p){
+    var lines = [
+      "FICHA DE RESPUESTAS — Unidad 3, Sesión 3",
+      "Nombre: " + p.nombre,
+      "",
+      "QUIZ (puntaje " + p.puntaje + ")",
+      "1) " + p.q1_respuesta + " (correcta: " + p.q1_correcta + ")",
+      "2) " + p.q2_respuesta + " (correcta: " + p.q2_correcta + ")",
+      "3) " + p.q3_respuesta + " (correcta: " + p.q3_correcta + ")",
+      "4) " + p.q4_respuesta + " (correcta: " + p.q4_correcta + ")",
+      "5) " + p.q5_respuesta + " (correcta: " + p.q5_correcta + ")",
+      "",
+      "CASO 1",
+      "Afirmación: " + p.caso1_afirmacion,
+      "Evidencia: " + p.caso1_evidencia,
+      "Razonamiento: " + p.caso1_razonamiento,
+      "",
+      "CASO 2",
+      "Afirmación: " + p.caso2_afirmacion,
+      "Evidencia: " + p.caso2_evidencia,
+      "Razonamiento: " + p.caso2_razonamiento,
+      "",
+      "REFLEXIÓN",
+      "1) " + p.reflexion1,
+      "2) " + p.reflexion2,
+      "3) " + p.reflexion3,
+      "",
+      "ACTIVIDAD MANUAL",
+      "Completada: " + p.actividad_completada,
+      "Anomalía trabajada: " + p.actividad_anomalia
+    ];
+    return lines.join("\n");
+  }
+
+  function showFallback(payload){
+    fallbackText.value = buildFallbackSummary(payload);
+    fallbackBox.classList.add("show");
+  }
+
+  copyBtn.addEventListener("click", function(){
+    fallbackText.select();
+    try{ document.execCommand("copy"); copyBtn.textContent = "¡Copiado!"; }
+    catch(e){ copyBtn.textContent = "No se pudo copiar, selecciónalo manualmente"; }
+    setTimeout(function(){ copyBtn.textContent = "Copiar resumen"; }, 2000);
+  });
+
+  submitBtn.addEventListener("click", function(){
+    if (studentNameInput.value.trim().length < 2){
+      submitMsg.className = "submit-msg err";
+      submitMsg.textContent = "Falta tu nombre en la primera pantalla.";
+      goTo(0);
+      return;
+    }
+    if (!endpointConfigured){
+      var payload = buildPayload();
+      submitMsg.className = "submit-msg err";
+      submitMsg.textContent = "Esta ficha aún no está conectada a una planilla. Usa el resumen de abajo.";
+      showFallback(payload);
+      return;
+    }
+
+    var payload = buildPayload();
+    submitBtn.disabled = true;
+    submitMsg.className = "submit-msg";
+    submitMsg.textContent = "Enviando…";
+
+    fetch(SHEET_ENDPOINT, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    }).then(function(){
+      submitMsg.className = "submit-msg ok";
+      submitMsg.textContent = "✅ ¡Respuestas enviadas! Ya puedes cerrar esta ficha.";
+      submitBtn.textContent = "Enviado";
+    }).catch(function(){
+      submitMsg.className = "submit-msg err";
+      submitMsg.textContent = "No se pudo enviar (sin conexión). Usa el resumen de abajo.";
+      submitBtn.disabled = false;
+      showFallback(payload);
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
