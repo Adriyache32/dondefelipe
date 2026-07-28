@@ -5,22 +5,26 @@ on:
     - cron: '0 * * * *'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Sync upstream
+      - name: Sync via GitHub API
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPSTREAM_REPO: fjimenez321-stack/dondefelipe
+          UPSTREAM_BRANCH: main
         run: |
-          git remote add upstream https://github.com/fjimenez321-stack/dondefelipe.git
-          git fetch upstream
-          git merge upstream/main --no-edit || echo "Already up to date"
-
-      - name: Push
-        run: git push origin main
+          # Fetch upstream default branch
+          git clone --bare "https://x-access-token:${GH_TOKEN}@github.com/${UPSTREAM_REPO}.git" upstream.git
+          git clone --bare "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" fork.git
+          
+          cd fork.git
+          git fetch ../upstream.git ${UPSTREAM_BRANCH}:${UPSTREAM_BRANCH} --force
+          git update-ref "refs/heads/${UPSTREAM_BRANCH}" "FETCH_HEAD"
+          git push origin ${UPSTREAM_BRANCH}
+          
+          echo "✅ Synced with upstream"
