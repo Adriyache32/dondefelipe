@@ -100,27 +100,31 @@ MUNDO.forma('habitat', function (H, color, b, ob) {
     H.pieza('caja', '#484d52', 'metal', b, [-R + k*(2*R/6), 0.67, 0], [0,0,0], [0.1, 0.02, 2*R], 0);
   }
 
-  // MURO CILÍNDRICO OPACO: segmentos de caja alrededor, dejando un vano para la puerta
-  var seg = 28;
+  // MURO CILÍNDRICO OPACO: segmentos de caja alrededor, dejando un vano para la
+  // puerta. Más segmentos y paneles más anchos (solape) = muro sin costuras.
+  var seg = 40;
+  var anchoPanel = 2*Math.PI*R/seg + 1.0;   // +1.0 de solape: sin huecos entre paneles
   for (var i = 0; i < seg; i++) {
     var a = i / seg * 6.2832;
     // hueco para la puerta: saltar los segmentos frontales (cerca de a=PI/2, +z)
     var ang = a;
-    var frente = Math.abs(ang - Math.PI/2) < 0.16;   // vano ajustado al frente (+z)
+    var frente = Math.abs(ang - Math.PI/2) < 0.18;   // vano ajustado al frente (+z)
     if (frente) continue;
     var x = Math.cos(a) * R, z = Math.sin(a) * R;
     H.pieza('caja', color, 'solido', b, [x, ALTO/2 + 0.6, z], [0, a*57.3 + 90, 0],
-      [2*Math.PI*R/seg + 0.3, ALTO, 0.4], 0);
+      [anchoPanel, ALTO, 0.4], 0);
     // franja de color inferior
     H.pieza('caja', '#3f5568', 'solido', b, [x, 1.1, z], [0, a*57.3 + 90, 0],
-      [2*Math.PI*R/seg + 0.3, 0.5, 0.42], 0);
+      [anchoPanel, 0.5, 0.42], 0);
     // ventanilla ocasional (opaca oscura, no atraviesa)
-    if (i % 4 === 0) H.pieza('caja', '#243541', 'solido', b, [x, 3.4, z], [0, a*57.3 + 90, 0],
+    if (i % 5 === 0) H.pieza('caja', '#243541', 'solido', b, [x, 3.4, z], [0, a*57.3 + 90, 0],
       [1.1, 1, 0.44], 0);
   }
 
-  // TECHO HERMÉTICO: media esfera sólida completa (sin huecos entre gajos)
-  H.pieza('esfera', color, 'solido', b, [0, ALTO + 0.6, 0], [0,0,0], [R+0.4, R*0.6, R+0.4], 0);
+  // TECHO HERMÉTICO: media esfera de DOBLE CARA (se ve desde dentro y desde
+  // fuera; con 'solido' el techo desaparecía visto desde el interior, sobre
+  // todo en el vacío sin niebla que lo disimulara).
+  H.pieza('esfera', color, 'domo', b, [0, ALTO + 0.6, 0], [0,0,0], [R+0.4, R*0.6, R+0.4], 0);
   // anillo de unión muro-techo
   H.pieza('cilindro', '#6a7078', 'solido', b, [0, ALTO + 0.6, 0], [0,0,0], [R+0.45, 0.5, R+0.45], 0);
   // costillas estructurales sobre la cúpula (decorativas, por fuera)
@@ -336,7 +340,7 @@ var MUROS_BASE = (function () {
   var R = 16, seg = 44, muros = [];
   for (var i = 0; i < seg; i++) {
     var a = i / seg * 6.2832;
-    if (Math.abs(a - Math.PI/2) < 0.16) continue;   // hueco de la puerta (ajustado)
+    if (Math.abs(a - Math.PI/2) < 0.18) continue;   // hueco de la puerta (alineado con el muro visual)
     muros.push({ r: 1.3, dx: Math.cos(a) * R, dz: Math.sin(a) * R, alto: 5, base: 0 });
   }
   return muros;
@@ -413,6 +417,9 @@ window.MUNDOS.mercurio = {
         // si ya está rota, no se dibuja
       } else {
         _deco.push({ x: x, y: t*0.4, z: z, s: t });
+        // solo las rocas grandes bloquean el paso; los guijarros se pueden pisar.
+        // La colisión queda etiquetada con el sector y se borra al descargarlo.
+        if (t > 1.1 && S.chocaCilindro) S.chocaCilindro(x, z, t*0.55, 0, t*0.9);
       }
     }
     // volcar las decorativas a una InstancedMesh colgada del grupo por object3D
@@ -616,7 +623,8 @@ window.MUNDOS.mercurio = {
     // Cráter Kuiper: joven, con rayos brillantes
     { forma: 'rayos', color: '#d8d2c4', pos: [24, 0.05, -14], rayos: 10,
       nombre: 'Cráter Kuiper', ficha: 'kuiper', altoFicha: 2.5 },
-    { forma: 'crater', color: '#6e675f', pos: [24, 0.05, -14], radio: 4 },
+    { forma: 'crater', color: '#6e675f', pos: [24, 0.05, -14], radio: 4,
+      nombre: 'Cráter de impacto', ficha: 'crater', altoFicha: 2.6 },
     // Escarpe de Discovery: un gran acantilado de contracción del planeta
     { forma: 'escarpe', color: '#847b70', pos: [40, 0.05, 10], giro: 20,
       largo: 44, alto: 5, nombre: 'Escarpe Discovery', ficha: 'escarpe', altoFicha: 6 },
@@ -708,6 +716,7 @@ window.MUNDOS.mercurio = {
           opciones: [
             { dice: 'Activar el oxígeno', accion: 'activarOxigeno', va: 'activado' },
             { dice: '¿Cómo funciona?', va: 'info' },
+            { dice: 'Ver la ficha del sistema', ficha: 'oxigeno', va: null },
             { dice: 'Cerrar', va: null }
           ]
         },
@@ -736,6 +745,7 @@ window.MUNDOS.mercurio = {
           opciones: [
             { dice: 'Abrir el analizador', accion: 'abrirLaboratorio', va: null },
             { dice: '¿Qué busco en las muestras?', va: 'info' },
+            { dice: 'Ver la ficha del laboratorio', ficha: 'laboratorio', va: null },
             { dice: 'Cerrar', va: null }
           ]
         },

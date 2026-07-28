@@ -893,6 +893,19 @@ OBJ.push({ forma: 'agua', color: '#4a7a8a', pos: [37, 0.16, SUB_CZ - 2], dim: [8
 OBJ.push({ forma: 'agua', color: '#4a7a8a', pos: [45, 0.16, SUB_CZ + 2], dim: [7, 6] });
 OBJ.push({ forma: 'agua', color: '#4a7a8a', pos: [27, 0.16, SUB_CZ + 1], dim: [5, 5] });
 
+// SALA DE CONTROL: la forma existía pero nunca se había colocado, así que su
+// ficha no se podía abrir y la vista 'control' apuntaba a un lugar vacío.
+OBJ.push({ forma: 'salaControl', color: '#c8ccd0', pos: [22, 0.15, 6], giro: 0,
+           nombre: 'Sala de control', ficha: 'control', altoFicha: 4.4,
+           piso: { ancho: 7, largo: 11, alto: 0.2, color: '#b0aa9e' },
+           choca: [
+             { dx: -3.5, dz: 0, ancho: 0.3, largo: 11, base: 0, alto: 3.4 },
+             { dx: 3.5,  dz: 0, ancho: 0.3, largo: 11, base: 0, alto: 3.4 },
+             { dx: 0, dz: -5.5, ancho: 7, largo: 0.3, base: 0, alto: 3.4 },
+             { dx: -2.2, dz: 5.5, ancho: 2.6, largo: 0.3, base: 0, alto: 3.4 },
+             { dx: 2.2,  dz: 5.5, ancho: 2.6, largo: 0.3, base: 0, alto: 3.4 }
+           ] });
+
 // Gente en el paso
 OBJ.push({ forma: 'persona', pos: [33, 0.15, SUB_CZ - 3], giro: 180,
   cuerpo: { altura: 1.66, piel: '#c88d6b', pelo: '#241b16', chaqueta: '#3f5d6b',

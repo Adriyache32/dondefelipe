@@ -301,6 +301,107 @@ MUNDO.forma('venusHito', function (H, color, b) {
    CONFIGURACIÓN DEL MUNDO
    ============================================================================ */
 
+
+
+/* ---------------------------------------------------------------------------
+   BASE AURELIA — el gran habitáculo presurizado
+   Inspirada en el "Hab" de The Martian: cúpula grande, esclusa, túnel e
+   invernadero. Pero en Venus no puede ser una carpa inflable: a 92 bar y 460 °C
+   el casco tiene que ser un recipiente a presión con nervaduras, como un
+   batiscafo. Esa diferencia es justamente el contenido de la ficha.
+   --------------------------------------------------------------------------- */
+MUNDO.forma('baseVenus', function (H, color, b) {
+  var R = 13, ALTO = 4.6, Y1 = 4.7;   // radio, altura del anillo, entrepiso
+
+  // ---- ANILLO EXTERIOR: casco de acero con nervaduras verticales ----
+  var seg = 44;
+  var panel = 2 * Math.PI * R / seg + 1.1;
+  for (var i = 0; i < seg; i++) {
+    var a = i / seg * 6.2832;
+    if (Math.abs(a - Math.PI / 2) < 0.17) continue;      // vano de la esclusa
+    var x = Math.cos(a) * R, z = Math.sin(a) * R;
+    var gy = a * 57.3 + 90;
+    H.pieza('caja', color, 'metal', b, [x, ALTO / 2, z], [0, gy, 0], [panel, ALTO, 0.55], 0);
+    H.pieza('caja', '#7d8894', 'metal', b, [x, ALTO / 2, z], [0, gy, 0], [0.34, ALTO, 0.75], 0);
+    H.pieza('caja', '#57626e', 'metal', b, [x, 0.5, z], [0, gy, 0], [panel, 0.7, 0.62], 0);
+    H.pieza('caja', color, 'metal', b, [x, ALTO + 0.6, z], [0, gy, 0], [panel, 1.2, 0.5], 0);
+    if (i % 4 === 0)
+      H.pieza('caja', '#2a3a44', 'vidrio', b, [x, 2.9, z], [0, gy, 0], [1.5, 1.1, 0.66], 0);
+  }
+  // cúpula de doble cara (se ve desde dentro y desde fuera)
+  H.pieza('esfera', color, 'domo', b, [0, ALTO + 1.1, 0], [0, 0, 0], [R + 0.5, R * 0.62, R + 0.5], 0);
+  for (var c = 0; c < 12; c++) {
+    var ac = c / 12 * 6.2832;
+    H.pieza('caja', '#7d8894', 'metal', b, [Math.cos(ac) * R * 0.52, ALTO + 4.3, Math.sin(ac) * R * 0.52],
+      [0, ac * 57.3, 22], [0.3, 0.3, R * 1.05], 0);
+  }
+
+  // ---- ENTREPISO (pasarela anular, con el hueco de la escalera) ----
+  H.pieza('caja', '#8e99a4', 'metal', b, [0, Y1 - 0.16, -4.5], [0, 0, 0], [24, 0.32, 13], 0);
+  H.pieza('caja', '#8e99a4', 'metal', b, [-8, Y1 - 0.16, 4], [0, 0, 0], [8, 0.32, 4], 0);
+  for (var r = 0; r < 12; r++)
+    H.pieza('caja', '#6d7a86', 'metal', b, [-11.5 + r * 2.1, Y1 + 0.55, 1.9], [0, 0, 0], [0.08, 1.1, 0.08], 0);
+  H.pieza('caja', '#6d7a86', 'metal', b, [0, Y1 + 1.1, 1.9], [0, 0, 0], [23, 0.1, 0.1], 0);
+
+  // ---- ESCLUSA de entrada: doble puerta, como corresponde ----
+  H.pieza('caja', '#8e99a4', 'metal', b, [0, 1.7, R + 1.6], [0, 0, 0], [5.2, 3.4, 4], 0);
+  H.pieza('caja', '#39434d', 'metal', b, [0, 1.5, R + 3.62], [0, 0, 0], [2.2, 3, 0.2], 0);
+  H.pieza('caja', '#c8a33a', 'brillo', b, [1.4, 2.4, R + 3.65], [0, 0, 0], [0.22, 0.22, 0.1], 0.2);
+  [-2.6, 2.6].forEach(function (dx) {
+    H.pieza('cilindro', '#7d8894', 'metal', b, [dx, 1.7, R + 3.4], [0, 0, 0], [0.2, 3.4, 0.2], 0);
+  });
+
+  // ---- INVERNADERO: cúpula menor unida por un túnel (la "granja de papas") ----
+  var GX = -20;
+  H.pieza('caja', '#8e99a4', 'metal', b, [GX / 2 - 5.5, 1.5, 0], [0, 0, 0], [11, 3, 3.4], 0);
+  for (var tu = 0; tu < 5; tu++)
+    H.pieza('caja', '#7d8894', 'metal', b, [GX / 2 - 9.5 + tu * 2.2, 1.5, 0], [0, 0, 0], [0.26, 3.1, 3.6], 0);
+  var R2 = 7.5;
+  for (var j = 0; j < 30; j++) {
+    var aj = j / 30 * 6.2832;
+    if (Math.abs(aj) < 0.28) continue;                    // boca del túnel
+    var xj = GX + Math.cos(aj) * R2, zj = Math.sin(aj) * R2;
+    H.pieza('caja', '#9aa6b0', 'metal', b, [xj, 1.6, zj], [0, aj * 57.3 + 90, 0],
+      [2 * Math.PI * R2 / 30 + 0.9, 3.2, 0.45], 0);
+    if (j % 3 === 0)
+      H.pieza('caja', '#2f4a44', 'vidrio', b, [xj, 2.1, zj], [0, aj * 57.3 + 90, 0], [1.5, 1.5, 0.55], 0);
+  }
+  H.pieza('esfera', '#9aa6b0', 'domo', b, [GX, 3.1, 0], [0, 0, 0], [R2 + 0.4, R2 * 0.66, R2 + 0.4], 0);
+  // bancales de cultivo bajo lámparas
+  [-3.4, 0, 3.4].forEach(function (dz) {
+    H.pieza('caja', '#5c4a34', 'solido', b, [GX, 0.45, dz], [0, 0, 0], [9, 0.9, 2], 0);
+    H.pieza('caja', '#3f5a2c', 'follaje', b, [GX, 1.0, dz], [0, 0, 0], [8.6, 0.35, 1.7], 0.08);
+    H.pieza('caja', '#e8d8a0', 'brillo', b, [GX, 3.3, dz], [0, 0, 0], [8, 0.14, 0.5], 0.15);
+  });
+
+  // ---- INTERIOR DE LA CÚPULA MAYOR ----
+  // puesto de mando con pantallas
+  H.pieza('caja', '#2f363d', 'metal', b, [6, 0.55, -6], [0, -30, 0], [5, 1.1, 1.8], 0);
+  [-1.4, 0, 1.4].forEach(function (dx) {
+    H.pieza('caja', '#1b6b7a', 'brillo', b, [6 + dx * 0.9, 1.6, -6.6], [0, -30, 0], [1.3, 0.9, 0.08], 0.14);
+  });
+  // literas
+  [[-7, -7], [-7, -3.5]].forEach(function (q) {
+    H.pieza('caja', '#8e99a4', 'metal', b, [q[0], 0.5, q[1]], [0, 0, 0], [2.4, 0.25, 1.5], 0);
+    H.pieza('caja', '#d8d2c4', 'solido', b, [q[0], 0.68, q[1]], [0, 0, 0], [2.3, 0.2, 1.4], 0);
+    H.pieza('caja', '#8e99a4', 'metal', b, [q[0], 1.9, q[1]], [0, 0, 0], [2.4, 0.25, 1.5], 0);
+    H.pieza('caja', '#d8d2c4', 'solido', b, [q[0], 2.08, q[1]], [0, 0, 0], [2.3, 0.2, 1.4], 0);
+    H.pieza('caja', '#6d7a86', 'metal', b, [q[0] - 1.15, 1.2, q[1]], [0, 0, 0], [0.12, 2.4, 1.5], 0);
+  });
+  // mesa común
+  H.pieza('caja', '#8a8f94', 'metal', b, [0, 0.78, -2], [0, 0, 0], [3.4, 0.12, 2.2], 0);
+  [[-1.5,-0.9],[1.5,-0.9],[-1.5,0.9],[1.5,0.9]].forEach(function (q) {
+    H.pieza('cilindro', '#6d7a86', 'metal', b, [q[0], 0.39, -2 + q[1]], [0,0,0], [0.09, 0.78, 0.09], 0);
+  });
+  // procesador de CO2 y reciclador de agua
+  H.pieza('cilindro', '#7d8894', 'metal', b, [9, 1.5, 4], [0, 0, 0], [1.5, 3, 1.5], 0);
+  H.pieza('cilindro', '#3f7a9a', 'metal', b, [11.2, 1.1, 6], [0, 0, 0], [1, 2.2, 1], 0);
+  H.pieza('caja', '#c8a33a', 'brillo', b, [9, 3.15, 4], [0, 0, 0], [0.5, 0.16, 0.5], 0.2);
+  // paneles del entrepiso: banco de baterías y taller
+  H.pieza('caja', '#2f363d', 'metal', b, [-6, Y1 + 0.6, -7], [0, 0, 0], [5, 1.2, 1.6], 0);
+  H.pieza('caja', '#8a8f94', 'metal', b, [5, Y1 + 0.5, -7.5], [0, 0, 0], [4.4, 0.12, 1.6], 0);
+}, 20);
+
 window.MUNDOS.venus = {
 
   titulo: 'Venus · el planeta invernadero',
@@ -740,7 +841,84 @@ window.MUNDOS.venus = {
      OBJETOS IMPORTANTES
      ------------------------------------------------------------------------- */
 
+  // Luces del interior de la base y del invernadero
+  luces: [
+    { pos: [0, 4, -2],    color: '#dce8f0', intensidad: 0.7, alcance: 20 },
+    { pos: [0, 8.5, -4],  color: '#dce8f0', intensidad: 0.5, alcance: 18 },
+    { pos: [-20, 3.4, 0], color: '#ffe8b0', intensidad: 0.9, alcance: 16 },
+    { pos: [0, 2.2, 15.6], color: '#c8a33a', intensidad: 0.5, alcance: 7 }
+  ],
+
   objetos: [
+    /* ---------- BASE AURELIA: el gran habitáculo ----------
+       Dos niveles pisables, escalera, esclusa, túnel e invernadero. El anillo
+       de colisión reproduce el casco dejando libre el vano de la esclusa. */
+    {
+      forma: 'baseVenus', color: '#b9c3cb', pos: [0, 0.05, 0],
+      nombre: 'Base Aurelia', ficha: 'base', altoFicha: 13,
+      pisos: [
+        { dx: 0,  dz: 0,    ancho: 26, largo: 26, alto: 0.15, color: '#8e99a4' },
+        { dx: 0,  dz: -4.5, ancho: 24, largo: 13, alto: 4.70, color: '#8e99a4' },
+        { dx: -8, dz: 4,    ancho: 8,  largo: 4,  alto: 4.70, color: '#8e99a4' },
+        { dx: -20, dz: 0,   ancho: 15, largo: 15, alto: 0.15, color: '#6d6250' },
+        { dx: -9.5, dz: 0,  ancho: 11, largo: 3.4, alto: 0.15, color: '#8e99a4' },
+        { dx: 0,  dz: 15.6, ancho: 5.2, largo: 4, alto: 0.15, color: '#8e99a4' }
+      ],
+      escalones: [
+        { dx: 8, dz: 6, ancho: 2.6, largo: 9, alto: 4.55, base: 0.15, pasos: 18, color: '#9aa6b0' }
+      ],
+      choca: [
+      { dx: 13.00, dz: 0.00, r: 0.62, base: 0, alto: 5.8 },
+      { dx: 12.87, dz: 1.85, r: 0.62, base: 0, alto: 5.8 },
+      { dx: 12.47, dz: 3.66, r: 0.62, base: 0, alto: 5.8 },
+      { dx: 11.83, dz: 5.40, r: 0.62, base: 0, alto: 5.8 },
+      { dx: 10.94, dz: 7.03, r: 0.62, base: 0, alto: 5.8 },
+      { dx: 9.82, dz: 8.51, r: 0.62, base: 0, alto: 5.8 },
+      { dx: 8.51, dz: 9.82, r: 0.62, base: 0, alto: 5.8 },
+      { dx: 7.03, dz: 10.94, r: 0.62, base: 0, alto: 5.8 },
+      { dx: 5.40, dz: 11.83, r: 0.62, base: 0, alto: 5.8 },
+      { dx: 3.66, dz: 12.47, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -3.66, dz: 12.47, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -5.40, dz: 11.83, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -7.03, dz: 10.94, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -8.51, dz: 9.82, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -9.82, dz: 8.51, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -10.94, dz: 7.03, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -11.83, dz: 5.40, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -12.47, dz: 3.66, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -12.87, dz: 1.85, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -13.00, dz: 0.00, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -12.87, dz: -1.85, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -12.47, dz: -3.66, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -11.83, dz: -5.40, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -10.94, dz: -7.03, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -9.82, dz: -8.51, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -8.51, dz: -9.82, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -7.03, dz: -10.94, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -5.40, dz: -11.83, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -3.66, dz: -12.47, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -1.85, dz: -12.87, r: 0.62, base: 0, alto: 5.8 },
+      { dx: -0.00, dz: -13.00, r: 0.62, base: 0, alto: 5.8 },
+      { dx: 1.85, dz: -12.87, r: 0.62, base: 0, alto: 5.8 },
+      { dx: 3.66, dz: -12.47, r: 0.62, base: 0, alto: 5.8 },
+      { dx: 5.40, dz: -11.83, r: 0.62, base: 0, alto: 5.8 },
+      { dx: 7.03, dz: -10.94, r: 0.62, base: 0, alto: 5.8 },
+      { dx: 8.51, dz: -9.82, r: 0.62, base: 0, alto: 5.8 },
+      { dx: 9.82, dz: -8.51, r: 0.62, base: 0, alto: 5.8 },
+      { dx: 10.94, dz: -7.03, r: 0.62, base: 0, alto: 5.8 },
+      { dx: 11.83, dz: -5.40, r: 0.62, base: 0, alto: 5.8 },
+      { dx: 12.47, dz: -3.66, r: 0.62, base: 0, alto: 5.8 },
+      { dx: 12.87, dz: -1.85, r: 0.62, base: 0, alto: 5.8 },
+        // esclusa: dos costados y el frente con su puerta
+        { dx: -2.6, dz: 15.6, ancho: 0.3, largo: 4, base: 0, alto: 3.4 },
+        { dx: 2.6,  dz: 15.6, ancho: 0.3, largo: 4, base: 0, alto: 3.4 },
+        // túnel al invernadero: dos paredes laterales
+        { dx: -9.5, dz: -1.75, ancho: 11, largo: 0.3, base: 0, alto: 3 },
+        { dx: -9.5, dz: 1.75,  ancho: 11, largo: 0.3, base: 0, alto: 3 },
+        // baranda del entrepiso
+        { dx: 0, dz: 1.9, ancho: 23, largo: 0.12, base: 4.7, alto: 1.1 }
+      ]
+    },
 
     {
 
@@ -911,6 +1089,13 @@ window.MUNDOS.venus = {
      ========================================================================== */
 
   fichas: [
+    {
+      id: 'base', nombre: 'Base Aurelia', rango: 'Por qué no puede ser el Hab de The Martian',
+      texto: 'En la película The Martian el hábitat es una carpa inflable de lona: en Marte basta con eso, porque la presión exterior es casi nula y el problema es retener el aire de adentro. En Venus ocurre lo contrario y con una violencia enorme. La atmósfera empuja hacia adentro con unas 92 atmósferas, la misma presión que hay a 900 metros bajo el mar, y la temperatura ronda los 460 °C. Un hábitat aquí no se parece a una carpa: se parece a un batiscafo. Por eso esta base es un casco de acero con nervaduras, ventanas pequeñas y gruesas, y una esclusa de doble puerta.',
+      vida: ['Casco a presión con nervaduras, no lona inflable', 'La presión empuja hacia ADENTRO, no hacia afuera', 'Ventanas pequeñas: cada abertura debilita el casco', 'Esclusa de doble puerta para no perder la atmósfera interior', 'Invernadero unido por túnel, con luz artificial'],
+      reto: 'En Marte el hábitat se infla y la presión interior lo sostiene. En Venus, inflarlo lo aplastaría igual. Explica por qué, usando la diferencia de presión entre el interior y el exterior en cada planeta.',
+      actividad: 'Recorre la base y anota tres decisiones de diseño que existen por causa de la presión y tres que existen por causa del calor. Después dibuja cómo sería esta misma base en Marte.'
+    },
 
 
     /* -----------------------------------------------------------------------
