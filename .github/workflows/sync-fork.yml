@@ -9,10 +9,20 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Sync fork with upstream
-        uses: repo-sync/github-sync@v2
-        with:
-          source_repo: "fjimenez321-stack/dondefelipe"
-          source_branch: "main"
-          destination_branch: "main"
-          github_token: ${{ secrets.PAT_TOKEN }}
+      - name: Test secret
+        run: echo "Token length: ${{ secrets.PAT_TOKEN }}"
+      
+      - name: Clone upstream
+        env:
+          PAT: ${{ secrets.PAT_TOKEN }}
+        run: |
+          git config --global user.name "Adriyache32"
+          git config --global user.email "bot@adriyache32.github.io"
+          git clone "https://x-access-token:${PAT}@github.com/fjimenez321-stack/dondefelipe.git" upstream
+          git clone "https://x-access-token:${PAT}@github.com/${{ github.repository }}.git" fork
+          cd fork
+          git remote add upstream ../upstream
+          git fetch upstream main
+          git merge upstream/main --no-edit
+          git push origin main
+          echo "✅ Synced successfully"
