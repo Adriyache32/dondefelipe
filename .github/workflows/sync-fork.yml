@@ -5,26 +5,14 @@ on:
     - cron: '0 * * * *'
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Sync via GitHub API
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          UPSTREAM_REPO: fjimenez321-stack/dondefelipe
-          UPSTREAM_BRANCH: main
-        run: |
-          # Fetch upstream default branch
-          git clone --bare "https://x-access-token:${GH_TOKEN}@github.com/${UPSTREAM_REPO}.git" upstream.git
-          git clone --bare "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" fork.git
-          
-          cd fork.git
-          git fetch ../upstream.git ${UPSTREAM_BRANCH}:${UPSTREAM_BRANCH} --force
-          git update-ref "refs/heads/${UPSTREAM_BRANCH}" "FETCH_HEAD"
-          git push origin ${UPSTREAM_BRANCH}
-          
-          echo "✅ Synced with upstream"
+      - name: Sync fork with upstream
+        uses: repo-sync/github-sync@v2
+        with:
+          source_repo: "fjimenez321-stack/dondefelipe"
+          source_branch: "main"
+          destination_branch: "main"
+          github_token: ${{ secrets.PAT_TOKEN }}
