@@ -1,5 +1,4 @@
 name: Sync Fork
-
 on:
   schedule:
     - cron: '0 * * * *'
@@ -9,20 +8,16 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Test secret
-        run: echo "Token length: ${{ secrets.PAT_TOKEN }}"
-      
-      - name: Clone upstream
-        env:
-          PAT: ${{ secrets.PAT_TOKEN }}
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT_TOKEN }}
+      - name: Sync
         run: |
-          git config --global user.name "Adriyache32"
-          git config --global user.email "bot@adriyache32.github.io"
-          git clone "https://x-access-token:${PAT}@github.com/fjimenez321-stack/dondefelipe.git" upstream
-          git clone "https://x-access-token:${PAT}@github.com/${{ github.repository }}.git" fork
-          cd fork
-          git remote add upstream ../upstream
+          git remote add upstream https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/fjimenez321-stack/dondefelipe.git
           git fetch upstream main
+          git config user.name "bot"
+          git config user.email "bot@adriyache32.github.io"
           git merge upstream/main --no-edit
           git push origin main
-          echo "✅ Synced successfully"
+          echo "✅ Synced"
