@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Ondas, Sonido y Luz — Compilado General</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0e1a; --bg-elevated:#12162a; --bg-elevated-2:#171c34;
+    --ink:#f5f3ec; --ink-dim:#9aa0b8; --line:rgba(245,243,236,0.12);
+    --violet:#7c3aed; --blue:#2563eb; --cyan:#06b6d4; --green:#22c55e;
+    --yellow:#eab308; --orange:#f97316; --red:#ef4444;
+    --spectrum:linear-gradient(90deg,var(--violet),var(--blue),var(--cyan),var(--green),var(--yellow),var(--orange),var(--red));
+    --accent:#7c3aed;
+  }
+  *,*::before,*::after{box-sizing:border-box;}
+  html,body{height:100%;height:100dvh;overscroll-behavior:none;}
+  body{
+    margin:0;
+    background:radial-gradient(ellipse at 15% -10%, rgba(124,58,237,0.16), transparent 45%),
+      radial-gradient(ellipse at 100% 110%, rgba(239,68,68,0.10), transparent 45%), var(--bg);
+    color:var(--ink);font-family:'Inter',system-ui,sans-serif;overflow:hidden;
+    -webkit-font-smoothing:antialiased;text-size-adjust:100%;-webkit-text-size-adjust:100%;
+  }
+  h1,h2,h3{font-family:'Space Grotesk','Inter',system-ui,sans-serif;margin:0;font-weight:600;letter-spacing:-0.01em;}
+  p{margin:0;}
+  button{font-family:inherit;}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+  .deck{position:relative;width:100vw;height:100vh;height:100dvh;}
+  .slide{
+    position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;
+    padding:7vh 8vw 12vh 8vw;
+    padding-top:max(7vh, env(safe-area-inset-top));padding-right:max(8vw, env(safe-area-inset-right));
+    padding-left:max(8vw, env(safe-area-inset-left));padding-bottom:calc(12vh + env(safe-area-inset-bottom));
+    opacity:0;transform:translateY(18px);pointer-events:none;
+    transition:opacity .5s ease, transform .5s ease;overflow:hidden auto;-webkit-overflow-scrolling:touch;
+  }
+  .slide.active{opacity:1;transform:translateY(0);pointer-events:auto;}
+  .slide-inner{max-width:1160px;width:100%;margin:0 auto;}
+
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:0.78rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:0.9rem;}
+  .eyebrow::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:8px;vertical-align:middle;box-shadow:0 0 8px var(--accent);}
+  h1.title{font-size:clamp(1.85rem,4vw,3.1rem);line-height:1.08;max-width:920px;}
+  .underline{height:4px;width:76px;border-radius:2px;background:var(--accent);margin:1rem 0 1.2rem 0;}
+  .lede{font-size:clamp(1rem,1.3vw,1.12rem);color:var(--ink-dim);max-width:720px;line-height:1.6;margin-bottom:1.2rem;}
+  .body-text{font-size:clamp(0.95rem,1.15vw,1.05rem);line-height:1.68;color:var(--ink);max-width:720px;}
+  .body-text + .body-text{margin-top:0.85rem;}
+
+  .card{background:var(--bg-elevated);border:1px solid var(--line);border-radius:14px;padding:1.2rem 1.35rem;}
+  .card h3{font-size:0.98rem;margin-bottom:0.45rem;}
+  .card p{font-size:0.88rem;color:var(--ink-dim);line-height:1.55;}
+  .card.accented{border-top:3px solid var(--accent);}
+  .card-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-top:1.1rem;}
+  @media (max-width:900px){.card-row{grid-template-columns:1fr;}}
+
+  .formula{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:clamp(0.95rem,1.5vw,1.2rem);background:var(--bg-elevated);border:1px solid var(--line);border-left:3px solid var(--accent);padding:0.6rem 1rem;border-radius:8px;margin:0.7rem 0;color:var(--ink);}
+  .think{margin-top:1.1rem;padding:0.8rem 1.05rem;background:rgba(255,255,255,0.03);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;font-size:0.88rem;color:var(--ink-dim);max-width:680px;}
+  .think b{color:var(--ink);font-weight:600;}
+
+  .field{margin-bottom:1rem;max-width:420px;}
+  .field label{display:block;font-family:'JetBrains Mono',monospace;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-dim);margin-bottom:0.4rem;}
+  .field input[type="text"]{
+    width:100%;background:var(--bg-elevated-2);border:1px solid var(--line);border-radius:8px;
+    padding:0.65rem 0.85rem;color:var(--ink);font-family:'Inter',sans-serif;font-size:0.95rem;
+  }
+  .field input[type="text"]:focus{outline:2px solid var(--cyan);outline-offset:1px;border-color:var(--cyan);}
+
+  .aer-example{background:var(--bg-elevated);border:1px solid var(--line);border-radius:14px;padding:1.1rem 1.3rem;margin-top:1rem;}
+  .aer-example .aer-row{display:flex;gap:0.6rem;margin-bottom:0.55rem;font-size:0.88rem;line-height:1.5;}
+  .aer-example .aer-tag{flex:none;width:118px;font-family:'JetBrains Mono',monospace;font-size:0.72rem;text-transform:uppercase;padding-top:0.1rem;}
+  .aer-example .aer-tag.afirm{color:var(--cyan);} .aer-example .aer-tag.evid{color:var(--green);} .aer-example .aer-tag.razon{color:var(--orange);}
+
+  .aer-field{margin-bottom:1rem;}
+  .aer-field label{display:block;font-family:'JetBrains Mono',monospace;font-size:0.74rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.35rem;}
+  .aer-field.afirm label{color:var(--cyan);} .aer-field.evid label{color:var(--green);} .aer-field.razon label{color:var(--orange);}
+  .aer-field textarea{
+    width:100%;background:var(--bg-elevated-2);border:1px solid var(--line);border-radius:8px;
+    padding:0.7rem 0.9rem;color:var(--ink);font-family:'Inter',sans-serif;font-size:0.9rem;
+    resize:vertical;min-height:60px;line-height:1.5;
+  }
+  .aer-field textarea:focus{outline:2px solid var(--cyan);outline-offset:1px;border-color:var(--cyan);}
+
+  .compare-table{width:100%;border-collapse:collapse;margin-top:1rem;font-size:0.88rem;}
+  .compare-table th,.compare-table td{padding:0.55rem 0.85rem;text-align:left;border-bottom:1px solid var(--line);}
+  .compare-table th{font-family:'JetBrains Mono',monospace;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-dim);}
+  .compare-table td.sound{color:var(--orange);} .compare-table td.light{color:var(--cyan);}
+
+  .btn-primary{font-family:'JetBrains Mono',monospace;font-size:0.85rem;font-weight:600;background:var(--spectrum);color:#0b0e1a;border:none;border-radius:10px;padding:0.65rem 1.2rem;cursor:pointer;letter-spacing:0.02em;}
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-primary:disabled{opacity:0.5;cursor:default;filter:none;}
+  .btn-ghost{font-family:'JetBrains Mono',monospace;font-size:0.82rem;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:0.6rem 1.1rem;cursor:pointer;}
+  .btn-ghost:hover{border-color:var(--ink-dim);}
+
+  .quiz-list{display:flex;flex-direction:column;gap:0.9rem;margin-top:1.1rem;}
+  .quiz-q{background:var(--bg-elevated);border:1px solid var(--line);border-radius:12px;padding:1rem 1.2rem;}
+  .quiz-question{font-size:0.92rem;color:var(--ink);margin-bottom:0.75rem;line-height:1.5;}
+  .quiz-options{display:grid;grid-template-columns:1fr 1fr;gap:0.55rem;}
+  .quiz-opt{background:var(--bg-elevated-2);border:1px solid var(--line);border-radius:8px;padding:0.5rem 0.8rem;text-align:left;color:var(--ink);cursor:pointer;font-size:0.83rem;transition:border-color .15s ease, background .15s ease;}
+  .quiz-opt:hover{border-color:var(--ink-dim);}
+  .quiz-opt.correct{background:rgba(34,197,94,0.16);border-color:var(--green);}
+  .quiz-opt.correct::after{content:' ✓';color:var(--green);font-weight:700;}
+  .quiz-opt.incorrect{background:rgba(239,68,68,0.16);border-color:var(--red);}
+  .quiz-opt.incorrect::after{content:' ✗';color:var(--red);font-weight:700;}
+
+  .review-box{background:var(--bg-elevated);border:1px solid var(--line);border-radius:14px;padding:1.2rem 1.4rem;margin-top:1rem;max-width:520px;}
+  .review-row{display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--line);font-size:0.9rem;}
+  .review-row:last-child{border-bottom:none;}
+  .review-row span:first-child{color:var(--ink-dim);}
+  .review-row span:last-child{color:var(--ink);font-weight:600;}
+  .submit-status{margin-top:1rem;font-size:0.88rem;padding:0.7rem 1rem;border-radius:8px;display:none;}
+  .submit-status.show{display:block;}
+  .submit-status.sending{background:rgba(255,255,255,0.05);color:var(--ink-dim);}
+  .submit-status.ok{background:rgba(34,197,94,0.14);color:var(--green);border:1px solid var(--green);}
+  .submit-status.err{background:rgba(239,68,68,0.14);color:var(--red);border:1px solid var(--red);}
+  .submit-status.warn{background:rgba(234,179,8,0.14);color:var(--yellow);border:1px solid var(--yellow);}
+
+  .controls{position:fixed;left:0;right:0;bottom:0;height:calc(70px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);display:flex;align-items:center;justify-content:space-between;padding-left:max(6vw, env(safe-area-inset-left));padding-right:max(6vw, env(safe-area-inset-right));z-index:60;background:linear-gradient(to top, rgba(11,14,26,0.95), rgba(11,14,26,0));}
+  .nav-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,0.02);color:var(--ink);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s ease;}
+  .nav-btn:hover{background:rgba(255,255,255,0.08);}
+  .nav-btn:disabled{opacity:0.3;cursor:default;}
+  .nav-btn:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;}
+  .counter{font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--ink-dim);}
+  .counter .score{color:var(--yellow);}
+  .progress{position:fixed;left:max(6vw, env(safe-area-inset-left));right:max(6vw, env(safe-area-inset-right));bottom:calc(56px + env(safe-area-inset-bottom));height:5px;z-index:60;display:flex;gap:3px;}
+  .seg{flex:1;height:100%;border-radius:2px;opacity:0.25;cursor:pointer;transition:opacity .2s ease, transform .2s ease;}
+  .seg.seg-active{opacity:1;transform:scaleY(1.6);}
+  .sound-toggle{position:fixed;top:max(20px, env(safe-area-inset-top));left:max(20px, env(safe-area-inset-left));z-index:70;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:rgba(18,22,42,0.92);color:var(--ink);font-size:1.15rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.3);transition:background .2s ease, opacity .2s ease;}
+  .sound-toggle:hover{background:rgba(255,255,255,0.1);}
+  .sound-toggle.muted{opacity:0.55;}
+
+  @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:0.001ms !important;animation-iteration-count:1 !important;transition-duration:0.001ms !important;}}
+  @media (max-width:700px){.sound-toggle{top:max(10px, env(safe-area-inset-top));left:max(10px, env(safe-area-inset-left));width:38px;height:38px;font-size:1rem;}}
+  @media (max-width:640px){
+    .slide{justify-content:flex-start;padding:18px 20px 96px 20px;
+      padding-top:max(18px, env(safe-area-inset-top));padding-right:max(20px, env(safe-area-inset-right));
+      padding-left:max(20px, env(safe-area-inset-left));padding-bottom:calc(96px + env(safe-area-inset-bottom));}
+    .slide-inner{padding-top:56px;}
+    h1.title{font-size:clamp(1.4rem,7vw,2rem);max-width:100%;}
+    .eyebrow{font-size:0.66rem;margin-bottom:0.6rem;}
+    .lede{font-size:0.92rem;} .body-text{font-size:0.9rem;}
+    .card{padding:1rem 1.1rem;} .card-row{gap:0.7rem;margin-top:0.8rem;}
+    .quiz-options{grid-template-columns:1fr;}
+    .aer-example .aer-row{flex-direction:column;gap:0.15rem;}
+    .aer-example .aer-tag{width:auto;}
+    .controls{height:calc(60px + env(safe-area-inset-bottom));padding-left:max(4vw, env(safe-area-inset-left));padding-right:max(4vw, env(safe-area-inset-right));}
+    .nav-btn{width:44px;height:44px;font-size:1.2rem;}
+    .progress{left:max(4vw, env(safe-area-inset-left));right:max(4vw, env(safe-area-inset-right));bottom:calc(48px + env(safe-area-inset-bottom));}
+  }
+  @media (max-height:480px) and (max-width:900px){
+    .slide{padding-top:14px;padding-bottom:70px;justify-content:flex-start;}
+    .slide-inner{padding-top:40px;}
+    h1.title{font-size:clamp(1.2rem,5vw,1.7rem);}
+    .lede,.body-text{font-size:0.82rem;}
+    .card{padding:0.75rem 0.9rem;}
+    .sound-toggle{transform:scale(0.85);transform-origin:top left;}
+    .controls{height:52px;} .nav-btn{width:36px;height:36px;} .progress{bottom:40px;}
+  }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+  <button class="sound-toggle" id="soundToggle" aria-label="Silenciar sonido" title="Sonido activado (clic para silenciar)">🔊</button>
+
+  <!-- SLIDE 0 — PORTADA -->
+  <section class="slide active" id="slide-0" style="--accent:#7c3aed">
+    <div class="slide-inner">
+      <div class="eyebrow">Física · 1° Medio · OA 9, 10 y 11</div>
+      <h1 class="title" style="font-size:clamp(2.1rem,5.2vw,3.8rem);background:var(--spectrum);-webkit-background-clip:text;background-clip:text;color:transparent;">Ondas, Sonido y Luz<br>Compilado General</h1>
+      <p class="lede" style="margin-top:1.1rem;">Conceptos, explicaciones y razonamiento AER (Afirmación–Evidencia–Razonamiento) para cerrar la unidad. Al final podrás enviar tus respuestas.</p>
+      <button class="btn-primary" id="startBtn">Comenzar →</button>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--ink-dim);margin-top:1.3rem;">Usa las flechas ← → o desliza para avanzar.</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 1 — DATOS DEL ESTUDIANTE -->
+  <section class="slide" id="slide-1" style="--accent:#7c3aed">
+    <div class="slide-inner">
+      <div class="eyebrow">Antes de empezar</div>
+      <h1 class="title">Tus datos</h1>
+      <div class="underline"></div>
+      <p class="body-text" style="margin-bottom:1.2rem;">Los necesitamos para identificar tus respuestas cuando las envíes al final.</p>
+      <div class="field">
+        <label for="studentName">Nombre completo</label>
+        <input type="text" id="studentName" placeholder="Ej: Ana Torres" autocomplete="name">
+      </div>
+      <div class="field">
+        <label for="studentCourse">Curso</label>
+        <input type="text" id="studentCourse" placeholder="Ej: 1°A" autocomplete="off">
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2 — CONCEPTO: ONDAS -->
+  <section class="slide" id="slide-2" style="--accent:#2563eb">
+    <div class="slide-inner">
+      <div class="eyebrow">01 · Concepto</div>
+      <h1 class="title">¿Qué es una onda?</h1>
+      <div class="underline"></div>
+      <p class="body-text">Una onda es una perturbación que se propaga a través del espacio o de un medio, transportando <b>energía</b> de un lugar a otro <b>sin transportar materia</b>. Cuando lanzas una piedra a un estanque, el agua no viaja hacia la orilla: lo que viaja es el patrón de movimiento, mientras cada partícula de agua solo sube y baja en su lugar.</p>
+      <p class="body-text">Las ondas se clasifican de dos formas complementarias. Según si necesitan un medio material, se dividen en <b>mecánicas</b> (como el sonido, que requieren un medio) y <b>electromagnéticas</b> (como la luz, que viajan incluso en el vacío). Según la dirección en que vibran respecto a su avance, se dividen en <b>transversales</b> (vibración perpendicular, como una cuerda) y <b>longitudinales</b> (vibración paralela, como el sonido).</p>
+      <p class="body-text">Toda onda periódica comparte los mismos parámetros: amplitud (A), longitud de onda (λ), período (T) y frecuencia (f), conectados por una misma fórmula.</p>
+      <div class="formula">v = λ · f &nbsp;·&nbsp; T = 1/f</div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3 — CONCEPTO: SONIDO -->
+  <section class="slide" id="slide-3" style="--accent:#f97316">
+    <div class="slide-inner">
+      <div class="eyebrow">02 · Concepto</div>
+      <h1 class="title">El sonido</h1>
+      <div class="underline"></div>
+      <p class="body-text">El sonido es una onda <b>mecánica y longitudinal</b>: se produce cuando un objeto vibra y esa vibración comprime y descomprime las partículas del medio —generalmente aire— a su alrededor, formando zonas de mayor y menor presión que viajan hasta llegar a nuestro oído.</p>
+      <p class="body-text">Percibimos tres cualidades, cada una ligada a un parámetro físico: el <b>tono</b> depende de la frecuencia (agudo = alta frecuencia), la <b>intensidad</b> depende de la amplitud, y el <b>timbre</b> depende de la forma de la onda — por eso distinguimos un violín de una guitarra tocando la misma nota.</p>
+      <p class="body-text">Como toda onda, experimenta reflexión (eco), refracción, difracción, interferencia (ondas estacionarias) y efecto Doppler. Su rapidez en el aire es de aproximadamente <b>340 m/s</b> — mucho menor que la de la luz, por eso vemos el rayo antes de escuchar el trueno.</p>
+    </div>
+  </section>
+
+  <!-- SLIDE 4 — CONCEPTO: LUZ -->
+  <section class="slide" id="slide-4" style="--accent:#06b6d4">
+    <div class="slide-inner">
+      <div class="eyebrow">03 · Concepto</div>
+      <h1 class="title">La luz</h1>
+      <div class="underline"></div>
+      <p class="body-text">La luz es una onda <b>electromagnética y transversal</b>: no necesita un medio material para propagarse, por lo que viaja por el vacío del espacio a una rapidez aproximada de <b>300.000 km/s</b>. A diferencia del sonido, tiene una naturaleza dual — se comporta como onda en la difracción y la interferencia, y como partícula (fotón) en el efecto fotoeléctrico.</p>
+      <p class="body-text">Igual que el sonido, se refleja y se refracta. Pero también tiene comportamientos que el sonido no tiene: se <b>dispersa en colores</b> al atravesar un prisma, porque cada longitud de onda se refracta con un ángulo levemente distinto.</p>
+      <p class="body-text">La luz visible es solo una pequeña porción de un espectro mucho más amplio: radio, microondas, infrarrojo, ultravioleta, rayos X y rayos gamma — todas viajando a la misma rapidez en el vacío, con distinta frecuencia y energía.</p>
+    </div>
+  </section>
+
+  <!-- SLIDE 5 — ESQUEMA COMPARATIVO -->
+  <section class="slide" id="slide-5" style="--accent:#22c55e">
+    <div class="slide-inner">
+      <div class="eyebrow">04 · Esquema</div>
+      <h1 class="title">Sonido vs. Luz</h1>
+      <div class="underline"></div>
+      <div class="card" style="overflow-x:auto;">
+        <table class="compare-table">
+          <thead><tr><th>Propiedad</th><th>🔊 Sonido</th><th>💡 Luz</th></tr></thead>
+          <tbody>
+            <tr><td>Tipo de onda</td><td class="sound">Mecánica, longitudinal</td><td class="light">Electromagnética, transversal</td></tr>
+            <tr><td>¿Necesita medio?</td><td class="sound">Sí</td><td class="light">No</td></tr>
+            <tr><td>Rapidez aprox.</td><td class="sound">340 m/s (aire)</td><td class="light">300.000 km/s (vacío)</td></tr>
+            <tr><td>Reflexión / Refracción</td><td class="sound">Sí</td><td class="light">Sí</td></tr>
+            <tr><td>Difracción / Interferencia</td><td class="sound">Sí</td><td class="light">Sí</td></tr>
+            <tr><td>Efecto Doppler</td><td class="sound">Sí</td><td class="light">Sí</td></tr>
+            <tr><td>Dispersión en colores</td><td class="sound">No aplica</td><td class="light">Sí</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6 — QUÉ ES AER -->
+  <section class="slide" id="slide-6" style="--accent:#eab308">
+    <div class="slide-inner">
+      <div class="eyebrow">Herramienta de razonamiento</div>
+      <h1 class="title">¿Qué es el razonamiento AER?</h1>
+      <div class="underline"></div>
+      <p class="body-text">AER es una forma de argumentar en ciencias con tres partes: la <b style="color:var(--cyan)">Afirmación</b> (tu respuesta o postura), la <b style="color:var(--green)">Evidencia</b> (los datos, observaciones o principios físicos que la respaldan) y el <b style="color:var(--orange)">Razonamiento</b> (cómo esa evidencia justifica tu afirmación — el puente lógico entre ambas).</p>
+      <p class="body-text">Vamos a usarla en las próximas 3 diapositivas. Aquí tienes un ejemplo resuelto, sobre un tema distinto al que te preguntaremos:</p>
+      <div class="aer-example">
+        <p class="body-text" style="margin-bottom:0.7rem;font-weight:600;">¿Por qué es más difícil ver un arcoíris al mediodía que en la tarde?</p>
+        <div class="aer-row"><span class="aer-tag afirm">Afirmación</span><span>Es más difícil ver un arcoíris cuando el sol está muy alto en el cielo.</span></div>
+        <div class="aer-row"><span class="aer-tag evid">Evidencia</span><span>Un arcoíris se forma cuando la luz solar se refracta y refleja dentro de gotas de agua, siempre a unos 42° respecto a la dirección de la luz solar.</span></div>
+        <div class="aer-row"><span class="aer-tag razon">Razonamiento</span><span>Al mediodía el sol está muy alto, así que ese ángulo de 42° apunta bajo el horizonte y no lo vemos; en la tarde el sol está bajo, y el arco se eleva sobre el horizonte, donde sí es visible.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7 — AER 1: ONDAS -->
+  <section class="slide" id="slide-7" style="--accent:#2563eb">
+    <div class="slide-inner">
+      <div class="eyebrow">AER 1 · Ondas</div>
+      <h1 class="title">¿Por qué una onda transporta energía pero no materia?</h1>
+      <div class="underline"></div>
+      <p class="lede">Usa un ejemplo (una ola de estadio, una cuerda, el sonido) como evidencia.</p>
+      <div class="aer-field afirm"><label for="aer1a">Afirmación</label><textarea id="aer1a" placeholder="Escribe tu respuesta a la pregunta..."></textarea></div>
+      <div class="aer-field evid"><label for="aer1e">Evidencia</label><textarea id="aer1e" placeholder="¿Qué observación o ejemplo lo demuestra?"></textarea></div>
+      <div class="aer-field razon"><label for="aer1r">Razonamiento</label><textarea id="aer1r" placeholder="¿Cómo conecta esa evidencia con tu afirmación?"></textarea></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8 — AER 2: SONIDO -->
+  <section class="slide" id="slide-8" style="--accent:#f97316">
+    <div class="slide-inner">
+      <div class="eyebrow">AER 2 · Sonido</div>
+      <h1 class="title">¿Por qué el sonido no se propaga en el vacío del espacio, pero la luz sí?</h1>
+      <div class="underline"></div>
+      <p class="lede">Argumenta usando el tipo de onda que es cada una.</p>
+      <div class="aer-field afirm"><label for="aer2a">Afirmación</label><textarea id="aer2a" placeholder="Escribe tu respuesta a la pregunta..."></textarea></div>
+      <div class="aer-field evid"><label for="aer2e">Evidencia</label><textarea id="aer2e" placeholder="¿Qué observación o principio lo demuestra?"></textarea></div>
+      <div class="aer-field razon"><label for="aer2r">Razonamiento</label><textarea id="aer2r" placeholder="¿Cómo conecta esa evidencia con tu afirmación?"></textarea></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9 — AER 3: LUZ -->
+  <section class="slide" id="slide-9" style="--accent:#06b6d4">
+    <div class="slide-inner">
+      <div class="eyebrow">AER 3 · Luz</div>
+      <h1 class="title">¿La luz es onda o partícula?</h1>
+      <div class="underline"></div>
+      <p class="lede">El video de QuantumFracture concluye "ni onda ni partícula, es complicado". ¿Estás de acuerdo? Fundamenta tu postura.</p>
+      <div class="aer-field afirm"><label for="aer3a">Afirmación</label><textarea id="aer3a" placeholder="Escribe tu postura..."></textarea></div>
+      <div class="aer-field evid"><label for="aer3e">Evidencia</label><textarea id="aer3e" placeholder="¿Qué fenómenos o experimentos lo demuestran?"></textarea></div>
+      <div class="aer-field razon"><label for="aer3r">Razonamiento</label><textarea id="aer3r" placeholder="¿Cómo conecta esa evidencia con tu postura?"></textarea></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10 — QUIZ -->
+  <section class="slide" id="slide-10" style="--accent:#7c3aed">
+    <div class="slide-inner">
+      <div class="eyebrow">Repaso rápido</div>
+      <h1 class="title">Preguntas de alternativas</h1>
+      <div class="underline"></div>
+      <div class="quiz-list" id="quizList">
+        <div class="quiz-q"><p class="quiz-question"><b>1.</b> Una onda transporta:</p><div class="quiz-options">
+          <button class="quiz-opt" data-correct="false">Materia</button><button class="quiz-opt" data-correct="true">Energía</button>
+          <button class="quiz-opt" data-correct="false">Materia y energía</button><button class="quiz-opt" data-correct="false">Ninguna</button>
+        </div></div>
+        <div class="quiz-q"><p class="quiz-question"><b>2.</b> El sonido es una onda:</p><div class="quiz-options">
+          <button class="quiz-opt" data-correct="false">Electromagnética y transversal</button><button class="quiz-opt" data-correct="true">Mecánica y longitudinal</button>
+          <button class="quiz-opt" data-correct="false">Mecánica y transversal</button><button class="quiz-opt" data-correct="false">Electromagnética y longitudinal</button>
+        </div></div>
+        <div class="quiz-q"><p class="quiz-question"><b>3.</b> La luz es una onda:</p><div class="quiz-options">
+          <button class="quiz-opt" data-correct="false">Mecánica y longitudinal</button><button class="quiz-opt" data-correct="true">Electromagnética y transversal</button>
+          <button class="quiz-opt" data-correct="false">Mecánica y transversal</button><button class="quiz-opt" data-correct="false">No se puede clasificar</button>
+        </div></div>
+        <div class="quiz-q"><p class="quiz-question"><b>4.</b> La relación correcta entre rapidez, longitud de onda y frecuencia es:</p><div class="quiz-options">
+          <button class="quiz-opt" data-correct="false">v = λ / f</button><button class="quiz-opt" data-correct="true">v = λ · f</button>
+          <button class="quiz-opt" data-correct="false">v = f / λ</button><button class="quiz-opt" data-correct="false">v = λ + f</button>
+        </div></div>
+        <div class="quiz-q"><p class="quiz-question"><b>5.</b> El tono de un sonido depende principalmente de su:</p><div class="quiz-options">
+          <button class="quiz-opt" data-correct="false">Amplitud</button><button class="quiz-opt" data-correct="true">Frecuencia</button>
+          <button class="quiz-opt" data-correct="false">Timbre</button><button class="quiz-opt" data-correct="false">Rapidez</button>
+        </div></div>
+        <div class="quiz-q"><p class="quiz-question"><b>6.</b> ¿Cuál fenómeno es EXCLUSIVO de la luz (no ocurre con el sonido)?</p><div class="quiz-options">
+          <button class="quiz-opt" data-correct="false">Reflexión</button><button class="quiz-opt" data-correct="false">Refracción</button>
+          <button class="quiz-opt" data-correct="true">Dispersión cromática</button><button class="quiz-opt" data-correct="false">Difracción</button>
+        </div></div>
+        <div class="quiz-q"><p class="quiz-question"><b>7.</b> El efecto Doppler explica por qué:</p><div class="quiz-options">
+          <button class="quiz-opt" data-correct="false">La luz se separa en colores en un prisma</button><button class="quiz-opt" data-correct="true">El sonido de una sirena cambia de tono al acercarse o alejarse</button>
+          <button class="quiz-opt" data-correct="false">Los espejos invierten las imágenes</button><button class="quiz-opt" data-correct="false">El sonido no viaja en el vacío</button>
+        </div></div>
+        <div class="quiz-q"><p class="quiz-question"><b>8.</b> ¿Qué fenómeno fue clave para demostrar que la luz también se comporta como partícula?</p><div class="quiz-options">
+          <button class="quiz-opt" data-correct="false">Interferencia de Young</button><button class="quiz-opt" data-correct="true">Efecto fotoeléctrico</button>
+          <button class="quiz-opt" data-correct="false">Dispersión en un prisma</button><button class="quiz-opt" data-correct="false">Reflexión total interna</button>
+        </div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 11 — REVISIÓN Y ENVÍO -->
+  <section class="slide" id="slide-11" style="--accent:#f5c518">
+    <div class="slide-inner">
+      <div class="eyebrow">Último paso</div>
+      <h1 class="title">Revisa y envía tus respuestas</h1>
+      <div class="underline" style="background:var(--spectrum);"></div>
+      <p class="body-text">Tus 3 respuestas AER y tu puntaje del quiz se enviarán junto con tus datos. Si algo falta, vuelve atrás con la flecha ← antes de enviar.</p>
+      <div class="review-box" id="reviewBox">
+        <div class="review-row"><span>Nombre</span><span id="reviewName">—</span></div>
+        <div class="review-row"><span>Curso</span><span id="reviewCourse">—</span></div>
+        <div class="review-row"><span>Puntaje del quiz</span><span id="reviewScore">0 / 8</span></div>
+      </div>
+      <div style="margin-top:1.3rem;display:flex;gap:0.7rem;flex-wrap:wrap;">
+        <button class="btn-primary" id="submitBtn">📤 Enviar mis respuestas</button>
+        <button class="btn-ghost" id="downloadBackupBtn">💾 Descargar respaldo</button>
+      </div>
+      <div class="submit-status" id="submitStatus"></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 12 — CIERRE -->
+  <section class="slide" id="slide-12" style="--accent:#22c55e">
+    <div class="slide-inner">
+      <div class="eyebrow">Cierre</div>
+      <h1 class="title">¡Gracias por completar la actividad!</h1>
+      <div class="underline" style="background:var(--spectrum);"></div>
+      <p class="body-text">Repasaste ondas, sonido y luz, aplicaste el razonamiento AER tres veces, y practicaste con el quiz. Si ya enviaste tus respuestas en el paso anterior, tu profesor las recibirá automáticamente.</p>
+      <div class="think">🔎 <b>Para comentar:</b> de todo lo visto en estas unidades, ¿qué es lo que más te costó entender, y qué fue lo que más te gustó?</div>
+    </div>
+  </section>
+
+  <div class="progress" id="progress" role="tablist" aria-label="Progreso de la presentación"></div>
+  <nav class="controls">
+    <button class="nav-btn" id="prevBtn" aria-label="Diapositiva anterior">‹</button>
+    <div class="counter"><span class="score" id="counterScore">0/8</span> · <span id="curNum">01</span> / <span id="totalNum">13</span></div>
+    <button class="nav-btn" id="nextBtn" aria-label="Siguiente diapositiva">›</button>
+  </nav>
+  <span class="sr-only" id="liveRegion" aria-live="polite"></span>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =====================================================================
+     CONFIGURACIÓN DEL ENVÍO DE RESPUESTAS
+     Reemplaza el texto de abajo por la URL de tu Google Apps Script
+     (termina en "/exec"). Instrucciones completas en la pestaña
+     "Instrucciones" de plantilla_respuestas_ondas_sonido_luz.xlsx
+     y en el archivo codigo_apps_script.gs
+  ===================================================================== */
+  var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwpDOc-3yi9N6KGuPhdP_24_6HIBGmoWV9N3mZPpfvjtctFeo-Rqatd-L6HrKj7kIHbmw/exec";
+
+  /* ---------- Efectos de sonido ---------- */
+  var SFX = (function(){
+    var ctx = null; var enabled = true;
+    function getCtx(){
+      if (!ctx){ var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; ctx = new AC(); }
+      if (ctx.state === 'suspended') ctx.resume();
+      return ctx;
+    }
+    function now(c){ return c.currentTime; }
+    function tone(c, freq, startTime, duration, type, gainPeak, freqEnd){
+      var osc = c.createOscillator(); var gain = c.createGain();
+      osc.type = type || 'square';
+      osc.frequency.setValueAtTime(freq, startTime);
+      if (freqEnd) osc.frequency.exponentialRampToValueAtTime(Math.max(freqEnd, 1), startTime + duration);
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(gainPeak || 0.22, startTime + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+      osc.connect(gain).connect(c.destination); osc.start(startTime); osc.stop(startTime + duration + 0.03);
+    }
+    function playNav(){ if(!enabled) return; var c=getCtx(); if(!c) return; var t=now(c); tone(c,180,t,0.09,'sine',0.28,95); tone(c,145,t+0.07,0.09,'sine',0.2,75); }
+    function playWhoosh(){
+      if(!enabled) return; var c=getCtx(); if(!c) return; var t=now(c);
+      var osc=c.createOscillator(); osc.type='sawtooth'; osc.frequency.setValueAtTime(760,t); osc.frequency.exponentialRampToValueAtTime(130,t+0.22);
+      var filter=c.createBiquadFilter(); filter.type='lowpass'; filter.frequency.setValueAtTime(2200,t); filter.frequency.exponentialRampToValueAtTime(220,t+0.22);
+      var gain=c.createGain(); gain.gain.setValueAtTime(0.0001,t); gain.gain.exponentialRampToValueAtTime(0.16,t+0.02); gain.gain.exponentialRampToValueAtTime(0.0001,t+0.22);
+      osc.connect(filter).connect(gain).connect(c.destination); osc.start(t); osc.stop(t+0.24);
+    }
+    function playCorrect(){ if(!enabled) return; var c=getCtx(); if(!c) return; var t=now(c); tone(c,523.25,t,0.09,'square',0.2); tone(c,659.25,t+0.08,0.09,'square',0.2); tone(c,783.99,t+0.16,0.16,'square',0.22); }
+    function playIncorrect(){ if(!enabled) return; var c=getCtx(); if(!c) return; tone(c,180,now(c),0.18,'sawtooth',0.16,85); }
+    return {
+      playNav:playNav, playWhoosh:playWhoosh, playCorrect:playCorrect, playIncorrect:playIncorrect,
+      setEnabled:function(v){ enabled=v; if(v) getCtx(); }, isEnabled:function(){ return enabled; }
+    };
+  })();
+  var soundToggle = document.getElementById('soundToggle');
+  function updateSoundUI(){
+    if (!soundToggle) return;
+    var on = SFX.isEnabled();
+    soundToggle.textContent = on ? '🔊' : '🔇';
+    soundToggle.classList.toggle('muted', !on);
+    soundToggle.title = on ? 'Sonido activado (clic para silenciar)' : 'Sonido silenciado (clic para activar)';
+  }
+  if (soundToggle){
+    soundToggle.addEventListener('click', function(){ SFX.setEnabled(!SFX.isEnabled()); updateSoundUI(); if (SFX.isEnabled()) SFX.playNav(); });
+    updateSoundUI();
+  }
+
+  /* ---------- Deck navigation ---------- */
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var total = slides.length;
+  var current = 0;
+  var progressEl = document.getElementById('progress');
+  var segs = [];
+  var stops = ['#7c3aed','#2563eb','#06b6d4','#22c55e','#eab308','#f97316','#ef4444'];
+  function hexToRgb(hex){ hex=hex.replace('#',''); return [parseInt(hex.substr(0,2),16),parseInt(hex.substr(2,2),16),parseInt(hex.substr(4,2),16)]; }
+  function rgbToHex(r,g,b){ return '#'+[r,g,b].map(function(x){ return Math.round(x).toString(16).padStart(2,'0'); }).join(''); }
+  function lerpColor(c1,c2,t){ var a=hexToRgb(c1),b=hexToRgb(c2); return rgbToHex(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t); }
+  function spectrumColor(t){ var n=stops.length-1; var scaled=t*n; var i=Math.min(n-1,Math.floor(scaled)); var localT=scaled-i; return lerpColor(stops[i],stops[i+1],localT); }
+
+  for (var idx = 0; idx < total; idx++){
+    var seg = document.createElement('div');
+    seg.className = 'seg'; seg.setAttribute('role','tab'); seg.setAttribute('tabindex','0');
+    seg.setAttribute('aria-label','Ir a diapositiva ' + (idx+1));
+    var t = total > 1 ? idx/(total-1) : 0;
+    seg.style.background = spectrumColor(t);
+    (function(i){
+      seg.addEventListener('click', function(){ goTo(i); });
+      seg.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); goTo(i); } });
+    })(idx);
+    progressEl.appendChild(seg); segs.push(seg);
+  }
+  document.getElementById('totalNum').textContent = String(total).padStart(2,'0');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var liveRegion = document.getElementById('liveRegion');
+
+  function updateNav(){
+    document.getElementById('curNum').textContent = String(current+1).padStart(2,'0');
+    segs.forEach(function(s,i){ s.classList.toggle('seg-active', i===current); });
+    prevBtn.disabled = current===0; nextBtn.disabled = current===total-1;
+    var h1 = slides[current].querySelector('h1');
+    liveRegion.textContent = 'Diapositiva '+(current+1)+' de '+total+(h1?': '+h1.textContent:'');
+  }
+  function goTo(i){
+    i = Math.max(0, Math.min(total-1, i));
+    if (i === current) return;
+    var distance = Math.abs(i-current);
+    slides[current].classList.remove('active'); current = i; slides[current].classList.add('active');
+    updateNav();
+    if (distance <= 1) SFX.playNav(); else SFX.playWhoosh();
+  }
+  document.addEventListener('keydown', function(e){
+    var tag = (e.target && e.target.tagName) || '';
+    if (tag === 'TEXTAREA' || tag === 'INPUT') return; // no interceptar mientras escriben
+    if (e.key==='ArrowRight'||e.key==='PageDown'){ e.preventDefault(); goTo(current+1); }
+    else if (e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); goTo(current-1); }
+    else if (e.key==='Home'){ goTo(0); } else if (e.key==='End'){ goTo(total-1); }
+  });
+  prevBtn.addEventListener('click', function(){ goTo(current-1); });
+  nextBtn.addEventListener('click', function(){ goTo(current+1); });
+  var startBtn = document.getElementById('startBtn');
+  if (startBtn) startBtn.addEventListener('click', function(){ goTo(1); });
+
+  var deck = document.getElementById('deck');
+  var touchX = null;
+  deck.addEventListener('touchstart', function(e){ touchX = e.touches[0].clientX; }, {passive:true});
+  deck.addEventListener('touchend', function(e){
+    if (touchX === null) return;
+    var dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 50){ dx<0 ? goTo(current+1) : goTo(current-1); }
+    touchX = null;
+  }, {passive:true});
+  updateNav();
+
+  /* ---------- Quiz con puntaje ---------- */
+  var quizScore = 0;
+  var quizTotal = document.querySelectorAll('#quizList .quiz-q').length;
+  var counterScore = document.getElementById('counterScore');
+  var reviewScore = document.getElementById('reviewScore');
+  function updateScoreUI(){
+    if (counterScore) counterScore.textContent = quizScore + '/' + quizTotal;
+    if (reviewScore) reviewScore.textContent = quizScore + ' / ' + quizTotal;
+  }
+  updateScoreUI();
+  var quizList = document.getElementById('quizList');
+  if (quizList){
+    quizList.addEventListener('click', function(e){
+      var btn = e.target.closest('.quiz-opt');
+      if (!btn) return;
+      var container = btn.closest('.quiz-options');
+      if (!container) return;
+      var already = container.dataset.answered === 'true';
+      var opts = container.querySelectorAll('.quiz-opt');
+      opts.forEach(function(o){ o.classList.remove('correct','incorrect'); });
+      if (btn.dataset.correct === 'true'){
+        btn.classList.add('correct'); SFX.playCorrect();
+        if (!already){ quizScore++; updateScoreUI(); }
+      } else {
+        btn.classList.add('incorrect');
+        var correctBtn = container.querySelector('.quiz-opt[data-correct="true"]');
+        if (correctBtn) correctBtn.classList.add('correct');
+        SFX.playIncorrect();
+      }
+      container.dataset.answered = 'true';
+    });
+  }
+
+  /* ---------- Revisión y envío de respuestas ---------- */
+  var studentName = document.getElementById('studentName');
+  var studentCourse = document.getElementById('studentCourse');
+  var reviewName = document.getElementById('reviewName');
+  var reviewCourse = document.getElementById('reviewCourse');
+  var submitBtn = document.getElementById('submitBtn');
+  var downloadBackupBtn = document.getElementById('downloadBackupBtn');
+  var submitStatus = document.getElementById('submitStatus');
+
+  function fieldVal(id){ var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+
+  function refreshReview(){
+    if (reviewName) reviewName.textContent = fieldVal('studentName') || '—';
+    if (reviewCourse) reviewCourse.textContent = fieldVal('studentCourse') || '—';
+  }
+  document.addEventListener('keydown', refreshReview);
+  if (nextBtn) nextBtn.addEventListener('click', refreshReview);
+  if (prevBtn) prevBtn.addEventListener('click', refreshReview);
+  segs.forEach(function(s){ s.addEventListener('click', refreshReview); });
+
+  function collectData(){
+    return {
+      nombre: fieldVal('studentName'),
+      curso: fieldVal('studentCourse'),
+      aer1_afirmacion: fieldVal('aer1a'), aer1_evidencia: fieldVal('aer1e'), aer1_razonamiento: fieldVal('aer1r'),
+      aer2_afirmacion: fieldVal('aer2a'), aer2_evidencia: fieldVal('aer2e'), aer2_razonamiento: fieldVal('aer2r'),
+      aer3_afirmacion: fieldVal('aer3a'), aer3_evidencia: fieldVal('aer3e'), aer3_razonamiento: fieldVal('aer3r'),
+      quiz_puntaje: quizScore + '/' + quizTotal
+    };
+  }
+
+  function showStatus(kind, text){
+    if (!submitStatus) return;
+    submitStatus.className = 'submit-status show ' + kind;
+    submitStatus.textContent = text;
+  }
+
+  function validateBeforeSubmit(data){
+    if (!data.nombre || !data.curso){
+      return 'Falta tu nombre o tu curso — vuelve a la diapositiva "Tus datos" (flecha ← varias veces).';
+    }
+    if (!data.aer1_afirmacion || !data.aer2_afirmacion || !data.aer3_afirmacion){
+      return 'Aún te falta responder alguna de las 3 preguntas AER.';
+    }
+    return null;
+  }
+
+  if (submitBtn){
+    submitBtn.addEventListener('click', function(){
+      refreshReview();
+      var data = collectData();
+      var problem = validateBeforeSubmit(data);
+      if (problem){ showStatus('warn', '⚠️ ' + problem); return; }
+
+      if (!SCRIPT_URL || SCRIPT_URL.indexOf('PEGA_AQUI') !== -1){
+        showStatus('warn', '⚠️ Tu profesor aún no ha activado el envío automático. Usa "Descargar respaldo" y entrega ese archivo como te indique.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      showStatus('sending', 'Enviando tus respuestas...');
+
+      var formData = new FormData();
+      Object.keys(data).forEach(function(k){ formData.append(k, data[k]); });
+
+      fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: formData })
+        .then(function(){
+          showStatus('ok', '✅ ¡Respuestas enviadas! Ya puedes avanzar a la última diapositiva.');
+          submitBtn.disabled = false;
+        })
+        .catch(function(){
+          showStatus('err', '❌ No se pudo enviar (revisa tu conexión). Usa "Descargar respaldo" mientras tanto.');
+          submitBtn.disabled = false;
+        });
+    });
+  }
+
+  if (downloadBackupBtn){
+    downloadBackupBtn.addEventListener('click', function(){
+      refreshReview();
+      var d = collectData();
+      var lines = [
+        'ONDAS, SONIDO Y LUZ — RESPALDO DE RESPUESTAS',
+        'Nombre: ' + d.nombre, 'Curso: ' + d.curso, 'Puntaje quiz: ' + d.quiz_puntaje, '',
+        'AER 1 — Ondas', 'Afirmación: ' + d.aer1_afirmacion, 'Evidencia: ' + d.aer1_evidencia, 'Razonamiento: ' + d.aer1_razonamiento, '',
+        'AER 2 — Sonido', 'Afirmación: ' + d.aer2_afirmacion, 'Evidencia: ' + d.aer2_evidencia, 'Razonamiento: ' + d.aer2_razonamiento, '',
+        'AER 3 — Luz', 'Afirmación: ' + d.aer3_afirmacion, 'Evidencia: ' + d.aer3_evidencia, 'Razonamiento: ' + d.aer3_razonamiento
+      ];
+      var blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      var safeName = (d.nombre || 'respuestas').replace(/[^a-zA-Z0-9]+/g, '_');
+      a.download = 'respuestas_' + safeName + '.txt';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showStatus('ok', '💾 Respaldo descargado.');
+    });
+  }
+
+})();
+</script>
+</body>
+</html>
