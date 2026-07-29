@@ -348,11 +348,20 @@ var MUROS_BASE = (function () {
 
 /* Recursos compartidos por TODAS las instancias de roca del generador: una sola
    geometría y un solo material para todos los sectores (se crean una vez). */
-var GEO_ROCA = null, MAT_ROCA = null;
+var GEO_ROCA = null, MAT_ROCA = null, GEO_CRIS = null, MAT_CRIS = null;
 function _recursosRoca() {
   if (!GEO_ROCA) {
     GEO_ROCA = new THREE.DodecahedronGeometry(1);
     MAT_ROCA = new THREE.MeshStandardMaterial({ color: '#7d756c', roughness: 0.95, flatShading: true });
+  }
+  if (!GEO_CRIS) {
+    // cono de radio 1 y alto 1: la escala de cada instancia le da su tamaño
+    GEO_CRIS = new THREE.ConeGeometry(1, 1, 6);
+    // OPACO a propósito: transparente obliga a ordenar cada cristal por
+    // profundidad en cada cuadro, y en las cuevas hay decenas. El brillo se
+    // consigue con emissive, que no cuesta nada.
+    MAT_CRIS = new THREE.MeshStandardMaterial({
+      color: '#6ad0e0', emissive: '#3aa8bc', emissiveIntensity: 0.9, roughness: 0.4 });
   }
 }
 
@@ -487,25 +496,45 @@ window.MUNDOS.mercurio = {
         position: cux + ' ' + (camY+5) + ' ' + camz, material: 'color:#252119' });
       S.terreno.appendChild(techoC);
       // cristales luminosos en la cámara (algo que descubrir abajo)
+      // CRISTALES: todos los de la cueva en una sola InstancedMesh opaca.
+      // El orden del azar se consume SIEMPRE, esté rota o no la roca, para que
+      // al descargar y regenerar el sector salga exactamente igual.
+      _recursosRoca();
+      var _cris = [];
       var nCrist = 3 + Math.floor(R()*4);
       for (var cc = 0; cc < nCrist; cc++) {
         var chx = cux + (R()-0.5)*12, chz = camz + (R()-0.5)*12;
-        var crist = S.nuevo('a-entity', { position: chx + ' ' + (camY+0.6) + ' ' + chz,
-          rotation: '0 ' + (R()*360) + ' ' + (R()*20-10) });
-        crist.setAttribute('geometry', 'primitive:cone; radiusBottom:0.3; radiusTop:0; height:' + (1+R()*1.5));
-        crist.setAttribute('material', 'color:#6ad0e0; shader:flat; emissive:#6ad0e0; emissiveIntensity:0.6; opacity:0.85; transparent:true');
-        S.terreno.appendChild(crist);
-        // roca rompible con más monedas en la cueva
-        if (R() < 0.5) {
+        var cgy = R()*6.2832, cinc = (R()*20-10) * Math.PI/180;
+        var calt = 1 + R()*1.5;
+        _cris.push({ x: chx, y: camY + 0.6, z: chz, alt: calt, gy: cgy, inc: cinc });
+        var hayRoca = (R() < 0.5);
+        var mon = 3 + Math.floor(R()*4);   // se consume siempre → determinista
+        if (hayRoca) {
           var idc = 'cave' + S.gx + '_' + S.gz + '_' + cc;
           if (!MUNDO.rotos[idc]) {
             var rc = S.nuevo('a-entity', { position: chx + ' ' + (camY+0.6) + ' ' + (chz+1) });
             rc.setAttribute('geometry', 'primitive:dodecahedron; radius:1');
             rc.setAttribute('material', 'color:#4a4038; roughness:0.9; flatShading:true');
             S.terreno.appendChild(rc);
-            MUNDO.rocaRompible({ id: idc, x: chx, z: chz+1, golpes: 4, monedas: 3 + Math.floor(R()*4), el: rc });
+            MUNDO.rocaRompible({ id: idc, x: chx, z: chz+1, golpes: 4, monedas: mon, el: rc });
           }
         }
+      }
+      if (_cris.length) {
+        var _mc = new THREE.InstancedMesh(GEO_CRIS, MAT_CRIS, _cris.length);
+        _mc.frustumCulled = false;
+        var _m2 = new THREE.Matrix4(), _p2 = new THREE.Vector3(),
+            _q2 = new THREE.Quaternion(), _e2 = new THREE.Euler(), _s2 = new THREE.Vector3();
+        for (var ci = 0; ci < _cris.length; ci++) {
+          var d2 = _cris[ci];
+          _p2.set(d2.x, d2.y + d2.alt/2, d2.z);
+          _e2.set(d2.inc, d2.gy, 0);
+          _q2.setFromEuler(_e2);
+          _s2.set(0.3, d2.alt, 0.3);
+          _mc.setMatrixAt(ci, _m2.compose(_p2, _q2, _s2));
+        }
+        _mc.instanceMatrix.needsUpdate = true;
+        S.terreno.setObject3D('cristales', _mc);
       }
     }
 
@@ -616,6 +645,22 @@ window.MUNDOS.mercurio = {
   ],
 
   objetos: [
+    /* ---------- ESTACIONES DE ASTRONOMÍA ----------
+       El hilo: dónde estamos (sistema solar) → cómo lo supimos (heliocentrismo,
+       Galileo) → qué tiene de propio este planeta (órbita, día, atmósfera). */
+    { forma: 'hito', color: '#c8a33a', pos: [14, 0.05, 26],
+      nombre: 'El sistema solar', ficha: 'sistemasolar', altoFicha: 4 },
+    { forma: 'hito', color: '#c8a33a', pos: [26, 0.05, 18],
+      nombre: 'Modelo heliocéntrico', ficha: 'heliocentrico', altoFicha: 4 },
+    { forma: 'hito', color: '#c8a33a', pos: [34, 0.05, 6],
+      nombre: 'Las pruebas de Galileo', ficha: 'galileo', altoFicha: 4 },
+    { forma: 'hito', color: '#7ac4d8', pos: [-16, 0.05, 24],
+      nombre: 'La órbita de Mercurio', ficha: 'orbita', altoFicha: 4 },
+    { forma: 'hito', color: '#7ac4d8', pos: [-28, 0.05, 14],
+      nombre: 'Un día más largo que un año', ficha: 'diaymes', altoFicha: 4 },
+    { forma: 'hito', color: '#7ac4d8', pos: [-34, 0.05, -2],
+      nombre: 'Sin atmósfera', ficha: 'sintema', altoFicha: 4 },
+
     // Cuenca Caloris: una de las mayores del sistema solar (~1550 km real)
     { forma: 'crater', color: '#6e675f', pos: [-30, 0.05, -30], radio: 16,
       nombre: 'Cuenca Caloris', ficha: 'caloris', altoFicha: 4 },
@@ -761,6 +806,48 @@ window.MUNDOS.mercurio = {
   },
 
   fichas: [
+    {
+      id: 'heliocentrico', nombre: 'Del geocentrismo al heliocentrismo', rango: 'Cómo cambió el modelo',
+      texto: 'Durante casi mil quinientos años se enseñó que la Tierra estaba quieta en el centro y que todo giraba a su alrededor. No era una idea absurda: explicaba lo que se ve. El problema eran los planetas, que a veces parecen detenerse y retroceder en el cielo —el movimiento retrógrado—. El modelo geocéntrico lo resolvía agregando círculos sobre círculos, los epiciclos, cada vez más complicados. Copérnico propuso otra cosa: poner el Sol al centro. Con eso, el retroceso deja de necesitar explicación especial: es lo que se ve cuando un planeta más rápido adelanta a otro más lento, igual que un auto parece ir hacia atrás cuando lo sobrepasas.',
+      vida: ['El geocentrismo explicaba lo observado, pero con creciente complejidad', 'El movimiento retrógrado exigía epiciclos', 'Copérnico (1543) puso el Sol al centro', 'Kepler corrigió: las órbitas son elipses, no círculos', 'Galileo aportó pruebas con el telescopio'],
+      reto: 'Los dos modelos predecían las posiciones de los planetas con precisión parecida al principio. Entonces, ¿por qué terminó imponiéndose el heliocéntrico? Tu respuesta debería hablar de simplicidad y de capacidad de explicar, no solo de acertar.',
+      actividad: 'Estás parado en Mercurio, el planeta más rápido. Explica con eso el movimiento retrógrado: ¿qué se vería desde la Tierra cuando Mercurio la adelanta?'
+    },
+    {
+      id: 'galileo', nombre: 'Las pruebas de Galileo', rango: 'Cuando mirar decidió la discusión',
+      texto: 'Galileo apuntó un telescopio al cielo y encontró cosas que el modelo geocéntrico no podía acomodar. Vio cuatro lunas girando alrededor de Júpiter: había centros de giro que no eran la Tierra. Y vio que Venus presenta fases completas, como la Luna, incluida una fase llena que solo puede ocurrir si Venus pasa por detrás del Sol. En el modelo geocéntrico Venus nunca podría verse lleno. Ese fue el dato que no admitía arreglo.',
+      vida: ['Las lunas de Júpiter: centros de giro distintos de la Tierra', 'Las fases completas de Venus, imposibles en el geocentrismo', 'Manchas solares y montañas en la Luna: los cielos no eran perfectos'],
+      reto: 'Una sola observación bien elegida puede descartar un modelo entero. Explica por qué la fase llena de Venus es incompatible con que Venus gire alrededor de la Tierra.',
+      actividad: 'Dibuja las dos situaciones: Venus girando en torno a la Tierra y Venus girando en torno al Sol. Marca en cada una desde dónde se vería iluminado.'
+    },
+    {
+      id: 'orbita', nombre: 'La órbita de Mercurio', rango: 'El año más corto del sistema solar',
+      texto: 'Mercurio da una vuelta completa al Sol en 88 días terrestres: es el año más corto de todos los planetas. Y no es casualidad que sea el más cercano. Kepler descubrió que cuanto más cerca está un planeta, más rápido se mueve, y esa relación es exacta y calculable. Además la órbita de Mercurio es la más alargada, la menos circular de todos los planetas: su distancia al Sol varía muchísimo entre el punto más cercano y el más lejano.',
+      vida: ['Un año de Mercurio dura 88 días terrestres', 'Es el planeta más cercano al Sol y el más veloz', 'Su órbita es la más elíptica de los planetas', 'Kepler: mientras más cerca, más rápido'],
+      reto: 'Si Mercurio tarda 88 días en dar una vuelta y la Tierra 365, ¿cuántas vueltas da Mercurio mientras la Tierra da una? Calcula y explica qué relación hay entre distancia y velocidad.',
+      actividad: 'Anota tu edad en años terrestres y calcula cuántos años de Mercurio tendrías. Después haz lo mismo con la duración de un día.'
+    },
+    {
+      id: 'diaymes', nombre: 'Un día más largo que un año', rango: 'Rotación y traslación',
+      texto: 'Aquí ocurre algo que parece imposible: en Mercurio un día dura más que un año. Mercurio rota muy lentamente sobre su eje, y por su resonancia con el Sol tarda unos 176 días terrestres en completar un ciclo de día y noche, mientras que su año dura solo 88. Es decir, un habitante de Mercurio vería salir el Sol una sola vez cada dos años mercurianos. La lección de fondo es que día y año miden dos movimientos distintos: el día es rotación sobre el propio eje, el año es traslación alrededor del Sol.',
+      vida: ['Día solar en Mercurio: unos 176 días terrestres', 'Año: 88 días terrestres', 'El día dura exactamente dos años mercurianos', 'Día = rotación; año = traslación'],
+      reto: 'Mucha gente confunde el día con el año porque en la Tierra ambos parecen naturales. Explica con Mercurio por qué son movimientos independientes y por qué uno puede durar más que el otro.',
+      actividad: 'Dibuja Mercurio en cuatro posiciones de su órbita e indica hacia dónde apunta un punto fijo de su superficie en cada una. ¿Cuántas vueltas dio sobre sí mismo?'
+    },
+    {
+      id: 'sistemasolar', nombre: 'El sistema solar y las distancias', rango: 'Dónde estamos',
+      texto: 'Mercurio es el primero de ocho planetas. Los cuatro interiores —Mercurio, Venus, Tierra y Marte— son rocosos, pequeños y densos; los cuatro exteriores son gigantes gaseosos o helados. Esa división no es casual: cerca del Sol hacía demasiado calor para que se condensaran los gases y los hielos, de modo que solo quedó la roca y el metal. Lo más difícil de captar es la escala: si el Sol fuera una pelota de fútbol, Mercurio sería un grano de arena a unos 12 metros, y la Tierra otro grano a 30.',
+      vida: ['Cuatro planetas rocosos interiores y cuatro gigantes exteriores', 'La temperatura durante la formación explica esa división', 'El sistema solar es sobre todo espacio vacío', 'Mercurio es el más pequeño de los ocho'],
+      reto: '¿Por qué los planetas cercanos al Sol son rocosos y los lejanos gaseosos? Tu respuesta debe mencionar la temperatura en la época en que se formaron.',
+      actividad: 'Construye un modelo a escala del sistema solar en el patio del colegio: elige un objeto para el Sol y calcula a cuántos pasos quedaría cada planeta. Anota qué te sorprendió.'
+    },
+    {
+      id: 'sintema', nombre: 'Sin atmósfera', rango: 'Por qué aquí todo es distinto',
+      texto: 'Mercurio casi no tiene atmósfera, y eso explica casi todo lo que ves alrededor. Sin aire no hay quien reparta el calor: la cara iluminada supera los 400 °C y la oscura baja de los 170 bajo cero, en el mismo mundo y al mismo tiempo. Sin aire tampoco hay erosión: los cráteres de hace miles de millones de años siguen intactos, mientras que en la Tierra el viento y el agua los habrían borrado. Y sin aire el cielo es negro incluso de día, porque no hay nada que disperse la luz del Sol.',
+      vida: ['Diferencia térmica enorme entre el día y la noche', 'Sin erosión: los cráteres se conservan intactos', 'Cielo negro incluso a pleno día', 'Los meteoritos llegan enteros a la superficie'],
+      reto: 'En la Tierra el cielo es celeste y en Mercurio negro, aunque el Sol es el mismo. Explica la diferencia. Después explica por qué en la Tierra casi no quedan cráteres antiguos.',
+      actividad: 'Cambia la atmósfera con el botón correspondiente y observa qué ocurre con el cielo y con la luz. Anota tres diferencias entre la versión real y la imaginada con aire.'
+    },
     {
       id: 'base', nombre: 'Base Discovery', rango: 'Hábitat presurizado',
       texto: 'Un hábitat como este es la única forma de sobrevivir en Mercurio: una cúpula sellada que mantiene aire, presión y temperatura estables mientras afuera todo es vacío y radiación. Entra por la esclusa y usa la consola para experimentar con distintas atmósferas artificiales.',

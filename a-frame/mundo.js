@@ -2315,6 +2315,44 @@ function mostrarFicha(d) {
     (d.pregunta ? '<div class="act act-responder"><b>\u2753 Responde</b>' + (d.pregunta.length ?
         '<ol>' + d.pregunta.map(function(q){return '<li>'+q+'</li>';}).join('') + '</ol>' : d.pregunta) + '</div>' : '') +
     (d.estacion ? '<div class="est-num">Estaci\u00f3n ' + d.estacion + '</div>' : '');
+
+  /* ---- Formulario de respuesta ----
+     Si la página cargó registro.js, toda ficha que tenga reto, actividad o
+     pregunta pasa a ser contestable: el estudiante escribe y envía, y la
+     respuesta llega a la planilla del curso. Sin registro.js no aparece nada
+     y la ficha se comporta como siempre. */
+  if (window.Registro && (d.reto || d.actividad || d.pregunta)) {
+    var enunciado = d.reto || d.actividad ||
+      (Array.isArray(d.pregunta) ? d.pregunta.join(' | ') : d.pregunta) || '';
+    var caja = document.createElement('div');
+    caja.className = 'act act-responder';
+    caja.style.marginTop = '14px';
+    var tit = document.createElement('b');
+    tit.textContent = '\u270D\uFE0F Escribe tu respuesta';
+    var ta = document.createElement('textarea');
+    ta.rows = 4;
+    ta.placeholder = 'Tu respuesta\u2026';
+    ta.style.cssText = 'width:100%;margin:8px 0;padding:9px 11px;border:1px solid rgba(0,0,0,.25);' +
+      'border-radius:8px;font:inherit;font-size:14px;box-sizing:border-box;resize:vertical;';
+    var bt = document.createElement('button');
+    bt.textContent = 'Enviar respuesta';
+    bt.style.cssText = 'background:#2f6b45;color:#fff;border:none;border-radius:8px;' +
+      'padding:9px 16px;font-weight:600;font-size:13.5px;cursor:pointer;';
+    bt.onclick = function () {
+      if (!ta.value.trim()) { ta.focus(); return; }
+      bt.disabled = true; bt.textContent = 'Enviando\u2026';
+      window.Registro.enviar({
+        origen: (MUNDO.datos && MUNDO.datos.titulo) || document.title,
+        actividad: d.nombre || '',
+        pregunta: enunciado,
+        respuesta: ta.value.trim()
+      }).then(function () { bt.textContent = 'Enviado \u2713'; })
+        .catch(function () { bt.disabled = false; bt.textContent = 'Reintentar'; });
+    };
+    caja.appendChild(tit); caja.appendChild(ta); caja.appendChild(bt);
+    cuerpo.appendChild(caja);
+  }
+
   document.getElementById('ficha').classList.add('visible');
 }
 MUNDO.ficha = mostrarFicha;
@@ -2967,6 +3005,7 @@ function arranque(M) {
   marcar('listo');
   var lotes = Object.keys(LOTES).length, piezas = 0;
   Object.keys(LOTES).forEach(function (k) { piezas += LOTES[k].datos.length; });
+  MUNDO.datos = M;
   MUNDO.informe = M.franjas.length + ' franjas · ' + lotes + ' llamadas de dibujo · ' + piezas + ' piezas';
   console.log('MUNDO listo: ' + MUNDO.informe);
 };
@@ -3142,6 +3181,9 @@ function construirUI(M) {
   // Teclado
   var TECLAS = { w: 1, W: 1, ArrowUp: 1, s: -1, S: -1, ArrowDown: -1 };
   window.addEventListener('keydown', function (e) {
+    // si el foco está en un campo de texto, el avatar no debe moverse
+    var _f = document.activeElement;
+    if (_f && (_f.tagName === 'INPUT' || _f.tagName === 'TEXTAREA' || _f.isContentEditable)) return;
     if ((M.rompibles || M.generador) && (e.key === 'g' || e.key === 'G')) MUNDO.golpear();
     if (M.muestras && (e.key === 'r' || e.key === 'R')) MUNDO.recolectar();
     if (M.muestras && (e.key === 'l' || e.key === 'L')) MUNDO.abrirLaboratorio();
