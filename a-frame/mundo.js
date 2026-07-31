@@ -421,6 +421,20 @@ function materialDe(color, acabado) {
     return new THREE.MeshStandardMaterial({
       color: color, roughness: 0.32, metalness: 0.75 });
   }
+  if (acabado === 'gel') {    // translúcido y brillante: citoplasma, vesículas, membranas
+    return new THREE.MeshStandardMaterial({
+      color: color, transparent: true, opacity: 0.55, roughness: 0.14,
+      metalness: 0.04, side: THREE.DoubleSide, depthWrite: false });
+  }
+  if (acabado === 'humedo') { // superficie orgánica húmeda, con reflejo suave
+    return new THREE.MeshStandardMaterial({
+      color: color, roughness: 0.24, metalness: 0.12 });
+  }
+  if (acabado === 'membrana') { // bicapa: se ve por dentro y por fuera, algo translúcida
+    return new THREE.MeshStandardMaterial({
+      color: color, transparent: true, opacity: 0.78, roughness: 0.3,
+      metalness: 0.06, side: THREE.DoubleSide });
+  }
   if (acabado === 'domo') {   // opaco pero visible por dentro Y por fuera: cúpulas y techos
     return new THREE.MeshStandardMaterial({
       color: color, side: THREE.DoubleSide, roughness: 0.82, metalness: 0.02 });
@@ -2321,6 +2335,9 @@ function mostrarFicha(d) {
      pregunta pasa a ser contestable: el estudiante escribe y envía, y la
      respuesta llega a la planilla del curso. Sin registro.js no aparece nada
      y la ficha se comporta como siempre. */
+  // aviso al mundo: se abrió una ficha (lo usa el modo juego de la célula)
+  if (MUNDO.alAbrirFicha) { try { MUNDO.alAbrirFicha(d); } catch (e) {} }
+
   if (window.Registro && (d.reto || d.actividad || d.pregunta)) {
     var enunciado = d.reto || d.actividad ||
       (Array.isArray(d.pregunta) ? d.pregunta.join(' | ') : d.pregunta) || '';
@@ -2346,7 +2363,10 @@ function mostrarFicha(d) {
         actividad: d.nombre || '',
         pregunta: enunciado,
         respuesta: ta.value.trim()
-      }).then(function () { bt.textContent = 'Enviado \u2713'; })
+      }).then(function () {
+        bt.textContent = 'Enviado \u2713';
+        if (MUNDO.alResponder) { try { MUNDO.alResponder(d, ta.value.trim()); } catch (e) {} }
+      })
         .catch(function () { bt.disabled = false; bt.textContent = 'Reintentar'; });
     };
     caja.appendChild(tit); caja.appendChild(ta); caja.appendChild(bt);
