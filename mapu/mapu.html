@@ -105,6 +105,30 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block}
 #zone{position:fixed;left:50%;top:calc(104px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:90vw;text-align:center;
   font:italic 700 clamp(22px,6vw,32px) 'Alegreya',Georgia,serif;text-shadow:0 2px 8px rgba(0,0,0,.85);opacity:0;pointer-events:none;transition:opacity 1s}
 #zone.show{opacity:1}
+#xp{display:none;flex-direction:column;gap:2px;font-size:14px;color:var(--ink);text-shadow:0 1px 3px rgba(0,0,0,.8);transform-origin:left center}
+#xp .row{display:flex;justify-content:space-between;gap:12px}
+#xp .bar{width:170px;height:7px;border:1px solid rgba(255,224,138,.65);background:rgba(0,0,0,.4);border-radius:3px;overflow:hidden}
+#xpFill{display:block;height:100%;width:0;background:linear-gradient(90deg,#e9c98a,#ffe08a);transition:width .6s}
+#xp.pop{animation:xpop .8s}
+@keyframes xpop{0%{transform:scale(1.25);filter:drop-shadow(0 0 8px #ffe08a)}100%{transform:scale(1)}}
+#trk{font-size:14px;color:#f2d089;text-shadow:0 1px 3px rgba(0,0,0,.85);max-width:230px;line-height:1.3}
+#misBtn{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));top:calc(54px + env(safe-area-inset-top,0px));display:none;
+  font:700 15px 'Alegreya',Georgia,serif;color:var(--ink);background:var(--panel);border:1px solid rgba(207,213,216,.4);border-radius:4px;padding:8px 14px;cursor:pointer}
+#mis{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(8,11,10,.82);padding:20px}
+#mis .box{width:min(560px,100%);max-height:80vh;overflow:auto;background:#161a18;border:1px solid rgba(207,213,216,.35);border-radius:4px;padding:18px 20px;touch-action:pan-y}
+#mis h2{margin:0 0 4px;font:700 26px 'Alegreya',Georgia,serif}
+#mis h3{margin:16px 0 6px;font:700 20px 'Alegreya',Georgia,serif}
+#mis p{margin:6px 0;color:var(--ink2);font-size:15px}
+#mis .ms{padding:8px 0;border-top:1px solid rgba(207,213,216,.15)}
+#mis .ms b{display:block;font:700 18px 'Alegreya',Georgia,serif;color:#e9c98a}
+#mis .ms span{display:block;font-size:15px}
+#mis .ms small{color:var(--ink2);font-size:13px}
+#mis .ms.done{color:#8fe08f;font-size:16px}
+#mis .mbar{height:6px;margin:5px 0 3px;background:rgba(0,0,0,.45);border:1px solid rgba(207,213,216,.3);border-radius:3px;overflow:hidden}
+#mis .mbar i{display:block;height:100%;background:#8fe08f}
+#mb{position:fixed;left:50%;top:calc(150px + env(safe-area-inset-top,0px));transform:translateX(-50%);max-width:min(560px,92vw);text-align:center;
+  background:var(--panel);border:2px solid #ffe08a;border-radius:4px;padding:10px 18px;font:700 19px 'Alegreya',Georgia,serif;opacity:0;pointer-events:none;transition:opacity .4s}
+#mb.show{opacity:1}
 #resRow{display:flex;gap:8px;pointer-events:none}
 .rc{position:relative;display:inline-flex;align-items:baseline;gap:5px;padding:5px 10px 8px;background:var(--panel);border:1px solid rgba(207,213,216,.4);border-radius:4px;overflow:hidden}
 .rc b{font:700 20px 'Alegreya',Georgia,serif;color:var(--ink)}
@@ -121,9 +145,12 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block}
 <body>
 <canvas id="c"></canvas>
 
-<div id="hud"><div id="pips"></div><div id="nw"><span>Newen</span><div class="bar"><i id="nwFill"></i></div></div><div id="counts"></div><div id="resRow"></div><div id="sites"></div><div id="evt"></div></div>
+<div id="hud"><div id="pips"></div><div id="xp"><div class="row"><span id="xpLv"></span><span id="xpTxt"></span></div><div class="bar"><i id="xpFill"></i></div></div><div id="nw"><span>Newen</span><div class="bar"><i id="nwFill"></i></div></div><div id="counts"></div><div id="resRow"></div><div id="sites"></div><div id="trk"></div><div id="evt"></div></div>
 <button id="kimunBtn">Kimün</button>
 <div id="toast"></div>
+<div id="mb"></div>
+<button id="misBtn">Misiones</button>
+<div id="mis"><div class="box"><h2>Misiones</h2><p>Toca para cerrar.</p><div id="misList"></div></div></div>
 
 <div id="dlg"><div class="who"></div><div class="txt"></div><div class="more">toca para seguir ▸</div></div>
 <button id="act" class="btn">Saludar</button>
@@ -170,7 +197,7 @@ const WORDS={
  'mari mari':'saludo mapuche','mapu':'tierra, territorio','che':'persona, gente','pichi che':'niño, niña; persona pequeña',
  'kuku':'abuela (por el lado de la madre)','ngen':'espíritu dueño y cuidador de un lugar o elemento','kütral':'fuego',
  'ko':'agua','kürüf':'viento','lof':'comunidad, familia extendida','pillán':'espíritu de la cordillera y los volcanes',
- 'wenu':'cielo, lo alto','mawida':'monte, bosque','pewen':'araucaria; su fruto es el piñón','küme mongen':'vivir bien, en equilibrio','ruka':'casa mapuche, de madera y paja','mingako':'trabajo colectivo: entre todos y de forma recíproca','mawün':'lluvia','foye':'canelo, árbol sagrado; su rama es señal de paz','machi':'autoridad espiritual y sanadora del pueblo mapuche','rewe':'mástil ceremonial de la machi, tallado en un tronco de canelo','pewenche':'gente del pewen (la araucaria)','kimün':'conocimiento, sabiduría que se transmite hablando','nütram':'conversación, relato de los mayores','epew':'cuento que enseña','pewma':'sueño; se considera un mensaje','lawen':'planta medicinal, remedio','lawentuchefe':'persona que conoce las plantas medicinales'
+ 'wenu':'cielo, lo alto','mawida':'monte, bosque','pewen':'araucaria; su fruto es el piñón','küme mongen':'vivir bien, en equilibrio','ruka':'casa mapuche, de madera y paja','mingako':'trabajo colectivo: entre todos y de forma recíproca','mawün':'lluvia','foye':'canelo, árbol sagrado; su rama es señal de paz','machi':'autoridad espiritual y sanadora del pueblo mapuche','rewe':'mástil ceremonial de la machi, tallado en un tronco de canelo','pewenche':'gente del pewen (la araucaria)','kimün':'conocimiento, sabiduría que se transmite hablando','nütram':'conversación, relato de los mayores','epew':'cuento que enseña','pewma':'sueño; se considera un mensaje','lawen':'planta medicinal, remedio','lawentuchefe':'persona que conoce las plantas medicinales','kimche':'persona sabia'
 };
 
 /* ---------- los cuatro ngen ---------- */
@@ -242,9 +269,9 @@ const SEGS=[[VIL.x,VIL.y+1,35.5,60],[VIL.x,VIL.y-1,26,22],[VIL.x,VIL.y-1,62,28],
 
 /* ---------- estado guardado ---------- */
 const KEY='mapu-nawel-v1',FOGKEY='mapu-fog-v1';
-let saved={greeted:{},intro:0,ended:0,words:[],wood:0,straw:0,built:[],tip:0,tip2:0,saberes:[]}, got=new Set(), startPos=null;
+let saved={greeted:{},intro:0,ended:0,words:[],wood:0,straw:0,built:[],tip:0,tip2:0,saberes:[],xp:0,done:[],st:{help:0,shelter:0,zones:[]}}, got=new Set(), startPos=null;
 try{const j=JSON.parse(localStorage.getItem(KEY)||'null');
-  if(j){saved={greeted:j.g||{},intro:j.i||0,ended:j.e||0,words:j.w||[],wood:j.wd||0,straw:j.st||0,built:j.b||[],tip:j.t||0,tip2:j.t2||0,saberes:j.sb||[]};got=new Set(j.c||[]);if(j.x)startPos={x:j.x,y:j.y}}}catch(e){}
+  if(j){saved={greeted:j.g||{},intro:j.i||0,ended:j.e||0,words:j.w||[],wood:j.wd||0,straw:j.st||0,built:j.b||[],tip:j.t||0,tip2:j.t2||0,saberes:j.sb||[],xp:j.xp||0,done:j.dn||[],st:Object.assign({help:0,shelter:0,zones:[]},j.stt||{})};got=new Set(j.c||[]);if(j.x)startPos={x:j.x,y:j.y}}}catch(e){}
 const COST=10,BUILD_MS=5*60*1000,MAX_SITES=2;
 const rukas=[{x:RUKA.x,y:RUKA.y}];(saved.built||[]).forEach(b=>rukas.push({x:b[0],y:b[1],end:b[2]||0}));
 const count=()=>Object.keys(saved.greeted).length;
@@ -602,7 +629,7 @@ function renderCdx(){
 }
 $('kimunBtn').addEventListener('click',()=>{renderCdx();$('cdx').style.display='flex'});
 $('cdx').addEventListener('click',()=>{$('cdx').style.display='none'});
-function persist(){try{localStorage.setItem(KEY,JSON.stringify({g:saved.greeted,i:saved.intro,e:saved.ended,w:saved.words,c:[...got],x:player.x,y:player.y,wd:saved.wood,st:saved.straw,b:rukas.slice(1).map(r=>[+r.x.toFixed(2),+r.y.toFixed(2),r.end||0]),t:saved.tip,t2:saved.tip2,sb:saved.saberes}))}catch(e){}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify({g:saved.greeted,i:saved.intro,e:saved.ended,w:saved.words,c:[...got],x:player.x,y:player.y,wd:saved.wood,st:saved.straw,b:rukas.slice(1).map(r=>[+r.x.toFixed(2),+r.y.toFixed(2),r.end||0]),t:saved.tip,t2:saved.tip2,sb:saved.saberes,xp:saved.xp,dn:saved.done,stt:saved.st}))}catch(e){}}
 
 function openDialog(who,lines,onEnd,hex){
   dlg={who,lines,i:0,ch:0,onEnd,shown:-1};
@@ -633,7 +660,7 @@ function talkKuku(){
       'Si el cielo se enoja y llega un temporal, ven al fuego o a una ruka: el techo de paja nos protege. Junta ramas caídas y paja, y levantaremos más rukas entre todos.',
       'Y recoge solo lo que necesites. Anda, que la tarde es larga.'],
       ()=>{saved.intro=1;saved.tip=1;learn(['mari mari','mapu','che','pichi che','kuku','kütral']);persist();
-        setTimeout(()=>toast('Los puntos de luz en el borde de la pantalla te muestran dónde están los ngen.'),4600)},'#e9c98a');return;
+        setTimeout(()=>toast('Los puntos de luz en el borde te muestran dónde están los ngen. Mira tus Misiones arriba a la derecha.'),4600)},'#e9c98a');return;
   }
   if(!saved.tip){
     openDialog('Kuku · abuela',[
@@ -663,7 +690,7 @@ function talkKuku(){
 function talkSpirit(s){
   if(saved.greeted[s.id]){openDialog(s.title,s.after,null,s.hex);return}
   openDialog(s.title,s.lines,()=>{
-    saved.greeted[s.id]=1;renderPips();learn(s.learn);
+    saved.greeted[s.id]=1;renderPips();learn(s.learn);addXP(40,s.x,s.y-.6);
     setTimeout(()=>toast(s.gift),300);
     for(let i=0;i<40;i++){const a=Math.random()*6.28,v=1+Math.random()*2.4;
       emit({k:'dot',x:s.x,y:s.y-.9,vx:Math.cos(a)*v,vy:Math.sin(a)*v*.7-.6,g:1,l:1.4,m:1.4,s:.09,c:s.hex})}
@@ -679,7 +706,7 @@ function talkTree(t){
   if(t.gate&&!saved.greeted[t.gate]){openDialog(t.title,[t.teaser],null,t.hex);return}
   if(heard){openDialog(t.title,[t.after],null,t.hex);return}
   openDialog(t.title,t.lines,()=>{
-    saved.saberes.push(t.id);newen=1;saved.wood+=2;renderCounts();persist();
+    saved.saberes.push(t.id);newen=1;saved.wood+=2;renderCounts();addXP(30,t.x,t.y-1.4*t.tr.s);persist();
     for(let i=0;i<26;i++){const a=Math.random()*6.28,v=.8+Math.random()*1.8;emit({k:'dot',x:t.x,y:t.y-1.2*t.tr.s,vx:Math.cos(a)*v,vy:Math.sin(a)*v*.7-.6,g:1,l:1.4,m:1.4,s:.08,c:t.hex})}
     const msg='Nuevo saber en Kimün: '+t.name+'. El árbol dejó caer 2 ramas.';
     if(t.learn&&t.learn.length){learn(t.learn);setTimeout(()=>toast(msg),4700)}else toast(msg);
@@ -719,7 +746,7 @@ addEventListener('blur',()=>{for(const k in keys)keys[k]=false;run=false});
 function hideJoy(){joyEl.style.display='none'}
 addEventListener('pointerdown',e=>{
   if(!started||dlg||joy)return;
-  if(e.target.closest('button')||e.target.closest('#dlg')||e.target.closest('#cdx')||e.target.closest('#mm')||e.target.closest('#bigmap'))return;
+  if(e.target.closest('button')||e.target.closest('#dlg')||e.target.closest('#cdx')||e.target.closest('#mis')||e.target.closest('#mm')||e.target.closest('#bigmap'))return;
   joy={id:e.pointerId,ox:e.clientX,oy:e.clientY,dx:0,dy:0};
   joyEl.style.left=joy.ox+'px';joyEl.style.top=joy.oy+'px';joyEl.style.display='block';knobEl.style.transform='translate(0,0)';
 });
@@ -811,7 +838,7 @@ function update(dt){
   const target=(.28+.18*n)*(1-.4*sk);satCur+=(target-satCur)*Math.min(1,dt*(sk>0?1.6:.8));
   if(Math.abs(satCur-lastSatSet)>.004){lastSatSet=satCur;cv.style.filter=`saturate(${satCur.toFixed(3)}) brightness(${(.9+.1*Math.min(1,satCur)).toFixed(3)})`}
 
-  updEvents(dt);updNewen(dt);updRes(dt);updZone(dt);updBuild();updSites(dt);
+  updEvents(dt);updNewen(dt);updRes(dt);updZone(dt);updBuild();updSites(dt);updProg(dt);
   updDlg(dt);updAct();
   const showRun=started&&!dlg&&giftRun()&&coarse;runEl.style.display=showRun?'block':'none';
 }
@@ -1043,6 +1070,11 @@ function draw(){
   for(const r of rukas){if(!r.end)continue;const sx=W/2+(r.x-cx)*S,sy=H/2+(r.y-2.5-cy)*S;
     if(sx<-40||sx>W+40||sy<-20||sy>H+40)continue;
     const t=fmtT(r.end-Date.now())+(r.helping?'  ×2':'');c.lineWidth=3;c.strokeStyle='rgba(0,0,0,.85)';c.strokeText(t,sx,sy);c.fillStyle=r.helping?'#a8f0a8':'#fff';c.fillText(t,sx,sy)}
+  // textos flotantes (+XP)
+  c.font='700 19px Alegreya,Georgia,serif';
+  for(const f of floats){const sx=W/2+(f.x-cx)*S,sy=H/2+(f.y-cy)*S-f.t*38;c.globalAlpha=Math.max(0,1-f.t/1.8);
+    c.lineWidth=4;c.strokeStyle='rgba(0,0,0,.85)';c.strokeText(f.text,sx,sy);c.fillStyle=f.col;c.fillText(f.text,sx,sy)}
+  c.globalAlpha=1;
   // indicadores de borde
   const targets=[];
   if(started&&!dlg&&saved.intro){for(const s of SPS)if(!saved.greeted[s.id])targets.push({x:s.x,y:s.y,col:s.col});
@@ -1111,7 +1143,7 @@ function updNewen(dt){
   shelterV=shelterAt(player.x,player.y);
   const sk=ev.type==='storm'?ev.k:0;
   if(sk>.25){
-    if(shelterV>=1)newen=Math.min(1,newen+.03*dt);
+    if(shelterV>=1){newen=Math.min(1,newen+.03*dt);saved.st.shelter+=dt}
     else newen-=.03*sev()*(shelterV?.4:1)*sk*dt;
   }else newen=Math.min(1,newen+.12*dt);
   if(newen<=0){faint();return}
@@ -1131,16 +1163,16 @@ function renderRes(){
 }
 let sitesT=0;
 function updSites(dt){
-  const now=Date.now();
+  const now=Date.now();let helpedNow=false;
   for(const r of rukas){if(!r.end)continue;
     r.helping=false;
-    if(started&&!dlg&&Math.hypot(player.x-r.x,player.y-r.y)<4.5){r.helping=true;r.end-=dt*1000}
+    if(started&&!dlg&&Math.hypot(player.x-r.x,player.y-r.y)<4.5){r.helping=true;r.end-=dt*1000;if(!helpedNow){helpedNow=true;saved.st.help+=dt}}
     if(Math.abs(r.x-cam.x)<W/S/2+3&&Math.abs(r.y-cam.y)<H/S/2+3&&Math.random()<dt*(r.helping?7:2))
       emit({k:'dot',x:r.x+(Math.random()-.5)*3.4,y:r.y+(Math.random()-.5)*1.6,vx:(Math.random()-.5)*.5,vy:-.5,l:.8,m:.8,s:.06,c:'rgba(210,190,150,.85)'});
     if(now>=r.end){r.end=0;r.helping=false;
       toast('Tu ruka está lista. Desde ahora es un refugio del temporal.');
       for(let i=0;i<40;i++){const a=Math.random()*6.28,v=.8+Math.random()*2;emit({k:'dot',x:r.x,y:r.y-.3,vx:Math.cos(a)*v,vy:Math.sin(a)*v*.5-.8,g:1.2,l:1.2,m:1.2,s:.1,c:'#f2d089'})}
-      persist();sitesT=1}}
+      addXP(45,r.x,r.y-1);persist();sitesT=1}}
   sitesT+=dt;if(sitesT<.5)return;sitesT=0;
   let done=0,html='';
   for(const r of rukas){if(!r.end)done++;else html+=`<div class="w">Ruka en obra · ${fmtT(r.end-now)}${r.helping?' · ayudando ×2':''}</div>`}
@@ -1157,7 +1189,7 @@ function tryBuild(){
   if(!ghost||!canBuild())return;
   if(rukas.filter(r=>r.end).length>=MAX_SITES){toast('Ya hay '+MAX_SITES+' obras en marcha. Espera a que termine una, o quédate cerca para ayudar y acelerar.');return}
   if(!ghost.ok){toast('Aquí no cabe una ruka: busca un lugar plano, sin árboles ni sendero, y lejos de otras rukas.');return}
-  saved.wood-=COST;saved.straw-=COST;rukas.push({x:ghost.x,y:ghost.y,end:Date.now()+BUILD_MS});saved.built.push([+ghost.x.toFixed(2),+ghost.y.toFixed(2)]);
+  saved.wood-=COST;saved.straw-=COST;rukas.push({x:ghost.x,y:ghost.y,end:Date.now()+BUILD_MS});addXP(15,ghost.x,ghost.y-1);saved.built.push([+ghost.x.toFixed(2),+ghost.y.toFixed(2)]);
   for(let i=res.length-1;i>=0;i--){const r=res[i];if(((r.x-ghost.x)/2.4)**2+((r.y-ghost.y)/1.5)**2<1)res.splice(i,1)}
   for(let i=0;i<34;i++){const a=Math.random()*6.28,v=.8+Math.random()*1.8;emit({k:'dot',x:ghost.x+(Math.random()-.5)*3,y:ghost.y+(Math.random()-.5),vx:Math.cos(a)*v,vy:Math.sin(a)*v*.5-.5,g:1,l:1,m:1,s:.1,c:'rgba(210,190,150,.9)'})}
   const first=rukas.length===2;
@@ -1181,7 +1213,7 @@ function zoneAt(x,y){
 }
 function updZone(dt){
   zoneT+=dt;if(zoneT<.4)return;zoneT=0;const z=zoneAt(player.x,player.y);
-  if(z!==zoneLast){zoneLast=z;mmz.textContent=z;
+  if(z!==zoneLast){zoneLast=z;mmz.textContent=z;if(ZONES5.includes(z)&&!saved.st.zones.includes(z))saved.st.zones.push(z);
     if(started&&!dlg&&z!=='Campos del mapu'){zoneEl.textContent=z;zoneEl.classList.add('show');clearTimeout(zoneTm);zoneTm=setTimeout(()=>zoneEl.classList.remove('show'),3200)}}
 }
 const mmEl=$('mm'),mmc=mmEl.getContext('2d'),bigEl=$('bigmap'),bm=$('bm'),bmc=bm.getContext('2d');
@@ -1236,6 +1268,75 @@ function drawMinimap(){
   if(bigOpen){bmc.setTransform(DPR,0,0,DPR,0,0);drawMap(bmc,bmS,true)}
 }
 
+/* ---------- experiencia y misiones ---------- */
+const LV=['Pichi che','Caminante del mapu','Aprendiz del mapu','Cuidador del mapu','Kimche'];
+const needXP=l=>100+50*(l-1);
+const floats=[];
+function lvInfo(){let xp=saved.xp,l=1;while(xp>=needXP(l)){xp-=needXP(l);l++}return{l,cur:xp,max:needXP(l),name:LV[Math.min(l,LV.length)-1]}}
+const mbEl=$('mb');let bq=[],bBusy=false;
+function banner(t,col){bq.push([t,col]);if(!bBusy)nextBanner()}
+function nextBanner(){
+  if(!bq.length){bBusy=false;return}bBusy=true;const b=bq.shift();
+  mbEl.textContent=b[0];mbEl.style.borderColor=b[1];mbEl.style.color=b[1];mbEl.classList.add('show');
+  setTimeout(()=>{mbEl.classList.remove('show');setTimeout(nextBanner,400)},3400);
+}
+function renderXP(pop){
+  const xe=$('xp');if(saved.xp<=0){xe.style.display='none';return}
+  const v=lvInfo();xe.style.display='flex';$('xpLv').textContent='Nv '+v.l+' · '+v.name;$('xpTxt').textContent=v.cur+'/'+v.max;
+  $('xpFill').style.width=(v.cur/v.max*100)+'%';
+  if(pop){xe.classList.remove('pop');void xe.offsetWidth;xe.classList.add('pop')}
+}
+function addXP(n,wx,wy){
+  const before=lvInfo().l;saved.xp+=n;
+  floats.push({x:wx==null?player.x:wx,y:(wy==null?player.y:wy)-.8,t:0,text:'+'+n+' XP',col:'#ffe08a'});
+  renderXP(true);
+  const a=lvInfo();
+  if(a.l>before){newen=1;saved.wood+=2;saved.straw+=2;renderCounts();
+    banner('¡Nivel '+a.l+'! Ahora eres: '+a.name+' (+2 madera, +2 paja)','#ffe08a');
+    if(a.l>=5)setTimeout(()=>learn(['kimche']),5000)}
+  persist();
+}
+const ZONES5=['Aldea de Nawel','El lago de Ngen-Ko','La colina del viento','La falda de la cordillera','El bosque de pewen'];
+const doneRukas=()=>rukas.slice(1).filter(r=>!r.end).length;
+function collected(){let c=0,p=0;for(const it of items)if(got.has(it.id)){if(it.k==='c')c++;else p++}return{c,p}}
+const MISSIONS=[
+ {id:'ngen',title:'Saluda a los cuatro ngen',desc:'Agua, viento, montaña y bosque esperan un mari mari.',xp:80,goal:()=>({cur:count(),max:4})},
+ {id:'arboles',title:'Escucha a los árboles-ngen',desc:'Cinco árboles antiguos hablan por los espíritus. Busca su brillo.',xp:100,goal:()=>({cur:saved.saberes.length,max:SACRED.length})},
+ {id:'ruka1',title:'Levanta tu primera ruka',desc:'Junta 10 de madera y 10 de paja, construye y espera a que termine la obra.',xp:60,goal:()=>({cur:Math.min(1,doneRukas()),max:1})},
+ {id:'temporal',title:'Capea un temporal a resguardo',desc:'Pasa 15 segundos junto al fuego o en una ruka durante un temporal.',xp:60,goal:()=>({cur:Math.min(15,Math.floor(saved.st.shelter)),max:15,unit:'s'})},
+ {id:'mingako',title:'Mingako: ayuda en una obra',desc:'Quédate cerca de una ruka en construcción durante 60 segundos.',xp:40,goal:()=>({cur:Math.min(60,Math.floor(saved.st.help)),max:60,unit:'s'})},
+ {id:'recolecta',title:'Recoge lo justo',desc:'Junta 8 copihues y 5 piñones.',xp:40,goal:()=>{const k=collected();return{cur:Math.min(8,k.c)+Math.min(5,k.p),max:13}}},
+ {id:'explora',title:'Conoce el mapu',desc:'Visita la aldea, el lago, la colina del viento, la cordillera y el bosque de pewen.',xp:60,goal:()=>({cur:ZONES5.filter(z=>saved.st.zones.includes(z)).length,max:5})},
+ {id:'aldea',title:'Una aldea en crecimiento',desc:'Ten tres rukas terminadas.',xp:100,goal:()=>({cur:Math.min(3,doneRukas()),max:3})}
+];
+const activeMissions=()=>MISSIONS.filter(m=>!saved.done.includes(m.id)).slice(0,3);
+let misT=0,misOpen=false;
+function completeMission(m){
+  saved.done.push(m.id);banner('Misión cumplida · '+m.title+' (+'+m.xp+' XP)','#8fe08f');addXP(m.xp);persist();if(misOpen)renderMis();
+}
+function renderTracker(){
+  const a=activeMissions()[0];
+  $('trk').textContent=!saved.intro?'':a?('Misión: '+a.title+' · '+a.goal().cur+'/'+a.goal().max):'Misiones cumplidas por ahora.';
+}
+function updProg(dt){
+  for(let i=floats.length-1;i>=0;i--){floats[i].t+=dt;if(floats[i].t>1.8)floats.splice(i,1)}
+  misT+=dt;if(misT<.5)return;misT=0;
+  if(!started||!saved.intro)return;
+  for(const m of activeMissions()){const g=m.goal();if(g.cur>=g.max)completeMission(m)}
+  renderTracker();if(misOpen)renderMis();
+}
+function renderMis(){
+  if(!saved.intro){$('misList').innerHTML='<p>Habla con la kuku junto al fuego para comenzar.</p>';return}
+  const act=activeMissions(),dn=MISSIONS.filter(m=>saved.done.includes(m.id)),locked=MISSIONS.length-act.length-dn.length;
+  let h='<h3>En curso</h3>'+(act.length?act.map(m=>{const g=m.goal(),pc=Math.min(100,g.cur/g.max*100);
+    return `<div class="ms"><b>${m.title}</b><span>${m.desc}</span><div class="mbar"><i style="width:${pc}%"></i></div><small>${g.cur}/${g.max}${g.unit?' '+g.unit:''} · recompensa: ${m.xp} XP</small></div>`}).join(''):'<p>No hay misiones en curso.</p>');
+  if(locked>0)h+=`<p>Se desbloquean ${locked} misiones más a medida que cumplas estas.</p>`;
+  if(dn.length)h+='<h3>Cumplidas</h3>'+dn.map(m=>`<div class="ms done">✓ ${m.title}</div>`).join('');
+  $('misList').innerHTML=h;
+}
+$('misBtn').addEventListener('click',()=>{misOpen=true;renderMis();$('mis').style.display='flex'});
+$('mis').addEventListener('click',()=>{misOpen=false;$('mis').style.display='none'});
+
 /* ---------- arranque ---------- */
 let last=0;
 function frame(now){
@@ -1255,13 +1356,13 @@ function init(){
   if(startPos&&!hit(startPos.x,startPos.y)){player.x=startPos.x;player.y=startPos.y}
   cam.x=player.x;cam.y=player.y;
   satCur=.28+.18*count();
-  renderPips();renderCounts();
+  renderPips();renderCounts();renderXP(false);
   ready=true;
   const go=$('go');go.disabled=false;go.textContent=saved.intro?'Continuar':'Comenzar';
 }
 $('go').addEventListener('click',()=>{
   if(!ready)return;started=true;$('start').style.display='none';
-  $('hud').style.display='flex';$('kimunBtn').style.display='block';
+  $('hud').style.display='flex';$('kimunBtn').style.display='block';$('misBtn').style.display='block';
   if(!saved.intro)setTimeout(()=>{if(!dlg)talkKuku()},700);
 });
 $('reset').addEventListener('click',()=>{try{localStorage.removeItem(KEY);localStorage.removeItem(FOGKEY)}catch(e){}location.reload()});
