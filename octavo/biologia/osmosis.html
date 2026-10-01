@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Sesión 9 · Difusión y Ósmosis</title>
+<style>
+:root{
+  --navy:#1A1F3A;
+  --navy-2:#232a4d;
+  --navy-3:#2c3560;
+  --teal:#2DD4BF;
+  --teal-dim:#1a8f80;
+  --coral:#FF6B6B;
+  --gold:#FFD166;
+  --amber:#F4A300;
+  --purple:#9B7EDE;
+  --ink:#eef1fb;
+  --ink-dim:#b8bfe0;
+  --glass:#f7f8fc;
+  --glass-line:#d7dcf0;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  font-family:Calibri,'Trebuchet MS',sans-serif;
+  background:radial-gradient(circle at 20% 10%, var(--navy-3), var(--navy) 60%);
+  color:var(--ink);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+h1,h2,h3,.heading{font-family:'Trebuchet MS',Calibri,sans-serif;}
+
+/* ---------- App shell ---------- */
+#app{
+  max-width:980px;
+  margin:0 auto;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  padding:14px 14px 90px;
+}
+
+/* top bar */
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:10px; padding:8px 4px 14px; flex-wrap:wrap;
+}
+.tag-oa{
+  font-size:.72rem; letter-spacing:.04em; font-weight:700; color:var(--navy);
+  background:var(--gold); padding:4px 10px; border-radius:20px;
+}
+.score-badge{
+  display:flex; align-items:center; gap:6px;
+  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15);
+  padding:5px 12px; border-radius:20px; font-size:.85rem; font-weight:700;
+}
+.score-badge .star{color:var(--gold);}
+.progress-trace{
+  font-size:.72rem; color:var(--ink-dim); font-weight:600;
+}
+
+/* ---------- Slide card: "portaobjetos de laboratorio" ---------- */
+.deck{position:relative; flex:1;}
+.slide{
+  display:none;
+  animation:fadeSlide .45s ease;
+}
+.slide.active{display:block;}
+@keyframes fadeSlide{
+  from{opacity:0; transform:translateY(14px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+.lamina{
+  background:linear-gradient(180deg,var(--glass),#eef0fa);
+  color:#1c2140;
+  border-radius:16px;
+  padding:22px 24px 26px;
+  position:relative;
+  box-shadow:0 20px 45px rgba(0,0,0,.35);
+  border-top:6px solid var(--accent, var(--teal));
+  min-height:420px;
+}
+.lamina::before, .lamina::after{
+  content:'';
+  position:absolute; left:50%; transform:translateX(-50%);
+  width:64px; height:8px; background:rgba(0,0,0,.08); border-radius:0 0 6px 6px;
+}
+.lamina::before{ top:-6px; border-radius:6px 6px 0 0; }
+.lamina::after{ bottom:-6px; }
+
+.accent-tag{
+  display:inline-block; font-size:.68rem; font-weight:800; letter-spacing:.05em;
+  text-transform:uppercase; color:#fff; background:var(--accent,var(--teal));
+  padding:3px 10px; border-radius:12px; margin-bottom:10px;
+}
+.slide h2{font-size:1.5rem; color:var(--navy); margin-bottom:6px; line-height:1.25;}
+.slide .sub{font-size:.9rem; color:#4a5178; margin-bottom:16px;}
+.slide p{font-size:.92rem; line-height:1.55; margin-bottom:10px;}
+
+/* nav */
+.navbar{
+  position:fixed; left:0; right:0; bottom:0;
+  background:rgba(15,18,38,.92); backdrop-filter:blur(6px);
+  border-top:1px solid rgba(255,255,255,.1);
+  display:flex; align-items:center; justify-content:center; gap:14px;
+  padding:10px 14px; z-index:50;
+}
+.nav-btn{
+  background:var(--teal); color:#062824; border:none; font-weight:800;
+  padding:9px 18px; border-radius:24px; cursor:pointer; font-size:.85rem;
+  transition:transform .15s ease, opacity .15s ease;
+}
+.nav-btn:disabled{opacity:.35; cursor:not-allowed;}
+.nav-btn:not(:disabled):hover{transform:translateY(-2px);}
+.nav-btn.secondary{background:transparent; color:var(--ink); border:1px solid rgba(255,255,255,.3);}
+.slide-counter{font-size:.78rem; color:var(--ink-dim); font-weight:700; min-width:52px; text-align:center;}
+
+/* teacher notes */
+.tn-toggle{
+  position:fixed; top:12px; right:12px; z-index:60;
+  background:var(--amber); color:#3a2400; border:none; font-weight:800;
+  font-size:.72rem; padding:7px 12px; border-radius:18px; cursor:pointer;
+  box-shadow:0 6px 16px rgba(0,0,0,.35);
+}
+.tn-panel{
+  display:none;
+  background:#3a2a00; border:1px solid var(--amber); color:#ffe9b8;
+  border-radius:10px; padding:12px 14px; margin-top:14px; font-size:.82rem; line-height:1.5;
+}
+.tn-panel.show{display:block;}
+.tn-panel b{color:var(--amber);}
+
+/* cover */
+.cover{
+  text-align:center; padding:34px 18px 24px;
+}
+.cover .kicker{
+  font-size:.78rem; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--teal); font-weight:800; margin-bottom:10px;
+}
+.cover h1{
+  font-size:1.9rem; line-height:1.2; margin-bottom:10px; color:var(--ink);
+}
+.cover .oa-line{color:var(--ink-dim); font-size:.85rem; max-width:560px; margin:0 auto 20px;}
+.qr-box{
+  display:inline-flex; flex-direction:column; align-items:center; gap:6px;
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15);
+  padding:14px 18px; border-radius:14px; margin:12px 0 20px;
+}
+.qr-box img{width:120px; height:120px; border-radius:8px; background:#fff; padding:6px;}
+.qr-box span{font-size:.7rem; color:var(--ink-dim);}
+@media (max-width:640px){ .qr-box{display:none;} }
+
+.team-input{
+  max-width:420px; margin:0 auto 22px; text-align:left;
+}
+.team-input label{font-size:.78rem; color:var(--ink-dim); font-weight:700; display:block; margin-bottom:6px;}
+.team-input input{
+  width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.06); color:var(--ink); font-size:.92rem;
+}
+.team-input input::placeholder{color:var(--ink-dim);}
+
+.start-btn{
+  background:linear-gradient(135deg,var(--teal),var(--purple)); border:none; color:#fff;
+  font-weight:800; padding:13px 30px; border-radius:26px; cursor:pointer; font-size:1rem;
+  box-shadow:0 10px 24px rgba(45,212,191,.3);
+}
+
+/* chips */
+.chip-row{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0;}
+.chip{
+  border:1px solid #ccd2ea; background:#fff; color:#1c2140; font-size:.82rem; font-weight:600;
+  padding:8px 14px; border-radius:20px; cursor:pointer; transition:.15s;
+}
+.chip:hover{border-color:var(--teal);}
+.chip.selected{background:var(--teal); border-color:var(--teal); color:#062824;}
+.chip.wrong{background:var(--coral); border-color:var(--coral); color:#fff;}
+#reveal-activacion{display:none; margin-top:14px; padding:12px 14px; background:#eafaf8; border-left:4px solid var(--teal); border-radius:8px; font-size:.88rem;}
+#reveal-activacion.show{display:block;}
+
+/* comparison cards */
+.cell-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:16px;}
+.cell-card{
+  background:#fff; border:1px solid var(--glass-line); border-left:5px solid var(--accent2,var(--purple));
+  border-radius:12px; padding:12px 14px; cursor:pointer; transition:.2s; min-height:96px;
+  display:flex; flex-direction:column; justify-content:center;
+}
+.cell-card:hover{transform:translateY(-3px); box-shadow:0 10px 18px rgba(0,0,0,.15);}
+.cell-card.flipped{background:var(--navy-2); color:#fff; border-color:var(--accent2,var(--purple));}
+.cell-card .cc-name{font-weight:800; font-size:.9rem; margin-bottom:3px;}
+.cell-card .cc-hint{font-size:.72rem; color:#5a5f80;}
+.cell-card.flipped .cc-hint{color:#c9cde0;}
+.cell-card .cc-detail{font-size:.76rem; display:none; margin-top:4px; line-height:1.4;}
+.cell-card.flipped .cc-detail{display:block;}
+.cell-card.flipped .cc-name{color:var(--gold);}
+.cell-card.has-diagram{grid-column:span 2;}
+@media (max-width:520px){ .cell-card.has-diagram{grid-column:span 1;} }
+.cc-diagram-btn{
+  display:none; margin-top:8px; font-size:.72rem; font-weight:800; color:var(--gold);
+  background:rgba(255,209,102,.15); border:1px solid var(--gold); padding:5px 10px; border-radius:14px;
+  cursor:pointer;
+}
+.cell-card.flipped .cc-diagram-btn{display:inline-block;}
+.cc-diagram-wrap{display:none; margin-top:10px;}
+.cc-diagram-wrap.open{display:block;}
+.cc-diagram-wrap img{width:100%; max-width:420px; border-radius:8px; background:#fff; padding:6px; display:block; margin:0 auto;}
+.cc-diagram-credit{font-size:.66rem; color:#c9cde0; text-align:center; margin-top:4px;}
+
+/* diagram lightbox */
+#diagramLightbox{
+  display:none; position:fixed; inset:0; background:rgba(10,12,26,.88); z-index:100;
+  align-items:center; justify-content:center; padding:20px;
+}
+#diagramLightbox.open{display:flex;}
+#diagramLightbox img{max-width:min(600px,92vw); max-height:80vh; border-radius:12px; background:#fff; padding:10px; box-shadow:0 20px 50px rgba(0,0,0,.5);}
+#diagramLightbox .lb-close{
+  position:absolute; top:18px; right:20px; background:var(--coral); color:#fff; border:none;
+  width:36px; height:36px; border-radius:50%; font-size:1.1rem; cursor:pointer; font-weight:800;
+}
+
+/* ---------- Detail slides per cell type ---------- */
+:root{ --green:#6BCB77; }
+.detail-layout{display:flex; gap:20px; flex-wrap:wrap; margin-top:14px; align-items:flex-start;}
+.detail-media{flex:1 1 260px; min-width:220px;}
+.detail-media img, .detail-media svg{width:100%; max-width:340px; display:block; margin:0 auto; background:#fff; border-radius:10px; padding:8px;}
+.detail-media .media-caption{font-size:.7rem; color:#5a5f80; text-align:center; margin-top:6px;}
+.detail-text{flex:1.3 1 300px; min-width:240px;}
+.fact-grid{display:flex; flex-direction:column; gap:8px; margin-bottom:12px;}
+.fact-row{
+  display:flex; gap:8px; align-items:baseline; font-size:.88rem; padding:8px 10px;
+  background:#fff; border:1px solid var(--glass-line); border-radius:8px;
+}
+.fact-row .fact-label{font-weight:800; color:var(--accent,var(--teal)); min-width:96px; font-size:.76rem; text-transform:uppercase; letter-spacing:.03em;}
+.fact-toggle{
+  background:transparent; border:1.5px dashed var(--accent,var(--teal)); color:var(--navy);
+  font-weight:800; font-size:.8rem; padding:8px 14px; border-radius:20px; cursor:pointer; margin-top:6px;
+}
+.fact-panel{display:none; margin-top:10px; padding:10px 13px; background:#fffbe8; border-left:4px solid var(--gold); border-radius:8px; font-size:.85rem;}
+.fact-panel.show{display:block;}
+.micro-check{margin-top:16px; padding:12px 14px; background:#f3f4fb; border-radius:10px;}
+.micro-check .mc-q{font-size:.84rem; font-weight:700; margin-bottom:8px; color:var(--navy);}
+.mc-opts{display:flex; gap:8px; flex-wrap:wrap;}
+.mc-opt{
+  border:2px solid var(--glass-line); background:#fff; padding:7px 12px; border-radius:16px;
+  font-size:.8rem; font-weight:700; cursor:pointer;
+}
+.mc-opt.correct{background:#e2faf3; border-color:#1fae7c; color:#0d6b4c;}
+.mc-opt.incorrect{background:#fde8e8; border-color:var(--coral); color:#a4222b;}
+.mc-fb{font-size:.78rem; font-weight:700; margin-top:8px; display:none;}
+.mc-fb.show{display:block;}
+.dot-nav{display:flex; gap:6px; justify-content:center; margin-top:16px;}
+.dot-nav span{width:7px; height:7px; border-radius:50%; background:rgba(28,33,64,.15);}
+.dot-nav span.on{background:var(--accent,var(--teal));}
+
+/* ---------- Sesión 9: simulación, cronómetro, tabla y comparación ---------- */
+.sim-box{
+  background:#0c0f22; border-radius:12px; padding:10px; margin-top:14px;
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+}
+.sim-temp-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center;}
+.temp-btn{
+  border:1.5px solid rgba(255,255,255,.25); background:transparent; color:var(--ink-dim);
+  font-weight:800; font-size:.76rem; padding:6px 13px; border-radius:16px; cursor:pointer; transition:.15s;
+}
+.temp-btn.active{background:var(--teal); border-color:var(--teal); color:#062824;}
+.sim-zone-counts{display:flex; gap:16px; font-size:.78rem; color:var(--ink-dim); font-weight:600;}
+.sim-zone-counts b{color:#fff;}
+.sim-graph-wrap{width:100%; max-width:460px; display:flex; flex-direction:column; gap:4px; margin-top:4px;}
+#concentrationGraph{width:100%; background:#12163080; border-radius:8px;}
+
+/* ---------- Ticket de salida ---------- */
+.conf-scale{display:flex; gap:8px; margin:10px 0 4px; flex-wrap:wrap;}
+.conf-btn{
+  border:2px solid var(--glass-line); background:#fff; width:42px; height:42px; border-radius:50%;
+  font-weight:800; font-size:.95rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+.conf-btn.active{background:var(--teal); border-color:var(--teal); color:#062824;}
+.conf-caption{display:flex; justify-content:space-between; font-size:.68rem; color:#5a5f80; max-width:260px; margin-top:2px;}
+.exit-section-label{font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--navy); margin:18px 0 6px;}
+.exit-section-label:first-of-type{margin-top:4px;}
+
+/* ---------- Registro en el cuaderno ---------- */
+.notebook-note{
+  margin-top:14px; padding:11px 14px; border-radius:8px;
+  background:repeating-linear-gradient(#fdfaf0, #fdfaf0 21px, #eee6cf 22px);
+  border-left:4px solid var(--navy); font-size:.84rem; line-height:1.5; color:#2a2410;
+}
+.notebook-note b{color:var(--navy);}
+.notebook-note .nb-icon{margin-right:4px;}
+#diffusionCanvas{width:100%; max-width:460px; height:220px; background:#12163080; border-radius:8px;}
+.sim-controls{display:flex; gap:10px; align-items:center;}
+.sim-label{font-size:.76rem; color:var(--ink-dim);}
+
+.timer-box{
+  display:flex; align-items:center; gap:14px; background:#f3f4fb; border-radius:12px;
+  padding:12px 16px; margin:12px 0; flex-wrap:wrap;
+}
+.timer-display{font-family:'Trebuchet MS',monospace; font-size:1.6rem; font-weight:800; color:var(--navy); min-width:84px;}
+.timer-btns{display:flex; gap:8px;}
+.timer-btns button{
+  border:none; font-weight:800; font-size:.78rem; padding:7px 14px; border-radius:16px; cursor:pointer;
+}
+.tbtn-start{background:var(--teal); color:#062824;}
+.tbtn-stop{background:var(--coral); color:#fff;}
+.tbtn-reset{background:#e2e4f0; color:#1c2140;}
+
+.data-table{width:100%; border-collapse:collapse; margin-top:12px; font-size:.82rem;}
+.data-table th, .data-table td{border:1px solid var(--glass-line); padding:7px 8px; text-align:center;}
+.data-table th{background:var(--navy-2); color:#fff; font-size:.72rem; text-transform:uppercase;}
+.data-table input{width:70px; border:1px solid var(--glass-line); border-radius:6px; padding:5px; text-align:center; font-size:.82rem;}
+.data-table td.delta{font-weight:800;}
+.data-table td.delta.pos{color:#1fae7c;}
+.data-table td.delta.neg{color:#c0392b;}
+
+.compare-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px;}
+@media (max-width:560px){ .compare-grid{grid-template-columns:1fr;} }
+.compare-col{background:#fff; border-radius:12px; padding:14px; border-top:5px solid var(--accent3,var(--teal));}
+.compare-col.osmosis{--accent3:var(--purple);}
+.compare-col h4{font-size:.95rem; color:var(--navy); margin-bottom:8px;}
+.compare-col ul{padding-left:18px; font-size:.82rem; line-height:1.6;}
+
+.cell-pair{display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin-top:10px;}
+.cell-pair figure{flex:1 1 180px; min-width:160px; margin:0; text-align:center;}
+.cell-pair figcaption{font-size:.74rem; color:#5a5f80; margin-top:4px; font-weight:700;}
+.cell-pair svg{width:100%; max-width:190px; background:#fff; border-radius:10px; padding:6px;}
+
+/* matching game */
+.match-wrap{display:flex; gap:22px; flex-wrap:wrap; margin-top:14px;}
+.match-col{flex:1; min-width:220px;}
+.match-col h4{font-size:.8rem; text-transform:uppercase; letter-spacing:.04em; color:#5a5f80; margin-bottom:8px;}
+.match-item{
+  background:#fff; border:2px solid var(--glass-line); border-radius:10px; padding:9px 12px;
+  margin-bottom:8px; font-size:.85rem; cursor:pointer; transition:.15s; user-select:none;
+}
+.match-item.sel{border-color:var(--purple); background:#f3ecff;}
+.match-item.matched{border-color:var(--teal); background:#e5fbf8; opacity:.6; cursor:default;}
+.match-item.err{animation:shake .4s;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+#match-feedback{margin-top:10px; font-size:.85rem; font-weight:700; min-height:20px;}
+
+/* AER form */
+.aer-block{margin-top:14px;}
+.aer-field{margin-bottom:12px;}
+.aer-field label{display:block; font-size:.78rem; font-weight:800; color:var(--navy); margin-bottom:4px;}
+.aer-field label .letter{color:var(--accent,var(--teal));}
+.aer-field textarea{
+  width:100%; min-height:58px; border:1px solid var(--glass-line); border-radius:8px;
+  padding:9px 11px; font-family:Calibri,sans-serif; font-size:.87rem; resize:vertical;
+}
+.select-card{
+  display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 4px;
+}
+.pick{
+  border:2px solid var(--glass-line); background:#fff; padding:8px 12px; border-radius:10px;
+  font-size:.8rem; font-weight:700; cursor:pointer;
+}
+.pick.active{border-color:var(--coral); background:#fff0f0; color:#a4222b;}
+
+/* quiz bank */
+.q-block{
+  border:1px solid var(--glass-line); border-radius:12px; padding:14px 16px; margin-bottom:14px;
+  background:#fff;
+}
+.q-block .q-level{font-size:.68rem; font-weight:800; text-transform:uppercase; color:var(--purple); margin-bottom:4px;}
+.q-block .q-text{font-weight:700; font-size:.9rem; margin-bottom:10px; color:var(--navy);}
+.opt-list{display:flex; flex-direction:column; gap:7px;}
+.opt{
+  border:1px solid var(--glass-line); border-radius:8px; padding:8px 12px; font-size:.84rem;
+  cursor:pointer; transition:.15s;
+}
+.opt:hover{border-color:var(--teal);}
+.opt.correct{background:#e2faf3; border-color:#1fae7c; font-weight:700;}
+.opt.incorrect{background:#fde8e8; border-color:var(--coral);}
+.q-open textarea{width:100%; min-height:56px; border:1px solid var(--glass-line); border-radius:8px; padding:9px; font-family:Calibri; font-size:.85rem;}
+.q-feedback{font-size:.78rem; margin-top:8px; font-weight:700; display:none;}
+.q-feedback.show{display:block;}
+
+/* checklist */
+.checklist{display:flex; flex-direction:column; gap:9px; margin-top:12px;}
+.check-item{display:flex; align-items:flex-start; gap:9px; font-size:.86rem; cursor:pointer;}
+.check-item input{margin-top:3px; width:16px; height:16px;}
+
+/* buttons */
+.btn{
+  background:var(--purple); color:#fff; border:none; font-weight:800; font-size:.82rem;
+  padding:9px 18px; border-radius:20px; cursor:pointer; margin-top:10px;
+}
+.btn.teal{background:var(--teal); color:#062824;}
+.btn.coral{background:var(--coral);}
+.btn.outline{background:transparent; border:1px solid var(--navy); color:var(--navy);}
+
+/* toast */
+#toast-container{position:fixed; top:60px; left:50%; transform:translateX(-50%); z-index:80; display:flex; flex-direction:column; gap:8px;}
+.toast{
+  background:var(--navy-2); border:1px solid var(--teal); color:#fff; padding:9px 16px;
+  border-radius:20px; font-size:.8rem; font-weight:700; box-shadow:0 8px 18px rgba(0,0,0,.4);
+  animation:toastIn .3s ease;
+}
+@keyframes toastIn{from{opacity:0; transform:translateY(-10px);} to{opacity:1; transform:translateY(0);}}
+
+/* confetti */
+#confetti-layer{position:fixed; inset:0; pointer-events:none; z-index:90; overflow:hidden;}
+.confetti-piece{position:absolute; top:-20px; width:9px; height:14px; opacity:.9;}
+
+footer.sig{text-align:center; font-size:.68rem; color:var(--ink-dim); margin-top:16px;}
+</style>
+</head>
+<body>
+
+<button class="tn-toggle" id="tnToggle">📝 Notas docente</button>
+<div id="toast-container"></div>
+<div id="confetti-layer"></div>
+<div id="diagramLightbox">
+  <button class="lb-close" id="lbClose">✕</button>
+  <img id="lbImg" src="" alt="Diagrama ampliado">
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <span class="tag-oa">OA3 · IE1-IE2 — Difusión y ósmosis</span>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="progress-trace" id="progressTrace">Diapositiva 1/8</span>
+      <div class="score-badge"><span class="star">★</span><span id="scoreCount">0</span> pts</div>
+    </div>
+  </div>
+
+  <div class="deck" id="deck">
+
+    <!-- SLIDE 0: COVER -->
+    <section class="slide" data-idx="0">
+      <div class="cover">
+        <div class="kicker">Unidad 2 · La Célula — Sesión 9</div>
+        <h1>Difusión y Ósmosis: Fenómenos Cotidianos</h1>
+        <p class="oa-line">OA3‑IE1, IE2: identificar el movimiento de partículas en fenómenos cotidianos y obtener evidencias de difusión y ósmosis mediante investigaciones simples.</p>
+
+        <div class="team-input">
+          <label for="teamNameInput">Nombre del equipo / integrantes</label>
+          <input type="text" id="teamNameInput" placeholder="Ej: Los Osmóticos — Ana, Beto, Caro, Dani">
+        </div>
+
+        <button class="start-btn" id="startBtn">Comenzar sesión →</button>
+      </div>
+      <div class="tn-panel" data-tn>
+        <b>Nota docente:</b> Esta sesión abre el <b>Bloque C: Transporte Celular</b>. Antes de comenzar, ten listos los materiales: bolsas de té, agua caliente, papas o zanahorias, sal, agua, balanza (o vasos graduados) y cronómetro. El Kahoot de cierre de este bloque se aplicará varias sesiones más adelante, no hoy.
+      </div>
+    </section>
+
+    <!-- SLIDE 1: ACTIVACIÓN -->
+    <section class="slide" data-idx="1">
+      <div class="lamina" style="--accent:var(--teal)">
+        <span class="accent-tag">Inicio · Activación</span>
+        <h2>¿Dónde has visto esto antes?</h2>
+        <p class="sub">Selecciona las situaciones que son ejemplos de difusión.</p>
+        <div class="chip-row" id="chipsActivacion">
+          <div class="chip" data-correct="true">El aroma del pan recién horneado se esparce por toda la casa</div>
+          <div class="chip" data-correct="true">Una gota de tinta se dispersa lentamente en un vaso de agua</div>
+          <div class="chip" data-correct="true">El azúcar se distribuye parejo en el té después de un rato, sin revolver</div>
+          <div class="chip" data-correct="false">El agua sube por una pajilla cuando succionas con la boca</div>
+          <div class="chip" data-correct="false">Una pelota rueda cuesta abajo por la gravedad</div>
+        </div>
+        <div id="reveal-activacion">
+          <strong>Exacto:</strong> en los tres primeros casos, partículas (aromas, tinta, azúcar) se mueven espontáneamente desde donde hay <em>más concentración</em> hacia donde hay <em>menos</em>, sin que nadie las empuje. Eso es <strong>difusión</strong>. Los otros dos ejemplos involucran fuerza mecánica o gravedad, no movimiento por diferencia de concentración.
+        </div>
+        <div class="notebook-note"><span class="nb-icon">📓</span><b>Para tu cuaderno:</b> anota el título "Difusión y Ósmosis" y la fecha. Copia la frase final: "la difusión es el movimiento de partículas desde donde hay más concentración hacia donde hay menos, sin gasto de energía".</div>
+        <div class="tn-panel" data-tn>
+          <b>Nota docente:</b> Si surge la pajilla como "difusión", aprovecha para distinguir movimiento pasivo (sin gasto de energía externa, por gradiente) de movimiento forzado (succión mecánica).
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: CONCEPTO DIFUSIÓN -->
+    <section class="slide" data-idx="2">
+      <div class="lamina" style="--accent:var(--coral)">
+        <span class="accent-tag">Concepto clave</span>
+        <h2>¿Qué es la difusión?</h2>
+        <div class="fact-grid">
+          <div class="fact-row"><span class="fact-label">Definición</span><span>Movimiento neto de partículas desde una zona de <b>mayor concentración</b> hacia una de <b>menor concentración</b>.</span></div>
+          <div class="fact-row"><span class="fact-label">Energía</span><span>Es un proceso <b>pasivo</b>: ocurre espontáneamente, sin que la célula gaste energía.</span></div>
+          <div class="fact-row"><span class="fact-label">Motor</span><span>El "motor" es el <b>gradiente de concentración</b> (la diferencia entre ambas zonas).</span></div>
+          <div class="fact-row"><span class="fact-label">¿Hasta cuándo?</span><span>Hasta que las partículas quedan distribuidas de manera uniforme (equilibrio).</span></div>
+        </div>
+        <button class="fact-toggle" data-fact="difusion">💡 ¿Sabías que...?</button>
+        <div class="fact-panel" data-factpanel="difusion">La difusión también ocurre dentro de tu cuerpo: así es como el oxígeno pasa desde los pulmones hacia la sangre, moviéndose desde donde hay más oxígeno (aire) hacia donde hay menos (sangre).</div>
+        <div class="notebook-note"><span class="nb-icon">📓</span><b>Para tu cuaderno:</b> copia la tabla Definición / Energía / Motor / ¿Hasta cuándo? de la difusión, con tus propias palabras.</div>
+        <div class="tn-panel" data-tn>
+          <b>Nota docente:</b> Conecta con la Unidad 1 (sistema respiratorio): el intercambio gaseoso alveolar es difusión pura.
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 3: SIMULACIÓN DE DIFUSIÓN -->
+    <section class="slide" data-idx="3">
+      <div class="lamina" style="--accent:var(--teal)">
+        <span class="accent-tag">Simulación interactiva</span>
+        <h2>Observa la difusión en acción</h2>
+        <p class="sub">Elige una temperatura, presiona "Iniciar" y observa cómo las partículas (como la tinta en el agua) se mueven desde el centro, donde están concentradas, hacia los bordes.</p>
+        <div class="sim-box">
+          <div class="sim-temp-row">
+            <span class="sim-label" style="margin:0;">🌡️ Temperatura:</span>
+            <button class="temp-btn" data-temp="0.35">Fría</button>
+            <button class="temp-btn active" data-temp="1">Tibia</button>
+            <button class="temp-btn" data-temp="2.3">Caliente</button>
+          </div>
+          <canvas id="diffusionCanvas" width="460" height="220"></canvas>
+          <div class="sim-zone-counts">
+            <span>🔵 Zona central: <b id="zoneCenterCount">90</b></span>
+            <span>⚪ Periferia: <b id="zonePeripheryCount">0</b></span>
+          </div>
+          <div class="sim-controls">
+            <button class="btn teal" id="simStartBtn">▶ Iniciar difusión</button>
+            <button class="btn outline" id="simResetBtn" style="color:#fff;border-color:rgba(255,255,255,.4);">↺ Reiniciar</button>
+          </div>
+          <span class="sim-label" id="simLabel">Partículas concentradas en el centro — presiona Iniciar.</span>
+          <div class="sim-graph-wrap">
+            <span class="sim-label">% de partículas aún en la zona central (en el tiempo)</span>
+            <canvas id="concentrationGraph" width="460" height="110"></canvas>
+          </div>
+        </div>
+        <div class="notebook-note"><span class="nb-icon">📓</span><b>Para tu cuaderno:</b> dibuja una pequeña tabla con 2 columnas (Temperatura / ¿Qué pasó con la velocidad?) y completa con "fría", "tibia" y "caliente" después de probar cada una.</div>
+        <div class="tn-panel" data-tn>
+          <b>Nota docente:</b> La temperatura controla la rapidez del movimiento de las partículas (energía cinética), igual que en el experimento real. El gráfico de abajo muestra cómo baja la concentración en la zona central hasta estabilizarse cerca del equilibrio — útil para introducir la idea de "equilibrio dinámico". Esta simulación es un apoyo visual del concepto, no reemplaza el experimento real de la siguiente diapositiva (bolsa de té en agua caliente).
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 4: EXPERIMENTO CLÁSICO - POE -->
+    <section class="slide" data-idx="4">
+      <div class="lamina" style="--accent:var(--amber)">
+        <span class="accent-tag">Experimento clásico · POE</span>
+        <h2>Bolsa de té en agua caliente</h2>
+        <p class="sub">Registra tu Predicción, luego la Observación durante el experimento, y finalmente tu Explicación.</p>
+
+        <div class="timer-box">
+          <span class="timer-display" id="timerDisplay">00:00</span>
+          <div class="timer-btns">
+            <button class="tbtn-start" id="timerStart">▶ Iniciar</button>
+            <button class="tbtn-stop" id="timerStop">⏸ Pausar</button>
+            <button class="tbtn-reset" id="timerReset">↺ Reiniciar</button>
+          </div>
+          <span class="sim-label" style="color:#5a5f80;">Cronómetro del experimento</span>
+        </div>
+
+        <div class="aer-block">
+          <div class="aer-field">
+            <label><span class="letter">P ·</span> Predicción: ¿qué crees que pasará con el color del agua al sumergir la bolsa de té?</label>
+            <textarea id="poeP" placeholder="Escribe tu predicción antes de observar..."></textarea>
+          </div>
+          <div class="aer-field">
+            <label><span class="letter">O ·</span> Observación: describe lo que realmente ocurre (velocidad, dirección, uniformidad del color).</label>
+            <textarea id="poeO" placeholder="Registra lo que observas mientras pasa el tiempo..."></textarea>
+          </div>
+          <div class="aer-field">
+            <label><span class="letter">E ·</span> Explicación: ¿por qué ocurre esto? Usa el concepto de difusión y gradiente de concentración.</label>
+            <textarea id="poeE" placeholder="Explica usando lo aprendido sobre difusión..."></textarea>
+          </div>
+        </div>
+        <button class="btn coral" id="poeSaveBtn">Guardar registro POE</button>
+        <div class="notebook-note"><span class="nb-icon">📓</span><b>Para tu cuaderno:</b> este es tu registro oficial de la actividad. Copia tu Predicción, Observación y Explicación en tu cuaderno de Ciencias, con el título "Experimento: bolsa de té en agua caliente".</div>
+        <div class="tn-panel" data-tn>
+          <b>Nota docente:</b> El agua caliente acelera la difusión (mayor energía cinética de las partículas) — es un buen gancho para preguntar qué pasaría con agua fría.
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 5: CONCEPTO ÓSMOSIS -->
+    <section class="slide" data-idx="5">
+      <div class="lamina" style="--accent:var(--purple)">
+        <span class="accent-tag">Concepto clave</span>
+        <h2>¿Qué es la ósmosis?</h2>
+        <div class="fact-grid">
+          <div class="fact-row"><span class="fact-label">Definición</span><span>Un caso especial de difusión: el movimiento de <b>agua</b> a través de una <b>membrana semipermeable</b>.</span></div>
+          <div class="fact-row"><span class="fact-label">Dirección</span><span>El agua se mueve desde donde hay <b>menos soluto</b> (más agua libre) hacia donde hay <b>más soluto</b> (menos agua libre).</span></div>
+          <div class="fact-row"><span class="fact-label">Membrana</span><span>La membrana plasmática deja pasar el agua, pero no (o con dificultad) al soluto disuelto.</span></div>
+        </div>
+        <button class="fact-toggle" data-fact="osmosis">💡 ¿Sabías que...?</button>
+        <div class="fact-panel" data-factpanel="osmosis">Por eso una lechuga marchita "revive" si la sumerges en agua: el agua entra por ósmosis hacia las células, que tienen más soluto en su interior que el agua pura.</div>
+        <div class="notebook-note"><span class="nb-icon">📓</span><b>Para tu cuaderno:</b> copia la definición de ósmosis y subraya hacia dónde se mueve el agua (hacia el lado con más soluto).</div>
+        <div class="tn-panel" data-tn>
+          <b>Nota docente:</b> Evita la confusión frecuente "el agua va hacia donde hay más agua" — enfatiza que se mueve hacia donde hay <b>más soluto</b> (menos agua disponible).
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 6: ESQUEMA TURGENCIA / PLASMÓLISIS -->
+    <section class="slide" data-idx="6">
+      <div class="lamina" style="--accent:var(--purple)">
+        <span class="accent-tag">Modelo visual</span>
+        <h2>El efecto de la ósmosis en una célula vegetal</h2>
+        <p class="sub">Compara qué le pasa a una célula vegetal según la concentración de soluto del medio que la rodea.</p>
+        <div class="cell-pair">
+          <figure>
+            <svg viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0" y="0" width="180" height="180" rx="12" fill="#eaf6e6"/>
+              <rect x="20" y="20" width="140" height="140" rx="8" fill="none" stroke="#2f6e2f" stroke-width="4"/>
+              <rect x="26" y="26" width="128" height="128" rx="6" fill="#bfe3b0" stroke="#4a8a4a" stroke-width="2"/>
+              <circle cx="90" cy="90" r="14" fill="#c9dfa0" stroke="#4a8a4a" stroke-width="1.5"/>
+              <text x="90" y="170" font-size="11" font-family="Arial" fill="#1c2140" text-anchor="middle">Medio hipotónico (poco soluto)</text>
+            </svg>
+            <figcaption>Célula túrgida — entra agua, la vacuola se llena y presiona la pared (célula firme)</figcaption>
+          </figure>
+          <figure>
+            <svg viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0" y="0" width="180" height="180" rx="12" fill="#fdf1e8"/>
+              <rect x="20" y="20" width="140" height="140" rx="8" fill="none" stroke="#2f6e2f" stroke-width="4"/>
+              <ellipse cx="95" cy="92" rx="48" ry="44" fill="#bfe3b0" stroke="#4a8a4a" stroke-width="2"/>
+              <circle cx="95" cy="92" r="10" fill="#c9dfa0" stroke="#4a8a4a" stroke-width="1.5"/>
+              <text x="90" y="170" font-size="11" font-family="Arial" fill="#1c2140" text-anchor="middle">Medio hipertónico (mucho soluto)</text>
+            </svg>
+            <figcaption>Célula plasmolizada — sale agua, la membrana se despega de la pared (célula flácida)</figcaption>
+          </figure>
+        </div>
+        <div class="notebook-note"><span class="nb-icon">📓</span><b>Para tu cuaderno:</b> dibuja ambos esquemas (célula túrgida y plasmolizada), rotula pared celular, membrana y vacuola, y anota debajo de cada una si entra o sale agua.</div>
+        <div class="tn-panel" data-tn>
+          <b>Nota docente:</b> Esquemas originales, simplificados a propósito. Relaciónalos con lo que verán al pesar la papa/zanahoria en la siguiente actividad: la pérdida de masa = salida de agua (medio hipertónico).
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 7: STEAM - EXPERIMENTO ÓSMOSIS -->
+    <section class="slide" data-idx="7">
+      <div class="lamina" style="--accent:var(--coral)">
+        <span class="accent-tag">STEAM · Experimento cuantitativo</span>
+        <h2>Ósmosis en papa o zanahoria</h2>
+        <p class="sub">Registra la masa inicial y final de cada trozo en las tres soluciones. La tabla calculará el cambio automáticamente.</p>
+        <table class="data-table" id="osmosisTable">
+          <thead>
+            <tr><th>Grupo</th><th>Masa inicial (g)</th><th>Masa final (g)</th><th>Δ masa (g)</th><th>Cambio (%)</th></tr>
+          </thead>
+          <tbody>
+            <tr data-row="agua">
+              <td>Agua pura (0% sal)</td>
+              <td><input type="number" step="0.1" class="m-init" placeholder="0.0"></td>
+              <td><input type="number" step="0.1" class="m-final" placeholder="0.0"></td>
+              <td class="delta">—</td>
+              <td class="pct">—</td>
+            </tr>
+            <tr data-row="baja">
+              <td>Solución 5% sal</td>
+              <td><input type="number" step="0.1" class="m-init" placeholder="0.0"></td>
+              <td><input type="number" step="0.1" class="m-final" placeholder="0.0"></td>
+              <td class="delta">—</td>
+              <td class="pct">—</td>
+            </tr>
+            <tr data-row="alta">
+              <td>Solución 15% sal</td>
+              <td><input type="number" step="0.1" class="m-init" placeholder="0.0"></td>
+              <td><input type="number" step="0.1" class="m-final" placeholder="0.0"></td>
+              <td class="delta">—</td>
+              <td class="pct">—</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="aer-block">
+          <div class="aer-field">
+            <label><span class="letter">A ·</span> Afirmación: ¿en qué solución(es) hubo mayor pérdida de masa?</label>
+            <textarea id="aerA" placeholder="Ej: la mayor pérdida de masa ocurrió en..."></textarea>
+          </div>
+          <div class="aer-field">
+            <label><span class="letter">E ·</span> Evidencia: usa los datos numéricos de tu tabla.</label>
+            <textarea id="aerE" placeholder="Cita los valores de Δ masa o % de cambio..."></textarea>
+          </div>
+          <div class="aer-field">
+            <label><span class="letter">R ·</span> Razonamiento: explica el resultado usando el concepto de ósmosis y tonicidad.</label>
+            <textarea id="aerR" placeholder="Relaciona con medio hipotónico/hipertónico..."></textarea>
+          </div>
+        </div>
+        <button class="btn coral" id="aerSaveBtn">Guardar conclusión del grupo</button>
+        <div class="notebook-note"><span class="nb-icon">📓</span><b>Para tu cuaderno:</b> copia la tabla con las 3 soluciones y sus masas (inicial, final, Δ y %), y tu conclusión AER completa.</div>
+        <div class="tn-panel" data-tn>
+          <b>Nota docente:</b> Si no hay balanza, pueden usar vasos graduados y medir el volumen desplazado, o comparar longitud/diámetro del trozo como proxy cualitativo.
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 8: COMPARACIÓN DIFUSIÓN VS ÓSMOSIS -->
+    <section class="slide" data-idx="8">
+      <div class="lamina" style="--accent:var(--gold)">
+        <span class="accent-tag">Síntesis</span>
+        <h2>Difusión vs. Ósmosis</h2>
+        <div class="compare-grid">
+          <div class="compare-col">
+            <h4>Difusión</h4>
+            <ul>
+              <li>Movimiento de <b>cualquier partícula</b> (gases, solutos, aromas).</li>
+              <li>No requiere necesariamente una membrana.</li>
+              <li>Va de mayor a menor concentración de esa partícula.</li>
+              <li>Ej: aroma del pan, tinta en agua, té sin revolver.</li>
+            </ul>
+          </div>
+          <div class="compare-col osmosis">
+            <h4>Ósmosis</h4>
+            <ul>
+              <li>Movimiento específico de <b>agua</b>.</li>
+              <li>Ocurre a través de una <b>membrana semipermeable</b>.</li>
+              <li>Va hacia donde hay más soluto (menos agua libre).</li>
+              <li>Ej: papa en solución salina, raíz absorbiendo agua del suelo.</li>
+            </ul>
+          </div>
+        </div>
+        <p style="margin-top:14px;"><strong>En común:</strong> ambos son procesos <b>pasivos</b> (sin gasto de energía) que ocurren por diferencias de concentración, hasta alcanzar el equilibrio.</p>
+        <div class="notebook-note"><span class="nb-icon">📓</span><b>Para tu cuaderno:</b> dibuja una tabla de dos columnas (Difusión | Ósmosis) y copia al menos 3 diferencias y 1 semejanza entre ambos procesos.</div>
+        <div class="tn-panel" data-tn>
+          <b>Nota docente:</b> La ósmosis es un caso particular de difusión — no son procesos opuestos ni independientes. Útil repetir esta idea antes del banco de preguntas.
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 9: BANCO DE PREGUNTAS -->
+    <section class="slide" data-idx="9">
+      <div class="lamina" style="--accent:var(--purple)">
+        <span class="accent-tag">Banco de preguntas · Comprender / Aplicar</span>
+        <h2>Pon a prueba lo aprendido</h2>
+
+        <div class="q-block">
+          <div class="q-level">Comprender</div>
+          <div class="q-text">1. ¿Por qué la difusión se considera un proceso pasivo?</div>
+          <div class="opt-list" data-answer="b">
+            <div class="opt" data-key="a">Porque solo ocurre en plantas.</div>
+            <div class="opt" data-key="b">Porque ocurre espontáneamente, sin que la célula gaste energía.</div>
+            <div class="opt" data-key="c">Porque requiere ATP para mover las partículas.</div>
+            <div class="opt" data-key="d">Porque solo ocurre con agua.</div>
+          </div>
+          <p class="q-feedback"></p>
+        </div>
+
+        <div class="q-block">
+          <div class="q-level">Aplicar</div>
+          <div class="q-text">2. Un trozo de papa pierde masa al sumergirse en agua con mucha sal. ¿Qué ocurrió?</div>
+          <div class="opt-list" data-answer="c">
+            <div class="opt" data-key="a">Entró sal a las células de la papa.</div>
+            <div class="opt" data-key="b">La papa realizó fotosíntesis.</div>
+            <div class="opt" data-key="c">Salió agua desde las células de la papa hacia la solución, por ósmosis.</div>
+            <div class="opt" data-key="d">La papa absorbió más agua de la solución.</div>
+          </div>
+          <p class="q-feedback"></p>
+        </div>
+
+        <div class="q-block">
+          <div class="q-level">Aplicar</div>
+          <div class="q-text">3. Si agregas una gota de colorante en agua fría y otra en agua caliente, ¿en cuál se distribuirá más rápido y por qué?</div>
+          <div class="q-open">
+            <textarea placeholder="Escribe tu respuesta relacionando temperatura y velocidad de difusión..."></textarea>
+          </div>
+        </div>
+
+        <div class="q-block">
+          <div class="q-level">Comprender</div>
+          <div class="q-text">4. Una célula se coloca en una solución con menos soluto que su interior (medio hipotónico). ¿Qué se espera que ocurra?</div>
+          <div class="opt-list" data-answer="a">
+            <div class="opt" data-key="a">Entra agua a la célula; en una célula vegetal esto genera turgencia.</div>
+            <div class="opt" data-key="b">Sale agua de la célula y se plasmoliza.</div>
+            <div class="opt" data-key="c">No ocurre ningún movimiento de agua.</div>
+            <div class="opt" data-key="d">La célula se divide inmediatamente.</div>
+          </div>
+          <p class="q-feedback"></p>
+        </div>
+
+        <button class="btn teal" id="checkQuizBtn">Corregir mis respuestas</button>
+        <div class="notebook-note"><span class="nb-icon">📓</span><b>Para tu cuaderno:</b> anota el número de las preguntas que fallaste y la respuesta correcta, para repasarlas antes de la próxima clase.</div>
+        <div class="tn-panel" data-tn>
+          <b>Nota docente:</b> Preguntas 1, 2 y 4 son de selección múltiple con corrección automática; la 3 es de desarrollo. Puntaje perfecto en las de selección múltiple dispara una animación de celebración.
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 10: CIERRE -->
+    <section class="slide" data-idx="10">
+      <div class="lamina" style="--accent:var(--teal)">
+        <span class="accent-tag">Cierre de sesión</span>
+        <h2>Síntesis y registro final</h2>
+        <p>Hoy exploramos la <strong>difusión</strong> (movimiento de partículas por gradiente de concentración) y la <strong>ósmosis</strong> (su caso particular con agua y membrana semipermeable), a través de un experimento clásico (bolsa de té) y uno cuantitativo (papa/zanahoria en soluciones salinas).</p>
+
+        <div class="checklist">
+          <label class="check-item"><input type="checkbox"> Puedo explicar la diferencia entre difusión y ósmosis.</label>
+          <label class="check-item"><input type="checkbox"> Completé mi registro POE del experimento de la bolsa de té.</label>
+          <label class="check-item"><input type="checkbox"> Mi grupo registró los datos y la conclusión AER del experimento de ósmosis.</label>
+          <label class="check-item"><input type="checkbox"> Puedo predecir qué le pasa a una célula en un medio hipotónico o hipertónico.</label>
+          <label class="check-item"><input type="checkbox"> Registré todas las actividades de hoy en mi cuaderno de Ciencias.</label>
+        </div>
+
+        <div style="margin-top:18px; padding:12px 14px; background:#eafaf8; border-left:4px solid var(--teal); border-radius:8px; font-size:.86rem;">
+          📋 Evaluación de hoy: <strong>registro de Predicción-Observación-Explicación (AER)</strong> del experimento — sin Kahoot (se aplica al cierre del Bloque C, más adelante).
+        </div>
+
+        <button class="btn outline" id="exportPdfBtn" style="margin-top:18px;">📄 Exportar registro del equipo (PDF)</button>
+        <div class="notebook-note"><span class="nb-icon">📓</span><b>Para tu cuaderno:</b> revisa que tengas registradas las 8 actividades de hoy (definiciones, esquemas, tabla de ósmosis, comparación y preguntas falladas). Tu profesor puede pedir tu cuaderno como evidencia de la clase.</div>
+
+        <footer class="sig">Sesión 9 · Unidad 2 · Prof. Felipe Jiménez · Ciencias Naturales 8° Básico</footer>
+        <div class="tn-panel" data-tn>
+          <b>Nota docente:</b> Guarda los registros POE y AER como evidencia formativa de IE1-IE2. La siguiente sesión (10) profundiza en la membrana celular y el movimiento de partículas a través de ella.
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 11: TICKET DE SALIDA -->
+    <section class="slide" data-idx="11">
+      <div class="lamina" style="--accent:var(--gold)">
+        <span class="accent-tag">Ticket de salida</span>
+        <h2>Antes de irte...</h2>
+        <p class="sub">Responde con honestidad — no es una prueba, es para que tú y tu profesor sepan cómo vas.</p>
+
+        <div class="exit-section-label">Sobre el contenido</div>
+        <div class="aer-block">
+          <div class="aer-field">
+            <label>1. En tus palabras, ¿cuál es la diferencia entre difusión y ósmosis?</label>
+            <textarea id="exitQ1" placeholder="Escribe tu respuesta..."></textarea>
+          </div>
+          <div class="aer-field">
+            <label>2. Da un ejemplo cotidiano de difusión que NO hayamos mencionado en clase.</label>
+            <textarea id="exitQ2" placeholder="Escribe tu ejemplo..."></textarea>
+          </div>
+          <div class="aer-field">
+            <label>3. Si una célula está en un medio con más soluto que su interior, ¿hacia dónde se mueve el agua?</label>
+            <textarea id="exitQ3" placeholder="Explica la dirección del agua..."></textarea>
+          </div>
+        </div>
+
+        <div class="exit-section-label">Sobre tu aprendizaje (metacognición)</div>
+        <div class="aer-block">
+          <div class="aer-field">
+            <label>4. ¿Qué fue lo que más te costó entender hoy?</label>
+            <textarea id="exitQ4" placeholder="Puede ser un concepto, una palabra, una actividad..."></textarea>
+          </div>
+          <div class="aer-field">
+            <label>5. Cuando algo no te quedó claro, ¿qué hiciste para intentar entenderlo?</label>
+            <textarea id="exitQ5" placeholder="Ej: lo volví a leer, le pregunté a mi grupo, miré la simulación de nuevo..."></textarea>
+          </div>
+          <div class="aer-field">
+            <label>6. Del 1 al 5, ¿qué tan seguro/a te sientes con el tema de hoy?</label>
+            <div class="conf-scale" id="confScale">
+              <button class="conf-btn" data-val="1">1</button>
+              <button class="conf-btn" data-val="2">2</button>
+              <button class="conf-btn" data-val="3">3</button>
+              <button class="conf-btn" data-val="4">4</button>
+              <button class="conf-btn" data-val="5">5</button>
+            </div>
+            <div class="conf-caption"><span>Nada seguro/a</span><span>Muy seguro/a</span></div>
+          </div>
+        </div>
+
+        <button class="btn coral" id="exitSaveBtn">Guardar ticket de salida</button>
+        <div class="notebook-note"><span class="nb-icon">📓</span><b>Para tu cuaderno:</b> si no tienes dispositivo, responde estas 6 preguntas directamente en tu cuaderno y entrégalo a tu profesor al salir.</div>
+        <div class="tn-panel" data-tn>
+          <b>Nota docente:</b> El ticket de salida es individual (no grupal), a diferencia del resto de la sesión. Úsalo como termómetro rápido antes de planificar la Sesión 10: si varios marcan 1-2 en confianza o repiten la misma dificultad en la pregunta 4, retómalo brevemente al inicio de la próxima clase.
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+<div class="navbar">
+  <button class="nav-btn secondary" id="prevBtn">← Anterior</button>
+  <span class="slide-counter" id="slideCounter">1 / 8</span>
+  <button class="nav-btn" id="nextBtn">Siguiente →</button>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ================= STATE ================= */
+const state = {
+  idx: 0,
+  total: 0,
+  score: 0,
+  team: "",
+  quizAnswered: {},
+  quizCorrectCount: 0
+};
+
+/* ================= HELPERS ================= */
+function $(sel, ctx){ return (ctx||document).querySelector(sel); }
+function $all(sel, ctx){ return Array.from((ctx||document).querySelectorAll(sel)); }
+
+function toast(msg){
+  const c = $('#toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(-8px)'; t.style.transition='.3s'; }, 1800);
+  setTimeout(()=>{ t.remove(); }, 2200);
+}
+
+function addScore(n, msg){
+  state.score += n;
+  $('#scoreCount').textContent = state.score;
+  if(msg) toast('★ +' + n + ' — ' + msg);
+}
+
+function confettiBurst(){
+  const layer = $('#confetti-layer');
+  const colors = ['#2DD4BF','#FF6B6B','#FFD166','#9B7EDE','#F4A300'];
+  for(let i=0;i<70;i++){
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = (Math.random()*100) + 'vw';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.transform = 'rotate(' + (Math.random()*360) + 'deg)';
+    const dur = 2.2 + Math.random()*1.6;
+    p.style.transition = 'top ' + dur + 's linear, opacity .3s ease ' + dur + 's';
+    layer.appendChild(p);
+    requestAnimationFrame(()=>{
+      p.style.top = (100 + Math.random()*20) + 'vh';
+      p.style.opacity = '0';
+    });
+    setTimeout(()=>p.remove(), (dur+0.5)*1000);
+  }
+}
+
+/* ================= NAVIGATION ================= */
+const slides = $all('.slide');
+state.total = slides.length;
+
+function renderSlide(){
+  slides.forEach(s => s.classList.toggle('active', +s.dataset.idx === state.idx));
+  $('#slideCounter').textContent = (state.idx+1) + ' / ' + state.total;
+  $('#progressTrace').textContent = 'Diapositiva ' + (state.idx+1) + '/' + state.total;
+  $('#prevBtn').disabled = state.idx === 0;
+  $('#nextBtn').textContent = state.idx === state.total-1 ? 'Finalizar ✓' : 'Siguiente →';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function goTo(i){
+  if(i < 0 || i >= state.total) return;
+  state.idx = i;
+  renderSlide();
+}
+
+$('#nextBtn').addEventListener('click', ()=>{
+  if(state.idx === state.total-1){ toast('¡Sesión completa! Trae tus materiales a la próxima clase 🧪'); return; }
+  goTo(state.idx+1);
+});
+$('#prevBtn').addEventListener('click', ()=> goTo(state.idx-1));
+
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'ArrowRight') goTo(state.idx+1);
+  if(e.key === 'ArrowLeft') goTo(state.idx-1);
+});
+
+let touchX = null;
+document.addEventListener('touchstart', e=>{ touchX = e.touches[0].clientX; }, {passive:true});
+document.addEventListener('touchend', e=>{
+  if(touchX === null) return;
+  const dx = e.changedTouches[0].clientX - touchX;
+  if(Math.abs(dx) > 50){ dx < 0 ? goTo(state.idx+1) : goTo(state.idx-1); }
+  touchX = null;
+}, {passive:true});
+
+/* ================= COVER ================= */
+$('#startBtn').addEventListener('click', ()=>{
+  const val = $('#teamNameInput').value.trim();
+  state.team = val || 'Equipo sin nombre';
+  toast('¡Vamos, ' + state.team + '!');
+  goTo(1);
+});
+
+/* ================= TEACHER NOTES ================= */
+let tnOn = false;
+$('#tnToggle').addEventListener('click', ()=>{
+  tnOn = !tnOn;
+  $all('[data-tn]').forEach(p => p.classList.toggle('show', tnOn));
+  $('#tnToggle').textContent = tnOn ? '🙈 Ocultar notas' : '📝 Notas docente';
+});
+
+/* ================= SLIDE 1: CHIPS ACTIVACIÓN ================= */
+let activCount = 0;
+$all('#chipsActivacion .chip').forEach(chip => {
+  chip.addEventListener('click', ()=>{
+    if(chip.classList.contains('selected') || chip.classList.contains('wrong')) return;
+    const correct = chip.dataset.correct === 'true';
+    chip.classList.add(correct ? 'selected' : 'wrong');
+    activCount++;
+    if(correct) addScore(1);
+    if(activCount >= 3){
+      $('#reveal-activacion').classList.add('show');
+    }
+  });
+});
+
+/* ================= SLIDE 2 & 5: FACT TOGGLE ================= */
+$all('.fact-toggle').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const key = btn.dataset.fact;
+    const panel = $('.fact-panel[data-factpanel="'+key+'"]');
+    const opening = !panel.classList.contains('show');
+    panel.classList.toggle('show');
+    if(opening) addScore(1, 'Dato curioso');
+  });
+});
+
+/* ================= SLIDE 3: SIMULACIÓN DE DIFUSIÓN (canvas) ================= */
+(function(){
+  const canvas = $('#diffusionCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2;
+  const ZONE_RADIUS = 42;
+  const TOTAL_AREA = W*H;
+  const ZONE_AREA = Math.PI*ZONE_RADIUS*ZONE_RADIUS;
+  const EQUILIBRIUM_PCT = Math.min(100, (ZONE_AREA/TOTAL_AREA)*100);
+
+  const gCanvas = $('#concentrationGraph');
+  const gCtx = gCanvas.getContext('2d');
+  const GW = gCanvas.width, GH = gCanvas.height;
+  const GRAPH_MAX_T = 30; // seconds of history shown
+
+  let particles = [];
+  let running = false;
+  let rafId = null;
+  let tempMultiplier = 1;
+  let elapsed = 0; // seconds
+  let lastTime = null;
+  let history = []; // {t, pct}
+
+  function initParticles(){
+    particles = [];
+    for(let i=0;i<90;i++){
+      const ang = Math.random()*Math.PI*2;
+      const r = Math.random()*14;
+      particles.push({
+        x: cx + Math.cos(ang)*r,
+        y: cy + Math.sin(ang)*r,
+        speed: 0.4 + Math.random()*0.9,
+        angle: Math.random()*Math.PI*2
+      });
+    }
+    elapsed = 0;
+    lastTime = null;
+    history = [{t:0, pct:100}];
+  }
+
+  function countZones(){
+    let inCenter = 0;
+    particles.forEach(p=>{
+      const d = Math.hypot(p.x-cx, p.y-cy);
+      if(d <= ZONE_RADIUS) inCenter++;
+    });
+    return inCenter;
+  }
+
+  function drawMain(){
+    ctx.clearRect(0,0,W,H);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.setLineDash([4,4]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, ZONE_RADIUS, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = 'rgba(45,212,191,0.85)';
+    particles.forEach(p=>{
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3, 0, Math.PI*2);
+      ctx.fill();
+    });
+  }
+
+  function drawGraph(){
+    gCtx.clearRect(0,0,GW,GH);
+    const padL = 28, padB = 16, padT = 8, padR = 6;
+    const plotW = GW - padL - padR, plotH = GH - padT - padB;
+
+    gCtx.strokeStyle = 'rgba(255,255,255,0.15)';
+    gCtx.lineWidth = 1;
+    gCtx.beginPath();
+    gCtx.moveTo(padL, padT); gCtx.lineTo(padL, padT+plotH); gCtx.lineTo(padL+plotW, padT+plotH);
+    gCtx.stroke();
+
+    // equilibrium reference line
+    const eqY = padT + plotH - (EQUILIBRIUM_PCT/100)*plotH;
+    gCtx.strokeStyle = 'rgba(255,209,102,0.6)';
+    gCtx.setLineDash([3,3]);
+    gCtx.beginPath();
+    gCtx.moveTo(padL, eqY); gCtx.lineTo(padL+plotW, eqY);
+    gCtx.stroke();
+    gCtx.setLineDash([]);
+
+    gCtx.fillStyle = 'rgba(255,255,255,0.55)';
+    gCtx.font = '9px Arial';
+    gCtx.fillText('100%', 2, padT+4);
+    gCtx.fillText('0%', 8, padT+plotH+4);
+
+    if(history.length > 1){
+      gCtx.strokeStyle = '#2DD4BF';
+      gCtx.lineWidth = 2;
+      gCtx.beginPath();
+      history.forEach((pt, i)=>{
+        const x = padL + (Math.min(pt.t, GRAPH_MAX_T)/GRAPH_MAX_T)*plotW;
+        const y = padT + plotH - (pt.pct/100)*plotH;
+        i===0 ? gCtx.moveTo(x,y) : gCtx.lineTo(x,y);
+      });
+      gCtx.stroke();
+    }
+  }
+
+  function step(timestamp){
+    if(lastTime === null) lastTime = timestamp;
+    const dt = (timestamp - lastTime)/1000;
+    lastTime = timestamp;
+    elapsed += dt;
+
+    particles.forEach(p=>{
+      p.angle += (Math.random()-0.5)*0.5;
+      const sp = p.speed * tempMultiplier;
+      p.x += Math.cos(p.angle)*sp;
+      p.y += Math.sin(p.angle)*sp;
+      if(p.x < 4 || p.x > W-4) p.angle = Math.PI - p.angle;
+      if(p.y < 4 || p.y > H-4) p.angle = -p.angle;
+      p.x = Math.max(4, Math.min(W-4, p.x));
+      p.y = Math.max(4, Math.min(H-4, p.y));
+    });
+
+    const inCenter = countZones();
+    const pct = (inCenter/particles.length)*100;
+    $('#zoneCenterCount').textContent = inCenter;
+    $('#zonePeripheryCount').textContent = particles.length - inCenter;
+
+    if(elapsed - (history[history.length-1]?.t || 0) > 0.25){
+      history.push({t: elapsed, pct});
+      if(history[history.length-1].t > GRAPH_MAX_T) history.shift();
+    }
+
+    drawMain();
+    drawGraph();
+    if(running) rafId = requestAnimationFrame(step);
+  }
+
+  initParticles();
+  drawMain();
+  drawGraph();
+  $('#zoneCenterCount').textContent = particles.length;
+  $('#zonePeripheryCount').textContent = 0;
+
+  $all('.temp-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      $all('.temp-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      tempMultiplier = parseFloat(btn.dataset.temp);
+    });
+  });
+
+  $('#simStartBtn').addEventListener('click', ()=>{
+    if(running) return;
+    running = true;
+    lastTime = null;
+    $('#simLabel').textContent = 'Difundiendo... observa cómo se alejan del centro y cómo baja el % en el gráfico.';
+    addScore(1, 'Simulación iniciada');
+    rafId = requestAnimationFrame(step);
+  });
+  $('#simResetBtn').addEventListener('click', ()=>{
+    running = false;
+    if(rafId) cancelAnimationFrame(rafId);
+    initParticles();
+    drawMain();
+    drawGraph();
+    $('#zoneCenterCount').textContent = particles.length;
+    $('#zonePeripheryCount').textContent = 0;
+    $('#simLabel').textContent = 'Partículas concentradas en el centro — presiona Iniciar.';
+  });
+})();
+
+/* ================= SLIDE 4: CRONÓMETRO + POE ================= */
+(function(){
+  let seconds = 0, timerInterval = null;
+  function fmt(s){
+    const m = Math.floor(s/60).toString().padStart(2,'0');
+    const r = (s%60).toString().padStart(2,'0');
+    return m + ':' + r;
+  }
+  $('#timerStart').addEventListener('click', ()=>{
+    if(timerInterval) return;
+    timerInterval = setInterval(()=>{
+      seconds++;
+      $('#timerDisplay').textContent = fmt(seconds);
+    }, 1000);
+  });
+  $('#timerStop').addEventListener('click', ()=>{
+    clearInterval(timerInterval);
+    timerInterval = null;
+  });
+  $('#timerReset').addEventListener('click', ()=>{
+    clearInterval(timerInterval);
+    timerInterval = null;
+    seconds = 0;
+    $('#timerDisplay').textContent = '00:00';
+  });
+})();
+
+$('#poeSaveBtn').addEventListener('click', ()=>{
+  const p = $('#poeP').value.trim(), o = $('#poeO').value.trim(), e = $('#poeE').value.trim();
+  if(!p || !o || !e){ toast('Completa Predicción, Observación y Explicación.'); return; }
+  addScore(4, 'Registro POE guardado');
+  toast('Registro POE guardado.');
+});
+
+/* ================= SLIDE 7: TABLA DE ÓSMOSIS ================= */
+$all('#osmosisTable tbody tr').forEach(row=>{
+  const mInit = $('.m-init', row), mFinal = $('.m-final', row);
+  const deltaCell = $('.delta', row), pctCell = $('.pct', row);
+  function recalc(){
+    const vi = parseFloat(mInit.value), vf = parseFloat(mFinal.value);
+    if(isNaN(vi) || isNaN(vf) || vi === 0){
+      deltaCell.textContent = '—'; pctCell.textContent = '—';
+      deltaCell.className = 'delta'; return;
+    }
+    const delta = vf - vi;
+    const pct = (delta/vi)*100;
+    deltaCell.textContent = (delta>=0?'+':'') + delta.toFixed(1) + ' g';
+    pctCell.textContent = (pct>=0?'+':'') + pct.toFixed(1) + '%';
+    deltaCell.className = 'delta ' + (delta >= 0 ? 'pos' : 'neg');
+  }
+  mInit.addEventListener('input', recalc);
+  mFinal.addEventListener('input', recalc);
+});
+
+$('#aerSaveBtn').addEventListener('click', ()=>{
+  const a = $('#aerA').value.trim(), e = $('#aerE').value.trim(), r = $('#aerR').value.trim();
+  const filled = $all('#osmosisTable .m-init, #osmosisTable .m-final').filter(i=>i.value.trim()!=='').length;
+  if(filled < 2){ toast('Registra al menos una medición en la tabla.'); return; }
+  if(!a || !e || !r){ toast('Completa Afirmación, Evidencia y Razonamiento.'); return; }
+  addScore(4, 'Conclusión AER guardada');
+  toast('Conclusión guardada.');
+});
+
+/* ================= SLIDE 9: QUIZ ================= */
+$all('.q-block .opt-list').forEach(list=>{
+  const answer = list.dataset.answer;
+  const qId = list.closest('.q-block');
+  $all('.opt', list).forEach(opt=>{
+    opt.addEventListener('click', ()=>{
+      if(qId.dataset.locked) return;
+      qId.dataset.locked = '1';
+      const correct = opt.dataset.key === answer;
+      $all('.opt', list).forEach(o=>{
+        if(o.dataset.key === answer) o.classList.add('correct');
+        else if(o === opt) o.classList.add('incorrect');
+      });
+      const fb = $('.q-feedback', qId);
+      fb.textContent = correct ? '✓ ¡Correcto!' : '✗ La respuesta correcta está resaltada en verde.';
+      fb.style.color = correct ? '#1fae7c' : '#c0392b';
+      fb.classList.add('show');
+      if(correct){ state.quizCorrectCount++; addScore(2); }
+    });
+  });
+});
+$('#checkQuizBtn').addEventListener('click', ()=>{
+  const totalMC = $all('.q-block .opt-list[data-answer]').length;
+  const locked = $all('.q-block .opt-list[data-answer]').filter(l=>l.closest('.q-block').dataset.locked).length;
+  if(locked < totalMC){
+    toast('Responde las preguntas de selección múltiple antes de corregir.');
+    return;
+  }
+  if(state.quizCorrectCount === totalMC){
+    toast('¡Puntaje perfecto en el banco de preguntas! 🎉');
+    confettiBurst();
+    addScore(3, 'Quiz perfecto');
+  } else {
+    toast('Respuestas corregidas: ' + state.quizCorrectCount + '/' + totalMC + ' correctas.');
+  }
+});
+
+/* ================= SLIDE 10: PDF EXPORT ================= */
+$('#exportPdfBtn').addEventListener('click', ()=>{
+  const w = window.open('', '_blank');
+  if(!w){ toast('Habilita ventanas emergentes para exportar.'); return; }
+  const esc = (s)=> (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  let html = '<html><head><meta charset="utf-8"><title>Sesión 9 - ' + esc(state.team) + '</title>';
+  html += '<style>body{font-family:Calibri,Arial,sans-serif;padding:28px;color:#1c2140;}h1{font-size:20px;border-bottom:3px solid #2DD4BF;padding-bottom:8px;}h2{font-size:15px;margin-top:22px;color:#1A1F3A;}p.meta{color:#666;font-size:12px;}.sec{margin-bottom:14px;padding:10px 14px;border-left:4px solid #9B7EDE;background:#f7f8fc;}.small{font-size:12px;color:#555;}table{border-collapse:collapse;width:100%;}td,th{border:1px solid #ccc;padding:5px 8px;font-size:11px;text-align:center;}</style></head><body>';
+  html += '<h1>Sesión 9 · Difusión y Ósmosis: Fenómenos Cotidianos</h1>';
+  html += '<p class="meta">Equipo: <b>' + esc(state.team || 'Sin registrar') + '</b> · Fecha: ' + new Date().toLocaleDateString('es-CL') + ' · Puntaje total: ' + state.score + ' pts</p>';
+
+  html += '<h2>Registro POE — Bolsa de té en agua caliente</h2><div class="sec">';
+  html += '<p class="small"><b>Predicción:</b> ' + esc($('#poeP').value) + '</p>';
+  html += '<p class="small"><b>Observación:</b> ' + esc($('#poeO').value) + '</p>';
+  html += '<p class="small"><b>Explicación:</b> ' + esc($('#poeE').value) + '</p>';
+  html += '</div>';
+
+  html += '<h2>Experimento de ósmosis — papa/zanahoria</h2><div class="sec"><table><tr><th>Grupo</th><th>Masa inicial</th><th>Masa final</th><th>Δ masa</th><th>%</th></tr>';
+  $all('#osmosisTable tbody tr').forEach(row=>{
+    const label = row.children[0].textContent;
+    const vi = $('.m-init', row).value || '—';
+    const vf = $('.m-final', row).value || '—';
+    const delta = $('.delta', row).textContent;
+    const pct = $('.pct', row).textContent;
+    html += '<tr><td>'+esc(label)+'</td><td>'+esc(vi)+'</td><td>'+esc(vf)+'</td><td>'+esc(delta)+'</td><td>'+esc(pct)+'</td></tr>';
+  });
+  html += '</table></div>';
+
+  html += '<h2>Conclusión AER</h2><div class="sec">';
+  html += '<p class="small"><b>A · Afirmación:</b> ' + esc($('#aerA').value) + '</p>';
+  html += '<p class="small"><b>E · Evidencia:</b> ' + esc($('#aerE').value) + '</p>';
+  html += '<p class="small"><b>R · Razonamiento:</b> ' + esc($('#aerR').value) + '</p>';
+  html += '</div>';
+
+  html += '<h2>Banco de preguntas — Pregunta 3 (desarrollo)</h2><div class="sec"><p class="small">' + esc($('.q-open textarea').value || '(sin responder)') + '</p></div>';
+
+  const checks = $all('.checklist input').map((c,i)=> (c.checked?'☑':'☐') + ' ' + c.closest('.check-item').textContent.trim());
+  html += '<h2>Autoevaluación de cierre</h2><div class="sec"><p class="small">' + checks.join('<br>') + '</p></div>';
+
+  html += '<h2>Ticket de salida (individual)</h2><div class="sec">';
+  html += '<p class="small"><b>1. Diferencia difusión/ósmosis:</b> ' + esc($('#exitQ1').value || '(sin responder)') + '</p>';
+  html += '<p class="small"><b>2. Ejemplo propio de difusión:</b> ' + esc($('#exitQ2').value || '(sin responder)') + '</p>';
+  html += '<p class="small"><b>3. Dirección del agua en ósmosis:</b> ' + esc($('#exitQ3').value || '(sin responder)') + '</p>';
+  html += '<p class="small"><b>4. Lo más difícil de hoy:</b> ' + esc($('#exitQ4').value || '(sin responder)') + '</p>';
+  html += '<p class="small"><b>5. Estrategia usada:</b> ' + esc($('#exitQ5').value || '(sin responder)') + '</p>';
+  html += '<p class="small"><b>6. Nivel de confianza (1-5):</b> ' + esc(exitConfidence || '(sin responder)') + '</p>';
+  html += '</div>';
+
+  html += '<p class="small" style="margin-top:20px;color:#999;">Generado desde el deck interactivo — Prof. Felipe Jiménez, Ciencias Naturales 8° Básico.</p>';
+  html += '</body></html>';
+
+  w.document.write(html);
+  w.document.close();
+  setTimeout(()=>{ w.print(); }, 400);
+});
+
+/* ================= SLIDE 11: TICKET DE SALIDA ================= */
+let exitConfidence = null;
+$all('#confScale .conf-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    $all('#confScale .conf-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    exitConfidence = btn.dataset.val;
+  });
+});
+$('#exitSaveBtn').addEventListener('click', ()=>{
+  const fields = ['#exitQ1','#exitQ2','#exitQ3','#exitQ4','#exitQ5'].map(sel => $(sel).value.trim());
+  if(fields.some(v => !v) || !exitConfidence){
+    toast('Completa las 6 preguntas antes de guardar.');
+    return;
+  }
+  addScore(3, 'Ticket de salida guardado');
+  toast('¡Gracias! Tu ticket de salida quedó guardado.');
+});
+
+/* ================= INIT ================= */
+renderSlide();
+
+})();
+</script>
+</body>
+</html>
