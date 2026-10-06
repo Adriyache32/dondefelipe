@@ -17,7 +17,7 @@ OC.Engine = (function () {
     scene: 'menu', saga: SAGAS[0], sagaIndex: 0, level: 0, score: 0, lives: C.lives.start, nombre: '', curso: '',
     ship: { x: 0, y: 0, w: C.ship.w, h: C.ship.h, speed: 5, cd: 0 },
     bullets: [], enemies: [], powerups: [], particles: [], stars: [], bossShots: [],
-    boss: null, bossPending: false, destroyed: 0, spawnT: 0, pending: false,
+    boss: null, bossPending: false, bossT: 0, destroyed: 0, spawnT: 0, pending: false,
     speedBuff: 0, powerBuff: 0, storm: 0, eventT: 0, nextEvent: 9000, msgKilledBy: '', groundY: 0,
     temp: 0, tempActive: false, tempRate: 0, coolT: 0, tempWarned: false, currentQ: null, final: false,
     coins: 0, upgrades: { armadura: 0, armamento: 0, cadencia: 0, rayo_especial: 0, refrigeracion: 0 }, shield: 0, shieldMax: 0, invuln: 0
@@ -47,6 +47,7 @@ OC.Engine = (function () {
     });
   }
   async function registrarPuntaje() {
+    if (!C.podium.enabled) return;
     const p = PLANETAS[Math.min(state.level, PLANETAS.length - 1)];
     const row = { nombre: state.nombre || 'Anónimo', curso: state.curso || '', mision: p.num, planeta: p.nombre, puntaje: state.score, fecha: new Date().toISOString().slice(0, 10) };
     const lb = loadLB(); lb.push(row); lb.sort((a, b) => b.puntaje - a.puntaje); saveLB(lb.slice(0, C.podium.localMax));
@@ -54,7 +55,7 @@ OC.Engine = (function () {
   }
   function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
   async function renderPodio(elId, incluirActual) {
-    const el = $(elId); if (!el) return;
+    const el = $(elId); if (!el || !C.podium.enabled) return;
     el.innerHTML = '<div class="podio-empty">Consultando el podio…</div>';
     let lb = await fetchLeaderboard(); const online = !!lb; if (!lb) lb = loadLB();
     lb = lb.slice().sort((a, b) => b.puntaje - a.puntaje);
@@ -120,6 +121,7 @@ OC.Engine = (function () {
     state.sagaIndex = i; state.saga = SAGAS[i];
     PLANETAS = state.saga.worlds; PREGUNTAS = state.saga.preguntas;
     resetRun();
+    if (!C.podium.enabled) { showIntro(); return; }   // sin podio no hace falta el nombre
     state.scene = 'nombre'; show('nombre'); setTimeout(() => $('in-nombre').focus(), 50);
   }
   function showIntro() {
@@ -252,7 +254,7 @@ OC.Engine = (function () {
   }
   function updateBoss(dt) {
     const b = state.boss; b.t += dt;
-    b.x += b.vx; if (b.x < 8) { b.x = 8; b.vx *= -1; } if (b.x > W - b.w - 8) { b.x = W - b.w - 8; b.vx *= -1; }
+    b.x += b.vx * (dt / 16.667); if (b.x < 8) { b.x = 8; b.vx *= -1; } if (b.x > W - b.w - 8) { b.x = W - b.w - 8; b.vx *= -1; }
     b.y = H * C.boss.yFactor + Math.sin(b.t * (b.final ? 0.0032 : 0.002)) * (b.final ? 26 : 18);
     b.cd -= dt;
     if (b.cd <= 0) {
@@ -298,16 +300,17 @@ OC.Engine = (function () {
 
   function update(dt) {
     const p = PLANETAS[state.level], sh = state.ship;
-    const spd = sh.speed * (state.speedBuff > 0 ? C.buffs.speedMult : 1);
+    const k = dt / 16.667;   // 1 a 60 Hz; escala todo lo que antes avanzaba "por frame"
+    const spd = sh.speed * (state.speedBuff > 0 ? C.buffs.speedMult : 1) * k;
     if (keys.left) sh.x -= spd; if (keys.right) sh.x += spd;
     sh.x = Math.max(6, Math.min(W - sh.w - 6, sh.x));
-    if (keys.fire) fire(); if (sh.cd > 0) sh.cd--;
+    if (keys.fire) fire(); if (sh.cd > 0) sh.cd -= k;
     if (state.speedBuff > 0) state.speedBuff -= dt;
     if (state.powerBuff > 0) state.powerBuff -= dt;
     if (state.invuln > 0) state.invuln -= dt;
     if (state.speedBuff > 0 || state.powerBuff > 0) drawHUD();
 
-    state.stars.forEach(s => { s.y += s.v * 0.004; if (s.y > 1) { s.y = 0; s.x = Math.random(); } });
+    state.stars.forEach(s => { s.y += s.v * 0.004 * k; if (s.y > 1) { s.y = 0; s.x = Math.random(); } });
 
     // TEMPERATURA (Venus)
     if (state.tempActive) {
@@ -325,25 +328,26 @@ OC.Engine = (function () {
       state.spawnT += dt;
       const rate = Math.max(C.spawn.baseMin, p.baseSpawn - state.level * C.spawn.perLevelReduce);
       if (state.spawnT > rate) { state.spawnT = 0; spawnEnemy(); if (Math.random() < C.spawn.doubleChance + state.level * C.spawn.doubleChancePerLevel) setTimeout(spawnEnemy, C.spawn.doubleDelay); }
-      if (state.storm > 0) { state.storm -= dt; if (Math.random() < C.events.stormSpawnChance) spawnEnemy(false); }
+      if (state.storm > 0) { state.storm -= dt; if (Math.random() < C.events.stormSpawnChance * k) spawnEnemy(false); }
       state.eventT += dt;
       if (state.eventT > state.nextEvent) { state.eventT = 0; state.nextEvent = C.events.nextMin + Math.random() * C.events.nextRand; triggerEvent(); }
-      if (Math.random() < C.powerups.chance && state.powerups.length < C.powerups.maxOnScreen) spawnPowerup(randomPowerupKind());
-      if (Math.random() < C.coins.pickupChance) spawnPowerup('moneda');
-      if (state.destroyed >= p.meta && !state.bossPending) { state.bossPending = true; setTimeout(() => { if (state.scene === 'playing') spawnBoss(); }, 600); }
+      if (Math.random() < C.powerups.chance * k && state.powerups.length < C.powerups.maxOnScreen) spawnPowerup(randomPowerupKind());
+      if (Math.random() < C.coins.pickupChance * k) spawnPowerup('moneda');
+      if (state.destroyed >= p.meta && !state.bossPending) { state.bossPending = true; state.bossT = 600; }
+      if (state.bossPending) { state.bossT -= dt; if (state.bossT <= 0) { spawnBoss(); return; } }
     }
 
-    state.bullets.forEach(b => { b.y += b.vy; b.x += (b.vx || 0); });
+    state.bullets.forEach(b => { b.y += b.vy * k; b.x += (b.vx || 0) * k; });
     state.bullets = state.bullets.filter(b => b.y + b.h > 0 && b.x > -10 && b.x < W + 10);
 
-    state.enemies.forEach(e => { e.y += e.vy; e.x += e.vx; e.rot += e.vr; if (e.type === 'alien') e.x += Math.sin((e.y + e.seed) * 0.04) * 0.7; if (e.x < 6) { e.x = 6; e.vx = Math.abs(e.vx); } if (e.x > W - e.w - 6) { e.x = W - e.w - 6; e.vx = -Math.abs(e.vx); } });
+    state.enemies.forEach(e => { e.y += e.vy * k; e.x += e.vx * k; e.rot += e.vr * k; if (e.type === 'alien') e.x += Math.sin((e.y + e.seed) * 0.04) * 0.7 * k; if (e.x < 6) { e.x = 6; e.vx = Math.abs(e.vx); } if (e.x > W - e.w - 6) { e.x = W - e.w - 6; e.vx = -Math.abs(e.vx); } });
 
-    state.powerups.forEach(pu => { pu.y += pu.vy; pu.t += dt; });
+    state.powerups.forEach(pu => { pu.y += pu.vy * k; pu.t += dt; });
     state.bossShots.forEach(s => {
-      s.y += s.vy; s.x += (s.vx || 0);
-      if (s.kind === 'nota') { s.sway = (s.sway || 0) + 0.12; s.x += Math.sin(s.sway) * 1.5; }
-      else if (s.kind === 'roca' || s.kind === 'roca_fuerte') { s.rot = (s.rot || 0) + (s.vr || 0.1); }
-      else if (s.kind === 'magma') { s.sway = (s.sway || 0) + 0.08; s.x += Math.sin(s.sway) * 0.8; }
+      s.y += s.vy * k; s.x += (s.vx || 0) * k;
+      if (s.kind === 'nota') { s.sway = (s.sway || 0) + 0.12 * k; s.x += Math.sin(s.sway) * 1.5 * k; }
+      else if (s.kind === 'roca' || s.kind === 'roca_fuerte') { s.rot = (s.rot || 0) + (s.vr || 0.1) * k; }
+      else if (s.kind === 'magma') { s.sway = (s.sway || 0) + 0.08 * k; s.x += Math.sin(s.sway) * 0.8 * k; }
     });
     state.bossShots = state.bossShots.filter(s => s.y < H + 20 && s.x > -20 && s.x < W + 20);
 
@@ -377,7 +381,7 @@ OC.Engine = (function () {
     const gy = state.groundY < H ? state.groundY : H;
     state.enemies = state.enemies.filter(e => e.y < gy + 10);
     state.powerups = state.powerups.filter(pu => pu.y < H + 30);
-    state.particles.forEach(pt => { pt.x += pt.vx; pt.y += pt.vy; pt.vy += 0.05; pt.life -= 0.03; });
+    state.particles.forEach(pt => { pt.x += pt.vx * k; pt.y += pt.vy * k; pt.vy += 0.05 * k; pt.life -= 0.03 * k; });
     state.particles = state.particles.filter(pt => pt.life > 0);
 
     if (state.boss) updateBoss(dt);
@@ -474,7 +478,7 @@ OC.Engine = (function () {
       G.powerups(state.powerups);
       G.bullets(state.bullets);
       G.bossShots(state.bossShots);
-      G.enemies(state.enemies);
+      G.enemies(state.enemies, { saga: state.saga.id, scene: p.scene });
       if (state.boss) G.boss(state.boss);
       G.particles(state.particles);
       if (!(state.invuln > 0 && Math.floor(state.invuln / 80) % 2 === 0))
@@ -552,6 +556,7 @@ OC.Engine = (function () {
   /* -------- RESIZE / ARRANQUE -------- */
   function resizeNow() { const r = G.resize(); W = r.W; H = r.H; }
   function start() {
+    document.body.classList.toggle('sin-podio', !C.podium.enabled);
     cv = $('game'); stageEl = $('stage');
     G.init(cv); resizeNow();
     window.addEventListener('resize', resizeNow);

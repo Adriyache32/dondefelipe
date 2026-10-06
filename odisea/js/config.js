@@ -95,7 +95,9 @@ OC.Config = {
   ],
 
   /* --- Podio --- */
-  podium: { topN: 5, localMax: 20, fetchTimeoutMs: 5000, postDelayMs: 700 },
+  /* enabled:false => se oculta TODO lo del podio (pantalla de nombre, tablas, botón copiar)
+     y no se guardan puntajes. La lógica sigue intacta: pon enabled:true para reactivarlo. */
+  podium: { enabled: false, topN: 5, localMax: 20, fetchTimeoutMs: 5000, postDelayMs: 700 },
 
   /* --- Estrellas de fondo --- */
   stars: { count: 70 }
