@@ -1,0 +1,1893 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Unidad 3 · Sesión 7 — Del gameto al organismo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B2340; --navy-2:#123054; --teal:#1F7A70; --teal-dark:#155F58;
+    --mint-tint:#EAF7F5; --page-bg:#F6FAF9; --cream-tint:#FDF6EC; --stage-bg:#F1FAF8;
+    --text:#233238; --muted:#6B7A78; --line:#DCEAE7;
+    --baseA:#E4572E; --baseT:#2E86AB; --baseG:#1F7A70; --baseC:#E0A458;
+    --ok:#2E8B57; --bad:#C0392B; --warn:#D99A2B;
+    --shadow: 0 10px 26px rgba(11,35,64,0.08); --radius: 18px;
+    --font-display:'Fraunces', Cambria, Georgia, serif;
+    --font-body:'Manrope', Calibri, Arial, sans-serif;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html{ scroll-behavior:smooth; }
+  body{ margin:0; background:var(--page-bg); color:var(--text); font-family:var(--font-body); line-height:1.5; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+  h1,h2,h3{ font-family:var(--font-display); margin:0; color:var(--navy); }
+  p{ margin:0; }
+  button{ font-family:var(--font-body); cursor:pointer; }
+  button:focus-visible, input:focus-visible, .prog-step:focus-visible{ outline:3px solid var(--baseC); outline-offset:2px; }
+
+  .app-shell{ min-height:100vh; display:flex; flex-direction:column; }
+
+  .progress-ladder{ position:fixed; top:0; left:0; right:0; z-index:40; display:flex; gap:4px; padding:10px 14px; background:rgba(246,250,249,0.9); backdrop-filter:blur(4px); border-bottom:1px solid var(--line); }
+  .prog-step{ flex:1; height:9px; border-radius:5px; border:1.5px solid #C9DEDA; background:#fff; padding:0; transition:background .25s ease, border-color .25s ease; }
+  .prog-step.done{ background:var(--teal); border-color:var(--teal); }
+  .prog-step.current{ border-color:var(--navy); box-shadow:0 0 0 2px rgba(11,35,64,0.15); }
+
+  .top-actions{ position:fixed; top:14px; right:14px; z-index:41; display:flex; gap:8px; }
+  .icon-btn{ background:var(--navy); color:#fff; border:none; border-radius:999px; padding:9px 16px; font-size:13px; font-weight:700; display:flex; align-items:center; gap:6px; box-shadow:var(--shadow); }
+  .icon-btn:hover{ background:var(--teal-dark); }
+
+  .slide-viewport{ flex:1; padding-top:46px; padding-bottom:78px; }
+  .slide{ display:none; min-height:calc(100vh - 124px); align-items:center; justify-content:center; padding:32px 16px; }
+  .slide.active{ display:flex; }
+  .slide-inner{ width:100%; max-width:1080px; margin:0 auto; }
+
+  .eyebrow{ display:inline-block; font-size:12px; font-weight:800; letter-spacing:1.2px; color:var(--teal-dark); text-transform:uppercase; margin-bottom:10px; }
+  .slide h2.title{ font-size:clamp(24px,4vw,38px); font-weight:700; margin-bottom:8px; }
+  .slide .subtitle{ font-size:clamp(14px,2vw,17px); color:var(--muted); font-style:italic; font-family:var(--font-display); margin-bottom:20px; }
+
+  .card{ background:#fff; border-radius:var(--radius); box-shadow:var(--shadow); padding:20px 22px; border:1px solid var(--line); }
+  .card.tint-mint{ background:var(--mint-tint); }
+  .card.tint-cream{ background:var(--cream-tint); }
+  .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  @media (max-width:760px){ .grid-2, .grid-3{ grid-template-columns:1fr; } }
+  .card-label{ font-size:11px; font-weight:800; letter-spacing:0.8px; color:var(--baseC); text-transform:uppercase; margin-bottom:8px; display:block; }
+  .card p, .card li{ font-size:14.5px; color:var(--text); }
+  .card ul, .card ol{ margin:0; padding-left:20px; }
+  .card li{ margin-bottom:6px; }
+  .tag{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; background:var(--mint-tint); color:var(--teal-dark); padding:6px 13px; border-radius:999px; border:1px solid #CCEAE5; }
+
+  .nav-fixed{ position:fixed; bottom:0; left:0; right:0; z-index:40; display:flex; align-items:center; justify-content:center; gap:14px; padding:12px 16px; background:rgba(246,250,249,0.92); backdrop-filter:blur(4px); border-top:1px solid var(--line); }
+  .nav-btn{ background:#fff; border:1.5px solid var(--teal); color:var(--teal-dark); border-radius:999px; padding:9px 16px; font-weight:700; font-size:13.5px; }
+  .nav-btn:disabled{ opacity:0.35; cursor:default; }
+  .nav-btn:not(:disabled):hover{ background:var(--teal); color:#fff; }
+  .nav-counter{ font-size:12.5px; color:var(--muted); font-weight:700; min-width:50px; text-align:center; }
+
+  .btn-primary{ background:var(--navy); color:#fff; border:none; border-radius:999px; padding:11px 22px; font-weight:800; font-size:14px; box-shadow:var(--shadow); }
+  .btn-primary:hover{ background:var(--teal-dark); }
+  .btn-primary:disabled{ opacity:.4; cursor:default; }
+  .btn-ghost{ background:#fff; border:1.5px solid var(--line); color:var(--muted); border-radius:999px; padding:10px 18px; font-weight:700; font-size:13.5px; }
+  .btn-ghost:hover:not(:disabled){ border-color:var(--teal); color:var(--teal-dark); }
+  .btn-ghost:disabled{ opacity:.4; cursor:default; }
+
+  /* ---------- portada ---------- */
+  .cover-grid{ display:grid; grid-template-columns:1.1fr 0.9fr; gap:30px; align-items:center; }
+  @media (max-width:900px){ .cover-grid{ grid-template-columns:1fr; } }
+  .cover-info{ display:flex; flex-wrap:wrap; gap:10px 20px; margin:16px 0 20px; }
+  .cover-info span{ font-size:13px; color:var(--muted); }
+  .cover-info b{ color:var(--navy); }
+
+  .helix-wrap{ width:140px; height:280px; margin:0 auto; position:relative; perspective:900px; }
+  .helix-wrap::before, .helix-wrap::after{ content:""; position:absolute; top:0; bottom:0; width:4px; border-radius:3px; background:linear-gradient(180deg, var(--teal), var(--navy)); opacity:0.5; }
+  .helix-wrap::before{ left:16%; } .helix-wrap::after{ right:16%; }
+  .helix-rung{ position:absolute; left:50%; width:96px; height:9px; margin-left:-48px; top:0; border-radius:5px; animation-name:helixSpin; animation-timing-function:linear; animation-iteration-count:infinite; }
+  @keyframes helixSpin{
+    0%{ transform: translateY(var(--ty,0px)) rotateY(0deg) scaleX(1); opacity:1; }
+    25%{ transform: translateY(var(--ty,0px)) rotateY(90deg) scaleX(0.12); opacity:0.45; }
+    50%{ transform: translateY(var(--ty,0px)) rotateY(180deg) scaleX(1); opacity:1; }
+    75%{ transform: translateY(var(--ty,0px)) rotateY(270deg) scaleX(0.12); opacity:0.45; }
+    100%{ transform: translateY(var(--ty,0px)) rotateY(360deg) scaleX(1); opacity:1; }
+  }
+
+  .qr-panel{ background:var(--navy); border-radius:var(--radius); padding:18px; text-align:center; box-shadow:var(--shadow); color:#fff; }
+  .qr-panel p{ color:#CFE7E3; font-size:12.5px; margin-top:10px; }
+  .qr-panel .qr-box{ background:#fff; border-radius:12px; padding:10px; display:inline-block; }
+  #qrHero{ width:180px; height:180px; }
+  #qrHero img, #qrHero canvas, #qrHero table{ width:100% !important; height:100% !important; }
+  .qr-fallback{ color:#0B2340 !important; font-size:12px !important; max-width:160px; }
+  @media (min-width:900px){ #qrHero{ width:220px; height:220px; } }
+
+  /* ---------- mapa de la unidad ---------- */
+  .unit-map{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:760px){ .unit-map{ grid-template-columns:1fr; } }
+  .unit-step{ display:flex; gap:12px; align-items:flex-start; margin-bottom:12px; }
+  .unit-step:last-child{ margin-bottom:0; }
+  .unit-badge{ flex-shrink:0; width:34px; height:34px; border-radius:50%; background:var(--teal); color:#fff; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); }
+  .unit-badge.b2{ background:var(--baseT); }
+  .unit-step b{ display:block; font-size:14.5px; color:var(--navy); }
+  .unit-step span{ font-size:13px; color:var(--muted); }
+
+  /* ---------- cronograma ---------- */
+  .timeline{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  @media (max-width:760px){ .timeline{ grid-template-columns:repeat(2,1fr); } }
+  .timeline .card{ text-align:center; padding:14px 8px; }
+  .timeline .mins{ color:var(--baseC); font-weight:800; font-size:12.5px; margin:4px 0; }
+  .timeline .step-n{ width:28px; height:28px; border-radius:50%; border:1.5px solid var(--teal); color:var(--teal-dark); display:flex; align-items:center; justify-content:center; font-weight:800; margin:0 auto 6px; font-size:13px; }
+
+  /* ---------- SVG celular (simulador y juego) ---------- */
+  .stage-wrap{ background:var(--stage-bg); border:1px solid var(--line); border-radius:var(--radius); padding:10px; }
+  .stage-wrap svg{ display:block; width:100%; height:auto; max-width:520px; margin:0 auto; }
+  .sv-cell{ fill:#FFFFFF; stroke:#9CCFC6; stroke-width:3; }
+  .sv-cyto{ fill:#FFFFFF; }
+  .sv-edge{ fill:#9CCFC6; stroke:#9CCFC6; stroke-width:2; }
+  .sv-nucleus{ fill:#E3F4F1; stroke:#7FB8AE; stroke-width:2.5; }
+  .sv-nucleolus{ fill:#B5DAD3; }
+  .sv-pole{ fill:#7FB8AE; }
+  .sv-spindle{ stroke:#7FB8AE; stroke-width:1.4; fill:none; }
+  .sv-chromatin{ fill:none; stroke-width:2.2; stroke-linecap:round; }
+  .sv-fade{ transition:opacity .7s ease, transform .9s cubic-bezier(.4,0,.2,1); }
+  .chd{ transition:transform .9s cubic-bezier(.4,0,.2,1), opacity .6s ease; }
+  .no-anim .chd, .no-anim .sv-fade{ transition:none !important; }
+
+  /* ---------- simulador mitosis ---------- */
+  .sim-layout{ display:grid; grid-template-columns:1.15fr 0.85fr; gap:20px; align-items:start; }
+  @media (max-width:860px){ .sim-layout{ grid-template-columns:1fr; } }
+  .phase-btns{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .phase-btn{ background:#fff; border:1.5px solid var(--line); color:var(--text); border-radius:999px; padding:8px 13px; font-size:12.5px; font-weight:700; }
+  .phase-btn.active{ background:var(--teal); border-color:var(--teal); color:#fff; }
+  .sim-controls{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:12px; }
+  .sim-slider{ flex:1; min-width:140px; accent-color:var(--teal); }
+  .sim-phase-name{ font-weight:800; font-size:13px; color:var(--teal-dark); min-width:96px; text-align:right; }
+  .phase-caption{ font-size:14px; color:var(--text); min-height:84px; }
+  .phase-caption b{ color:var(--navy); }
+  .stat-grid{ display:grid; grid-template-columns:1fr; gap:8px; margin-top:12px; }
+  .stat-item{ background:var(--mint-tint); border-radius:10px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:12.5px; }
+  .stat-item b{ color:var(--teal-dark); font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; }
+  .stat-item span{ font-weight:800; color:var(--navy); text-align:right; }
+
+  /* ---------- juego etapas ---------- */
+  .game-hud{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .hud-pill{ background:var(--navy); color:#fff; border-radius:999px; padding:7px 14px; font-size:12.5px; font-weight:800; }
+  .hud-pill.soft{ background:var(--mint-tint); color:var(--teal-dark); border:1px solid #CCEAE5; }
+  .game-options{ display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:12px; }
+  @media (max-width:760px){ .game-options{ grid-template-columns:repeat(2,1fr); } }
+  .g-opt{ background:#fff; border:1.5px solid var(--line); border-radius:12px; padding:12px 6px; font-weight:800; font-size:13.5px; color:var(--text); }
+  .g-opt:hover:not(:disabled){ border-color:var(--teal); }
+  .g-opt.correct{ background:#E8F6EE; border-color:var(--ok); color:var(--ok); }
+  .g-opt.incorrect{ background:#FBEAE8; border-color:var(--bad); color:var(--bad); }
+  .g-opt:disabled{ cursor:default; }
+  .game-feedback{ margin-top:12px; font-size:14px; min-height:44px; font-weight:600; }
+  .game-feedback.ok{ color:var(--ok); }
+  .game-feedback.bad{ color:var(--bad); }
+  .game-hint{ margin-top:8px; font-size:13px; color:var(--teal-dark); font-style:italic; min-height:20px; }
+  .game-result{ text-align:center; padding:12px 6px; }
+  .game-result .big{ font-family:var(--font-display); font-size:clamp(40px,8vw,64px); font-weight:700; color:var(--teal-dark); line-height:1; }
+
+  /* ---------- hilo conductor ---------- */
+  .chain{ display:grid; grid-template-columns:repeat(6,1fr); gap:12px; }
+  @media (max-width:900px){ .chain{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:460px){ .chain{ grid-template-columns:1fr; } }
+  .chain-node{ position:relative; background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px 12px; box-shadow:var(--shadow); text-align:center; }
+  .chain-node .n{ width:26px; height:26px; border-radius:50%; background:var(--teal); color:#fff; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; margin:0 auto 6px; }
+  .chain-node b{ display:block; font-size:14px; color:var(--navy); margin-bottom:4px; }
+  .chain-node p{ font-size:12px; color:var(--muted); }
+  .chain-node .blk{ display:inline-block; margin-top:8px; font-size:10px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; color:var(--teal-dark); background:var(--mint-tint); border-radius:999px; padding:3px 9px; }
+  .chain-node .blk.b2{ color:#1d5b78; background:#E1F0F7; }
+  @media (min-width:901px){
+    .chain-node:not(:last-child)::after{ content:"→"; position:absolute; right:-14px; top:50%; transform:translateY(-50%); color:var(--muted); font-weight:800; z-index:2; }
+  }
+
+  /* ---------- mapa conceptual ---------- */
+  .chip-row{ display:flex; flex-wrap:wrap; gap:7px; }
+  .concept-chip{ background:#fff; border:1.5px solid var(--line); border-radius:999px; padding:6px 12px; font-size:12.5px; font-weight:700; color:var(--text); }
+  .concept-chip:hover{ border-color:var(--teal); }
+  .concept-chip.done{ background:var(--teal); border-color:var(--teal); color:#fff; text-decoration:line-through; }
+  .chip-progress{ font-size:12px; color:var(--muted); margin-top:10px; font-weight:700; }
+  .tree{ display:flex; flex-direction:column; align-items:center; font-size:12.5px; }
+  .tnode{ background:#fff; border:1.5px solid var(--teal); border-radius:10px; padding:6px 12px; font-weight:700; color:var(--navy); text-align:center; }
+  .tnode.l1{ background:var(--navy); color:#fff; border-color:var(--navy); }
+  .tnode.l2{ background:var(--mint-tint); }
+  .tlink{ font-size:10.5px; color:var(--muted); font-style:italic; padding:3px 0; text-align:center; }
+  .tvline{ width:2px; height:12px; background:#9CCFC6; }
+  .trow{ display:flex; gap:10px; justify-content:center; width:100%; }
+  .tcol{ display:flex; flex-direction:column; align-items:center; flex:1; }
+
+  /* ---------- rúbrica ---------- */
+  .table-wrap{ overflow-x:auto; border-radius:14px; border:1px solid var(--line); background:#fff; box-shadow:var(--shadow); }
+  .rubric{ width:100%; min-width:680px; border-collapse:collapse; font-size:12.5px; }
+  .rubric th, .rubric td{ border:1px solid var(--line); padding:9px 10px; text-align:left; vertical-align:top; }
+  .rubric th{ background:var(--navy); color:#fff; font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; }
+  .rubric td.crit{ background:var(--mint-tint); font-weight:800; color:var(--teal-dark); }
+
+  /* ---------- simulador mutaciones ---------- */
+  .mm-toggle{ display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+  .mm-btn{ flex:1; min-width:140px; padding:11px; border-radius:12px; border:1.5px solid var(--line); background:#fff; font-weight:800; font-size:13px; color:var(--muted); }
+  .mm-btn.active{ border-color:var(--navy); background:var(--navy); color:#fff; }
+  .mut-board{ display:grid; grid-template-columns:1fr auto 1fr; gap:14px; align-items:center; margin-bottom:14px; }
+  @media (max-width:760px){ .mut-board{ grid-template-columns:1fr; } .mut-arrow{ transform:rotate(90deg); } }
+  .mut-arrow{ font-size:12px; font-weight:800; color:var(--muted); text-align:center; max-width:90px; margin:0 auto; }
+  .dot-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:7px; max-width:200px; margin:0 0 12px; }
+  .dot{ aspect-ratio:1/1; border-radius:50%; background:var(--teal); opacity:.85; transition:background .4s ease; }
+  .dot.mut{ background:var(--bad); opacity:1; }
+  .gamete-row{ display:flex; gap:10px; flex-wrap:wrap; }
+  .gamete{ width:46px; height:46px; border-radius:50%; border:2.5px solid transparent; background:var(--teal); color:#fff; font-weight:800; font-size:12px; }
+  .gamete.mut{ background:var(--bad); }
+  .gamete.sel{ border-color:var(--navy); box-shadow:0 0 0 3px rgba(11,35,64,0.18); }
+  .mut-legend{ display:flex; gap:16px; flex-wrap:wrap; font-size:12px; color:var(--muted); margin-bottom:12px; }
+  .mut-legend i{ display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:6px; vertical-align:-1px; }
+
+  /* ---------- AER y texto ---------- */
+  .aer-label{ font-size:11px; font-weight:800; color:var(--teal-dark); text-transform:uppercase; letter-spacing:.5px; display:block; margin:9px 0 4px; }
+  textarea{ width:100%; border:1.5px solid var(--line); border-radius:10px; padding:9px 11px; font-family:var(--font-body); font-size:13.5px; color:var(--text); resize:vertical; min-height:56px; }
+  textarea:focus{ outline:none; border-color:var(--teal); }
+  .case-vignette{ background:var(--cream-tint); border-radius:12px; padding:14px 16px; font-size:14px; font-style:italic; color:var(--navy); }
+
+  /* ---------- quiz ---------- */
+  .quiz-card{ margin-bottom:16px; }
+  .quiz-q{ font-weight:700; font-size:15px; margin-bottom:11px; color:var(--navy); }
+  .quiz-options{ display:grid; gap:8px; }
+  .opt-btn{ text-align:left; background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:10px 14px; font-size:13.5px; color:var(--text); }
+  .opt-btn:hover:not(:disabled){ border-color:var(--teal); }
+  .opt-btn.correct{ background:#E8F6EE; border-color:var(--ok); color:var(--ok); font-weight:700; }
+  .opt-btn.incorrect{ background:#FBEAE8; border-color:var(--bad); color:var(--bad); font-weight:700; }
+  .opt-btn:disabled{ cursor:default; }
+  .score-badge{ position:sticky; top:56px; display:inline-block; background:var(--navy); color:#fff; padding:8px 15px; border-radius:999px; font-weight:800; font-size:13px; margin-bottom:16px; z-index:5; }
+
+  /* ---------- semáforo ---------- */
+  .light-row{ display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; padding:12px 0; border-bottom:1px solid var(--line); }
+  .light-row:last-child{ border-bottom:none; }
+  @media (max-width:640px){ .light-row{ grid-template-columns:1fr; } }
+  .light-text{ font-size:14px; font-weight:600; color:var(--text); }
+  .light-btns{ display:flex; gap:8px; }
+  .light-btn{ display:flex; align-items:center; gap:6px; border:1.5px solid var(--line); background:#fff; border-radius:999px; padding:7px 12px; font-size:12px; font-weight:700; color:var(--muted); }
+  .light-btn i{ width:16px; height:16px; border-radius:50%; display:inline-block; }
+  .light-btn.g i{ background:var(--ok); } .light-btn.y i{ background:var(--warn); } .light-btn.r i{ background:var(--bad); }
+  .light-btn.sel.g{ background:#E8F6EE; border-color:var(--ok); color:var(--ok); }
+  .light-btn.sel.y{ background:#FFF4DC; border-color:var(--warn); color:#9A6A10; }
+  .light-btn.sel.r{ background:#FBEAE8; border-color:var(--bad); color:var(--bad); }
+  .light-summary{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:6px; }
+  .light-count{ border-radius:12px; padding:10px; text-align:center; font-size:12px; font-weight:800; }
+  .light-count .num{ display:block; font-family:var(--font-display); font-size:28px; line-height:1.1; }
+  .light-count.g{ background:#E8F6EE; color:var(--ok); } .light-count.y{ background:#FFF4DC; color:#9A6A10; } .light-count.r{ background:#FBEAE8; color:var(--bad); }
+  .light-msg{ margin-top:12px; font-size:14px; font-weight:600; color:var(--navy); }
+
+  /* ---------- cierre ---------- */
+  .qr-toggle{ background:#fff; border:1.5px solid var(--teal); color:var(--teal-dark); border-radius:999px; padding:9px 15px; font-weight:700; font-size:13px; }
+  #qrClosing{ margin-top:14px; width:110px; height:110px; }
+  #qrClosing img, #qrClosing canvas, #qrClosing table{ width:100% !important; height:100% !important; }
+  .footer-credit{ text-align:center; font-size:11.5px; color:var(--muted); margin-top:24px; }
+
+  /* ---------- impresión / PDF ---------- */
+  /* ---------- cuadro comparativo (celdas que se revelan) ---------- */
+  .cmp{ width:100%; min-width:620px; border-collapse:collapse; font-size:13px; }
+  .cmp th, .cmp td{ border:1px solid var(--line); padding:10px 12px; text-align:left; vertical-align:middle; }
+  .cmp th{ background:var(--navy); color:#fff; font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; }
+  .cmp td.asp{ background:var(--mint-tint); font-weight:800; color:var(--teal-dark); width:22%; }
+  .cmp td.rv{ cursor:pointer; position:relative; transition:background .2s ease; }
+  .cmp td.rv:hover{ background:#F3FAF8; }
+  .cmp td.rv:focus-visible{ outline:3px solid var(--baseC); outline-offset:-3px; }
+  .cmp td.rv .ans{ filter:blur(7px); opacity:.55; transition:filter .25s ease, opacity .25s ease; user-select:none; display:block; }
+  .cmp td.rv.shown .ans{ filter:none; opacity:1; user-select:auto; }
+  .cmp td.rv .hint{ position:absolute; left:0; right:0; top:0; bottom:0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:var(--teal-dark); letter-spacing:.3px; text-transform:uppercase; }
+  .cmp td.rv.shown .hint{ display:none; }
+  .cmp-actions{ display:flex; gap:8px; flex-wrap:wrap; margin:12px 0; align-items:center; }
+  details.think{ background:var(--cream-tint); border-radius:12px; padding:12px 16px; font-size:13.5px; }
+  details.think summary{ cursor:pointer; font-weight:800; color:var(--navy); }
+  details.think p{ margin-top:8px; }
+
+  /* ---------- Mendel en una página / pedigríes ---------- */
+  .ratio-pill{ display:inline-block; background:var(--navy); color:#fff; font-family:var(--font-display); font-weight:700; font-size:15px; padding:5px 12px; border-radius:999px; margin:4px 6px 4px 0; }
+  .mini-list{ list-style:none; margin:0; padding:0; }
+  .mini-list li{ font-size:13.5px; padding:5px 0; border-bottom:1px dashed var(--line); margin:0; }
+  .mini-list li:last-child{ border-bottom:none; }
+  .mini-list b{ color:var(--teal-dark); }
+  .pat-card h3{ font-size:16px; margin-bottom:8px; }
+  .pat-card ul{ margin:0 0 10px; padding-left:18px; }
+  .pat-card li{ font-size:13px; margin-bottom:5px; }
+  .pat-ex{ font-size:12px; color:var(--muted); font-style:italic; }
+  .tip-box{ margin-top:14px; background:var(--cream-tint); border:1px dashed var(--baseC); border-radius:12px; padding:12px 16px; font-size:13.5px; }
+
+  /* ---------- mapa conceptual en el cuaderno ---------- */
+  .notebook{ background-color:#FFFEFA; background-image:repeating-linear-gradient(to bottom, transparent 0, transparent 21px, #CFE6E1 21px, #CFE6E1 22px); border:1px solid var(--line); border-left:4px solid #E4A0A0; border-radius:12px; padding:6px 14px 8px; }
+  .notebook ol{ margin:0; padding-left:18px; }
+  .notebook li{ line-height:22px; margin:0; font-size:13px; }
+
+  /* ---------- ¿mito o realidad? ---------- */
+  .mr-hud{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; align-items:center; }
+  .mr-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:760px){ .mr-grid{ grid-template-columns:1fr; } }
+  .mr-card{ background:#fff; border:1.5px solid var(--line); border-radius:16px; padding:14px 16px; box-shadow:var(--shadow); }
+  .mr-card p.st{ font-weight:700; color:var(--navy); font-size:14.5px; margin-bottom:10px; }
+  .mr-btns{ display:flex; gap:8px; }
+  .mr-btn{ flex:1; padding:9px; border-radius:10px; border:1.5px solid var(--line); background:#fff; font-weight:800; font-size:13px; color:var(--muted); }
+  .mr-btn:hover:not(:disabled){ border-color:var(--teal); color:var(--teal-dark); }
+  .mr-btn.correct{ background:#E8F6EE; border-color:var(--ok); color:var(--ok); }
+  .mr-btn.incorrect{ background:#FBEAE8; border-color:var(--bad); color:var(--bad); }
+  .mr-btn:disabled{ cursor:default; }
+  .mr-exp{ margin-top:10px; font-size:13px; color:var(--text); display:none; }
+  .mr-card.answered .mr-exp{ display:block; }
+
+  /* ---------- interrogación y cronómetro ---------- */
+  .steps-list{ counter-reset:step; list-style:none; padding:0; margin:0; }
+  .steps-list li{ counter-increment:step; position:relative; padding-left:36px; margin-bottom:11px; font-size:14px; }
+  .steps-list li::before{ content:counter(step); position:absolute; left:0; top:-1px; width:24px; height:24px; border-radius:50%; background:var(--teal); color:#fff; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; }
+  .timer-box{ text-align:center; }
+  .timer-display{ font-family:var(--font-display); font-weight:700; font-size:clamp(46px,9vw,76px); color:var(--navy); line-height:1; margin:6px 0 4px; font-variant-numeric:tabular-nums; }
+  .timer-display.warn{ color:var(--bad); animation:timerPulse 1s ease-in-out infinite; }
+  .timer-display.end{ color:var(--bad); }
+  .timer-phase{ font-size:12px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; color:var(--teal-dark); min-height:18px; }
+  .timer-btns{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:12px; }
+  @keyframes timerPulse{ 0%,100%{ opacity:1; } 50%{ opacity:.55; } }
+  .topic-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+
+  /* ---------- ticket de salida ---------- */
+  .ticket{ background:#fff; border:2px dashed var(--teal); border-radius:18px; padding:20px 20px 16px; position:relative; }
+  .ticket-q{ margin-bottom:14px; }
+  .ticket-q b.q{ display:block; color:var(--navy); font-size:14.5px; margin-bottom:6px; }
+  .ticket-actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:4px; }
+  .ticket-msg{ font-size:12.5px; color:var(--muted); }
+  .ticket-keys{ display:none; margin-top:14px; }
+  .ticket-keys.open{ display:block; }
+  .ticket-keys li{ margin-bottom:6px; }
+
+  @media (prefers-reduced-motion: reduce){ .timer-display.warn{ animation:none !important; } .cmp td.rv .ans{ transition:none !important; } }
+  @media print{
+    .cmp td.rv .ans{ filter:none !important; opacity:1 !important; }
+    .cmp td.rv .hint{ display:none !important; }
+    .cmp-actions, .timer-btns{ display:none !important; }
+    .mr-exp{ display:block !important; }
+  }
+
+  @media print{
+    .progress-ladder, .top-actions, .nav-fixed{ display:none !important; }
+    body{ background:#fff !important; }
+    .slide{ display:block !important; min-height:auto !important; page-break-after:always; padding:14px 10px !important; }
+    .slide:last-of-type{ page-break-after:auto; }
+    .slide-viewport{ padding:0 !important; }
+    * { animation:none !important; transition:none !important; }
+    .card, .quiz-card, .table-wrap{ box-shadow:none !important; }
+    .score-badge{ position:static !important; }
+    .table-wrap{ overflow:visible !important; }
+    .rubric{ min-width:0 !important; }
+  }
+  @page{ size: A4 landscape; margin:12mm; }
+  @media (prefers-reduced-motion: reduce){
+    .helix-rung{ animation:none !important; }
+    .chd, .sv-fade{ transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <nav class="progress-ladder" id="progressLadder" aria-label="Progreso de la clase"></nav>
+
+  <div class="top-actions">
+    <button class="icon-btn" id="exportPdfBtn" title="Exportar esta clase a PDF">⤓ Exportar a PDF</button>
+  </div>
+
+  <main class="slide-viewport" id="slideViewport">
+
+    <!-- ================= 0 — PORTADA ================= -->
+    <section class="slide active" data-title="Portada">
+      <div class="slide-inner">
+        <div class="cover-grid">
+          <div>
+            <span class="eyebrow">Unidad 3 · Genética · 2° Medio Biología</span>
+            <h2 class="title" style="font-size:clamp(28px,4.4vw,42px);">Del gameto al organismo</h2>
+            <p class="subtitle">Sesión 7 — Cierre de unidad: integración y metacognición</p>
+            <div class="cover-info">
+              <span><b>Profesor(a):</b> Felipe Jiménez</span>
+              <span><b>Curso:</b> 2° Medio</span>
+              <span><b>Duración:</b> 90 minutos</span>
+            </div>
+            <div style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
+              <span class="tag">OA 6 y OA 7</span>
+              <span class="tag">Nivel Bloom: Evaluar / Crear</span>
+              <span class="tag">Simuladores y juego</span>
+            </div>
+            <button class="btn-primary" id="startBtn">Iniciar clase →</button>
+          </div>
+
+          <div>
+            <div class="helix-wrap" id="helixWrap" aria-hidden="true"></div>
+            <div class="qr-panel">
+              <p style="color:#fff; font-weight:700; font-size:13.5px; margin-top:0;">Recursos de la clase</p>
+              <div class="qr-box"><div id="qrHero"></div></div>
+              <p>Escanea con tu celular o visita<br><span style="color:#fff;">fjimenez321-stack.github.io/dondefelipe</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 1 — MAPA DE LA UNIDAD ================= -->
+    <section class="slide" data-title="Mapa de la unidad">
+      <div class="slide-inner">
+        <span class="eyebrow">Repaso · Lo que recorrimos</span>
+        <h2 class="title">Dos bloques, un mismo hilo</h2>
+        <p class="subtitle">Seis sesiones para entender cómo se copia, se reparte y se hereda la información genética</p>
+        <div class="unit-map">
+          <div class="card tint-mint">
+            <span class="card-label">Bloque 1 · Base celular de la herencia</span>
+            <div class="unit-step"><div class="unit-badge">S1</div><div><b>ADN, genes y cromosomas</b><span>Cómo se organiza el material genético.</span></div></div>
+            <div class="unit-step"><div class="unit-badge">S2</div><div><b>Mitosis y meiosis</b><span>Cómo se reparte al dividirse la célula.</span></div></div>
+            <div class="unit-step"><div class="unit-badge">S3</div><div><b>Anomalías y cáncer</b><span>Qué pasa cuando el reparto o su control falla.</span></div></div>
+          </div>
+          <div class="card tint-cream">
+            <span class="card-label">Bloque 2 · Herencia mendeliana</span>
+            <div class="unit-step"><div class="unit-badge b2">S4</div><div><b>Mendel, genotipo y fenotipo</b><span>Alelos, dominancia y ambiente.</span></div></div>
+            <div class="unit-step"><div class="unit-badge b2">S5</div><div><b>Monohibridismo</b><span>Predecir cruces con el cuadro de Punnett.</span></div></div>
+            <div class="unit-step"><div class="unit-badge b2">S6</div><div><b>Dihibridismo y pedigríes</b><span>Dos genes a la vez y herencia en familias.</span></div></div>
+          </div>
+        </div>
+        <p style="margin-top:18px; font-size:14px; color:var(--muted); text-align:center;">
+          Hoy <b style="color:var(--navy);">unimos ambos bloques</b>: la meiosis y la fecundación son los puentes entre la célula y las leyes de Mendel.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= 2 — OBJETIVO ================= -->
+    <section class="slide" data-title="Objetivo de la sesión">
+      <div class="slide-inner">
+        <span class="eyebrow">Foco de la clase · Sesión 7</span>
+        <h2 class="title">Objetivo, OA e Indicador de Evaluación</h2>
+        <div class="grid-2" style="margin-bottom:18px;">
+          <div class="card tint-mint">
+            <span class="card-label">Eje Biología</span>
+            <h3 style="font-size:18px; margin-bottom:8px;">OA 6 y OA 7</h3>
+            <p>Argumentar, basándose en evidencias, que el material genético se transmite de generación en generación (mitosis, meiosis y sus anomalías) y explicar los procesos de herencia aplicando los principios de Mendel.</p>
+          </div>
+          <div class="card tint-cream">
+            <span class="card-label">Indicador de Evaluación (IE)</span>
+            <p>Comparan mitosis y meiosis en relación con la herencia; aplican los principios de Mendel en la argumentación de un caso integrado.</p>
+          </div>
+        </div>
+        <div class="timeline">
+          <div class="card"><div class="step-n">1</div><b>Inicio</b><div class="mins">10 min</div><p style="font-size:12px;">Simulador y juego de etapas</p></div>
+          <div class="card"><div class="step-n">2</div><b>Clásica</b><div class="mins">25 min</div><p style="font-size:12px;">Comparación y mapa conceptual en el cuaderno</p></div>
+          <div class="card"><div class="step-n">3</div><b>STEAM</b><div class="mins">35 min</div><p style="font-size:12px;">Mutaciones y caso final (AER)</p></div>
+          <div class="card"><div class="step-n">4</div><b>Cierre</b><div class="mins">20 min</div><p style="font-size:12px;">Interrogación, ticket de salida y semáforo</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 3 — SIMULADOR MITOSIS ================= -->
+    <section class="slide" data-title="Simulador: mitosis">
+      <div class="slide-inner">
+        <span class="eyebrow">Inicio · Simulador interactivo</span>
+        <h2 class="title">Mitosis en movimiento</h2>
+        <p class="subtitle">Célula con 4 cromosomas (2n = 4): reproduce el proceso o recórrelo etapa por etapa</p>
+        <div class="sim-layout">
+          <div>
+            <div class="stage-wrap" id="simStage"></div>
+            <div class="sim-controls">
+              <button class="btn-primary" id="simPlay">▶ Reproducir</button>
+              <button class="btn-ghost" id="simReset">⏮ Reiniciar</button>
+              <input type="range" class="sim-slider" id="simSlider" min="0" max="4" step="1" value="0" aria-label="Etapa de la mitosis">
+              <span class="sim-phase-name" id="simPhaseName">Interfase</span>
+            </div>
+          </div>
+          <div>
+            <div class="phase-btns" id="phaseBtns">
+              <button class="phase-btn active" data-phase="interfase">Interfase</button>
+              <button class="phase-btn" data-phase="profase">Profase</button>
+              <button class="phase-btn" data-phase="metafase">Metafase</button>
+              <button class="phase-btn" data-phase="anafase">Anafase</button>
+              <button class="phase-btn" data-phase="telofase">Telofase</button>
+            </div>
+            <div class="card">
+              <span class="card-label">¿Qué está pasando?</span>
+              <p class="phase-caption" id="phaseCaption"></p>
+              <div class="stat-grid" id="statGrid"></div>
+            </div>
+            <div class="card tint-cream" style="margin-top:12px; padding:14px 16px;">
+              <span class="card-label">Para pensar</span>
+              <p style="font-size:13px;">¿Qué pasaría si las cromátidas hermanas <b>no se separaran</b> en la anafase? Recuerda la no disyunción de la Sesión 3.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 4 — JUEGO ETAPAS ================= -->
+    <section class="slide" data-title="Juego: ¿en qué etapa estoy?">
+      <div class="slide-inner">
+        <span class="eyebrow">Inicio · Juego</span>
+        <h2 class="title">¿En qué etapa estoy?</h2>
+        <p class="subtitle">Observa la célula y identifica la etapa de la mitosis. 10 rondas, cada una con un dibujo distinto.</p>
+
+        <div id="gameIntro" class="card tint-mint" style="text-align:center;">
+          <p style="max-width:560px; margin:0 auto 14px;">Ganas <b>1 punto</b> por acierto sin ayuda y <b>0,5</b> si usas la pista. Al final verás qué etapa te costó más.</p>
+          <button class="btn-primary" id="gameStart">Comenzar juego</button>
+        </div>
+
+        <div id="gameBoard" hidden>
+          <div class="game-hud">
+            <span class="hud-pill" id="hudRound">Ronda 1 / 10</span>
+            <span class="hud-pill" id="hudScore">Puntaje: 0</span>
+            <span class="hud-pill soft" id="hudStreak">Racha: 0</span>
+          </div>
+          <div class="stage-wrap" id="gameStage"></div>
+          <div class="game-options" id="gameOptions"></div>
+          <div class="game-hint" id="gameHint"></div>
+          <div class="game-feedback" id="gameFeedback" aria-live="polite"></div>
+          <div class="sim-controls" style="justify-content:space-between;">
+            <button class="btn-ghost" id="gameHintBtn">💡 Ver pista (−0,5)</button>
+            <button class="btn-primary" id="gameNext" hidden>Siguiente →</button>
+          </div>
+        </div>
+
+        <div id="gameResult" class="card game-result" hidden>
+          <span class="card-label">Resultado final</span>
+          <div class="big" id="resScore">0</div>
+          <p style="margin-top:6px; font-size:13px; color:var(--muted);">de 10 puntos posibles</p>
+          <p id="resMsg" style="margin-top:14px; font-weight:700; color:var(--navy);"></p>
+          <p id="resMissed" style="margin-top:6px; font-size:13.5px; color:var(--muted);"></p>
+          <div style="margin-top:16px;"><button class="btn-primary" id="gameAgain">Jugar de nuevo</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 5 — HILO CONDUCTOR ================= -->
+    <section class="slide" data-title="El hilo conductor">
+      <div class="slide-inner">
+        <span class="eyebrow">Clásica · Integración</span>
+        <h2 class="title">Del gameto al organismo</h2>
+        <p class="subtitle">El camino que conecta la división celular con las leyes de Mendel</p>
+        <div class="chain">
+          <div class="chain-node"><div class="n">1</div><b>Meiosis</b><p>Forma gametos haploides (n) distintos entre sí.</p><span class="blk">Bloque 1</span></div>
+          <div class="chain-node"><div class="n">2</div><b>Gametos</b><p>Cada uno lleva un solo alelo por gen.</p><span class="blk b2">Bloque 2</span></div>
+          <div class="chain-node"><div class="n">3</div><b>Fecundación</b><p>Se unen dos gametos: se restaura 2n.</p><span class="blk b2">Bloque 2</span></div>
+          <div class="chain-node"><div class="n">4</div><b>Cigoto</b><p>Primera célula del nuevo organismo (2n).</p><span class="blk">Bloque 1</span></div>
+          <div class="chain-node"><div class="n">5</div><b>Mitosis</b><p>Multiplica el cigoto: crecimiento y desarrollo.</p><span class="blk">Bloque 1</span></div>
+          <div class="chain-node"><div class="n">6</div><b>Organismo</b><p>Genotipo + ambiente = fenotipo.</p><span class="blk b2">Bloque 2</span></div>
+        </div>
+        <div class="grid-2" style="margin-top:18px;">
+          <div class="card tint-mint"><span class="card-label">¿Dónde entra Mendel?</span><p>En el reparto de alelos: cada gameto recibe uno por gen, y el cuadro de Punnett predice cómo se combinan en la fecundación.</p></div>
+          <div class="card tint-cream"><span class="card-label">¿Qué pasa si algo falla?</span><p>Errores en la meiosis (no disyunción) o en el control de la mitosis (cáncer) alteran el camino: eso vimos en la Sesión 3.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 5b — CUADRO COMPARATIVO ================= -->
+    <section class="slide" data-title="Mitosis vs meiosis">
+      <div class="slide-inner">
+        <span class="eyebrow">Clásica · Contenido clave</span>
+        <h2 class="title">Mitosis y meiosis frente a frente</h2>
+        <p class="subtitle">Toca cada celda para revelar la respuesta: primero intenta recordarla</p>
+        <div class="table-wrap">
+          <table class="cmp" id="cmpTable">
+            <thead><tr><th>Aspecto</th><th>Mitosis</th><th>Meiosis</th></tr></thead>
+            <tbody>
+              <tr><td class="asp">¿Para qué sirve?</td><td class="rv" tabindex="0" role="button" aria-pressed="false"><span class="ans">Crecimiento, reparación y renovación de tejidos</span><span class="hint">Toca para ver</span></td><td class="rv" tabindex="0" role="button" aria-pressed="false"><span class="ans">Formar gametos (óvulos y espermatozoides)</span><span class="hint">Toca para ver</span></td></tr>
+              <tr><td class="asp">¿Dónde ocurre?</td><td class="rv" tabindex="0" role="button" aria-pressed="false"><span class="ans">En las células somáticas de todo el cuerpo</span><span class="hint">Toca para ver</span></td><td class="rv" tabindex="0" role="button" aria-pressed="false"><span class="ans">En las células germinales (ovarios y testículos)</span><span class="hint">Toca para ver</span></td></tr>
+              <tr><td class="asp">Divisiones</td><td class="rv" tabindex="0" role="button" aria-pressed="false"><span class="ans">1 división</span><span class="hint">Toca para ver</span></td><td class="rv" tabindex="0" role="button" aria-pressed="false"><span class="ans">2 divisiones sucesivas (meiosis I y meiosis II)</span><span class="hint">Toca para ver</span></td></tr>
+              <tr><td class="asp">Células resultantes</td><td class="rv" tabindex="0" role="button" aria-pressed="false"><span class="ans">2 células hijas</span><span class="hint">Toca para ver</span></td><td class="rv" tabindex="0" role="button" aria-pressed="false"><span class="ans">4 células hijas</span><span class="hint">Toca para ver</span></td></tr>
+              <tr><td class="asp">Cromosomas (en humanos)</td><td class="rv" tabindex="0" role="button" aria-pressed="false"><span class="ans">46 (2n): igual que la célula madre</span><span class="hint">Toca para ver</span></td><td class="rv" tabindex="0" role="button" aria-pressed="false"><span class="ans">23 (n): la mitad que la célula madre</span><span class="hint">Toca para ver</span></td></tr>
+              <tr><td class="asp">Parecido genético</td><td class="rv" tabindex="0" role="button" aria-pressed="false"><span class="ans">Idénticas entre sí y a la célula madre</span><span class="hint">Toca para ver</span></td><td class="rv" tabindex="0" role="button" aria-pressed="false"><span class="ans">Distintas entre sí (entrecruzamiento y segregación independiente)</span><span class="hint">Toca para ver</span></td></tr>
+              <tr><td class="asp">Qué se separa en la anafase</td><td class="rv" tabindex="0" role="button" aria-pressed="false"><span class="ans">Las cromátidas hermanas</span><span class="hint">Toca para ver</span></td><td class="rv" tabindex="0" role="button" aria-pressed="false"><span class="ans">Los cromosomas homólogos (anafase I) y luego las cromátidas hermanas (anafase II)</span><span class="hint">Toca para ver</span></td></tr>
+              <tr><td class="asp">Relación con Mendel</td><td class="rv" tabindex="0" role="button" aria-pressed="false"><span class="ans">Copia el genotipo de la célula sin cambiarlo</span><span class="hint">Toca para ver</span></td><td class="rv" tabindex="0" role="button" aria-pressed="false"><span class="ans">Reparte los alelos a los gametos: base de las proporciones de Mendel</span><span class="hint">Toca para ver</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="cmp-actions">
+          <button class="btn-ghost" id="cmpShowAll">Mostrar todo</button>
+          <button class="btn-ghost" id="cmpHideAll">Ocultar todo</button>
+          <span class="chip-progress" id="cmpCount" style="margin:0;"></span>
+        </div>
+        <details class="think">
+          <summary>Para pensar: ¿qué pasaría si los gametos se formaran por mitosis?</summary>
+          <p>Los gametos tendrían 46 cromosomas y el cigoto, 92. En cada generación se duplicaría la dotación cromosómica. La meiosis reduce a la mitad el número de cromosomas para que la fecundación lo restaure en 46.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- ================= 5c — MENDEL EN UNA PÁGINA ================= -->
+    <section class="slide" data-title="Herencia mendeliana: lo esencial">
+      <div class="slide-inner">
+        <span class="eyebrow">Clásica · Contenido clave</span>
+        <h2 class="title">Herencia mendeliana: lo esencial</h2>
+        <p class="subtitle">Lo que usaste en las Sesiones 4 a 6, en una sola página</p>
+        <div class="grid-2">
+          <div class="card tint-mint">
+            <span class="card-label">Vocabulario</span>
+            <ul class="mini-list">
+              <li><b>Alelo:</b> cada versión de un gen (S o s).</li>
+              <li><b>Genotipo:</b> combinación de alelos (SS, Ss, ss).</li>
+              <li><b>Fenotipo:</b> característica observable (semilla lisa o rugosa).</li>
+              <li><b>Homocigoto / heterocigoto:</b> alelos iguales (SS, ss) / distintos (Ss).</li>
+              <li><b>Dominante / recesivo:</b> el dominante se expresa en heterocigosis; el recesivo, solo en homocigosis.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="card-label">Monohibridismo (1 gen)</span>
+            <p>Aa × Aa → gametos A y a → cuadro de Punnett de 2 × 2</p>
+            <p style="margin-top:8px;"><span class="ratio-pill">1 AA : 2 Aa : 1 aa</span><span class="ratio-pill">3 : 1</span></p>
+            <p class="pat-ex">Genotipos 1 : 2 : 1 · fenotipos 3 dominante : 1 recesivo</p>
+            <p style="margin-top:8px; font-size:13px;"><b>Cruce de prueba:</b> Aa × aa → 1 : 1. Si un individuo dominante tiene hijos aa, entonces es Aa.</p>
+          </div>
+          <div class="card">
+            <span class="card-label">Dihibridismo (2 genes)</span>
+            <p>RrYy × RrYy → 4 gametos (RY, Ry, rY, ry) → cuadro de 4 × 4 = 16 combinaciones</p>
+            <p style="margin-top:8px;"><span class="ratio-pill">9 : 3 : 3 : 1</span></p>
+            <p class="pat-ex">Los dos genes se reparten de forma independiente en la meiosis (si están en cromosomas distintos).</p>
+          </div>
+          <div class="card tint-cream">
+            <span class="card-label">Fenotipo y ambiente</span>
+            <p><b>Fenotipo = genotipo + ambiente.</b></p>
+            <p style="font-size:13px; margin-top:6px;">Estatura: genes + nutrición. Tono de piel: melanina heredada + exposición al sol. En cambio, rasgos como el lóbulo de la oreja dependen casi solo del genotipo.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 5d — PEDIGRÍES: PISTAS ================= -->
+    <section class="slide" data-title="Pedigríes: pistas del patrón">
+      <div class="slide-inner">
+        <span class="eyebrow">Clásica · Contenido clave</span>
+        <h2 class="title">Pedigríes: pistas para descubrir el patrón</h2>
+        <p class="subtitle">Busca estas señales en el árbol antes de decidir</p>
+        <div class="grid-3">
+          <div class="card pat-card">
+            <h3>Autosómico recesivo</h3>
+            <ul>
+              <li>Padres sanos pueden tener hijos afectados.</li>
+              <li>"Salta" generaciones.</li>
+              <li>Afecta por igual a hombres y mujeres.</li>
+            </ul>
+            <p class="pat-ex">Ejemplos: albinismo, fibrosis quística.</p>
+          </div>
+          <div class="card pat-card tint-mint">
+            <h3>Autosómico dominante</h3>
+            <ul>
+              <li>Aparece en todas las generaciones.</li>
+              <li>Cada persona afectada suele tener un progenitor afectado.</li>
+              <li>Afecta por igual a hombres y mujeres.</li>
+            </ul>
+            <p class="pat-ex">Ejemplos: enfermedad de Huntington, acondroplasia.</p>
+          </div>
+          <div class="card pat-card tint-cream">
+            <h3>Recesivo ligado al X</h3>
+            <ul>
+              <li>Afecta mucho más a los varones.</li>
+              <li>Lo transmiten mujeres portadoras que no están afectadas.</li>
+              <li>Un padre afectado no lo pasa a sus hijos varones.</li>
+            </ul>
+            <p class="pat-ex">Ejemplos: daltonismo, hemofilia.</p>
+          </div>
+        </div>
+        <div class="tip-box"><b>Pista clave:</b> dos padres sanos con un hijo afectado indican herencia <b>recesiva</b> (y, si es autosómica, ambos padres son portadores). Aplícalo al pedigrí del daltonismo que analizaste en la Sesión 6.</div>
+      </div>
+    </section>
+
+    <!-- ================= 6 — MAPA CONCEPTUAL ================= -->
+    <section class="slide" data-title="Actividad: mapa conceptual">
+      <div class="slide-inner">
+        <span class="eyebrow">Clásica · Actividad</span>
+        <h2 class="title">Construye tu mapa conceptual</h2>
+        <p class="subtitle">Integra la división celular y la herencia mendeliana en un solo mapa</p>
+        <div class="grid-2">
+          <div>
+            <div class="card tint-mint" style="margin-bottom:14px;">
+              <span class="card-label">Qué debes hacer (en tu cuaderno)</span>
+              <ul>
+                <li>Trabaja en <b>una página completa de tu cuaderno</b>, girado en <b>horizontal</b> para tener más espacio. Usa lápiz grafito y lápices de colores.</li>
+                <li>Organiza al menos <b>3 niveles</b>: de lo general (arriba) a lo específico (abajo).</li>
+                <li>Escribe cada concepto dentro de un <b>óvalo o recuadro</b> y únelos con <b>flechas</b>. Sobre cada flecha escribe el <b>conector</b> (verbo o frase) que forme una proposición correcta.</li>
+                <li>Usa <b>un color por bloque</b> (división celular y herencia mendeliana) y muestra al menos <b>3 relaciones entre ambos bloques</b> con flechas de un tercer color.</li>
+              </ul>
+            </div>
+            <div class="card">
+              <span class="card-label">Conceptos que no pueden faltar (toca para marcar)</span>
+              <div class="chip-row" id="chipRow"></div>
+              <p class="chip-progress" id="chipProgress"></p>
+            </div>
+          </div>
+          <div>
+          <div class="card" style="margin-bottom:14px;">
+            <span class="card-label">Ejemplo de estructura (solo una guía)</span>
+            <div class="tree">
+              <div class="tnode l1">Herencia genética</div>
+              <div class="tvline"></div>
+              <div class="trow">
+                <div class="tcol">
+                  <div class="tlink">se transmite mediante</div>
+                  <div class="tnode l2">División celular</div>
+                  <div class="tvline"></div>
+                  <div class="tlink">incluye</div>
+                  <div class="trow"><div class="tnode">Mitosis</div><div class="tnode">Meiosis</div></div>
+                </div>
+                <div class="tcol">
+                  <div class="tlink">se predice con</div>
+                  <div class="tnode l2">Leyes de Mendel</div>
+                  <div class="tvline"></div>
+                  <div class="tlink">se aplican en</div>
+                  <div class="trow"><div class="tnode">Mono-hibridismo</div><div class="tnode">Di-hibridismo</div></div>
+                </div>
+              </div>
+            </div>
+            <p style="font-size:12px; color:var(--muted); margin-top:14px; font-style:italic;">Tu mapa debe ser más completo: agrega gametos, fecundación, alelos, genotipo, fenotipo, pedigríes y mutaciones.</p>
+          </div>
+          <div class="card tint-cream">
+            <span class="card-label">Paso a paso en el cuaderno (≈ 20 min)</span>
+            <div class="notebook">
+              <ol>
+                <li>Gira el cuaderno y escribe el concepto central arriba.</li>
+                <li>A un lado, haz una lista rápida con los conceptos (borrador).</li>
+                <li>Agrúpalos por bloque y asígnales un color.</li>
+                <li>Dibuja óvalos y flechas; escribe los conectores.</li>
+                <li>Revisa: ¿3 niveles? ¿3 relaciones entre bloques?</li>
+              </ol>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 7 — RÚBRICA ================= -->
+    <section class="slide" data-title="Rúbrica del mapa conceptual">
+      <div class="slide-inner">
+        <span class="eyebrow">Instrumento de evaluación</span>
+        <h2 class="title">Rúbrica: mapa conceptual</h2>
+        <p class="subtitle">5 criterios × 4 niveles de logro · 20 puntos</p>
+        <div class="table-wrap">
+          <table class="rubric">
+            <thead><tr><th>Criterio</th><th>Destacado (4)</th><th>Logrado (3)</th><th>En desarrollo (2)</th><th>Inicial (1)</th></tr></thead>
+            <tbody>
+              <tr><td class="crit">Conceptos clave</td><td>12 o más conceptos de ambos bloques, todos bien usados</td><td>9 a 11 conceptos, con errores menores</td><td>5 a 8 conceptos, o varios imprecisos</td><td>Menos de 5 conceptos o con errores graves</td></tr>
+              <tr><td class="crit">Jerarquía y estructura</td><td>3 o más niveles claros, de lo general a lo específico</td><td>3 niveles, con alguna jerarquía confusa</td><td>2 niveles o estructura desordenada</td><td>Lista de conceptos sin jerarquía</td></tr>
+              <tr><td class="crit">Conectores y proposiciones</td><td>Todas las uniones con conector preciso y proposición correcta</td><td>La mayoría de las uniones bien conectadas</td><td>Pocos conectores o imprecisos</td><td>Sin conectores</td></tr>
+              <tr><td class="crit">Integración de bloques</td><td>3 o más relaciones entre división celular y herencia</td><td>2 relaciones entre ambos bloques</td><td>1 relación entre ambos bloques</td><td>Los bloques aparecen separados</td></tr>
+              <tr><td class="crit">Presentación y claridad</td><td>Ordenado y legible, con colores o recuadros que facilitan la lectura</td><td>Ordenado y legible, con detalles por mejorar</td><td>Difícil de leer en algunas partes</td><td>Desordenado o ilegible</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 8 — SIMULADOR MUTACIONES ================= -->
+    <section class="slide" data-title="Simulador: mutación somática vs germinal">
+      <div class="slide-inner">
+        <span class="eyebrow">STEAM · Simulador interactivo</span>
+        <h2 class="title">¿Dónde ocurre la mutación?</h2>
+        <p class="subtitle">Descubre cuándo una mutación pasa a la descendencia</p>
+        <div class="mm-toggle" id="mutToggle">
+          <button class="mm-btn active" data-mut="none">Sin mutación</button>
+          <button class="mm-btn" data-mut="somatic">En célula somática (piel)</button>
+          <button class="mm-btn" data-mut="germinal">En célula germinal</button>
+        </div>
+        <div class="mut-legend"><span><i style="background:var(--teal)"></i>ADN normal</span><span><i style="background:var(--bad)"></i>ADN con mutación</span></div>
+        <div class="mut-board">
+          <div>
+            <span class="card-label">Progenitor · células del cuerpo</span>
+            <div class="dot-grid" id="parentGrid"></div>
+            <span class="card-label">Sus gametos · toca uno para elegir cuál fecunda</span>
+            <div class="gamete-row" id="gameteRow"></div>
+          </div>
+          <div class="mut-arrow">fecundación y mitosis →</div>
+          <div>
+            <span class="card-label">Hijo/a · células del cuerpo</span>
+            <div class="dot-grid" id="childGrid"></div>
+          </div>
+        </div>
+        <div class="card tint-mint" id="mutMessage" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ================= 8b — ¿MITO O REALIDAD? ================= -->
+    <section class="slide" data-title="¿Mito o realidad?">
+      <div class="slide-inner">
+        <span class="eyebrow">STEAM · Ideas que suelen confundirse</span>
+        <h2 class="title">¿Mito o realidad?</h2>
+        <p class="subtitle">Decide si cada afirmación es correcta y revisa la explicación</p>
+        <div class="mr-hud">
+          <span class="hud-pill" id="mrScore">Aciertos: 0 / 6</span>
+          <button class="btn-ghost" id="mrReset">Reiniciar</button>
+        </div>
+        <div class="mr-grid" id="mrGrid"></div>
+      </div>
+    </section>
+
+    <!-- ================= 9 — CASO FINAL AER ================= -->
+    <section class="slide" data-title="Caso final (AER)">
+      <div class="slide-inner">
+        <span class="eyebrow">STEAM · Estudio de caso final</span>
+        <h2 class="title">Argumenta con evidencia</h2>
+        <div class="case-vignette" style="margin-bottom:14px;">
+          "Valentina trabaja a la intemperie y desarrolla un melanoma: la radiación UV provocó una mutación en el ADN de células de su piel. Meses después nace su hijo Tomás. Un familiar afirma: <b>'Tomás heredará el melanoma de su mamá, porque la mutación está en su ADN'</b>."
+        </div>
+        <div class="card" style="margin-bottom:14px;">
+          <span class="card-label">Evalúa la afirmación del familiar (AER)</span>
+          <label class="aer-label">Afirmación: ¿es correcta la afirmación del familiar?</label>
+          <textarea rows="2" aria-label="Afirmación"></textarea>
+          <label class="aer-label">Evidencia: ¿qué sabes sobre dónde ocurrió la mutación y cómo se forman los gametos?</label>
+          <textarea rows="2" aria-label="Evidencia"></textarea>
+          <label class="aer-label">Razonamiento: conecta la evidencia con tu afirmación (usa mitosis, meiosis y gametos)</label>
+          <textarea rows="3" aria-label="Razonamiento"></textarea>
+        </div>
+        <div class="grid-2">
+          <div class="card tint-cream">
+            <span class="card-label">Caso B · comparación</span>
+            <p style="font-size:13.5px; margin-bottom:8px;">Si la mutación hubiera ocurrido en un <b>óvulo</b> de Valentina, ¿qué cambiaría? ¿Tomás la heredaría con seguridad?</p>
+            <textarea rows="3" aria-label="Caso B"></textarea>
+          </div>
+          <div class="card tint-mint">
+            <span class="card-label">Desafío</span>
+            <p style="font-size:13.5px; margin-bottom:8px;">Algunas personas heredan mayor predisposición al cáncer. ¿Cómo lo explicarías con lo que sabes de mutaciones germinales y de herencia mendeliana?</p>
+            <textarea rows="3" aria-label="Desafío"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 10 — QUIZ ================= -->
+    <section class="slide" data-title="Quiz de integración">
+      <div class="slide-inner">
+        <span class="eyebrow">Práctica · Evaluación formativa (opcional)</span>
+        <h2 class="title">Quiz de integración</h2>
+        <p class="subtitle">Para repasar antes de la interrogación o para hacer en casa</p>
+        <div class="score-badge" id="scoreBadge">Puntaje: 0 / 0</div>
+        <div id="quizContainer"></div>
+      </div>
+    </section>
+
+    <!-- ================= 10b — INTERROGACIÓN ================= -->
+    <section class="slide" data-title="Interrogación: 4 estudiantes">
+      <div class="slide-inner">
+        <span class="eyebrow">Cierre · Actividad oral</span>
+        <h2 class="title">Interrogación: 4 estudiantes al azar</h2>
+        <p class="subtitle">Un sorteo elige quién sale y qué pregunta le toca</p>
+        <div class="grid-2">
+          <div class="card tint-mint">
+            <span class="card-label">Cómo funciona</span>
+            <ol class="steps-list">
+              <li>El docente abre el Excel <b>Interrogacion_Sesion7_Sorteo_4Estudiantes.xlsx</b>. Un estudiante dice un número: esa es la <b>semilla</b> del sorteo.</li>
+              <li>El sorteo elige a <b>4 estudiantes</b> y le asigna a cada uno una pregunta de un tema distinto.</li>
+              <li>Cada estudiante tiene <b>30 segundos para pensar</b> y <b>90 segundos para responder</b> en voz alta.</li>
+              <li>El docente puede pedir una precisión: <i>¿por qué?</i>, <i>¿puedes dar un ejemplo?</i></li>
+              <li>El resto del curso escucha y anota en su cuaderno <b>una idea que agregaría o corregiría</b>.</li>
+            </ol>
+          </div>
+          <div>
+            <div class="card timer-box" id="tmBox" data-think="30" data-answer="90" style="margin-bottom:14px;">
+              <span class="card-label">Cronómetro</span>
+              <div class="timer-phase" id="tmPhase">Listo</div>
+              <div class="timer-display" id="tmDisplay">00:30</div>
+              <div class="timer-btns">
+                <button class="btn-primary" id="tmThink">Pensar (30 s)</button>
+                <button class="btn-primary" id="tmAnswer">Responder (90 s)</button>
+                <button class="btn-ghost" id="tmPause">Pausa</button>
+                <button class="btn-ghost" id="tmReset">Reiniciar</button>
+              </div>
+            </div>
+            <div class="card">
+              <span class="card-label">Qué se evalúa (0 a 4 en cada criterio)</span>
+              <ul>
+                <li><b>Precisión conceptual:</b> la respuesta es científicamente correcta.</li>
+                <li><b>Vocabulario científico:</b> usa los términos de la unidad.</li>
+                <li><b>Claridad y argumentación:</b> explica con evidencia y razonamiento (AER).</li>
+              </ul>
+              <div class="topic-row">
+                <span class="tag">Mitosis y meiosis</span>
+                <span class="tag">Mutaciones y anomalías</span>
+                <span class="tag">Herencia mendeliana</span>
+                <span class="tag">Pedigríes e integración</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 10c — TICKET DE SALIDA ================= -->
+    <section class="slide" data-title="Ticket de salida">
+      <div class="slide-inner">
+        <span class="eyebrow">Cierre · Ticket de salida</span>
+        <h2 class="title">Antes de salir…</h2>
+        <p class="subtitle">Respóndelo en media hoja de tu cuaderno (o escríbelo aquí) y entrégalo al salir</p>
+        <div class="ticket" id="ticketBox">
+          <div class="ticket-q"><b class="q">1. Explica con tus palabras la diferencia entre mitosis y meiosis (máximo 2 líneas).</b><textarea rows="2" aria-label="Respuesta 1"></textarea></div>
+          <div class="ticket-q"><b class="q">2. Una mutación ocurre en una célula de la piel y otra, en un gameto. ¿Cuál puede heredarse y por qué?</b><textarea rows="2" aria-label="Respuesta 2"></textarea></div>
+          <div class="ticket-q"><b class="q">3. Dos progenitores Aa × Aa: ¿qué probabilidad hay de que un hijo sea aa? Muestra cómo lo calculaste.</b><textarea rows="2" aria-label="Respuesta 3"></textarea></div>
+          <div class="ticket-q"><b class="q">4. ¿Qué concepto de la unidad te costó más y qué harás para reforzarlo?</b><textarea rows="2" aria-label="Respuesta 4"></textarea></div>
+          <div class="ticket-actions">
+            <button class="btn-ghost" id="ticketCopy">Copiar mis respuestas</button>
+            <button class="btn-ghost" id="ticketClear">Borrar</button>
+            <button class="btn-ghost" id="ticketKeys" aria-expanded="false">Ver respuestas modelo (docente)</button>
+            <span class="ticket-msg" id="ticketMsg"></span>
+          </div>
+          <div class="ticket-keys" id="ticketKeyBox">
+            <div class="card tint-cream">
+              <span class="card-label">Respuestas modelo (docente)</span>
+              <ol>
+                <li>Mitosis: 1 división que forma 2 células diploides idénticas (crecimiento y reparación). Meiosis: 2 divisiones que forman 4 células haploides distintas (gametos).</li>
+                <li>La mutación del gameto: si ese gameto participa en la fecundación, queda en el cigoto y en todas las células del hijo. La mutación de la piel es somática: queda en el cuerpo de esa persona y no llega a los gametos.</li>
+                <li>25% (1/4): en el cuadro de Punnett de Aa × Aa se obtienen AA, Aa, Aa y aa, y solo 1 de las 4 combinaciones es aa.</li>
+                <li>Respuesta personal: debe nombrar un concepto concreto y una estrategia (por ejemplo, rehacer cuadros de Punnett, repetir el juego de etapas o releer el cuadro comparativo).</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 11 — SEMÁFORO ================= -->
+    <section class="slide" data-title="Semáforo de metacognición">
+      <div class="slide-inner">
+        <span class="eyebrow">Cierre · Metacognición</span>
+        <h2 class="title">Semáforo de aprendizaje</h2>
+        <p class="subtitle">Individual y anónimo: tus respuestas no se guardan ni se envían a nadie</p>
+        <div class="card" style="margin-bottom:14px;">
+          <div id="lightRows"></div>
+        </div>
+        <div class="card tint-mint">
+          <span class="card-label">Tu resumen</span>
+          <div class="light-summary">
+            <div class="light-count g"><span class="num" id="cntG">0</span>Lo domino</div>
+            <div class="light-count y"><span class="num" id="cntY">0</span>A medias</div>
+            <div class="light-count r"><span class="num" id="cntR">0</span>A repasar</div>
+          </div>
+          <p class="light-msg" id="lightMsg">Marca un color en cada afirmación para ver tu resumen.</p>
+          <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn-ghost" id="lightCopy">Copiar mi resumen</button>
+            <button class="btn-ghost" id="lightReset">Reiniciar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 12 — CIERRE ================= -->
+    <section class="slide" data-title="Cierre de la unidad">
+      <div class="slide-inner">
+        <span class="eyebrow">Síntesis y próximos pasos</span>
+        <h2 class="title">Lo que construimos en la Unidad 3</h2>
+        <div class="grid-2" style="margin-bottom:18px;">
+          <div class="card tint-mint">
+            <span class="card-label">Hoy lograste</span>
+            <ul>
+              <li>Simular y reconocer las etapas de la mitosis.</li>
+              <li>Comparar mitosis y meiosis y relacionarlas con las leyes de Mendel.</li>
+              <li>Integrar división celular y herencia mendeliana en un mapa conceptual en tu cuaderno.</li>
+              <li>Argumentar con AER por qué una mutación germinal se hereda y una somática no.</li>
+              <li>Responder en la interrogación, el ticket de salida y el semáforo de aprendizaje.</li>
+            </ul>
+          </div>
+          <div class="card tint-cream">
+            <span class="card-label">Lo que viene — Unidad 4</span>
+            <p>Manipulación genética: aplicaciones de la biotecnología y sus implicancias éticas y sociales (OA 8).</p>
+          </div>
+        </div>
+
+        <button class="qr-toggle" id="qrToggleBtn">Mostrar QR de recursos</button>
+        <div id="qrClosing" style="display:none;"></div>
+
+        <p class="footer-credit">Unidad 3 · Genética — Sesión 7 · Prof. Felipe Jiménez · 2° Medio Biología</p>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="nav-fixed">
+    <button class="nav-btn" id="prevBtn">← Anterior</button>
+    <span class="nav-counter" id="navCounter">1 / 19</span>
+    <button class="nav-btn" id="nextBtn">Siguiente →</button>
+  </nav>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var QR_URL = "https://fjimenez321-stack.github.io/dondefelipe/#";
+
+  /* ====================================================================
+     NAVEGACIÓN
+     ==================================================================== */
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var total = slides.length;
+  var current = 0;
+
+  var ladder = document.getElementById("progressLadder");
+  slides.forEach(function(s, i){
+    var b = document.createElement("button");
+    b.className = "prog-step";
+    b.type = "button";
+    b.setAttribute("aria-label", "Ir a: " + (s.getAttribute("data-title") || ("Diapositiva " + (i+1))));
+    b.addEventListener("click", function(){ goTo(i); });
+    ladder.appendChild(b);
+  });
+  var progSteps = Array.prototype.slice.call(document.querySelectorAll(".prog-step"));
+  var prevBtn = document.getElementById("prevBtn");
+  var nextBtn = document.getElementById("nextBtn");
+  var navCounter = document.getElementById("navCounter");
+
+  function goTo(index){
+    if (index < 0) index = 0;
+    if (index > total - 1) index = total - 1;
+    if (index !== current && typeof stopSimPlay === "function") stopSimPlay();
+    if (index !== current && typeof stopInterrTimer === "function") stopInterrTimer();
+    slides[current].classList.remove("active");
+    current = index;
+    slides[current].classList.add("active");
+    progSteps.forEach(function(step, i){
+      step.classList.toggle("done", i <= current);
+      step.classList.toggle("current", i === current);
+    });
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+    navCounter.textContent = (current + 1) + " / " + total;
+    window.scrollTo(0, 0);
+  }
+  prevBtn.addEventListener("click", function(){ goTo(current - 1); });
+  nextBtn.addEventListener("click", function(){ goTo(current + 1); });
+  document.getElementById("startBtn").addEventListener("click", function(){ goTo(1); });
+  document.addEventListener("keydown", function(e){
+    var tag = (e.target && e.target.tagName) || "";
+    if (tag === "TEXTAREA" || tag === "INPUT") return;
+    if (e.key === "ArrowRight") goTo(current + 1);
+    if (e.key === "ArrowLeft") goTo(current - 1);
+  });
+
+  /* ====================================================================
+     QR
+     ==================================================================== */
+  function buildQR(elementId, size){
+    try{
+      new QRCode(document.getElementById(elementId), {
+        text: QR_URL, width: size, height: size,
+        colorDark: "#0B2340", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M
+      });
+    } catch(e){
+      var el = document.getElementById(elementId);
+      if (el) el.innerHTML = '<p class="qr-fallback">No se pudo cargar el QR (sin conexión). Visita:<br>' + QR_URL + '</p>';
+    }
+  }
+  buildQR("qrHero", 220);
+  var qrToggleBtn = document.getElementById("qrToggleBtn");
+  var qrClosingBuilt = false;
+  qrToggleBtn.addEventListener("click", function(){
+    var box = document.getElementById("qrClosing");
+    var showing = box.style.display !== "none";
+    if (!showing && !qrClosingBuilt){ buildQR("qrClosing", 110); qrClosingBuilt = true; }
+    box.style.display = showing ? "none" : "inline-block";
+    qrToggleBtn.textContent = showing ? "Mostrar QR de recursos" : "Ocultar QR de recursos";
+  });
+
+  /* ====================================================================
+     HÉLICE DE ADN (portada)
+     ==================================================================== */
+  var helixWrap = document.getElementById("helixWrap");
+  var baseColors = ["var(--baseA)", "var(--baseT)", "var(--baseG)", "var(--baseC)"];
+  for (var i = 0; i < 15; i++){
+    var rung = document.createElement("div");
+    rung.className = "helix-rung";
+    rung.style.setProperty("--ty", (i * 18) + "px");
+    rung.style.background = baseColors[i % 4];
+    rung.style.animationDuration = "5s";
+    rung.style.animationDelay = (i * -0.3) + "s";
+    helixWrap.appendChild(rung);
+  }
+
+  /* ====================================================================
+     CÉLULA SVG REUTILIZABLE (simulador de mitosis y juego)
+     ==================================================================== */
+  var SVGNS = "http://www.w3.org/2000/svg";
+  function svgEl(name, attrs, parent){
+    var e = document.createElementNS(SVGNS, name);
+    for (var k in attrs){ if (attrs.hasOwnProperty(k)) e.setAttribute(k, attrs[k]); }
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+
+  var CHROM_COLORS = ["#E4572E", "#2E86AB", "#1F7A70", "#E0A458"];
+  var Y_META = [84, 128, 172, 216];                       // cromosomas en el ecuador, bien separados
+  var PROF_POS = [[170,116],[230,120],[174,182],[228,178]];
+  var PROF_ROT = [25, -30, 40, -20];
+  var ANA_ROT = [-14, 10, -10, 14];
+  var TELO_OFF = [[-13,-15],[13,-11],[-11,15],[14,13]];   // racimo dentro de cada núcleo hijo
+  var TELO_ROT = [25, -30, 35, -20];
+  var POLE_L = 58, POLE_R = 342, MID_Y = 150;
+  var NUC_L = 92, NUC_R = 308;
+
+  function poleX(side, s){ return side === 0 ? POLE_L + 142 * s : POLE_R - 142 * s; }
+
+  var STAGE_KEYS = ["interfase", "profase", "metafase", "anafase", "telofase"];
+
+  // Configuración de cada etapa: qué elementos se ven y dónde está cada cromátida.
+  // sx / sy: escala de las fibras del huso, que parten desde cada polo.
+  var PHASES = {
+    interfase: { nucleus:1, chromatin:1, poles:0, spindle:0, sx:0.1, sy:0.1, single:1, telo:0, nuclei2:0,
+      chd:function(i, w){ return { x:200, y:150, r:0, o:0, s:0.6 }; } },
+    profase: { nucleus:0.45, chromatin:0, poles:1, spindle:0.45, sx:0.38, sy:0.38, single:1, telo:0, nuclei2:0,
+      chd:function(i, w){ return { x:PROF_POS[i][0], y:PROF_POS[i][1], r:PROF_ROT[i] + (w === 0 ? 22 : -22), o:1, s:1 }; } },
+    metafase: { nucleus:0, chromatin:0, poles:1, spindle:0.75, sx:1, sy:1, single:1, telo:0, nuclei2:0,
+      chd:function(i, w){ return { x:200, y:Y_META[i], r:(w === 0 ? 24 : -24), o:1, s:1 }; } },
+    anafase: { nucleus:0, chromatin:0, poles:1, spindle:0.75, sx:0.5, sy:1, single:1, telo:0, nuclei2:0,
+      chd:function(i, w){ return { x:poleX(w, 0.5), y:Y_META[i], r:(w === 0 ? ANA_ROT[i] : -ANA_ROT[i]), o:1, s:1 }; } },
+    telofase: { nucleus:0, chromatin:0, poles:0, spindle:0, sx:0.22, sy:0.22, single:0, telo:1, nuclei2:1,
+      chd:function(i, w){
+        var off = TELO_OFF[i];
+        return w === 0
+          ? { x:NUC_L + off[0], y:MID_Y + off[1], r:TELO_ROT[i], o:1, s:0.62 }
+          : { x:NUC_R - off[0], y:MID_Y + off[1], r:-TELO_ROT[i], o:1, s:0.62 };
+      } }
+  };
+
+  function buildCell(container, opts){
+    opts = opts || {};
+    container.innerHTML = "";
+    var svg = svgEl("svg", { viewBox:"0 0 400 300", role:"img", "aria-label":"Célula en división, vista esquemática" });
+    if (opts.noAnim) container.classList.add("no-anim"); else container.classList.remove("no-anim");
+
+    // Membrana celular: única (interfase a anafase) o dos células hijas (telofase)
+    var gSingle = svgEl("g", { "class":"sv-fade" }, svg);
+    svgEl("ellipse", { cx:200, cy:150, rx:162, ry:112, "class":"sv-edge" }, gSingle);
+    svgEl("ellipse", { cx:200, cy:150, rx:159, ry:109, "class":"sv-cyto" }, gSingle);
+
+    var gTelo = svgEl("g", { "class":"sv-fade" }, svg);
+    svgEl("ellipse", { cx:128, cy:150, rx:94, ry:110, "class":"sv-edge" }, gTelo);
+    svgEl("ellipse", { cx:272, cy:150, rx:94, ry:110, "class":"sv-edge" }, gTelo);
+    svgEl("ellipse", { cx:128, cy:150, rx:91, ry:107, "class":"sv-cyto" }, gTelo);
+    svgEl("ellipse", { cx:272, cy:150, rx:91, ry:107, "class":"sv-cyto" }, gTelo);
+
+    // Huso mitótico (fibras): 4 por polo, escaladas desde el polo
+    var spindles = [];
+    for (var side = 0; side < 2; side++){
+      var px = side === 0 ? POLE_L : POLE_R;
+      for (var i = 0; i < 4; i++){
+        var ln = svgEl("line", { x1:px, y1:MID_Y, x2:200, y2:Y_META[i], "class":"sv-spindle sv-fade" }, svg);
+        ln.style.transformOrigin = px + "px " + MID_Y + "px";
+        spindles.push(ln);
+      }
+    }
+    var poles = [
+      svgEl("circle", { cx:POLE_L, cy:MID_Y, r:5, "class":"sv-pole sv-fade" }, svg),
+      svgEl("circle", { cx:POLE_R, cy:MID_Y, r:5, "class":"sv-pole sv-fade" }, svg)
+    ];
+
+    // Núcleo (interfase / profase) y núcleos hijos (telofase)
+    var nucleus = svgEl("g", { "class":"sv-fade" }, svg);
+    svgEl("circle", { cx:200, cy:150, r:84, "class":"sv-nucleus" }, nucleus);
+    svgEl("circle", { cx:246, cy:150, r:12, "class":"sv-nucleolus" }, nucleus);
+    var chromatin = svgEl("g", { "class":"sv-fade" }, svg);
+    var chromaPaths = [
+      "M 152 112 q 10 -13 20 0 t 20 0 t 20 0",
+      "M 156 138 q 10 13 20 0 t 20 0 t 20 0",
+      "M 152 164 q 10 -13 20 0 t 20 0 t 20 0",
+      "M 158 190 q 10 13 20 0 t 20 0 t 20 0"
+    ];
+    chromaPaths.forEach(function(d, i){
+      svgEl("path", { d:d, stroke:CHROM_COLORS[i], "class":"sv-chromatin" }, chromatin);
+    });
+    var nuclei2 = svgEl("g", { "class":"sv-fade" }, svg);
+    svgEl("circle", { cx:92, cy:150, r:36, "class":"sv-nucleus" }, nuclei2);
+    svgEl("circle", { cx:308, cy:150, r:36, "class":"sv-nucleus" }, nuclei2);
+
+    // Cromátidas: 4 cromosomas x 2 cromátidas hermanas
+    var chds = [];
+    for (var c = 0; c < 4; c++){
+      chds.push([]);
+      for (var w = 0; w < 2; w++){
+        var g = svgEl("g", { "class":"chd" }, svg);
+        svgEl("rect", { x:-4, y:-18, width:8, height:36, rx:4, fill:CHROM_COLORS[c], opacity:(w === 0 ? 1 : 0.88) }, g);
+        svgEl("circle", { r:2.8, fill:"#ffffff", opacity:0.9 }, g);
+        chds[c].push(g);
+      }
+    }
+    container.appendChild(svg);
+
+    function setOpacity(node, v){ node.style.opacity = String(v); }
+
+    function setPhase(key, jitter){
+      var cfg = PHASES[key];
+      setOpacity(gSingle, cfg.single);
+      setOpacity(gTelo, cfg.telo);
+      setOpacity(nucleus, cfg.nucleus);
+      setOpacity(chromatin, cfg.chromatin);
+      setOpacity(nuclei2, cfg.nuclei2);
+      poles.forEach(function(p){ setOpacity(p, cfg.poles); });
+      spindles.forEach(function(ln){
+        setOpacity(ln, cfg.spindle);
+        ln.style.transform = "scale(" + cfg.sx + "," + cfg.sy + ")";
+      });
+      for (var c = 0; c < 4; c++){
+        var jx = jitter ? (Math.random() * 10 - 5) : 0;
+        var jy = jitter ? (Math.random() * 8 - 4) : 0;
+        var jr = jitter ? (Math.random() * 14 - 7) : 0;
+        for (var w = 0; w < 2; w++){
+          var p = cfg.chd(c, w);
+          var node = chds[c][w];
+          node.style.opacity = String(p.o);
+          node.style.transform = "translate(" + (p.x + jx) + "px," + (p.y + jy) + "px) rotate(" + (p.r + jr) + "deg) scale(" + p.s + ")";
+        }
+      }
+    }
+    return { svg:svg, setPhase:setPhase };
+  }
+
+  /* ====================================================================
+     SIMULADOR DE MITOSIS
+     ==================================================================== */
+  var PHASE_INFO = {
+    interfase: {
+      name:"Interfase",
+      caption:"<b>Interfase:</b> la célula crece, cumple sus funciones y duplica su ADN (fase S). La cromatina está descondensada: todavía no se ven cromosomas.",
+      stats:[["Cromosomas en la célula","4 (cromatina difusa)"],["Cromátidas por cromosoma","2 (tras la fase S)"],["ADN por célula","2C → 4C"]]
+    },
+    profase: {
+      name:"Profase",
+      caption:"<b>Profase:</b> la cromatina se condensa en cromosomas de dos cromátidas, el núcleo comienza a desaparecer y se forma el huso mitótico.",
+      stats:[["Cromosomas en la célula","4 (condensados)"],["Cromátidas por cromosoma","2"],["ADN por célula","4C"]]
+    },
+    metafase: {
+      name:"Metafase",
+      caption:"<b>Metafase:</b> los cromosomas se alinean en el ecuador de la célula, unidos a las fibras del huso por el centrómero.",
+      stats:[["Cromosomas en la célula","4 (en el ecuador)"],["Cromátidas por cromosoma","2"],["ADN por célula","4C"]]
+    },
+    anafase: {
+      name:"Anafase",
+      caption:"<b>Anafase:</b> las cromátidas hermanas se separan y viajan a polos opuestos. Ahora la célula tiene 8 cromosomas: 4 en cada polo.",
+      stats:[["Cromosomas en la célula","8 (4 por polo)"],["Cromátidas por cromosoma","1 (ya separadas)"],["ADN por célula","4C (aún una célula)"]]
+    },
+    telofase: {
+      name:"Telofase y citocinesis",
+      caption:"<b>Telofase y citocinesis:</b> se reforman dos núcleos, los cromosomas se descondensan y la célula se estrangula: nacen 2 células hijas idénticas.",
+      stats:[["Cromosomas por núcleo","4 (2 núcleos)"],["Cromátidas por cromosoma","1"],["ADN por célula hija","2C"]]
+    }
+  };
+
+  var simCell = buildCell(document.getElementById("simStage"), { noAnim:true });
+  simCell.setPhase("interfase", false);
+  // Habilitar transiciones tras pintar el estado inicial
+  (function(){
+    var stage = document.getElementById("simStage");
+    void stage.offsetWidth;
+    stage.classList.remove("no-anim");
+  })();
+
+  var simIndex = 0;
+  var simTimer = null;
+  var phaseButtons = Array.prototype.slice.call(document.querySelectorAll(".phase-btn"));
+  var simSlider = document.getElementById("simSlider");
+  var simPlayBtn = document.getElementById("simPlay");
+  var simPhaseName = document.getElementById("simPhaseName");
+  var phaseCaption = document.getElementById("phaseCaption");
+  var statGrid = document.getElementById("statGrid");
+
+  function renderSim(index){
+    simIndex = index;
+    var key = STAGE_KEYS[index];
+    var info = PHASE_INFO[key];
+    simCell.setPhase(key, false);
+    phaseCaption.innerHTML = info.caption;
+    simPhaseName.textContent = info.name.split(" ")[0];
+    simSlider.value = String(index);
+    phaseButtons.forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-phase") === key); });
+    statGrid.innerHTML = "";
+    info.stats.forEach(function(pair){
+      var row = document.createElement("div");
+      row.className = "stat-item";
+      row.innerHTML = "<b>" + pair[0] + "</b><span>" + pair[1] + "</span>";
+      statGrid.appendChild(row);
+    });
+  }
+
+  function stopSimPlay(){
+    if (simTimer){ clearInterval(simTimer); simTimer = null; }
+    simPlayBtn.textContent = (simIndex >= STAGE_KEYS.length - 1) ? "↻ Repetir" : "▶ Reproducir";
+  }
+  function startSimPlay(){
+    if (simIndex >= STAGE_KEYS.length - 1) renderSim(0);
+    simPlayBtn.textContent = "⏸ Pausar";
+    simTimer = setInterval(function(){
+      if (simIndex < STAGE_KEYS.length - 1){
+        renderSim(simIndex + 1);
+      }
+      if (simIndex >= STAGE_KEYS.length - 1) stopSimPlay();
+    }, 2600);
+  }
+  simPlayBtn.addEventListener("click", function(){ if (simTimer) stopSimPlay(); else startSimPlay(); });
+  document.getElementById("simReset").addEventListener("click", function(){ stopSimPlay(); renderSim(0); simPlayBtn.textContent = "▶ Reproducir"; });
+  simSlider.addEventListener("input", function(){ stopSimPlay(); renderSim(parseInt(simSlider.value, 10)); });
+  phaseButtons.forEach(function(b){
+    b.addEventListener("click", function(){ stopSimPlay(); renderSim(STAGE_KEYS.indexOf(b.getAttribute("data-phase"))); });
+  });
+  renderSim(0);
+
+  /* ====================================================================
+     JUEGO: ¿EN QUÉ ETAPA ESTOY?
+     ==================================================================== */
+  var STAGE_LABEL = { interfase:"Interfase", profase:"Profase", metafase:"Metafase", anafase:"Anafase", telofase:"Telofase" };
+  var STAGE_CLUE = {
+    interfase:"Núcleo visible y cromatina difusa (no hay cromosomas definidos): la célula crece y duplica su ADN.",
+    profase:"Cromosomas condensados con dos cromátidas, aún dispersos; el núcleo se desvanece y se forma el huso.",
+    metafase:"Todos los cromosomas están alineados en el ecuador, unidos a las fibras del huso.",
+    anafase:"Las cromátidas hermanas ya se separaron y se desplazan hacia polos opuestos.",
+    telofase:"Dos grupos de cromosomas en los polos, nuevos núcleos y la célula estrechándose para dividirse."
+  };
+  var STAGE_HINT = {
+    interfase:"¿Se distinguen cromosomas, o solo hilos difusos dentro de un núcleo?",
+    profase:"Hay cromosomas visibles, pero todavía no están ordenados.",
+    metafase:"Observa la posición de los cromosomas respecto del centro de la célula.",
+    anafase:"Mira si los cromosomas siguen siendo \"X\" o ya están separados en barras.",
+    telofase:"Cuenta los grupos de cromosomas y fíjate en la forma de la célula."
+  };
+
+  function shuffle(arr){
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function fmtScore(n){ return (n % 1 === 0) ? String(n) : n.toFixed(1).replace(".", ","); }
+
+  var gameIntro = document.getElementById("gameIntro");
+  var gameBoard = document.getElementById("gameBoard");
+  var gameResult = document.getElementById("gameResult");
+  var gameStage = document.getElementById("gameStage");
+  var gameOptions = document.getElementById("gameOptions");
+  var gameHint = document.getElementById("gameHint");
+  var gameFeedback = document.getElementById("gameFeedback");
+  var gameHintBtn = document.getElementById("gameHintBtn");
+  var gameNext = document.getElementById("gameNext");
+  var hudRound = document.getElementById("hudRound");
+  var hudScore = document.getElementById("hudScore");
+  var hudStreak = document.getElementById("hudStreak");
+
+  var G = { order:[], idx:0, score:0, streak:0, answered:false, hintUsed:false, missed:{} };
+  var ROUNDS = 10;
+
+  function startGame(){
+    G.order = shuffle(STAGE_KEYS.concat(STAGE_KEYS));
+    G.idx = 0; G.score = 0; G.streak = 0; G.missed = {};
+    gameIntro.hidden = true;
+    gameResult.hidden = true;
+    gameBoard.hidden = false;
+    renderRound();
+  }
+
+  function renderRound(){
+    G.answered = false;
+    G.hintUsed = false;
+    var key = G.order[G.idx];
+    var cell = buildCell(gameStage, { noAnim:true });
+    cell.setPhase(key, true);
+    // Variación visual: orientación al azar para no memorizar posiciones
+    var flipX = Math.random() < 0.5 ? -1 : 1;
+    var flipY = Math.random() < 0.5 ? -1 : 1;
+    cell.svg.style.transform = "scale(" + flipX + "," + flipY + ")";
+    cell.svg.setAttribute("data-stage", key);
+    gameStage.setAttribute("data-stage", key);
+
+    gameOptions.innerHTML = "";
+    STAGE_KEYS.forEach(function(k){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "g-opt";
+      b.textContent = STAGE_LABEL[k];
+      b.setAttribute("data-key", k);
+      b.addEventListener("click", function(){ answerRound(k); });
+      gameOptions.appendChild(b);
+    });
+    gameHint.textContent = "";
+    gameFeedback.textContent = "";
+    gameFeedback.className = "game-feedback";
+    gameHintBtn.disabled = false;
+    gameNext.hidden = true;
+    updateHud();
+  }
+
+  function updateHud(){
+    hudRound.textContent = "Ronda " + (G.idx + 1) + " / " + ROUNDS;
+    hudScore.textContent = "Puntaje: " + fmtScore(G.score);
+    hudStreak.textContent = "Racha: " + G.streak;
+  }
+
+  gameHintBtn.addEventListener("click", function(){
+    if (G.answered || G.hintUsed) return;
+    G.hintUsed = true;
+    gameHint.textContent = "Pista: " + STAGE_HINT[G.order[G.idx]];
+    gameHintBtn.disabled = true;
+  });
+
+  function answerRound(k){
+    if (G.answered) return;
+    G.answered = true;
+    var correctKey = G.order[G.idx];
+    var ok = (k === correctKey);
+    Array.prototype.forEach.call(gameOptions.children, function(b){
+      b.disabled = true;
+      if (b.getAttribute("data-key") === correctKey) b.classList.add("correct");
+      else if (b.getAttribute("data-key") === k) b.classList.add("incorrect");
+    });
+    if (ok){
+      G.score += G.hintUsed ? 0.5 : 1;
+      G.streak += 1;
+      gameFeedback.textContent = "¡Correcto! " + STAGE_LABEL[correctKey] + ": " + STAGE_CLUE[correctKey];
+      gameFeedback.className = "game-feedback ok";
+    } else {
+      G.streak = 0;
+      G.missed[correctKey] = (G.missed[correctKey] || 0) + 1;
+      gameFeedback.textContent = "Era " + STAGE_LABEL[correctKey] + ". " + STAGE_CLUE[correctKey];
+      gameFeedback.className = "game-feedback bad";
+    }
+    gameHintBtn.disabled = true;
+    gameNext.textContent = (G.idx >= ROUNDS - 1) ? "Ver resultado" : "Siguiente →";
+    gameNext.hidden = false;
+    updateHud();
+  }
+
+  gameNext.addEventListener("click", function(){
+    if (G.idx >= ROUNDS - 1){ showResult(); return; }
+    G.idx += 1;
+    renderRound();
+  });
+
+  function showResult(){
+    gameBoard.hidden = true;
+    gameResult.hidden = false;
+    document.getElementById("resScore").textContent = fmtScore(G.score);
+    var msg;
+    if (G.score >= 9) msg = "¡Experto/a en mitosis! Reconoces cada etapa con seguridad.";
+    else if (G.score >= 7) msg = "¡Muy bien! Dominas casi todas las etapas.";
+    else if (G.score >= 5) msg = "Vas por buen camino: repasa el simulador y vuelve a intentarlo.";
+    else msg = "Aún necesitas repasar: vuelve al simulador y observa cada etapa con calma.";
+    document.getElementById("resMsg").textContent = msg;
+    var worst = null, worstN = 0;
+    Object.keys(G.missed).forEach(function(k){ if (G.missed[k] > worstN){ worst = k; worstN = G.missed[k]; } });
+    document.getElementById("resMissed").textContent = worst
+      ? "La etapa que más te costó: " + STAGE_LABEL[worst] + " (" + worstN + (worstN === 1 ? " error)." : " errores).")
+      : "No cometiste errores: ¡partida perfecta!";
+  }
+
+  document.getElementById("gameStart").addEventListener("click", startGame);
+  document.getElementById("gameAgain").addEventListener("click", startGame);
+
+  /* ====================================================================
+     MAPA CONCEPTUAL: chips de conceptos
+     ==================================================================== */
+  var CONCEPTS = ["ADN","Gen","Alelo","Cromosoma","Mitosis","Meiosis","Gameto","Fecundación","Genotipo","Fenotipo","Dominante / recesivo","Cuadro de Punnett","Pedigrí","Mutación","No disyunción","Ambiente"];
+  var chipRow = document.getElementById("chipRow");
+  var chipProgress = document.getElementById("chipProgress");
+  function updateChipProgress(){
+    var done = chipRow.querySelectorAll(".concept-chip.done").length;
+    chipProgress.textContent = done + " de " + CONCEPTS.length + " conceptos usados" + (done >= 12 ? " — ¡cumples el nivel Destacado!" : "");
+  }
+  CONCEPTS.forEach(function(c){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "concept-chip";
+    b.textContent = c;
+    b.addEventListener("click", function(){ b.classList.toggle("done"); updateChipProgress(); });
+    chipRow.appendChild(b);
+  });
+  updateChipProgress();
+
+  /* ====================================================================
+     SIMULADOR MUTACIÓN SOMÁTICA vs GERMINAL
+     ==================================================================== */
+  var mutMode = "none";
+  var selGamete = 0;
+  var MUT_GAMETE = 1;
+  var SOMATIC_CELLS = [2, 3, 7];
+  var parentGrid = document.getElementById("parentGrid");
+  var childGrid = document.getElementById("childGrid");
+  var gameteRow = document.getElementById("gameteRow");
+  var mutMessage = document.getElementById("mutMessage");
+  var mutButtons = Array.prototype.slice.call(document.querySelectorAll("#mutToggle .mm-btn"));
+
+  function renderMut(){
+    parentGrid.innerHTML = "";
+    for (var i = 0; i < 12; i++){
+      var d = document.createElement("div");
+      var isMut = (mutMode === "somatic" && SOMATIC_CELLS.indexOf(i) !== -1);
+      d.className = "dot" + (isMut ? " mut" : "");
+      parentGrid.appendChild(d);
+    }
+    gameteRow.innerHTML = "";
+    for (var g = 0; g < 4; g++){
+      (function(gi){
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "gamete" + ((mutMode === "germinal" && gi === MUT_GAMETE) ? " mut" : "") + (gi === selGamete ? " sel" : "");
+        b.textContent = String(gi + 1);
+        b.setAttribute("aria-label", "Gameto " + (gi + 1));
+        b.addEventListener("click", function(){ selGamete = gi; renderMut(); });
+        gameteRow.appendChild(b);
+      })(g);
+    }
+    var childMut = (mutMode === "germinal" && selGamete === MUT_GAMETE);
+    childGrid.innerHTML = "";
+    for (var c = 0; c < 12; c++){
+      var cd = document.createElement("div");
+      cd.className = "dot" + (childMut ? " mut" : "");
+      childGrid.appendChild(cd);
+    }
+    var msg;
+    if (mutMode === "none"){
+      msg = "<b>Sin mutaciones:</b> todas las células del progenitor tienen el ADN normal, y el hijo o la hija también.";
+    } else if (mutMode === "somatic"){
+      msg = "<b>Mutación somática:</b> afecta solo a algunas células del cuerpo de la persona (por ejemplo, de la piel). Los gametos no la llevan, así que <b>no se hereda</b>: el hijo o la hija tiene todas sus células normales.";
+    } else if (childMut){
+      msg = "<b>Mutación germinal:</b> el gameto mutado participó en la fecundación. El cigoto lleva la mutación y, por mitosis, <b>todas las células del hijo o la hija</b> la tendrán. Sí se hereda.";
+    } else {
+      msg = "<b>Mutación germinal, pero este gameto es normal:</b> el hijo o la hija no hereda la mutación. Una mutación germinal no siempre se transmite: depende de <b>qué gameto fecunda</b>.";
+    }
+    mutMessage.innerHTML = msg;
+    mutButtons.forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-mut") === mutMode); });
+  }
+  mutButtons.forEach(function(b){
+    b.addEventListener("click", function(){
+      mutMode = b.getAttribute("data-mut");
+      if (mutMode === "germinal") selGamete = MUT_GAMETE;
+      renderMut();
+    });
+  });
+  renderMut();
+
+  /* ====================================================================
+     QUIZ DE INTEGRACIÓN
+     ==================================================================== */
+  var quizData = [
+    { q:"1. Un estudiante afirma: \"La mitosis y la meiosis producen células idénticas a la célula madre\". ¿Cuál es la crítica más adecuada?",
+      options:["Es correcta: ambas copian el ADN sin cambios.","Solo la mitosis genera células idénticas (2n); la meiosis forma 4 gametos haploides genéticamente distintos.","Solo la meiosis genera células idénticas a la célula madre.","Es incorrecta porque ninguna de las dos copia el ADN."], correct:1 },
+    { q:"2. En una célula con 2n = 4, ¿cuántos cromosomas tendrá cada gameto al terminar la meiosis?",
+      options:["2","4","8","1"], correct:0 },
+    { q:"3. Dos progenitores heterocigotos (Aa × Aa) tienen 4 hijos. ¿Cuál afirmación es correcta?",
+      options:["Exactamente 1 de los 4 tendrá el fenotipo recesivo.","Si el primer hijo es aa, los siguientes no podrán serlo.","Los 4 hijos serán Aa.","Cada hijo tiene 25% de probabilidad de ser aa, independiente de sus hermanos."], correct:3 },
+    { q:"4. En un cruce dihíbrido RrYy × RrYy, ¿qué fracción de la descendencia será rugosa y verde (rryy)?",
+      options:["3/16","1/16","9/16","1/4"], correct:1 },
+    { q:"5. En un pedigrí, una enfermedad aparece solo en varones de distintas generaciones, transmitida por mujeres sanas. ¿Qué patrón es más consistente?",
+      options:["Autosómico dominante","Autosómico recesivo","Recesivo ligado al cromosoma X","Dominante ligado al cromosoma X"], correct:2 },
+    { q:"6. ¿Qué evidencia respaldaría mejor que un rasgo depende casi solo del genotipo y no del ambiente?",
+      options:["Aparece solo en familias que viven en la misma ciudad.","Cambia según la dieta de la persona.","Se mantiene igual en gemelos idénticos criados en ambientes distintos.","Varía a lo largo de la vida de cada persona."], correct:2 }
+  ];
+  var quizContainer = document.getElementById("quizContainer");
+  var scoreBadge = document.getElementById("scoreBadge");
+  var quizScore = 0;
+  function updateQuizScore(){ scoreBadge.textContent = "Puntaje: " + quizScore + " / " + quizData.length; }
+
+  quizData.forEach(function(item){
+    var card = document.createElement("div");
+    card.className = "card quiz-card";
+    var qEl = document.createElement("p");
+    qEl.className = "quiz-q";
+    qEl.textContent = item.q;
+    card.appendChild(qEl);
+    var optWrap = document.createElement("div");
+    optWrap.className = "quiz-options";
+    var opts = item.options.map(function(text, idx){ return { text:text, ok:(idx === item.correct) }; });
+    shuffle(opts).forEach(function(o){
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "opt-btn";
+      btn.textContent = o.text;
+      if (o.ok) btn.setAttribute("data-correct", "1");
+      btn.addEventListener("click", function(){
+        var all = optWrap.querySelectorAll(".opt-btn");
+        if (all[0].disabled) return;
+        Array.prototype.forEach.call(all, function(b){
+          b.disabled = true;
+          if (b.getAttribute("data-correct") === "1") b.classList.add("correct");
+        });
+        if (o.ok) quizScore++; else btn.classList.add("incorrect");
+        updateQuizScore();
+      });
+      optWrap.appendChild(btn);
+    });
+    card.appendChild(optWrap);
+    quizContainer.appendChild(card);
+  });
+  updateQuizScore();
+
+  /* ====================================================================
+     SEMÁFORO DE METACOGNICIÓN (individual y anónimo, sin guardar datos)
+     ==================================================================== */
+  var LIGHT_ITEMS = [
+    { short:"Mitosis y meiosis", text:"Puedo explicar cómo se reparte el material genético en la mitosis y en la meiosis." },
+    { short:"Anomalías y cáncer", text:"Puedo explicar por qué ocurren las anomalías cromosómicas y el cáncer." },
+    { short:"Cruce monohíbrido", text:"Puedo resolver un cruce monohíbrido con un cuadro de Punnett." },
+    { short:"Cruce dihíbrido", text:"Puedo resolver un cruce dihíbrido y reconocer la proporción 9:3:3:1." },
+    { short:"Pedigríes", text:"Puedo interpretar un pedigrí e inferir el patrón de herencia." },
+    { short:"Mutaciones", text:"Puedo explicar por qué una mutación germinal se hereda y una somática no." },
+    { short:"Argumentación AER", text:"Puedo argumentar usando Afirmación, Evidencia y Razonamiento." }
+  ];
+  var lightRows = document.getElementById("lightRows");
+  var lightState = LIGHT_ITEMS.map(function(){ return null; });
+  var LIGHT_LABEL = { g:"Lo domino", y:"A medias", r:"A repasar" };
+
+  var lightButtons = []; // lightButtons[i] = { g:btn, y:btn, r:btn }
+
+  function buildLight(){
+    lightRows.innerHTML = "";
+    lightButtons = [];
+    LIGHT_ITEMS.forEach(function(item, i){
+      var row = document.createElement("div");
+      row.className = "light-row";
+      var t = document.createElement("div");
+      t.className = "light-text";
+      t.textContent = item.text;
+      var btns = document.createElement("div");
+      btns.className = "light-btns";
+      var refs = {};
+      ["g","y","r"].forEach(function(col){
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "light-btn " + col;
+        b.setAttribute("data-col", col);
+        b.innerHTML = "<i></i>" + LIGHT_LABEL[col];
+        b.addEventListener("click", function(){ lightState[i] = col; renderLight(); });
+        btns.appendChild(b);
+        refs[col] = b;
+      });
+      lightButtons.push(refs);
+      row.appendChild(t);
+      row.appendChild(btns);
+      lightRows.appendChild(row);
+    });
+  }
+
+  function renderLight(){
+    lightButtons.forEach(function(refs, i){
+      ["g","y","r"].forEach(function(col){
+        var on = lightState[i] === col;
+        refs[col].classList.toggle("sel", on);
+        refs[col].setAttribute("aria-pressed", on ? "true" : "false");
+      });
+    });
+    var g = 0, y = 0, r = 0, answered = 0;
+    var reds = [], yellows = [];
+    lightState.forEach(function(s, i){
+      if (s === "g") { g++; answered++; }
+      if (s === "y") { y++; answered++; yellows.push(LIGHT_ITEMS[i].short); }
+      if (s === "r") { r++; answered++; reds.push(LIGHT_ITEMS[i].short); }
+    });
+    document.getElementById("cntG").textContent = g;
+    document.getElementById("cntY").textContent = y;
+    document.getElementById("cntR").textContent = r;
+    var msg;
+    if (answered === 0) msg = "Marca un color en cada afirmación para ver tu resumen.";
+    else if (answered < LIGHT_ITEMS.length){
+      var falta = LIGHT_ITEMS.length - answered;
+      msg = (falta === 1) ? "Te falta 1 afirmación por marcar." : "Te faltan " + falta + " afirmaciones por marcar.";
+    }
+    else if (r > 0) msg = "Prioriza repasar: " + reds.join(", ") + ".";
+    else if (y > 0) msg = "Casi listo/a. Refuerza: " + yellows.join(", ") + ".";
+    else msg = "¡Dominas todos los contenidos de la unidad!";
+    document.getElementById("lightMsg").textContent = msg;
+  }
+  document.getElementById("lightReset").addEventListener("click", function(){
+    lightState = LIGHT_ITEMS.map(function(){ return null; });
+    renderLight();
+  });
+  document.getElementById("lightCopy").addEventListener("click", function(){
+    var btn = document.getElementById("lightCopy");
+    var lines = ["Semáforo de aprendizaje — Unidad 3: Genética"];
+    LIGHT_ITEMS.forEach(function(item, i){
+      lines.push("- " + item.short + ": " + (lightState[i] ? LIGHT_LABEL[lightState[i]] : "sin marcar"));
+    });
+    var text = lines.join("\n");
+    function done(ok){
+      btn.textContent = ok ? "¡Copiado!" : "No se pudo copiar";
+      setTimeout(function(){ btn.textContent = "Copiar mi resumen"; }, 1800);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ done(true); }, function(){ done(false); });
+    } else {
+      var ta = document.createElement("textarea");
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      done(ok);
+    }
+  });
+  buildLight();
+  renderLight();
+
+  /* ====================================================================
+     CUADRO COMPARATIVO: celdas que se revelan al tocar
+     ==================================================================== */
+  var cmpCells = Array.prototype.slice.call(document.querySelectorAll("#cmpTable td.rv"));
+  var cmpCount = document.getElementById("cmpCount");
+  function cmpUpdate(){
+    var n = cmpCells.filter(function(c){ return c.classList.contains("shown"); }).length;
+    cmpCount.textContent = "Reveladas: " + n + " / " + cmpCells.length;
+  }
+  function cmpToggle(cell, force){
+    var on = (typeof force === "boolean") ? force : !cell.classList.contains("shown");
+    cell.classList.toggle("shown", on);
+    cell.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+  cmpCells.forEach(function(cell){
+    cell.addEventListener("click", function(){ cmpToggle(cell); cmpUpdate(); });
+    cell.addEventListener("keydown", function(e){
+      if (e.key === "Enter" || e.key === " "){ e.preventDefault(); cmpToggle(cell); cmpUpdate(); }
+    });
+  });
+  document.getElementById("cmpShowAll").addEventListener("click", function(){ cmpCells.forEach(function(c){ cmpToggle(c, true); }); cmpUpdate(); });
+  document.getElementById("cmpHideAll").addEventListener("click", function(){ cmpCells.forEach(function(c){ cmpToggle(c, false); }); cmpUpdate(); });
+  cmpUpdate();
+
+  /* ====================================================================
+     ¿MITO O REALIDAD?
+     ==================================================================== */
+  var mrData = [
+    { s:"Un hijo puede tener un rasgo recesivo aunque ninguno de sus padres lo presente.", real:true,
+      e:"Si ambos padres son heterocigotos (Aa), cada hijo tiene 25% de probabilidad de ser aa y mostrar el rasgo." },
+    { s:"La mitosis es el proceso que forma los gametos.", real:false,
+      e:"Los gametos se forman por meiosis. La mitosis produce células somáticas idénticas para crecer y reparar tejidos." },
+    { s:"Una mutación en las células de la piel de una madre puede heredarse a sus hijos.", real:false,
+      e:"Es una mutación somática: no está en los gametos, por eso no pasa a la descendencia." },
+    { s:"En un cruce Aa × Aa, cada hijo tiene 25% de probabilidad de ser aa, sin importar cómo sean sus hermanos.", real:true,
+      e:"Cada fecundación es un evento independiente: el azar no \"recuerda\" a los hijos anteriores." },
+    { s:"La meiosis produce gametos genéticamente distintos entre sí.", real:true,
+      e:"Por el entrecruzamiento y la segregación independiente de los cromosomas, cada gameto lleva una combinación distinta de alelos." },
+    { s:"El cuadro de Punnett predice exactamente cuántos hijos tendrá cada fenotipo.", real:false,
+      e:"Predice probabilidades. En muestras pequeñas el resultado puede alejarse de lo esperado, como en el laboratorio de fichas de la Sesión 5." }
+  ];
+  var mrGrid = document.getElementById("mrGrid");
+  var mrScoreEl = document.getElementById("mrScore");
+  var mrCorrect = 0;
+  function mrUpdate(){ mrScoreEl.textContent = "Aciertos: " + mrCorrect + " / " + mrData.length; }
+  function mrBuild(){
+    mrGrid.innerHTML = "";
+    mrCorrect = 0;
+    mrData.forEach(function(item, idx){
+      var card = document.createElement("div");
+      card.className = "mr-card";
+      var st = document.createElement("p");
+      st.className = "st";
+      st.textContent = (idx + 1) + ". " + item.s;
+      var btns = document.createElement("div");
+      btns.className = "mr-btns";
+      var exp = document.createElement("p");
+      exp.className = "mr-exp";
+      var refs = {};
+      [["mito", "Mito", false], ["real", "Realidad", true]].forEach(function(def){
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "mr-btn";
+        b.textContent = def[1];
+        b.setAttribute("data-val", def[0]);
+        b.addEventListener("click", function(){
+          if (card.classList.contains("answered")) return;
+          card.classList.add("answered");
+          var ok = (def[2] === item.real);
+          refs.mito.disabled = true;
+          refs.real.disabled = true;
+          (item.real ? refs.real : refs.mito).classList.add("correct");
+          if (!ok) b.classList.add("incorrect");
+          exp.innerHTML = "<b>" + (item.real ? "Realidad." : "Mito.") + "</b> " + item.e;
+          if (ok) mrCorrect++;
+          mrUpdate();
+        });
+        btns.appendChild(b);
+        refs[def[0]] = b;
+      });
+      card.appendChild(st);
+      card.appendChild(btns);
+      card.appendChild(exp);
+      mrGrid.appendChild(card);
+    });
+    mrUpdate();
+  }
+  document.getElementById("mrReset").addEventListener("click", mrBuild);
+  mrBuild();
+
+  /* ====================================================================
+     INTERROGACIÓN: cronómetro (30 s para pensar, 90 s para responder)
+     ==================================================================== */
+  var tmBox = document.getElementById("tmBox");
+  var tmDisplay = document.getElementById("tmDisplay");
+  var tmPhase = document.getElementById("tmPhase");
+  var tmPauseBtn = document.getElementById("tmPause");
+  var tm = { left: 30, phase: "Listo", running: false, id: null, started: false };
+  function tmFmt(s){
+    var m = Math.floor(s / 60), r = s % 60;
+    return (m < 10 ? "0" : "") + m + ":" + (r < 10 ? "0" : "") + r;
+  }
+  function tmRender(){
+    tmDisplay.textContent = tmFmt(tm.left);
+    tmDisplay.classList.toggle("warn", tm.running && tm.left <= 10 && tm.left > 0);
+    tmDisplay.classList.toggle("end", tm.started && tm.left === 0);
+    tmPhase.textContent = tm.phase;
+    tmPauseBtn.textContent = tm.running ? "Pausa" : "Seguir";
+  }
+  function tmStop(){
+    if (tm.id){ clearInterval(tm.id); tm.id = null; }
+    tm.running = false;
+  }
+  function tmTick(){
+    tm.left--;
+    if (tm.left <= 0){ tm.left = 0; tmStop(); tm.phase = "¡Tiempo!"; }
+    tmRender();
+  }
+  function tmStart(seconds, label){
+    tmStop();
+    tm.left = seconds; tm.phase = label; tm.started = true; tm.running = true;
+    tmRender();
+    tm.id = setInterval(tmTick, 1000);
+  }
+  function stopInterrTimer(){ tmStop(); tmRender(); }
+  document.getElementById("tmThink").addEventListener("click", function(){
+    tmStart(parseInt(tmBox.getAttribute("data-think"), 10) || 30, "Piensa tu respuesta");
+  });
+  document.getElementById("tmAnswer").addEventListener("click", function(){
+    tmStart(parseInt(tmBox.getAttribute("data-answer"), 10) || 90, "Responde en voz alta");
+  });
+  tmPauseBtn.addEventListener("click", function(){
+    if (tm.running){ tmStop(); tmRender(); }
+    else if (tm.started && tm.left > 0){ tm.running = true; tm.id = setInterval(tmTick, 1000); tmRender(); }
+  });
+  document.getElementById("tmReset").addEventListener("click", function(){
+    tmStop();
+    tm.left = parseInt(tmBox.getAttribute("data-think"), 10) || 30;
+    tm.phase = "Listo"; tm.started = false;
+    tmRender();
+  });
+  tmRender();
+
+  /* ====================================================================
+     TICKET DE SALIDA
+     ==================================================================== */
+  var TICKET_Q = [
+    "1. Diferencia entre mitosis y meiosis",
+    "2. Mutación en la piel vs. en un gameto: ¿cuál se hereda y por qué?",
+    "3. Probabilidad de un hijo aa en Aa × Aa",
+    "4. Concepto que más me costó y cómo lo reforzaré"
+  ];
+  var ticketAreas = Array.prototype.slice.call(document.querySelectorAll("#ticketBox textarea"));
+  var ticketMsg = document.getElementById("ticketMsg");
+  function ticketFlash(t){ ticketMsg.textContent = t; setTimeout(function(){ ticketMsg.textContent = ""; }, 2200); }
+  document.getElementById("ticketCopy").addEventListener("click", function(){
+    var lines = ["Ticket de salida — Unidad 3: Genética", ""];
+    ticketAreas.forEach(function(a, i){
+      lines.push(TICKET_Q[i]);
+      lines.push(a.value.trim() || "(sin respuesta)");
+      lines.push("");
+    });
+    var text = lines.join("\n");
+    function done(ok){ ticketFlash(ok ? "¡Copiado!" : "No se pudo copiar"); }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ done(true); }, function(){ done(false); });
+    } else {
+      var ta = document.createElement("textarea");
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      done(ok);
+    }
+  });
+  document.getElementById("ticketClear").addEventListener("click", function(){
+    ticketAreas.forEach(function(a){ a.value = ""; });
+    ticketFlash("Respuestas borradas");
+  });
+  var ticketKeysBtn = document.getElementById("ticketKeys");
+  var ticketKeyBox = document.getElementById("ticketKeyBox");
+  ticketKeysBtn.addEventListener("click", function(){
+    var open = ticketKeyBox.classList.toggle("open");
+    ticketKeysBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    ticketKeysBtn.textContent = open ? "Ocultar respuestas modelo" : "Ver respuestas modelo (docente)";
+  });
+
+  /* ====================================================================
+     EXPORTAR A PDF
+     ==================================================================== */
+  document.getElementById("exportPdfBtn").addEventListener("click", function(){ window.print(); });
+
+  goTo(0);
+
+})();
+</script>
+</body>
+</html>
