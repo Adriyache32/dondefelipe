@@ -1602,14 +1602,14 @@ let AC=null,muted=false;try{muted=localStorage.getItem('vv_mute')==='1'}catch(e)
 /* música: exterior (Glass Kingdom Rites) e interior de edificios (Safe Harbor at Midday) */
 function mkTrack(src,pre){const a=new Audio();a.loop=true;a.preload=pre;a.volume=0;a.src=src;return a}
 // la música de interiores se descarga después, para no competir con la carga inicial ni con la conexión en línea
-const TRACKS={out:mkTrack('assets/music.mp3','auto'),in:mkTrack('assets/music_indoor.mp3','none')};
-setTimeout(()=>{try{TRACKS.in.preload='auto';TRACKS.in.load()}catch(e){}},12000);
+const TRACKS={out:mkTrack('assets/music.mp3','auto'),in:mkTrack('assets/music_indoor.mp3','none'),zod:mkTrack('assets/music_zodiaco.mp3','none')};
+setTimeout(()=>armTrack(TRACKS.in),12000); // la de interiores baja sola al rato; la del Santuario, solo al usar el portal
 const music=TRACKS.out;
 let musicOn=true;try{musicOn=localStorage.getItem('vv_music')!=='0'}catch(e){}
 let musicLive=false; // se activa con la primera interacción (requisito de los navegadores)
 const MUSIC_VOL=.32,MUSIC_DUCK=.16;
-const INDOOR_SHEETS=new Set(['market','shop','recycle','work','bank']);
-function wantedTrack(){if(player.scene!=='world')return'in';if(modal&&INDOOR_SHEETS.has(modal.kind))return'in';return'out'}
+const INDOOR_SHEETS=new Set(['market','shop','recycle','work','bank','mu','altar']);
+function wantedTrack(){if(ZSCENES[player.scene])return'zod';if(player.scene!=='world')return'in';if(modal&&INDOOR_SHEETS.has(modal.kind))return'in';return'out'}
 function updateMusic(dt){
   const want=(musicOn&&musicLive&&!document.hidden)?wantedTrack():null;
   const duck=modal&&!INDOOR_SHEETS.has(modal.kind)?MUSIC_DUCK:MUSIC_VOL;
@@ -1620,7 +1620,9 @@ function updateMusic(dt){
     if(target===0&&a.volume<.005&&!a.paused)a.pause();}
 }
 let musicUnlocked=false;
-function unlockTracks(){if(musicUnlocked)return;musicUnlocked=true;for(const k in TRACKS){const t=TRACKS[k];t.volume=0;const p=t.play();if(p&&p.then)p.then(()=>{if(t.volume<.005)t.pause()}).catch(()=>{musicUnlocked=false})}}
+function unlockOne(t,strict){t.volume=0;const p=t.play();if(p&&p.then)p.then(()=>{if(t.volume<.005)t.pause()}).catch(()=>{if(strict)musicUnlocked=false})}
+function armTrack(t){if(!t||t.preload==='auto')return;t.preload='auto';try{t.load()}catch(e){}if(musicUnlocked&&musicOn)unlockOne(t)}
+function unlockTracks(){if(musicUnlocked)return;musicUnlocked=true;for(const k in TRACKS){const t=TRACKS[k];if(t.preload==='none')continue;unlockOne(t,true)}}
 function musicPlay(){musicLive=true;if(!musicOn)return;unlockTracks()}
 window.addEventListener('pointerdown',()=>{if(musicLive&&musicOn)unlockTracks()},{passive:true});
 function musicStop(){}
@@ -3046,7 +3048,8 @@ function zodStars(){const c=mk(320,220),g=c.getContext('2d');
   ZSTARS=c}
 function zodLoad(){
   if(ZST==='ok'||ZST==='loading')return ZST;
-  ZST='loading';const i=new Image();
+  ZST='loading';armTrack(TRACKS.zod);
+  const i=new Image();
   i.onload=()=>{ZA=i;ZST='ok';muFaceCSS()};
   i.onerror=()=>{ZST='err';ZERR='Falta el archivo assets/zodiaco.png en el sitio.'};
   i.src=(window.EMBED&&EMBED['assets/zodiaco.png'])||'assets/zodiaco.png';
