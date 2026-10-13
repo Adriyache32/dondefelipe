@@ -1369,6 +1369,8 @@ function drawMinimap(){
   mmx.textAlign='center';mmx.textBaseline='middle';
   for(const p of PLACES){const x=(p.x+p.w/2)*s,y=(p.base-p.d/2)*s;if(hot.has(p.id)){mmx.fillStyle=`rgba(242,177,52,${.5+.4*Math.sin(T*5)})`;mmx.beginPath();mmx.arc(x,y,17,0,7);mmx.fill()}mmx.fillStyle='rgba(255,255,255,.92)';mmx.beginPath();mmx.arc(x,y,12,0,7);mmx.fill();mmx.font='14px system-ui';mmx.fillText(p.icon,x,y+1)}
   {const gx=(HUERTO.x+HUERTO.w/2)*s,gy=(HUERTO.y+HUERTO.h/2)*s,rd=S.plots&&S.plots.some(p=>p&&p.ready&&!p.dead);if(rd){mmx.fillStyle=`rgba(242,177,52,${.5+.4*Math.sin(T*5)})`;mmx.beginPath();mmx.arc(gx,gy,16,0,7);mmx.fill()}mmx.fillStyle='rgba(255,255,255,.92)';mmx.beginPath();mmx.arc(gx,gy,11,0,7);mmx.fill();mmx.font='13px system-ui';mmx.fillText('🌱',gx,gy+1)}
+  {const qx=PORTAL.x*s,qy=(PORTAL.y-40)*s;mmx.fillStyle=`rgba(214,180,255,${.45+.4*Math.sin(T*4)})`;mmx.beginPath();mmx.arc(qx,qy,15,0,7);mmx.fill();
+   mmx.fillStyle='rgba(255,255,255,.92)';mmx.beginPath();mmx.arc(qx,qy,11,0,7);mmx.fill();mmx.font='13px system-ui';mmx.fillStyle='#5b4a8a';mmx.fillText('♈',qx,qy+1)}
     const px=(player.scene==='home'?1700:player.x)*s,py=(player.scene==='home'?1580:player.y)*s;
   mmx.fillStyle='#fff';mmx.beginPath();mmx.arc(px,py,7,0,7);mmx.fill();mmx.fillStyle='#d24b3e';mmx.beginPath();mmx.arc(px,py,4.5,0,7);mmx.fill();
 }
@@ -3037,7 +3039,7 @@ const ZHOUSES=[
 ];
 const TRIAL_N=5,TRIAL_PAY=2000;          // preguntas seguidas y recompensa al superar la casa
 const EXT_W=600,EXT_H=800,ARI_W=1200,ARI_H=800;
-const PORTAL={x:1392,y:1044};            // portal estelar en el pueblo
+const PORTAL={x:1340,y:772};            // portal estelar en el pueblo
 let ZA=null,ZST='idle',ZERR='';let ZSTARS=null;
 function zodStars(){const c=mk(320,220),g=c.getContext('2d');
   const bg=g.createLinearGradient(0,0,320,220);bg.addColorStop(0,'#0a0820');bg.addColorStop(.5,'#141033');bg.addColorStop(1,'#09071a');
@@ -3116,7 +3118,9 @@ function renderZod(){
 /* ---------- portal en el pueblo ---------- */
 function drawPortal(g){
   const{x,y}=PORTAL,t=T*1.5;
-  g.save();g.translate(x,y);
+  g.save();g.translate(x,y);g.scale(1.42,1.42);
+  g.save();g.globalCompositeOperation='lighter';const hg=g.createRadialGradient(0,-10,0,0,-10,54);
+  hg.addColorStop(0,`rgba(190,150,255,${.3+Math.sin(t)*.06})`);hg.addColorStop(1,'rgba(120,80,220,0)');g.fillStyle=hg;g.fillRect(-56,-66,112,112);g.restore();
   g.fillStyle='rgba(10,8,30,.35)';g.beginPath();g.ellipse(0,0,40,14,0,0,7);g.fill();
   // base de mármol
   g.fillStyle='#cfc6ae';rr(g,-34,-18,68,22,5);g.fill();g.fillStyle='#a79d85';rr(g,-28,-24,56,10,4);g.fill();
@@ -3125,13 +3129,15 @@ function drawPortal(g){
   g.strokeStyle='#f0dc9a';g.lineWidth=2.5;g.stroke();
   // vórtice
   g.save();g.globalCompositeOperation='lighter';
-  for(let i=0;i<4;i++){const a=.28-i*.05,r=30-i*6;const gr=g.createRadialGradient(0,-66,0,0,-66,r+Math.sin(t+i)*4);
+  for(let i=0;i<4;i++){const a=.42-i*.06,r=30-i*6;const gr=g.createRadialGradient(0,-66,0,0,-66,r+Math.sin(t+i)*4);
     gr.addColorStop(0,`rgba(255,228,150,${a+.25})`);gr.addColorStop(1,'rgba(150,110,255,0)');g.fillStyle=gr;g.beginPath();g.ellipse(0,-66,r,r*1.5,0,0,7);g.fill()}
   g.restore();
   // símbolo de Aries
   g.strokeStyle=`rgba(255,236,170,${.75+Math.sin(t)*.2})`;g.lineWidth=3.5;g.lineCap='round';
   g.beginPath();g.moveTo(0,-50);g.lineTo(0,-82);g.moveTo(0,-78);g.quadraticCurveTo(-14,-96,-12,-72);g.moveTo(0,-78);g.quadraticCurveTo(14,-96,12,-72);g.stroke();
   g.restore();
+  // letrero
+  drawSign(g,x,y-150,'SANTUARIO','♈',.86);
 }
 /* ---------- diálogo y prueba de Mu ---------- */
 let TRIAL=null; // {qs:[idx],i,sel,ok,fail}
