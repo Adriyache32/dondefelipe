@@ -8,7 +8,7 @@
  * Para publicar cambios a quienes ya instalaron la app,
  * sube el número de CACHE_VERSION: al activarse se borran las cachés viejas.
  */
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = `mundo-felipe-${CACHE_VERSION}`;
 
 // Portada y piezas mínimas para abrir la app sin conexión.
@@ -16,6 +16,7 @@ const PRECACHE = [
   './',
   './index.html',
   './manifest.json',
+  './install.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
 ];
