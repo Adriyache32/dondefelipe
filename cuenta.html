@@ -99,6 +99,13 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:v
     <input type="number" id="pEdad" min="5" max="99" inputmode="numeric"> <span class="muted">años</span>
     <div id="pCursoBox" class="oculto"><label class="f" for="pCurso">Curso</label><select id="pCurso"><option value="">Elige tu curso…</option></select></div>
     <label class="ap oculto" id="pApBox"><input type="checkbox" id="pAp"> <span>Mi apoderado/a sabe que uso esta cuenta en El Mundo de Felipe y está de acuerdo.</span></label>
+    <div id="pGrBox" class="oculto">
+      <label class="f">¿Quién eres?</label>
+      <label class="ap"><input type="radio" name="pgr" value="estudiante"> <span>Estudiante</span></label>
+      <label class="ap"><input type="radio" name="pgr" value="docente"> <span>Docente</span></label>
+      <label class="ap"><input type="radio" name="pgr" value="publico"> <span>Público general</span></label>
+    </div>
+    <p id="pGrFijo" class="oculto" style="margin:12px 0 0">Grupo: <b id="pGrNom"></b> <span class="muted" style="font-size:14px">· Si está mal, pídele al profe que lo cambie.</span></p>
     <p class="muted" style="font-size:14px">Al guardar aceptas que guardemos tu nombre, correo y edad, junto con tu progreso, como se explica en <a href="#privacidad">Privacidad</a>.</p>
     <button class="btn p" id="btnPerfil"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
   </section>
@@ -136,6 +143,7 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:v
     <table>
       <tr><td>Nombre y correo</td><td>Los de tu cuenta Google, cuando eliges "Entrar con Google".</td></tr>
       <tr><td>Edad</td><td>La escribes tú la primera vez. Si tienes menos de 14 años, te pedimos confirmar que tu apoderado/a está de acuerdo.</td></tr>
+      <tr><td>Grupo</td><td>Estudiante, docente o público general (ver más abajo).</td></tr>
       <tr><td>Tu progreso</td><td>Puntajes de juegos, resultados de simuladores y avance en los planes de estudio.</td></tr>
       <tr><td>Banco de Hipopesos</td><td>Si el profe conecta tu cuenta del banco con tu correo, aquí ves tu saldo, tus compras y si ya las usaste. Los movimientos los registra el profe.</td></tr>
       <tr><td>Visitas</td><td>Un contador de cuántas veces se abre cada página. <b>No</b> guarda quién eres.</td></tr>
@@ -151,6 +159,13 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:v
 
     <h3>Quién los ve</h3>
     <p>Solo tú y el profe. No se venden, no se comparten con otras empresas y no se usan para publicidad.</p>
+
+    <h3>Estudiantes y público general</h3>
+    <p>Al registrarte eliges tu grupo: <b>estudiante</b>, <b>docente</b> o <b>público general</b>. Quienes tienen menos de 18 años quedan siempre como estudiantes.</p>
+    <ul>
+      <li>Si eres <b>estudiante</b>, tus datos sirven solo para guardar tu progreso. Nunca se usan para vender ni para ofrecerte nada.</li>
+      <li>Si el sitio ofrece materiales o servicios pagados, esa parte solo se muestra a docentes y público general mayores de 18 años. Nunca a estudiantes.</li>
+    </ul>
 
     <h3>Dónde se guardan</h3>
     <p>En Firebase, un servicio de Google, protegido con reglas de seguridad: cada estudiante solo puede leer y modificar lo suyo.</p>
@@ -216,15 +231,25 @@ function cargarPerfil() {
     $('pEdad').value = pf && pf.edad ? pf.edad : '';
     $('pCurso').value = pf && pf.curso ? pf.curso : '';
     $('pAp').checked = !!(pf && pf.apoderado);
+    grupoFijo = (pf && pf.grupo) || '';
     actualizarAp();
-    if (!DF.perfilCompleto(pf)) aviso('Completa tu edad para que podamos guardar tu progreso.');
+    if (!DF.perfilCompleto(pf)) aviso('Completa tus datos (edad' + (grupoFijo ? '' : ' y grupo') + ') para que podamos guardar tu progreso.');
   });
 }
-function actualizarAp() { const e = +$('pEdad').value; ver('pApBox', e > 0 && e < DF.edadMinima()); }
+let grupoFijo = '';
+function actualizarAp() {
+  const e = +$('pEdad').value;
+  ver('pApBox', e > 0 && e < DF.edadMinima());
+  // Menores de 18: siempre "Estudiante". El grupo se elige una vez.
+  ver('pGrBox', !grupoFijo && e >= 18);
+  ver('pGrFijo', !!grupoFijo || (e > 0 && e < 18));
+  $('pGrNom').textContent = grupoFijo ? DF.grupos[grupoFijo] : 'Estudiante';
+}
 $('pEdad').addEventListener('input', actualizarAp);
 $('btnPerfil').onclick = () => {
-  DF.guardarPerfil({ edad: $('pEdad').value, curso: $('pCurso').value, apoderado: $('pAp').checked })
-    .then(() => { aviso('✓ Datos guardados.', 'ok'); })
+  const g = document.querySelector('input[name="pgr"]:checked');
+  DF.guardarPerfil({ edad: $('pEdad').value, curso: $('pCurso').value, apoderado: $('pAp').checked, grupo: g ? g.value : '' })
+    .then(pf => { grupoFijo = pf.grupo; actualizarAp(); aviso('✓ Datos guardados.', 'ok'); })
     .catch(e => aviso(esc(e.message), 'err'));
 };
 

@@ -29,17 +29,30 @@ service cloud.firestore {
     function esDueno() { return request.auth != null && resource.data.uid == request.auth.uid; }
 
     // ── Perfil del estudiante: nombre, correo y edad (curso opcional) ──
+    // Grupo: 'estudiante' (sus datos solo sirven para su progreso), 'docente' o 'publico'.
+    // Docente y público exigen 18 años o más. El estudiante elige al crear la cuenta;
+    // después solo el profe puede cambiar el grupo.
+    function grupoValido(d) {
+      return d.grupo in ['estudiante', 'docente', 'publico']
+        && (d.grupo == 'estudiante' || d.edad >= 18);
+    }
     match /alumnos/{uid} {
       allow read: if soyYo(uid) || esProfe();
       allow create, update: if esColegio() && soyYo(uid)
-        && request.resource.data.keys().hasOnly(['nombre', 'email', 'edad', 'curso', 'apoderado', 'actualizado'])
+        && request.resource.data.keys().hasOnly(['nombre', 'email', 'edad', 'curso', 'apoderado', 'grupo', 'actualizado'])
         && texto(request.resource.data.nombre, 120)
         && request.resource.data.email == request.auth.token.email
         && request.resource.data.edad is int
         && request.resource.data.edad >= 5 && request.resource.data.edad <= 99
         && texto(request.resource.data.curso, 40)
         && request.resource.data.apoderado is bool
+        && grupoValido(request.resource.data)
+        && (resource == null || !('grupo' in resource.data) || request.resource.data.grupo == resource.data.grupo)
         && request.resource.data.actualizado == request.time;
+      // El profe solo puede cambiar el grupo.
+      allow update: if esProfe()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['grupo'])
+        && grupoValido(request.resource.data);
       allow delete: if soyYo(uid) || esProfe();
     }
 

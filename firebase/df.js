@@ -75,6 +75,8 @@
   var _fb = null, usuario = null, perfil = null, oyentes = [];
   function avisar() {
     pintarBotonCuenta();
+    aplicarGrupo();
+    if (usuario) leerPerfil().then(aplicarGrupo, function () {});
     oyentes.forEach(function (cb) { try { cb(usuario); } catch (e) {} });
   }
   function listo() {
@@ -177,13 +179,14 @@
       return fb.F.getDoc(fb.F.doc(fb.db, 'alumnos', usuario.uid)).then(function (s) {
         var d = s.exists() ? s.data() : {};
         perfil = { uid: usuario.uid, existe: s.exists(), nombre: d.nombre || usuario.displayName || '', email: usuario.email || '',
-          edad: d.edad || null, curso: d.curso || '', apoderado: !!d.apoderado };
+          edad: d.edad || null, curso: d.curso || '', apoderado: !!d.apoderado, grupo: d.grupo || '' };
         return perfil;
       });
     });
   }
+  var GRUPOS = { estudiante: 'Estudiante', docente: 'Docente', publico: 'Público general' };
   function perfilCompleto(pf) {
-    if (!pf || !pf.existe || !pf.edad) return false;
+    if (!pf || !pf.existe || !pf.edad || !pf.grupo) return false;
     if (cfg().pedirCurso && !pf.curso) return false;
     if (pf.edad < edadMinima() && !pf.apoderado) return false;
     return true;
@@ -194,20 +197,37 @@
       var edad = Math.round(+datos.edad || 0);
       if (!(edad >= 5 && edad <= 99)) throw new Error('Escribe una edad válida.');
       if (edad < edadMinima() && !datos.apoderado) throw new Error('Necesitas que tu apoderado/a esté de acuerdo.');
+      // Grupo: los menores de 18 siempre son "estudiante". Una vez elegido, solo el profe lo cambia.
+      var previo = perfil && perfil.uid === usuario.uid ? perfil.grupo : '';
+      var grupo = previo || (edad < 18 ? 'estudiante' : String(datos.grupo || ''));
+      if (!GRUPOS[grupo]) throw new Error('Elige si eres estudiante, docente o público general.');
+      if (grupo !== 'estudiante' && edad < 18) throw new Error('Con menos de 18 años la cuenta queda en el grupo Estudiante.');
       var doc = {
         nombre: usuario.displayName || '',
         email: usuario.email || '',
         edad: edad,
         curso: cfg().pedirCurso ? String(datos.curso || '').slice(0, 40) : '',
         apoderado: edad < edadMinima() ? true : false,
+        grupo: grupo,
         actualizado: fb.F.serverTimestamp()
       };
       return fb.F.setDoc(fb.F.doc(fb.db, 'alumnos', usuario.uid), doc).then(function () {
-        perfil = { uid: usuario.uid, existe: true, nombre: doc.nombre, email: doc.email, edad: edad, curso: doc.curso, apoderado: doc.apoderado };
-        pintarBotonCuenta();
+        perfil = { uid: usuario.uid, existe: true, nombre: doc.nombre, email: doc.email, edad: edad, curso: doc.curso, apoderado: doc.apoderado, grupo: grupo };
+        pintarBotonCuenta(); aplicarGrupo();
         return perfil;
       });
     });
+  }
+
+  /* ---------- grupos: qué ve cada uno ----------
+     estudiante → solo progreso (sus datos no se usan para nada más)
+     docente / publico (mayores de 18) → pueden ver lo marcado con data-solo-publico (tienda, etc.) */
+  function grupoActual() { return (usuario && perfil && perfil.uid === usuario.uid && perfil.grupo) || ''; }
+  function puedeComprar() { var g = grupoActual(); return g === 'docente' || g === 'publico'; }
+  function aplicarGrupo() {
+    var si = puedeComprar(), g = grupoActual();
+    document.querySelectorAll('[data-solo-publico]').forEach(function (el) { el.hidden = !si; });
+    document.querySelectorAll('[data-solo-estudiante]').forEach(function (el) { el.hidden = g !== 'estudiante'; });
   }
 
   /* ---------- puntajes de juegos ---------- */
@@ -404,6 +424,7 @@
     a.innerHTML = '<b class="t">🔒 Tus datos en El Mundo de Felipe</b>' +
       '<p>Puedes usar el sitio sin cuenta. Si entras con Google para guardar tu progreso, guardamos <b>solo lo mínimo</b>:</p>' +
       '<ul><li><b>Nombre</b> y <b>correo</b> (los de tu cuenta Google)</li><li><b>Edad</b> (la escribes tú)</li>' +
+      '<li><b>Grupo</b>: estudiante, docente o público general</li>' +
       '<li>Tus puntajes, resultados y avances en el sitio</li></ul>' +
       '<p>Solo el profe los ve. No se venden ni se comparten, y puedes borrarlos cuando quieras desde <b>Mi cuenta</b>. Las visitas se cuentan sin saber quién eres.</p>' +
       '<div class="fila"><button class="b p" type="button" data-a="ok">Entendido</button><a class="b s" href="' + rutaRaiz() + 'cuenta.html#privacidad">Más detalles</a></div>';
@@ -439,19 +460,28 @@
       '<p>Hola, ' + esc(String(usuario.displayName || usuario.email || '').split(/[\s@]+/)[0]) + '. ¿Cuántos años tienes?</p>' +
       '<div class="fila"><input type="number" min="5" max="99" inputmode="numeric" data-f="edad" aria-label="Edad"> años</div>' + cursos +
       '<label class="ap" data-f="apbox" hidden><input type="checkbox" data-f="apoderado"> <span>Mi apoderado/a sabe que uso esta cuenta en El Mundo de Felipe y está de acuerdo.</span></label>' +
-      '<p class="legal">Al continuar aceptas que guardemos tu <b>nombre, correo y edad</b>, junto con tu progreso, para tu aprendizaje. Solo el profe los ve. <a href="' + rutaRaiz() + 'cuenta.html#privacidad" target="_blank" rel="noopener">Más detalles</a></p>' +
+      '<div data-f="grbox" hidden><p style="margin:8px 0 4px">¿Quién eres?</p>' +
+      '<label class="ap"><input type="radio" name="dfgr" value="estudiante"> <span>Estudiante</span></label>' +
+      '<label class="ap"><input type="radio" name="dfgr" value="docente"> <span>Docente</span></label>' +
+      '<label class="ap"><input type="radio" name="dfgr" value="publico"> <span>Público general</span></label></div>' +
+      '<p class="legal">Al continuar aceptas que guardemos tu <b>nombre, correo, edad y grupo</b>, junto con tu progreso, para tu aprendizaje. Solo el profe los ve. <a href="' + rutaRaiz() + 'cuenta.html#privacidad" target="_blank" rel="noopener">Más detalles</a></p>' +
       (err ? '<p class="err">' + esc(err) + '</p>' : '') +
       '<div class="fila"><button class="b p" type="button" data-a="okperfil">Acepto y continúo</button></div>';
   }
   function engancharPerfil(t) {
     var edad = t.querySelector('[data-f="edad"]'), box = t.querySelector('[data-f="apbox"]');
     if (!edad) return;
-    edad.addEventListener('input', function () { box.hidden = !(+edad.value > 0 && +edad.value < edadMinima()); });
+    var gr = t.querySelector('[data-f="grbox"]');
+    edad.addEventListener('input', function () {
+      box.hidden = !(+edad.value > 0 && +edad.value < edadMinima());
+      if (gr) gr.hidden = !(+edad.value >= 18);
+    });
     setTimeout(function () { edad.focus(); }, 50);
   }
   function leerFormPerfil(t) {
     var q = function (f) { return t.querySelector('[data-f="' + f + '"]'); };
-    return { edad: q('edad') && q('edad').value, curso: q('curso') && q('curso').value, apoderado: q('apoderado') && q('apoderado').checked };
+    var g = t.querySelector('input[name="dfgr"]:checked');
+    return { edad: q('edad') && q('edad').value, curso: q('curso') && q('curso').value, apoderado: q('apoderado') && q('apoderado').checked, grupo: g ? g.value : '' };
   }
 
   /* ---------- tarjeta flotante "guardar" ---------- */
@@ -554,6 +584,9 @@
     ofrecer: ofrecer,
     mostrarAviso: mostrarAviso,
     edadMinima: edadMinima,
+    grupo: grupoActual,
+    grupos: GRUPOS,
+    puedeComprar: puedeComprar,
     idSeguro: idSeguro,
     nombreCorto: nombreCorto,
     hoy: hoyChile

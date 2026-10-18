@@ -108,7 +108,7 @@ dialog.ancho{max-width:min(860px,calc(100vw - 32px))}
       <button data-t="banco" class="on">Banco</button>
       <button data-t="juegos">Juegos</button>
       <button data-t="sims">Simuladores</button>
-      <button data-t="alumnos">Estudiantes</button>
+      <button data-t="alumnos">Usuarios</button>
       <button data-t="visitas">Visitas</button>
     </nav>
 
@@ -209,11 +209,12 @@ dialog.ancho{max-width:min(860px,calc(100vw - 32px))}
     <section id="t-alumnos" class="oculto">
       <div class="barra">
         <input id="aBuscar" type="search" placeholder="Buscar nombre o correo…" style="flex:1;min-width:160px">
+        <select id="aGrupo"><option value="">Todos los grupos</option><option value="estudiante">Estudiantes</option><option value="docente">Docentes</option><option value="publico">Público general</option><option value="-">Sin grupo</option></select>
         <button class="btn sm" id="aCargar">Actualizar</button>
         <button class="btn sm" id="aExportar">Descargar CSV</button>
         <span class="muted" id="aCuenta"></span>
       </div>
-      <div class="tabla-wrap"><table><thead><tr><th>Nombre</th><th>Correo</th><th class="num">Edad</th><th>Curso</th><th>Apoderado</th><th>Plan química</th><th>Actualizado</th></tr></thead><tbody id="aTabla"></tbody></table></div>
+      <div class="tabla-wrap"><table><thead><tr><th>Nombre</th><th>Correo</th><th class="num">Edad</th><th>Grupo</th><th>Apoderado</th><th>Plan química</th><th>Actualizado</th></tr></thead><tbody id="aTabla"></tbody></table></div>
     </section>
 
     <!-- ═════════ VISITAS ═════════ -->
@@ -795,7 +796,14 @@ $('sExportar').onclick = () => {
 /* ═════════ ESTUDIANTES ═════════ */
 let alumnos = [];
 $('aCargar').onclick = cargarAlumnos;
-$('aBuscar').oninput = pintarAlumnos;
+$('aBuscar').oninput = $('aGrupo').onchange = pintarAlumnos;
+$('aTabla').onchange = async ev => {
+  const sel = ev.target.closest('select[data-uid]'); if (!sel) return;
+  const a = alumnos.find(x => x.uid === sel.dataset.uid); if (!a) return;
+  if (sel.value !== 'estudiante' && (a.edad || 0) < 18) { toast('Menores de 18 solo pueden estar en Estudiantes'); sel.value = a.grupo || 'estudiante'; return; }
+  try { await FB.F.updateDoc(FB.F.doc(FB.db, 'alumnos', a.uid), { grupo: sel.value }); a.grupo = sel.value; toast('✓ Grupo actualizado'); pintarAlumnos(); }
+  catch (e) { toast('Error: ' + e.message); sel.value = a.grupo || ''; }
+};
 async function cargarAlumnos() {
   const { F, db } = FB;
   try {
@@ -812,15 +820,23 @@ async function cargarAlumnos() {
     pintarAlumnos();
   } catch (e) { toast('Error: ' + e.message); }
 }
-function alumnosFiltrados() { const q = $('aBuscar').value.trim().toLowerCase(); return alumnos.filter(a => !q || `${a.nombre} ${a.email}`.toLowerCase().includes(q)); }
+function alumnosFiltrados() {
+  const q = $('aBuscar').value.trim().toLowerCase(), g = $('aGrupo').value;
+  return alumnos.filter(a => (!q || `${a.nombre} ${a.email}`.toLowerCase().includes(q)) && (!g || (g === '-' ? !a.grupo : a.grupo === g)));
+}
+const GRUPOS = { estudiante: 'Estudiante', docente: 'Docente', publico: 'Público general' };
+function selGrupo(a) {
+  return `<select data-uid="${esc(a.uid)}" style="padding:4px 6px">${a.grupo ? '' : '<option value="">—</option>'}${Object.entries(GRUPOS).map(([k, n]) => `<option value="${k}"${a.grupo === k ? ' selected' : ''}${k !== 'estudiante' && (a.edad || 0) < 18 ? ' disabled' : ''}>${n}</option>`).join('')}</select>`;
+}
 function pintarAlumnos() {
   const l = alumnosFiltrados();
-  $('aCuenta').textContent = l.length + ' estudiantes con cuenta';
-  $('aTabla').innerHTML = l.length ? l.map(a => `<tr><td>${esc(a.nombre)}</td><td class="muted">${esc(a.email)}</td><td class="num">${esc(a.edad || '—')}</td><td>${esc(a.curso || '—')}</td><td>${a.apoderado ? 'Sí (menor de ' + (window.DF_CONFIG && DF_CONFIG.edadMinimaSinApoderado || 14) + ')' : '—'}</td><td>${esc(a.plan || '—')}</td><td class="muted">${fecha(a.actualizado)}</td></tr>`).join('') : '<tr><td colspan="7" class="muted">Nadie ha creado su cuenta todavía.</td></tr>';
+  const cuenta = g => alumnos.filter(a => a.grupo === g).length;
+  $('aCuenta').textContent = `${l.length} de ${alumnos.length} · ${cuenta('estudiante')} estudiantes · ${cuenta('docente')} docentes · ${cuenta('publico')} público`;
+  $('aTabla').innerHTML = l.length ? l.map(a => `<tr><td>${esc(a.nombre)}</td><td class="muted">${esc(a.email)}</td><td class="num">${esc(a.edad || '—')}</td><td>${selGrupo(a)}</td><td>${a.apoderado ? 'Sí (menor de ' + (window.DF_CONFIG && DF_CONFIG.edadMinimaSinApoderado || 14) + ')' : '—'}</td><td>${esc(a.plan || '—')}</td><td class="muted">${fecha(a.actualizado)}</td></tr>`).join('') : '<tr><td colspan="7" class="muted">No hay usuarios que mostrar.</td></tr>';
 }
 $('aExportar').onclick = () => {
-  descargarCSV(`estudiantes-${DF.hoy()}.csv`, [['Nombre', 'Correo', 'Edad', 'Curso', 'Apoderado de acuerdo', 'Plan química (metas)', 'Actualizado']]
-    .concat(alumnosFiltrados().map(a => [a.nombre, a.email, a.edad, a.curso, a.apoderado ? 'Sí' : '', a.plan || '', fecha(a.actualizado)])));
+  descargarCSV(`estudiantes-${DF.hoy()}.csv`, [['Nombre', 'Correo', 'Edad', 'Grupo', 'Apoderado de acuerdo', 'Plan química (metas)', 'Actualizado']]
+    .concat(alumnosFiltrados().map(a => [a.nombre, a.email, a.edad, GRUPOS[a.grupo] || '', a.apoderado ? 'Sí' : '', a.plan || '', fecha(a.actualizado)])));
 };
 
 /* ═════════ VISITAS ═════════ */
