@@ -196,7 +196,7 @@ pre.prev{background:var(--slab2);padding:10px;border-radius:10px;max-height:200p
         <button class="btn sm" id="aExportar">Descargar CSV</button>
         <span class="muted" id="aCuenta"></span>
       </div>
-      <div class="tabla-wrap"><table><thead><tr><th>Nombre</th><th>Correo</th><th class="num">Edad</th><th>Curso</th><th>Apoderado</th><th>Actualizado</th></tr></thead><tbody id="aTabla"></tbody></table></div>
+      <div class="tabla-wrap"><table><thead><tr><th>Nombre</th><th>Correo</th><th class="num">Edad</th><th>Curso</th><th>Apoderado</th><th>Plan química</th><th>Actualizado</th></tr></thead><tbody id="aTabla"></tbody></table></div>
     </section>
 
     <!-- ═════════ VISITAS ═════════ -->
@@ -631,17 +631,25 @@ async function cargarAlumnos() {
     const s = await F.getDocs(F.collection(db, 'alumnos'));
     alumnos = s.docs.map(d => Object.assign({ uid: d.id }, d.data())).sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es'));
     pintarAlumnos();
+    // Avance en los planes de química (español e inglés) de cada estudiante
+    await Promise.all(alumnos.map(async a => {
+      const ps = await Promise.all(['quimica-es', 'quimica-en'].map(k => F.getDoc(F.doc(db, 'progreso', a.uid, 'items', k)).catch(() => null)));
+      let n = 0, total = 0;
+      ps.forEach(x => { if (x && x.exists()) { const d = x.data().datos || {}; n = Math.max(n, Object.keys(d.marcas || {}).length); total = Math.max(total, d.total || 0); } });
+      a.plan = total ? n + ' de ' + total : '';
+    }));
+    pintarAlumnos();
   } catch (e) { toast('Error: ' + e.message); }
 }
 function alumnosFiltrados() { const q = $('aBuscar').value.trim().toLowerCase(); return alumnos.filter(a => !q || `${a.nombre} ${a.email}`.toLowerCase().includes(q)); }
 function pintarAlumnos() {
   const l = alumnosFiltrados();
   $('aCuenta').textContent = l.length + ' estudiantes con cuenta';
-  $('aTabla').innerHTML = l.length ? l.map(a => `<tr><td>${esc(a.nombre)}</td><td class="muted">${esc(a.email)}</td><td class="num">${esc(a.edad || '—')}</td><td>${esc(a.curso || '—')}</td><td>${a.apoderado ? 'Sí (menor de ' + (window.DF_CONFIG && DF_CONFIG.edadMinimaSinApoderado || 14) + ')' : '—'}</td><td class="muted">${fecha(a.actualizado)}</td></tr>`).join('') : '<tr><td colspan="6" class="muted">Nadie ha creado su cuenta todavía.</td></tr>';
+  $('aTabla').innerHTML = l.length ? l.map(a => `<tr><td>${esc(a.nombre)}</td><td class="muted">${esc(a.email)}</td><td class="num">${esc(a.edad || '—')}</td><td>${esc(a.curso || '—')}</td><td>${a.apoderado ? 'Sí (menor de ' + (window.DF_CONFIG && DF_CONFIG.edadMinimaSinApoderado || 14) + ')' : '—'}</td><td>${esc(a.plan || '—')}</td><td class="muted">${fecha(a.actualizado)}</td></tr>`).join('') : '<tr><td colspan="7" class="muted">Nadie ha creado su cuenta todavía.</td></tr>';
 }
 $('aExportar').onclick = () => {
-  descargarCSV(`estudiantes-${DF.hoy()}.csv`, [['Nombre', 'Correo', 'Edad', 'Curso', 'Apoderado de acuerdo', 'Actualizado']]
-    .concat(alumnosFiltrados().map(a => [a.nombre, a.email, a.edad, a.curso, a.apoderado ? 'Sí' : '', fecha(a.actualizado)])));
+  descargarCSV(`estudiantes-${DF.hoy()}.csv`, [['Nombre', 'Correo', 'Edad', 'Curso', 'Apoderado de acuerdo', 'Plan química (metas)', 'Actualizado']]
+    .concat(alumnosFiltrados().map(a => [a.nombre, a.email, a.edad, a.curso, a.apoderado ? 'Sí' : '', a.plan || '', fecha(a.actualizado)])));
 };
 
 /* ═════════ VISITAS ═════════ */
