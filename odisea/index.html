@@ -34,7 +34,7 @@
       linear-gradient(180deg,var(--papiro),var(--papiro-sombra));
     color:var(--tinta);border-radius:6px;padding:26px 24px 30px;
     box-shadow:0 10px 40px rgba(0,0,0,.6), inset 0 0 60px rgba(120,90,40,.25);font-family:Georgia,"Times New Roman",serif;}
-  .papiro::before,.papiro::after{content:"";position:absolute;left:0;right:0;height:22px;background:linear-gradient(180deg,rgba(90,60,20,.35),transparent);}
+  .papiro::before,.papiro::after{content:"";position:absolute;left:0;right:0;height:22px;pointer-events:none;background:linear-gradient(180deg,rgba(90,60,20,.35),transparent);}
   .papiro::before{top:0;border-radius:6px 6px 0 0}
   .papiro::after{bottom:0;transform:scaleY(-1);border-radius:0 0 6px 6px}
   .sello{width:56px;height:56px;margin:0 auto 6px;border-radius:50%;
@@ -115,6 +115,10 @@
     flex-direction:column;gap:2px;color:#ffd0a0;background:rgba(70,32,20,.42);border-color:rgba(255,150,90,.6)}
   .pad-btn.fire b{font-size:24px;line-height:1}
   .pad-btn.fire.pressed{background:rgba(255,120,60,.42);border-color:var(--pow)}
+  .pad-btn.special{position:absolute;right:26px;bottom:124px;width:62px;height:62px;font-size:10px;font-weight:bold;flex-direction:column;gap:0;color:#ffe9a8;background:rgba(60,48,10,.42);border-color:rgba(255,215,107,.55);opacity:.55}
+  .pad-btn.special b{font-size:20px;line-height:1}
+  .pad-btn.special.ready{opacity:1;background:rgba(255,200,60,.35);border-color:#ffd76b;animation:rayoPulso .8s infinite alternate}
+  @keyframes rayoPulso{from{box-shadow:0 0 6px rgba(255,215,107,.4)}to{box-shadow:0 0 22px rgba(255,215,107,.95)}}
   .hint{position:absolute;bottom:8px;left:0;right:0;text-align:center;color:#567;font-size:11px;z-index:5;font-family:"Courier New",monospace;pointer-events:none}
   /* Podio desactivado (OC.Config.podium.enabled = false) */
   .sin-podio .podio-box, .sin-podio #btn-copiar-go, .sin-podio #btn-copiar-vic{display:none!important}
@@ -186,6 +190,7 @@
         <div class="pad-btn" id="t-left">◀</div>
         <div class="pad-btn" id="t-right">▶</div>
       </div>
+      <div class="pad-btn special" id="t-special"><b>⚡</b>RAYO</div>
       <div class="pad-btn fire" id="t-fire"><b>▲</b>FUEGO</div>
     </div>
 
@@ -317,7 +322,6 @@
   <script src="js/sprites.js"></script>
   <script src="js/scenes.js"></script>
   <script src="js/graphics.js"></script>
-  <script src="../firebase/df.js"></script>
   <script src="js/engine.js"></script>
 </body>
 </html>

@@ -70,6 +70,23 @@ OC.Config = {
     warnAt: 78, warnResetBelow: 68, maxTemp: 100
   },
 
+  /* --- Minas espaciales: al detonarlas con un disparo liberan una onda que destruye lo cercano --- */
+  mine: { size: 30, fall: 0.8, blastR: 105, blastMs: 420, unlockD: 0.3, share: 0.28, boss: 3 },
+
+  /* --- Rayo especial: se carga destruyendo enemigos y rocas; B (o el botón) lo dispara --- */
+  special: { max: 100, perKill: 5, perShip: 9, perMine: 8, durationMs: 1300, width: 64, bossDps: 10 },
+
+  /* --- Flota enemiga: naves que se desbloquean de forma gradual.
+         unlock = "avance" (nº de misión completada + fracción de la actual) --- */
+  fleet: {
+    caza:        { w: 34, h: 37, hp: 1, vy: 1.5, unlock: 0.25, weight: 1.0, shoot: 2600 },
+    dron:        { w: 28, h: 30, hp: 1, vy: 1.7, unlock: 0.6,  weight: 0.9, shoot: 0 },
+    interceptor: { w: 36, h: 39, hp: 2, vy: 2.3, unlock: 1.2,  weight: 0.8, shoot: 0 },
+    bombardeo:   { w: 34, h: 57, hp: 3, vy: 0.9, unlock: 2.0,  weight: 0.6, shoot: 3000 },
+    pesada:      { w: 44, h: 65, hp: 5, vy: 0.7, unlock: 3.0,  weight: 0.5, shoot: 2000 }
+  },
+  fleetShare: { base: 0.10, perD: 0.05, max: 0.5 },   // probabilidad de que un spawn sea nave/mina
+
   /* --- Jefes --- */
   boss: {
     yFactor: 0.14, w: 68, h: 52,

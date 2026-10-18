@@ -80,6 +80,9 @@ OC.Audio = (function () {
     coolant()    { osc(1200, 0.10, { type: 'sine', vol: 0.12, to: 500 }); setTimeout(() => osc(700, 0.14, { type: 'sine', vol: 0.10, to: 300 }), 80); },
     overheat()   { osc(120, 0.5, { type: 'sawtooth', vol: 0.18, to: 300 }); noise(0.4, { vol: 0.10, lp: 1600 }); },
     boss()       { osc(70, 0.5, { type: 'sawtooth', vol: 0.2, to: 50 }); setTimeout(() => osc(110, 0.4, { type: 'square', vol: 0.15 }), 200); },
+    special()    { osc(220, 0.5, { type: 'sawtooth', vol: 0.14, to: 880 }); setTimeout(() => osc(660, 0.9, { type: 'square', vol: 0.08, to: 330 }), 120); noise(0.9, { vol: 0.08, lp: 2400 }); },
+    mine()       { noise(0.5, { vol: 0.22, lp: 700 }); osc(80, 0.5, { type: 'sawtooth', vol: 0.2, to: 28 }); },
+    ready()      { osc(988, 0.1, { type: 'triangle', vol: 0.12 }); setTimeout(() => osc(1319, 0.18, { type: 'triangle', vol: 0.12 }), 90); },
     event()      { osc(300, 0.2, { type: 'square', vol: 0.12, to: 180 }); setTimeout(() => osc(240, 0.25, { type: 'square', vol: 0.12, to: 140 }), 160); },
     // "notas musicales" del Profesor Carlos: una nota aleatoria de una escala
     noteMusical() {

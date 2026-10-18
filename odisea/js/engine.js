@@ -17,7 +17,7 @@ OC.Engine = (function () {
     scene: 'menu', saga: SAGAS[0], sagaIndex: 0, level: 0, score: 0, lives: C.lives.start, nombre: '', curso: '',
     ship: { x: 0, y: 0, w: C.ship.w, h: C.ship.h, speed: 5, cd: 0, tilt: 0 },
     bullets: [], enemies: [], powerups: [], particles: [], stars: [], bossShots: [],
-    boss: null, bossPending: false, bossT: 0, levelT: 0, marks: {}, phaseLabel: '', destroyed: 0, spawnT: 0, spawnQueue: [], pending: false,
+    boss: null, bossPending: false, bossT: 0, charge: 0, beam: 0, beamAcc: 0, blasts: [], readyShown: false, levelT: 0, marks: {}, phaseLabel: '', destroyed: 0, spawnT: 0, spawnQueue: [], pending: false,
     qDeck: [], lastQ: null, checkpoint: null, paused: false, briefFinal: false,
     speedBuff: 0, powerBuff: 0, storm: 0, eventT: 0, nextEvent: 9000, msgKilledBy: '', groundY: 0,
     temp: 0, tempActive: false, tempRate: 0, coolT: 0, tempWarned: false, currentQ: null, final: false,
@@ -133,6 +133,7 @@ OC.Engine = (function () {
     state.level = 0; state.score = 0; state.lives = C.lives.start;
     state.coins = 0; state.upgrades = { armadura: 0, armamento: 0, cadencia: 0, rayo_especial: 0, refrigeracion: 0 };
     state.shield = 0; state.shieldMax = 0; state.final = false; state.msgKilledBy = ''; state.invuln = 0;
+    state.charge = 0; state.beam = 0; state.blasts = []; state.readyShown = false;
     state.qDeck = []; state.lastQ = null; state.checkpoint = null; state.briefFinal = false; state.paused = false; state.spawnQueue = [];
   }
   function selectSaga(i) {
@@ -165,7 +166,7 @@ OC.Engine = (function () {
   }
 
   /* -------- BRIEFINGS (papiro antes de cada misión y del examen final) -------- */
-  function controles() { return isTouch ? '◀ ▶ mover · FUEGO disparar · recoge ⚡ velocidad y ✦ poder' : '◂ ▸ mover · ESPACIO disparar · P pausa · recoge ⚡ velocidad y ✦ poder'; }
+  function controles() { return isTouch ? '◀ ▶ mover · FUEGO disparar · RAYO cuando la barra esté llena · dispara a las minas 💥 desde lejos' : '◂ ▸ mover · ESPACIO disparar · B rayo especial (barra llena) · P pausa · dispara a las minas 💥 desde lejos'; }
   function fillBriefing(sello, titulo, sub, texto, jefe, ctrl) {
     $('brief-sello').textContent = sello; $('brief-titulo').textContent = titulo; $('brief-sub').textContent = sub;
     $('brief-texto').textContent = texto; $('brief-boss').textContent = jefe; $('brief-ctrl').textContent = ctrl;
@@ -186,7 +187,7 @@ OC.Engine = (function () {
   function startFinalBoss() {
     const s = state.saga, last = PLANETAS[PLANETAS.length - 1]; resizeNow(); snapshot(true);
     state.scene = 'playing'; state.final = true; state.briefFinal = false;
-    state.bullets = []; state.enemies = []; state.powerups = []; state.particles = []; state.bossShots = []; state.spawnQueue = [];
+    state.bullets = []; state.enemies = []; state.powerups = []; state.particles = []; state.bossShots = []; state.spawnQueue = []; state.blasts = []; state.beam = 0;
     state.bossPending = false; state.destroyed = 0; state.spawnT = 0; state.pending = false;
     state.speedBuff = 0; state.powerBuff = 0; state.storm = 0; state.tempActive = false; state.msgKilledBy = ''; state.invuln = 0;
     state.ship.speed = baseSpeed();
@@ -206,7 +207,7 @@ OC.Engine = (function () {
     state.scene = 'playing'; state.briefFinal = false;
     state.bullets = []; state.enemies = []; state.powerups = []; state.particles = []; state.bossShots = []; state.spawnQueue = [];
     state.boss = null; state.bossPending = false; state.destroyed = 0; state.spawnT = 0; state.pending = false;
-    state.levelT = 0; state.marks = {}; state.phaseLabel = '';
+    state.levelT = 0; state.marks = {}; state.phaseLabel = ''; state.blasts = []; state.beam = 0;
     state.speedBuff = 0; state.powerBuff = 0; state.storm = 0; state.eventT = 0;
     state.nextEvent = p.duracion ? p.duracion * 0.34 : C.events.firstMin + Math.random() * C.events.firstRand;
     state.tempActive = !!p.cooling; state.temp = 0; state.tempWarned = false; state.final = false; state.msgKilledBy = ''; state.invuln = 0;
@@ -226,8 +227,141 @@ OC.Engine = (function () {
   function rampa() { const p = PLANETAS[state.level]; return (p && p.duracion && !state.final) ? Math.min(1, state.levelT / p.duracion) : null; }
   function fmtT(ms) { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 
+
+  /* -------- FLOTA, MINAS, ONDAS Y RAYO ESPECIAL -------- */
+  function avance() {   // misión completada + fracción de la actual (0 a ~N)
+    const p = PLANETAS[state.level]; if (!p || state.final) return 0;
+    const pr = p.duracion ? Math.min(1, state.levelT / p.duracion) : Math.min(1, state.destroyed / Math.max(1, p.meta || 1));
+    return state.level + pr;
+  }
+  function naveCausa() { const en = state.saga.enemigos || {}; return en.nave || 'una nave enemiga'; }
+  function minaCausa() { const en = state.saga.enemigos || {}; return en.mina || 'una mina espacial'; }
+  function trySpawnSpecial() {
+    const d = avance(), F = C.fleet, S = C.fleetShare;
+    if (d < Math.min(C.mine.unlockD, F.caza.unlock)) return false;
+    if (Math.random() > Math.min(S.max, S.base + S.perD * d)) return false;
+    if (d >= C.mine.unlockD && Math.random() < C.mine.share) { spawnMine(); return true; }
+    const opts = Object.keys(F).filter(k => d >= F[k].unlock);
+    if (!opts.length) return false;
+    let tot = 0; opts.forEach(k => tot += F[k].weight);
+    let r = Math.random() * tot, kind = opts[0];
+    for (const k of opts) { r -= F[k].weight; if (r <= 0) { kind = k; break; } }
+    if (kind === 'dron') { const n = Math.min(5, 3 + Math.floor(d / 3)), x0 = 30 + Math.random() * (W - 60 - n * 34); for (let i = 0; i < n; i++) spawnShip('dron', x0 + i * 34, -30 - i * 26); }
+    else spawnShip(kind);
+    return true;
+  }
+  function spawnMine() {
+    const M = C.mine;
+    state.enemies.push({ x: 24 + Math.random() * (W - 48 - M.size), y: -M.size, w: M.size, h: M.size, vy: M.fall * (0.85 + Math.random() * 0.4), vx: (Math.random() - 0.5) * 0.4, type: 'mine', rot: 0, vr: 0.012, seed: Math.random() * 6.28, hp: 1 });
+  }
+  function spawnShip(kind, x, y) {
+    const F = C.fleet[kind];
+    state.enemies.push({ x: x === undefined ? 20 + Math.random() * (W - 40 - F.w) : x, y: y === undefined ? -F.h : y, w: F.w, h: F.h, vy: F.vy * (0.9 + Math.random() * 0.2), vx: 0, type: 'ship', kind, hp: F.hp, rot: 0, vr: 0,
+      seed: Math.random() * 6.28, age: 0, shootT: F.shoot ? F.shoot * (0.4 + Math.random() * 0.6) : 0, flash: 0 });
+  }
+  function enemyShot(kind, x, y, vx, vy, from) {
+    const bomb = kind === 'bomba';
+    state.bossShots.push({ x: x - (bomb ? 6 : 4), y, w: bomb ? 12 : 8, h: bomb ? 20 : 16, vy, vx, kind, from: from || naveCausa(), rot: 0, vr: 0, sway: 0 });
+  }
+  function updateShips(dt, k) {
+    const sh = state.ship;
+    state.enemies.forEach(e => {
+      if (e.type === 'ship') {
+        e.age += dt; if (e.flash > 0) e.flash -= dt;
+        if (e.kind === 'caza') e.x += Math.sin(e.age * 0.003 + e.seed) * 1.3 * k;
+        else if (e.kind === 'dron') e.x += Math.sin(e.age * 0.004 + e.seed) * 1.8 * k;
+        else if (e.kind === 'interceptor') { const dx = (sh.x + sh.w / 2) - (e.x + e.w / 2); e.vx += Math.max(-0.05, Math.min(0.05, dx * 0.0008)) * k; e.vx = Math.max(-2, Math.min(2, e.vx)); }
+        else if (e.kind === 'pesada') e.x += Math.sin(e.age * 0.0014 + e.seed) * 0.6 * k;
+        const F = C.fleet[e.kind];
+        if (F.shoot && e.y > 10 && e.y < H * 0.58) {
+          e.shootT -= dt;
+          if (e.shootT <= 0) {
+            e.shootT = F.shoot * (0.85 + Math.random() * 0.3); const cx0 = e.x + e.w / 2, by = e.y + e.h * 0.85, sp = 3.0 + Math.min(1.2, avance() * 0.12);
+            if (e.kind === 'caza') enemyShot('bala', cx0, by, 0, sp);
+            else if (e.kind === 'pesada') { enemyShot('bala', cx0, by, 0, sp); enemyShot('bala', cx0 - 10, by, -0.9, sp * 0.95); enemyShot('bala', cx0 + 10, by, 0.9, sp * 0.95); }
+            else if (e.kind === 'bombardeo') enemyShot('bomba', cx0, by, 0, 1.5);
+          }
+        }
+      } else if (e.type === 'mine') { e.age = (e.age || 0) + dt; e.x += Math.sin(e.age * 0.002 + e.seed) * 0.25 * k; }
+    });
+  }
+  function padReady() { if (padEls && padEls.special) padEls.special.classList.toggle('ready', state.charge >= C.special.max && state.beam <= 0); }
+  function addCharge(n) {
+    if (state.beam > 0 || state.charge >= C.special.max) return;
+    state.charge = Math.min(C.special.max, state.charge + n); padReady();
+    if (state.charge >= C.special.max && !state.readyShown) { state.readyShown = true; A.ready(); announce(isTouch ? '⚡ ¡RAYO LISTO! Toca RAYO' : '⚡ ¡RAYO LISTO! Pulsa B', '#ffd76b'); }
+  }
+  function killEnemy(e, viaBlast) {   // destruye (ya sin su vida) y da recompensas
+    const mid = { x: e.x + e.w / 2, y: e.y + e.h / 2 };
+    if (e.type === 'mine') { detonate(e); return; }
+    boom(mid.x, mid.y, e.type === 'meteor' ? '#f2a93b' : (e.type === 'ship' ? '#ff7a3a' : '#ff8bd0'), e.type === 'ship' && e.kind === 'pesada'); A.explosion();
+    state.score += e.type === 'ship' ? C.score.enemy * 2 : C.score.enemy; state.coins += e.type === 'ship' ? 2 : C.coins.perEnemy; state.destroyed++;
+    addCharge(e.type === 'ship' ? C.special.perShip : C.special.perKill); drawHUD();
+  }
+  function detonate(m, hostile) {   // mina (o bomba) → onda expansiva
+    if (m.boom) return; m.boom = true;
+    const x = m.x + m.w / 2, y = m.y + m.h / 2, R = hostile ? 62 : C.mine.blastR;
+    state.blasts.push({ x, y, r: 4, max: R, t: 0, dur: C.mine.blastMs, hit: new Set(), hostile: !!hostile });
+    boom(x, y, hostile ? '#ff9a3b' : '#ffd76b', true); A.mine(); shake();
+    if (!hostile) { state.score += C.score.enemy; state.destroyed++; addCharge(C.special.perMine); drawHUD(); }
+  }
+  function bossDamage(n) {
+    const b = state.boss; if (!b) return false;
+    if (b.look === 'alex' && b.phase !== 'respira') { state.particles.push({ x: b.x + b.w / 2, y: b.y + b.h * 0.9, vx: 0, vy: 0, life: 1, color: '#7fd6ff', ring: true, rs: 0.8 }); return false; }
+    b.hp -= n; b.flash = 140; state.score += C.score.bossHit; drawHUD();
+    if (b.hp <= 0) {
+      boom(b.x + b.w / 2, b.y + b.h / 2, b.color, true); boom(b.x + b.w * 0.25, b.y + b.h * 0.5, '#ff7a3a'); boom(b.x + b.w * 0.75, b.y + b.h * 0.4, '#ffd76b');
+      const fue = b.final; state.coins += fue ? C.coins.perFinalDefeat : C.coins.perBossDefeat; state.boss = null; state.bossShots = []; state.blasts = []; state.beam = 0;
+      if (fue) victoria(); else completeLevel(); return true;
+    }
+    return false;
+  }
+  function updateBlasts(dt) {
+    const sh = state.ship;
+    for (let bi = 0; bi < state.blasts.length; bi++) {
+      const bl = state.blasts[bi]; bl.t += dt; const u = Math.min(1, bl.t / bl.dur); bl.r = bl.max * (1 - Math.pow(1 - u, 2.2));
+      if (bl.hostile) {
+        if (!bl.hit.has('ship') && Math.hypot(sh.x + sh.w / 2 - bl.x, sh.y + sh.h / 2 - bl.y) <= bl.r + 6) { bl.hit.add('ship'); hitShip('una bomba de la flota'); }
+        continue;
+      }
+      state.enemies.forEach(e => {
+        if (bl.hit.has(e) || e.dead) return;
+        if (Math.hypot(e.x + e.w / 2 - bl.x, e.y + e.h / 2 - bl.y) <= bl.r + e.w / 2) {
+          bl.hit.add(e);
+          if (e.type === 'ship') { e.hp -= 3; e.flash = 120; if (e.hp <= 0) { e.dead = true; killEnemy(e, true); } }
+          else { e.dead = true; killEnemy(e, true); }
+        }
+      });
+      state.enemies = state.enemies.filter(e => !e.dead);
+      state.bossShots = state.bossShots.filter(s => Math.hypot(s.x + s.w / 2 - bl.x, s.y + s.h / 2 - bl.y) > bl.r + 8);
+      if (state.boss && !bl.hit.has('boss') && Math.hypot(state.boss.x + state.boss.w / 2 - bl.x, state.boss.y + state.boss.h / 2 - bl.y) <= bl.r + state.boss.w / 2) { bl.hit.add('boss'); if (bossDamage(C.mine.boss)) return; }
+      if (!bl.hit.has('ship') && Math.hypot(sh.x + sh.w / 2 - bl.x, sh.y + sh.h / 2 - bl.y) <= bl.r * 0.85) { bl.hit.add('ship'); hitShip('la onda de ' + minaCausa()); }
+    }
+    state.blasts = state.blasts.filter(bl => bl.t < bl.dur + 120);
+  }
+  function fireSpecial() {
+    if (state.scene !== 'playing' || state.paused || state.beam > 0 || state.charge < C.special.max) return;
+    state.beam = C.special.durationMs; state.beamAcc = 0; state.charge = 0; state.readyShown = false; padReady(); A.special(); shake();
+    announce('⚡ RAYO ESPECIAL', '#ffd76b');
+  }
+  function updateBeam(dt) {
+    const S = C.special, sh = state.ship, cxp = sh.x + sh.w / 2, col = { x: cxp - S.width / 2, y: 0, w: S.width, h: sh.y };
+    state.beam -= dt; state.beamAcc += dt;
+    state.enemies.forEach(e => {
+      if (e.dead || !hit(col, e)) return;
+      if (e.type === 'ship') { e.hp -= dt / 140; e.flash = 60; if (e.hp <= 0) { e.dead = true; killEnemy(e); } }
+      else { e.dead = true; killEnemy(e); }
+    });
+    state.enemies = state.enemies.filter(e => !e.dead);
+    state.bossShots = state.bossShots.filter(s => !hit(col, s));
+    if (state.boss && hit(col, state.boss)) { while (state.beamAcc >= 100 / (S.bossDps / 10)) { state.beamAcc -= 100 / (S.bossDps / 10); if (bossDamage(1)) return; } }
+    else if (state.beamAcc > 400) state.beamAcc = 0;
+    if (state.beam < 0) state.beam = 0;
+  }
+
   /* -------- SPAWN -------- */
   function spawnEnemy(forceAlien) {
+    if (!forceAlien && !state.final && trySpawnSpecial()) return;
     const pr = rampa();
     const meteor = forceAlien ? false : (Math.random() < (pr === null ? C.enemy.alienChance : 0.92 - 0.36 * pr));   // al inicio casi solo meteoritos; luego aparecen más centinelas
     const size = meteor ? 20 + Math.random() * 16 : 22;
@@ -433,7 +567,7 @@ OC.Engine = (function () {
     if (keys.left) sh.x -= spd; if (keys.right) sh.x += spd;
     sh.x = Math.max(6, Math.min(W - sh.w - 6, sh.x));
     sh.tilt += (((keys.left ? -1 : 0) + (keys.right ? 1 : 0)) - sh.tilt) * Math.min(1, 0.22 * k);   // alabeo visual
-    if (keys.fire) fire(); if (sh.cd > 0) sh.cd -= k;
+    if (keys.fire && state.beam <= 0) fire(); if (sh.cd > 0) sh.cd -= k;
     if (state.speedBuff > 0) state.speedBuff -= dt;
     if (state.powerBuff > 0) state.powerBuff -= dt;
     if (state.invuln > 0) state.invuln -= dt;
@@ -479,6 +613,7 @@ OC.Engine = (function () {
     state.bullets.forEach(b => { b.y += b.vy * k; b.x += (b.vx || 0) * k; });
     state.bullets = state.bullets.filter(b => b.y + b.h > 0 && b.x > -10 && b.x < W + 10);
 
+    updateShips(dt, k);
     state.enemies.forEach(e => { e.y += e.vy * k; e.x += e.vx * k; e.rot += e.vr * k; if (e.type === 'alien') e.x += Math.sin((e.y + e.seed) * 0.04) * 0.7 * k; if (e.x < 6) { e.x = 6; e.vx = Math.abs(e.vx); } if (e.x > W - e.w - 6) { e.x = W - e.w - 6; e.vx = -Math.abs(e.vx); } });
 
     state.powerups.forEach(pu => { pu.y += pu.vy * k; pu.t += dt; });
@@ -487,19 +622,25 @@ OC.Engine = (function () {
       if (s.kind === 'nota') { s.sway = (s.sway || 0) + 0.12 * k; s.x += Math.sin(s.sway) * 1.5 * k; }
       else if (s.kind === 'roca' || s.kind === 'roca_fuerte') { s.rot = (s.rot || 0) + (s.vr || 0.1) * k; }
       else if (s.kind === 'magma') { s.sway = (s.sway || 0) + 0.08 * k; s.x += Math.sin(s.sway) * 0.8 * k; }
+      else if (s.kind === 'bomba' && s.y > Math.min(H * 0.74, state.groundY - 30)) { s.gone = true; detonate({ x: s.x, y: s.y, w: s.w, h: s.h }, true); }
     });
-    state.bossShots = state.bossShots.filter(s => s.y < H + 20 && s.x > -20 && s.x < W + 20);
+    state.bossShots = state.bossShots.filter(s => !s.gone && s.y < H + 20 && s.x > -20 && s.x < W + 20);
+    updateBlasts(dt); if (state.beam > 0) updateBeam(dt);
+    if (state.scene !== 'playing') return;
 
     for (let i = state.bullets.length - 1; i >= 0; i--) {
       const bu = state.bullets[i]; if (!bu) continue;
       for (let j = state.enemies.length - 1; j >= 0; j--) {
-        if (hit(bu, state.enemies[j])) {
-          const e = state.enemies[j]; boom(e.x + e.w / 2, e.y + e.h / 2, e.type === 'meteor' ? '#f2a93b' : '#ff8bd0'); A.explosion();
-          state.enemies.splice(j, 1); state.score += C.score.enemy; state.coins += C.coins.perEnemy; state.destroyed++; drawHUD();
-          if (!bu.pierce) { state.bullets.splice(i, 1); break; }
-        }
+        const e = state.enemies[j]; if (e.dead || !hit(bu, e)) continue;
+        if (e.type === 'mine') { e.dead = true; detonate(e); }
+        else if (e.type === 'ship') {
+          e.hp -= 1; e.flash = 90;
+          if (e.hp <= 0) { e.dead = true; killEnemy(e); } else { boom(bu.x, bu.y, '#ffb35a'); A.hit && 0; }
+        } else { e.dead = true; killEnemy(e); }
+        if (!bu.pierce) { state.bullets.splice(i, 1); break; }
       }
     }
+    state.enemies = state.enemies.filter(e => !e.dead);
     for (let j = state.powerups.length - 1; j >= 0; j--) {
       if (hit(sh, state.powerups[j])) {
         const kind = state.powerups[j].kind; state.powerups.splice(j, 1);
@@ -512,10 +653,14 @@ OC.Engine = (function () {
       }
     }
     for (let j = state.enemies.length - 1; j >= 0; j--) {
-      if (hit(sh, state.enemies[j])) { const e = state.enemies[j]; state.enemies.splice(j, 1); boom(sh.x + sh.w / 2, sh.y, '#7cff6b'); const en = state.saga.enemigos || {}; hitShip(e.type === 'meteor' ? (en.meteoro || 'un meteorito') : (en.alien || 'un enemigo')); return; }
+      if (hit(sh, state.enemies[j])) {
+        const e = state.enemies[j]; state.enemies.splice(j, 1); boom(sh.x + sh.w / 2, sh.y, '#7cff6b'); const en = state.saga.enemigos || {};
+        if (e.type === 'mine') { detonate(e); hitShip(minaCausa()); return; }
+        hitShip(e.type === 'meteor' ? (en.meteoro || 'un meteorito') : e.type === 'ship' ? naveCausa() : (en.alien || 'un enemigo')); return;
+      }
     }
     for (let j = state.bossShots.length - 1; j >= 0; j--) {
-      if (hit(sh, state.bossShots[j])) { state.bossShots.splice(j, 1); boom(sh.x + sh.w / 2, sh.y, '#7cff6b'); hitShip('el ataque de ' + (state.boss ? state.boss.name : 'el guardián')); return; }
+      if (hit(sh, state.bossShots[j])) { const sj = state.bossShots[j]; state.bossShots.splice(j, 1); boom(sh.x + sh.w / 2, sh.y, '#7cff6b'); hitShip('el ataque de ' + (sj.from || (state.boss ? state.boss.name : 'el guardián'))); return; }
     }
     const gy = state.groundY < H ? state.groundY : H;
     state.enemies = state.enemies.filter(e => e.y < gy + 10);
@@ -631,13 +776,16 @@ OC.Engine = (function () {
       G.powerups(state.powerups);
       G.bullets(state.bullets);
       G.bossShots(state.bossShots);
-      G.enemies(state.enemies, { saga: state.saga.id, scene: p.scene, fondo: E.fondo, groundY: state.groundY, H: H });
+      if (state.beam > 0) G.beam(state.ship, state.beam / C.special.durationMs, C.special.width);
+      G.enemies(state.enemies, { saga: state.saga.id, scene: p.scene, fondo: E.fondo, groundY: state.groundY, H: H, ship: state.ship });
       if (state.boss) G.boss(state.boss, E);
       if (p.duracion && !state.boss && !state.final) G.progress(Math.min(1, state.levelT / p.duracion), Math.max(0, p.duracion - state.levelT), state.phaseLabel, state.bossPending);
+      G.blasts(state.blasts);
       G.particles(state.particles);
       if (!(state.invuln > 0 && Math.floor(state.invuln / 80) % 2 === 0))
         G.ship(state.ship, { speed: state.speedBuff > 0, power: state.powerBuff > 0, shield: state.shield > 0 }, state.saga.vehiculo, E);
       if (state.tempActive) { G.thermometer(state.temp); G.heatTint(state.temp); }
+      if (state.scene === 'playing') G.charge(state.charge / C.special.max, state.beam > 0, isTouch);
     } else if (state.scene === 'briefing') {
       G.scene(p, state.stars, groundFor(p)); G.dim(0.5);   // el mundo de la misión se asoma tras el papiro
     } else {
@@ -661,12 +809,13 @@ OC.Engine = (function () {
   /* -------- INPUT: teclado -------- */
   function bindKeyboard() {
     window.addEventListener('keydown', e => {
-      if (state.scene === 'playing' && ['ArrowLeft', 'ArrowRight', 'ArrowUp', ' ', 'Spacebar'].includes(e.key)) e.preventDefault();
+      if (state.scene === 'playing' && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', 'Spacebar'].includes(e.key)) e.preventDefault();
       if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') { setPaused(!state.paused); return; }
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
       if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
       if (e.key === ' ' || e.key === 'Spacebar' || e.key === 'ArrowUp') keys.fire = true;
       if (e.key === 'm' || e.key === 'M') toggleMute();
+      if (e.key === 'b' || e.key === 'B' || e.key === 'ArrowDown') fireSpecial();
     });
     window.addEventListener('keyup', e => {
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
@@ -680,11 +829,12 @@ OC.Engine = (function () {
   let padEls = null;
   const activePtr = new Map();
   function pin(x, y, el) { const r = el.getBoundingClientRect(); return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; }
-  function zoneAt(x, y) { if (pin(x, y, padEls.fire)) return 'fire'; if (pin(x, y, padEls.left)) return 'left'; if (pin(x, y, padEls.right)) return 'right'; return null; }
+  function zoneAt(x, y) { if (pin(x, y, padEls.special)) return 'special'; if (pin(x, y, padEls.fire)) return 'fire'; if (pin(x, y, padEls.left)) return 'left'; if (pin(x, y, padEls.right)) return 'right'; return null; }
   function applyPad() {
     let L = false, R = false, F = false;
-    for (const z of activePtr.values()) { if (z === 'left') L = true; else if (z === 'right') R = true; else if (z === 'fire') F = true; }
+    for (const z of activePtr.values()) { if (z === 'special') { if (!padEls.__sp) { padEls.__sp = true; fireSpecial(); } continue; } if (z === 'left') L = true; else if (z === 'right') R = true; else if (z === 'fire') F = true; }
     keys.left = L; keys.right = R; keys.fire = F;
+    if (![...activePtr.values()].includes('special')) padEls.__sp = false;
     padEls.left.classList.toggle('pressed', L); padEls.right.classList.toggle('pressed', R); padEls.fire.classList.toggle('pressed', F);
   }
   function clearPad() {
@@ -692,7 +842,7 @@ OC.Engine = (function () {
     if (padEls) { padEls.left.classList.remove('pressed'); padEls.right.classList.remove('pressed'); padEls.fire.classList.remove('pressed'); }
   }
   function bindTouch() {
-    padEls = { left: $('t-left'), right: $('t-right'), fire: $('t-fire') };
+    padEls = { left: $('t-left'), right: $('t-right'), fire: $('t-fire'), special: $('t-special') };
     stageEl.addEventListener('pointerdown', e => { if (state.scene !== 'playing') return; const z = zoneAt(e.clientX, e.clientY); if (z) { e.preventDefault(); activePtr.set(e.pointerId, z); applyPad(); } }, { passive: false });
     stageEl.addEventListener('pointermove', e => { if (!activePtr.has(e.pointerId)) return; e.preventDefault(); activePtr.set(e.pointerId, zoneAt(e.clientX, e.clientY)); applyPad(); }, { passive: false });
     const end = e => { if (activePtr.has(e.pointerId)) { activePtr.delete(e.pointerId); applyPad(); } };
@@ -749,7 +899,7 @@ OC.Engine = (function () {
     requestAnimationFrame(loop);
   }
 
-  return { start };
+  return Object.assign({ start }, window.__ODISEA_TEST ? { _t: { state, update, spawnMine, spawnShip, detonate, fireSpecial, trySpawnSpecial, avance, startLevel, spawnBoss, addCharge } } : {});
 })();
 
 document.addEventListener('DOMContentLoaded', OC.Engine.start);
