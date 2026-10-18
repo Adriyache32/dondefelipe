@@ -37,10 +37,15 @@ OC.Sagas = [
 
  { nombre:"Mercurio", color:"#b8b0a0", num:1, scene:"mercurio", fondo:"mercurio",
    autor:{nombre:"Galileo", sello:"G"}, sub:"Bitácora de Galileo",
-   contexto:"Misión 1 · Mercurio. Apenas logré verlo: viaja tan cerca del Sol que se esconde en su resplandor. Tu nave sí puede acercarse. Es el planeta más pequeño y el más veloz: completa su órbita en solo 88 días. Casi no tiene atmósfera que lo proteja, así que su superficie es un desierto de cráteres golpeado por meteoritos. Despeja el camino y supera a su guardián.",
+   contexto:"Misión 1 · Mercurio. Apenas logré verlo: viaja tan cerca del Sol que se esconde en su resplandor. Tu nave sí puede acercarse. Es el planeta más pequeño y el más veloz: completa su órbita en solo 88 días, y casi no tiene atmósfera que lo proteja de los meteoritos. El viaje dura unos dos minutos y se pone más peligroso a medida que avanzas. Al final te espera el Profesor Alex, maestro de música, cuya voz es su arma: mientras habla, lanza rayos de sonido y nada lo daña; solo puedes atacarlo cuando se detiene a respirar. Esquiva cuando hable, dispara cuando respire.",
    dato:"Mercurio casi no tiene atmósfera y su año dura solo 88 días.",
    cierre:"Mercurio queda atrás. Sigue hacia Venus: con mi anteojo vi allí algo que cambió mi forma de entender el cielo.",
-   meta:12, baseSpawn:1200, boss:{nombre:"Profesor Alex", hp:16, color:"#d9d2c2", look:"birrete", shot:"bolt"} },
+   meta:12, baseSpawn:1200, duracion:135000,
+   hitos:[[0.01,"☀ Tramo tranquilo: calienta motores","Tramo 1 · calma"],
+          [0.30,"☄ Los meteoritos se aceleran","Tramo 2 · meteoritos"],
+          [0.58,"🛸 Aparecen centinelas… y se oye una melodía lejana","Tramo 3 · centinelas","#ff9a3b"],
+          [0.82,"♪ La música se acerca: el Profesor Alex está cerca","Tramo 4 · se oye a Alex","#ff4d57"]],
+   boss:{nombre:"Profesor Alex", hp:30, color:"#e0a63a", look:"alex", shot:"nota", aviso:"Habla = rayos y escudo · Respira = vulnerable"} },
 
  { nombre:"Venus", color:"#e0a648", num:2, scene:"venus", fondo:"venus", cooling:true,
    autor:{nombre:"Galileo", sello:"G"}, sub:"Bitácora de Galileo",
