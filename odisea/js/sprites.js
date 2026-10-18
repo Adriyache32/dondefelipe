@@ -18,7 +18,16 @@ OC.Sprites = (function () {
   const S = 2, TAU = Math.PI * 2, cache = new Map();   // S = resolución de la caché
   const now = () => performance.now();
 
-  function init(ctx) { cx = ctx; }
+  /* --- imágenes externas (img/): si faltan, el juego usa el dibujo vectorial --- */
+  const IMG = {};
+  function loadImgs() {
+    if (typeof Image === 'undefined') return;
+    ['alex_idle', 'alex_idle2', 'alex_habla', 'alex_onda', 'alex_p_sonrie', 'alex_p_grita', 'alex_p_enojo', 'alex_p_duda', 'alex_p_piensa', 'alex_p_calma'].forEach(n => {
+      try { const i = new Image(); i.src = 'img/' + n + '.png'; IMG[n] = i; } catch (e) {}
+    });
+  }
+  const imgOk = n => { const i = IMG[n]; return !!(i && i.complete && i.naturalWidth > 0); };
+  function init(ctx) { cx = ctx; if (!IMG.alex_idle) loadImgs(); }
 
   /* ---------- utilidades ---------- */
   function hex2rgb(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
@@ -585,10 +594,88 @@ OC.Sprites = (function () {
     cx.save(); cx.fillStyle = 'rgba(0,0,0,' + (0.1 + d * 0.28) + ')';
     cx.beginPath(); cx.ellipse(cxp, gy + 6, w * (0.35 + d * 0.3), w * 0.07, 0, 0, TAU); cx.fill(); cx.restore();
   }
+
+  /* ============================================================
+     PROFESOR ALEX  (sprites de img/): habla = escudo + rayos · respira = vulnerable
+     ============================================================ */
+  function bossAlex(b, t, W, H) {
+    const ph = b.phase, x = b.x, y = b.y, w = b.w, h = b.h, cxp = x + w / 2, cyp = y + h / 2;
+    // rayos de voz (detrás de la nave)
+    (b.beams || []).forEach(bm => {
+      const y0 = y + h * 0.6, len = H - y0;
+      cx.save();
+      if (bm.t < 750) {   // aviso: línea punteada que te sigue
+        const a = 0.35 + 0.35 * Math.sin(t * 0.03);
+        cx.strokeStyle = 'rgba(255,215,107,' + a + ')'; cx.lineWidth = 2; cx.setLineDash([8, 8]);
+        cx.beginPath(); cx.moveTo(bm.x, y0); cx.lineTo(bm.x, H); cx.stroke(); cx.setLineDash([]);
+        addGlow(bm.x, y0 + 8, 26, '#ffd76b', 0.5);
+      } else {
+        const a = 0.75 + 0.25 * Math.sin(t * 0.05);
+        const g = cx.createLinearGradient(bm.x - bm.w / 2, 0, bm.x + bm.w / 2, 0);
+        g.addColorStop(0, 'rgba(255,170,40,0)'); g.addColorStop(0.5, 'rgba(255,230,140,' + (0.45 * a) + ')'); g.addColorStop(1, 'rgba(255,170,40,0)');
+        cx.fillStyle = g; cx.fillRect(bm.x - bm.w / 2, y0, bm.w, len);
+        if (imgOk('alex_onda')) {
+          cx.globalCompositeOperation = 'lighter'; cx.globalAlpha = a; cx.translate(bm.x, y0); cx.rotate(Math.PI / 2);
+          const sc = bm.w / 117; for (let o = -(t * 0.4 % (397 * sc)); o < len; o += 397 * sc) cx.drawImage(IMG.alex_onda, o, -bm.w / 2, 397 * sc, bm.w);
+        }
+      }
+      cx.restore();
+    });
+    // nave
+    const im = ph === 'habla' ? IMG.alex_habla : ((Math.floor(t / 650) % 2) ? IMG.alex_idle2 : IMG.alex_idle);
+    const f = (w * 1.08) / 175, dw = im.naturalWidth * f, dh = im.naturalHeight * f;
+    if (ph === 'respira') addGlow(cxp, cyp, w * 0.95, '#7cffb0', 0.2 + 0.1 * Math.sin(t * 0.005));
+    if (ph === 'aviso') addGlow(cxp, cyp, w * 1.1, '#ffd76b', 0.3 + 0.25 * Math.sin(t * 0.04));
+    cx.save(); cx.translate(cxp, cyp);
+    if (ph === 'habla') cx.translate((Math.random() - 0.5) * 1.6, (Math.random() - 0.5) * 1.6);
+    if (ph === 'respira') { const br = 1 + 0.035 * Math.sin(t * 0.0045); cx.scale(br, br); }
+    cx.scale(b.dir < 0 ? -1 : 1, 1);
+    cx.drawImage(im, -dw / 2, -dh / 2, dw, dh);
+    if (b.flash > 0) { cx.globalCompositeOperation = 'lighter'; cx.globalAlpha = 0.55; cx.drawImage(im, -dw / 2, -dh / 2, dw, dh); }
+    cx.restore();
+    // escudo de sonido mientras habla/avisa
+    if (ph !== 'respira') {
+      cx.save(); cx.translate(cxp, cyp);
+      for (let i = 0; i < 3; i++) {
+        const u = ((t * 0.0011) + i / 3) % 1, r = w * (0.62 + u * 0.28);
+        cx.strokeStyle = 'rgba(127,214,255,' + (0.55 * (1 - u)) + ')'; cx.lineWidth = 1.6;
+        cx.beginPath(); cx.ellipse(0, 0, r, r * 0.62, 0, 0, TAU); cx.stroke();
+      }
+      cx.restore();
+    }
+    // retrato + estado, bajo la barra de vida (la izquierda y la derecha del HUD están ocupadas)
+    const by = H * 0.075, hf = b.hp / b.maxhp;
+    const pn = b.flash > 0 ? 'enojo' : ph === 'habla' ? 'grita' : ph === 'aviso' ? 'sonrie' : (hf < 0.3 ? 'duda' : 'calma'), pi = IMG['alex_p_' + pn];
+    const msg = ph === 'respira' ? '💨 RESPIRA · ¡DISPÁRALE!' : ph === 'aviso' ? '♪ ¡VA A HABLAR!' : '🎵 HABLA · ¡ESQUIVA!';
+    cx.save(); cx.font = 'bold 11px Courier New'; cx.textAlign = 'left';
+    const tw = cx.measureText(msg).width, gw = 40 + 8 + tw, gx = W / 2 - gw / 2, py = by + 12, col = ph === 'respira' ? '#7cffb0' : '#ffd76b';
+    if (pi && pi.complete && pi.naturalWidth > 0) {
+      cx.fillStyle = '#05060e'; rr(cx, gx, py, 40, 32, 5); cx.fill();
+      cx.save(); rr(cx, gx, py, 40, 32, 5); cx.clip(); cx.drawImage(pi, gx, py, 40, 32); cx.restore();
+      cx.strokeStyle = col; cx.lineWidth = 2; rr(cx, gx, py, 40, 32, 5); cx.stroke();
+    }
+    cx.fillStyle = 'rgba(0,0,0,.7)'; cx.fillText(msg, gx + 49, py + 21); cx.fillStyle = col; cx.fillText(msg, gx + 48, py + 20); cx.restore();
+  }
+  function progress(f, rem, label, warn, W, H) {
+    const bw = Math.min(W * 0.7, 260), bx = W / 2 - bw / 2, by = H * 0.075;
+    cx.save();
+    cx.fillStyle = 'rgba(5,8,20,.72)'; rr(cx, bx - 3, by - 3, bw + 6, 12, 6); cx.fill();
+    cx.strokeStyle = 'rgba(255,255,255,.2)'; cx.lineWidth = 1; cx.stroke();
+    const g = cx.createLinearGradient(bx, 0, bx + bw, 0); g.addColorStop(0, '#5bd6ff'); g.addColorStop(0.6, '#ffd76b'); g.addColorStop(1, '#ff4d57');
+    cx.fillStyle = g; rr(cx, bx, by, Math.max(4, bw * f), 6, 3); cx.fill();
+    [0.30, 0.58, 0.82].forEach(m => { cx.fillStyle = 'rgba(255,255,255,.35)'; cx.fillRect(bx + bw * m - 0.5, by - 1, 1, 8); });
+    const pi = IMG.alex_p_sonrie; // meta: Alex
+    if (pi && pi.complete && pi.naturalWidth > 0) { cx.drawImage(pi, bx + bw + 8, by - 8, 26, 21); cx.strokeStyle = warn ? '#ff4d57' : 'rgba(255,255,255,.4)'; cx.strokeRect(bx + bw + 8, by - 8, 26, 21); }
+    cx.font = 'bold 11px Courier New'; cx.textAlign = 'center';
+    const txt = (label ? label + ' · ' : '') + (warn ? '¡AHORA!' : Math.floor(Math.ceil(rem / 1000) / 60) + ':' + String(Math.ceil(rem / 1000) % 60).padStart(2, '0'));
+    cx.fillStyle = 'rgba(0,0,0,.7)'; cx.fillText(txt, W / 2 + 1, by + 22); cx.fillStyle = warn ? '#ff9aa2' : '#dfe6ff'; cx.fillText(txt, W / 2, by + 21);
+    cx.restore();
+  }
   function boss(b, W, H, env) {
     const t = now();
     if (env && env.groundY) shadow(b.x + b.w / 2, env.groundY, b.y + b.h, b.w, env.H);
     hpBar(b, W, H);
+    if (b.look === 'alex' && imgOk('alex_idle') && imgOk('alex_habla')) { bossAlex(b, t, W, H); return; }
     if (b.look === 'atomo_hierro') { bossAtom(b, t); return; }
     if (b.look === 'guardian') { bossGuardian(b, t); return; }
     const x = b.x, y = b.y, w = b.w, h = b.h, cxp = x + w / 2, c = b.color;
@@ -709,5 +796,5 @@ OC.Sprites = (function () {
     cx.fillStyle = '#ffe66b'; cx.beginPath(); cx.arc(17, -2.4, 1.6, 0, TAU); cx.fill(); addGlow(17, -2.4, 6, '#ffe66b', 0.45 + 0.35 * Math.sin(t * 0.012));
   }
 
-  return { init, enemies, bossShots, bullets, powerups, particles, boss, ship };
+  return { init, enemies, bossShots, bullets, powerups, particles, boss, progress, ship };
 })();

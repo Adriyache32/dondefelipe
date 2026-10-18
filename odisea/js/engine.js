@@ -17,7 +17,7 @@ OC.Engine = (function () {
     scene: 'menu', saga: SAGAS[0], sagaIndex: 0, level: 0, score: 0, lives: C.lives.start, nombre: '', curso: '',
     ship: { x: 0, y: 0, w: C.ship.w, h: C.ship.h, speed: 5, cd: 0, tilt: 0 },
     bullets: [], enemies: [], powerups: [], particles: [], stars: [], bossShots: [],
-    boss: null, bossPending: false, bossT: 0, destroyed: 0, spawnT: 0, spawnQueue: [], pending: false,
+    boss: null, bossPending: false, bossT: 0, levelT: 0, marks: {}, phaseLabel: '', destroyed: 0, spawnT: 0, spawnQueue: [], pending: false,
     qDeck: [], lastQ: null, checkpoint: null, paused: false, briefFinal: false,
     speedBuff: 0, powerBuff: 0, storm: 0, eventT: 0, nextEvent: 9000, msgKilledBy: '', groundY: 0,
     temp: 0, tempActive: false, tempRate: 0, coolT: 0, tempWarned: false, currentQ: null, final: false,
@@ -51,7 +51,7 @@ OC.Engine = (function () {
     });
   }
   async function registrarPuntaje() {
-    // Ranking del colegio en Firebase (firebase/df.js). Si no está configurado, no hace nada.
+    // Ranking del colegio en Firebase (firebase/df.js). Si el sitio no lo carga, no hace nada.
     try {
       if (window.DF && state.score > 0) {
         const p0 = PLANETAS[Math.min(state.level, PLANETAS.length - 1)] || {};
@@ -172,7 +172,7 @@ OC.Engine = (function () {
   }
   function startBriefing() {
     const p = PLANETAS[state.level]; state.briefFinal = false; state.final = false;
-    fillBriefing(p.autor.sello, 'Misión ' + p.num + ' · ' + p.nombre, p.sub, p.contexto, '⚠ Guardián de la misión: ' + p.boss.nombre,
+    fillBriefing(p.autor.sello, 'Misión ' + p.num + ' · ' + p.nombre, p.sub, p.contexto, '⚠ Guardián de la misión: ' + p.boss.nombre + (p.boss.aviso ? ' — ' + p.boss.aviso : ''),
       p.cooling ? '🌡 En esta misión sube la temperatura: recoge ❄ para enfriar · ' + controles() : controles());
     state.scene = 'briefing'; show('briefing'); A.stopAmbient();
   }
@@ -206,8 +206,9 @@ OC.Engine = (function () {
     state.scene = 'playing'; state.briefFinal = false;
     state.bullets = []; state.enemies = []; state.powerups = []; state.particles = []; state.bossShots = []; state.spawnQueue = [];
     state.boss = null; state.bossPending = false; state.destroyed = 0; state.spawnT = 0; state.pending = false;
+    state.levelT = 0; state.marks = {}; state.phaseLabel = '';
     state.speedBuff = 0; state.powerBuff = 0; state.storm = 0; state.eventT = 0;
-    state.nextEvent = C.events.firstMin + Math.random() * C.events.firstRand;
+    state.nextEvent = p.duracion ? p.duracion * 0.34 : C.events.firstMin + Math.random() * C.events.firstRand;
     state.tempActive = !!p.cooling; state.temp = 0; state.tempWarned = false; state.final = false; state.msgKilledBy = ''; state.invuln = 0;
     state.tempRate = C.temperature.rate * (1 - state.upgrades.refrigeracion * 0.2);
     state.coolT = C.temperature.coolFirst;
@@ -219,11 +220,18 @@ OC.Engine = (function () {
     initStars(); drawHUD(); show('playing'); A.ambient(p);
   }
 
+  /* -------- RAMPA DE DIFICULTAD (misiones con temporizador) --------
+     Si el mundo define `duracion` (ms), la misión es un viaje: empieza suave y
+     la dificultad sube hasta que, al terminar el tiempo, aparece el jefe. */
+  function rampa() { const p = PLANETAS[state.level]; return (p && p.duracion && !state.final) ? Math.min(1, state.levelT / p.duracion) : null; }
+  function fmtT(ms) { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+
   /* -------- SPAWN -------- */
   function spawnEnemy(forceAlien) {
-    const meteor = forceAlien ? false : (Math.random() < C.enemy.alienChance);
+    const pr = rampa();
+    const meteor = forceAlien ? false : (Math.random() < (pr === null ? C.enemy.alienChance : 0.92 - 0.36 * pr));   // al inicio casi solo meteoritos; luego aparecen más centinelas
     const size = meteor ? 20 + Math.random() * 16 : 22;
-    const spd = (C.enemy.baseFall + state.level * C.enemy.fallPerLevel) * (0.7 + Math.random() * 0.6);
+    const spd = (pr === null ? (C.enemy.baseFall + state.level * C.enemy.fallPerLevel) : (0.7 + 1.1 * pr)) * (0.7 + Math.random() * 0.6);
     state.enemies.push({ x: 20 + Math.random() * (W - 40 - size), y: -size, w: size, h: size, vy: spd, vx: (Math.random() - 0.5) * 1.2, type: meteor ? 'meteor' : 'alien', rot: 0, vr: (Math.random() - 0.5) * 0.1, seed: Math.random() * 6.28 });
   }
   function spawnWave() {
@@ -292,10 +300,87 @@ OC.Engine = (function () {
   function spawnBoss() {
     const p = PLANETAS[state.level];
     state.enemies = []; state.spawnQueue = [];
+    if (p.boss.look === 'alex') { spawnAlex(p); return; }
     state.boss = { name: p.boss.nombre, color: p.boss.color, x: W / 2 - C.boss.w / 2, y: H * C.boss.yFactor, w: C.boss.w, h: C.boss.h, hp: p.boss.hp, maxhp: p.boss.hp, vx: C.boss.vxBase + state.level * C.boss.vxPerLevel, cd: 0, t: 0, look: p.boss.look || 'guardian', deco: p.boss.deco, shot: p.boss.shot || 'bolt' };
     announce('☠ JEFE: ' + p.boss.nombre, '#ff4d57'); A.boss();
   }
+
+  /* -------- PROFESOR ALEX (jefe de la misión 1) --------
+     Su poder es hablar. HABLA → lanza rayos y está protegido por sonido (nada lo daña).
+     RESPIRA → se queda sin aire: es vulnerable y no ataca. Antes de hablar da un AVISO.
+     Mientras menos vida le queda, respira menos y habla más. */
+  function spawnAlex(p) {
+    const bw = 140, bh = 86;
+    state.boss = { name: p.boss.nombre, color: p.boss.color, look: 'alex', x: W / 2 - bw / 2, y: H * (C.boss.yFactor + 0.04), w: bw, h: bh, hp: p.boss.hp, maxhp: p.boss.hp, vx: 0, dir: 1, cd: 0, t: 0,
+      phase: 'respira', pt: 2200, talkIdx: 0, pat: 0, shotT: 0, beams: [], flash: 0, puff: 0, said: {} };
+    announce('☠ JEFE: ' + p.boss.nombre, '#ff4d57'); A.boss();
+  }
+  function alexShot(b, vx, vy, bx, by) {
+    state.bossShots.push({ x: bx - 4, y: by, w: 8, h: 14, vy, vx, kind: 'nota', sway: Math.random() * 6.28, rot: 0, vr: 0 });
+  }
+  function updateAlex(dt) {
+    const b = state.boss, k = dt / 16.667, hf = b.hp / b.maxhp, sh = state.ship, shx = sh.x + sh.w / 2, shy = sh.y;
+    b.t += dt; b.pt -= dt; if (b.flash > 0) b.flash -= dt;
+    // movimiento: casi quieto al avisar, tranquilo al respirar, ágil al hablar
+    const mult = b.phase === 'habla' ? 1.5 : (b.phase === 'respira' ? 0.45 : 0.1), spd = (C.boss.vxBase + 0.2) * mult;
+    b.x += b.dir * spd * k; if (b.x < 8) { b.x = 8; b.dir = 1; } if (b.x > W - b.w - 8) { b.x = W - b.w - 8; b.dir = -1; }
+    b.vx = b.dir * spd;
+    b.y = H * (C.boss.yFactor + 0.04) + Math.sin(b.t * 0.0034) * (b.phase === 'respira' ? 12 : 6);
+    // cambio de fase
+    if (b.pt <= 0) {
+      if (b.phase === 'respira') { b.phase = 'aviso'; b.pt = 650; A.noteMusical(); }
+      else if (b.phase === 'aviso') {
+        b.phase = 'habla'; b.pat = b.talkIdx % 3; b.talkIdx++; b.shotT = 0; b.beams = [];
+        b.pt = 2600 + 1000 * (1 - hf); if (b.pat === 2) b.pt = Math.max(b.pt, 3100);
+        if (b.pat === 2) { b.beams.push({ x: shx, w: 44, t: 0 }); if (hf < 0.5) b.beams.push({ x: shx + (shx < W / 2 ? 130 : -130), w: 44, t: 0 }); }
+        if (!b.said.habla) { b.said.habla = 1; announce('🎵 HABLA: protegido, ¡esquiva sus notas!', '#ffd76b'); }
+        A.noteMusical();
+      } else {
+        b.phase = 'respira'; b.pt = 2600 - 900 * (1 - hf); b.beams = [];
+        if (!b.said.respira) { b.said.respira = 1; announce('💨 RESPIRA: ¡ahora es vulnerable!', '#7cffb0'); }
+      }
+    }
+    // ataques mientras habla
+    if (b.phase === 'habla') {
+      b.shotT -= dt;
+      const bx = b.x + b.w * 0.55, by = b.y + b.h * 0.72, sp = 3.0 + (1 - hf) * 0.8;
+      if (b.shotT <= 0) {
+        if (b.pat === 0) {   // notas dirigidas hacia ti
+          [-0.22, 0, 0.22].forEach(a => { const ang = Math.atan2(Math.max(60, shy - by), shx - bx) + a; alexShot(b, Math.cos(ang) * sp, Math.max(1.4, Math.sin(ang) * sp), bx, by); });
+          b.shotT = hf < 0.5 ? 340 : 460;
+        } else if (b.pat === 1) {   // abanico
+          for (let i = -2; i <= 2; i++) alexShot(b, i * 1.05, sp * 0.9, bx, by);
+          b.shotT = 680 - (1 - hf) * 160;
+        } else { alexShot(b, (shx - bx) * 0.004, sp, bx, by); b.shotT = 900; }
+        A.noteMusical();
+      }
+    }
+    // rayos de voz: avisan 750 ms y luego queman 900 ms
+    b.beams.forEach((bm, i) => {
+      bm.t += dt;
+      if (bm.t < 750) { const tx = i === 0 ? shx : shx + (shx < W / 2 ? 130 : -130); bm.x += (Math.max(30, Math.min(W - 30, tx)) - bm.x) * Math.min(1, 0.09 * k); }
+      else if (bm.t < 1650) { if (hit(sh, { x: bm.x - bm.w / 2, y: b.y + b.h * 0.6, w: bm.w, h: H })) { boom(sh.x + sh.w / 2, sh.y, '#ffd76b'); hitShip('el rayo de voz de ' + b.name); if (state.scene !== 'playing') return; } }
+    });
+    b.beams = b.beams.filter(bm => bm.t < 1700);
+    // humo cuando está herido
+    if (hf < 0.66) { b.puff -= dt; if (b.puff <= 0) { b.puff = hf < 0.33 ? 90 : 180; state.particles.push({ x: b.x + b.w * (0.3 + Math.random() * 0.3), y: b.y + b.h * 0.3, vx: (Math.random() - 0.5) * 0.4, vy: -0.9, life: 0.9, color: hf < 0.33 ? '#ff8a3a' : '#9aa0aa' }); } }
+    // disparos del jugador: solo dañan mientras RESPIRA
+    for (let i = state.bullets.length - 1; i >= 0; i--) {
+      const bu = state.bullets[i];
+      if (!hit(bu, b)) continue;
+      if (b.phase === 'respira') {
+        b.hp -= (bu.bd || 1); b.flash = 160; boom(bu.x, bu.y, '#ffb35a'); A.explosion(); state.score += C.score.bossHit; drawHUD();
+        if (!bu.pierce) state.bullets.splice(i, 1);
+        if (b.hp <= 0) { boom(b.x + b.w / 2, b.y + b.h / 2, b.color, true); boom(b.x + b.w * 0.25, b.y + b.h * 0.5, '#ff7a3a'); boom(b.x + b.w * 0.75, b.y + b.h * 0.4, '#ffd76b'); state.coins += C.coins.perBossDefeat; state.boss = null; state.bossShots = []; completeLevel(); return; }
+      } else {   // el escudo de sonido desvía el disparo
+        state.particles.push({ x: bu.x, y: b.y + b.h * 0.9, vx: 0, vy: 0, life: 1, color: '#7fd6ff', ring: true, rs: 0.5 });
+        state.bullets.splice(i, 1);
+      }
+    }
+    if (hit(sh, b)) hitShip('el choque con ' + b.name);
+  }
   function updateBoss(dt) {
+    if (state.boss.look === 'alex') { updateAlex(dt); return; }
     const b = state.boss; b.t += dt;
     b.x += b.vx * (dt / 16.667); if (b.x < 8) { b.x = 8; b.vx *= -1; } if (b.x > W - b.w - 8) { b.x = W - b.w - 8; b.vx *= -1; }
     b.y = H * C.boss.yFactor + Math.sin(b.t * (b.final ? 0.0032 : 0.002)) * (b.final ? 26 : 18);
@@ -369,16 +454,25 @@ OC.Engine = (function () {
     }
 
     if (!state.boss) {
-      state.spawnT += dt;
-      const rate = Math.max(C.spawn.baseMin, p.baseSpawn - state.level * C.spawn.perLevelReduce);
-      if (state.spawnT > rate) { state.spawnT = 0; spawnEnemy(); if (Math.random() < C.spawn.doubleChance + state.level * C.spawn.doubleChancePerLevel) state.spawnQueue.push(C.spawn.doubleDelay); }
-      for (let qi = state.spawnQueue.length - 1; qi >= 0; qi--) { state.spawnQueue[qi] -= dt; if (state.spawnQueue[qi] <= 0) { state.spawnQueue.splice(qi, 1); spawnEnemy(); } }
-      if (state.storm > 0) { state.storm -= dt; if (Math.random() < C.events.stormSpawnChance * k) spawnEnemy(false); }
-      state.eventT += dt;
-      if (state.eventT > state.nextEvent) { state.eventT = 0; state.nextEvent = C.events.nextMin + Math.random() * C.events.nextRand; triggerEvent(); }
-      if (Math.random() < C.powerups.chance * k && state.powerups.length < C.powerups.maxOnScreen) spawnPowerup(randomPowerupKind());
-      if (Math.random() < C.coins.pickupChance * k) spawnPowerup('moneda');
-      if (state.destroyed >= p.meta && !state.bossPending) { state.bossPending = true; state.bossT = 600; }
+      const pr = rampa(), calm = pr !== null && state.bossPending;   // en la espera del jefe no entra nada nuevo
+      if (pr !== null) {
+        state.levelT += dt;
+        (p.hitos || []).forEach((h, i) => { if (!state.marks[i] && pr >= h[0]) { state.marks[i] = 1; state.phaseLabel = h[2] || state.phaseLabel; announce(h[1], h[3] || '#ffd76b'); } });
+        if (state.levelT >= p.duracion && !state.bossPending) { state.bossPending = true; state.bossT = 3400; state.phaseLabel = '⚠ Alex se acerca'; announce('⚠ Una voz resuena en el vacío…', '#ff4d57'); A.boss(); }
+      }
+      if (!calm) {
+        state.spawnT += dt;
+        const rate = pr === null ? Math.max(C.spawn.baseMin, p.baseSpawn - state.level * C.spawn.perLevelReduce) : Math.round(1900 - 1250 * Math.pow(pr, 1.1));
+        const dbl = pr === null ? C.spawn.doubleChance + state.level * C.spawn.doubleChancePerLevel : 0.04 + 0.5 * pr;
+        if (state.spawnT > rate) { state.spawnT = 0; spawnEnemy(); if (Math.random() < dbl) state.spawnQueue.push(C.spawn.doubleDelay); }
+        for (let qi = state.spawnQueue.length - 1; qi >= 0; qi--) { state.spawnQueue[qi] -= dt; if (state.spawnQueue[qi] <= 0) { state.spawnQueue.splice(qi, 1); spawnEnemy(); } }
+        if (state.storm > 0) { state.storm -= dt; if (Math.random() < C.events.stormSpawnChance * k) spawnEnemy(false); }
+        state.eventT += dt;
+        if (state.eventT > state.nextEvent) { state.eventT = 0; state.nextEvent = pr === null ? C.events.nextMin + Math.random() * C.events.nextRand : 12000 - 5500 * pr + Math.random() * 3000; triggerEvent(); }
+        if (Math.random() < C.powerups.chance * k && state.powerups.length < C.powerups.maxOnScreen) spawnPowerup(randomPowerupKind());
+        if (Math.random() < C.coins.pickupChance * k) spawnPowerup('moneda');
+      }
+      if (pr === null && state.destroyed >= p.meta && !state.bossPending) { state.bossPending = true; state.bossT = 600; }
       if (state.bossPending) { state.bossT -= dt; if (state.bossT <= 0) { spawnBoss(); return; } }
     }
 
@@ -539,6 +633,7 @@ OC.Engine = (function () {
       G.bossShots(state.bossShots);
       G.enemies(state.enemies, { saga: state.saga.id, scene: p.scene, fondo: E.fondo, groundY: state.groundY, H: H });
       if (state.boss) G.boss(state.boss, E);
+      if (p.duracion && !state.boss && !state.final) G.progress(Math.min(1, state.levelT / p.duracion), Math.max(0, p.duracion - state.levelT), state.phaseLabel, state.bossPending);
       G.particles(state.particles);
       if (!(state.invuln > 0 && Math.floor(state.invuln / 80) % 2 === 0))
         G.ship(state.ship, { speed: state.speedBuff > 0, power: state.powerBuff > 0, shield: state.shield > 0 }, state.saga.vehiculo, E);
