@@ -154,7 +154,7 @@ footer{margin-top:56px;padding-top:18px;border-top:1px solid var(--line);color:v
       <b>Your progress: <span id="pN">0</span> of 28 goals</b>
       <div class="bar"><i id="pBar"></i></div>
       <button type="button" id="pReset">Reset progress</button>
-      <small>Tick each &quot;You should be able to&quot; goal once you can do it without notes. Your progress is saved in this browser.</small>
+      <small>Tick each &quot;You should be able to&quot; goal once you can do it without notes. Your progress is saved in this browser. <span id="pNube"></span></small>
     </div>
   </section>
 
@@ -269,6 +269,7 @@ footer{margin-top:56px;padding-top:18px;border-top:1px solid var(--line);color:v
 
   <footer><span>Introductory Chemistry · Study Plan</span><span><a href="../index.html" style="color:var(--mute)">El Mundo de Felipe</a> · Colegio San Agustín</span></footer>
 </div>
+<script src="../firebase/df.js"></script>
 <script>
 (function () {
   var KEY = 'plan_quimica_en';
@@ -293,13 +294,45 @@ footer{margin-top:56px;padding-top:18px;border-top:1px solid var(--line);color:v
   }
   cajas.forEach(function (c) {
     c.checked = !!marcas[c.dataset.id];
-    c.addEventListener('change', function () { if (c.checked) marcas[c.dataset.id] = 1; else delete marcas[c.dataset.id]; guardar(); pintar(); });
+    c.addEventListener('change', function () { if (c.checked) marcas[c.dataset.id] = 1; else delete marcas[c.dataset.id]; guardar(); pintar(); subir(); });
   });
   document.getElementById('pReset').addEventListener('click', function () {
     if (!confirm('Clear all progress marks?')) return;
-    marcas = {}; guardar(); cajas.forEach(function (c) { c.checked = false; }); pintar();
+    marcas = {}; guardar(); cajas.forEach(function (c) { c.checked = false; }); pintar(); subir();
   });
   pintar();
+
+  // ── Avance en la nube (si el estudiante entra con su cuenta) ──
+  var CLAVE = 'quimica-en', TXT = {'si': '☁️ Also saved to your account.', 'no': '<a href="../cuenta.html">Sign in</a> to save it to the cloud.'}, tSubir = null;
+  function aplicar() { cajas.forEach(function (c) { c.checked = !!marcas[c.dataset.id]; }); guardar(); pintar(); }
+  function subir() {
+    if (!window.DF || !DF.usuario()) return;
+    clearTimeout(tSubir);
+    tSubir = setTimeout(function () { DF.guardarProgreso(CLAVE, { marcas: marcas, total: cajas.length }).catch(function () {}); }, 1200);
+  }
+  function nube(u) {
+    var el = document.getElementById('pNube');
+    el.innerHTML = u ? TXT.si : TXT.no;
+  }
+  if (window.DF) {
+    DF.listo().then(function () {
+      DF.alCambiarUsuario(function (u) {
+        nube(u);
+        if (!u) return;
+        var kSync = KEY + '_sync_' + u.uid, yaSync = false;
+        try { yaSync = !!localStorage.getItem(kSync); } catch (e) {}
+        DF.leerProgreso(CLAVE).then(function (r) {
+          var remotas = (r && r.marcas) || {};
+          // Primera vez en este navegador: se juntan las marcas locales y las de la cuenta.
+          // Después, manda lo guardado en la cuenta.
+          marcas = yaSync ? remotas : Object.assign({}, remotas, marcas);
+          try { localStorage.setItem(kSync, '1'); } catch (e) {}
+          aplicar();
+          if (!yaSync) subir();
+        }).catch(function () {});
+      });
+    }, function () {});
+  }
 })();
 </script>
 </body>

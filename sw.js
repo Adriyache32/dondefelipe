@@ -8,7 +8,7 @@
  * Para publicar cambios a quienes ya instalaron la app,
  * sube el número de CACHE_VERSION: al activarse se borran las cachés viejas.
  */
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const CACHE_NAME = `mundo-felipe-${CACHE_VERSION}`;
 
 // Portada y piezas mínimas para abrir la app sin conexión.
@@ -56,7 +56,7 @@ function shouldHandle(request) {
   // Solo el propio sitio: Firebase, Apps Script (script.google.com),
   // CDNs y demás dominios externos van directo a la red.
   if (url.origin !== self.location.origin) return false;
-  // Solo dentro del alcance de la app (/dondefelipe/).
+  // Solo dentro del alcance de la app (la carpeta donde está sw.js: /dondefelipe/ en GitHub Pages, / en Vercel).
   if (!url.pathname.startsWith(new URL(self.registration.scope).pathname)) return false;
   if (EXCLUDED_PATHS.some(re => re.test(url.pathname))) return false;
   return request.mode === 'navigate' || url.pathname.endsWith('/') || STATIC_EXT.test(url.pathname);

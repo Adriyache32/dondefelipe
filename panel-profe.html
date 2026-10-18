@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Panel del profe · El Mundo de Felipe</title>
+<style>
+:root{
+  --bg:#0f0e17;--slab:#17151f;--slab2:#1f1c2b;--line:rgba(255,255,255,.1);
+  --ink:#f3f1ff;--ink2:#a9a4c8;--lime:#c8f55a;--rosa:#ff2e7e;--cyan:#22e3ff;
+  --pos:#5fe39a;--neg:#ff7a70;--radius:14px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+a{color:var(--lime)}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
+header.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+header.top h1{font-size:22px;margin:0;flex:1;min-width:220px}
+header.top h1 small{display:block;font-size:13px;color:var(--ink2);font-weight:400}
+.btn{border:0;border-radius:10px;padding:9px 14px;font:600 14px system-ui,sans-serif;cursor:pointer;background:var(--slab2);color:var(--ink)}
+.btn:hover{filter:brightness(1.15)}
+.btn.p{background:var(--lime);color:#14121f}
+.btn.r{background:#3a1622;color:#ffb3c7}
+.btn.sm{padding:6px 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.card{background:var(--slab);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.aviso{padding:14px 16px;border-radius:12px;background:#2a2410;color:#ffe9a6;border:1px solid #5a4a12;margin-bottom:16px}
+.aviso.err{background:#2b1414;color:#ffc2bd;border-color:#5c2020}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.tabs button{background:transparent;border:1px solid var(--line);color:var(--ink2);border-radius:999px;padding:7px 14px;font:600 14px system-ui;cursor:pointer}
+.tabs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.oculto{display:none!important}
+.barra{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+input,select,textarea{background:var(--slab2);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:14px system-ui,sans-serif}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--lime)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+.tabla-wrap{overflow:auto;max-height:70vh;border-radius:12px;border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{position:sticky;top:0;background:var(--slab2);color:var(--ink2);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px;z-index:1}
+tr.sel td{background:rgba(200,245,90,.07)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--slab2);font-size:12px;color:var(--ink2)}
+.mov h3{margin:0 0 4px;font-size:16px}
+.mov .sub{color:var(--ink2);font-size:13px;margin-bottom:12px}
+.mov h4{margin:14px 0 6px;font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--ink2)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--slab2);color:var(--ink);border-radius:10px;padding:7px 10px;font:13px system-ui;cursor:pointer;text-align:left}
+.chip b{display:block;font-size:13px}
+.chip span{font-size:12px;color:var(--neg)}
+.chip.multa span{color:#ffb86b}
+.chip.gana span{color:var(--pos)}
+.chip:hover{border-color:var(--lime)}
+.libre{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.libre input{width:100%}
+.libre .full{grid-column:1/-1}
+.lluvia{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:var(--cyan)}
+.lista-movs{max-height:340px;overflow:auto;font-size:13px}
+.lista-movs .m{display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+.lista-movs .m .t{flex:1;min-width:0}
+.lista-movs .m .t small{display:block;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+dialog{background:var(--slab);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:20px;max-width:min(520px,calc(100vw - 32px));width:100%}
+dialog::backdrop{background:rgba(0,0,0,.6)}
+dialog h3{margin:0 0 10px}
+dialog label{display:block;font-size:13px;color:var(--ink2);margin:8px 0 3px}
+dialog input,dialog select{width:100%}
+dialog .acc{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--slab);border:1px solid var(--line);border-radius:12px;padding:12px}
+.kpi b{display:block;font-size:22px}
+.kpi span{font-size:12px;color:var(--ink2)}
+.barras .f{display:grid;grid-template-columns:150px 1fr 60px;gap:8px;align-items:center;font-size:13px;margin:4px 0}
+.barras .f i{display:block;height:10px;border-radius:5px;background:var(--lime)}
+.barras .f span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+pre.prev{background:var(--slab2);padding:10px;border-radius:10px;max-height:200px;overflow:auto;font-size:12px}
+.muted{color:var(--ink2)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Panel del profe<small>Banco de Hipopesos · juegos · simuladores · estudiantes · visitas</small></h1>
+    <span id="quien" class="muted"></span>
+    <button class="btn p" id="btnEntrar">Entrar con Google</button>
+    <button class="btn oculto" id="btnSalir">Salir</button>
+    <a class="btn" href="index.html">← Sitio</a>
+  </header>
+
+  <div id="avisos"></div>
+
+  <div id="app" class="oculto">
+    <nav class="tabs" id="tabs">
+      <button data-t="banco" class="on">Banco</button>
+      <button data-t="juegos">Juegos</button>
+      <button data-t="sims">Simuladores</button>
+      <button data-t="alumnos">Estudiantes</button>
+      <button data-t="visitas">Visitas</button>
+    </nav>
+
+    <!-- ═════════ BANCO ═════════ -->
+    <section id="t-banco">
+      <div class="kpis">
+        <div class="kpi"><b id="kTotal">—</b><span>Hipopesos en circulación</span></div>
+        <div class="kpi"><b id="kCuentas">—</b><span>Cuentas activas</span></div>
+        <div class="kpi"><b id="kSel">0</b><span>Cuentas seleccionadas</span></div>
+      </div>
+      <div class="grid2">
+        <div>
+          <div class="barra">
+            <select id="fCurso"><option value="">Todos los cursos</option></select>
+            <input id="fBuscar" type="search" placeholder="Buscar nombre o N°…" style="flex:1;min-width:160px">
+            <button class="btn sm" id="btnSelTodos">Seleccionar visibles</button>
+            <button class="btn sm" id="btnSelNinguno">Quitar selección</button>
+          </div>
+          <div class="barra">
+            <button class="btn sm" id="btnNueva">+ Nueva cuenta</button>
+            <button class="btn sm" id="btnImportar">Importar desde la hoja de Google</button>
+            <button class="btn sm" id="btnExportar">Descargar respaldo CSV</button>
+            <label class="muted" style="font-size:13px"><input type="checkbox" id="fCerradas"> ver cerradas</label>
+          </div>
+          <div class="tabla-wrap">
+            <table>
+              <thead><tr><th></th><th>N°</th><th>Estudiante</th><th>Curso</th><th class="num">Saldo</th><th></th></tr></thead>
+              <tbody id="tCuentas"><tr><td colspan="6" class="muted">Cargando…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <aside class="card mov">
+          <h3>Movimiento</h3>
+          <div class="sub" id="movSub">Selecciona una o más cuentas en la tabla.</div>
+
+          <h4>Ganancias</h4>
+          <div class="chips" id="chipsGanancias"></div>
+
+          <h4>Compras</h4>
+          <div class="chips" id="chipsCompras"></div>
+          <label class="lluvia"><input type="checkbox" id="lluvia"> 🌧️ Día de lluvia (compras al 50%)</label>
+
+          <h4>Multas</h4>
+          <div class="chips" id="chipsMultas"></div>
+
+          <h4>Abono o cargo libre</h4>
+          <div class="libre">
+            <input id="mMonto" type="number" step="1000" placeholder="Monto (ej. 20000)">
+            <select id="mSigno"><option value="1">Abonar (+)</option><option value="-1">Cobrar (−)</option></select>
+            <input id="mMotivo" class="full" placeholder="Motivo (ej. Ganó el quiz de 8°)">
+            <button class="btn p full" id="btnLibre">Aplicar</button>
+          </div>
+
+          <h4>Últimos movimientos</h4>
+          <div class="lista-movs" id="listaMovs"><div class="muted">—</div></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ═════════ JUEGOS ═════════ -->
+    <section id="t-juegos" class="oculto">
+      <div class="barra">
+        <select id="jJuego"></select>
+        <select id="jCurso"><option value="">Todos los cursos</option></select>
+        <button class="btn sm" id="jCargar">Actualizar</button>
+        <button class="btn sm" id="jExportar">Descargar CSV de partidas</button>
+      </div>
+      <div class="grid2">
+        <div class="card"><h3 style="margin-top:0">Ranking (mejor marca de cada estudiante)</h3>
+          <div class="tabla-wrap"><table><thead><tr><th>#</th><th>Estudiante</th><th>Curso</th><th class="num">Puntaje</th><th>Fecha</th></tr></thead><tbody id="jRank"></tbody></table></div>
+        </div>
+        <div class="card"><h3 style="margin-top:0">Últimas partidas</h3>
+          <div class="lista-movs" id="jPartidas" style="max-height:60vh"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════ SIMULADORES ═════════ -->
+    <section id="t-sims" class="oculto">
+      <div class="barra">
+        <select id="sSim"><option value="">Todos los simuladores</option></select>
+        <select id="sCurso"><option value="">Todos los cursos</option></select>
+        <button class="btn sm" id="sCargar">Actualizar</button>
+        <button class="btn sm" id="sExportar">Descargar CSV</button>
+        <span class="muted" id="sCuenta"></span>
+      </div>
+      <div class="tabla-wrap"><table><thead><tr><th>Fecha</th><th>Estudiante</th><th>Correo</th><th>Curso</th><th>Simulador</th><th>Resultado</th></tr></thead><tbody id="sTabla"></tbody></table></div>
+    </section>
+
+    <!-- ═════════ ESTUDIANTES ═════════ -->
+    <section id="t-alumnos" class="oculto">
+      <div class="barra">
+        <input id="aBuscar" type="search" placeholder="Buscar nombre o correo…" style="flex:1;min-width:160px">
+        <button class="btn sm" id="aCargar">Actualizar</button>
+        <button class="btn sm" id="aExportar">Descargar CSV</button>
+        <span class="muted" id="aCuenta"></span>
+      </div>
+      <div class="tabla-wrap"><table><thead><tr><th>Nombre</th><th>Correo</th><th class="num">Edad</th><th>Curso</th><th>Apoderado</th><th>Actualizado</th></tr></thead><tbody id="aTabla"></tbody></table></div>
+    </section>
+
+    <!-- ═════════ VISITAS ═════════ -->
+    <section id="t-visitas" class="oculto">
+      <div class="kpis">
+        <div class="kpi"><b id="vTotal">—</b><span>Visitas totales (sesiones)</span></div>
+        <div class="kpi"><b id="vHoy">—</b><span>Hoy</span></div>
+        <div class="kpi"><b id="vPaginas">—</b><span>Páginas distintas</span></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><h3 style="margin-top:0">Páginas más visitadas</h3><div class="barras" id="vLista"></div></div>
+        <div class="card"><h3 style="margin-top:0">Últimos 30 días</h3><div class="barras" id="vDias"></div></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Diálogo: cuenta -->
+<dialog id="dCuenta">
+  <h3 id="dCuentaTit">Cuenta</h3>
+  <label>N° de cuenta</label><input id="cNumero">
+  <label>Apellido</label><input id="cApellido">
+  <label>Nombre</label><input id="cNombre">
+  <label>Curso</label><input id="cCurso" list="listaCursos">
+  <datalist id="listaCursos"></datalist>
+  <label>Estado</label><select id="cEstado"><option>Activa</option><option>Cerrada</option></select>
+  <label id="cSaldoLbl">Saldo inicial</label><input id="cSaldo" type="number" step="1000" value="0">
+  <div class="acc"><button class="btn" data-cerrar>Cancelar</button><button class="btn p" id="cGuardar">Guardar</button></div>
+</dialog>
+
+<!-- Diálogo: importar -->
+<dialog id="dImportar">
+  <h3>Importar cuentas desde la hoja de Google</h3>
+  <p class="muted" style="margin-top:0">Lee la hoja publicada como CSV (la misma que usaba la página del banco) y crea una cuenta por fila. Úsalo una vez, para el traspaso.</p>
+  <label>Enlace CSV publicado</label><input id="iUrl">
+  <div class="acc" style="justify-content:flex-start"><button class="btn" id="iLeer">Leer hoja</button></div>
+  <div id="iPrev"></div>
+  <label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" id="iReemplazar"> Si la cuenta ya existe, reemplazar sus datos y saldo</label>
+  <div class="acc"><button class="btn" data-cerrar>Cancelar</button><button class="btn p" id="iImportar" disabled>Importar</button></div>
+</dialog>
+
+<script src="firebase/df.js" data-sin-visita data-sin-aviso></script>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   CATÁLOGO DEL BANCO — edita aquí precios y multas
+   (mismos valores que la banda de precios del inicio)
+   ═══════════════════════════════════════════════════════════════ */
+const COMPRAS = [
+  { ico: '📝', nombre: 'Borrar formativa',              precio: 300000 },
+  { ico: '🏫', nombre: 'Vuelta al colegio',             precio: 100000 },
+  { ico: '✂️', nombre: 'Eliminar puntos de una prueba', precio: 100000 },
+  { ico: '📱', nombre: 'Uso de celular libre',          precio: 150000 },
+  { ico: '🍪', nombre: 'Comer',                         precio: 50000 },
+  { ico: '🎧', nombre: 'Su playlist en clases',         precio: 50000 }
+];
+const GANANCIAS = [
+  { ico: '✍️', nombre: 'Trabajo en clases',           monto: 40000 },
+  { ico: '⭐', nombre: 'Trabajo destacado en clases', monto: 50000 }
+];
+const MULTAS = [
+  { ico: '🍔', nombre: 'Comer sin autorización', monto: 100000 },
+  { ico: '🚫', nombre: 'Insultar o agredir',     monto: 300000 }
+];
+// Juegos que guardan puntaje (id usado en Firebase → nombre visible)
+const JUEGOS = { 'odisea': 'Odisea', 'operacion-barrera': 'Operación Barrera' };
+// Enlace de la hoja actual (para la importación inicial)
+const CSV_HOJA = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQnbt0U0JBO566aDO1wjINscn_JchLt5T8LbBWX9Yj4VPVnXRVcDEWq2InSkalYyg/pub?output=csv&gid=1415520168';
+
+/* ═══════════════════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const fmt = n => new Intl.NumberFormat('es-CL').format(Math.round(n || 0));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fecha = ts => { try { const d = ts && ts.toDate ? ts.toDate() : (ts ? new Date(ts) : null); return d ? d.toLocaleString('es-CL', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'; } catch (e) { return '—'; } };
+function toast(msg) { document.querySelectorAll('.toast').forEach(x => x.remove()); const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3200); }
+function aviso(html, err) { $('avisos').innerHTML = html ? `<div class="aviso${err ? ' err' : ''}">${html}</div>` : ''; }
+function descargarCSV(nombre, filas) {
+  const txt = filas.map(f => f.map(v => { const s = String(v == null ? '' : v); return /[",;\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + txt], { type: 'text/csv;charset=utf-8' }));
+  a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+}
+
+let FB = null, cuentas = [], seleccion = new Set(), movs = [], desuscribir = [];
+
+/* ---------- sesión ---------- */
+$('btnEntrar').onclick = () => DF.entrar().catch(e => aviso(esc(e.message), true));
+$('btnSalir').onclick = () => DF.salir();
+
+DF.listo().then(fb => {
+  FB = fb;
+  DF.alCambiarUsuario(u => {
+    desuscribir.forEach(f => f()); desuscribir = [];
+    $('btnEntrar').classList.toggle('oculto', !!u);
+    $('btnSalir').classList.toggle('oculto', !u);
+    $('quien').textContent = u ? u.email : '';
+    if (!u) { $('app').classList.add('oculto'); aviso('Entra con tu cuenta de profe para usar el panel.'); return; }
+    if (!DF.esProfe(u)) { $('app').classList.add('oculto'); aviso('La cuenta <b>' + esc(u.email) + '</b> no tiene permiso de profe. Agrégala en <code>firebase/config.js</code> y en las reglas de Firestore.', true); return; }
+    aviso(''); $('app').classList.remove('oculto');
+    iniciarBanco();
+  });
+}).catch(e => {
+  aviso('Firebase todavía no está conectado: ' + esc(e.message) + '<br>Completa <code>firebase/config.js</code> con los datos de tu proyecto.', true);
+  $('btnEntrar').disabled = true;
+});
+
+/* ---------- pestañas ---------- */
+$('tabs').onclick = ev => {
+  const t = ev.target.dataset.t; if (!t) return;
+  [...$('tabs').children].forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  ['banco', 'juegos', 'sims', 'alumnos', 'visitas'].forEach(x => $('t-' + x).classList.toggle('oculto', x !== t));
+  if (t === 'alumnos') cargarAlumnos();
+  if (t === 'juegos') cargarJuegos();
+  if (t === 'sims') cargarSims();
+  if (t === 'visitas') cargarVisitas();
+};
+
+/* ═════════ BANCO ═════════ */
+function iniciarBanco() {
+  const { F, db } = FB;
+  desuscribir.push(F.onSnapshot(F.collection(db, 'banco_cuentas'), s => {
+    cuentas = s.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    cuentas.sort((a, b) => String(a.curso || '').localeCompare(String(b.curso || ''), 'es') || String(a.apellido || '').localeCompare(String(b.apellido || ''), 'es'));
+    for (const id of [...seleccion]) if (!cuentas.find(c => c.id === id)) seleccion.delete(id);
+    llenarCursos(); pintarCuentas();
+    aviso(cuentas.length ? '' : 'El banco en Firebase está vacío. Usa <b>Importar desde la hoja de Google</b> para traer las cuentas actuales. Mientras esté vacío, la página pública del banco sigue leyendo la hoja.');
+  }, e => aviso('No se pudieron leer las cuentas: ' + esc(e.message), true)));
+  desuscribir.push(F.onSnapshot(F.query(F.collection(db, 'banco_movs'), F.orderBy('fecha', 'desc'), F.limit(40)), s => {
+    movs = s.docs.map(d => Object.assign({ id: d.id }, d.data())); pintarMovs();
+  }, e => console.info(e)));
+}
+function cursosDe(lista) { return [...new Set(lista.map(c => (c.curso || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es')); }
+function llenarCursos() {
+  const cs = cursosDe(cuentas), sel = $('fCurso'), v = sel.value;
+  sel.innerHTML = '<option value="">Todos los cursos</option>' + cs.map(c => `<option${c === v ? ' selected' : ''}>${esc(c)}</option>`).join('');
+  $('listaCursos').innerHTML = cs.concat((window.DF_CONFIG && DF_CONFIG.cursos) || []).map(c => `<option value="${esc(c)}">`).join('');
+}
+function visibles() {
+  const cur = $('fCurso').value, q = $('fBuscar').value.trim().toLowerCase(), cerr = $('fCerradas').checked;
+  return cuentas.filter(c => (cerr || c.estado !== 'Cerrada') && (!cur || (c.curso || '').trim() === cur) &&
+    (!q || `${c.numero} ${c.apellido} ${c.nombre}`.toLowerCase().includes(q)));
+}
+function pintarCuentas() {
+  const v = visibles();
+  const act = cuentas.filter(c => c.estado !== 'Cerrada');
+  $('kTotal').textContent = fmt(act.reduce((s, c) => s + (c.saldo || 0), 0)) + ' ₣';
+  $('kCuentas').textContent = act.length;
+  $('kSel').textContent = seleccion.size;
+  $('tCuentas').innerHTML = v.length ? v.map(c => `
+    <tr class="${seleccion.has(c.id) ? 'sel' : ''}" data-id="${esc(c.id)}">
+      <td><input type="checkbox" data-sel ${seleccion.has(c.id) ? 'checked' : ''} aria-label="Seleccionar"></td>
+      <td class="muted">${esc(c.numero)}</td>
+      <td><b>${esc(c.apellido)}</b> ${esc(c.nombre)}${c.estado === 'Cerrada' ? ' <span class="pill">cerrada</span>' : ''}</td>
+      <td><span class="pill">${esc(c.curso || '—')}</span></td>
+      <td class="num ${(c.saldo || 0) < 0 ? 'neg' : ''}">${fmt(c.saldo)} ₣</td>
+      <td><button class="btn sm" data-editar>Editar</button></td>
+    </tr>`).join('') : '<tr><td colspan="6" class="muted">Sin cuentas que mostrar.</td></tr>';
+  const n = seleccion.size;
+  $('movSub').innerHTML = n ? `<b>${n}</b> cuenta${n > 1 ? 's' : ''} seleccionada${n > 1 ? 's' : ''}: ${esc([...seleccion].slice(0, 4).map(id => { const c = cuentas.find(x => x.id === id); return c ? c.nombre + ' ' + (c.apellido || '').charAt(0) + '.' : id; }).join(', '))}${n > 4 ? '…' : ''}` : 'Selecciona una o más cuentas en la tabla.';
+}
+$('fCurso').onchange = $('fBuscar').oninput = $('fCerradas').onchange = pintarCuentas;
+$('btnSelTodos').onclick = () => { visibles().forEach(c => seleccion.add(c.id)); pintarCuentas(); };
+$('btnSelNinguno').onclick = () => { seleccion.clear(); pintarCuentas(); };
+$('tCuentas').onclick = ev => {
+  const tr = ev.target.closest('tr[data-id]'); if (!tr) return;
+  const id = tr.dataset.id;
+  if (ev.target.hasAttribute('data-editar')) { abrirCuenta(cuentas.find(c => c.id === id)); return; }
+  if (seleccion.has(id)) seleccion.delete(id); else seleccion.add(id);
+  pintarCuentas();
+};
+
+/* catálogo */
+function pintarCatalogo() {
+  const ll = $('lluvia').checked;
+  $('chipsCompras').innerHTML = COMPRAS.map((c, i) => `<button class="chip" data-compra="${i}"><b>${c.ico} ${esc(c.nombre)}</b><span>−$${fmt(ll ? c.precio / 2 : c.precio)}</span></button>`).join('');
+  $('chipsGanancias').innerHTML = GANANCIAS.map((g, i) => `<button class="chip gana" data-gana="${i}"><b>${g.ico} ${esc(g.nombre)}</b><span>+$${fmt(g.monto)}</span></button>`).join('');
+  $('chipsMultas').innerHTML = MULTAS.map((m, i) => `<button class="chip multa" data-multa="${i}"><b>${m.ico} ${esc(m.nombre)}</b><span>−$${fmt(m.monto)}</span></button>`).join('');
+}
+$('lluvia').onchange = pintarCatalogo;
+pintarCatalogo();
+$('chipsCompras').onclick = ev => {
+  const b = ev.target.closest('[data-compra]'); if (!b) return;
+  const c = COMPRAS[+b.dataset.compra], ll = $('lluvia').checked;
+  aplicar(-(ll ? c.precio / 2 : c.precio), 'Compra: ' + c.nombre + (ll ? ' (día de lluvia 50%)' : ''), 'compra');
+};
+$('chipsGanancias').onclick = ev => {
+  const b = ev.target.closest('[data-gana]'); if (!b) return;
+  const g = GANANCIAS[+b.dataset.gana];
+  aplicar(g.monto, g.nombre, 'abono');
+};
+$('chipsMultas').onclick = ev => {
+  const b = ev.target.closest('[data-multa]'); if (!b) return;
+  const m = MULTAS[+b.dataset.multa];
+  aplicar(-m.monto, 'Multa: ' + m.nombre, 'multa');
+};
+$('btnLibre').onclick = () => {
+  const monto = Math.round(Math.abs(+$('mMonto').value || 0)) * (+$('mSigno').value);
+  const motivo = $('mMotivo').value.trim();
+  if (!monto) { $('mMonto').focus(); return; }
+  if (!motivo) { $('mMotivo').focus(); return; }
+  aplicar(monto, motivo, monto > 0 ? 'abono' : 'cargo').then(ok => { if (ok) { $('mMonto').value = ''; $('mMotivo').value = ''; } });
+};
+
+async function aplicar(monto, motivo, tipo) {
+  const ids = [...seleccion];
+  if (!ids.length) { toast('Primero selecciona cuentas en la tabla'); return false; }
+  const lista = ids.map(id => cuentas.find(c => c.id === id)).filter(Boolean);
+  let txt = `${monto > 0 ? 'Abonar' : 'Cobrar'} $${fmt(Math.abs(monto))} a ${lista.length} cuenta${lista.length > 1 ? 's' : ''}\nMotivo: ${motivo}`;
+  if (tipo === 'compra') {
+    const cortos = lista.filter(c => (c.saldo || 0) + monto < 0);
+    if (cortos.length) txt += `\n\n⚠ Quedan en negativo: ${cortos.map(c => c.nombre + ' ' + (c.apellido || '')).join(', ')}`;
+  }
+  if (!confirm(txt)) return false;
+  const { F, db } = FB, profe = (DF.usuario() || {}).email || '';
+  let ok = 0;
+  for (const c of lista) {
+    try {
+      await F.runTransaction(db, async tx => {
+        const ref = F.doc(db, 'banco_cuentas', c.id);
+        const s = await tx.get(ref);
+        if (!s.exists()) throw new Error('la cuenta ya no existe');
+        const nuevo = (s.data().saldo || 0) + monto;
+        tx.update(ref, { saldo: nuevo, actualizado: F.serverTimestamp() });
+        tx.set(F.doc(F.collection(db, 'banco_movs')), {
+          cuenta: c.id, numero: c.numero || '', nombre: `${c.nombre || ''} ${c.apellido || ''}`.trim(), curso: c.curso || '',
+          monto, motivo, tipo, saldoDespues: nuevo, profe, fecha: F.serverTimestamp()
+        });
+      });
+      ok++;
+    } catch (e) { toast(`Error con ${c.nombre}: ${e.message}`); }
+  }
+  toast(`✓ Movimiento aplicado a ${ok} de ${lista.length}`);
+  return ok > 0;
+}
+
+function pintarMovs() {
+  $('listaMovs').innerHTML = movs.length ? movs.map(m => `
+    <div class="m"><div class="t"><b class="${m.monto < 0 ? 'neg' : 'pos'}">${m.monto < 0 ? '−' : '+'}$${fmt(Math.abs(m.monto))}</b> ${esc(m.nombre)}
+      <small>${esc(m.motivo)} · ${fecha(m.fecha)}</small></div>
+      ${m.tipo === 'reverso' || m.tipo === 'importacion' ? '' : `<button class="btn sm" data-rev="${esc(m.id)}" title="Crear el movimiento contrario">Revertir</button>`}</div>`).join('')
+    : '<div class="muted">Aún no hay movimientos.</div>';
+}
+$('listaMovs').onclick = async ev => {
+  const id = ev.target.dataset && ev.target.dataset.rev; if (!id) return;
+  const m = movs.find(x => x.id === id); if (!m) return;
+  if (movs.some(x => x.tipo === 'reverso' && x.revierte === id)) { toast('Ese movimiento ya fue revertido'); return; }
+  if (!confirm(`Revertir ${m.monto < 0 ? '−' : '+'}$${fmt(Math.abs(m.monto))} de ${m.nombre}?\n(${m.motivo})`)) return;
+  const { F, db } = FB;
+  try {
+    await F.runTransaction(db, async tx => {
+      const ref = F.doc(db, 'banco_cuentas', m.cuenta);
+      const s = await tx.get(ref);
+      if (!s.exists()) throw new Error('la cuenta ya no existe');
+      const nuevo = (s.data().saldo || 0) - m.monto;
+      tx.update(ref, { saldo: nuevo, actualizado: F.serverTimestamp() });
+      tx.set(F.doc(F.collection(db, 'banco_movs')), {
+        cuenta: m.cuenta, numero: m.numero || '', nombre: m.nombre, curso: m.curso || '', monto: -m.monto,
+        motivo: 'Reverso: ' + m.motivo, tipo: 'reverso', revierte: id, saldoDespues: nuevo,
+        profe: (DF.usuario() || {}).email || '', fecha: F.serverTimestamp()
+      });
+    });
+    toast('✓ Revertido');
+  } catch (e) { toast('No se pudo revertir: ' + e.message); }
+};
+
+/* cuenta nueva / editar */
+let editando = null;
+function abrirCuenta(c) {
+  editando = c || null;
+  $('dCuentaTit').textContent = c ? 'Editar cuenta' : 'Nueva cuenta';
+  const sig = Math.max(0, ...cuentas.map(x => parseInt(x.numero, 10) || 0)) + 1;
+  $('cNumero').value = c ? (c.numero || '') : String(sig);
+  $('cNumero').disabled = !!c;
+  $('cApellido').value = c ? (c.apellido || '') : '';
+  $('cNombre').value = c ? (c.nombre || '') : '';
+  $('cCurso').value = c ? (c.curso || '') : ($('fCurso').value || '');
+  $('cEstado').value = c ? (c.estado || 'Activa') : 'Activa';
+  $('cSaldo').value = '0';
+  $('cSaldo').classList.toggle('oculto', !!c); $('cSaldoLbl').classList.toggle('oculto', !!c);
+  $('dCuenta').showModal();
+}
+$('btnNueva').onclick = () => abrirCuenta(null);
+$('cGuardar').onclick = async () => {
+  const { F, db } = FB;
+  const datos = { apellido: $('cApellido').value.trim(), nombre: $('cNombre').value.trim(), curso: $('cCurso').value.trim(), estado: $('cEstado').value, actualizado: F.serverTimestamp() };
+  if (!datos.nombre && !datos.apellido) { $('cNombre').focus(); return; }
+  try {
+    if (editando) {
+      await F.updateDoc(F.doc(db, 'banco_cuentas', editando.id), datos);
+    } else {
+      const numero = $('cNumero').value.trim();
+      const id = DF.idSeguro(numero || (datos.apellido + '-' + datos.nombre));
+      if (cuentas.find(c => c.id === id)) { toast('Ya existe una cuenta con ese número'); return; }
+      const saldo = Math.round(+$('cSaldo').value || 0);
+      const batch = F.writeBatch(db);
+      batch.set(F.doc(db, 'banco_cuentas', id), Object.assign({ numero, saldo, extra: {}, creada: F.serverTimestamp() }, datos));
+      if (saldo) batch.set(F.doc(F.collection(db, 'banco_movs')), { cuenta: id, numero, nombre: `${datos.nombre} ${datos.apellido}`.trim(), curso: datos.curso, monto: saldo, motivo: 'Saldo inicial', tipo: 'abono', saldoDespues: saldo, profe: (DF.usuario() || {}).email || '', fecha: F.serverTimestamp() });
+      await batch.commit();
+    }
+    $('dCuenta').close(); toast('✓ Cuenta guardada');
+  } catch (e) { toast('Error: ' + e.message); }
+};
+document.querySelectorAll('[data-cerrar]').forEach(b => b.onclick = () => b.closest('dialog').close());
+
+/* exportar */
+$('btnExportar').onclick = () => {
+  descargarCSV('banco-hipopesos-' + DF.hoy() + '.csv', [['N° cuenta', 'Apellido', 'Nombre', 'Curso', 'Saldo', 'Estado']]
+    .concat(cuentas.map(c => [c.numero, c.apellido, c.nombre, c.curso, c.saldo, c.estado])));
+};
+
+/* importar desde la hoja */
+function parseCSV(text) {
+  const rows = [];
+  for (const line of text.split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    const cols = []; let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      if (line[i] === '"') { inQ = !inQ; continue; }
+      if (line[i] === ',' && !inQ) { cols.push(cur.trim()); cur = ''; } else cur += line[i];
+    }
+    cols.push(cur.trim()); rows.push(cols);
+  }
+  return rows;
+}
+const numCL = s => parseFloat(String(s || '').replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.')) || 0;
+let paraImportar = [];
+$('btnImportar').onclick = () => { $('iUrl').value = CSV_HOJA; $('iPrev').innerHTML = ''; $('iImportar').disabled = true; $('dImportar').showModal(); };
+$('iLeer').onclick = async () => {
+  $('iPrev').innerHTML = '<p class="muted">Leyendo…</p>';
+  try {
+    const r = await fetch($('iUrl').value.trim(), { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const raw = parseCSV(await r.text());
+    // Igual que la página del banco: fila 0 = título, fila 1 = encabezados, desde la fila 2 datos.
+    // Columnas: 0 N° cuenta · 2 apellido · 3 nombre · 4 curso · 6 saldo · 7 estado. Las demás se guardan en "extra".
+    const enc = raw[1] || [];
+    const datos = raw.slice(2).filter(r => r[0] && r[0].trim() && !r[0].toLowerCase().includes('total'));
+    const usados = new Set();
+    paraImportar = datos.map((r, i) => {
+      const extra = {};
+      r.forEach((v, j) => { if (![0, 2, 3, 4, 6, 7].includes(j) && v) extra[(enc[j] || 'col' + j).replace(/[.~*/\[\]]/g, ' ').trim() || 'col' + j] = v; });
+      let id = DF.idSeguro(r[0]); if (usados.has(id)) id = id + '-' + i; usados.add(id);
+      return { id, numero: r[0], apellido: r[2] || '', nombre: r[3] || '', curso: (r[4] || '').trim(), saldo: Math.round(numCL(r[6])), estado: r[7] || 'Activa', extra };
+    });
+    const total = paraImportar.filter(c => c.estado === 'Activa').reduce((s, c) => s + c.saldo, 0);
+    $('iPrev').innerHTML = `<p><b>${paraImportar.length}</b> cuentas · ${fmt(total)} ₣ en cuentas activas. Encabezados: <span class="muted">${esc(enc.join(' | '))}</span></p>
+      <pre class="prev">${esc(paraImportar.slice(0, 8).map(c => `${c.numero}  ${c.apellido} ${c.nombre}  ·  ${c.curso}  ·  ${fmt(c.saldo)} ₣  ·  ${c.estado}`).join('\n'))}${paraImportar.length > 8 ? '\n…' : ''}</pre>`;
+    $('iImportar').disabled = !paraImportar.length;
+  } catch (e) { $('iPrev').innerHTML = `<p class="neg">No se pudo leer: ${esc(e.message)}</p>`; }
+};
+$('iImportar').onclick = async () => {
+  const { F, db } = FB, reemplazar = $('iReemplazar').checked, profe = (DF.usuario() || {}).email || '';
+  const existentes = new Set(cuentas.map(c => c.id));
+  const lista = paraImportar.filter(c => reemplazar || !existentes.has(c.id));
+  if (!lista.length) { toast('Todas esas cuentas ya existen (marca "reemplazar" si quieres sobrescribirlas)'); return; }
+  if (!confirm(`Importar ${lista.length} cuentas al banco en Firebase?`)) return;
+  $('iImportar').disabled = true;
+  try {
+    for (let i = 0; i < lista.length; i += 200) {           // 2 escrituras por cuenta, máx. 500 por lote
+      const b = F.writeBatch(db);
+      lista.slice(i, i + 200).forEach(c => {
+        b.set(F.doc(db, 'banco_cuentas', c.id), { numero: c.numero, apellido: c.apellido, nombre: c.nombre, curso: c.curso, saldo: c.saldo, estado: c.estado, extra: c.extra, creada: F.serverTimestamp(), actualizado: F.serverTimestamp() });
+        b.set(F.doc(F.collection(db, 'banco_movs')), { cuenta: c.id, numero: c.numero, nombre: `${c.nombre} ${c.apellido}`.trim(), curso: c.curso, monto: c.saldo, motivo: 'Saldo importado desde la hoja de Google', tipo: 'importacion', saldoDespues: c.saldo, profe, fecha: F.serverTimestamp() });
+      });
+      await b.commit();
+    }
+    $('dImportar').close(); toast(`✓ ${lista.length} cuentas importadas`);
+  } catch (e) { toast('Error al importar: ' + e.message); $('iImportar').disabled = false; }
+};
+
+/* ═════════ JUEGOS ═════════ */
+let partidas = [];
+$('jJuego').innerHTML = Object.entries(JUEGOS).map(([id, n]) => `<option value="${id}">${esc(n)}</option>`).join('');
+$('jCargar').onclick = cargarJuegos;
+$('jJuego').onchange = $('jCurso').onchange = cargarJuegos;
+async function cargarJuegos() {
+  const { F, db } = FB, j = $('jJuego').value, cur = $('jCurso').value;
+  try {
+    const [rk, pt] = await Promise.all([
+      F.getDocs(F.query(F.collection(db, 'rankings', j, 'mejores'), F.orderBy('puntaje', 'desc'), F.limit(200))),
+      F.getDocs(F.query(F.collection(db, 'puntajes'), F.orderBy('fecha', 'desc'), F.limit(300)))
+    ]);
+    const rank = rk.docs.map(d => d.data());
+    partidas = pt.docs.map(d => d.data());
+    const cs = cursosDe(rank.concat(partidas));
+    $('jCurso').innerHTML = '<option value="">Todos los cursos</option>' + cs.map(c => `<option${c === cur ? ' selected' : ''}>${esc(c)}</option>`).join('');
+    const r2 = rank.filter(r => !cur || r.curso === cur);
+    $('jRank').innerHTML = r2.length ? r2.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.nombre)}</td><td><span class="pill">${esc(r.curso || '—')}</span></td><td class="num">${fmt(r.puntaje)}</td><td class="muted">${fecha(r.fecha)}</td></tr>`).join('') : '<tr><td colspan="5" class="muted">Sin puntajes todavía.</td></tr>';
+    const p2 = partidas.filter(p => p.juego === j && (!cur || p.curso === cur));
+    $('jPartidas').innerHTML = p2.length ? p2.map(p => `<div class="m"><div class="t"><b>${fmt(p.puntaje)}</b> ${esc(p.nombre)} <span class="pill">${esc(p.curso || '—')}</span><small>${esc(p.email)} · ${fecha(p.fecha)}</small></div></div>`).join('') : '<div class="muted">Sin partidas recientes.</div>';
+  } catch (e) { toast('Error: ' + e.message); }
+}
+$('jExportar').onclick = () => {
+  const j = $('jJuego').value;
+  descargarCSV(`partidas-${j}-${DF.hoy()}.csv`, [['Fecha', 'Juego', 'Nombre', 'Correo', 'Curso', 'Puntaje', 'Detalle']]
+    .concat(partidas.filter(p => p.juego === j).map(p => [fecha(p.fecha), p.juego, p.nombre, p.email, p.curso, p.puntaje, JSON.stringify(p.extra || {})])));
+};
+
+/* ═════════ SIMULADORES ═════════ */
+let resultados = [];
+const resumen = d => Object.entries(d || {}).map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`).join(' · ');
+$('sCargar').onclick = cargarSims;
+$('sSim').onchange = $('sCurso').onchange = pintarSims;
+async function cargarSims() {
+  const { F, db } = FB;
+  try {
+    const s = await F.getDocs(F.query(F.collection(db, 'resultados'), F.orderBy('fecha', 'desc'), F.limit(500)));
+    resultados = s.docs.map(d => d.data());
+    const sims = [...new Set(resultados.map(r => r.sim))].sort(), vs = $('sSim').value, vc = $('sCurso').value;
+    $('sSim').innerHTML = '<option value="">Todos los simuladores</option>' + sims.map(x => `<option${x === vs ? ' selected' : ''}>${esc(x)}</option>`).join('');
+    $('sCurso').innerHTML = '<option value="">Todos los cursos</option>' + cursosDe(resultados).map(x => `<option${x === vc ? ' selected' : ''}>${esc(x)}</option>`).join('');
+    pintarSims();
+  } catch (e) { toast('Error: ' + e.message); }
+}
+function simsFiltrados() { const vs = $('sSim').value, vc = $('sCurso').value; return resultados.filter(r => (!vs || r.sim === vs) && (!vc || r.curso === vc)); }
+function pintarSims() {
+  const l = simsFiltrados();
+  $('sCuenta').textContent = l.length + ' resultados (últimos 500)';
+  $('sTabla').innerHTML = l.length ? l.map(r => `<tr><td class="muted">${fecha(r.fecha)}</td><td>${esc(r.nombre)}</td><td class="muted">${esc(r.email)}</td><td><span class="pill">${esc(r.curso || '—')}</span></td><td>${esc(r.sim)}</td><td style="white-space:normal;min-width:260px">${esc(resumen(r.datos))}</td></tr>`).join('') : '<tr><td colspan="6" class="muted">Sin resultados todavía.</td></tr>';
+}
+$('sExportar').onclick = () => {
+  descargarCSV(`resultados-simuladores-${DF.hoy()}.csv`, [['Fecha', 'Simulador', 'Nombre', 'Correo', 'Curso', 'Resultado']]
+    .concat(simsFiltrados().map(r => [fecha(r.fecha), r.sim, r.nombre, r.email, r.curso, resumen(r.datos)])));
+};
+
+/* ═════════ ESTUDIANTES ═════════ */
+let alumnos = [];
+$('aCargar').onclick = cargarAlumnos;
+$('aBuscar').oninput = pintarAlumnos;
+async function cargarAlumnos() {
+  const { F, db } = FB;
+  try {
+    const s = await F.getDocs(F.collection(db, 'alumnos'));
+    alumnos = s.docs.map(d => Object.assign({ uid: d.id }, d.data())).sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es'));
+    pintarAlumnos();
+  } catch (e) { toast('Error: ' + e.message); }
+}
+function alumnosFiltrados() { const q = $('aBuscar').value.trim().toLowerCase(); return alumnos.filter(a => !q || `${a.nombre} ${a.email}`.toLowerCase().includes(q)); }
+function pintarAlumnos() {
+  const l = alumnosFiltrados();
+  $('aCuenta').textContent = l.length + ' estudiantes con cuenta';
+  $('aTabla').innerHTML = l.length ? l.map(a => `<tr><td>${esc(a.nombre)}</td><td class="muted">${esc(a.email)}</td><td class="num">${esc(a.edad || '—')}</td><td>${esc(a.curso || '—')}</td><td>${a.apoderado ? 'Sí (menor de ' + (window.DF_CONFIG && DF_CONFIG.edadMinimaSinApoderado || 14) + ')' : '—'}</td><td class="muted">${fecha(a.actualizado)}</td></tr>`).join('') : '<tr><td colspan="6" class="muted">Nadie ha creado su cuenta todavía.</td></tr>';
+}
+$('aExportar').onclick = () => {
+  descargarCSV(`estudiantes-${DF.hoy()}.csv`, [['Nombre', 'Correo', 'Edad', 'Curso', 'Apoderado de acuerdo', 'Actualizado']]
+    .concat(alumnosFiltrados().map(a => [a.nombre, a.email, a.edad, a.curso, a.apoderado ? 'Sí' : '', fecha(a.actualizado)])));
+};
+
+/* ═════════ VISITAS ═════════ */
+async function cargarVisitas() {
+  const { F, db } = FB;
+  try {
+    const [pg, ds] = await Promise.all([
+      F.getDocs(F.collection(db, 'visitas')),
+      F.getDocs(F.query(F.collection(db, 'visitas_dias'), F.orderBy(F.documentId(), 'desc'), F.limit(30)))
+    ]);
+    const paginas = pg.docs.map(d => ({ p: d.id.replace(/~/g, '/'), n: d.data().n || 0 })).sort((a, b) => b.n - a.n);
+    const dias = ds.docs.map(d => ({ d: d.id, n: d.data().n || 0 })).reverse();
+    const hoy = dias.find(x => x.d === DF.hoy());
+    $('vTotal').textContent = fmt(dias.length ? paginas.reduce((s, x) => s + (x.p.includes('#') ? 0 : x.n), 0) : 0);
+    $('vHoy').textContent = fmt(hoy ? hoy.n : 0);
+    $('vPaginas').textContent = paginas.length;
+    const barras = (l, k) => { const mx = Math.max(1, ...l.map(x => x.n)); return l.map(x => `<div class="f"><span title="${esc(x[k])}">${esc(x[k])}</span><i style="width:${Math.max(2, x.n / mx * 100)}%"></i><span class="num">${fmt(x.n)}</span></div>`).join('') || '<div class="muted">Sin datos todavía.</div>'; };
+    $('vLista').innerHTML = barras(paginas.slice(0, 40), 'p');
+    $('vDias').innerHTML = barras(dias, 'd');
+  } catch (e) { toast('Error: ' + e.message); }
+}
+</script>
+</body>
+</html>

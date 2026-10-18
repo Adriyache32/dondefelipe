@@ -269,6 +269,7 @@ th{color:var(--muted);font-weight:700;font-size:12px}
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../../firebase/df.js"></script>
 <script>
 /* ===== MOTOR FÍSICO (sin DOM) ===== */
 const SIG = 5.670374e-8;
@@ -516,7 +517,23 @@ function award(key, n, msg) {
   $('#walletN').textContent = store.total;
   toast('<b>+' + n + ' 🪙</b> ' + msg);
   renderExps();
+  guardarAvanceDF(msg);
   return true;
+}
+// Avance en Firebase (firebase/df.js): espera unos segundos para juntar logros seguidos.
+let _dfTimer = null;
+function guardarAvanceDF(ultimo) {
+  if (!window.DF) return;
+  clearTimeout(_dfTimer);
+  _dfTimer = setTimeout(() => {
+    try {
+      DF.ofrecer({
+        tipo: 'resultado', sim: 'equilibrio', titulo: 'Equilibrio térmico',
+        texto: store.total + ' monedas · ' + Object.keys(store.keys).length + ' logros',
+        datos: { monedas: store.total, logros: Object.keys(store.keys).length, ultimo: String(ultimo).replace(/<[^>]*>/g, '') }
+      });
+    } catch (e) {}
+  }, 5000);
 }
 const ach = (k, msg) => { const e = EXPS.find(x => x.key === k); return award('ach:' + k, e.n, msg); };
 

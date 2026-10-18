@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Banco Felipeso</title>
+<title>Banco Hipopesos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -472,7 +472,7 @@ tbody tr:hover td { background: var(--brand-soft); }
   <header class="cabecera">
     <div class="sello-corona" aria-hidden="true">₣</div>
     <div class="marca">
-      <div class="banco-titulo">Banco Felipeso</div>
+      <div class="banco-titulo">Banco Hipopesos</div>
       <div class="banco-subtitulo">Colegio San Agustín · Villa Alemana</div>
     </div>
     <button type="button" class="estado-live" onclick="actualizar()" title="Actualizar ahora">
@@ -503,7 +503,7 @@ tbody tr:hover td { background: var(--brand-soft); }
         <div class="chip" aria-hidden="true"></div>
         <div class="kpi-rotulo">Dinero en circulación</div>
         <div class="kpi-valor oro" id="kpi-total">—</div>
-        <div class="kpi-pie">Suma de los Felipesos (₣) de todas las cuentas activas</div>
+        <div class="kpi-pie">Suma de los Hipopesos (₣) de todas las cuentas activas</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-rotulo">Cuentas activas</div>
@@ -602,7 +602,7 @@ tbody tr:hover td { background: var(--brand-soft); }
         </details>
         <details>
           <summary>Dinero en circulación</summary>
-          <p>La suma de los saldos de <strong>todas</strong> las cuentas. Si el banco emite más Felipesos, este número sube.</p>
+          <p>La suma de los saldos de <strong>todas</strong> las cuentas. Si el banco emite más Hipopesos, este número sube.</p>
         </details>
         <details>
           <summary>Promedio</summary>
@@ -618,7 +618,7 @@ tbody tr:hover td { background: var(--brand-soft); }
         </details>
         <details>
           <summary>Saldo negativo</summary>
-          <p>Aparece en <strong style="color:var(--neg)">rojo</strong>: significa que la cuenta debe Felipesos al banco.</p>
+          <p>Aparece en <strong style="color:var(--neg)">rojo</strong>: significa que la cuenta debe Hipopesos al banco.</p>
         </details>
       </div>
     </section>
@@ -628,12 +628,13 @@ tbody tr:hover td { background: var(--brand-soft); }
   <footer class="pie">
     <div class="pie-texto">
       Última consulta: <span id="ultimaHora">—</span><br>
-      Refrescado cada XXX · Banco Felipeso © <span id="anio"></span>
+      Refrescado cada XXX · Banco Hipopesos © <span id="anio"></span>
     </div>
   </footer>
 
 </div><!-- /pergamino -->
 
+<script src="firebase/df.js"></script>
 <script>
 const BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQnbt0U0JBO566aDO1wjINscn_JchLt5T8LbBWX9Yj4VPVnXRVcDEWq2InSkalYyg/pub';
 const GID_CUENTAS = 1415520168;
@@ -781,14 +782,32 @@ function renderTabla(cuentas) {
   }).join('');
 }
 
+/* ── Fuente de datos: Firebase (en vivo) y, si está vacío o no conecta, la hoja de Google ── */
+let cacheFB = null;
+function iniciarFirebase() {
+  if (!window.DF) return;
+  DF.listo().then(fb => {
+    fb.F.onSnapshot(fb.F.collection(fb.db, 'banco_cuentas'), s => {
+      if (s.empty) { cacheFB = null; return; }
+      // Mismo formato de filas que la hoja: [N°, -, apellido, nombre, curso, -, saldo, estado]
+      cacheFB = s.docs.map(d => { const x = d.data(); return [x.numero || d.id, '', x.apellido || '', x.nombre || '', x.curso || '', '', String(Math.round(x.saldo || 0)), x.estado || 'Activa']; });
+      actualizar();
+    }, e => { console.info('[banco] Firebase no disponible:', e.message); cacheFB = null; });
+  }).catch(() => {});
+}
+async function obtenerCuentas() {
+  if (cacheFB) return cacheFB;
+  const raw = await fetchCSV(csvUrl());
+  // fila 0 = título del banco, fila 1 = encabezados, desde fila 2 datos
+  return raw.slice(2).filter(r => r[0] && !r[0].toLowerCase().includes('total') && r[0].trim() !== '');
+}
+
 async function actualizar() {
   const dot  = document.getElementById('liveDot');
   const txt  = document.getElementById('liveText');
   const err  = document.getElementById('mensajeError');
   try {
-    const raw = await fetchCSV(csvUrl());
-    // fila 0 = título del banco, fila 1 = encabezados, desde fila 2 datos
-    datosCuentas = raw.slice(2).filter(r => r[0] && !r[0].toLowerCase().includes('total') && r[0].trim() !== '');
+    datosCuentas = await obtenerCuentas();
 
     const cursos = [...new Set(datosCuentas.map(r=>(r[4]||'').trim()).filter(Boolean))].sort();
     if (JSON.stringify(cursos) !== JSON.stringify(cursosDisponibles)) {
@@ -820,6 +839,7 @@ document.querySelector('.pie-texto').innerHTML = document.querySelector('.pie-te
 window.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('baraCarga').style.display = 'block';
   actualizar();
+  iniciarFirebase();
   setInterval(actualizar, 30000);
 });
 </script>

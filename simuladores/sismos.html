@@ -629,6 +629,7 @@ footer{padding:36px 0 56px;color:var(--muted);font-size:14px;border-top:1px soli
 </footer>
 <noscript><p style="padding:20px;text-align:center">Esta página necesita JavaScript para mostrar el simulador y la práctica.</p></noscript>
 
+<script src="../firebase/df.js"></script>
 <script>
 (() => {
 'use strict';
@@ -1699,6 +1700,13 @@ function quizAnswer(oi) {
 }
 function quizEnd() {
   const n = Q.items.length, pct = Math.round(Q.score / n * 100);
+  try {
+    if (window.DF) DF.ofrecer({
+      tipo: 'resultado', sim: 'sismos', titulo: 'Sismos, ondas y tsunamis · Quiz',
+      texto: Q.score + ' de ' + n + ' correctas',
+      datos: { correctas: Q.score, total: n, porcentaje: pct }
+    });
+  } catch (e) {}
   const msg = pct >= 85 ? 'Vas muy bien. Repasa solo lo que fallaste.' : pct >= 60 ? 'Buen avance. Vuelve a los conceptos de las que fallaste.' : 'Todavía hay que repasar. Usa el simulador para ver cada idea en acción y vuelve a intentarlo.';
   const rev = Q.wrong.map((i) => `<li><b>${QUIZ[i].q}</b><br><span style="color:var(--ink-2)">${QUIZ[i].e}</span></li>`).join('');
   quizEl.innerHTML = `<div class="q-head"><span>Resultado</span><span></span></div><div class="score">${Q.score}<span style="font-size:28px;color:var(--muted)"> / ${n}</span></div><p style="margin:10px 0 16px">${msg}</p>${Q.wrong.length ? `<h4 style="margin:18px 0 10px">Para repasar</h4><ul class="review" style="padding-left:20px">${rev}</ul>` : ''}<div class="q-actions">${Q.wrong.length ? '<button class="btn btn-primary" id="qagain" type="button">Reintentar las falladas</button>' : ''}<button class="btn btn-ghost" id="qnew" type="button">Nuevo intento</button></div>`;

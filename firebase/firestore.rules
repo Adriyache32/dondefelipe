@@ -1,0 +1,147 @@
+rules_version = '2';
+// ═══════════════════════════════════════════════════════════════
+//  El Mundo de Felipe · Reglas de seguridad de Firestore
+//  Pégalas en Firebase → Firestore Database → Reglas → Publicar.
+//
+//  EDITA SOLO ESTAS DOS FUNCIONES:
+//   · profes(): correos con permiso de profe (igual que en config.js).
+//   · dominio(): expresión del dominio del colegio. Ejemplo para
+//     "@sanagustin.cl" →  '.*@sanagustin[.]cl$'
+//     Para aceptar cualquier cuenta Google → '.*'
+// ═══════════════════════════════════════════════════════════════
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function profes()  { return ['fjimenez321@gmail.com']; }
+    // Por ahora: cualquier cuenta Google. Para limitar al colegio, cambia '.*' por '.*@dominio[.]cl$'.
+    function dominio() { return '.*'; }
+
+    function conCuenta() {
+      return request.auth != null && request.auth.token.email != null
+          && request.auth.token.email_verified == true;
+    }
+    function esProfe()   { return conCuenta() && request.auth.token.email.lower() in profes(); }
+    function esColegio() { return conCuenta() && (request.auth.token.email.lower().matches(dominio()) || esProfe()); }
+    function soyYo(uid)  { return request.auth != null && request.auth.uid == uid; }
+    function texto(v, max) { return v is string && v.size() <= max; }
+    function idJuego(j)  { return j.matches('^[a-z0-9_-]{1,40}$'); }
+
+    function esDueno() { return request.auth != null && resource.data.uid == request.auth.uid; }
+
+    // ── Perfil del estudiante: nombre, correo y edad (curso opcional) ──
+    match /alumnos/{uid} {
+      allow read: if soyYo(uid) || esProfe();
+      allow create, update: if esColegio() && soyYo(uid)
+        && request.resource.data.keys().hasOnly(['nombre', 'email', 'edad', 'curso', 'apoderado', 'actualizado'])
+        && texto(request.resource.data.nombre, 120)
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.edad is int
+        && request.resource.data.edad >= 5 && request.resource.data.edad <= 99
+        && texto(request.resource.data.curso, 40)
+        && request.resource.data.apoderado is bool
+        && request.resource.data.actualizado == request.time;
+      allow delete: if soyYo(uid) || esProfe();
+    }
+
+    // ── Progreso de cada estudiante (planes de estudio, juegos, etc.) ──
+    match /progreso/{uid}/items/{clave} {
+      allow read: if soyYo(uid) || esProfe();
+      allow create, update: if esColegio() && soyYo(uid)
+        && clave.matches('^[a-z0-9_-]{1,40}$')
+        && request.resource.data.keys().hasOnly(['datos', 'actualizado'])
+        && request.resource.data.datos is map
+        && request.resource.data.datos.size() <= 30
+        && request.resource.data.actualizado == request.time;
+      allow delete: if soyYo(uid) || esProfe();
+    }
+
+    // ── Cada partida jugada (historial; solo lo ve el profe) ──
+    match /puntajes/{id} {
+      allow read: if esProfe() || (request.auth != null && resource.data.uid == request.auth.uid);
+      allow create: if esColegio()
+        && request.resource.data.keys().hasOnly(['juego', 'uid', 'nombre', 'email', 'curso', 'puntaje', 'extra', 'fecha'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && idJuego(request.resource.data.juego)
+        && texto(request.resource.data.nombre, 80)
+        && texto(request.resource.data.curso, 40)
+        && request.resource.data.puntaje is int
+        && request.resource.data.puntaje >= 0 && request.resource.data.puntaje <= 10000000
+        && request.resource.data.extra is map && request.resource.data.extra.size() <= 20
+        && request.resource.data.fecha == request.time;
+      allow delete: if esProfe() || esDueno();
+    }
+
+    // ── Mejor puntaje de cada estudiante por juego (ranking público) ──
+    match /rankings/{juego}/mejores/{uid} {
+      allow read: if true;
+      allow create: if esColegio() && soyYo(uid) && idJuego(juego)
+        && request.resource.data.keys().hasOnly(['juego', 'uid', 'nombre', 'curso', 'puntaje', 'fecha'])
+        && request.resource.data.juego == juego
+        && request.resource.data.uid == uid
+        && texto(request.resource.data.nombre, 80)
+        && texto(request.resource.data.curso, 40)
+        && request.resource.data.puntaje is int
+        && request.resource.data.puntaje >= 0 && request.resource.data.puntaje <= 10000000
+        && request.resource.data.fecha == request.time;
+      // Solo se puede subir el récord, nunca bajarlo.
+      allow update: if esColegio() && soyYo(uid)
+        && request.resource.data.keys().hasOnly(['juego', 'uid', 'nombre', 'curso', 'puntaje', 'fecha'])
+        && request.resource.data.juego == juego
+        && request.resource.data.uid == uid
+        && texto(request.resource.data.nombre, 80)
+        && texto(request.resource.data.curso, 40)
+        && request.resource.data.puntaje is int
+        && request.resource.data.puntaje > resource.data.puntaje
+        && request.resource.data.puntaje <= 10000000
+        && request.resource.data.fecha == request.time;
+      allow delete: if esProfe() || soyYo(uid);
+    }
+
+    // ── Resultados de simuladores ──
+    match /resultados/{id} {
+      allow read: if esProfe() || (request.auth != null && resource.data.uid == request.auth.uid);
+      allow create: if esColegio()
+        && request.resource.data.keys().hasOnly(['sim', 'uid', 'nombre', 'email', 'curso', 'datos', 'fecha'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && idJuego(request.resource.data.sim)
+        && texto(request.resource.data.nombre, 120)
+        && texto(request.resource.data.curso, 40)
+        && request.resource.data.datos is map && request.resource.data.datos.size() <= 30
+        && request.resource.data.fecha == request.time;
+      allow delete: if esProfe() || esDueno();
+    }
+
+    // ── Contador de visitas: cualquiera suma 1, nadie puede poner otro número ──
+    function sumaUno() {
+      return request.resource.data.keys().hasOnly(['n', 'ultima'])
+        && request.resource.data.ultima == request.time
+        && (resource == null
+              ? request.resource.data.n == 1
+              : request.resource.data.n == resource.data.n + 1);
+    }
+    match /visitas/{pagina} {
+      allow read: if esProfe();
+      allow create, update: if sumaUno();
+      allow delete: if esProfe();
+    }
+    match /visitas_dias/{dia} {
+      allow read: if esProfe();
+      allow create, update: if dia.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') && sumaUno();
+      allow delete: if esProfe();
+    }
+
+    // ── Banco de Hipopesos ──
+    // Saldos públicos (igual que la hoja publicada); solo el profe escribe.
+    match /banco_cuentas/{id} {
+      allow read: if true;
+      allow write: if esProfe();
+    }
+    // Movimientos: solo el profe; no se editan ni se borran (se corrige con un movimiento inverso).
+    match /banco_movs/{id} {
+      allow read, create: if esProfe();
+      allow update, delete: if false;
+    }
+  }
+}

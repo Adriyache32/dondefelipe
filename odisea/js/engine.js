@@ -51,6 +51,17 @@ OC.Engine = (function () {
     });
   }
   async function registrarPuntaje() {
+    // Ranking del colegio en Firebase (firebase/df.js). Si no está configurado, no hace nada.
+    try {
+      if (window.DF && state.score > 0) {
+        const p0 = PLANETAS[Math.min(state.level, PLANETAS.length - 1)] || {};
+        DF.ofrecer({
+          tipo: 'puntaje', juego: 'odisea', titulo: 'Odisea' + (state.saga && state.saga.titulo ? ' · ' + state.saga.titulo : ''),
+          puntaje: state.score,
+          extra: { saga: state.sagaIndex, mision: p0.num, planeta: p0.nombre, victoria: state.scene === 'victoria' }
+        });
+      }
+    } catch (e) {}
     if (!C.podium.enabled) return;
     const p = PLANETAS[Math.min(state.level, PLANETAS.length - 1)];
     const row = { nombre: state.nombre || 'Anónimo', curso: state.curso || '', mision: p.num, planeta: p.nombre, puntaje: state.score, fecha: new Date().toISOString().slice(0, 10) };

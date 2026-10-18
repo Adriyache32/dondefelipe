@@ -343,6 +343,7 @@ th{font-family:var(--f-display);font-size:.68rem;letter-spacing:.09em;text-trans
     </div>
   </div>
 </div>
+<script src="../../firebase/df.js"></script>
 <script>
 /* ===== Datos del juego ===== */
 var BARRIER_NAMES = { mec: 'Mecánica', qui: 'Química', mic: 'Microbiológica' };
@@ -934,6 +935,17 @@ function endGame(reason) {
   var good = S.results.filter(function (r) { return r.outcome === 'stopped' || r.outcome === 'passed'; }).length;
   var wrongs = S.results.reduce(function (a, r) { return a + r.wrongs; }, 0);
   scoreReport(reason, good);
+  // Ranking del colegio (firebase/df.js)
+  try {
+    if (window.DF && S.final && S.final.total > 0) {
+      DF.ofrecer({
+        tipo: 'puntaje', juego: 'operacion-barrera', titulo: 'Operación Barrera',
+        puntaje: S.final.total,
+        extra: { nivel: MODE_INFO[S.mode].name, resultado: reason, rango: S.final.rank, estrellas: S.final.stars,
+                 desempeno: S.final.perf, medallas: S.final.earned, aciertos: good, errores: wrongs, equipo: S.team || '' }
+      });
+    }
+  } catch (e) {}
   $('repTtl').textContent = reason === 'win' ? 'Cuerpo protegido' : reason === 'lose' ? 'Las barreras primarias fueron superadas' : 'Operación terminada';
   $('repLead').textContent = reason === 'win'
     ? 'Resististe las ' + WAVES.length + ' oleadas. Revisa la bitácora para ver qué decisiones salieron mejor y cuáles se pueden afinar.'

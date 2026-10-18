@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rankings · El Mundo de Felipe</title>
+<style>
+:root{--bg:#0f0e17;--slab:#17151f;--slab2:#1f1c2b;--line:rgba(255,255,255,.1);--ink:#f3f1ff;--ink2:#a9a4c8;--lime:#c8f55a;--rosa:#ff2e7e;--oro:#e9b949;--plata:#c3c7d4;--bronce:#d08a52}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 500px at 50% -200px,rgba(255,46,126,.18),transparent),var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+.wrap{max-width:760px;margin:0 auto;padding:28px 16px 60px}
+a{color:var(--lime)}
+.volver{display:inline-block;margin-bottom:18px;text-decoration:none;color:var(--ink2);font-size:14px}
+h1{font-size:clamp(28px,6vw,44px);margin:0;letter-spacing:-.5px}
+h1 span{color:var(--rosa)}
+.lead{color:var(--ink2);margin:6px 0 22px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button{background:transparent;border:1px solid var(--line);color:var(--ink2);border-radius:999px;padding:8px 16px;font:600 14px system-ui;cursor:pointer}
+.tabs button.on{background:var(--lime);color:#14121f;border-color:var(--lime)}
+.barra{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+select{background:var(--slab2);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:14px system-ui}
+.jugar{margin-left:auto;font-size:14px;font-weight:600}
+.lista{display:flex;flex-direction:column;gap:8px}
+.fila{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--slab);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.fila .pos{font-weight:800;font-size:18px;text-align:center;color:var(--ink2)}
+.fila.p1{border-color:rgba(233,185,73,.5);background:linear-gradient(90deg,rgba(233,185,73,.12),var(--slab) 60%)}
+.fila.p1 .pos{color:var(--oro)}.fila.p2 .pos{color:var(--plata)}.fila.p3 .pos{color:var(--bronce)}
+.fila .nom{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fila .cur{display:inline-block;font-size:12px;color:var(--ink2);background:var(--slab2);border-radius:999px;padding:1px 8px;margin-top:2px}
+.fila .pts{font-weight:800;font-size:18px;font-variant-numeric:tabular-nums;color:var(--lime)}
+.vacio{color:var(--ink2);padding:24px;text-align:center;border:1px dashed var(--line);border-radius:14px}
+.nota{color:var(--ink2);font-size:13px;margin-top:22px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="volver" href="index.html">← Volver a El Mundo de Felipe</a>
+  <h1>Rankings <span>del colegio</span></h1>
+  <p class="lead">La mejor marca de cada estudiante en cada juego.</p>
+  <nav class="tabs" id="tabs"></nav>
+  <div class="barra">
+    <select id="curso"><option value="">Todos los cursos</option></select>
+    <a class="jugar" id="jugar" href="#">Jugar →</a>
+  </div>
+  <div class="lista" id="lista"><div class="vacio">Cargando…</div></div>
+  <p class="nota">Para aparecer aquí, termina una partida y elige <b>Entrar con Google</b> con tu cuenta del colegio. Solo se muestra tu nombre y la inicial de tu apellido.</p>
+</div>
+
+<script src="firebase/df.js"></script>
+<script>
+// id del juego en Firebase → nombre y enlace
+const JUEGOS = {
+  'odisea':            { nombre: 'Odisea',            url: 'odisea/index.html' },
+  'operacion-barrera': { nombre: 'Operación Barrera', url: 'simuladores/operacionbarrera.html' }
+};
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = n => new Intl.NumberFormat('es-CL').format(Math.round(n || 0));
+let actual = (location.hash.slice(1) in JUEGOS) ? location.hash.slice(1) : Object.keys(JUEGOS)[0];
+let datos = [];
+
+$('tabs').innerHTML = Object.entries(JUEGOS).map(([id, j]) => `<button data-j="${id}">${esc(j.nombre)}</button>`).join('');
+$('tabs').onclick = ev => { const j = ev.target.dataset.j; if (j) { actual = j; history.replaceState(null, '', '#' + j); cargar(); } };
+$('curso').onchange = pintar;
+
+function cargar() {
+  [...$('tabs').children].forEach(b => b.classList.toggle('on', b.dataset.j === actual));
+  $('jugar').href = JUEGOS[actual].url;
+  $('lista').innerHTML = '<div class="vacio">Cargando…</div>';
+  DF.top(actual, 200).then(l => {
+    datos = l;
+    const cs = [...new Set(l.map(x => x.curso).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+    const v = $('curso').value;
+    $('curso').innerHTML = '<option value="">Todos los cursos</option>' + cs.map(c => `<option${c === v ? ' selected' : ''}>${esc(c)}</option>`).join('');
+    $('curso').style.display = cs.length ? '' : 'none';
+    pintar();
+  }).catch(e => {
+    $('lista').innerHTML = `<div class="vacio">El ranking todavía no está disponible.<br><small>${esc(e.message)}</small></div>`;
+  });
+}
+function pintar() {
+  const c = $('curso').value;
+  const l = datos.filter(x => !c || x.curso === c).slice(0, 30);
+  $('lista').innerHTML = l.length ? l.map((x, i) => `
+    <div class="fila${i < 3 ? ' p' + (i + 1) : ''}">
+      <div class="pos">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</div>
+      <div><div class="nom">${esc(x.nombre)}</div>${x.curso ? `<span class="cur">${esc(x.curso)}</span>` : ''}</div>
+      <div class="pts">${fmt(x.puntaje)}</div>
+    </div>`).join('') : '<div class="vacio">Aún no hay puntajes. ¡Sé el primero!</div>';
+}
+cargar();
+</script>
+</body>
+</html>
