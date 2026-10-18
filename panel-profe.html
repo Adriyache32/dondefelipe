@@ -78,6 +78,17 @@ dialog .acc{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.4)}
 pre.prev{background:var(--slab2);padding:10px;border-radius:10px;max-height:200px;overflow:auto;font-size:12px}
 .muted{color:var(--ink2)}
+.can{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700}
+.can.pend{background:rgba(233,185,73,.15);color:#f3c766}
+.can.usada{background:rgba(95,227,154,.14);color:var(--pos)}
+.can.anul{background:rgba(255,255,255,.08);color:var(--ink2);text-decoration:line-through}
+.vinc{font-size:12px;color:var(--cyan)}
+dialog.ancho{max-width:min(860px,calc(100vw - 32px))}
+.hist-res{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:10px 0 14px}
+.hist-res div{background:var(--slab2);border-radius:10px;padding:10px}
+.hist-res b{display:block;font-size:18px}
+.hist-res span{font-size:12px;color:var(--ink2)}
+.porcanjear .m{align-items:flex-start}
 </style>
 </head>
 <body>
@@ -120,6 +131,7 @@ pre.prev{background:var(--slab2);padding:10px;border-radius:10px;max-height:200p
             <button class="btn sm" id="btnNueva">+ Nueva cuenta</button>
             <button class="btn sm" id="btnImportar">Importar desde la hoja de Google</button>
             <button class="btn sm" id="btnExportar">Descargar respaldo CSV</button>
+            <button class="btn sm" id="btnVincular" title="Conecta las cuentas del banco con los estudiantes que ya entraron al sitio">Vincular con estudiantes</button>
             <label class="muted" style="font-size:13px"><input type="checkbox" id="fCerradas"> ver cerradas</label>
           </div>
           <div class="tabla-wrap">
@@ -127,6 +139,11 @@ pre.prev{background:var(--slab2);padding:10px;border-radius:10px;max-height:200p
               <thead><tr><th></th><th>N°</th><th>Estudiante</th><th>Curso</th><th class="num">Saldo</th><th></th></tr></thead>
               <tbody id="tCuentas"><tr><td colspan="6" class="muted">Cargando…</td></tr></tbody>
             </table>
+          </div>
+          <div class="card porcanjear" style="margin-top:16px">
+            <h3 style="margin:0 0 4px">Compras por canjear <span class="pill" id="nPend">0</span></h3>
+            <p class="muted" style="margin:0 0 8px;font-size:13px">Lo que los estudiantes compraron y todavía no usan. Al aplicarlo (por ejemplo, borrar la formativa), márcalo como usado y anota dónde.</p>
+            <div class="lista-movs" id="listaPend"><div class="muted">—</div></div>
           </div>
         </div>
 
@@ -224,7 +241,29 @@ pre.prev{background:var(--slab2);padding:10px;border-radius:10px;max-height:200p
   <datalist id="listaCursos"></datalist>
   <label>Estado</label><select id="cEstado"><option>Activa</option><option>Cerrada</option></select>
   <label id="cSaldoLbl">Saldo inicial</label><input id="cSaldo" type="number" step="1000" value="0">
+  <label>Correo del estudiante <span class="muted">(opcional: así ve su saldo y sus compras en Mi cuenta)</span></label><input id="cCorreo" type="email" placeholder="nombre@correo.cl" list="listaCorreos">
+  <datalist id="listaCorreos"></datalist>
   <div class="acc"><button class="btn" data-cerrar>Cancelar</button><button class="btn p" id="cGuardar">Guardar</button></div>
+</dialog>
+
+<!-- Diálogo: historial de una cuenta -->
+<dialog id="dHist" class="ancho">
+  <h3 id="hTit">Historial</h3>
+  <div class="muted" id="hSub"></div>
+  <div class="hist-res" id="hRes"></div>
+  <h4 style="margin:6px 0">Compras</h4>
+  <div class="tabla-wrap" style="max-height:34vh"><table><thead><tr><th>Fecha</th><th>Compra</th><th class="num">Monto</th><th>Estado</th><th></th></tr></thead><tbody id="hCompras"></tbody></table></div>
+  <h4 style="margin:14px 0 6px">Todos los movimientos</h4>
+  <div class="lista-movs" id="hMovs" style="max-height:30vh"></div>
+  <div class="acc"><button class="btn" id="hCsv">Descargar CSV</button><button class="btn p" data-cerrar>Cerrar</button></div>
+</dialog>
+
+<!-- Diálogo: vincular cuentas con estudiantes -->
+<dialog id="dVinc" class="ancho">
+  <h3>Vincular cuentas del banco con estudiantes</h3>
+  <p class="muted" style="margin-top:0">Busca, por nombre y apellido, a los estudiantes que ya entraron al sitio con Google. Revisa cada pareja antes de confirmar: al vincular, el estudiante ve el saldo y las compras de esa cuenta.</p>
+  <div class="tabla-wrap" style="max-height:50vh"><table><thead><tr><th></th><th>Cuenta del banco</th><th>Estudiante con cuenta en el sitio</th></tr></thead><tbody id="vTabla"></tbody></table></div>
+  <div class="acc"><button class="btn" data-cerrar>Cancelar</button><button class="btn p" id="vConfirmar">Vincular marcadas</button></div>
 </dialog>
 
 <!-- Diálogo: importar -->
@@ -326,6 +365,126 @@ function iniciarBanco() {
   desuscribir.push(F.onSnapshot(F.query(F.collection(db, 'banco_movs'), F.orderBy('fecha', 'desc'), F.limit(40)), s => {
     movs = s.docs.map(d => Object.assign({ id: d.id }, d.data())); pintarMovs();
   }, e => console.info(e)));
+  desuscribir.push(F.onSnapshot(F.collection(db, 'banco_vinculos'), s => {
+    vinculos = {}; s.docs.forEach(d => { vinculos[d.data().cuenta] = d.id; });
+    pintarCuentas();
+  }, e => console.info(e)));
+  desuscribir.push(F.onSnapshot(F.query(F.collection(db, 'banco_movs'), F.where('canje', '==', 'pendiente')), s => {
+    pendientes = s.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    pendientes.sort((a, b) => (ms(a.fecha) - ms(b.fecha)));
+    pintarPendientes();
+  }, e => console.info(e)));
+}
+const ms = ts => (ts && ts.toDate ? ts.toDate().getTime() : 0);
+let vinculos = {}, pendientes = [];
+function correoDe(cuentaId) { return vinculos[cuentaId] || ''; }
+function pintarPendientes() {
+  $('nPend').textContent = pendientes.length;
+  $('listaPend').innerHTML = pendientes.length ? pendientes.map(m => `
+    <div class="m"><div class="t"><b>${esc(m.item || m.motivo)}</b> · ${esc(m.nombre)} <span class="pill">${esc(m.curso || '—')}</span>
+      <small>Comprada el ${fecha(m.fecha)} · −$${fmt(Math.abs(m.monto))}</small></div>
+      <button class="btn sm p" data-usar="${esc(m.id)}">Marcar usada</button></div>`).join('')
+    : '<div class="muted">No hay compras pendientes.</div>';
+}
+async function marcarUsada(id, item, nombre) {
+  const nota = prompt(`¿Dónde se aplicó "${item}" de ${nombre}?\n(ej.: Formativa de Biología del 15/10 · 3 puntos en la prueba de Física)`);
+  if (nota === null) return false;
+  const { F, db } = FB;
+  try {
+    await F.updateDoc(F.doc(db, 'banco_movs', id), { canje: 'usada', canjeNota: nota.trim().slice(0, 200), canjeFecha: F.serverTimestamp(), canjeProfe: (DF.usuario() || {}).email || '' });
+    toast('✓ Marcada como usada'); return true;
+  } catch (e) { toast('Error: ' + e.message); return false; }
+}
+$('listaPend').onclick = ev => {
+  const id = ev.target.dataset && ev.target.dataset.usar; if (!id) return;
+  const m = pendientes.find(x => x.id === id); if (m) marcarUsada(id, m.item || m.motivo, m.nombre);
+};
+
+/* historial de una cuenta */
+let histCuenta = null, histMovs = [];
+function estadoCanje(m) {
+  if (m.tipo !== 'compra') return '';
+  if (m.canje === 'usada') return `<span class="can usada">Usada</span> <small class="muted">${esc(m.canjeNota || '')}${m.canjeFecha ? ' · ' + fecha(m.canjeFecha) : ''}</small>`;
+  if (m.canje === 'anulada') return '<span class="can anul">Anulada</span>';
+  return '<span class="can pend">Pendiente</span>';
+}
+async function abrirHistorial(id) {
+  const c = cuentas.find(x => x.id === id); if (!c) return;
+  histCuenta = c;
+  $('hTit').textContent = `${c.nombre || ''} ${c.apellido || ''}`.trim() + ' · Historial';
+  $('hSub').innerHTML = `Cuenta N° ${esc(c.numero)} · ${esc(c.curso || 'sin curso')} · Saldo actual <b>${fmt(c.saldo)} ₣</b>${correoDe(id) ? ' · <span class="vinc">✓ ' + esc(correoDe(id)) + '</span>' : ' · <span class="muted">sin correo vinculado</span>'}`;
+  $('hRes').innerHTML = ''; $('hCompras').innerHTML = '<tr><td colspan="5" class="muted">Cargando…</td></tr>'; $('hMovs').innerHTML = '';
+  $('dHist').showModal();
+  const { F, db } = FB;
+  try {
+    const s = await F.getDocs(F.query(F.collection(db, 'banco_movs'), F.where('cuenta', '==', id)));
+    histMovs = s.docs.map(d => Object.assign({ id: d.id }, d.data())).sort((a, b) => ms(b.fecha) - ms(a.fecha));
+    pintarHistorial();
+  } catch (e) { $('hCompras').innerHTML = `<tr><td colspan="5" class="neg">Error: ${esc(e.message)}</td></tr>`; }
+}
+function pintarHistorial() {
+  const suma = f => histMovs.filter(f).reduce((s, m) => s + m.monto, 0);
+  const compras = histMovs.filter(m => m.tipo === 'compra');
+  const vivas = compras.filter(m => m.canje !== 'anulada');
+  $('hRes').innerHTML = `
+    <div><b class="pos">+${fmt(suma(m => m.monto > 0 && m.tipo !== 'reverso' && m.tipo !== 'importacion'))}</b><span>Ganado en el sitio</span></div>
+    <div><b class="neg">−${fmt(Math.abs(suma(m => m.tipo === 'compra' && m.canje !== 'anulada')))}</b><span>Gastado en ${vivas.length} compra${vivas.length !== 1 ? 's' : ''}</span></div>
+    <div><b class="${suma(m => m.tipo === 'multa') ? 'neg' : ''}">${suma(m => m.tipo === 'multa') ? '−' : ''}${fmt(Math.abs(suma(m => m.tipo === 'multa')))}</b><span>Multas</span></div>
+    <div><b>${vivas.filter(m => m.canje === 'pendiente' || !m.canje).length} / ${vivas.filter(m => m.canje === 'usada').length}</b><span>Compras pendientes / usadas</span></div>`;
+  $('hCompras').innerHTML = compras.length ? compras.map(m => `<tr><td class="muted">${fecha(m.fecha)}</td><td>${esc(m.item || m.motivo)}</td><td class="num neg">−${fmt(Math.abs(m.monto))}</td><td style="white-space:normal">${estadoCanje(m)}</td><td>${(m.canje === 'pendiente' || !m.canje) ? `<button class="btn sm p" data-husar="${esc(m.id)}">Marcar usada</button>` : ''}</td></tr>`).join('')
+    : '<tr><td colspan="5" class="muted">No ha comprado nada todavía.</td></tr>';
+  $('hMovs').innerHTML = histMovs.length ? histMovs.map(m => `<div class="m"><div class="t"><b class="${m.monto < 0 ? 'neg' : 'pos'}">${m.monto < 0 ? '−' : '+'}$${fmt(Math.abs(m.monto))}</b> ${esc(m.motivo)}<small>${fecha(m.fecha)} · saldo después: ${fmt(m.saldoDespues)} ₣</small></div></div>`).join('') : '<div class="muted">Sin movimientos.</div>';
+}
+$('hCompras').onclick = async ev => {
+  const id = ev.target.dataset && ev.target.dataset.husar; if (!id) return;
+  const m = histMovs.find(x => x.id === id); if (!m) return;
+  if (await marcarUsada(id, m.item || m.motivo, m.nombre)) { m.canje = 'usada'; m.canjeNota = '(recién marcada)'; pintarHistorial(); }
+};
+$('hCsv').onclick = () => {
+  const c = histCuenta || {};
+  descargarCSV(`historial-${DF.idSeguro((c.nombre || '') + '-' + (c.apellido || ''))}-${DF.hoy()}.csv`, [['Fecha', 'Tipo', 'Motivo', 'Monto', 'Saldo después', 'Estado compra', 'Dónde se usó']]
+    .concat(histMovs.map(m => [fecha(m.fecha), m.tipo, m.motivo, m.monto, m.saldoDespues, m.tipo === 'compra' ? (m.canje || 'pendiente') : '', m.canjeNota || ''])));
+};
+
+/* vincular cuentas con estudiantes que ya tienen cuenta en el sitio */
+const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z ]/g, ' ').split(/\s+/).filter(w => w.length > 1);
+let propuestas = [];
+$('btnVincular').onclick = async () => {
+  const { F, db } = FB;
+  let alum = [];
+  try { alum = (await F.getDocs(F.collection(db, 'alumnos'))).docs.map(d => d.data()); } catch (e) { toast('Error: ' + e.message); return; }
+  const usados = new Set(Object.values(vinculos));
+  propuestas = [];
+  cuentas.filter(c => !correoDe(c.id) && c.estado !== 'Cerrada').forEach(c => {
+    const nc = norm(c.nombre), ac = norm(c.apellido);
+    if (!nc.length || !ac.length) return;
+    // "Benja" coincide con "Benjamín"; el apellido debe coincidir completo.
+    const pareja = (t, w) => t.some(x => x === w || (w.length >= 3 && (x.startsWith(w) || w.startsWith(x)) && x.length >= 3));
+    const cand = alum.filter(a => a.email && !usados.has(a.email.toLowerCase())).filter(a => { const t = norm(a.nombre); return nc.some(w => pareja(t, w)) && ac.some(w => t.includes(w)); });
+    if (cand.length === 1) propuestas.push({ c, a: cand[0] });
+  });
+  $('vTabla').innerHTML = propuestas.length ? propuestas.map((p, i) => `<tr><td><input type="checkbox" data-i="${i}" checked></td><td>${esc(p.c.apellido)} ${esc(p.c.nombre)} <span class="pill">${esc(p.c.curso || '—')}</span></td><td>${esc(p.a.nombre)} <span class="muted">${esc(p.a.email)}</span></td></tr>`).join('')
+    : '<tr><td colspan="3" class="muted">No encontré parejas claras. Puedes escribir el correo a mano en "Editar" de cada cuenta.</td></tr>';
+  $('vConfirmar').disabled = !propuestas.length;
+  $('dVinc').showModal();
+};
+$('vConfirmar').onclick = async () => {
+  const marcadas = [...$('vTabla').querySelectorAll('input[data-i]:checked')].map(x => propuestas[+x.dataset.i]);
+  if (!marcadas.length) return;
+  const { F, db } = FB, b = F.writeBatch(db);
+  marcadas.forEach(p => b.set(F.doc(db, 'banco_vinculos', p.a.email.toLowerCase()), { cuenta: p.c.id, numero: p.c.numero || '', nombre: `${p.c.nombre || ''} ${p.c.apellido || ''}`.trim(), actualizado: F.serverTimestamp() }));
+  try { await b.commit(); $('dVinc').close(); toast(`✓ ${marcadas.length} cuentas vinculadas`); } catch (e) { toast('Error: ' + e.message); }
+};
+async function guardarVinculo(cuenta, correo) {
+  const { F, db } = FB;
+  correo = String(correo || '').trim().toLowerCase();
+  const actual = correoDe(cuenta.id);
+  if (correo === actual) return;
+  if (correo && vinculos && Object.entries(vinculos).some(([cid, em]) => em === correo && cid !== cuenta.id)) throw new Error('Ese correo ya está vinculado a otra cuenta');
+  const b = F.writeBatch(db);
+  if (actual) b.delete(F.doc(db, 'banco_vinculos', actual));
+  if (correo) b.set(F.doc(db, 'banco_vinculos', correo), { cuenta: cuenta.id, numero: cuenta.numero || '', nombre: `${cuenta.nombre || ''} ${cuenta.apellido || ''}`.trim(), actualizado: F.serverTimestamp() });
+  await b.commit();
 }
 function cursosDe(lista) { return [...new Set(lista.map(c => (c.curso || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es')); }
 function llenarCursos() {
@@ -348,10 +507,10 @@ function pintarCuentas() {
     <tr class="${seleccion.has(c.id) ? 'sel' : ''}" data-id="${esc(c.id)}">
       <td><input type="checkbox" data-sel ${seleccion.has(c.id) ? 'checked' : ''} aria-label="Seleccionar"></td>
       <td class="muted">${esc(c.numero)}</td>
-      <td><b>${esc(c.apellido)}</b> ${esc(c.nombre)}${c.estado === 'Cerrada' ? ' <span class="pill">cerrada</span>' : ''}</td>
+      <td><b>${esc(c.apellido)}</b> ${esc(c.nombre)}${c.estado === 'Cerrada' ? ' <span class="pill">cerrada</span>' : ''}${correoDe(c.id) ? `<br><span class="vinc" title="Ve su banco en Mi cuenta">✓ ${esc(correoDe(c.id))}</span>` : ''}</td>
       <td><span class="pill">${esc(c.curso || '—')}</span></td>
       <td class="num ${(c.saldo || 0) < 0 ? 'neg' : ''}">${fmt(c.saldo)} ₣</td>
-      <td><button class="btn sm" data-editar>Editar</button></td>
+      <td style="white-space:nowrap"><button class="btn sm" data-hist>Historial</button> <button class="btn sm" data-editar>Editar</button></td>
     </tr>`).join('') : '<tr><td colspan="6" class="muted">Sin cuentas que mostrar.</td></tr>';
   const n = seleccion.size;
   $('movSub').innerHTML = n ? `<b>${n}</b> cuenta${n > 1 ? 's' : ''} seleccionada${n > 1 ? 's' : ''}: ${esc([...seleccion].slice(0, 4).map(id => { const c = cuentas.find(x => x.id === id); return c ? c.nombre + ' ' + (c.apellido || '').charAt(0) + '.' : id; }).join(', '))}${n > 4 ? '…' : ''}` : 'Selecciona una o más cuentas en la tabla.';
@@ -363,6 +522,7 @@ $('tCuentas').onclick = ev => {
   const tr = ev.target.closest('tr[data-id]'); if (!tr) return;
   const id = tr.dataset.id;
   if (ev.target.hasAttribute('data-editar')) { abrirCuenta(cuentas.find(c => c.id === id)); return; }
+  if (ev.target.hasAttribute('data-hist')) { abrirHistorial(id); return; }
   if (seleccion.has(id)) seleccion.delete(id); else seleccion.add(id);
   pintarCuentas();
 };
@@ -379,7 +539,7 @@ pintarCatalogo();
 $('chipsCompras').onclick = ev => {
   const b = ev.target.closest('[data-compra]'); if (!b) return;
   const c = COMPRAS[+b.dataset.compra], ll = $('lluvia').checked;
-  aplicar(-(ll ? c.precio / 2 : c.precio), 'Compra: ' + c.nombre + (ll ? ' (día de lluvia 50%)' : ''), 'compra');
+  aplicar(-(ll ? c.precio / 2 : c.precio), 'Compra: ' + c.nombre + (ll ? ' (día de lluvia 50%)' : ''), 'compra', c.nombre);
 };
 $('chipsGanancias').onclick = ev => {
   const b = ev.target.closest('[data-gana]'); if (!b) return;
@@ -399,7 +559,7 @@ $('btnLibre').onclick = () => {
   aplicar(monto, motivo, monto > 0 ? 'abono' : 'cargo').then(ok => { if (ok) { $('mMonto').value = ''; $('mMotivo').value = ''; } });
 };
 
-async function aplicar(monto, motivo, tipo) {
+async function aplicar(monto, motivo, tipo, item) {
   const ids = [...seleccion];
   if (!ids.length) { toast('Primero selecciona cuentas en la tabla'); return false; }
   const lista = ids.map(id => cuentas.find(c => c.id === id)).filter(Boolean);
@@ -421,7 +581,8 @@ async function aplicar(monto, motivo, tipo) {
         tx.update(ref, { saldo: nuevo, actualizado: F.serverTimestamp() });
         tx.set(F.doc(F.collection(db, 'banco_movs')), {
           cuenta: c.id, numero: c.numero || '', nombre: `${c.nombre || ''} ${c.apellido || ''}`.trim(), curso: c.curso || '',
-          monto, motivo, tipo, saldoDespues: nuevo, profe, fecha: F.serverTimestamp()
+          monto, motivo, tipo, saldoDespues: nuevo, profe, fecha: F.serverTimestamp(),
+          ...(tipo === 'compra' ? { item: item || motivo, canje: 'pendiente' } : {})
         });
       });
       ok++;
@@ -456,6 +617,7 @@ $('listaMovs').onclick = async ev => {
         motivo: 'Reverso: ' + m.motivo, tipo: 'reverso', revierte: id, saldoDespues: nuevo,
         profe: (DF.usuario() || {}).email || '', fecha: F.serverTimestamp()
       });
+      if (m.tipo === 'compra') tx.update(F.doc(db, 'banco_movs', id), { canje: 'anulada', canjeNota: 'Compra revertida', canjeFecha: F.serverTimestamp(), canjeProfe: (DF.usuario() || {}).email || '' });
     });
     toast('✓ Revertido');
   } catch (e) { toast('No se pudo revertir: ' + e.message); }
@@ -475,6 +637,8 @@ function abrirCuenta(c) {
   $('cEstado').value = c ? (c.estado || 'Activa') : 'Activa';
   $('cSaldo').value = '0';
   $('cSaldo').classList.toggle('oculto', !!c); $('cSaldoLbl').classList.toggle('oculto', !!c);
+  $('cCorreo').value = c ? correoDe(c.id) : '';
+  FB.F.getDocs(FB.F.collection(FB.db, 'alumnos')).then(s => { $('listaCorreos').innerHTML = s.docs.map(d => `<option value="${esc(d.data().email)}">${esc(d.data().nombre)}</option>`).join(''); }).catch(() => {});
   $('dCuenta').showModal();
 }
 $('btnNueva').onclick = () => abrirCuenta(null);
@@ -483,8 +647,11 @@ $('cGuardar').onclick = async () => {
   const datos = { apellido: $('cApellido').value.trim(), nombre: $('cNombre').value.trim(), curso: $('cCurso').value.trim(), estado: $('cEstado').value, actualizado: F.serverTimestamp() };
   if (!datos.nombre && !datos.apellido) { $('cNombre').focus(); return; }
   try {
+    const correo = $('cCorreo').value.trim();
+    if (correo && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(correo)) { toast('Revisa el correo'); $('cCorreo').focus(); return; }
     if (editando) {
       await F.updateDoc(F.doc(db, 'banco_cuentas', editando.id), datos);
+      await guardarVinculo(editando, correo);
     } else {
       const numero = $('cNumero').value.trim();
       const id = DF.idSeguro(numero || (datos.apellido + '-' + datos.nombre));
@@ -494,6 +661,7 @@ $('cGuardar').onclick = async () => {
       batch.set(F.doc(db, 'banco_cuentas', id), Object.assign({ numero, saldo, extra: {}, creada: F.serverTimestamp() }, datos));
       if (saldo) batch.set(F.doc(F.collection(db, 'banco_movs')), { cuenta: id, numero, nombre: `${datos.nombre} ${datos.apellido}`.trim(), curso: datos.curso, monto: saldo, motivo: 'Saldo inicial', tipo: 'abono', saldoDespues: saldo, profe: (DF.usuario() || {}).email || '', fecha: F.serverTimestamp() });
       await batch.commit();
+      if (correo) await guardarVinculo({ id, numero, nombre: datos.nombre, apellido: datos.apellido }, correo);
     }
     $('dCuenta').close(); toast('✓ Cuenta guardada');
   } catch (e) { toast('Error: ' + e.message); }
@@ -538,7 +706,9 @@ $('iLeer').onclick = async () => {
       const extra = {};
       r.forEach((v, j) => { if (![0, 2, 3, 4, 6, 7].includes(j) && v) extra[(enc[j] || 'col' + j).replace(/[.~*/\[\]]/g, ' ').trim() || 'col' + j] = v; });
       let id = DF.idSeguro(r[0]); if (usados.has(id)) id = id + '-' + i; usados.add(id);
-      return { id, numero: r[0], apellido: r[2] || '', nombre: r[3] || '', curso: (r[4] || '').trim(), saldo: Math.round(numCL(r[6])), estado: r[7] || 'Activa', extra };
+      const jMail = enc.findIndex(h => /correo|mail/i.test(h || ''));
+      const correo = jMail >= 0 && /@/.test(r[jMail] || '') ? r[jMail].trim().toLowerCase() : '';
+      return { id, numero: r[0], apellido: r[2] || '', nombre: r[3] || '', curso: (r[4] || '').trim(), saldo: Math.round(numCL(r[6])), estado: r[7] || 'Activa', extra, correo };
     });
     const total = paraImportar.filter(c => c.estado === 'Activa').reduce((s, c) => s + c.saldo, 0);
     $('iPrev').innerHTML = `<p><b>${paraImportar.length}</b> cuentas · ${fmt(total)} ₣ en cuentas activas. Encabezados: <span class="muted">${esc(enc.join(' | '))}</span></p>
@@ -554,11 +724,12 @@ $('iImportar').onclick = async () => {
   if (!confirm(`Importar ${lista.length} cuentas al banco en Firebase?`)) return;
   $('iImportar').disabled = true;
   try {
-    for (let i = 0; i < lista.length; i += 200) {           // 2 escrituras por cuenta, máx. 500 por lote
+    for (let i = 0; i < lista.length; i += 150) {           // hasta 3 escrituras por cuenta, máx. 500 por lote
       const b = F.writeBatch(db);
-      lista.slice(i, i + 200).forEach(c => {
+      lista.slice(i, i + 150).forEach(c => {
         b.set(F.doc(db, 'banco_cuentas', c.id), { numero: c.numero, apellido: c.apellido, nombre: c.nombre, curso: c.curso, saldo: c.saldo, estado: c.estado, extra: c.extra, creada: F.serverTimestamp(), actualizado: F.serverTimestamp() });
         b.set(F.doc(F.collection(db, 'banco_movs')), { cuenta: c.id, numero: c.numero, nombre: `${c.nombre} ${c.apellido}`.trim(), curso: c.curso, monto: c.saldo, motivo: 'Saldo importado desde la hoja de Google', tipo: 'importacion', saldoDespues: c.saldo, profe, fecha: F.serverTimestamp() });
+        if (c.correo) b.set(F.doc(db, 'banco_vinculos', c.correo), { cuenta: c.id, numero: c.numero, nombre: `${c.nombre} ${c.apellido}`.trim(), actualizado: F.serverTimestamp() });
       });
       await b.commit();
     }

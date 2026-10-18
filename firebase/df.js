@@ -276,6 +276,27 @@
     });
   }
 
+  /* ---------- mi banco de Hipopesos (si el profe vinculó mi correo) ---------- */
+  function miBanco() {
+    return listo().then(function (fb) {
+      if (!usuario || !usuario.email) return null;
+      var F = fb.F, db = fb.db;
+      return F.getDoc(F.doc(db, 'banco_vinculos', usuario.email.toLowerCase())).then(function (v) {
+        if (!v.exists()) return null;
+        var id = v.data().cuenta;
+        return Promise.all([
+          F.getDoc(F.doc(db, 'banco_cuentas', id)),
+          F.getDocs(F.query(F.collection(db, 'banco_movs'), F.where('cuenta', '==', id)))
+        ]).then(function (r) {
+          if (!r[0].exists()) return null;
+          var movs = r[1].docs.map(function (d) { return Object.assign({ _id: d.id }, d.data()); });
+          movs.sort(function (a, b) { return (b.fecha && b.fecha.toDate ? b.fecha.toDate() : 0) - (a.fecha && a.fecha.toDate ? a.fecha.toDate() : 0); });
+          return { cuenta: Object.assign({ id: id }, r[0].data()), movs: movs };
+        });
+      });
+    });
+  }
+
   /* ---------- mis datos: ver, descargar, borrar ---------- */
   function misDatos() {
     return listo().then(function (fb) {
@@ -285,10 +306,11 @@
       return Promise.all([
         leerPerfil(),
         mios('puntajes'), mios('resultados'),
-        F.getDocs(F.collection(fb.db, 'progreso', uid, 'items'))
+        F.getDocs(F.collection(fb.db, 'progreso', uid, 'items')),
+        miBanco().catch(function () { return null; })
       ]).then(function (r) {
         var lista = function (s) { return s.docs.map(function (d) { return Object.assign({ _id: d.id }, d.data()); }); };
-        return { perfil: r[0], puntajes: lista(r[1]), resultados: lista(r[2]), progreso: lista(r[3]) };
+        return { perfil: r[0], puntajes: lista(r[1]), resultados: lista(r[2]), progreso: lista(r[3]), banco: r[4] };
       });
     });
   }
@@ -525,6 +547,7 @@
     guardarProgreso: guardarProgreso,
     leerProgreso: leerProgreso,
     misDatos: misDatos,
+    miBanco: miBanco,
     borrarMisDatos: borrarMisDatos,
     top: top,
     visita: visita,

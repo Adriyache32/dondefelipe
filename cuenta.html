@@ -60,6 +60,13 @@ label.ap input{width:18px;height:18px;margin-top:3px;accent-color:var(--acid)}
 .priv td{padding:8px 10px;border-top:1px solid var(--line);vertical-align:top;font-size:15px}
 .priv td:first-child{color:#fff;font-weight:600;white-space:nowrap}
 .oculto{display:none!important}
+.saldo{display:flex;gap:18px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px}
+.saldo b{font-family:var(--ff-d);font-size:46px;line-height:1;color:var(--acid)}
+.saldo b.neg{color:var(--neg)}
+.can{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.can.pend{background:rgba(233,185,73,.15);color:#f3c766}
+.can.usada{background:rgba(204,255,0,.12);color:var(--acid)}
+.can.anul{background:rgba(255,255,255,.08);color:var(--mute);text-decoration:line-through}
 footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:var(--mute);font-size:14px}
 </style>
 </head>
@@ -104,6 +111,12 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:v
     <p class="sub">Simuladores</p><div class="lista" id="lSims"></div>
   </section>
 
+  <!-- Banco -->
+  <section class="card oculto" id="banco">
+    <h2><i class="fa-solid fa-piggy-bank"></i> Mi banco de Hipopesos</h2>
+    <div id="bCont"><div class="vacio">Cargando…</div></div>
+  </section>
+
   <!-- Mis datos -->
   <section class="card oculto" id="datos">
     <h2><i class="fa-solid fa-database"></i> Mis datos</h2>
@@ -124,6 +137,7 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:v
       <tr><td>Nombre y correo</td><td>Los de tu cuenta Google, cuando eliges "Entrar con Google".</td></tr>
       <tr><td>Edad</td><td>La escribes tú la primera vez. Si tienes menos de 14 años, te pedimos confirmar que tu apoderado/a está de acuerdo.</td></tr>
       <tr><td>Tu progreso</td><td>Puntajes de juegos, resultados de simuladores y avance en los planes de estudio.</td></tr>
+      <tr><td>Banco de Hipopesos</td><td>Si el profe conecta tu cuenta del banco con tu correo, aquí ves tu saldo, tus compras y si ya las usaste. Los movimientos los registra el profe.</td></tr>
       <tr><td>Visitas</td><td>Un contador de cuántas veces se abre cada página. <b>No</b> guarda quién eres.</td></tr>
     </table>
     <p>No guardamos tu contraseña (la maneja Google), ni tu ubicación, ni datos de salud, ni fotos.</p>
@@ -183,16 +197,18 @@ DF.listo().then(() => {
   DF.alCambiarUsuario(u => {
     ver('cargando', false);
     ver('fuera', !u); ver('dentro', !!u);
-    ['perfil', 'progreso', 'datos'].forEach(s => ver(s, !!u));
+    ['perfil', 'progreso', 'banco', 'datos'].forEach(s => ver(s, !!u));
     if (!u) return;
     $('nombre').textContent = u.displayName || 'Sin nombre';
     $('correo').textContent = u.email || '';
     $('av').innerHTML = u.photoURL ? `<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer">` : esc((u.displayName || u.email || '?').charAt(0).toUpperCase());
-    cargarPerfil(); cargarProgreso();
+    cargarPerfil(); cargarProgreso(); cargarBanco();
   });
 }).catch(e => {
   ver('cargando', false);
-  aviso('Las cuentas todavía no están activadas en el sitio. ' + esc(e.message), 'err');
+  aviso(/configurado/.test(e.message)
+    ? 'Las cuentas todavía no están activadas en el sitio.'
+    : 'No se pudo conectar con el servicio de cuentas (Google Firebase). Revisa tu conexión a internet; algunas redes bloquean <b>gstatic.com</b> o <b>firebaseapp.com</b>.', 'err');
 });
 
 function cargarPerfil() {
@@ -233,6 +249,25 @@ function cargarProgreso() {
       return `<div class="it"><b>${esc(nombre(r.sim))}</b><span class="v">${esc(det)}</span><small>${fecha(r.fecha)}</small></div>`;
     }).join('') : '<div class="vacio">Aún no guardas resultados.</div>';
   }).catch(e => { ['lProg', 'lJuegos', 'lSims'].forEach(id => $(id).innerHTML = `<div class="vacio">No se pudo cargar: ${esc(e.message)}</div>`); });
+}
+
+function cargarBanco() {
+  DF.miBanco().then(b => {
+    if (!b) {
+      $('bCont').innerHTML = '<div class="vacio">Tu cuenta del banco todavía no está conectada con este correo. Pídele al profe que la vincule y aquí verás tu saldo y tus compras.</div>';
+      return;
+    }
+    const c = b.cuenta, compras = b.movs.filter(m => m.tipo === 'compra');
+    const estado = m => m.canje === 'usada' ? `<span class="can usada">Usada</span>${m.canjeNota ? ' <small class="muted">' + esc(m.canjeNota) + '</small>' : ''}`
+      : m.canje === 'anulada' ? '<span class="can anul">Anulada</span>' : '<span class="can pend">Por usar</span>';
+    $('bCont').innerHTML = `
+      <div class="saldo"><b class="${(c.saldo || 0) < 0 ? 'neg' : ''}">${fmt(c.saldo)} ₣</b><span class="muted">Cuenta N° ${esc(c.numero)}${c.curso ? ' · ' + esc(c.curso) : ''}</span></div>
+      <p class="sub">Mis compras</p>
+      <div class="lista">${compras.length ? compras.map(m => `<div class="it"><b>${esc(m.item || m.motivo)}</b>${estado(m)}<small>${fecha(m.fecha)}</small></div>`).join('') : '<div class="vacio">Aún no compras nada.</div>'}</div>
+      <p class="sub">Últimos movimientos</p>
+      <div class="lista">${b.movs.slice(0, 15).map(m => `<div class="it"><b>${esc(m.motivo)}</b><span class="v" style="color:${m.monto < 0 ? 'var(--neg)' : 'var(--acid)'}">${m.monto < 0 ? '−' : '+'}${fmt(Math.abs(m.monto))}</span><small>${fecha(m.fecha)}</small></div>`).join('') || '<div class="vacio">Sin movimientos.</div>'}</div>
+      <p class="muted" style="font-size:14px;margin-top:12px"><a href="banco-felipeso/bases.html">Bases de los Hipopesos</a>: qué se puede comprar y cómo se gana.</p>`;
+  }).catch(e => { $('bCont').innerHTML = `<div class="vacio">No se pudo cargar tu banco: ${esc(e.message)}</div>`; });
 }
 
 $('btnDescargar').onclick = () => {

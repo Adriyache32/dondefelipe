@@ -138,10 +138,27 @@ service cloud.firestore {
       allow read: if true;
       allow write: if esProfe();
     }
-    // Movimientos: solo el profe; no se editan ni se borran (se corrige con un movimiento inverso).
+    // Vínculo cuenta del banco ↔ correo del estudiante (el documento se llama como el correo).
+    function miCuentaBanco() {
+      return conCuenta()
+        && exists(/databases/$(database)/documents/banco_vinculos/$(request.auth.token.email.lower()))
+        ? get(/databases/$(database)/documents/banco_vinculos/$(request.auth.token.email.lower())).data.cuenta
+        : '';
+    }
+    match /banco_vinculos/{correo} {
+      allow read: if esProfe() || (conCuenta() && request.auth.token.email.lower() == correo);
+      allow write: if esProfe();
+    }
+
+    // Movimientos: los crea el profe y no se borran (un error se corrige con un movimiento inverso).
+    // El estudiante vinculado puede leer los de su cuenta.
+    // Lo único que se puede editar después es el estado de canje de una compra.
     match /banco_movs/{id} {
-      allow read, create: if esProfe();
-      allow update, delete: if false;
+      allow read: if esProfe() || (resource.data.cuenta == miCuentaBanco() && miCuentaBanco() != '');
+      allow create: if esProfe();
+      allow update: if esProfe()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['canje', 'canjeNota', 'canjeFecha', 'canjeProfe']);
+      allow delete: if false;
     }
   }
 }
