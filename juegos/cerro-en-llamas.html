@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cerro en llamas · Reglas</title>
+<meta name="description" content="Juego de mesa en grupos de 4: diseñen un cerro junto a la ciudad y vean qué pasa cuando llega el incendio. Biología 1° Medio · OA 8.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+:root{--bg:#0b0807;--slab:#151110;--slab2:#1e1816;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.15);
+--ink:#f4efe9;--mute:#a69c95;--fire:#ff5a1f;--ember:#ffb020;--acid:#ccff00;--cyan:#22e3ff;--ash:#6f6762;--leaf:#7fd36b;
+--ff-d:'Big Shoulders Display',Impact,'Arial Narrow',sans-serif;--ff:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(1000px 460px at 50% -160px,rgba(255,90,31,.22),transparent),radial-gradient(600px 300px at 100% 10%,rgba(255,176,32,.08),transparent),var(--bg);color:var(--ink);font:16px/1.6 var(--ff);-webkit-font-smoothing:antialiased}
+.wrap{max-width:980px;margin:0 auto;padding:22px 16px 70px}
+.top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px}
+.top a.crumb{color:var(--mute);text-decoration:none}.top a.crumb:hover{color:var(--ink)}
+.top .sp{flex:1}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line2);background:var(--slab2);color:var(--ink);border-radius:999px;padding:9px 16px;font:600 14px var(--ff);text-decoration:none;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--fire)}
+.btn.p{background:var(--fire);border-color:var(--fire);color:#1a0700}
+header{padding:30px 0 6px}
+.kick{font:700 12px var(--ff);letter-spacing:4px;text-transform:uppercase;color:var(--ember);margin:0 0 8px}
+h1{font-family:var(--ff-d);font-weight:900;font-size:clamp(46px,11vw,104px);line-height:.9;text-transform:uppercase;letter-spacing:1px;margin:0;overflow-wrap:break-word}
+h1 span{color:var(--fire);text-shadow:0 0 34px rgba(255,90,31,.45)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 18px}
+.meta span{font-size:14px;border:1px solid var(--line2);border-radius:999px;padding:4px 12px;color:#d9d1ca}
+.meta i{color:var(--ember);margin-right:4px}
+.what{background:linear-gradient(120deg,rgba(255,90,31,.14),rgba(255,176,32,.04));border:1px solid var(--line);border-left:4px solid var(--fire);border-radius:16px;padding:16px 18px;font-size:17px;text-wrap:pretty}
+.acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+nav.pasos{display:flex;gap:6px;flex-wrap:wrap;margin:26px 0 0}
+nav.pasos a{font-size:13px;color:#d9d1ca;text-decoration:none;border:1px solid var(--line);background:var(--slab);border-radius:999px;padding:5px 12px}
+nav.pasos a:hover{border-color:var(--ember)}
+h2{font-family:var(--ff-d);font-weight:800;font-size:clamp(28px,4vw,36px);text-transform:uppercase;letter-spacing:.5px;margin:0;display:flex;align-items:center;gap:12px}
+.n{flex:0 0 auto;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--fire);color:#1a0700;font:900 22px var(--ff-d)}
+.paso{background:var(--slab);border:1px solid var(--line);border-radius:20px;padding:22px clamp(16px,3vw,28px);margin-top:18px}
+.paso h2 small{font:600 14px var(--ff);letter-spacing:0;text-transform:none;color:var(--ember);margin-left:4px}
+.paso p,.paso li{text-wrap:pretty}
+.paso ol,.paso ul{padding-left:22px;margin:12px 0}
+.paso li{margin:6px 0}
+b{color:#fff}
+.roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:14px}
+.rol{background:var(--slab2);border:1px solid var(--line);border-top:3px solid var(--c);border-radius:14px;padding:14px}
+.rol i{color:var(--c);font-size:20px}
+.rol b{display:block;margin:6px 0 2px;font-size:17px}
+.rol span{color:#cfc6bf;font-size:15px}
+.ojo{margin-top:14px;padding:11px 14px;border-radius:12px;background:rgba(255,176,32,.08);border:1px solid rgba(255,176,32,.35);color:#ffe2b0}
+.cartas{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.carta{flex:1 1 150px;border-radius:12px;padding:12px;border:1px solid var(--line2);background:var(--slab2);text-align:center}
+.carta b{display:block;font-family:var(--ff-d);font-size:22px;letter-spacing:.5px;text-transform:uppercase}
+.carta span{font-size:13px;color:var(--mute)}
+.carta.arriba{border-color:rgba(34,227,255,.5)}
+.carta.abajo{background:repeating-linear-gradient(45deg,#231b18 0 8px,#1b1513 8px 16px)}
+.prop{display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin:14px 0}
+.cruz{display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(3,54px);gap:5px;flex:0 0 auto}
+.cruz div{border-radius:9px;display:grid;place-items:center;font-size:20px;font-weight:800}
+.cruz .f{background:var(--fire);box-shadow:0 0 22px rgba(255,90,31,.6)}
+.cruz .ok{background:rgba(255,90,31,.14);border:2px solid var(--fire);color:var(--fire)}
+.cruz .no{background:var(--slab2);border:1px dashed var(--line2);color:var(--ash)}
+.prop p{flex:1 1 260px;margin:0}
+/* tabla del dado */
+.dado-ui{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin:16px 0 12px}
+.dado-ui .lbl{font:700 12px var(--ff);letter-spacing:2px;text-transform:uppercase;color:var(--mute)}
+.caras{display:flex;gap:6px}
+.caras button{width:42px;height:42px;border-radius:10px;border:1px solid var(--line2);background:var(--slab2);color:var(--ink);font:800 18px var(--ff);cursor:pointer}
+.caras button[aria-pressed="true"]{background:var(--ember);color:#1a0700;border-color:var(--ember)}
+.res-dado{min-height:48px;padding:12px 14px;border-radius:12px;background:var(--slab2);border:1px solid var(--line);font-size:15px}
+.tablas{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:12px}
+.tabla h3{margin:0 0 8px;font:700 13px var(--ff);letter-spacing:2px;text-transform:uppercase;color:var(--ember)}
+table{width:100%;border-collapse:separate;border-spacing:4px}
+.tabla th{font-size:13px;color:var(--mute);font-weight:700;text-align:center}
+.tabla th:first-child{text-align:left}
+.tabla td{text-align:center;border-radius:7px;height:34px;font-size:15px}
+.tabla td:not(:first-child),.tabla th:not(:first-child){width:12%}
+.tabla td:first-child{text-align:left;padding-left:2px;white-space:nowrap;font-size:14px}
+.tabla td.q{background:linear-gradient(180deg,#ff6a2a,#d8380b);box-shadow:inset 0 -2px 0 rgba(0,0,0,.25)}
+.tabla td.r{background:#2a2321;color:var(--ash)}
+.tabla .col-on{outline:2px solid var(--ember);outline-offset:1px}
+.tabla th.col-on{color:var(--ember)}
+.ej{margin-top:12px;font-size:15px;color:#d9d1ca}
+.puntos td,.puntos th{border:0;padding:11px 12px;text-align:left;vertical-align:top;font-size:15px}
+.puntos{border-collapse:collapse}
+.puntos tr{border-bottom:1px solid var(--line)}
+.puntos th{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--mute)}
+.total{margin-top:12px;font-weight:700;color:var(--ember)}
+details{border-bottom:1px solid var(--line);padding:10px 0}
+details:last-child{border-bottom:0}
+summary{cursor:pointer;font-weight:700;list-style:none;display:flex;gap:10px;align-items:baseline}
+summary::-webkit-details-marker{display:none}
+summary:before{content:"+";color:var(--ember);font-weight:900;width:14px}
+details[open] summary:before{content:"−"}
+details p{margin:6px 0 0 24px;color:#d9d1ca}
+footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:var(--mute);font-size:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+@media print{
+  :root{--bg:#fff;--slab:#fff;--slab2:#f5f3f1;--line:#ddd;--line2:#ccc;--ink:#111;--mute:#555;--fire:#c2410c;--ember:#b45309;--ash:#999}
+  body{background:#fff;font-size:11pt}
+  b{color:#000}
+  .top,.acts,nav.pasos,.dado-ui,.res-dado{display:none!important}
+  .paso,.what{break-inside:avoid;border-color:#ccc}
+  .rol span,.ej,details p,.carta span{color:#333}
+  .ojo{color:#5a3200;background:#fff4e0}
+  details{display:block}details>*{display:block}
+  .tabla td.q{background:#e8541c!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .tabla td.r{background:#eee!important;color:#999;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="crumb" href="../index.html"><i class="fa-solid fa-house"></i> El Mundo de Felipe</a>
+    <span class="sp"></span>
+    <a class="btn" href="cerro-en-llamas-reglas.pdf" download="Cerro_en_llamas_Reglas.pdf"><i class="fa-solid fa-file-pdf"></i> PDF para imprimir</a>
+  </div>
+
+  <header>
+    <p class="kick"><i class="fa-solid fa-dice"></i> Juego de mesa · Biología 1° Medio · OA 8</p>
+    <h1>Cerro en <span>llamas</span></h1>
+    <div class="meta">
+      <span><i class="fa-solid fa-users"></i> Grupos de 4</span>
+      <span><i class="fa-solid fa-id-badge"></i> Cada persona tiene un rol</span>
+      <span><i class="fa-solid fa-rotate"></i> 2 rondas por partida</span>
+    </div>
+    <div class="what"><b>¿De qué se trata?</b> Ustedes deciden cómo es un cerro que está al lado de una ciudad: dónde van los árboles, las casas y los cortafuegos. Después llega un incendio. Al final ven cuánto se salvó y por qué.</div>
+    <div class="acts">
+      <a class="btn p" href="#paso0"><i class="fa-solid fa-play"></i> Cómo se juega</a>
+      <a class="btn" href="#dado"><i class="fa-solid fa-dice"></i> Tabla del dado</a>
+      <button class="btn" type="button" onclick="window.print()"><i class="fa-solid fa-print"></i> Imprimir</button>
+    </div>
+    <nav class="pasos" aria-label="Secciones">
+      <a href="#paso0">0 · Antes de empezar</a><a href="#paso1">1 · Diseñen el paisaje</a><a href="#paso2">2 · Revelen las cartas</a><a href="#paso3">3 · El fuego avanza</a><a href="#paso4">4 · Puntos</a><a href="#dado">Tabla del dado</a><a href="#pavesas">Pavesas</a><a href="#bomberos">Bomberos</a><a href="#puntos">Puntos por rol</a><a href="#dudas">Dudas</a>
+    </nav>
+  </header>
+
+  <!-- ═══ CARA 1 · CÓMO SE JUEGA ═══ -->
+  <section class="paso" id="paso0">
+    <h2><span class="n">0</span> Antes de empezar</h2>
+    <p>Cada persona toma una <b>tarjeta de rol</b>. Cada rol gana puntos con cosas distintas.</p>
+    <div class="roles">
+      <div class="rol" style="--c:var(--ember)"><i class="fa-solid fa-tree"></i><b>Gerenta forestal</b><span>Quiere plantar eucaliptos y pinos.</span></div>
+      <div class="rol" style="--c:var(--leaf)"><i class="fa-solid fa-seedling"></i><b>Ecólogo</b><span>Quiere bosque nativo.</span></div>
+      <div class="rol" style="--c:var(--cyan)"><i class="fa-solid fa-city"></i><b>Planificador</b><span>Quiere construir muchas casas.</span></div>
+      <div class="rol" style="--c:var(--fire)"><i class="fa-solid fa-helmet-safety"></i><b>Jefa de brigadistas</b><span>Quiere que ninguna casa se queme. Controla 2 bomberos.</span></div>
+    </div>
+    <p style="margin-top:16px">El profesor les da <b>3 cartas</b>:</p>
+    <div class="cartas">
+      <div class="carta arriba"><b>Clima</b><span>Boca arriba: todos la ven</span></div>
+      <div class="carta abajo"><b>Inicio</b><span>Boca abajo: nadie la mira</span></div>
+      <div class="carta abajo"><b>Viento</b><span>Boca abajo: nadie la mira</span></div>
+    </div>
+  </section>
+
+  <section class="paso" id="paso1">
+    <h2><span class="n">1</span> Diseñen el paisaje <small>8 minutos</small></h2>
+    <p>Pongan las fichas en este orden. Conversen: <b>el grupo gana o pierde junto.</b></p>
+    <ol>
+      <li><b>Planificador:</b> pone entre <b>4 y 10 casas</b>, solo en las <b>filas 6, 7 y 8</b> (zona gris).</li>
+      <li><b>Forestal y ecólogo:</b> se ponen de acuerdo en cómo repartir <b>24 árboles</b> (eucalipto, pino o nativo). Máximo 16 de cada tipo. Si no se ponen de acuerdo, decide la brigadista. Después los ponen por turnos, uno cada uno.</li>
+      <li><b>Brigadista:</b> pone <b>hasta 6 cortafuegos</b>, donde crea que sirven más.</li>
+    </ol>
+    <div class="ojo"><i class="fa-solid fa-triangle-exclamation"></i> Las casillas que quedan vacías son <b>matorral</b>. El matorral también se quema.</div>
+  </section>
+
+  <section class="paso" id="paso2">
+    <h2><span class="n">2</span> Revelen las cartas</h2>
+    <ol>
+      <li><b>¡Manos arriba!</b> Nadie toca más el tablero. Saquen una foto del paisaje.</li>
+      <li>Den vuelta la carta de <b>Inicio</b>. Pongan una <b>ficha de fuego</b> en la casilla que dice (por ejemplo, D1).</li>
+      <li><b>Predigan:</b> ¿hacia dónde se irá el fuego? ¿Qué casas están en peligro?</li>
+      <li>Den vuelta la carta de <b>Viento</b>. La flecha muestra hacia dónde empuja el fuego.</li>
+    </ol>
+  </section>
+
+  <section class="paso" id="paso3">
+    <h2><span class="n">3</span> El fuego avanza <small>turno por turno</small></h2>
+    <div class="prop">
+      <div class="cruz" aria-label="Ejemplo de propagación con viento hacia abajo">
+        <div></div><div class="no">✕</div><div></div>
+        <div class="ok">←</div><div class="f">🔥</div><div class="ok">→</div>
+        <div></div><div class="ok">↓</div><div></div>
+      </div>
+      <p><b>Ejemplo con viento hacia la ciudad (↓):</b> el fuego puede pasar a la casilla de <b>adelante</b> (hacia donde va el viento) y a las de los <b>dos lados</b>. <b>Nunca hacia atrás</b> y nunca en diagonal.</p>
+    </div>
+    <p><b>En cada turno:</b></p>
+    <ol>
+      <li>Una persona <b>lanza el dado</b> (se van turnando).</li>
+      <li>Miren cada casilla que el fuego puede alcanzar. Busquen su número en la <a href="#dado" style="color:var(--ember)">tabla del dado</a>.</li>
+      <li>Si el dado sacó <b>ese número o uno más alto</b>, esa casilla <b>se quema</b>: pónganle una ficha de fuego.</li>
+      <li><b>Al terminar el turno 2 y el turno 4</b> llega un bombero: la brigadista lo pone en el tablero (ver <a href="#bomberos" style="color:var(--ember)">Bomberos</a>).</li>
+    </ol>
+    <div class="ojo"><i class="fa-solid fa-fire-extinguisher"></i> <b>El incendio se apaga</b> cuando pasan <b>2 turnos seguidos</b> sin que se queme nada, o cuando se completan <b>8 turnos</b>.</div>
+  </section>
+
+  <section class="paso" id="paso4">
+    <h2><span class="n">4</span> Cuenten los puntos y vuelvan a jugar</h2>
+    <p>Cada rol cuenta sus puntos (<a href="#puntos" style="color:var(--ember)">tabla de puntos</a>) y los suman: ese es el <b>puntaje del grupo</b>. Anótenlo en la hoja de registro.</p>
+    <p><b>Ronda 2:</b> saquen el fuego, cambien el paisaje y vuelvan a jugar <b>con las mismas cartas</b>. Así sabrán si su cambio funcionó.</p>
+  </section>
+
+  <!-- ═══ CARA 2 · TABLAS ═══ -->
+  <section class="paso" id="dado">
+    <h2><i class="fa-solid fa-dice" style="color:var(--ember)"></i> Tabla del dado</h2>
+    <p>¿Con qué números se quema cada casilla? <b style="color:var(--fire)">Rojo = se quema.</b> Gris = resiste. Miren la columna de su carta de clima.</p>
+    <div class="dado-ui">
+      <span class="lbl">Salió un…</span>
+      <div class="caras" id="caras"></div>
+    </div>
+    <div class="res-dado" id="resDado">Toca el número que salió en el dado y verás qué se quema en cada clima.</div>
+    <div class="tablas" id="tablas"></div>
+    <p class="ej"><b>Ejemplo:</b> es año normal y sale un 3. El fuego toca un pino, un nativo y una casa. El pino se quema (con 3 sí). El nativo y la casa resisten (necesitan 4 o más). Con 1 no se quema nada.</p>
+  </section>
+
+  <section class="paso" id="pavesas">
+    <h2><i class="fa-solid fa-fire-flame-curved" style="color:var(--ember)"></i> Pavesas: el fuego salta</h2>
+    <p>La corteza del eucalipto vuela encendida con el viento.</p>
+    <ol>
+      <li>Si sale <b>6</b> y hay algún <b>eucalipto quemándose</b>, el fuego salta. (Con <b>megasequía</b> salta con <b>5 o 6</b>.)</li>
+      <li>Elijan el eucalipto quemado que esté <b>más adelante</b> en la dirección del viento.</li>
+      <li>Cuenten <b>2 casillas</b> desde él hacia donde va el viento. Esa casilla se quema <b>sin importar lo que sea</b>. Solo un cortafuego o un bombero la detienen.</li>
+    </ol>
+  </section>
+
+  <section class="paso" id="bomberos">
+    <h2><i class="fa-solid fa-helmet-safety" style="color:var(--ember)"></i> Bomberos</h2>
+    <ul>
+      <li>Hay <b>2 bomberos</b>. Los controla la <b>jefa de brigadistas</b>.</li>
+      <li>El primero llega <b>al terminar el turno 2</b>. El segundo, <b>al terminar el turno 4</b>.</li>
+      <li>Cuando llega, la brigadista lo pone en <b>una casilla que no esté quemada</b>. Esa casilla <b>ya no se puede quemar</b>.</li>
+      <li>El bombero <b>no se mueve</b> y <b>no apaga</b> casillas que ya se quemaron.</li>
+    </ul>
+  </section>
+
+  <section class="paso" id="puntos">
+    <h2><i class="fa-solid fa-trophy" style="color:var(--ember)"></i> Puntos <small>se cuentan cuando se apaga el incendio</small></h2>
+    <table class="puntos" style="margin-top:10px">
+      <thead><tr><th>Rol</th><th>Suma puntos por…</th></tr></thead>
+      <tbody>
+        <tr><td><b>Gerenta forestal</b></td><td>Cada eucalipto <b>sin quemar</b>: 4 · Cada pino <b>sin quemar</b>: 3</td></tr>
+        <tr><td><b>Ecólogo</b></td><td>Cada nativo <b>sin quemar</b>: 2</td></tr>
+        <tr><td><b>Jefa de brigadistas</b></td><td>Cada casa salvada: <b>+3</b> · Cada casa quemada: <b>−3</b> (resta)</td></tr>
+        <tr><td><b>Planificador</b></td><td>Cada casa construida: <b>+2</b> (aunque se queme) · Cada casa salvada que tenga <b>al lado</b> un árbol sin quemar: <b>+1 extra</b></td></tr>
+      </tbody>
+    </table>
+    <p class="total">Puntaje del grupo = forestal + ecólogo + brigadista + planificador.</p>
+  </section>
+
+  <section class="paso" id="dudas">
+    <h2><i class="fa-solid fa-circle-question" style="color:var(--ember)"></i> Dudas frecuentes</h2>
+    <details><summary>¿Se lanza un dado por cada casilla?</summary><p>No. Un solo dado por turno, y sirve para todas las casillas.</p></details>
+    <details><summary>Una casilla se quemó en este turno. ¿Ya propaga el fuego?</summary><p>No. Empieza a propagar en el turno siguiente.</p></details>
+    <details><summary>¿El fuego pasa en diagonal?</summary><p>No. Solo adelante y a los lados (pero sí puede saltar con las pavesas).</p></details>
+    <details><summary>¿Una casilla quemada se puede volver a quemar?</summary><p>No. Queda quemada hasta el final.</p></details>
+    <details><summary>Si el incendio se apaga antes del turno 4, ¿llega el segundo bombero?</summary><p>No. Ya no hace falta.</p></details>
+    <details><summary>¿Qué es "al lado" para el planificador?</summary><p>Arriba, abajo, a la izquierda o a la derecha de la casa. No en diagonal.</p></details>
+  </section>
+
+  <footer><span>Cerro en llamas · Reglas</span><span>Biología 1° Medio · OA 8 · <a href="../index.html" style="color:var(--mute)">El Mundo de Felipe</a></span></footer>
+</div>
+<script>
+// Número mínimo del dado para que cada casilla se queme (null = nunca)
+const TIPOS = [
+  { n: 'Eucalipto',  i: 'fa-tree',          normal: 2, sequia: 2 },
+  { n: 'Pino',       i: 'fa-tree',          normal: 3, sequia: 2 },
+  { n: 'Matorral',   i: 'fa-leaf',          normal: 3, sequia: 2 },
+  { n: 'Nativo',     i: 'fa-seedling',      normal: 4, sequia: 3 },
+  { n: 'Casa',       i: 'fa-house',         normal: 4, sequia: 3 },
+  { n: 'Cortafuego', i: 'fa-road-barrier',  normal: null, sequia: null }
+];
+const CLIMAS = [['normal', 'Año normal'], ['sequia', 'Sequía o megasequía']];
+const $ = id => document.getElementById(id);
+$('tablas').innerHTML = CLIMAS.map(([k, nom]) => `
+  <div class="tabla"><h3>${nom}</h3><table>
+    <thead><tr><th></th>${[1,2,3,4,5,6].map(d => `<th data-d="${d}">${d}</th>`).join('')}</tr></thead>
+    <tbody>${TIPOS.map(t => `<tr><td><i class="fa-solid ${t.i}" style="opacity:.6;width:16px"></i> ${t.n}</td>${[1,2,3,4,5,6].map(d => {
+      const q = t[k] !== null && d >= t[k];
+      return `<td data-d="${d}" class="${q ? 'q' : 'r'}" aria-label="${q ? 'se quema' : 'resiste'}">${q ? '🔥' : '·'}</td>`;
+    }).join('')}</tr>`).join('')}</tbody>
+  </table></div>`).join('');
+$('caras').innerHTML = [1,2,3,4,5,6].map(d => `<button type="button" data-d="${d}" aria-pressed="false">${d}</button>`).join('');
+$('caras').addEventListener('click', ev => {
+  const b = ev.target.closest('button'); if (!b) return;
+  const d = +b.dataset.d;
+  $('caras').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  document.querySelectorAll('.tabla [data-d]').forEach(c => c.classList.toggle('col-on', +c.dataset.d === d));
+  const linea = (k, nom) => {
+    const q = TIPOS.filter(t => t[k] !== null && d >= t[k]).map(t => t.n);
+    return `<b>${nom}:</b> ${q.length ? 'se queman ' + q.join(', ').replace(/, ([^,]*)$/, ' y $1') : 'no se quema nada'}.`;
+  };
+  let pav = '';
+  if (d === 6) pav = ' <b style="color:var(--ember)">Pavesas:</b> si hay un eucalipto quemándose, el fuego salta 2 casillas con el viento.';
+  else if (d === 5) pav = ' <b style="color:var(--ember)">Pavesas:</b> solo con megasequía, si hay un eucalipto quemándose.';
+  $('resDado').innerHTML = CLIMAS.map(([k, nom]) => linea(k, nom)).join('<br>') + (pav ? '<br>' + pav : '');
+});
+</script>
+</body>
+</html>
