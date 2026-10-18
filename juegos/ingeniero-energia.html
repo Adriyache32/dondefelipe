@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<title>Ingeniero/a en Energía · El Mundo de Felipe</title>
+<meta name="description" content="Juego de síntesis de la unidad de Energía (6° Básico): conduce por la ciudad y repara centrales, paneles solares y más usando tipos de energía, transferencia de calor y unidades de medida.">
+<meta name="theme-color" content="#0a1728">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a1728;--panel:#102338;--panel2:#16304d;--line:#27466b;--gold:#f4b942;--teal:#2ed3bd;--ember:#ff8a5c;--boss:#b98bff;--ink:#e8f0f8;--mut:#8fa6bd;--ok:#3ddc97;--bad:#ff6b6b;
+  --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px);--sar:env(safe-area-inset-right,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:none;overscroll-behavior:none}
+h1,h2,h3{font-family:'Space Grotesk',Inter,sans-serif;margin:0}
+.mono{font-family:'JetBrains Mono',monospace}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block}
+.hidden{display:none!important}
+button{font-family:inherit;cursor:pointer}
+.btn{border:0;border-radius:12px;padding:12px 20px;font-weight:700;font-size:15px;background:var(--gold);color:#1b1500;transition:transform .12s,box-shadow .12s,filter .12s;box-shadow:0 4px 0 #b88a1e}
+.btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #b88a1e}
+a.btn{text-decoration:none;display:inline-block}
+.btn.ghost{background:var(--panel2);color:var(--ink);box-shadow:0 4px 0 #0b1b2e;border:1px solid var(--line)}
+.btn.big{font-size:17px;padding:14px 26px}
+.pill{background:rgba(10,23,40,.82);border:1px solid var(--line);border-radius:14px;padding:8px 12px;backdrop-filter:blur(6px)}
+
+/* HUD */
+#hud{position:fixed;inset:0;pointer-events:none;z-index:10}
+#hud>*{pointer-events:none}
+#hudL{position:absolute;left:calc(10px + var(--sal));top:calc(10px + var(--sat));display:flex;flex-direction:column;gap:2px;font-size:13px;min-width:150px}
+#hudL .fel{font-size:20px;font-weight:700;color:var(--gold)}
+#hudL small{color:var(--mut);font-weight:400;font-size:12px}
+#radio{position:absolute;left:50%;top:calc(10px + var(--sat));transform:translateX(-50%);width:min(440px,calc(100% - 520px));min-width:280px;font-size:13px;border-color:var(--teal)}
+#radio .rt{display:flex;gap:8px;align-items:center;font-weight:700}
+#radio .rs{color:var(--mut);margin-top:2px;line-height:1.35;font-size:12.5px}
+#radio .bar{height:6px;background:#0b1b2e;border-radius:4px;margin-top:6px;overflow:hidden}
+#radio .bar i{display:block;height:100%;background:var(--teal);width:100%;transition:width .3s}
+#radio.alert{border-color:var(--ember);animation:pulse 1.2s infinite}
+#radio.boss{border-color:var(--boss);animation:pulseB 1s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 4px rgba(255,138,92,.25)}}
+@keyframes pulseB{50%{box-shadow:0 0 0 5px rgba(185,139,255,.35)}}
+#hudR{position:absolute;right:calc(10px + var(--sar));top:calc(10px + var(--sat));display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.batt{display:flex;align-items:center;gap:8px;font-size:13px}
+.batt .bar{width:96px;height:12px;background:#0b1b2e;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.batt .bar i{display:block;height:100%;width:100%;background:var(--ok);transition:width .3s,background .3s}
+#hSpdRow{font-size:13px;display:flex;gap:10px;align-items:center}
+#mm{width:132px;height:132px;border-radius:14px;border:1px solid var(--line);background:#0d2238}
+.hbtns{display:flex;gap:6px;pointer-events:auto!important}
+.hbtns button{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:rgba(10,23,40,.85);color:var(--ink);font-size:17px;pointer-events:auto}
+#hint{position:absolute;left:50%;bottom:calc(26px + var(--sab));transform:translateX(-50%);font-weight:700;color:var(--gold);background:rgba(10,23,40,.85);padding:8px 16px;border-radius:12px;border:1px solid var(--gold);font-size:14px;text-align:center;max-width:90%}
+#bAtender{position:absolute;left:50%;bottom:calc(76px + var(--sab));transform:translateX(-50%);pointer-events:auto!important;z-index:12;animation:glow 1s infinite;white-space:nowrap}
+#bAtender small{opacity:.7;font-weight:500}
+body.touch #bAtender{bottom:calc(176px + var(--sab))}
+@keyframes glow{50%{box-shadow:0 4px 0 #b88a1e,0 0 0 8px rgba(244,185,66,.3)}}
+#toasts{position:absolute;left:calc(10px + var(--sal));top:calc(96px + var(--sat));display:flex;flex-direction:column;gap:6px;max-width:min(360px,60%)}
+.toast{background:rgba(16,35,56,.95);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:10px;padding:8px 12px;font-size:12.5px;line-height:1.4;animation:tin .3s ease-out}
+.toast.badge{border-left-color:var(--gold)}
+.toast.bad{border-left-color:var(--bad)}
+@keyframes tin{from{opacity:0;transform:translateX(-14px)}}
+#touch{position:absolute;inset:auto 0 0 0;display:none;justify-content:space-between;padding:0 calc(14px + var(--sar)) calc(14px + var(--sab)) calc(14px + var(--sal));pointer-events:none}
+body.touch #touch{display:flex}
+#touch .grp{display:flex;gap:12px;align-items:flex-end}
+#touch button{width:76px;height:76px;border-radius:50%;border:2px solid var(--line);background:rgba(16,35,56,.72);color:var(--ink);font-size:28px;pointer-events:auto;touch-action:none;backdrop-filter:blur(4px)}
+#touch button.on{background:var(--gold);color:#1b1500}
+#touch .stack{display:flex;flex-direction:column;gap:12px}
+body.touch #hint{bottom:calc(120px + var(--sab))}
+
+/* Overlays */
+.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:clamp(8px,2vh,22px);background:rgba(6,14,26,.74);backdrop-filter:blur(4px);z-index:30}
+.card{width:min(1000px,100%);max-height:100%;background:linear-gradient(180deg,var(--panel),#0c1c30);border:1px solid var(--line);border-radius:20px;padding:clamp(12px,2.2vh,22px) clamp(14px,2.4vw,26px);display:flex;flex-direction:column;gap:clamp(8px,1.6vh,14px);overflow:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch;user-select:text;-webkit-user-select:text}
+.card header{display:flex;align-items:center;gap:12px}
+.card header .ic{font-size:32px}
+.card header h2{font-size:clamp(18px,2.6vh,24px)}
+.card header small{color:var(--mut)}
+.chip{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11.5px;padding:3px 9px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);color:var(--teal);font-weight:700}
+.chip.boss{color:var(--boss);border-color:var(--boss)}
+.tbody{display:grid;grid-template-columns:minmax(240px,330px) 1fr;gap:clamp(12px,2vw,22px);align-items:start}
+.scene canvas{width:100%;height:auto;aspect-ratio:4/3;border-radius:14px;border:1px solid var(--line);display:block;background:#2a3340}
+.scene p{font-size:13px;color:var(--mut);line-height:1.5;margin:10px 0 0}
+.work h3{font-size:clamp(16px,2.4vh,20px);line-height:1.3;margin-bottom:12px}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{text-align:left;padding:11px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--panel2);color:var(--ink);font-size:14.5px;line-height:1.35;transition:transform .12s,border-color .12s,background .12s}
+.opt:hover:not(:disabled){border-color:var(--gold);transform:translateX(3px)}
+.opt:disabled{cursor:default}
+.opt.ok{background:rgba(61,220,151,.16);border-color:var(--ok)}
+.opt.no{background:rgba(255,107,107,.15);border-color:var(--bad)}
+.slots{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.slot{display:flex;align-items:center;gap:10px;min-height:40px;padding:6px 12px;border:1.5px dashed var(--line);border-radius:10px;font-size:13.5px;color:var(--mut)}
+.slot b{font-family:'JetBrains Mono',monospace;color:var(--gold)}
+.slot.f{border-style:solid;border-color:var(--ok);background:rgba(61,220,151,.1);color:var(--ink)}
+.slot .tag{margin-left:auto;font-size:11.5px;color:var(--teal);font-family:'JetBrains Mono',monospace;text-align:right}
+.pool{display:flex;flex-wrap:wrap;gap:8px}
+.pool .opt{padding:8px 12px;font-size:13.5px}
+.opt.used{opacity:.25;pointer-events:none}
+.shake{animation:shk .35s}
+@keyframes shk{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.crow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #1d3753}
+.crow .it{flex:1 1 220px;font-size:14px;line-height:1.35}
+.crow .cb{display:flex;gap:6px;flex-wrap:wrap}
+.crow .cb button{padding:7px 11px;border-radius:9px;border:1.5px solid var(--line);background:var(--panel2);color:var(--ink);font-size:12.5px;font-weight:600}
+.crow .cb button:hover:not(:disabled){border-color:var(--gold)}
+.crow .cb button.ok{background:rgba(61,220,151,.2);border-color:var(--ok)}
+.crow.done .it{color:var(--ok)}
+.fb{margin-top:12px;padding:11px 14px;border-radius:12px;font-size:13.5px;line-height:1.5;background:#0c1c30;border:1px solid var(--line)}
+.fb.ok{border-color:var(--ok)}.fb.no{border-color:var(--bad)}
+.fb b{display:block;margin-bottom:2px}
+.cfoot{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.prog{display:flex;gap:6px}
+.prog i{width:26px;height:6px;border-radius:4px;background:#1d3753}
+.prog i.on{background:var(--gold)}
+.stars{font-size:34px;letter-spacing:4px;color:#2a3f58}.stars .s{color:var(--gold);text-shadow:0 0 14px rgba(244,185,66,.6)}
+.res{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;margin:8px 0}
+.res span:nth-child(odd){color:var(--mut)}
+.bdg{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.bdg .chip{color:var(--gold)}
+
+/* Start screen */
+#screenStart .card,#screenEnd .card,#screenPause .card{width:min(760px,100%)}
+#screenStart h1{font-size:clamp(26px,5vh,40px);line-height:1.1}
+#screenStart h1 span{color:var(--gold)}
+.lead{color:var(--mut);line-height:1.55;font-size:14.5px;margin:0}
+.keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;font-size:13px}
+.keys div{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+kbd{font-family:'JetBrains Mono',monospace;background:#0b1b2e;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12px}
+input[type=text]{width:100%;padding:11px 14px;border-radius:12px;border:1.5px solid var(--line);background:#0b1b2e;color:var(--ink);font-size:16px;font-family:inherit;user-select:text;-webkit-user-select:text}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.modes label{display:block;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--panel2);cursor:pointer;font-size:13px;line-height:1.35}
+.modes input{display:none}
+.modes label:has(input:checked){border-color:var(--gold);background:rgba(244,185,66,.1)}
+.modes b{display:block;font-size:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.endgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.endgrid div{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.endgrid b{display:block;font-size:22px;color:var(--gold);font-family:'Space Grotesk',sans-serif}
+.endgrid small{color:var(--mut)}
+.rev{font-size:13px;line-height:1.5;margin:0;padding-left:18px}
+
+#print-sheet{display:none}
+@media (max-width:900px){
+  #radio{left:calc(10px + var(--sal));right:auto;transform:none;top:calc(96px + var(--sat));width:calc(100% - 160px);min-width:0}
+  #toasts{top:calc(192px + var(--sat))}
+  #toasts .toast:not(:last-child){display:none}
+  #radio .rs{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  #mm{width:96px;height:96px}
+  .tbody{grid-template-columns:1fr}
+  .scene canvas{aspect-ratio:16/7}
+  .modes{grid-template-columns:1fr}
+  #hudL{min-width:0}
+}
+@media (max-width:900px) and (orientation:landscape){#toasts{top:calc(150px + var(--sat));left:50%;transform:translateX(-50%);max-width:46%}}
+@media (max-height:520px){
+  #mm{display:none}
+  #touch button{width:60px;height:60px;font-size:22px}
+}
+@media print{
+  html,body{height:auto!important;overflow:visible!important;background:#fff!important;color:#111!important}
+  body>*:not(#print-sheet){display:none!important}
+  #print-sheet{display:block!important;font-family:Inter,Arial,sans-serif;color:#111;padding:0 8px}
+  #print-sheet h1{font-size:22px;margin:0 0 4px}
+  #print-sheet h2{font-size:15px;margin:16px 0 6px;border-bottom:2px solid #f4b942;padding-bottom:3px}
+  #print-sheet table{width:100%;border-collapse:collapse;font-size:12px}
+  #print-sheet td,#print-sheet th{border:1px solid #bbb;padding:5px 7px;text-align:left;vertical-align:top}
+  #print-sheet th{background:#eef2f6}
+  #print-sheet li{font-size:12px;margin-bottom:3px}
+}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="hudL" class="pill">
+    <div>👷 <b id="hName"></b></div>
+    <div class="fel">🪙 <span id="hFel">0</span> <small>Felipesos</small></div>
+    <div><small>Llamados atendidos</small> <b id="hProg">0/0</b></div>
+  </div>
+  <div id="radio" class="pill">
+    <div class="rt"><span id="rIcon">📻</span><span id="rTitle">Esperando llamado de la Central…</span></div>
+    <div class="rs" id="rSub">Recorre la ciudad. Pronto recibirás una misión.</div>
+    <div class="bar"><i id="rBar"></i></div>
+  </div>
+  <div id="hudR">
+    <div class="pill batt">🔋 <div class="bar"><i id="hBat"></i></div><b id="hBatT" class="mono">100%</b></div>
+    <div class="pill" id="hSpdRow"><span><b id="hSpd" class="mono">0</b> km/h</span><span id="hClock" class="mono">☀️ 09:00</span></div>
+    <canvas id="mm" width="140" height="140"></canvas>
+    <div class="hbtns">
+      <button id="bMute" title="Sonido (M)">🔊</button>
+      <button id="bCam" title="Cambiar cámara (C)">🎥</button>
+      <button id="bPause" title="Pausa (Esc)">⏸</button>
+    </div>
+  </div>
+  <div id="toasts"></div>
+  <div id="hint" class="hidden"></div>
+  <button id="bAtender" class="btn big hidden">🔧 Atender llamado <small>(E)</small></button>
+  <div id="touch">
+    <div class="grp"><button data-k="left">◀</button><button data-k="right">▶</button></div>
+    <div class="grp"><div class="stack"><button data-k="up">▲</button><button data-k="down">▼</button></div></div>
+  </div>
+</div>
+
+<!-- INICIO -->
+<div id="screenStart" class="overlay">
+  <div class="card">
+    <header><span class="ic">⚡🚗</span><div><h1>Ingeniero/a en <span>Energía</span></h1><small>Unidad 3 · Síntesis de la unidad · 6° básico</small></div></header>
+    <p class="lead">Eres ingeniero/a de la <b>Central de Control de Villa Alemana</b>. Conduce tu auto eléctrico por la ciudad: la Central te llamará por radio con emergencias de energía. Llega al lugar, <b>diagnostica y repara</b> usando lo que aprendiste: formas de energía, transformaciones, transferencia de calor, fuentes y eficiencia.</p>
+    <div class="keys">
+      <div><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> o <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> conducir</div>
+      <div><kbd>Espacio</kbd> freno · <kbd>E</kbd> atender llamado · <kbd>C</kbd> cámara · <kbd>M</kbd> sonido</div>
+      <div>📍 Al entrar al <b>círculo dorado</b> el auto frena solo</div>
+      <div>🔋 Recarga en los <b>⚡ cargadores solares</b> y responde una pregunta relámpago</div>
+      <div>🚧 Evita chocar: los choques restan Felipesos</div>
+    </div>
+    <div><input id="inName" type="text" maxlength="24" placeholder="Tu nombre de ingeniero/a" autocomplete="off"></div>
+    <div class="modes">
+      <label><input type="radio" name="mode" value="short"><b>⏱ Turno corto</b>4 llamados + Jefe final</label>
+      <label><input type="radio" name="mode" value="mid" checked><b>🕒 Turno medio</b>7 llamados + Jefe final</label>
+      <label><input type="radio" name="mode" value="full"><b>🏙 Turno completo</b>11 llamados + Jefe final</label>
+    </div>
+    <div class="row">
+      <button id="bStart" class="btn big">🚗 Comenzar turno</button>
+      <a class="btn ghost" href="../index.html">🏠 Volver al sitio</a>
+      <small id="bestTxt" style="color:var(--mut)"></small>
+    </div>
+  </div>
+</div>
+
+<!-- TAREA -->
+<div id="taskModal" class="overlay hidden">
+  <div class="card">
+    <header><span class="ic" id="tmIcon">🔧</span><div style="flex:1"><h2 id="tmTitle"></h2><small id="tmSub"></small></div><span class="chip" id="tmBloom"></span></header>
+    <div class="tbody">
+      <div class="scene"><canvas id="sceneCv" width="360" height="270"></canvas><p id="tmStory"></p></div>
+      <div class="work" id="tmWork"></div>
+    </div>
+    <div class="cfoot"><div class="prog" id="tmProg"></div><span class="mono" style="font-size:12px;color:var(--mut)" id="tmPts"></span></div>
+  </div>
+</div>
+
+<!-- PREGUNTA RELÁMPAGO -->
+<div id="quickModal" class="overlay hidden">
+  <div class="card" style="width:min(560px,100%)">
+    <header><span class="ic">⚡</span><div><h2>Pregunta relámpago</h2><small>Mientras carga tu batería · +8 🪙 si aciertas</small></div></header>
+    <div class="work"><h3 id="qQ"></h3><div class="opts" id="qOpts"></div><div id="qFb"></div></div>
+    <div class="row"><button id="qSkip" class="btn ghost">Saltar</button><button id="qNext" class="btn hidden">Continuar →</button></div>
+  </div>
+</div>
+
+<!-- PAUSA -->
+<div id="screenPause" class="overlay hidden">
+  <div class="card">
+    <h2>⏸ Pausa</h2>
+    <p class="lead">El turno está detenido. Puedes continuar o terminar y ver tu informe.</p>
+    <div class="row"><button id="pResume" class="btn">▶ Continuar</button><button id="pEnd" class="btn ghost">🏁 Terminar y ver informe</button></div>
+  </div>
+</div>
+
+<!-- FINAL -->
+<div id="screenEnd" class="overlay hidden">
+  <div class="card">
+    <header><span class="ic" id="eIcon">🏆</span><div><h2 id="eTitle"></h2><small id="eSub"></small></div></header>
+    <div class="endgrid" id="eGrid"></div>
+    <div><b style="font-size:13px">Insignias</b><div class="bdg" id="eBadges"></div></div>
+    <div id="eRevBox"><b style="font-size:13px">Para repasar</b><ul class="rev" id="eRev"></ul></div>
+    <div class="row"><button id="eReport" class="btn">📄 Guardar informe (PDF)</button><button id="eAgain" class="btn ghost">↺ Jugar de nuevo</button><a class="btn ghost" href="../index.html">🏠 Volver al sitio</a></div>
+  </div>
+</div>
+
+<div id="print-sheet"></div>
+
+<script>
+'use strict';
+/* ================= UTILIDADES ================= */
+const $=s=>document.querySelector(s);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const TAU=Math.PI*2;
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e}
+function angDiff(a,b){let d=(b-a)%TAU;if(d>Math.PI)d-=TAU;if(d<-Math.PI)d+=TAU;return d}
+
+/* ================= SONIDO ================= */
+const AudioFX=(()=>{let ctx=null,master=null,muted=false,eng=null,engG=null;
+  function init(){if(ctx){if(ctx.state==='suspended')ctx.resume();return}
+    try{ctx=new(window.AudioContext||window.webkitAudioContext)();master=ctx.createGain();master.gain.value=muted?0:.8;master.connect(ctx.destination);
+      eng=ctx.createOscillator();eng.type='triangle';eng.frequency.value=70;engG=ctx.createGain();engG.gain.value=0;eng.connect(engG);engG.connect(master);eng.start()}catch(e){ctx=null}}
+  function tone(f,d,type='sine',v=.14,when=0,to=null){if(!ctx)return;const t=ctx.currentTime+when;const o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(to)o.frequency.exponentialRampToValueAtTime(to,t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(master);o.start(t);o.stop(t+d+.05)}
+  function noise(d,v=.25){if(!ctx)return;const n=Math.floor(ctx.sampleRate*d),b=ctx.createBuffer(1,n,ctx.sampleRate),a=b.getChannelData(0);for(let i=0;i<n;i++)a[i]=(Math.random()*2-1)*(1-i/n);const s=ctx.createBufferSource();s.buffer=b;const g=ctx.createGain();g.gain.value=v;s.connect(g);g.connect(master);s.start()}
+  return{init,
+    premio(){tone(523,.12,'triangle',.16);tone(659,.12,'triangle',.16,.1);tone(784,.2,'triangle',.18,.2)},
+    castigo(){tone(220,.22,'sawtooth',.12,0,140)},
+    radio(){tone(1200,.08,'square',.07);tone(1500,.08,'square',.07,.12);tone(1200,.1,'square',.07,.3)},
+    bocina(){tone(380,.25,'square',.08)},
+    choque(){noise(.3,.3);tone(110,.25,'sawtooth',.14,0,50)},
+    carga(){tone(600,.1,'sine',.08,0,900)},
+    nivel(){[523,659,784,1047].forEach((f,i)=>tone(f,.18,'triangle',.17,i*.11))},
+    mute(){muted=!muted;if(master)master.gain.value=muted?0:.8;return muted},
+    engine(r,on){if(!ctx||!engG)return;const t=ctx.currentTime;engG.gain.setTargetAtTime(on?.012+.03*r:0,t,.08);eng.frequency.setTargetAtTime(60+r*230,t,.08)}}})();
+
+/* ================= DATOS PEDAGÓGICOS ================= */
+const FACTS=[
+ 'Cuando aceleras, la batería transforma energía química en eléctrica y el motor la transforma en energía cinética.',
+ 'Al frenar, un auto eléctrico puede recuperar parte de la energía cinética y guardarla en la batería (frenado regenerativo).',
+ 'El calor que se siente en los frenos es energía cinética transformada en térmica por el roce.',
+ 'Este cargador tiene techo solar: la luz se transforma en energía eléctrica para tu auto.',
+ 'Un auto eléctrico desperdicia menos energía como calor que uno a combustión: es más eficiente.',
+ 'La energía no se gasta ni se pierde: se transforma. Lo que "se pierde" se dispersa, sobre todo como calor.',
+ 'Chile tiene uno de los mejores recursos solares del mundo, en el desierto de Atacama.'];
+
+const CATS_HEAT=['Conducción','Convección','Radiación'];
+const MISSIONS=[
+{id:'casa',site:'C',tier:1,short:true,renew:true,icon:'🏠',place:'Casa de la familia Rojas',title:'Termo solar sin agua caliente',
+ radio:'Central a ingeniero/a: la familia Rojas se bañó con agua helada. Su termo solar del techo no funciona. ¡Pasa a revisarlo!',
+ story:'En el patio los niños juegan a la pelota y el gato duerme sobre el techo tibio. El abuelo jura que "el sol ya no calienta como antes". Tú sospechas de otra cosa…',
+ tasks:[
+  {type:'classify',bloom:3,q:'Revisa el termo solar: ¿cómo se transfiere el calor en cada parte?',cats:CATS_HEAT,
+   items:[{t:'La luz del Sol llega al colector oscuro y lo calienta',c:2},{t:'El agua caliente sube por el tubo y la fría baja',c:1},{t:'La pared de cobre del tubo calienta el agua que la toca',c:0}],
+   exp:'La radiación viaja desde el Sol sin necesitar materia; la convección mueve el fluido (lo caliente sube, lo frío baja); la conducción transfiere calor por contacto dentro de un sólido.',concept:'Transferencia de calor: conducción, convección y radiación'},
+  {type:'choice',bloom:4,q:'Alguien pintó el colector de blanco. ¿Por qué ahora calienta menos?',
+   opts:['Las superficies claras reflejan más radiación y absorben menos','El blanco pesa más y el agua no puede subir','El blanco conduce peor la electricidad','El blanco enfría el aire de la casa'],ans:0,
+   exp:'Los colores oscuros absorben más radiación y los claros reflejan más. Por eso los colectores solares se pintan de negro.',concept:'Absorción y reflexión de la radiación'},
+  {type:'choice',bloom:2,q:'El termo solar entregó 4 000 000 de joules al agua. ¿Qué es el joule (J)?',
+   opts:['La unidad de energía del Sistema Internacional','La unidad de temperatura','La unidad de fuerza','La unidad de tiempo'],ans:0,
+   exp:'La energía y el calor se miden en joules (J). La temperatura se mide en grados Celsius (°C) o kelvin (K).',concept:'Unidades de energía (joule)'}]},
+{id:'granja',site:'S',tier:1,short:true,renew:true,icon:'🌾',place:'Granja Don Anselmo',title:'Bomba solar sin agua para las vacas',
+ radio:'Central a ingeniero/a: en la granja de Don Anselmo las vacas no tienen agua. La bomba funciona con paneles solares y está detenida.',
+ story:'Las vacas se amontonan junto al estanque vacío. Don Anselmo dice que los paneles están "cubiertos de polvo" y que de noche tampoco funciona nada. Hay mucho que revisar…',
+ tasks:[
+  {type:'chain',bloom:3,q:'Ordena la cadena de transformaciones de la bomba solar',steps:[
+    {t:'Luz del Sol que llega a los paneles',tag:'Energía luminosa'},{t:'Corriente que sale del panel fotovoltaico',tag:'Energía eléctrica'},{t:'Motor de la bomba girando',tag:'Energía cinética'},{t:'Agua almacenada en el estanque alto',tag:'Energía potencial gravitatoria'}],
+   exp:'El panel transforma luz en electricidad; el motor, electricidad en movimiento; y la bomba sube el agua, que queda con energía potencial para bajar por las cañerías.',concept:'Cadena de transformaciones de energía (solar)'},
+  {type:'choice',bloom:4,q:'El polvo cubre los paneles. ¿Por qué baja la producción?',
+   opts:['Bloquea parte de la luz: llega menos energía luminosa al panel','El polvo es tan pesado que rompe el panel','El polvo conduce la electricidad hacia el suelo','El polvo calienta el panel y lo apaga'],ans:0,
+   exp:'Menos luz que llega al panel significa menos energía luminosa disponible para transformar en eléctrica. Limpiar los paneles es parte del mantenimiento.',concept:'Energía solar fotovoltaica y su rendimiento'},
+  {type:'choice',bloom:4,q:'A las 10 de la noche los paneles no producen nada. ¿Es una falla?',
+   opts:['No: sin luz no hay energía luminosa que transformar; conviene usar baterías u otra fuente','Sí: el panel está roto y hay que cambiarlo','Sí: debería producir lo mismo de noche','No: de noche producen el doble'],ans:0,
+   exp:'La energía solar depende de la luz. Por eso se combina con baterías u otras fuentes para tener energía cuando no hay Sol.',concept:'Limitaciones de las energías renovables'}]},
+{id:'escuela',site:'Q',tier:1,renew:false,icon:'🏫',place:'Escuela del barrio',title:'Sala helada en pleno invierno',
+ radio:'Central a ingeniero/a: una sala de 6° básico está helada y la estufa no alcanza a calentarla. Pasa por la escuela.',
+ story:'Los estudiantes trabajan con chaquetas puestas. La ventana tiene una rendija y la baranda metálica del pasillo "quema de lo fría". La profesora pide ayuda.',
+ tasks:[
+  {type:'choice',bloom:3,q:'Por la rendija se pierde calor hacia afuera. ¿En qué sentido se transfiere el calor?',
+   opts:['Del cuerpo más caliente al más frío','Del cuerpo más frío al más caliente','Siempre hacia arriba','Desaparece sin ir a ninguna parte'],ans:0,
+   exp:'El calor fluye espontáneamente desde donde hay mayor temperatura hacia donde hay menor temperatura, hasta alcanzar el equilibrio térmico.',concept:'Sentido de la transferencia de calor y equilibrio térmico'},
+  {type:'classify',bloom:3,q:'Identifica el tipo de transferencia de calor en la sala',cats:CATS_HEAT,
+   items:[{t:'Sientes el calor de la estufa en las manos sin tocarla',c:2},{t:'El aire caliente de la estufa sube hacia el techo',c:1},{t:'La baranda metálica se siente helada al tocarla',c:0}],
+   exp:'Sin contacto y sin materia entre medio: radiación. El aire caliente que sube: convección. Contacto directo con un sólido: conducción.',concept:'Transferencia de calor: conducción, convección y radiación'},
+  {type:'choice',bloom:4,q:'Quieres aislar las paredes de la sala. ¿Qué material conviene?',
+   opts:['Lana mineral o poliestireno (malos conductores del calor)','Láminas de aluminio (buenos conductores)','Planchas de cobre (buenos conductores)','Cualquiera: todos aíslan igual'],ans:0,
+   exp:'Un aislante es un mal conductor del calor: frena la transferencia. Los metales conducen muy bien, por eso son malos aislantes.',concept:'Materiales conductores y aislantes'}]},
+{id:'hidro',site:'H',tier:2,short:true,renew:true,icon:'💧',place:'Central hidroeléctrica del Aconcagua',title:'La turbina dejó de girar',
+ radio:'Central a ingeniero/a: la central hidroeléctrica del río Aconcagua se detuvo. La turbina no gira. Dirígete al río.',
+ story:'Desde la orilla, unos pescadores miran la tubería. El nivel del embalse bajó por la sequía y el operador no sabe si es una avería o simplemente falta de agua.',
+ tasks:[
+  {type:'chain',bloom:3,q:'Ordena el camino de la energía en la central hidroeléctrica',steps:[
+    {t:'Agua almacenada en el embalse',tag:'Energía potencial gravitatoria'},{t:'Agua que cae por la tubería',tag:'Energía cinética'},{t:'Turbina girando',tag:'Energía cinética de rotación'},{t:'Corriente que sale del generador',tag:'Energía eléctrica'}],
+   exp:'La altura del embalse da energía potencial; al caer se vuelve cinética, mueve la turbina y el generador la transforma en electricidad.',concept:'Cadena de transformaciones en una hidroeléctrica'},
+  {type:'choice',bloom:4,q:'El embalse está más bajo que antes. ¿Qué pasa con la electricidad generada?',
+   opts:['Disminuye: el agua cae desde menos altura y llega con menos velocidad','Aumenta porque hay menos agua que mover','No cambia: solo depende de la turbina','Se convierte en energía química'],ans:0,
+   exp:'La energía potencial depende de la altura (Ep = m·g·h). Menos altura significa menos energía disponible para transformar en electricidad.',concept:'Altura de caída y energía generada'},
+  {type:'choice',bloom:4,q:'El agua entrega 100 unidades de energía a la turbina y salen 85 como electricidad. ¿Cuál es la eficiencia y qué pasó con las otras 15?',
+   opts:['85 %; se dispersaron como calor y sonido, pero no desaparecieron','85 %; la energía se destruyó','15 %; se transformó en agua','100 %; no existen pérdidas'],ans:0,
+   exp:'Eficiencia = energía útil ÷ energía total × 100. La energía se conserva: lo que no es útil se dispersa al ambiente, sobre todo como calor.',concept:'Eficiencia y conservación de la energía'},
+  {type:'choice',bloom:3,q:'La central entrega 50 MW (megawatts). ¿Qué mide el watt (W)?',
+   opts:['Cuánta energía se transforma cada segundo (potencia)','La temperatura del agua','La altura del embalse','La cantidad de agua almacenada'],ans:0,
+   exp:'Potencia es energía por unidad de tiempo: 1 W = 1 J por segundo. 50 MW son 50 millones de joules cada segundo.',concept:'Unidades: potencia (watt)'}]},
+{id:'eolico',site:'E',tier:2,renew:true,icon:'🌬️',place:'Parque eólico del cerro',title:'Aspas detenidas en el cerro',
+ radio:'Central a ingeniero/a: el parque eólico del cerro dejó de entregar energía. Las aspas están quietas. ¡Ve a revisar!',
+ story:'Una bandada de aves cruza el cerro y el pastor dice que hace dos días no corre ni una brisa. Los aerogeneradores parecen intactos…',
+ tasks:[
+  {type:'classify',bloom:3,q:'Reconoce la forma de energía en el parque: ¿qué tipo es cada una?',cats:['Cinética','Potencial','Química','Luminosa'],
+   items:[{t:'El viento que empuja las aspas',c:0},{t:'El agua quieta en un embalse en lo alto',c:1},{t:'Las baterías del parque, cargadas',c:2},{t:'La luz del Sol sobre el cerro',c:3}],
+   exp:'Cinética: por el movimiento. Potencial: por la posición (altura). Química: guardada en enlaces (baterías, alimentos, combustibles). Luminosa: la que transporta la luz.',concept:'Tipos de energía'},
+  {type:'classify',bloom:3,q:'Clasifica cada fuente de energía',cats:['Renovable','No renovable'],
+   items:[{t:'Viento',c:0},{t:'Carbón',c:1},{t:'Luz del Sol',c:0},{t:'Petróleo',c:1},{t:'Agua en movimiento de un río',c:0},{t:'Gas natural',c:1}],
+   exp:'Las fuentes renovables se reponen de forma natural en escalas humanas; las no renovables se agotan y tardan millones de años en formarse.',concept:'Fuentes renovables y no renovables'},
+  {type:'choice',bloom:5,q:'Hoy no hay viento. ¿Qué decisión protege mejor el suministro del pueblo?',
+   opts:['Combinar fuentes (solar, hidro, eólica) y usar almacenamiento','Apagar el pueblo hasta que vuelva el viento','Instalar más aspas en el mismo cerro','Usar una sola fuente para simplificar'],ans:0,
+   exp:'Cada fuente depende de condiciones distintas. Una matriz diversificada con almacenamiento asegura energía cuando una de ellas falla.',concept:'Diversificación de fuentes de energía'}]},
+{id:'panaderia',site:'P',tier:2,renew:false,icon:'🥖',place:'Panadería El Kuchen',title:'Horno apagado y cuenta de luz por las nubes',
+ radio:'Central a ingeniero/a: la panadería de la plaza se quedó sin horno y la cuenta de la luz se disparó. Revisa los equipos.',
+ story:'Huele a pan tostado y hay fila en la puerta. Las ampolletas incandescentes del mesón están tan calientes que nadie las toca. El dueño dice: "La luz me cuesta una fortuna".',
+ tasks:[
+  {type:'classify',bloom:3,q:'¿Qué transformación principal ocurre en cada equipo?',cats:['Eléctrica → Térmica','Eléctrica → Luminosa','Eléctrica → Cinética'],
+   items:[{t:'Horno eléctrico',c:0},{t:'Letrero LED de la fachada',c:1},{t:'Batidora de masa',c:2}],
+   exp:'El horno usa resistencias que se calientan; el LED entrega luz; la batidora tiene un motor que produce movimiento.',concept:'Transformaciones de energía eléctrica'},
+  {type:'choice',bloom:4,q:'¿Qué ocurre al cambiar una ampolleta incandescente por una LED?',
+   opts:['Da la misma luz gastando menos electricidad: desperdicia menos energía como calor','Da menos luz y gasta lo mismo','Gasta más pero dura más','No cambia nada, porque la energía se conserva'],ans:0,
+   exp:'La LED es más eficiente: transforma más energía eléctrica en luz y menos en calor no deseado.',concept:'Eficiencia energética'},
+  {type:'choice',bloom:5,q:'Para bajar la cuenta de luz con sentido, ¿qué plan es mejor?',
+   opts:['Usar LED, apagar equipos sin uso y hornear en tandas completas','Dejar todo prendido para que no se gaste','Hornear siempre con el horno casi vacío','Comprar ampolletas más grandes'],ans:0,
+   exp:'Ahorrar energía es usar bien la que necesitas: equipos eficientes, apagar lo que no usas y evitar gastar de más.',concept:'Consumo responsable y ahorro de energía'},
+  {type:'choice',bloom:3,q:'Una porción de pan entrega unas 250 kcal. ¿Qué es una kilocaloría y qué energía guarda el alimento?',
+   opts:['Una unidad de energía; el alimento guarda energía química','Una unidad de temperatura; guarda energía luminosa','Una unidad de fuerza; guarda energía cinética','Una unidad de potencia; guarda energía eléctrica'],ans:0,
+   exp:'Las kilocalorías miden energía (1 kcal ≈ 4 184 J). El alimento guarda energía química que tu cuerpo transforma en movimiento y calor.',concept:'Unidades de energía (kcal) y energía química'}]},
+{id:'termo',site:'T',tier:3,renew:false,icon:'🏭',place:'Central termoeléctrica a carbón',title:'Caldera sin presión y vecinos molestos',
+ radio:'Central a ingeniero/a: la caldera de la termoeléctrica perdió presión y los vecinos reclaman por el humo. Prioridad alta.',
+ story:'Dos chimeneas escupen humo oscuro sobre el pueblo. Un vecino muestra el hollín en su ropa colgada y la dirección de la empresa quiere saber si conviene seguir usando carbón.',
+ tasks:[
+  {type:'chain',bloom:4,q:'Ordena la cadena de transformaciones de la termoeléctrica',steps:[
+    {t:'Carbón almacenado',tag:'Energía química'},{t:'Vapor muy caliente en la caldera',tag:'Energía térmica'},{t:'Turbina girando con el vapor',tag:'Energía cinética'},{t:'Corriente del generador',tag:'Energía eléctrica'}],
+   exp:'Al quemar carbón, la energía química pasa a térmica; el vapor mueve la turbina (cinética) y el generador entrega electricidad.',concept:'Cadena de transformaciones en una termoeléctrica'},
+  {type:'choice',bloom:4,q:'Solo unas 35–40 de cada 100 unidades de energía del carbón se vuelven electricidad. ¿Dónde está el resto?',
+   opts:['Se transfirió al ambiente, sobre todo como calor: se conservó pero se dispersó','Desapareció','Se convirtió en más carbón','Quedó guardada en la chimenea para siempre'],ans:0,
+   exp:'Principio de conservación: la energía no se crea ni se destruye. La que no se aprovecha se dispersa, principalmente como calor.',concept:'Conservación de la energía y pérdidas'},
+  {type:'choice',bloom:5,q:'La comunidad pide cerrar la central ya mismo. ¿Qué propuesta es más razonable?',
+   opts:['Planificar una transición: reemplazar gradualmente por fuentes renovables y mejorar la eficiencia, cuidando que no falte energía','Seguir igual: el humo no afecta a nadie','Cerrarla hoy sin reemplazo','Quemar más carbón para compensar'],ans:0,
+   exp:'Evaluar es decidir con criterios: cuidar la salud y el ambiente sin dejar a la ciudad sin energía. Por eso se habla de transición energética.',concept:'Impacto ambiental y transición energética'}]},
+{id:'hospital',site:'O',tier:3,renew:false,icon:'🏥',place:'Hospital comunal',title:'Corte de luz y combustible limitado',
+ radio:'Central a ingeniero/a: corte de luz en el sector. El hospital funciona con su generador de respaldo y el combustible es limitado. ¡Urgente!',
+ story:'Las ambulancias entran y salen. El generador diésel ruge detrás del edificio y la jefa de turno pregunta qué equipos conectar primero.',
+ tasks:[
+  {type:'chain',bloom:4,q:'Ordena la cadena de transformaciones del generador diésel',steps:[
+    {t:'Combustible diésel en el estanque',tag:'Energía química'},{t:'Gases calientes dentro del motor',tag:'Energía térmica'},{t:'Eje del motor girando',tag:'Energía cinética'},{t:'Corriente del alternador',tag:'Energía eléctrica'}],
+   exp:'El combustible se quema (química → térmica), los gases mueven el motor (cinética) y el alternador produce electricidad.',concept:'Transformaciones en un generador'},
+  {type:'choice',bloom:5,q:'La energía alcanza solo para algunos equipos. ¿Qué conectas primero?',
+   opts:['Ventiladores, pabellón y refrigeradores de medicamentos; apagar lo no esencial','Ascensores y luces decorativas','La cafetería y el televisor de la sala de espera','Todo por igual, aunque falle todo'],ans:0,
+   exp:'Evaluar es decidir con criterios: aquí, proteger la vida y los medicamentos antes que la comodidad.',concept:'Uso responsable de la energía: priorizar'},
+  {type:'choice',bloom:5,q:'Para el futuro, ¿qué sistema daría energía más limpia y segura al hospital?',
+   opts:['Paneles solares con baterías y un generador solo como último respaldo','Solo más generadores diésel','Solo paneles, sin baterías','No tener ninguna fuente de respaldo'],ans:0,
+   exp:'Combinar generación limpia, almacenamiento y respaldo da seguridad y reduce el impacto ambiental.',concept:'Matriz energética y almacenamiento'},
+  {type:'choice',bloom:4,q:'Un ventilador de 100 W funciona 10 horas seguidas. ¿Cuánta energía consume?',
+   opts:['1 kWh','10 kWh','100 kWh','0,1 kWh'],ans:0,
+   exp:'Energía = potencia × tiempo. 100 W = 0,1 kW; 0,1 kW × 10 h = 1 kWh.',concept:'Cálculo de consumo (kWh)'}]},
+{id:'edificio',site:'A',tier:2,renew:false,icon:'🏢',place:'Edificio Los Aromos',title:'Boleta de luz por las nubes',
+ radio:'Central a ingeniero/a: los vecinos del Edificio Los Aromos reclaman por una boleta de la luz altísima. Revisa los medidores.',
+ story:'En el hall hay vecinos con la boleta en la mano. Dice "consumo: 420 kWh" y nadie sabe qué significa esa unidad ni por qué subió tanto. El conserje te pide que lo expliques.',
+ tasks:[
+  {type:'classify',bloom:3,q:'Antes de revisar, ordena las unidades: ¿qué mide cada una?',cats:['Joule (J)','Watt (W)','kilowatt-hora (kWh)','Grado Celsius (°C)'],
+   items:[{t:'Energía, en el Sistema Internacional',c:0},{t:'Potencia: energía transformada cada segundo',c:1},{t:'Energía que la empresa eléctrica cobra en la boleta',c:2},{t:'Temperatura de una sala',c:3}],
+   exp:'El joule mide energía; el watt mide potencia (1 W = 1 J por segundo); el kWh es una unidad práctica de energía (1 kWh = 3,6 millones de J); la temperatura se mide en °C.',concept:'Unidades de energía, potencia y temperatura'},
+  {type:'choice',bloom:4,q:'Una estufa de 2 000 W (2 kW) funciona 3 horas. ¿Cuánta energía consume?',
+   opts:['6 kWh','2 kWh','5 kWh','0,6 kWh'],ans:0,
+   exp:'Energía = potencia × tiempo: 2 kW × 3 h = 6 kWh.',concept:'Cálculo de consumo (kWh)'},
+  {type:'choice',bloom:4,q:'Una ampolleta LED de 10 W y una incandescente de 60 W dan la misma luz y están 5 h al día encendidas. ¿Cuál consume más y cuánto más?',
+   opts:['La incandescente: 0,25 kWh más al día','La LED: 0,25 kWh más al día','Consumen lo mismo','La incandescente: 2,5 kWh más al día'],ans:0,
+   exp:'Incandescente: 60 W × 5 h = 300 Wh = 0,30 kWh. LED: 10 W × 5 h = 50 Wh = 0,05 kWh. Diferencia: 0,25 kWh al día.',concept:'Eficiencia y cálculo de consumo (kWh)'}]},
+{id:'feria',site:'F',tier:2,renew:false,icon:'🎢',place:'Parque de diversiones',title:'Montaña rusa detenida a medio camino',
+ radio:'Central a ingeniero/a: la montaña rusa del parque de diversiones se detuvo en plena subida. Revisa qué pasa con la energía.',
+ story:'Los carros quedaron en lo alto y los niños gritan entre risas y nervios. El operador revisa el motor de la cadena y dice que "la segunda colina la hicieron más alta que la primera".',
+ tasks:[
+  {type:'classify',bloom:3,q:'En el recorrido de la montaña rusa, ¿qué forma de energía predomina en cada situación?',cats:['Potencial gravitatoria','Cinética','Térmica','Sonora'],
+   items:[{t:'Carro detenido en la cima de la colina',c:0},{t:'Carro pasando a gran velocidad por el punto más bajo',c:1},{t:'Los frenos se calientan al detener el carro',c:2},{t:'Los gritos y el chirrido de los rieles',c:3}],
+   exp:'En la cima hay máxima energía potencial; abajo, máxima cinética. El roce transforma parte en calor (térmica) y en sonido.',concept:'Tipos de energía: potencial, cinética, térmica y sonora'},
+  {type:'choice',bloom:4,q:'Sin roce, un carro baja desde la cima. Mientras baja, ¿qué pasa con su energía?',
+   opts:['La potencial disminuye y la cinética aumenta; la suma se mantiene','Las dos aumentan','La cinética disminuye y la potencial aumenta','Ambas desaparecen al llegar abajo'],ans:0,
+   exp:'La energía potencial se transforma en cinética. La energía mecánica total se conserva si no hay roce.',concept:'Transformación potencial-cinética y conservación'},
+  {type:'choice',bloom:4,q:'El diseño tiene una segunda colina MÁS ALTA que la primera. ¿Qué ocurrirá con el carro?',
+   opts:['No llega a la cima: no tiene energía suficiente, y además el roce transformó parte en calor y sonido','Llega más rápido porque tiene más energía','Llega igual: la energía siempre aumenta','Se detiene porque la energía desaparece'],ans:0,
+   exp:'El carro solo puede subir hasta la altura desde la que partió (y menos aún con roce). Para subir más alto habría que entregarle energía extra.',concept:'Conservación de la energía y pérdidas por roce'}]},
+{id:'heladeria',site:'I',tier:3,renew:false,icon:'🍦',place:'Heladería El Polo',title:'Helados derretidos en pleno verano',
+ radio:'Central a ingeniero/a: en la heladería de la plaza los helados se derriten. El refrigerador no enfría. Pasa a revisar.',
+ story:'Con 30 °C afuera hay una fila de niños y los barquillos gotean. La puerta del congelador estaba entreabierta y el dueño jura que "el frío se escapó por la rendija".',
+ tasks:[
+  {type:'choice',bloom:4,q:'Un refrigerador, ¿qué hace realmente?',
+   opts:['Extrae calor del interior y lo libera hacia afuera','Fabrica frío y lo guarda adentro','Destruye el calor que hay adentro','Impide que el calor exista'],ans:0,
+   exp:'No existe "energía fría" que se escape: lo que se transfiere es calor, desde lo caliente hacia lo frío. El refrigerador bombea calor hacia afuera.',concept:'Transferencia de calor y refrigeración'},
+  {type:'choice',bloom:3,q:'El termómetro marca 30 °C afuera y −18 °C en el congelador. ¿Qué mide el termómetro?',
+   opts:['La temperatura: qué tan caliente o frío está algo','El calor que contiene cada lugar','La energía total almacenada','La cantidad de hielo'],ans:0,
+   exp:'La temperatura indica cuán caliente o frío está un cuerpo (°C). El calor es la energía que se transfiere entre cuerpos con distinta temperatura.',concept:'Temperatura y calor'},
+  {type:'classify',bloom:3,q:'Explica cómo se derrite el helado: ¿qué tipo de transferencia es cada una?',cats:CATS_HEAT,
+   items:[{t:'La cuchara metálica se enfría al tocar el helado',c:0},{t:'El aire tibio sobre el helado sube y el frío baja',c:1},{t:'El sol del mediodía calienta el barquillo sin tocarlo',c:2}],
+   exp:'Contacto directo: conducción. Movimiento de aire (fluido): convección. Sin contacto, desde el Sol: radiación.',concept:'Transferencia de calor: conducción, convección y radiación'}]}
+];
+const LV={casa:1,hidro:1,edificio:1,feria:1,granja:2,escuela:2,termo:2,eolico:3,panaderia:3,hospital:3,heladeria:3};
+MISSIONS.forEach(m=>{m.lv=LV[m.id]||3});
+const BOSS={id:'boss',site:'B',boss:true,icon:'🚨',place:'Central de Control Villa Alemana',title:'¡APAGÓN GENERAL!',
+ radio:'¡ALERTA ROJA! Apagón general en Villa Alemana. Todos los sistemas cayeron. Ven a la Central de Control: ¡eres nuestra última esperanza!',
+ story:'La ciudad está a oscuras: sin semáforos, con el hospital en respaldo y toda la comunidad esperando. Hay que reconstruir la red paso a paso… y pensar cómo evitar que vuelva a pasar.',
+ tasks:[
+  {type:'classify',bloom:4,q:'Reinicia la red: ¿qué forma de energía predomina en cada elemento?',cats:['Potencial','Cinética','Térmica','Eléctrica'],
+   items:[{t:'Agua quieta en lo alto del embalse',c:0},{t:'Aspas del parque eólico girando',c:1},{t:'Resistencia del horno al rojo',c:2},{t:'Corriente en el cable que llega a las casas',c:3}],
+   exp:'Potencial: por la posición (altura). Cinética: por el movimiento. Térmica: por la agitación de las partículas. Eléctrica: por el flujo de cargas.',concept:'Formas de energía'},
+  {type:'choice',bloom:5,q:'Diseña la matriz energética de Villa Alemana para que un apagón no la deje a oscuras otra vez',
+   opts:['Varias fuentes (hidro, solar, eólica) + baterías + ahorro de energía en el consumo','Solo una gran central de carbón','Solo paneles solares','Ninguna: depender de que otra ciudad nos preste energía'],ans:0,
+   exp:'La diversificación, el almacenamiento y el consumo eficiente hacen un sistema más seguro y sustentable.',concept:'Matriz energética diversificada'},
+  {type:'choice',bloom:6,q:'Tu curso construirá una maqueta de energía. ¿Cuál es la mejor pregunta de investigación?',
+   opts:['¿Cómo cambia la electricidad que genera una turbina al variar la altura desde donde cae el agua?','¿Qué es la energía?','¿Por qué es linda la energía?','¿Hay mucha agua en los ríos?'],ans:0,
+   exp:'Una buena pregunta de investigación es específica, se puede investigar y relaciona variables que puedes medir (altura de caída ↔ electricidad generada).',concept:'Formular preguntas de investigación'}]};
+
+const BASE={2:10,3:15,4:20,5:30,6:40};
+const BADGES={
+ primer:['🎖️','Primer llamado'],cero:['⭐','Reparación perfecta'],prudente:['🛡️','Conductor/a prudente'],rapido:['⚡','Llegada veloz'],
+ rel:['💡','Mente relámpago'],limpia:['🌱','Energía limpia'],agua:['💧','Maestro/a del agua'],bateria:['🔋','Recarga justo a tiempo'],jefe:['👑','Ingeniero/a Jefe']};
+
+/* ================= MUNDO ================= */
+const C=420,RW=110,N=8,LW=C-RW,WORLD=N*C,MAXV=330,ZONE=130;
+const MAP=['..G.E.R.','.Q...ART','I..C..R.','.P...HW.','..G...W.','...O..WS','.B..F.W.','....G.WG'];
+const SITE={C:{n:'Casa',side:'bottom',col:'#ff8a5c'},S:{n:'Granja',side:'left',col:'#f4b942'},Q:{n:'Escuela',side:'bottom',col:'#9ac7ff'},H:{n:'Hidroeléctrica',side:'right',col:'#2ed3bd'},
+ E:{n:'Parque eólico',side:'bottom',col:'#7de8d0'},P:{n:'Panadería',side:'bottom',col:'#ffb3c6'},T:{n:'Termoeléctrica',side:'left',col:'#b0b0b0'},O:{n:'Hospital',side:'top',col:'#ffffff'},
+ B:{n:'Central de Control',side:'right',col:'#b98bff'},G:{n:'Cargador solar',side:'bottom',col:'#3ddc97'},
+ A:{n:'Edificio',side:'bottom',col:'#d6c8b2'},F:{n:'Parque de diversiones',side:'bottom',col:'#ff6fb5'},I:{n:'Heladería',side:'right',col:'#9fe0ff'}};
+const lots=[];const lotList=[];
+(function genWorld(){
+  for(let j=0;j<N;j++){lots[j]=[];for(let i=0;i<N;i++){
+    const ch=MAP[j][i];const x=i*C+RW/2,y=j*C+RW/2;const r=rng(i*131+j*17+7);
+    const l={i,j,x,y,cx:x+LW/2,cy:y+LW/2,type:ch,state:'idle',d:{},cool:0};
+    if(ch==='.'){const v=r();l.type=v<.42?'h':v<.62?'a':v<.82?'k':'s';
+      if(l.type==='h'){l.d.hs=[];l.d.ts=[];const roofs=['#b5533c','#8a5a44','#6b7f8f','#a8483a','#7d6b4f','#5f7f5a'];
+        for(let q=0;q<4;q++){const qx=(q%2)*155+10,qy=(q>>1)*155+10;l.d.hs.push({x:x+qx+r()*12,y:y+qy+r()*10,w:66+r()*30,h:58+r()*24,roof:roofs[Math.floor(r()*roofs.length)]});l.d.ts.push({x:x+qx+(q%2?18:118)+r()*10,y:y+qy+(q>>1?30:120)+r()*8,r:9+r()*7})}}
+      if(l.type==='k'){l.d.ts=[];for(let q=0;q<9;q++)l.d.ts.push({x:x+20+r()*(LW-40),y:y+20+r()*(LW-40),r:10+r()*10});l.d.pond={x:x+60+r()*100,y:y+60+r()*100}}
+      if(l.type==='a'){l.d.w=190+r()*40;l.d.h=130+r()*40;l.d.col=['#c9b79c','#bfae9a','#b8c1c9'][Math.floor(r()*3)]}
+      if(l.type==='s'){l.d.col=['#d96c5b','#4f86c6','#e0a92f','#58a773'][Math.floor(r()*4)];l.d.cars=[['#c33','#fff'][Math.floor(r()*2)],'#2a6fb0']}}
+    if(ch==='W'||ch==='R')l.type=ch;
+    lots[j][i]=l;lotList.push(l);
+    if(SITE[ch]){const s=SITE[ch];l.site=true;
+      l.acc=s.side==='bottom'?{x:l.cx,y:(j+1)*C}:s.side==='top'?{x:l.cx,y:j*C}:s.side==='left'?{x:i*C,y:l.cy}:{x:(i+1)*C,y:l.cy}}
+  }}
+})();
+const findLot=t=>lotList.find(l=>l.type===t);
+const chargers=lotList.filter(l=>l.type==='G');
+
+/* peatones */
+const peds=[];(function(){const r=rng(99);for(const l of lotList){if(l.type==='W'||l.type==='R')continue;if(r()<.7)peds.push({l,u:r()*4,sp:.05+r()*.05,col:['#e85d75','#4f86c6','#e0a92f','#58a773','#fff'][Math.floor(r()*5)]})}})();
+
+/* ================= TRÁFICO ================= */
+const npcs=[];
+function initNPC(){npcs.length=0;const cols=['#d9d9d9','#4f86c6','#c0554a','#e0a92f','#58a773','#8c8c99'];
+  for(let k=0;k<16;k++){const a={gx:Math.floor(Math.random()*(N+1)),gy:Math.floor(Math.random()*(N+1))};
+    const n=pickNext(a,null);npcs.push({a,b:n,t:Math.random(),sp:100+Math.random()*50,col:cols[k%cols.length],off:{x:0,y:0},x:0,y:0,ang:0,stop:0});}}
+function neighbors(n){const r=[];if(n.gx>0)r.push({gx:n.gx-1,gy:n.gy});if(n.gx<N)r.push({gx:n.gx+1,gy:n.gy});if(n.gy>0)r.push({gx:n.gx,gy:n.gy-1});if(n.gy<N)r.push({gx:n.gx,gy:n.gy+1});return r}
+function pickNext(a,prev){let ns=neighbors(a);if(prev){const f=ns.filter(n=>!(n.gx===prev.gx&&n.gy===prev.gy));if(f.length)ns=f}
+  /* evitar el río fuera de puentes: los nodos son solo intersecciones, no hay problema */return ns[Math.floor(Math.random()*ns.length)]}
+
+/* ================= ESTADO ================= */
+const G={state:'menu',anim:0,t:0,fel:0,name:'',mode:'full',camMode:'fixed',queue:[],active:null,nextCall:5,done:[],review:[],crashes:0,battery:100,badges:new Set(),
+  night:0,hour:9,modal:false,blackout:false,paused:false,dwell:0,shake:0,crashCd:0,fx:[],stars:0,maxStars:0,lowBat:false,groundCd:0};
+const car={x:0,y:0,a:-Math.PI/2,v:0,brake:false};
+const cam={x:0,y:0,th:0,z:1};
+const inp={up:false,down:false,left:false,right:false,space:false};
+let camTheta=0;
+
+/* ================= DIBUJO ================= */
+const cv=$('#cv'),ctx=cv.getContext('2d');let VW=0,VH=0,DPR=1;
+function resize(){DPR=Math.min(2,window.devicePixelRatio||1);VW=window.innerWidth;VH=window.innerHeight;cv.width=Math.round(VW*DPR);cv.height=Math.round(VH*DPR)}
+window.addEventListener('resize',resize);resize();
+
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+function blob(c,x,y,r,col){c.fillStyle=col;c.beginPath();c.arc(x,y,r,0,TAU);c.fill()}
+function box(c,x,y,w,h,col,sh=5){c.fillStyle='rgba(0,0,0,.25)';c.fillRect(x+sh,y+sh,w,h);c.fillStyle=col;c.fillRect(x,y,w,h)}
+function tree(c,x,y,r){blob(c,x+r*.35,y+r*.35,r,'rgba(0,0,0,.22)');blob(c,x,y,r,'#2c7339');blob(c,x-r*.25,y-r*.25,r*.6,'#3f9650')}
+function label(c,txt,x,y,size=22,col='#fff'){c.save();c.translate(x,y);c.rotate(-camTheta);c.font=size+'px Inter,Arial,sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle=col;c.fillText(txt,0,0);c.restore()}
+function tag(c,txt,x,y,col){c.save();c.translate(x,y);c.rotate(-camTheta);c.font='700 13px Inter,Arial,sans-serif';const w=c.measureText(txt).width+16;c.fillStyle='rgba(10,23,40,.85)';rr(c,-w/2,-11,w,22,8);c.fill();c.strokeStyle=col;c.lineWidth=1.5;c.stroke();c.fillStyle='#fff';c.textAlign='center';c.textBaseline='middle';c.fillText(txt,0,1);c.restore()}
+function ground(c,l,col){c.fillStyle=col;c.fillRect(l.x,l.y,LW,LW);c.strokeStyle='rgba(232,226,208,.9)';c.lineWidth=7;c.strokeRect(l.x+3.5,l.y+3.5,LW-7,LW-7)}
+function smoke(c,x,y,t,run,col='255,255,255',big=1){if(!run)return;for(let k=0;k<6;k++){const ph=((t*.3+k/6)%1);const px=x+ph*34+Math.sin(k*2+t)*3,py=y-ph*64*big;blob(c,px,py,(5+ph*14)*big,`rgba(${col},${(1-ph)*.5})`)}}
+function panel(c,x,y,w,h,t,glint){c.fillStyle='#1d4f9a';c.fillRect(x,y,w,h);c.strokeStyle='#8fb7ee';c.lineWidth=1;for(let k=1;k<4;k++){c.beginPath();c.moveTo(x+w*k/4,y);c.lineTo(x+w*k/4,y+h);c.stroke()}c.beginPath();c.moveTo(x,y+h/2);c.lineTo(x+w,y+h/2);c.stroke();c.strokeStyle='#cfd8e3';c.strokeRect(x,y,w,h);
+  if(glint){const g=((t*.5+x*.013)%1);c.fillStyle=`rgba(255,255,255,${.5*Math.max(0,1-Math.abs(g-.5)*4)})`;c.fillRect(x,y,w,h)}}
+function sparks(c,l,t){const h=Math.floor(t*10);const r=rng(h*7+l.i*3+l.j);c.strokeStyle='#ffe27a';c.lineWidth=2;for(let k=0;k<6;k++){const a=r()*TAU,d=10+r()*22;c.beginPath();c.moveTo(l.cx+Math.cos(a)*8,l.cy+Math.sin(a)*8);c.lineTo(l.cx+Math.cos(a)*d,l.cy+Math.sin(a)*d);c.stroke()}}
+function person(c,x,y,col){blob(c,x+1,y+1,4.2,'rgba(0,0,0,.25)');blob(c,x,y,4,col);blob(c,x,y,2,'#f1c9a5')}
+
+const LOT={};
+LOT.h=(c,l,t)=>{ground(c,l,'#5c9b57');for(const h of l.d.hs){c.fillStyle='rgba(0,0,0,.26)';c.fillRect(h.x+6,h.y+6,h.w,h.h);c.fillStyle=h.roof;c.fillRect(h.x,h.y,h.w,h.h);c.fillStyle='rgba(0,0,0,.18)';c.fillRect(h.x,h.y,h.w,h.h/2);c.strokeStyle='rgba(0,0,0,.35)';c.lineWidth=2;c.beginPath();c.moveTo(h.x,h.y+h.h/2);c.lineTo(h.x+h.w,h.y+h.h/2);c.stroke();c.fillStyle='#6b6b6b';c.fillRect(h.x+h.w*.7,h.y+4,8,10)}
+  for(const tr of l.d.ts)tree(c,tr.x,tr.y,tr.r)};
+LOT.a=(c,l,t)=>{ground(c,l,'#9aa0a6');const w=l.d.w,h=l.d.h,x=l.x+(LW-w)/2,y=l.y+(LW-h)/2-10;box(c,x,y,w,h,l.d.col,8);c.fillStyle='rgba(0,0,0,.14)';c.fillRect(x+8,y+8,w-16,h-16);
+  for(let k=0;k<3;k++)box(c,x+20+k*55,y+16,26,22,'#8d949b',3);blob(c,x+w-40,y+h-34,16,'#7b8b99');blob(c,x+w-40,y+h-34,10,'#a6b4c0');
+  for(let k=0;k<5;k++){c.fillStyle='rgba(255,255,255,.7)';c.fillRect(l.x+24+k*54,l.y+LW-34,30,5)}tree(c,l.x+26,l.y+LW-60,12);tree(c,l.x+LW-26,l.y+LW-60,12)};
+LOT.k=(c,l,t)=>{ground(c,l,'#6fae5e');c.fillStyle='#e0d3b0';c.fillRect(l.x+LW/2-9,l.y+8,18,LW-16);c.fillRect(l.x+8,l.y+LW/2-9,LW-16,18);blob(c,l.cx,l.cy,24,'#e0d3b0');blob(c,l.cx,l.cy,15,'#59a6d6');
+  c.fillStyle='#59a6d6';c.beginPath();c.ellipse(l.d.pond.x,l.d.pond.y,34,22,.4,0,TAU);c.fill();for(const tr of l.d.ts)tree(c,tr.x,tr.y,tr.r)
+  const a=t*.4;person(c,l.cx+Math.cos(a)*52,l.cy+Math.sin(a)*52,'#e85d75');person(c,l.cx+Math.cos(a+3)*52,l.cy+Math.sin(a+3)*52,'#4f86c6')};
+LOT.s=(c,l,t)=>{ground(c,l,'#8c9096');box(c,l.x+40,l.y+40,210,110,l.d.col,7);c.fillStyle='rgba(255,255,255,.85)';c.fillRect(l.x+40,l.y+150-14,210,14);for(let k=0;k<4;k++)box(c,l.x+60+k*44,l.y+58,28,22,'#7c838b',3);
+  for(let k=0;k<6;k++){c.fillStyle='rgba(255,255,255,.8)';c.fillRect(l.x+30+k*44,l.y+200,4,70)}c.fillStyle=l.d.cars[0];rr(c,l.x+50,l.y+210,34,52,6);c.fill();c.fillStyle=l.d.cars[1];rr(c,l.x+138,l.y+210,34,52,6);c.fill()};
+LOT.W=(c,l,t)=>{const res=l.type==='R';c.fillStyle=res?'#3d9bd0':'#2c7db8';c.fillRect(l.x,l.y,LW,LW);
+  c.strokeStyle='rgba(255,255,255,.28)';c.lineWidth=2;const sp=res?6:38;for(let k=0;k<8;k++){const xx=l.x+22+k*40,yy=l.y+((t*sp+k*61)%LW);c.beginPath();c.moveTo(xx,yy);c.lineTo(xx,Math.min(yy+22,l.y+LW));c.stroke()}
+  c.fillStyle='#b8a98a';c.fillRect(l.x,l.y,9,LW);c.fillRect(l.x+LW-9,l.y,9,LW);for(let k=0;k<9;k++){blob(c,l.x+4,l.y+k*36+10,4,'#8c7f66');blob(c,l.x+LW-4,l.y+k*36+22,4,'#8c7f66')}
+  if(res&&l.j===2){c.fillStyle='#9aa3ab';c.fillRect(l.x,l.y+LW-12,LW,12);c.strokeStyle='#6c757d';for(let k=0;k<16;k++){c.beginPath();c.moveTo(l.x+k*20,l.y+LW-12);c.lineTo(l.x+k*20+8,l.y+LW);c.stroke()}}};
+LOT.R=LOT.W;
+LOT.C=(c,l,t)=>{const run=l.state!=='broken';ground(c,l,'#78b862');
+  for(let k=0;k<4;k++){c.fillStyle='#e9e3d0';c.fillRect(l.x+22+k*10,l.y+LW-26,6,18)}
+  box(c,l.x+40,l.y+50,170,120,'#c9743f',8);c.fillStyle='rgba(0,0,0,.2)';c.fillRect(l.x+40,l.y+50,170,60);c.strokeStyle='rgba(0,0,0,.4)';c.lineWidth=2;c.beginPath();c.moveTo(l.x+40,l.y+110);c.lineTo(l.x+210,l.y+110);c.stroke();
+  for(let r=0;r<2;r++)for(let k=0;k<4;k++)panel(c,l.x+52+k*38,l.y+116+r*0+0,32,24,t+r,run);
+  c.fillStyle='#f4f4f4';rr(c,l.x+52,l.y+60,70,40,6);c.fill();c.strokeStyle='#999';c.stroke();c.fillStyle=run?'#ff9d6c':'#7aa7ff';rr(c,l.x+58,l.y+66,58,28,5);c.fill();
+  c.strokeStyle='#cfd8e3';c.lineWidth=3;c.beginPath();c.moveTo(l.x+130,l.y+80);c.lineTo(l.x+196,l.y+80);c.stroke();
+  smoke(c,l.x+190,l.y+60,t,run,'230,230,230',.5);
+  c.strokeStyle='#a98255';c.lineWidth=3;c.strokeRect(l.x+14,l.y+14,LW-28,LW-28);tree(c,l.x+250,l.y+70,18);tree(c,l.x+262,l.y+210,16);
+  const a=t*1.4;person(c,l.x+220+Math.cos(a)*34,l.y+230+Math.sin(a*1.3)*20,'#e85d75');person(c,l.x+240+Math.cos(a+2)*30,l.y+215+Math.sin(a+1)*22,'#4f86c6');blob(c,l.x+232,l.y+232,4,'#fff');
+  blob(c,l.x+90+Math.sin(t*.4)*3,l.y+60,6,'#555')};
+LOT.S=(c,l,t)=>{const run=l.state!=='broken';ground(c,l,'#8fbf5a');
+  for(let k=0;k<6;k++){c.fillStyle=k%2?'#a9cc63':'#7fae4d';c.fillRect(l.x+12,l.y+14+k*22,150,18)}
+  box(c,l.x+190,l.y+16,95,64,'#b23a2e',6);c.fillStyle='#8c2c23';c.fillRect(l.x+190,l.y+16,95,32);c.strokeStyle='#ddd';c.beginPath();c.moveTo(l.x+190,l.y+48);c.lineTo(l.x+285,l.y+48);c.stroke();
+  for(let r=0;r<3;r++)for(let k=0;k<5;k++)panel(c,l.x+190+k*20,l.y+96+r*26,17,20,t+k*.2,run);
+  blob(c,l.x+230,l.y+240,26,'rgba(0,0,0,.2)');blob(c,l.x+228,l.y+238,26,'#c9ccd1');blob(c,l.x+228,l.y+238,19,run?'#3a8fd0':'#7b7f85');if(run){c.strokeStyle='rgba(255,255,255,.55)';c.lineWidth=2;c.beginPath();c.arc(l.x+228,l.y+238,8+(t*10)%11,0,TAU);c.stroke()}
+  box(c,l.x+262,l.y+196,26,24,'#6b7480',3);c.strokeStyle='#3a8fd0';c.lineWidth=4;c.beginPath();c.moveTo(l.x+262,l.y+208);c.lineTo(l.x+254,l.y+208);c.stroke();
+  const cows=[[60,200,0],[110,235,1.7],[40,260,3.1],[150,200,4.6]];cows.forEach(([cx,cy,ph],k)=>{const x=l.x+cx+Math.sin(t*.35+ph)*22,y=l.y+cy+Math.cos(t*.27+ph)*8;c.fillStyle='#f4f4f4';c.beginPath();c.ellipse(x,y,12,7,0,0,TAU);c.fill();c.fillStyle='#222';blob(c,x-3,y-1,3,'#222');blob(c,x+4,y+2,2.5,'#222');blob(c,x+12,y,4,'#f4f4f4')});
+  c.strokeStyle='#8a6a3b';c.lineWidth=3;c.strokeRect(l.x+14,l.y+170,160,120)};
+LOT.Q=(c,l,t)=>{const run=l.state!=='broken';ground(c,l,'#b8bcc2');c.fillStyle='#d9695f';c.fillRect(l.x+30,l.y+170,150,100);c.strokeStyle='#fff';c.lineWidth=2;c.strokeRect(l.x+30,l.y+170,150,100);c.beginPath();c.arc(l.x+105,l.y+220,18,0,TAU);c.stroke();c.beginPath();c.moveTo(l.x+105,l.y+170);c.lineTo(l.x+105,l.y+270);c.stroke();
+  box(c,l.x+30,l.y+26,230,70,'#e8d9a7',7);c.fillStyle='#9c4f3a';c.fillRect(l.x+30,l.y+26,230,35);box(c,l.x+30,l.y+26,70,130,'#e8d9a7',0);c.fillStyle='#9c4f3a';c.fillRect(l.x+30,l.y+26,35,130);
+  box(c,l.x+205,l.y+36,14,14,'#666',2);smoke(c,l.x+212,l.y+36,t,run,'210,210,210',.55);
+  if(!run){label(c,'🥶',l.x+160,l.y+95,26)}
+  c.strokeStyle='#777';c.lineWidth=2;c.beginPath();c.moveTo(l.x+245,l.y+150);c.lineTo(l.x+245,l.y+110);c.stroke();c.fillStyle='#3a7bd5';c.fillRect(l.x+245,l.y+110,22,12);
+  for(let k=0;k<7;k++){const a=t*(.5+k*.07)+k*1.7;person(c,l.x+105+Math.cos(a)*(30+k*3)*1.5,l.y+220+Math.sin(a*1.2)*(22+k*2),['#e85d75','#4f86c6','#e0a92f','#58a773','#fff','#b98bff','#ff8a5c'][k]);}
+  tree(c,l.x+235,l.y+230,15);tree(c,l.x+265,l.y+270,12)};
+LOT.H=(c,l,t)=>{const run=l.state!=='broken';ground(c,l,'#aeb4ba');
+  c.fillStyle='#8c949c';c.fillRect(l.x+LW-70,l.y+14,26,LW-60);c.fillRect(l.x+LW-70,l.y+LW-60,50,20);
+  box(c,l.x+30,l.y+90,170,110,'#d8dde2',8);c.fillStyle='#4a6f8f';c.fillRect(l.x+30,l.y+90,170,30);c.fillStyle='#2f4f6b';for(let k=0;k<4;k++)c.fillRect(l.x+44+k*38,l.y+130,26,50);
+  c.save();c.translate(l.x+115,l.y+160);c.rotate(run?t*3:0.4);c.strokeStyle='#ffd166';c.lineWidth=5;for(let k=0;k<4;k++){c.rotate(Math.PI/2);c.beginPath();c.moveTo(0,0);c.lineTo(0,22);c.stroke()}c.restore();blob(c,l.x+115,l.y+160,5,'#fff');
+  c.strokeStyle='#8c949c';c.lineWidth=2;for(let k=0;k<3;k++){c.strokeRect(l.x+210+k*14,l.y+220,12,40)}
+  if(run){c.fillStyle='rgba(255,255,255,.7)';for(let k=0;k<12;k++){const ph=((t*.9+k/12)%1);blob(c,l.x+LW-6+ph*20,l.y+110+((k*37)%80),2+ph*3,`rgba(255,255,255,${.8*(1-ph)})`)}}
+  c.strokeStyle='#555';c.lineWidth=2;c.beginPath();c.moveTo(l.x+230,l.y+30);c.lineTo(l.x+230,l.y+80);c.stroke();c.beginPath();c.moveTo(l.x+215,l.y+42);c.lineTo(l.x+245,l.y+42);c.stroke();
+  tree(c,l.x+30,l.y+40,14);tree(c,l.x+60,l.y+260,15)};
+LOT.E=(c,l,t)=>{const run=l.state!=='broken';ground(c,l,'#7fae5d');blob(c,l.cx,l.cy+10,130,'rgba(60,110,60,.55)');blob(c,l.cx,l.cy+16,95,'rgba(60,110,60,.5)');
+  c.strokeStyle='#cdb98d';c.lineWidth=7;c.beginPath();c.moveTo(l.cx,l.y+LW);c.quadraticCurveTo(l.cx-40,l.cy+60,l.x+80,l.y+100);c.stroke();
+  const T=[[85,90],[215,75],[160,205]];T.forEach(([tx,ty],k)=>{const x=l.x+tx,y=l.y+ty;c.save();c.translate(x+8,y+8);c.rotate((run?t*(1.6+k*.25):0.5+k)+k*2);c.strokeStyle='rgba(0,0,0,.22)';c.lineWidth=5;for(let q=0;q<3;q++){c.rotate(TAU/3);c.beginPath();c.moveTo(0,0);c.lineTo(0,58);c.stroke()}c.restore();
+    c.save();c.translate(x,y);c.rotate((run?t*(1.6+k*.25):0.5+k)+k*2);c.strokeStyle='#f2f4f6';c.lineWidth=5;c.lineCap='round';for(let q=0;q<3;q++){c.rotate(TAU/3);c.beginPath();c.moveTo(0,0);c.lineTo(0,58);c.stroke()}c.restore();blob(c,x,y,7,'#cfd6dc');blob(c,x,y,3,'#e63946')});
+  box(c,l.x+250,l.y+240,28,22,'#6b7480',3);
+  const sx=l.x+40+((t*8)%180);blob(c,sx,l.y+LW-60,5,'#fff');blob(c,sx+10,l.y+LW-56,5,'#fff')};
+LOT.P=(c,l,t)=>{const run=l.state!=='broken';ground(c,l,'#b9a98b');box(c,l.x+50,l.y+40,190,120,'#e7c79a',7);c.fillStyle='rgba(0,0,0,.13)';c.fillRect(l.x+50,l.y+40,190,60);
+  box(c,l.x+190,l.y+50,18,18,'#7a5b3a',3);smoke(c,l.x+199,l.y+50,t,run,'255,255,255',.7);
+  for(let k=0;k<10;k++){c.fillStyle=k%2?'#fff':'#d8433a';c.fillRect(l.x+50+k*19,l.y+160,19,26)}
+  c.fillStyle=run?'#ffd84a':'#666';c.fillRect(l.x+50,l.y+190,190,4);
+  for(let k=0;k<5;k++)person(c,l.x+70+k*26,l.y+212+Math.sin(t*1.2+k)*2,['#e85d75','#4f86c6','#e0a92f','#58a773','#b98bff'][k]);
+  c.fillStyle='#c33';rr(c,l.x+240,l.y+230,30,16,5);c.fill();blob(c,l.x+246,l.y+248,5,'#222');blob(c,l.x+266,l.y+248,5,'#222');tree(c,l.x+30,l.y+250,14);tree(c,l.x+270,l.y+60,13)};
+LOT.T=(c,l,t)=>{const run=l.state!=='broken';ground(c,l,'#8d9298');
+  box(c,l.x+30,l.y+120,180,110,'#5c646c',9);c.fillStyle='#454c53';c.fillRect(l.x+30,l.y+120,180,30);for(let k=0;k<5;k++)box(c,l.x+44+k*32,l.y+168,22,40,'#3a4047',3);
+  for(const cx of [90,170]){c.fillStyle='rgba(0,0,0,.25)';c.beginPath();c.ellipse(l.x+cx+34,l.y+90+16,15,26,.5,0,TAU);c.fill();blob(c,l.x+cx,l.y+60,16,'#9aa0a6');blob(c,l.x+cx,l.y+60,10,'#2a2d31');
+    smoke(c,l.x+cx,l.y+54,t+cx,true,run?'90,90,90':'20,20,20',run?1:1.5)}
+  c.fillStyle='#1f1f1f';for(let k=0;k<7;k++)blob(c,l.x+240+(k%3)*14,l.y+240+(k>>1)*8-8,12-k%2*2,'#1f1f1f');
+  c.strokeStyle='#d8a928';c.lineWidth=7;c.beginPath();c.moveTo(l.x+226,l.y+230);c.lineTo(l.x+226,l.y+160);c.stroke();c.setLineDash([6,8]);c.strokeStyle='#333';c.lineDashOffset=-t*20;c.stroke();c.setLineDash([]);
+  c.strokeStyle='#555';c.lineWidth=2;c.beginPath();c.moveTo(l.x+270,l.y+30);c.lineTo(l.x+270,l.y+110);c.moveTo(l.x+252,l.y+48);c.lineTo(l.x+288,l.y+48);c.stroke();
+  if(!run){blob(c,l.x+170,l.y+135,6+Math.abs(Math.sin(t*4))*3,'#ff3b3b')}};
+LOT.O=(c,l,t)=>{const run=l.state!=='broken';ground(c,l,'#c4c9ce');box(c,l.x+26,l.y+120,230,120,run?'#f4f7fa':'#c9d2da',8);c.fillStyle='#8fb8e8';c.fillRect(l.x+26,l.y+120,230,18);
+  c.fillStyle='#e63946';c.fillRect(l.x+120,l.y+158,42,12);c.fillRect(l.x+135,l.y+143,12,42);
+  blob(c,l.x+64,l.y+66,36,'#9aa3ab');blob(c,l.x+64,l.y+66,30,'#6c757d');c.fillStyle='#fff';c.font='700 34px Inter,Arial';c.textAlign='center';c.textBaseline='middle';c.save();c.translate(l.x+64,l.y+67);c.rotate(-camTheta);c.fillText('H',0,0);c.restore();
+  box(c,l.x+222,l.y+34,56,42,'#e0a92f',4);c.fillStyle=Math.floor(t*3)%2?'#ff3b3b':'#771111';blob(c,l.x+232,l.y+44,4,c.fillStyle);if(!run){c.fillStyle='rgba(255,226,122,.5)';c.fillRect(l.x+222,l.y+34,56,42)}
+  const ax=l.x+110+Math.sin(t*.4)*60;c.fillStyle='#fff';rr(c,ax,l.y+256,38,20,5);c.fill();c.fillStyle='#e63946';c.fillRect(ax+15,l.y+260,8,12);c.fillRect(ax+13,l.y+264,12,4);if(Math.floor(t*4)%2){blob(c,ax+6,l.y+258,3,'#3a7bd5');blob(c,ax+32,l.y+258,3,'#e63946')}};
+LOT.B=(c,l,t)=>{ground(c,l,'#aab4c4');blob(c,l.cx,l.cy,98,'rgba(0,0,0,.2)');blob(c,l.cx,l.cy,92,'#2e3f5c');blob(c,l.cx,l.cy,72,'#3d5a8a');blob(c,l.cx,l.cy,46,'#16284a');
+  c.save();c.translate(l.cx,l.cy);c.rotate(t*1.2);c.strokeStyle=G.blackout?'#ff6b6b':'#2ed3bd';c.lineWidth=3;c.beginPath();c.moveTo(0,0);c.lineTo(0,-44);c.stroke();c.restore();blob(c,l.cx,l.cy,6,'#f4b942');
+  for(let k=0;k<4;k++)panel(c,l.x+18,l.y+24+k*20,50,16,t,!G.blackout);for(let k=0;k<4;k++)panel(c,l.x+LW-68,l.y+24+k*20,50,16,t,!G.blackout);
+  if(G.blackout&&Math.floor(t*3)%2)blob(c,l.cx,l.cy,98,'rgba(185,139,255,.25)')};
+LOT.G=(c,l,t)=>{ground(c,l,'#aeb3b8');for(let k=0;k<5;k++){c.fillStyle='rgba(255,255,255,.8)';c.fillRect(l.x+30+k*52,l.y+LW-90,4,70)}
+  box(c,l.x+40,l.y+60,210,90,'#1d4f9a',8);c.strokeStyle='#8fb7ee';c.lineWidth=1.5;for(let k=1;k<7;k++){c.beginPath();c.moveTo(l.x+40+k*30,l.y+60);c.lineTo(l.x+40+k*30,l.y+150);c.stroke()}c.beginPath();c.moveTo(l.x+40,l.y+105);c.lineTo(l.x+250,l.y+105);c.stroke();
+  const g=((t*.4)%1);c.fillStyle=`rgba(255,255,255,${.35*Math.max(0,1-Math.abs(g-.5)*3)})`;c.fillRect(l.x+40,l.y+60,210,90);
+  for(let k=0;k<3;k++){box(c,l.x+70+k*70,l.y+170,16,26,'#2a3340',2);blob(c,l.x+78+k*70,l.y+178,4,Math.floor(t*2+k)%2?'#3ddc97':'#1a6b49')}
+  label(c,'⚡',l.cx,l.y+LW-40,30,'#3ddc97')};
+
+LOT.A=(c,l,t)=>{const run=l.state!=='broken';ground(c,l,'#b9bdc2');
+  box(c,l.x+36,l.y+36,208,128,'#d6c8b2',9);c.fillStyle='rgba(0,0,0,.12)';c.fillRect(l.x+36,l.y+36,208,64);
+  for(let k=0;k<5;k++)box(c,l.x+52+k*38,l.y+50,26,18,'#8d949b',3);
+  c.fillStyle='rgba(255,255,255,.45)';for(let k=0;k<4;k++)c.fillRect(l.x+36,l.y+108+k*13,208,3);
+  box(c,l.x+36,l.y+196,130,62,'#6d7782',4);
+  for(let r=0;r<2;r++)for(let k=0;k<4;k++){const x=l.x+54+k*29,y=l.y+214+r*26;blob(c,x,y,10,'#f2f4f6');c.save();c.translate(x,y);c.rotate(run?t*(1+k*.4+r*.7):1.2+k);c.strokeStyle='#d62828';c.lineWidth=2;c.beginPath();c.moveTo(0,0);c.lineTo(0,-8);c.stroke();c.restore()}
+  if(!run&&Math.floor(t*4)%2)blob(c,l.x+176,l.y+206,6,'#ff3b3b');
+  tree(c,l.x+230,l.y+232,16);tree(c,l.x+264,l.y+192,12);
+  const a=t*.8;person(c,l.x+205+Math.cos(a)*20,l.y+252+Math.sin(a)*8,'#e85d75');person(c,l.x+222,l.y+236,'#4f86c6')};
+function coasterPt(l,u){const a=u*TAU;return{x:l.x+120+105*Math.cos(a),y:l.y+190+55*Math.sin(a)+16*Math.sin(3*a)}}
+LOT.F=(c,l,t)=>{const run=l.state!=='broken';ground(c,l,'#9fd08f');
+  c.strokeStyle='#6a4a35';c.lineWidth=8;c.beginPath();for(let k=0;k<=64;k++){const p=coasterPt(l,k/64);k?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y)}c.closePath();c.stroke();c.strokeStyle='#e0c29b';c.lineWidth=2;c.stroke();
+  const u0=run?(t*.1)%1:.23;for(let k=0;k<3;k++){const p=coasterPt(l,(u0-k*.02+1)%1),q=coasterPt(l,(u0-k*.02+1.004)%1);c.save();c.translate(p.x,p.y);c.rotate(Math.atan2(q.y-p.y,q.x-p.x));c.fillStyle=['#e63946','#f4b942','#3a86ff'][k];rr(c,-8,-6,16,12,3);c.fill();c.restore()}
+  const wx=l.x+210,wy=l.y+70;blob(c,wx+6,wy+6,52,'rgba(0,0,0,.14)');c.strokeStyle='#cfd8e3';c.lineWidth=4;c.beginPath();c.arc(wx,wy,50,0,TAU);c.stroke();
+  c.save();c.translate(wx,wy);c.rotate(run?t*.4:0);c.lineWidth=2;for(let k=0;k<6;k++){c.rotate(Math.PI/6*2);c.beginPath();c.moveTo(-50,0);c.lineTo(50,0);c.stroke()}for(let k=0;k<12;k++){const a=k*TAU/12;blob(c,Math.cos(a)*50,Math.sin(a)*50,5,['#e63946','#f4b942','#3a86ff','#58a773'][k%4])}c.restore();blob(c,wx,wy,6,'#555');
+  for(let k=0;k<4;k++)person(c,l.x+30+k*14,l.y+34+Math.sin(t*1.5+k)*2,['#e85d75','#4f86c6','#e0a92f','#58a773'][k]);
+  box(c,l.x+30,l.y+262,50,26,'#d95d39',3);tree(c,l.x+262,l.y+268,14)};
+LOT.I=(c,l,t)=>{const run=l.state!=='broken';ground(c,l,'#eadbc6');
+  box(c,l.x+40,l.y+40,170,104,'#f2a7c3',7);c.fillStyle='rgba(0,0,0,.12)';c.fillRect(l.x+40,l.y+40,170,52);
+  c.fillStyle='#d9a066';c.beginPath();c.moveTo(l.x+100,l.y+62);c.lineTo(l.x+150,l.y+62);c.lineTo(l.x+125,l.y+122);c.closePath();c.fill();blob(c,l.x+125,l.y+58,20,'#fff4d6');blob(c,l.x+118,l.y+52,10,'#ff8fb1');blob(c,l.x+136,l.y+54,8,'#7fd1c5');
+  for(let k=0;k<8;k++){c.fillStyle=k%2?'#fff':'#ff6f91';c.fillRect(l.x+40+k*21.25,l.y+144,21.25,24)}
+  for(let k=0;k<5;k++)person(c,l.x+60+k*24,l.y+190+Math.sin(t*1.3+k)*2,['#e85d75','#4f86c6','#e0a92f','#58a773','#b98bff'][k]);
+  for(let k=0;k<8;k++){c.fillStyle=k%2?'#fff':'#4fc3f7';c.beginPath();c.moveTo(l.x+232,l.y+222);c.arc(l.x+232,l.y+222,32,k*TAU/8,(k+1)*TAU/8);c.closePath();c.fill()}blob(c,l.x+232,l.y+222,4,'#555');
+  if(!run){for(let k=0;k<4;k++){c.fillStyle='rgba(255,143,177,.65)';c.beginPath();c.ellipse(l.x+70+k*34,l.y+216+(k%2)*10,12+Math.sin(t*3+k)*3,7,0,0,TAU);c.fill()}}
+  else{for(let k=0;k<6;k++){const a=t*.8+k*1.1;blob(c,l.x+232+Math.cos(a)*44,l.y+222+Math.sin(a)*44,2.5,'rgba(120,200,255,.8)')}}
+  tree(c,l.x+30,l.y+262,14)};
+function drawLot(c,l,t){const f=LOT[l.type];if(f){c.save();f(c,l,t);c.restore()}
+  if(l.state==='broken'){const p=(t*1.8)%1;c.strokeStyle=`rgba(255,80,80,${1-p})`;c.lineWidth=5;c.beginPath();c.arc(l.cx,l.cy,30+p*90,0,TAU);c.stroke();sparks(c,l,t);label(c,'⚠️',l.cx,l.cy-4+Math.sin(t*6)*3,34)}
+  if(l.state==='fixed'){label(c,l.okStars>=3?'✅':'🔧',l.x+LW-22,l.y+22,22)}}
+
+function drawRoads(c,R){
+  const lo=-RW/2,hi=WORLD+RW/2;c.fillStyle='#363d4a';
+  for(let k=0;k<=N;k++){c.fillRect(k*C-RW/2,lo,RW,hi-lo);c.fillRect(lo,k*C-RW/2,hi-lo,RW)}
+  c.strokeStyle='#e6c75a';c.lineWidth=3;c.setLineDash([24,20]);
+  for(let k=0;k<=N;k++){c.beginPath();c.moveTo(k*C,lo);c.lineTo(k*C,hi);c.stroke();c.beginPath();c.moveTo(lo,k*C);c.lineTo(hi,k*C);c.stroke()}c.setLineDash([]);
+  const i0=clamp(Math.floor((cam.x-R)/C),0,N),i1=clamp(Math.ceil((cam.x+R)/C),0,N),j0=clamp(Math.floor((cam.y-R)/C),0,N),j1=clamp(Math.ceil((cam.y+R)/C),0,N);
+  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const x=i*C,y=j*C;c.fillStyle='#363d4a';c.fillRect(x-RW/2,y-RW/2,RW,RW);c.fillStyle='rgba(255,255,255,.8)';
+    const arm=(dx,dy)=>{for(let m=0;m<7;m++){if(dx){const xx=dx>0?x+RW/2+4:x-RW/2-22;c.fillRect(xx,y-RW/2+7+m*14,18,7)}else{const yy=dy>0?y+RW/2+4:y-RW/2-22;c.fillRect(x-RW/2+7+m*14,yy,7,18)}}};
+    if(i<N)arm(1,0);if(i>0)arm(-1,0);if(j<N)arm(0,1);if(j>0)arm(0,-1);
+    if(G.night>0.25&&!G.blackout){for(const [sx,sy] of [[-1,-1],[1,-1],[-1,1],[1,1]]){const g=c.createRadialGradient(x+sx*(RW/2+8),y+sy*(RW/2+8),2,x+sx*(RW/2+8),y+sy*(RW/2+8),46);g.addColorStop(0,`rgba(255,220,130,${.55*G.night})`);g.addColorStop(1,'rgba(255,220,130,0)');c.fillStyle=g;c.fillRect(x+sx*(RW/2+8)-46,y+sy*(RW/2+8)-46,92,92)}}}
+  /* puentes sobre el río */
+  for(let j=0;j<=N;j++){const x0=6*C+RW/2,y=j*C;c.fillStyle=j===3?'#8f98a1':'#b8c0c8';c.fillRect(x0,y-RW/2,LW,7);c.fillRect(x0,y+RW/2-7,LW,7)}
+  c.strokeStyle='#e8d98a';c.lineWidth=3;c.strokeRect(-RW/2-8,-RW/2-8,WORLD+RW+16,WORLD+RW+16)}
+
+function drawCar(c,x,y,a,col,player,brk){c.save();c.translate(x,y);c.rotate(a);c.fillStyle='rgba(0,0,0,.3)';rr(c,-20,-8,46,24,6);c.fill();c.fillStyle=col;rr(c,-22,-11,44,22,6);c.fill();
+  c.fillStyle='rgba(15,30,50,.9)';rr(c,3,-8.5,10,17,3);c.fill();rr(c,-15,-8.5,7,17,3);c.fill();c.fillStyle='rgba(255,255,255,.18)';rr(c,-8,-8,11,16,2);c.fill();
+  c.fillStyle='#fff6c8';c.fillRect(19,-9.5,3,5);c.fillRect(19,4.5,3,5);c.fillStyle=brk?'#ff2a2a':'#8f1c1c';c.fillRect(-22,-9.5,3,5);c.fillRect(-22,4.5,3,5);
+  if(player){c.fillStyle='#f4b942';c.fillRect(-8,-1.3,18,2.6);}c.restore()}
+
+function drawFrame(){
+  const c=ctx;c.setTransform(DPR,0,0,DPR,0,0);c.fillStyle='#3f7a45';c.fillRect(0,0,VW,VH);
+  const rot=G.camMode==='rot';const sh=G.shake>0?(Math.random()-.5)*G.shake*14:0;
+  c.translate(VW/2+sh,VH*(rot?.64:.5)+sh);c.rotate(cam.th);c.scale(cam.z,cam.z);c.translate(-cam.x,-cam.y);camTheta=cam.th;
+  const R=Math.hypot(VW,VH)/cam.z*(rot?.75:.55)+40;
+  for(const l of lotList){if(Math.abs(l.cx-cam.x)>R+LW||Math.abs(l.cy-cam.y)>R+LW)continue;drawLot(c,l,G.anim)}
+  drawRoads(c,R);
+  /* peatones */
+  for(const p of peds){const l=p.l;if(Math.abs(l.cx-cam.x)>R||Math.abs(l.cy-cam.y)>R)continue;const u=(p.u+G.anim*p.sp)%4,k=Math.floor(u),f=u-k,m=LW-10;let x,y;
+    if(k===0){x=l.x+5+f*m;y=l.y+5}else if(k===1){x=l.x+LW-5;y=l.y+5+f*m}else if(k===2){x=l.x+LW-5-f*m;y=l.y+LW-5}else{x=l.x+5;y=l.y+LW-5-f*m}person(c,x,y,p.col)}
+  /* objetivo */
+  if(G.active&&G.active.phase==='drive'){const a=G.active.lot.acc;const p=(G.anim*1.2)%1;c.fillStyle='rgba(244,185,66,.16)';c.beginPath();c.arc(a.x,a.y,ZONE,0,TAU);c.fill();c.strokeStyle='rgba(244,185,66,.9)';c.lineWidth=4;c.setLineDash([16,12]);c.lineDashOffset=-G.anim*20;c.beginPath();c.arc(a.x,a.y,ZONE,0,TAU);c.stroke();c.setLineDash([]);c.strokeStyle=`rgba(244,185,66,${1-p})`;c.lineWidth=4;c.beginPath();c.arc(a.x,a.y,30+p*(ZONE-30),0,TAU);c.stroke();label(c,G.active.m.icon,a.x,a.y,30);
+    const l=G.active.lot;c.strokeStyle='#f4b942';c.lineWidth=4;c.setLineDash([14,10]);c.lineDashOffset=-G.anim*30;c.strokeRect(l.x,l.y,LW,LW);c.setLineDash([])}
+  /* nombres de sitios cercanos */
+  for(const l of lotList){if(!l.site)continue;const dx=l.cx-cam.x,dy=l.cy-cam.y;if(dx*dx+dy*dy>520*520)continue;const s=SITE[l.type];tag(c,s.n,l.cx,l.y+LW+(l.type==='H'?0:0)-(l.type==='O'?0:0)-12,s.col)}
+  /* cargadores: indicador */
+  for(const l of chargers){const dx=l.acc.x-car.x,dy=l.acc.y-car.y;if(dx*dx+dy*dy<90*90&&G.battery<99){const p=(G.anim*2)%1;c.strokeStyle=`rgba(61,220,151,${1-p})`;c.lineWidth=3;c.beginPath();c.arc(l.acc.x,l.acc.y,20+p*40,0,TAU);c.stroke()}}
+  /* tráfico y jugador */
+  for(const n of npcs)drawCar(c,n.x,n.y,n.ang,n.col,false,n.stop>0);
+  if(G.night>.25||G.blackout){const k=Math.max(G.night,G.blackout?.8:0);c.save();c.translate(car.x,car.y);c.rotate(car.a);c.globalCompositeOperation='lighter';const g=c.createRadialGradient(22,0,4,150,0,170);g.addColorStop(0,`rgba(255,240,180,${.45*k})`);g.addColorStop(1,'rgba(255,240,180,0)');c.fillStyle=g;c.beginPath();c.moveTo(20,-6);c.lineTo(230,-95);c.lineTo(230,95);c.lineTo(20,6);c.closePath();c.fill();c.restore()}
+  drawCar(c,car.x,car.y,car.a,'#f26b3a',true,car.brake);
+  /* flecha GPS alrededor del auto */
+  if(G.active&&G.active.phase==='drive'){const a=G.active.lot.acc;const ang=Math.atan2(a.y-car.y,a.x-car.x);const d=Math.hypot(a.x-car.x,a.y-car.y);if(d>110){c.save();c.translate(car.x+Math.cos(ang)*58,car.y+Math.sin(ang)*58);c.rotate(ang);c.fillStyle='#f4b942';c.strokeStyle='#1b1500';c.lineWidth=2;c.beginPath();c.moveTo(14,0);c.lineTo(-8,-10);c.lineTo(-3,0);c.lineTo(-8,10);c.closePath();c.fill();c.stroke();c.restore()}}
+  for(const f of G.fx){c.globalAlpha=clamp(f.life*2,0,1);blob(c,f.x,f.y,f.r,f.col);c.globalAlpha=1}
+  /* sobreposición día/noche (pantalla) */
+  c.setTransform(DPR,0,0,DPR,0,0);
+  const dark=G.blackout?.62+(Math.sin(G.anim*20)>.9?-.08:0):G.night*.5;
+  if(dark>0.01){c.fillStyle=`rgba(5,12,40,${dark})`;c.fillRect(0,0,VW,VH)}
+  /* viñeta de batería baja */
+  if(G.battery<15&&G.state==='play'){c.fillStyle=`rgba(255,60,60,${.12+.08*Math.sin(G.anim*6)})`;c.fillRect(0,0,VW,VH)}
+}
+
+/* mini-escena en el modal */
+const sceneCv=$('#sceneCv'),sctx=sceneCv.getContext('2d');
+function drawScene(){const m=G.active;if(!m)return;const l=m.lot,w=sceneCv.width,h=sceneCv.height;sctx.setTransform(1,0,0,1,0,0);sctx.fillStyle='#363d4a';sctx.fillRect(0,0,w,h);
+  const s=Math.min(w,h)/(LW+36);sctx.setTransform(s,0,0,s,w/2-s*l.cx,h/2-s*l.cy);const sv=camTheta;camTheta=0;drawLot(sctx,l,G.anim);camTheta=sv}
+
+/* minimapa */
+const mmC=$('#mm'),mmx=mmC.getContext('2d');const mmBase=document.createElement('canvas');mmBase.width=mmBase.height=140;
+(function(){const c=mmBase.getContext('2d');const sc=140/(WORLD+RW+20);c.fillStyle='#16304d';c.fillRect(0,0,140,140);c.save();c.translate((RW/2+10)*sc,(RW/2+10)*sc);c.scale(sc,sc);
+  for(const l of lotList){if(l.type==='W'||l.type==='R'){c.fillStyle='#2c7db8';c.fillRect(l.x,l.y,LW,LW)}else if(!l.site){c.fillStyle='#1f4538';c.fillRect(l.x,l.y,LW,LW)}}
+  c.strokeStyle='#5d7490';c.lineWidth=RW*.55;for(let k=0;k<=N;k++){c.beginPath();c.moveTo(k*C,0);c.lineTo(k*C,WORLD);c.stroke();c.beginPath();c.moveTo(0,k*C);c.lineTo(WORLD,k*C);c.stroke()}
+  for(const l of lotList){if(!l.site)continue;c.fillStyle=SITE[l.type].col;c.fillRect(l.x+30,l.y+30,LW-60,LW-60)}c.restore()})();
+function drawMini(){const sc=140/(WORLD+RW+20),o=(RW/2+10)*sc;mmx.clearRect(0,0,140,140);mmx.drawImage(mmBase,0,0);
+  if(G.active&&G.active.phase==='drive'){const a=G.active.lot.acc,p=(G.anim*1.5)%1;mmx.strokeStyle=`rgba(244,185,66,${1-p})`;mmx.lineWidth=2;mmx.beginPath();mmx.arc(o+a.x*sc,o+a.y*sc,4+p*10,0,TAU);mmx.stroke();mmx.fillStyle='#f4b942';mmx.beginPath();mmx.arc(o+a.x*sc,o+a.y*sc,4,0,TAU);mmx.fill()}
+  mmx.save();mmx.translate(o+car.x*sc,o+car.y*sc);mmx.rotate(car.a);mmx.fillStyle='#ff8a5c';mmx.strokeStyle='#fff';mmx.lineWidth=1.5;mmx.beginPath();mmx.moveTo(7,0);mmx.lineTo(-5,-5);mmx.lineTo(-3,0);mmx.lineTo(-5,5);mmx.closePath();mmx.fill();mmx.stroke();mmx.restore()}
+
+/* ================= JUEGO ================= */
+function toast(txt,cls=''){const t=el('div','toast '+cls,txt);$('#toasts').append(t);setTimeout(()=>t.remove(),cls==='badge'?4500:6500);while($('#toasts').children.length>3)$('#toasts').firstChild.remove()}
+function earn(id){if(G.badges.has(id))return;G.badges.add(id);AudioFX.nivel();toast(`${BADGES[id][0]} <b>Insignia:</b> ${BADGES[id][1]}`,'badge')}
+function addFel(n){G.fel=Math.max(0,G.fel+n)}
+
+function resetLots(){for(const l of lotList){if(l.site){l.state='idle';l.okStars=0}l.cool=0}}
+function startGame(){
+  AudioFX.init();
+  G.name=($('#inName').value||'').trim()||'Ingeniero/a';G.mode=document.querySelector('input[name=mode]:checked').value;
+  Object.assign(G,{state:'play',t:0,fel:0,active:null,nextCall:4,done:[],review:[],crashes:0,battery:100,badges:new Set(),blackout:false,paused:false,dwell:0,shake:0,fx:[],stars:0,maxStars:0,night:0,lowBat:false});
+  const lv={short:1,mid:2,full:3}[G.mode]||3;G.queue=MISSIONS.filter(m=>m.lv<=lv).sort((a,b)=>a.tier-b.tier).concat([BOSS]);G.total=G.queue.length;
+  G.renewIds=G.queue.filter(m=>m.renew).map(m=>m.id);G.quickPool=[];G.quickOK=0;G.quickN=0;G.atenderReq=false;
+  resetLots();initNPC();
+  const b=findLot('B');car.x=b.acc.x+27;car.y=b.acc.y+150;car.a=-Math.PI/2;car.v=0;cam.x=car.x;cam.y=car.y;cam.th=0;cam.z=1;
+  $('#hName').textContent=G.name;$('#screenStart').classList.add('hidden');$('#screenEnd').classList.add('hidden');$('#hud').classList.remove('hidden');
+  $('#toasts').innerHTML='';setRadio(null);
+  toast('📻 <b>Central:</b> Bienvenido/a, '+esc(G.name)+'. Recorre la ciudad; pronto recibirás tu primer llamado.');
+}
+function setRadio(m,sub){const r=$('#radio');r.classList.remove('alert','boss');
+  if(!m){$('#rIcon').textContent='📻';$('#rTitle').textContent='Esperando llamado de la Central…';$('#rSub').textContent='Recorre la ciudad. Pronto recibirás una misión.';$('#rBar').style.width='100%';return}
+  $('#rIcon').textContent=m.icon;$('#rTitle').textContent=m.title;r.classList.add(m.boss?'boss':'alert')}
+
+function issueCall(){
+  const m=G.queue.shift();const lot=findLot(m.site);lot.state='broken';
+  const d=Math.abs(lot.acc.x-car.x)+Math.abs(lot.acc.y-car.y);const limit=clamp(Math.round(d/150+55),80,220);
+  G.active={m,lot,phase:'drive',timeLimit:limit,timeLeft:limit,pts:0,errors:0,crash0:G.crashes,taskIdx:0,frac:0};
+  if(m.boss){G.blackout=true}
+  AudioFX.radio();setRadio(m);toast('📻 <b>Central:</b> '+m.radio);
+}
+function fmtDist(){const a=G.active.lot.acc;return Math.round(Math.hypot(a.x-car.x,a.y-car.y)/10)}
+
+function update(dt){
+  G.anim+=dt;
+  for(const l of chargers)l.cool=Math.max(0,l.cool-dt);
+  if(G.state!=='play'||G.paused||G.modal){car.v*=0.9;G.fx.forEach(f=>f.life-=dt);G.fx=G.fx.filter(f=>f.life>0);camUpdate(dt);AudioFX.engine(0,false);return}
+  G.t+=dt;
+  const hr=(9+G.t/30)%24;G.hour=hr;G.night=clamp((Math.cos((hr-13)/12*Math.PI)*-1-.1)*1.4,0,1);
+  /* física */
+  const blockedByBat=G.battery<=0;
+  const sgn=Math.sign(car.v);car.brake=false;
+  if(inp.up&&!blockedByBat){car.v+=260*(1-Math.max(0,car.v)/MAXV*.65)*dt}
+  if(inp.down){if(car.v>8){car.v-=460*dt;car.brake=true}else if(!blockedByBat)car.v-=170*dt}
+  if(inp.space){car.v-=sgn*Math.min(Math.abs(car.v),560*dt);car.brake=true}
+  if(!inp.up&&!inp.down&&!inp.space)car.v-=sgn*Math.min(Math.abs(car.v),120*dt);
+  if(blockedByBat)car.v-=sgn*Math.min(Math.abs(car.v),200*dt);
+  car.v=clamp(car.v,-110,MAXV);
+  const turn=(inp.right?1:0)-(inp.left?1:0);
+  car.a+=turn*2.7*dt*clamp(car.v/45,-1,1)*(1-.3*Math.abs(car.v)/MAXV);
+  car.x+=Math.cos(car.a)*car.v*dt;car.y+=Math.sin(car.a)*car.v*dt;
+  collide(dt);
+  /* batería */
+  G.battery=clamp(G.battery-(0.02+0.26*Math.abs(car.v)/MAXV)*dt,0,100);
+  if(G.battery<15&&!G.lowBat){G.lowBat=true;toast('📻 <b>Central:</b> ¡Batería baja! Busca un cargador solar ⚡ (puntos verdes del mapa).','bad')}
+  if(G.battery>30)G.lowBat=false;
+  if(G.battery<=0){G.groundCd+=dt;if(G.groundCd>3){G.groundCd=0;const b=findLot('B');car.x=b.acc.x+27;car.y=b.acc.y+100;car.a=-Math.PI/2;car.v=0;G.battery=40;addFel(-10);toast('🚚 La grúa te llevó a la Central y te recargó. −10 Felipesos.','bad')}}else G.groundCd=0;
+  /* carga */
+  let charging=false;
+  for(const l of chargers){const d=Math.hypot(l.acc.x-car.x,l.acc.y-car.y);if(d<95&&Math.abs(car.v)<90&&G.battery<100){charging=true;if(l.cool<=0){l.cool=60;if(G.battery<15)earn('bateria');openQuick()}G.battery=Math.min(100,G.battery+24*dt);if(Math.random()<.2)AudioFX.carga();if(Math.random()<.5)G.fx.push({x:car.x+(Math.random()-.5)*30,y:car.y+(Math.random()-.5)*20,vx:0,vy:-30,r:3,life:.8,col:'#3ddc97'})}}
+  /* tráfico */
+  updateNPC(dt);
+  /* efectos */
+  G.shake=Math.max(0,G.shake-dt*1.5);G.crashCd=Math.max(0,G.crashCd-dt);
+  for(const f of G.fx){f.x+=f.vx*dt;f.y+=f.vy*dt;f.life-=dt}G.fx=G.fx.filter(f=>f.life>0);
+  /* llamados */
+  if(!G.active&&G.queue.length){G.nextCall-=dt;if(G.nextCall<=0)issueCall()}
+  if(G.active&&G.active.phase==='drive'){const a=G.active;a.timeLeft=Math.max(0,a.timeLeft-dt);
+    const d=Math.hypot(a.lot.acc.x-car.x,a.lot.acc.y-car.y);
+    if(d<ZONE){setAtender(true);
+      /* asistencia de llegada: el auto frena solo y no pasa de cierta velocidad dentro de la zona */
+      if(!inp.up&&!inp.down&&!inp.space)car.v-=Math.sign(car.v)*Math.min(Math.abs(car.v),320*dt);
+      if(car.v>90)car.v=Math.max(90,car.v-700*dt);
+      if(G.atenderReq){G.atenderReq=false;G.dwell=0;setAtender(false);openMission()}
+      else if(Math.abs(car.v)<100){G.dwell+=dt;showHint('Atendiendo llamado…');if(G.dwell>.35){G.dwell=0;setAtender(false);openMission()}}
+      else{G.dwell=0;showHint('📍 Ya estás en la zona: suelta el acelerador y el auto frena solo')}}
+    else{G.dwell=0;G.atenderReq=false;setAtender(false);showHint(null)}}
+  else{showHint(null);setAtender(false);G.atenderReq=false}
+  AudioFX.engine(Math.abs(car.v)/MAXV,!blockedByBat||Math.abs(car.v)>5);
+  camUpdate(dt);
+}
+let atOn=false;function setAtender(v){if(v===atOn)return;atOn=v;$('#bAtender').classList.toggle('hidden',!v)}
+let hintOn=null;function showHint(t){if(t===hintOn)return;hintOn=t;const h=$('#hint');if(!t){h.classList.add('hidden')}else{h.textContent=t;h.classList.remove('hidden')}}
+
+function camUpdate(dt){const rot=G.camMode==='rot';const look=car.v*.38;const tx=car.x+Math.cos(car.a)*look,ty=car.y+Math.sin(car.a)*look;const k=Math.min(1,dt*5);cam.x+=(tx-cam.x)*k;cam.y+=(ty-cam.y)*k;
+  const tz=clamp(Math.min(VW,VH)/620,.62,1.25)*(1-.16*Math.abs(car.v)/MAXV);cam.z+=(tz-cam.z)*Math.min(1,dt*2.5);
+  const tth=rot?(-Math.PI/2-car.a):0;cam.th+=angDiff(cam.th,tth)*Math.min(1,dt*4)}
+
+function pushOut(px,py,r,l){const cx=clamp(px,l.x,l.x+LW),cy=clamp(py,l.y,l.y+LW);let dx=px-cx,dy=py-cy;const d2=dx*dx+dy*dy;if(d2>=r*r)return null;
+  if(d2<1e-6){const L=px-l.x,Rr=l.x+LW-px,T=py-l.y,B=l.y+LW-py,m=Math.min(L,Rr,T,B);if(m===L)return{x:-(L+r),y:0};if(m===Rr)return{x:Rr+r,y:0};if(m===T)return{x:0,y:-(T+r)};return{x:0,y:B+r}}
+  const d=Math.sqrt(d2),pen=r-d;return{x:dx/d*pen,y:dy/d*pen}}
+function collide(dt){let hit=0;
+  for(let it=0;it<2;it++){const pts=[[Math.cos(car.a)*11,Math.sin(car.a)*11],[-Math.cos(car.a)*11,-Math.sin(car.a)*11]];
+    const ci=clamp(Math.floor(car.x/C),0,N-1),cj=clamp(Math.floor(car.y/C),0,N-1);
+    for(let j=cj-1;j<=cj+1;j++)for(let i=ci-1;i<=ci+1;i++){if(i<0||j<0||i>=N||j>=N)continue;const l=lots[j][i];for(const p of pts){const o=pushOut(car.x+p[0],car.y+p[1],13,l);if(o){car.x+=o.x;car.y+=o.y;hit=Math.max(hit,Math.hypot(o.x,o.y))}}}}
+  const lo=-RW/2+20,hi=WORLD+RW/2-20;if(car.x<lo){car.x=lo;hit=Math.max(hit,3)}if(car.x>hi){car.x=hi;hit=Math.max(hit,3)}if(car.y<lo){car.y=lo;hit=Math.max(hit,3)}if(car.y>hi){car.y=hi;hit=Math.max(hit,3)}
+  if(hit>.5){const sp=Math.abs(car.v);if(sp>110&&G.crashCd<=0)crash(sp);car.v*=.9}}
+function crash(sp){G.crashCd=.8;G.crashes++;G.battery=Math.max(0,G.battery-1.5);G.shake=.45;car.v*=.3;AudioFX.choque();
+  for(let k=0;k<12;k++)G.fx.push({x:car.x,y:car.y,vx:(Math.random()-.5)*220,vy:(Math.random()-.5)*220,r:2+Math.random()*2,life:.5,col:Math.random()<.5?'#ffe27a':'#ff8a5c'});
+  if(G.crashes%3===1)toast('🚧 ¡Choque! Conduce con cuidado: cada choque resta Felipesos en el llamado.','bad')}
+
+function updateNPC(dt){for(const n of npcs){
+  const ax=n.a.gx*C,ay=n.a.gy*C,bx=n.b.gx*C,by=n.b.gy*C;const len=Math.hypot(bx-ax,by-ay);const dx=(bx-ax)/len,dy=(by-ay)/len;
+  const px=lerp(ax,bx,n.t),py=lerp(ay,by,n.t);
+  /* frenar si el jugador está al frente */
+  let blocked=false;const vx=car.x-px,vy=car.y-py,dist=Math.hypot(vx,vy);if(dist<90&&(vx*dx+vy*dy)/dist>.5)blocked=true;
+  for(const o of npcs){if(o===n)continue;const ox=o.x-px,oy=o.y-py,dd=Math.hypot(ox,oy);if(dd<70&&(ox*dx+oy*dy)/dd>.7){blocked=true;break}}
+  n.stop=blocked?1:Math.max(0,n.stop-dt);
+  if(!blocked&&n.stop<=0){n.t+=n.sp*dt/len;}
+  if(n.t>=1){const prev=n.a;n.a=n.b;n.b=pickNext(n.a,prev);n.t=0}
+  const tr={x:-dy*26,y:dx*26};n.off.x+=(tr.x-n.off.x)*Math.min(1,dt*6);n.off.y+=(tr.y-n.off.y)*Math.min(1,dt*6);
+  const tx=lerp(ax,bx,n.t)+n.off.x,ty=lerp(ay,by,n.t)+n.off.y;const ta=Math.atan2(dy,dx);n.ang=n.ang===0&&n.x===0?ta:n.ang+angDiff(n.ang,ta)*Math.min(1,dt*8);n.x=tx;n.y=ty;
+  /* choque con jugador */
+  const d=Math.hypot(n.x-car.x,n.y-car.y);if(d<32){const nx=(car.x-n.x)/(d||1),ny=(car.y-n.y)/(d||1);car.x+=nx*(32-d);car.y+=ny*(32-d);if(Math.abs(car.v)>90&&G.crashCd<=0)crash(Math.abs(car.v));car.v*=.8;n.stop=1}}}
+
+/* ================= PREGUNTAS RELÁMPAGO (cargadores) ================= */
+const QUICK=[
+ {q:'¿Qué energía tiene un objeto por estar en movimiento?',o:['Cinética','Potencial gravitatoria','Química','Nuclear'],a:0,e:'La energía cinética depende de la masa y de la rapidez del objeto.',c:'Energía cinética'},
+ {q:'Un resorte comprimido guarda energía…',o:['Potencial elástica','Cinética','Luminosa','Sonora'],a:0,e:'Al deformarse, el resorte almacena energía potencial elástica que libera al soltarse.',c:'Energía potencial elástica'},
+ {q:'La energía guardada en una pila o en los alimentos es…',o:['Química','Térmica','Cinética','Sonora'],a:0,e:'Los enlaces químicos almacenan energía que se libera al reaccionar.',c:'Energía química'},
+ {q:'¿Qué energía tiene el agua de un embalse en lo alto?',o:['Potencial gravitatoria','Cinética','Eléctrica','Luminosa'],a:0,e:'Por su altura tiene energía potencial gravitatoria: Ep = m·g·h.',c:'Energía potencial gravitatoria'},
+ {q:'¿Cuál es la unidad de energía en el Sistema Internacional?',o:['Joule (J)','Watt (W)','Newton (N)','Grado Celsius (°C)'],a:0,e:'La energía se mide en joules. El watt mide potencia (joules por segundo).',c:'Unidades de energía'},
+ {q:'El watt (W) mide…',o:['Potencia: energía por segundo','Temperatura','Fuerza','Masa'],a:0,e:'1 W equivale a 1 joule transformado cada segundo.',c:'Unidades: potencia'},
+ {q:'Una ampolleta de 100 W encendida 10 horas consume…',o:['1 kWh','10 kWh','100 kWh','0,1 kWh'],a:0,e:'100 W = 0,1 kW; 0,1 kW × 10 h = 1 kWh.',c:'Cálculo de consumo (kWh)'},
+ {q:'Una kilocaloría (kcal) es una unidad de…',o:['Energía','Potencia','Temperatura','Fuerza'],a:0,e:'Se usa para la energía de los alimentos: 1 kcal ≈ 4 184 J.',c:'Unidades de energía (kcal)'},
+ {q:'¿Qué se mide en grados Celsius (°C)?',o:['La temperatura','La energía','La potencia','El calor transferido'],a:0,e:'La temperatura se mide con termómetro en °C. El calor, como energía, se mide en joules o calorías.',c:'Temperatura y calor'},
+ {q:'El calor se transfiere espontáneamente…',o:['De lo más caliente a lo más frío','De lo más frío a lo más caliente','Solo entre sólidos','Solo hacia arriba'],a:0,e:'Hasta alcanzar el equilibrio térmico: misma temperatura.',c:'Sentido de la transferencia de calor'},
+ {q:'La energía del Sol llega a la Tierra por…',o:['Radiación','Conducción','Convección','Fricción'],a:0,e:'La radiación no necesita materia: viaja incluso por el espacio vacío.',c:'Transferencia por radiación'},
+ {q:'En una olla, el agua caliente sube y la fría baja. Esto es…',o:['Convección','Conducción','Radiación','Reflexión'],a:0,e:'En fluidos (líquidos y gases), el calor se transfiere por movimiento del propio fluido: convección.',c:'Transferencia por convección'},
+ {q:'Una cuchara de metal se calienta en la sopa. ¿Cómo se transfirió el calor?',o:['Conducción','Convección','Radiación','Evaporación'],a:0,e:'En un sólido el calor pasa de partícula a partícula por contacto: conducción.',c:'Transferencia por conducción'},
+ {q:'Una ampolleta incandescente transforma la energía eléctrica en…',o:['Luz y mucho calor','Solo luz','Solo movimiento','Energía química'],a:0,e:'Gran parte se disipa como calor: por eso es poco eficiente.',c:'Transformaciones y eficiencia'},
+ {q:'Un panel fotovoltaico transforma…',o:['Luz en electricidad','Calor en movimiento','Viento en luz','Electricidad en luz'],a:0,e:'La energía luminosa del Sol se transforma en energía eléctrica.',c:'Transformaciones de energía'},
+ {q:'¿Cuál es una fuente de energía renovable?',o:['Viento','Carbón','Petróleo','Gas natural'],a:0,e:'El viento se repone constantemente; los combustibles fósiles tardan millones de años en formarse.',c:'Fuentes renovables y no renovables'},
+ {q:'Cuando "se pierde" energía en una máquina…',o:['Se transforma y se dispersa, sobre todo como calor','Se destruye','Se crea energía nueva','Desaparece sin dejar rastro'],a:0,e:'La energía se conserva: solo cambia de forma o se dispersa.',c:'Conservación de la energía'},
+ {q:'¿Qué material es un buen aislante térmico?',o:['Lana','Cobre','Aluminio','Hierro'],a:0,e:'Los aislantes conducen mal el calor; los metales lo conducen muy bien.',c:'Materiales conductores y aislantes'}];
+function openQuick(){
+  if(!G.quickPool||!G.quickPool.length)G.quickPool=shuffle(QUICK.map((q,i)=>i));
+  const q=QUICK[G.quickPool.pop()];G.modal=true;car.v=0;showHint(null);setAtender(false);
+  $('#qQ').textContent=q.q;const o=$('#qOpts');o.innerHTML='';$('#qFb').innerHTML='';$('#qNext').classList.add('hidden');$('#qSkip').classList.remove('hidden');
+  const order=shuffle(q.o.map((x,i)=>i));
+  order.forEach(k=>{const b=el('button','opt',esc(q.o[k]));b.onclick=()=>{AudioFX.init();const ok=k===q.a;[...o.children].forEach(x=>x.disabled=true);b.classList.add(ok?'ok':'no');if(!ok)[...o.children].forEach((x,i)=>{if(order[i]===q.a)x.classList.add('ok')});
+    G.quickN++;if(ok){G.quickOK++;addFel(8);AudioFX.premio();if(G.quickOK>=3)earn('rel')}else{AudioFX.castigo();G.review.push({m:'Pregunta relámpago',c:q.c})}
+    $('#qFb').innerHTML='<div class="fb '+(ok?'ok':'no')+'"><b>'+(ok?'¡Correcto! +8 🪙':'Para repasar')+'</b>'+esc(q.e)+'</div>';$('#qSkip').classList.add('hidden');$('#qNext').classList.remove('hidden')};o.append(b)});
+  $('#quickModal').classList.remove('hidden')}
+function closeQuick(){$('#quickModal').classList.add('hidden');G.modal=false}
+$('#qNext').onclick=closeQuick;
+$('#qSkip').onclick=()=>{closeQuick();toast('⚡ <b>Dato:</b> '+FACTS[Math.floor(Math.random()*FACTS.length)])};
+
+/* ================= MISIONES / TAREAS ================= */
+function openMission(){
+  const a=G.active;a.phase='task';a.frac=a.timeLeft/a.timeLimit;car.v=0;G.modal=true;AudioFX.premio();showHint(null);
+  const m=a.m;$('#tmIcon').textContent=m.icon;$('#tmTitle').textContent=m.title;$('#tmSub').textContent=m.place;$('#tmStory').textContent=m.story;
+  $('#tmBloom').textContent=m.boss?'DESAFÍO BOSS':'Misión';$('#tmBloom').className='chip'+(m.boss?' boss':'');
+  buildProg();$('#tmPts').textContent='';$('#taskModal').classList.remove('hidden');
+  const w=$('#tmWork');w.innerHTML='';w.append(el('h3',null,'Llegaste al lugar'));w.append(el('p','lead','Observa la escena: algo anda mal. Para repararlo tendrás que resolver '+m.tasks.length+' desafíos'+(m.boss?' (el último es de creación)':'')+'. Los errores bajan tu calificación de reparación (★).'));
+  const b=el('button','btn big','🔧 Comenzar reparación');b.style.marginTop='14px';b.onclick=()=>{AudioFX.init();renderTask(0)};w.append(b);
+}
+function buildProg(idx=-1,mm){const m=mm||G.active.m,p=$('#tmProg');p.innerHTML='';m.tasks.forEach((t,i)=>p.append(el('i',i<=idx?'on':'')))}
+function renderTask(i){
+  const a=G.active,m=a.m,t=a.m.tasks[i];a.taskIdx=i;buildProg(i);
+  $('#tmBloom').textContent=(m.boss?'DESAFÍO BOSS · ':'')+'N'+t.bloom+' · '+['','','Comprender','Aplicar','Analizar','Evaluar','Crear'][t.bloom];$('#tmBloom').className='chip'+(m.boss||t.bloom>=5?' boss':'');
+  $('#tmPts').textContent='Tarea '+(i+1)+' de '+m.tasks.length;
+  const w=$('#tmWork');w.innerHTML='';w.append(el('h3',null,esc(t.q)));const area=el('div');w.append(area);const fb=el('div');w.append(fb);
+  const done=(errors)=>finishTask(t,errors,area,fb,i);
+  if(t.type==='choice')buildChoice(t,area,done);else if(t.type==='chain')buildChain(t,area,done);else buildClassify(t,area,done);
+}
+function buildChoice(t,area,done){const wrap=el('div','opts');const order=shuffle(t.opts.map((o,k)=>k));
+  order.forEach(k=>{const b=el('button','opt',esc(t.opts[k]));b.onclick=()=>{AudioFX.init();const ok=k===t.ans;[...wrap.children].forEach(x=>x.disabled=true);b.classList.add(ok?'ok':'no');if(!ok){[...wrap.children].forEach((x,idx)=>{if(order[idx]===t.ans)x.classList.add('ok')})}done(ok?0:1)};wrap.append(b)});area.append(wrap)}
+function buildChain(t,area,done){const n=t.steps.length;const slots=el('div','slots');const sl=t.steps.map((s,i)=>{const d=el('div','slot','<b>'+(i+1)+'</b><span>?</span>');slots.append(d);return d});
+  const pool=el('div','pool');let next=0,errors=0;let order=shuffle(t.steps.map((s,i)=>i));if(order.every((v,i)=>v===i))order.reverse();
+  const msg=el('div');msg.style.cssText='font-size:12.5px;color:var(--mut);min-height:18px;margin-top:8px';
+  order.forEach(i=>{const b=el('button','opt',esc(t.steps[i].t));b.onclick=()=>{AudioFX.init();if(i===next){const d=sl[next];d.className='slot f';d.innerHTML='<b>'+(next+1)+'</b><span>'+esc(t.steps[i].t)+'</span><span class="tag">'+esc(t.steps[i].tag)+'</span>';b.classList.add('used');AudioFX.premio();next++;msg.textContent='';if(next===n){pool.style.display='none';done(errors)}}
+    else{errors++;b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');AudioFX.castigo();msg.textContent='Ese paso todavía no corresponde. ¿Qué ocurre justo después del anterior?'}};pool.append(b)});
+  area.append(slots,pool,msg)}
+function buildClassify(t,area,done){let remaining=t.items.length,errors=0;
+  t.items.forEach(it=>{const row=el('div','crow');row.append(el('div','it',esc(it.t)));const cb=el('div','cb');
+    t.cats.forEach((cat,ci)=>{const b=el('button',null,esc(cat));b.onclick=()=>{AudioFX.init();if(ci===it.c){b.classList.add('ok');[...cb.children].forEach(x=>x.disabled=true);row.classList.add('done');AudioFX.premio();remaining--;if(remaining===0)done(errors)}else{errors++;b.disabled=true;b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');AudioFX.castigo()}};cb.append(b)});
+    row.append(cb);area.append(row)})}
+function finishTask(t,errors,area,fb,i){
+  const a=G.active,m=a.m;const base=BASE[t.bloom];let pts=t.type==='choice'?(errors?0:base):Math.round(base*Math.max(.4,1-.2*errors));if(m.boss)pts*=2;
+  a.pts+=pts;a.errors+=errors>0?(t.type==='choice'?1:errors):0;
+  if(errors>0)G.review.push({m:m.title,c:t.concept});
+  errors?AudioFX.castigo():AudioFX.premio();
+  fb.className='fb '+(errors?'no':'ok');fb.innerHTML='<b>'+(errors?'Para repasar':'¡Correcto!')+' '+(pts?'· +'+pts+' 🪙':'')+'</b>'+esc(t.exp);
+  const last=i===m.tasks.length-1;const b=el('button','btn',last?'✅ Terminar reparación':'Siguiente →');b.style.marginTop='12px';b.onclick=()=>{last?finishMission():renderTask(i+1)};fb.after(b);b.scrollIntoView({block:'nearest'});
+}
+function finishMission(){
+  const a=G.active,m=a.m,lot=a.lot;const crashes=G.crashes-a.crash0;
+  const stars=a.errors===0?3:a.errors<=2?2:1;const fast=a.frac>.4;const bonus=fast?Math.round(a.pts*.25):0;const pen=Math.min(15,crashes*5);const total=Math.max(0,a.pts+bonus-pen);
+  addFel(total);G.stars+=stars;G.maxStars+=3;lot.state='fixed';lot.okStars=stars;G.done.push({id:m.id,title:m.title,place:m.place,icon:m.icon,stars,errors:a.errors,pts:total,boss:!!m.boss});
+  G.active=null;G.dwell=0;setRadio(null);
+  earn('primer');if(stars===3)earn('cero');if(crashes===0)earn('prudente');if(fast&&!m.boss)earn('rapido');
+  if(m.id==='hidro')earn('agua');const fixed=id=>G.done.some(d=>d.id===id);if(G.renewIds.length>1&&G.renewIds.every(fixed))earn('limpia');
+  if(m.boss){G.blackout=false;earn('jefe')}else G.nextCall=7;
+  AudioFX.nivel();
+  buildProg(m.tasks.length,m);$('#tmBloom').textContent='Reparación completa';$('#tmBloom').className='chip';$('#tmPts').textContent='';
+  const w=$('#tmWork');w.innerHTML='';w.append(el('h3',null,m.boss?'¡La ciudad volvió a encenderse!':'¡Reparación lista!'));
+  w.append(el('div','stars',[1,2,3].map(k=>`<span class="${k<=stars?'s':''}">★</span>`).join('')));
+  w.append(el('div','res',`<span>Desafíos</span><span>+${a.pts} 🪙</span><span>Llegaste con tiempo</span><span>${fast?'+'+bonus+' 🪙 (bonus)':'sin bonus'}</span><span>Choques en el trayecto</span><span>${crashes?'−'+pen+' 🪙 ('+crashes+')':'ninguno ✔'}</span><span><b>Total</b></span><span><b>+${total} 🪙</b></span>`));
+  const b=el('button','btn big',m.boss?'🏁 Ver mi informe':'🚗 Volver a la ruta');b.onclick=()=>{$('#taskModal').classList.add('hidden');G.modal=false;if(m.boss)endGame();else toast('📻 <b>Central:</b> Buen trabajo, '+esc(G.name)+'. Prepárate: llegará otro llamado en unos segundos.')};w.append(b);
+}
+
+/* ================= FINAL / INFORME ================= */
+function endGame(){
+  G.state='end';G.modal=false;showHint(null);AudioFX.engine(0,false);$('#hud').classList.add('hidden');$('#taskModal').classList.add('hidden');$('#screenPause').classList.add('hidden');
+  const ratio=G.maxStars?G.stars/G.maxStars:0;const bossDone=G.done.some(d=>d.boss);
+  const rank=!bossDone?'Ingeniero/a de turno':ratio>=.85?'Ingeniero/a Jefe':ratio>=.6?'Ingeniero/a Senior':'Ingeniero/a en formación';
+  $('#eIcon').textContent=bossDone?'🏆':'🏁';$('#eTitle').textContent=rank+' · '+G.name;$('#eSub').textContent=bossDone?'¡Salvaste a Villa Alemana del apagón!':'Turno terminado';
+  $('#eGrid').innerHTML=`<div><b>${G.fel}</b><small>Felipesos</small></div><div><b>${G.done.length}/${G.total}</b><small>Llamados</small></div><div><b>${G.stars}/${G.maxStars}</b><small>Estrellas ★</small></div><div><b>${G.crashes}</b><small>Choques</small></div><div><b>${G.quickOK}/${G.quickN}</b><small>Relámpago ⚡</small></div>`;
+  $('#eBadges').innerHTML=G.badges.size?[...G.badges].map(b=>`<span class="chip">${BADGES[b][0]} ${BADGES[b][1]}</span>`).join(''):'<small style="color:var(--mut)">Aún sin insignias: ¡inténtalo de nuevo!</small>';
+  const rv=[...new Set(G.review.map(r=>r.c))];$('#eRevBox').classList.toggle('hidden',!rv.length);$('#eRev').innerHTML=rv.map(c=>`<li>${esc(c)}</li>`).join('');
+  try{const best=+localStorage.getItem('ing_energia_best')||0;if(G.fel>best)localStorage.setItem('ing_energia_best',G.fel)}catch(e){}
+  $('#screenEnd').classList.remove('hidden');
+}
+function buildReport(){
+  const rv=[...new Set(G.review.map(r=>r.c))];const d=new Date().toLocaleDateString('es-CL');
+  $('#print-sheet').innerHTML=`<h1>⚡ Informe del ingeniero/a en energía</h1><div style="font-size:13px">Unidad 3 · Energía · 6° básico — <b>${esc(G.name)}</b> · ${d}</div>
+  <h2>Resumen</h2><table><tr><th>Felipesos</th><th>Llamados</th><th>Estrellas</th><th>Choques</th><th>Relámpago</th><th>Insignias</th></tr><tr><td>${G.fel}</td><td>${G.done.length}/${G.total}</td><td>${G.stars}/${G.maxStars}</td><td>${G.crashes}</td><td>${G.quickOK}/${G.quickN}</td><td>${[...G.badges].map(b=>BADGES[b][1]).join(', ')||'—'}</td></tr></table>
+  <h2>Misiones</h2><table><tr><th>Misión</th><th>Lugar</th><th>Calificación</th><th>Errores</th><th>Felipesos</th></tr>${G.done.map(m=>`<tr><td>${esc(m.title)}</td><td>${esc(m.place)}</td><td>${'★'.repeat(m.stars)+'☆'.repeat(3-m.stars)}</td><td>${m.errors}</td><td>${m.pts}</td></tr>`).join('')||'<tr><td colspan="5">Sin misiones completadas</td></tr>'}</table>
+  <h2>Conceptos para repasar</h2>${rv.length?'<ul>'+rv.map(c=>`<li>${esc(c)}</li>`).join('')+'</ul>':'<p style="font-size:12px">¡Sin errores! Excelente dominio de los conceptos de la unidad.</p>'}`;
+}
+
+/* ================= ENTRADAS ================= */
+const KEYMAP={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',Space:'space'};
+window.addEventListener('keydown',e=>{const k=KEYMAP[e.code];if(document.activeElement&&document.activeElement.tagName==='INPUT')return;
+  if(k){inp[k]=true;if(G.state==='play'&&!G.modal)e.preventDefault()}
+  else if((e.code==='KeyE'||e.code==='Enter')&&G.state==='play'&&!G.modal&&atOn){e.preventDefault();G.atenderReq=true}
+  else if(e.code==='KeyM')toggleMute();else if(e.code==='KeyC')toggleCam();else if(e.code==='Escape'&&G.state==='play'&&!G.modal)togglePause()});
+window.addEventListener('keyup',e=>{const k=KEYMAP[e.code];if(k)inp[k]=false});
+window.addEventListener('blur',()=>{for(const k in inp)inp[k]=false;if(G.state==='play'&&!G.modal&&!G.paused)togglePause()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&G.state==='play'&&!G.modal&&!G.paused)togglePause()});
+document.querySelectorAll('#touch button').forEach(b=>{const k=b.dataset.k;const on=e=>{e.preventDefault();inp[k]=true;b.classList.add('on')},off=e=>{e.preventDefault();inp[k]=false;b.classList.remove('on')};
+  b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);b.addEventListener('pointerleave',off);b.addEventListener('contextmenu',e=>e.preventDefault())});
+if('ontouchstart' in window||navigator.maxTouchPoints>0)document.body.classList.add('touch');
+function toggleMute(){const m=AudioFX.mute();$('#bMute').textContent=m?'🔇':'🔊'}
+function toggleCam(){G.camMode=G.camMode==='rot'?'fixed':'rot';toast('🎥 Cámara: '+(G.camMode==='rot'?'gira con el auto':'fija (norte arriba)'))}
+function togglePause(){if(G.state!=='play')return;G.paused=!G.paused;$('#screenPause').classList.toggle('hidden',!G.paused);if(G.paused)for(const k in inp)inp[k]=false}
+$('#bAtender').onclick=()=>{AudioFX.init();G.atenderReq=true};
+$('#bMute').onclick=toggleMute;$('#bCam').onclick=toggleCam;$('#bPause').onclick=togglePause;
+$('#pResume').onclick=togglePause;$('#pEnd').onclick=()=>{G.paused=false;endGame()};
+$('#bStart').onclick=startGame;$('#eAgain').onclick=()=>{$('#screenEnd').classList.add('hidden');$('#screenStart').classList.remove('hidden');G.state='menu';refreshBest()};
+$('#eReport').onclick=()=>{buildReport();window.print()};
+function refreshBest(){try{const b=+localStorage.getItem('ing_energia_best')||0;$('#bestTxt').textContent=b?'Tu mejor puntaje: '+b+' 🪙':''}catch(e){}}refreshBest();
+
+/* ================= BUCLE ================= */
+let last=performance.now(),hudT=0;
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;
+  try{update(dt);drawFrame();if(G.modal&&G.active)drawScene();
+    hudT+=dt;if(G.state==='play'&&hudT>.12){hudT=0;updateHUD()}if(G.state==='play')drawMini()}catch(e){console.error(e)}
+  requestAnimationFrame(frame)}
+function updateHUD(){$('#hFel').textContent=G.fel;$('#hProg').textContent=G.done.filter(d=>!d.boss).length+'/'+(G.total-1);
+  $('#hBat').style.width=G.battery+'%';$('#hBat').style.background=G.battery<15?'var(--bad)':G.battery<35?'var(--gold)':'var(--ok)';$('#hBatT').textContent=Math.round(G.battery)+'%';
+  $('#hSpd').textContent=Math.round(Math.abs(car.v)/MAXV*60);const h=Math.floor(G.hour||9),mn=Math.floor(((G.hour||9)%1)*60);$('#hClock').textContent=(G.blackout?'🌑 ':(G.night>.4?'🌙 ':'☀️ '))+String(h).padStart(2,'0')+':'+String(mn).padStart(2,'0');
+  const a=G.active;if(a&&a.phase==='drive'){$('#rSub').textContent=a.m.radio.replace(/^Central a ingeniero\/a:\s*/,'')+'  ·  📍 '+fmtDist()+' m';$('#rBar').style.width=(a.timeLeft/a.timeLimit*100)+'%';$('#rBar').style.background=a.timeLeft/a.timeLimit<.4?'var(--ember)':'var(--teal)'}
+  else if(!a){$('#rSub').textContent=G.queue.length?'Recorre la ciudad. Pronto recibirás una misión.':'Sin más llamados.'}}
+requestAnimationFrame(frame);
+window.__dbg={chargers,G,car,inp,issueCall,openMission,findLot,renderTask,MISSIONS,BOSS,update,startGame};
+</script>
+</body>
+</html>
