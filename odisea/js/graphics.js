@@ -39,6 +39,9 @@ OC.Graphics = (function () {
   function powerups(list)           { OC.Sprites.powerups(list); }
   function enemies(list, theme)     { OC.Sprites.enemies(list, theme); }
   function boss(b, env)             { OC.Sprites.boss(b, W, H, env); }
+  function blasts(l) { OC.Sprites.blasts(l); }
+  function beam(s, f, w) { OC.Sprites.beam(s, f, w); }
+  function charge(f, firing, touch) { OC.Sprites.charge(f, firing, touch, W, H); }
   function progress(f, rem, label, warn) { OC.Sprites.progress(f, rem, label, warn, W, H); }
   function ship(s, buffs, vehiculo, env) { OC.Sprites.ship(s, buffs, vehiculo, env); }
 
@@ -58,6 +61,6 @@ OC.Graphics = (function () {
     if (temp > 78) { cx.fillStyle = 'rgba(255,40,20,' + Math.min(0.28, (temp - 78) / 22 * 0.28) + ')'; cx.fillRect(0, 0, W, H); }
   }
 
-  return { init, resize, clear, starfield, scene, dim, bullets, bossShots, particles, powerups, enemies, boss, progress, ship, thermometer, heatTint, lighten,
+  return { init, resize, clear, starfield, scene, dim, bullets, bossShots, particles, powerups, enemies, boss, progress, blasts, beam, charge, ship, thermometer, heatTint, lighten,
            get W() { return W; }, get H() { return H; } };
 })();
