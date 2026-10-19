@@ -196,7 +196,8 @@ const NOMBRES = {
   'odisea': 'Odisea', 'operacion-barrera': 'Operación Barrera', 'sismos': 'Sismos, ondas y tsunamis', 'equilibrio': 'Equilibrio térmico',
   'quimica-es': 'Química básica (español)', 'quimica-en': 'Introductory Chemistry (English)'
 };
-const nombre = k => NOMBRES[k] || k;
+const AREAS_PAES = { lectora: 'Competencia Lectora', m1: 'Matemática M1', m2: 'Matemática M2', ciencias: 'Ciencias', biologia: 'Ciencias · Biología', fisica: 'Ciencias · Física', quimica: 'Ciencias · Química', historia: 'Historia y Ed. Ciudadana' };
+const nombre = k => NOMBRES[k] || (/^paes-/.test(k || '') ? 'Ensayo PAES · ' + (AREAS_PAES[k.slice(5)] || k.slice(5)) : k);
 function aviso(html, tipo) { $('avisos').innerHTML = html ? `<div class="aviso ${tipo || ''}">${html}</div>` : ''; }
 function ver(id, si) { $(id).classList.toggle('oculto', !si); }
 
