@@ -118,6 +118,26 @@
   @keyframes spin{to{transform:rotate(360deg)}}
   .loader p{color:var(--muted);font-size:15px;margin:0}
 
+  /* Semana / banco */
+  .week-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+  .week-row select{font:inherit;font-size:14px;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+  .week-row span{font-size:13px;color:var(--muted)}
+  /* Historial */
+  .history{display:flex;flex-direction:column;gap:8px}
+  .hist-item{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:14px}
+  .hist-item .tag{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-family:"JetBrains Mono";font-weight:700;color:#fff;font-size:12px;flex-shrink:0}
+  .hist-item b{font-family:"JetBrains Mono"} .hist-item .sp{flex:1} .hist-item small{color:var(--muted)}
+  .resume{background:var(--action-soft);border:1px solid #C7CBF7;border-radius:12px;padding:14px 16px;margin:18px 0 0;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:14.5px}
+  .resume .sp{flex:1}
+  /* Ejes */
+  .ejes{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-top:18px}
+  .eje-row{display:grid;grid-template-columns:minmax(120px,1.2fr) 3fr auto;gap:12px;align-items:center;margin:8px 0;font-size:14px}
+  .eje-bar{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
+  .eje-bar i{display:block;height:100%;border-radius:5px}
+  .eje-row b{font-family:"JetBrains Mono";font-size:13px;white-space:nowrap}
+  .qimg{display:block;max-width:100%;max-height:340px;margin:0 0 18px;border-radius:10px;border:1px solid var(--line);background:#fff}
+  .tema{display:inline-block;font-size:12px;font-weight:600;color:var(--action);background:var(--action-soft);padding:2px 9px;border-radius:999px;margin-left:6px}
+
   @media (max-width:780px){
     .exam-grid.has-passage{grid-template-columns:1fr} .passage{position:static;max-height:none}
     .modes{grid-template-columns:1fr} .answersheet{display:none}
@@ -157,8 +177,10 @@
       <h1 class="serif">Practica para la PAES y revisa cada respuesta al instante.</h1>
       <p>Elige una prueba, responde un ensayo armado al azar desde el banco de la semana y recibe retroalimentación pregunta por pregunta.</p>
     </div>
+    <div class="resume" id="resumeBox" style="display:none"></div>
     <div class="section-label">1 · Elige la prueba</div>
-    <div class="subjects" id="subjectList"></div>
+    <div class="week-row"><select id="weekSel" aria-label="Banco de preguntas"></select><span id="weekInfo"></span></div>
+    <div class="subjects" id="subjectList" style="margin-top:14px"></div>
     <div class="section-label">2 · Elige el modo</div>
     <div class="modes">
       <div class="mode active" data-mode="practica" tabindex="0" role="button">
@@ -170,9 +192,13 @@
         <p>Tiempo en contra y sin pistas. La retroalimentación llega al final, como en la prueba real.</p>
       </div>
     </div>
-    <div class="start-row">
+    <div class="start-row" style="margin-bottom:30px">
       <button class="btn-primary" id="startBtn" disabled>Comenzar ensayo</button>
       <span class="start-note" id="startNote">Selecciona una prueba para empezar.</span>
+    </div>
+    <div id="historyWrap" style="display:none;margin-bottom:80px">
+      <div class="section-label" style="margin-top:0">Tus últimos ensayos (en este dispositivo)</div>
+      <div class="history" id="historyList"></div>
     </div>
   </div>
 </section>
@@ -222,78 +248,109 @@
       </div>
     </div>
     <p class="score-disclaimer" id="scoreNote"></p>
+    <div class="ejes" id="ejesBox" style="display:none">
+      <h3 class="serif" style="margin:0 0 4px;font-size:19px">Rendimiento por tema</h3>
+      <p style="margin:0 0 10px;font-size:13.5px;color:var(--muted)">De lo más débil a lo más fuerte: empieza a repasar por arriba.</p>
+      <div id="ejesList"></div>
+    </div>
     <h3 class="review-title">Retroalimentación pregunta por pregunta</h3>
     <div id="reviewList"></div>
     <div class="start-row"><button class="btn-primary" id="retryBtn">Hacer otro ensayo</button></div>
   </div>
 </section>
 
+<script src="firebase/df.js" data-sin-aviso data-sin-visita></script>
 <script>
 /* ================================================================
    CONFIGURACIÓN  ── lo único que tú editas habitualmente
    ================================================================ */
 const CONFIG = {
-  // OPCIÓN RECOMENDADA: pega aquí la URL del Apps Script (termina en /exec).
-  // Si está puesta, se usa esta y se ignora el SHEET_ID de abajo.
+  // URL del Apps Script que entrega el banco en JSON (termina en /exec).
   WEBAPP_URL: "https://script.google.com/macros/s/AKfycbzW_Kf-vNiZy_iYwAPfoEKQuwkqD5DA2mS7r2gXmpBbss3HsDk4-wPHOAzgPoXvHJcj/exec",
-  // Opción heredada: lectura directa del Sheet (puede fallar por CORS en hosting).
+  // Respaldo: lectura directa del Sheet (solo si WEBAPP_URL está vacía).
   SHEET_ID: "1DXcK6H21l50vFJmyVdv7UW7FVIF0DoiZwvdxUVZVGfc",
-  TAB_PREGUNTAS: "Preguntas",     // nombre de la pestaña con las preguntas
-  TAB_LECTURAS:  "Lecturas",      // nombre de la pestaña con los textos de lectura
-  PREGUNTAS_POR_ENSAYO: 30,       // cuántas saca al azar del banco de la semana (pon 100 para el banco completo)
-  SEGUNDOS_POR_PREGUNTA: 90,      // tiempo del modo ensayo = preguntas × esto
-  BARAJAR_ALTERNATIVAS: true      // mezcla el orden de A–E para evitar memorización
+  TAB_PREGUNTAS: "Preguntas",
+  TAB_LECTURAS:  "Lecturas",
+  PREGUNTAS_POR_ENSAYO: 30,       // cuántas saca al azar (pon 100 para usar el banco completo)
+  SEGUNDOS_POR_PREGUNTA: 90,      // tiempo del modo ensayo si el área no tiene uno propio (abajo)
+  BARAJAR_ALTERNATIVAS: true,     // mezcla A–E (no se mezclan las preguntas cuya retro nombra letras)
+  GUARDAR_EN_CUENTA: true         // ofrece guardar el resultado en la cuenta del estudiante (Firebase)
 };
 
-// Áreas: id (como va en la columna "area" del Sheet) → nombre visible, sigla y color.
+// Áreas: id (columna "area" del Sheet) → nombre, sigla, color y segundos por pregunta en modo ensayo.
 const AREAS = {
-  lectora:  { name:"Competencia Lectora",        short:"CL", color:"#4338CA" },
-  m1:       { name:"Competencia Matemática (M1)", short:"M1", color:"#0D9488" },
-  ciencias: { name:"Ciencias",                    short:"CS", color:"#DB2777" },
-  historia: { name:"Historia y Ed. Ciudadana",    short:"HC", color:"#D97706" }
+  lectora:  { name:"Competencia Lectora",         short:"CL", color:"#4338CA", seg:90 },
+  m1:       { name:"Competencia Matemática (M1)", short:"M1", color:"#0D9488", seg:90 },
+  m2:       { name:"Competencia Matemática (M2)", short:"M2", color:"#0F766E", seg:90 },
+  ciencias: { name:"Ciencias",                    short:"CS", color:"#DB2777", seg:90 },
+  biologia: { name:"Ciencias · Biología",         short:"BI", color:"#16A34A", seg:90 },
+  fisica:   { name:"Ciencias · Física",           short:"FI", color:"#2563EB", seg:90 },
+  quimica:  { name:"Ciencias · Química",          short:"QU", color:"#9333EA", seg:90 },
+  historia: { name:"Historia y Ed. Ciudadana",    short:"HC", color:"#D97706", seg:90 }
 };
 
-// Tabla de conversión referencial: fracción de acierto → puntaje (escala 100–1000).
-// OJO: el puntaje PAES real es estandarizado a nivel nacional; esto es solo una ESTIMACIÓN.
-// Ajusta los puntos a tu criterio (o a las tablas referenciales del DEMRE).
+// Conversión referencial: fracción de acierto → puntaje (escala 100–1000). NO es el puntaje oficial.
 const TABLA_PUNTAJE = [[0,100],[0.30,500],[0.50,650],[0.70,800],[0.85,900],[1,1000]];
 
+/* Columnas del Sheet «Preguntas»:
+   obligatorias: semana, area, enunciado, A, B, C, D, E, correcta, retro, lectura_id
+   opcionales:   eje     → tema de la pregunta (ej. "Genética"); da el rendimiento por tema
+                 imagen  → enlace a una imagen (gráfico, tabla, figura) que se muestra con la pregunta
+   En el texto puedes usar saltos de línea; se respetan. */
+
 /* ================================================================
-   DATOS DE EJEMPLO (se usan si SHEET_ID está vacío o falla la carga)
-   Reproducen exactamente la forma que tendrán las filas del Sheet.
+   DATOS DE EJEMPLO (solo si no hay conexión ni banco guardado)
    ================================================================ */
 const DEMO_LECTURAS = [
   { lectura_id:"L1", titulo:"Leer despacio en la era de la distracción",
     texto:"Leer un texto extenso exige hoy un esfuerzo poco habitual. Acostumbrados a desplazarnos por pantallas que renuevan su contenido cada pocos segundos, hemos entrenado a nuestra atención para saltar antes que para detenerse.||Sin embargo, comprender una idea compleja requiere lo contrario: permanecer. Quien lee con calma construye relaciones, anticipa, duda y vuelve atrás cuando algo no calza.||Esa lentitud no es una pérdida de tiempo, sino la condición del pensamiento profundo. Leer despacio no es nostalgia, sino una forma de resistencia frente a una cultura que premia la velocidad por sobre la comprensión." }
 ];
 const DEMO_PREGUNTAS = [
-  {semana:"2026-W24",area:"lectora",enunciado:"¿Cuál es el propósito principal del texto?",A:"Criticar el uso de pantallas.",B:"Defender el valor de la lectura pausada para el pensamiento.",C:"Describir cómo funciona la atención.",D:"Comparar lectura digital y en papel.",E:"Lamentar la desaparición de los libros.",correcta:"B",retro:"Argumenta a favor de “leer despacio” como condición del pensamiento profundo; no se limita a criticar ni describir.",lectura_id:"L1"},
-  {semana:"2026-W24",area:"lectora",enunciado:"¿Qué implica “permanecer” al leer, según el texto?",A:"Memorizar el texto.",B:"Mantener la atención de forma sostenida.",C:"Evitar los dispositivos.",D:"Leer solo textos difíciles.",E:"Detenerse en palabras nuevas.",correcta:"B",retro:"“Permanecer” se opone a “saltar”: es atención sostenida, no memorización.",lectura_id:"L1"},
-  {semana:"2026-W24",area:"lectora",enunciado:"La expresión “forma de resistencia” en el cierre…",A:"Indica esfuerzo físico.",B:"Plantea la lectura pausada como postura crítica frente a la cultura de la velocidad.",C:"Dice que leer está prohibido.",D:"Propone dejar la tecnología.",E:"Expresa nostalgia.",correcta:"B",retro:"Se opone a “una cultura que premia la velocidad”; el texto descarta la nostalgia.",lectura_id:"L1"},
-  {semana:"2026-W24",area:"m1",enunciado:"Si 3(x − 2) = 2x + 4, ¿cuál es el valor de x?",A:"−2",B:"2",C:"6",D:"8",E:"10",correcta:"E",retro:"3x − 6 = 2x + 4 → x − 6 = 4 → x = 10.",lectura_id:""},
-  {semana:"2026-W24",area:"m1",enunciado:"Un producto cuesta $12.000 con 25% de descuento. Precio final:",A:"$3.000",B:"$8.000",C:"$9.000",D:"$9.600",E:"$15.000",correcta:"C",retro:"25% de 12.000 = 3.000. Final = 12.000 − 3.000 = 9.000.",lectura_id:""},
-  {semana:"2026-W24",area:"m1",enunciado:"Catetos de 6 y 8 cm. ¿Hipotenusa?",A:"10 cm",B:"12 cm",C:"14 cm",D:"48 cm",E:"100 cm",correcta:"A",retro:"Pitágoras: √(36+64)=√100=10 cm.",lectura_id:""},
-  {semana:"2026-W24",area:"ciencias",enunciado:"Función principal de los glóbulos rojos:",A:"Defender de infecciones.",B:"Transportar oxígeno.",C:"Coagular la sangre.",D:"Producir anticuerpos.",E:"Regular la temperatura.",correcta:"B",retro:"La hemoglobina transporta oxígeno desde los pulmones a los tejidos.",lectura_id:""},
-  {semana:"2026-W24",area:"ciencias",enunciado:"¿Cuál es un cambio químico?",A:"Derretir hielo.",B:"Disolver azúcar.",C:"Oxidación del hierro.",D:"Romper un vidrio.",E:"Evaporar agua.",correcta:"C",retro:"La oxidación forma una sustancia nueva; los demás son cambios físicos.",lectura_id:""},
-  {semana:"2026-W24",area:"historia",enunciado:"Órgano que elabora las leyes en Chile:",A:"Poder Judicial.",B:"Congreso Nacional.",C:"Contraloría.",D:"Banco Central.",E:"Tribunal Constitucional.",correcta:"B",retro:"El Congreso (Diputados + Senado) ejerce la función legislativa.",lectura_id:""},
-  {semana:"2026-W24",area:"historia",enunciado:"La “separación de poderes” busca principalmente:",A:"Concentrar el poder.",B:"Equilibrar poderes independientes para evitar abusos.",C:"Eliminar el poder judicial.",D:"Dar el legislativo al presidente.",E:"Reducir la participación.",correcta:"B",retro:"Poderes que se controlan entre sí evitan la concentración y el abuso.",lectura_id:""}
+  {semana:"2026-W24",area:"lectora",eje:"Propósito",enunciado:"¿Cuál es el propósito principal del texto?",A:"Criticar el uso de pantallas.",B:"Defender el valor de la lectura pausada para el pensamiento.",C:"Describir cómo funciona la atención.",D:"Comparar lectura digital y en papel.",E:"Lamentar la desaparición de los libros.",correcta:"B",retro:"Argumenta a favor de “leer despacio” como condición del pensamiento profundo; no se limita a criticar ni describir.",lectura_id:"L1"},
+  {semana:"2026-W24",area:"lectora",eje:"Vocabulario en contexto",enunciado:"¿Qué implica “permanecer” al leer, según el texto?",A:"Memorizar el texto.",B:"Mantener la atención de forma sostenida.",C:"Evitar los dispositivos.",D:"Leer solo textos difíciles.",E:"Detenerse en palabras nuevas.",correcta:"B",retro:"“Permanecer” se opone a “saltar”: es atención sostenida, no memorización.",lectura_id:"L1"},
+  {semana:"2026-W24",area:"m1",eje:"Álgebra",enunciado:"Si 3(x − 2) = 2x + 4, ¿cuál es el valor de x?",A:"−2",B:"2",C:"6",D:"8",E:"10",correcta:"E",retro:"3x − 6 = 2x + 4 → x − 6 = 4 → x = 10.",lectura_id:""},
+  {semana:"2026-W24",area:"m1",eje:"Números",enunciado:"Un producto cuesta $12.000 con 25% de descuento. Precio final:",A:"$3.000",B:"$8.000",C:"$9.000",D:"$9.600",E:"$15.000",correcta:"C",retro:"25% de 12.000 = 3.000. Final = 12.000 − 3.000 = 9.000.",lectura_id:""},
+  {semana:"2026-W24",area:"ciencias",eje:"Biología",enunciado:"Función principal de los glóbulos rojos:",A:"Defender de infecciones.",B:"Transportar oxígeno.",C:"Coagular la sangre.",D:"Producir anticuerpos.",E:"Regular la temperatura.",correcta:"B",retro:"La hemoglobina transporta oxígeno desde los pulmones a los tejidos.",lectura_id:""},
+  {semana:"2026-W24",area:"ciencias",eje:"Química",enunciado:"¿Cuál es un cambio químico?",A:"Derretir hielo.",B:"Disolver azúcar.",C:"Oxidación del hierro.",D:"Romper un vidrio.",E:"Evaporar agua.",correcta:"C",retro:"La oxidación forma una sustancia nueva; los demás son cambios físicos.",lectura_id:""},
+  {semana:"2026-W24",area:"historia",eje:"Institucionalidad",enunciado:"Órgano que elabora las leyes en Chile:",A:"Poder Judicial.",B:"Congreso Nacional.",C:"Contraloría.",D:"Banco Central.",E:"Tribunal Constitucional.",correcta:"B",retro:"El Congreso (Diputados + Senado) ejerce la función legislativa.",lectura_id:""}
 ];
 
 /* ================================================================
-   CARGA DE DATOS (Google Sheet vía gviz/CSV, con respaldo demo)
+   UTILIDADES
    ================================================================ */
-function gvizURL(tab){
-  return `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
+const $ = s => document.querySelector(s);
+const LETRAS = ["A","B","C","D","E"];
+// Todo el texto del Sheet se muestra como texto (un "x < 3" no rompe la página); los saltos de línea se respetan.
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function txt(s){ return esc(s).replace(/\r?\n/g,"<br>"); }
+function quitarAcentos(s){ return String(s).normalize("NFD").replace(/[̀-ͯ]/g,""); }
+function normKey(k){ return quitarAcentos(String(k).trim().toLowerCase()); }
+function normObj(o){ const n={}; for(const k in o){ n[normKey(k)] = o[k]; } return n; }
+function shuffle(a){ const x=a.slice(); for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];} return x; }
+function fmt(s){const m=Math.floor(s/60),r=s%60;return String(m).padStart(2,"0")+":"+String(r).padStart(2,"0");}
+const store = {
+  get(k){ try{ return JSON.parse(localStorage.getItem(k)||"null"); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+const K_BANCO="paes_banco_v1", K_CURSO="paes_en_curso_v1", K_HIST="paes_historial_v1";
+function banner(html){ const b=$("#demoBanner"); if(b){ b.style.display="block"; b.innerHTML=html; } }
+function imagenOk(u){ return /^https:\/\/\S+$/i.test(String(u||"").trim()); }
+// Convierte enlaces de Google Drive "compartir" en enlaces directos de imagen.
+function imagenURL(u){
+  u=String(u||"").trim();
+  const m=u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]{20,})/);
+  return m ? "https://drive.google.com/thumbnail?id="+m[1]+"&sz=w1200" : u;
 }
-// Parser de CSV tolerante (maneja comillas, comas y saltos de línea dentro de celdas).
+
+/* ================================================================
+   CARGA DEL BANCO (Apps Script → Sheet → banco guardado → ejemplo)
+   ================================================================ */
 function parseCSV(text){
   const rows=[]; let row=[], field="", inQ=false, i=0;
   while(i<text.length){
     const c=text[i];
-    if(inQ){
-      if(c==='"'){ if(text[i+1]==='"'){field+='"';i+=2;continue;} inQ=false;i++;continue; }
-      field+=c;i++;continue;
-    }
+    if(inQ){ if(c==='"'){ if(text[i+1]==='"'){field+='"';i+=2;continue;} inQ=false;i++;continue; } field+=c;i++;continue; }
     if(c==='"'){inQ=true;i++;continue;}
     if(c===','){row.push(field);field="";i++;continue;}
     if(c==='\r'){i++;continue;}
@@ -303,229 +360,237 @@ function parseCSV(text){
   if(field.length||row.length){row.push(field);rows.push(row);}
   return rows;
 }
-// Normaliza nombres de columnas: minúsculas, sin espacios extra y SIN ACENTOS.
-// Así "Área", "AREA" o "área" se entienden todas como "area".
-function quitarAcentos(s){ return String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,""); }
-function normKey(k){ return quitarAcentos(String(k).trim().toLowerCase()); }
-function normObj(o){ const n={}; for(const k in o){ n[normKey(k)] = o[k]; } return n; }
-
 function rowsToObjects(rows){
   if(!rows.length) return [];
-  const head=rows[0].map(h=>normKey(h));
-  return rows.slice(1).filter(r=>r.some(c=>c.trim()!=="")).map(r=>{
-    const o={}; head.forEach((h,k)=>o[h]=(r[k]||"").trim()); return o;
-  });
+  const head=rows[0].map(normKey);
+  return rows.slice(1).filter(r=>r.some(c=>c.trim()!=="")).map(r=>{ const o={}; head.forEach((h,k)=>o[h]=(r[k]||"").trim()); return o; });
 }
-async function fetchTab(tab, timeoutMs=9000){
-  const ctrl=new AbortController();
-  const t=setTimeout(()=>ctrl.abort(), timeoutMs);
-  try{
-    const res=await fetch(gvizURL(tab), {signal:ctrl.signal});
-    if(!res.ok) throw new Error("HTTP "+res.status);
-    return rowsToObjects(parseCSV(await res.text()));
-  } finally { clearTimeout(t); }
+async function fetchConTiempo(url, ms){
+  const ctrl=new AbortController(), t=setTimeout(()=>ctrl.abort(), ms);
+  try{ const r=await fetch(url,{signal:ctrl.signal}); if(!r.ok) throw new Error("HTTP "+r.status); return r; }
+  finally{ clearTimeout(t); }
 }
-// Muestra un aviso en pantalla (reutiliza el recuadro del banner) en vez de quedarse en blanco.
-function banner(html){
-  const b=document.getElementById("demoBanner");
-  if(b){ b.style.display="block"; b.innerHTML=html; }
-}
-
-const state={ subjects:{}, semana:"", demo:false, area:null, mode:"practica",
-              ensayo:[], i:0, answers:[], startMs:0, timerId:null, finished:false };
-
-async function loadData(){
-  // ===== OPCIÓN A (recomendada): Apps Script Web App que entrega JSON =====
+const valido = ps => ps.length && ps.some(p=>p.area && p.enunciado);
+async function bancoEnLinea(){
   if(CONFIG.WEBAPP_URL && CONFIG.WEBAPP_URL.indexOf("http")===0){
-    try{
-      const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),12000);
-      const res=await fetch(CONFIG.WEBAPP_URL, {signal:ctrl.signal});
-      clearTimeout(t);
-      if(!res.ok) throw new Error("HTTP "+res.status);
-      const data=await res.json();
-      const preguntas=(data.preguntas||[]).map(normObj), lecturas=(data.lecturas||[]).map(normObj);
-      if(!preguntas.length || !preguntas.some(p=>p.area && p.enunciado)){
-        banner(`<b>El Apps Script respondió, pero sin preguntas válidas.</b> Revisa que la pestaña «${CONFIG.TAB_PREGUNTAS}» tenga los encabezados: semana, area, enunciado, A, B, C, D, E, correcta, retro, lectura_id.`);
-        state.demo=true; buildSubjects(DEMO_PREGUNTAS, DEMO_LECTURAS); return;
-      }
-      buildSubjects(preguntas, lecturas); return;
-    }catch(err){
-      console.error("Error al leer el Apps Script:", err);
-      banner(`<b>No se pudo leer el Apps Script.</b> Verifica que la implementación sea «Aplicación web», con acceso «Cualquier persona», y que la URL termine en /exec. Detalle: ${err.message||err}`);
-      state.demo=true; buildSubjects(DEMO_PREGUNTAS, DEMO_LECTURAS); return;
-    }
+    const data=await (await fetchConTiempo(CONFIG.WEBAPP_URL, 15000)).json();
+    const preguntas=(data.preguntas||[]).map(normObj), lecturas=(data.lecturas||[]).map(normObj);
+    if(!valido(preguntas)) throw new Error(`el Apps Script respondió sin preguntas válidas (revisa los encabezados de «${CONFIG.TAB_PREGUNTAS}»)`);
+    return { preguntas, lecturas };
   }
-  // ===== OPCIÓN B (heredada): lectura directa del Sheet vía gviz =====
-  let preguntas=[], lecturas=[];
   if(CONFIG.SHEET_ID && CONFIG.SHEET_ID.length>10){
-    // 1) Preguntas (obligatorias)
-    try{
-      preguntas = await fetchTab(CONFIG.TAB_PREGUNTAS);
-    }catch(err){
-      console.error("Error al leer la pestaña Preguntas:", err);
-      banner(`<b>No se pudieron leer las preguntas.</b> Verifica que el Sheet sea una Hoja de Google nativa (no un archivo .xlsx), compartido como «cualquiera con el enlace», y que la pestaña se llame exactamente «${CONFIG.TAB_PREGUNTAS}». Detalle técnico: ${err.message||err}`);
-      state.demo=true; buildSubjects(DEMO_PREGUNTAS, DEMO_LECTURAS); return;
-    }
-    // ¿Respondió con preguntas reales? (si no, suele ser un .xlsx sin convertir o sin permiso)
-    if(!preguntas.length || !preguntas.some(p=>p.area && p.enunciado)){
-      banner(`<b>El Sheet respondió, pero no con preguntas válidas.</b> Lo más probable es que no sea una Hoja de Google nativa, o que los encabezados de «${CONFIG.TAB_PREGUNTAS}» no sean: semana, area, enunciado, A, B, C, D, E, correcta, retro, lectura_id.`);
-      state.demo=true; buildSubjects(DEMO_PREGUNTAS, DEMO_LECTURAS); return;
-    }
-    // 2) Lecturas (opcionales): nunca deben bloquear ni colgar la página
-    try{
-      lecturas = await fetchTab(CONFIG.TAB_LECTURAS, 7000);
-    }catch(err){
-      console.warn("Aviso: no se cargaron las lecturas, continúo sin ellas:", err);
-      lecturas=[];
-      banner(`<b>Cargué las preguntas correctamente</b>, pero no la pestaña «${CONFIG.TAB_LECTURAS}». Las preguntas de Comprensión Lectora se mostrarán sin su texto. Revisa el nombre de esa pestaña si la necesitas.`);
-    }
-  }else{
-    preguntas=DEMO_PREGUNTAS; lecturas=DEMO_LECTURAS; state.demo=true;
+    const url=tab=>`https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
+    const preguntas=rowsToObjects(parseCSV(await (await fetchConTiempo(url(CONFIG.TAB_PREGUNTAS), 10000)).text()));
+    if(!valido(preguntas)) throw new Error(`el Sheet respondió sin preguntas válidas (revisa los encabezados de «${CONFIG.TAB_PREGUNTAS}»)`);
+    let lecturas=[]; try{ lecturas=rowsToObjects(parseCSV(await (await fetchConTiempo(url(CONFIG.TAB_LECTURAS), 7000)).text())); }catch(e){}
+    return { preguntas, lecturas };
   }
-  buildSubjects(preguntas, lecturas);
+  throw new Error("no hay WEBAPP_URL ni SHEET_ID configurados");
+}
+async function loadData(){
+  try{
+    const b=await bancoEnLinea();
+    store.set(K_BANCO, { preguntas:b.preguntas, lecturas:b.lecturas, fecha:Date.now() });
+    return b;
+  }catch(err){
+    console.error("No se pudo leer el banco en línea:", err);
+    const g=store.get(K_BANCO);
+    if(g && valido(g.preguntas||[])){
+      banner(`<b>Sin conexión con el banco de preguntas.</b> Estás usando la copia guardada en este dispositivo el ${new Date(g.fecha).toLocaleDateString("es-CL")}. Detalle: ${esc(err.message||err)}`);
+      return g;
+    }
+    state.demo=true;
+    banner(`<b>No se pudo leer el banco de preguntas</b> y no hay copia guardada, así que ves <b>preguntas de ejemplo</b>. Revisa que el Apps Script esté publicado como «Aplicación web» con acceso «Cualquier persona». Detalle: ${esc(err.message||err)}`);
+    return { preguntas:DEMO_PREGUNTAS.map(normObj), lecturas:DEMO_LECTURAS.map(normObj) };
+  }
 }
 
-function buildSubjects(preguntas, lecturas){
-  // Mapa de lecturas por id
+/* ================================================================
+   BANCO → PREGUNTAS LISTAS PARA USAR
+   ================================================================ */
+const state={ todas:[], semanas:[], semana:"", demo:false, area:null, mode:"practica",
+              ensayo:[], i:0, answers:[], startMs:0, elapsedPrev:0, timerId:null, finished:false };
+// Si la retroalimentación nombra letras ("la B", "alternativa C"), barajar la confundiría.
+const NOMBRA_LETRAS=/\b(alternativa|opci[oó]n|letra|respuesta)\s+[A-E]\b|\b[A-E]\)|\bla\s+[A-E]\b/i;
+
+function prepararBanco(preguntas, lecturas){
   const lecMap={};
   (lecturas||[]).forEach(l=>{
     if(!l.lectura_id) return;
-    lecMap[l.lectura_id]={ titulo:l.titulo||"Texto",
-      paras:(l.texto||"").split(/\|\||\n{2,}/).map(p=>p.trim()).filter(Boolean) };
+    lecMap[l.lectura_id]={ titulo:l.titulo||"Texto", paras:String(l.texto||"").split(/\|\||\n{2,}/).map(p=>p.trim()).filter(Boolean) };
   });
-
-  // Semana activa = la mayor etiqueta presente (usa formato ISO 2026-W24 para que ordene bien)
-  const semanas=[...new Set(preguntas.map(p=>p.semana).filter(Boolean))].sort();
-  state.semana = semanas.length ? semanas[semanas.length-1] : "—";
-
   const letters=["a","b","c","d","e"];
-  const subjects={};
-  preguntas.filter(p=> (p.semana||state.semana)===state.semana ).forEach(p=>{
-    const areaId=(p.area||"").toLowerCase();
-    if(!areaId || !p.enunciado) return;
-    const meta=AREAS[areaId] || { name:areaId, short:areaId.slice(0,2).toUpperCase(), color:"#4338CA" };
-    if(!subjects[areaId]) subjects[areaId]={ id:areaId, ...meta, pool:[] };
-    const correctLetter=(p.correcta||"").trim().toLowerCase();
-    const options=letters
-      .filter(L=> (p[L]||"").trim()!=="")
-      .map(L=>({ text:p[L].trim(), correct:L===correctLetter }));
-    subjects[areaId].pool.push({
-      text:p.enunciado, options, retro:p.retro||"",
-      passage: p.lectura_id && lecMap[p.lectura_id] ? lecMap[p.lectura_id] : null
-    });
-  });
-  state.subjects=subjects;
+  state.todas = preguntas.map((p,idx)=>{
+    const area=String(p.area||"").trim().toLowerCase();
+    if(!area || !p.enunciado) return null;
+    const cl=String(p.correcta||"").trim().toLowerCase();
+    const options=letters.filter(L=>String(p[L]||"").trim()!=="").map(L=>({ text:String(p[L]).trim(), correct:L===cl, letra:L.toUpperCase() }));
+    if(!options.some(o=>o.correct)) { console.warn("Pregunta sin alternativa correcta válida (fila "+(idx+2)+"):", p.enunciado); return null; }
+    return { id:idx, semana:String(p.semana||"").trim(), area, eje:String(p.eje||p.tema||"").trim(),
+      text:String(p.enunciado), options, retro:String(p.retro||""),
+      imagen: imagenOk(p.imagen) ? imagenURL(p.imagen) : "",
+      passage: p.lectura_id && lecMap[p.lectura_id] ? lecMap[p.lectura_id] : null,
+      fija: NOMBRA_LETRAS.test(String(p.retro||"")) };
+  }).filter(Boolean);
+  state.semanas=[...new Set(state.todas.map(q=>q.semana).filter(Boolean))].sort();
+  state.semana = state.semanas.length ? state.semanas[state.semanas.length-1] : "*";
 }
+function poolDe(area){
+  return state.todas.filter(q=>q.area===area && (state.semana==="*" || (q.semana||state.semana)===state.semana));
+}
+function areasVisibles(){
+  const ids=[...new Set(state.todas.filter(q=>state.semana==="*"||(q.semana||state.semana)===state.semana).map(q=>q.area))];
+  const orden=Object.keys(AREAS);
+  return ids.sort((a,b)=>((orden.indexOf(a)+1)||99)-((orden.indexOf(b)+1)||99));
+}
+function metaArea(id){ return AREAS[id] || { name:id, short:id.slice(0,2).toUpperCase(), color:"#4338CA", seg:CONFIG.SEGUNDOS_POR_PREGUNTA }; }
 
 /* ================================================================
-   ARMADO DEL ENSAYO (aleatorio)
+   INICIO
    ================================================================ */
-function shuffle(a){ const x=a.slice(); for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];} return x; }
-function buildEnsayo(area){
-  const pool=state.subjects[area].pool;
-  const picked=shuffle(pool).slice(0, Math.min(CONFIG.PREGUNTAS_POR_ENSAYO, pool.length));
-  return picked.map(q=>({
-    text:q.text, retro:q.retro, passage:q.passage,
-    options: CONFIG.BARAJAR_ALTERNATIVAS ? shuffle(q.options) : q.options.slice()
-  }));
-}
-
-/* ================================================================
-   UI: inicio
-   ================================================================ */
-const $=s=>document.querySelector(s);
 const screens={load:$("#loadScreen"),home:$("#homeScreen"),exam:$("#examScreen"),results:$("#resultsScreen")};
 function show(name){ for(const k in screens) screens[k].classList.toggle("on",k===name); window.scrollTo(0,0); }
 
 function renderHome(){
-  $("#weekEyebrow").textContent = "Ensayo de la semana · "+state.semana;
-  const list=$("#subjectList"); list.innerHTML="";
-  const ids=Object.keys(state.subjects);
-  if(!ids.length){ list.innerHTML=`<p style="color:var(--muted)">No hay preguntas para la semana ${state.semana}. Revisa la columna <b>semana</b> en tu Sheet.</p>`; }
-  ids.forEach(id=>{
-    const s=state.subjects[id];
-    const card=document.createElement("button");
-    card.className="subject";
-    card.innerHTML=`<div class="tag" style="background:${s.color}">${s.short}</div><h3>${s.name}</h3><span>${s.pool.length} preguntas en el banco</span>`;
-    card.onclick=()=>{
-      state.area=id;
-      document.querySelectorAll(".subject").forEach(c=>c.classList.remove("active"));
-      card.classList.add("active");
-      $("#startBtn").disabled=false;
-      const n=Math.min(CONFIG.PREGUNTAS_POR_ENSAYO,s.pool.length);
-      $("#startNote").textContent=`Listo: ${s.name}, ${n} preguntas al azar.`;
-    };
-    list.appendChild(card);
-  });
+  // selector de banco
+  const sel=$("#weekSel");
+  const opts=state.semanas.slice().reverse().map((w,i)=>`<option value="${esc(w)}">${i===0?"Semana actual · ":"Semana "}${esc(w)}</option>`);
+  opts.push(`<option value="*">Banco completo (todas las semanas)</option>`);
+  sel.innerHTML=opts.join(""); sel.value=state.semana;
+  sel.onchange=()=>{ state.semana=sel.value; state.area=null; renderSubjects(); };
+  renderSubjects();
   document.querySelectorAll(".mode").forEach(m=>{
-    const pick=()=>{document.querySelectorAll(".mode").forEach(x=>x.classList.remove("active"));m.classList.add("active");state.mode=m.dataset.mode;};
+    const pick=()=>{document.querySelectorAll(".mode").forEach(x=>x.classList.remove("active"));m.classList.add("active");state.mode=m.dataset.mode;actualizarNota();};
     m.onclick=pick; m.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();pick();}};
   });
+  renderResume(); renderHistory();
+}
+function renderSubjects(){
+  $("#weekEyebrow").textContent = state.semana==="*" ? "Banco completo" : "Ensayo de la semana · "+state.semana;
+  const total=state.todas.filter(q=>state.semana==="*"||(q.semana||state.semana)===state.semana).length;
+  $("#weekInfo").textContent = total+" preguntas disponibles";
+  const list=$("#subjectList"); list.innerHTML="";
+  const ids=areasVisibles();
+  if(!ids.length) list.innerHTML=`<p style="color:var(--muted)">No hay preguntas para esta semana. Revisa la columna <b>semana</b> del Sheet.</p>`;
+  ids.forEach(id=>{
+    const s=metaArea(id), n=poolDe(id).length;
+    const card=document.createElement("button"); card.className="subject"+(state.area===id?" active":"");
+    card.innerHTML=`<div class="tag" style="background:${esc(s.color)}">${esc(s.short)}</div><h3>${esc(s.name)}</h3><span>${n} pregunta${n!==1?"s":""} en el banco</span>`;
+    card.onclick=()=>{ state.area=id; document.querySelectorAll(".subject").forEach(c=>c.classList.remove("active")); card.classList.add("active"); actualizarNota(); };
+    list.appendChild(card);
+  });
+  actualizarNota();
+}
+function actualizarNota(){
+  const ok=!!(state.area && poolDe(state.area).length);
+  $("#startBtn").disabled=!ok;
+  if(!ok){ $("#startNote").textContent="Selecciona una prueba para empezar."; return; }
+  const s=metaArea(state.area), n=Math.min(CONFIG.PREGUNTAS_POR_ENSAYO, poolDe(state.area).length);
+  $("#startNote").textContent = `Listo: ${s.name}, ${n} preguntas al azar` + (state.mode==="ensayo" ? ` · ${fmt(n*(s.seg||CONFIG.SEGUNDOS_POR_PREGUNTA))} de tiempo.` : ".");
+}
+
+/* ---------- ensayo en curso guardado (si se recarga o se sale sin querer) ---------- */
+function guardarEnCurso(){
+  if(state.finished || !state.ensayo.length) return;
+  store.set(K_CURSO, { area:state.area, mode:state.mode, semana:state.semana, i:state.i, answers:state.answers,
+    ids:state.ensayo.map(q=>({ id:q.id, orden:q.options.map(o=>o.letra) })),
+    elapsed:state.elapsedPrev + Math.floor((Date.now()-state.startMs)/1000), fecha:Date.now() });
+}
+function renderResume(){
+  const c=store.get(K_CURSO), box=$("#resumeBox");
+  if(!c || !c.ids || Date.now()-c.fecha > 3*86400e3){ box.style.display="none"; return; }
+  const s=metaArea(c.area), resp=(c.answers||[]).filter(a=>a!==null).length;
+  box.style.display="flex";
+  box.innerHTML=`<span><b>Tienes un ensayo sin terminar</b> · ${esc(s.name)} · ${resp} de ${c.ids.length} respondidas</span><span class="sp"></span>
+    <button class="btn-primary" style="padding:9px 16px;font-size:14px" id="resumeBtn">Continuar</button>
+    <button class="ghost-btn" id="discardBtn">Descartar</button>`;
+  $("#resumeBtn").onclick=()=>reanudar(c);
+  $("#discardBtn").onclick=()=>{ store.del(K_CURSO); renderResume(); };
+}
+function reanudar(c){
+  const porId={}; state.todas.forEach(q=>porId[q.id]=q);
+  const ens=c.ids.map(x=>{ const q=porId[x.id]; if(!q) return null;
+    const opts=x.orden.map(L=>q.options.find(o=>o.letra===L)).filter(Boolean);
+    return Object.assign({}, q, { options: opts.length===q.options.length ? opts : q.options }); });
+  if(ens.some(q=>!q)){ alert("El banco cambió desde que empezaste ese ensayo; no se puede continuar."); store.del(K_CURSO); renderResume(); return; }
+  state.area=c.area; state.mode=c.mode; state.semana=c.semana||state.semana;
+  iniciar(ens, c.answers, c.i||0, c.elapsed||0);
+}
+
+/* ---------- historial local ---------- */
+function renderHistory(){
+  const h=store.get(K_HIST)||[];
+  $("#historyWrap").style.display=h.length?"block":"none";
+  $("#historyList").innerHTML=h.slice(0,8).map(r=>{
+    const s=metaArea(r.area);
+    return `<div class="hist-item"><span class="tag" style="background:${esc(s.color)}">${esc(s.short)}</span>
+      <span>${esc(s.name)} <small>· ${r.modo==="ensayo"?"cronometrado":"práctica"}</small></span><span class="sp"></span>
+      <b>${r.correctas}/${r.total}</b><small>≈ ${r.puntaje} pts · ${new Date(r.fecha).toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</small></div>`;
+  }).join("");
 }
 
 /* ================================================================
-   UI: ensayo
+   ENSAYO
    ================================================================ */
-function fmt(s){const m=Math.floor(s/60),r=s%60;return String(m).padStart(2,"0")+":"+String(r).padStart(2,"0");}
-function startTimer(){
-  state.startMs=Date.now();
-  const total=state.ensayo.length*CONFIG.SEGUNDOS_POR_PREGUNTA;
-  state.timerId=setInterval(()=>{
-    const el=$("#timer"), elapsed=Math.floor((Date.now()-state.startMs)/1000);
-    if(state.mode==="ensayo"){
-      const left=total-elapsed; el.textContent=fmt(Math.max(0,left));
-      el.classList.toggle("danger",left<=60); if(left<=0) finishExam();
-    }else el.textContent=fmt(elapsed);
-  },1000);
+function buildEnsayo(area){
+  const pick=shuffle(poolDe(area)).slice(0, Math.min(CONFIG.PREGUNTAS_POR_ENSAYO, poolDe(area).length));
+  return pick.map(q=>Object.assign({}, q, { options: (CONFIG.BARAJAR_ALTERNATIVAS && !q.fija) ? shuffle(q.options) : q.options.slice() }));
 }
-function startExam(){
-  state.ensayo=buildEnsayo(state.area);
-  state.i=0; state.finished=false; state.answers=new Array(state.ensayo.length).fill(null);
-  const s=state.subjects[state.area];
+function tiempoTotal(){ return state.ensayo.length*(metaArea(state.area).seg||CONFIG.SEGUNDOS_POR_PREGUNTA); }
+function transcurrido(){ return state.elapsedPrev + Math.floor((Date.now()-state.startMs)/1000); }
+function tick(){
+  const el=$("#timer"), e=transcurrido();
+  if(state.mode==="ensayo"){ const left=tiempoTotal()-e; el.textContent=fmt(Math.max(0,left)); el.classList.toggle("danger",left<=60); if(left<=0) finishExam(); }
+  else el.textContent=fmt(e);
+}
+function iniciar(ensayo, answers, i, elapsed){
+  state.ensayo=ensayo; state.i=i||0; state.finished=false;
+  state.answers=answers && answers.length===ensayo.length ? answers.slice() : new Array(ensayo.length).fill(null);
+  state.elapsedPrev=elapsed||0; state.startMs=Date.now();
+  const s=metaArea(state.area);
   $("#examControls").style.display="flex";
-  $("#subjectPill").innerHTML=`<span style="width:8px;height:8px;border-radius:50%;background:${s.color};display:inline-block"></span>${s.short}`;
-  $("#timer").classList.remove("danger"); $("#timer").textContent="00:00";
-  buildAnswerSheet(); startTimer(); show("exam"); renderQuestion();
+  $("#subjectPill").innerHTML=`<span style="width:8px;height:8px;border-radius:50%;background:${esc(s.color)};display:inline-block"></span>${esc(s.short)}`;
+  $("#timer").classList.remove("danger");
+  clearInterval(state.timerId); state.timerId=setInterval(tick,1000); tick();
+  buildAnswerSheet(); show("exam"); renderQuestion(); guardarEnCurso();
 }
+function startExam(){ store.del(K_CURSO); iniciar(buildEnsayo(state.area)); }
 function buildAnswerSheet(){
   const sheet=$("#answerSheet"); sheet.innerHTML="";
-  state.ensayo.forEach((_,idx)=>{const d=document.createElement("button");d.className="sheet-dot";d.textContent=idx+1;d.onclick=()=>{state.i=idx;renderQuestion();};sheet.appendChild(d);});
+  state.ensayo.forEach((_,idx)=>{const d=document.createElement("button");d.className="sheet-dot";d.textContent=idx+1;d.setAttribute("aria-label","Ir a la pregunta "+(idx+1));d.onclick=()=>{state.i=idx;renderQuestion();};sheet.appendChild(d);});
 }
 function refreshAnswerSheet(){
   document.querySelectorAll(".sheet-dot").forEach((d,idx)=>{d.classList.toggle("answered",state.answers[idx]!==null);d.classList.toggle("current",idx===state.i);});
 }
 function renderQuestion(){
-  const q=state.ensayo[state.i], n=state.ensayo.length, letters=["A","B","C","D","E"];
-  const s=state.subjects[state.area];
+  const q=state.ensayo[state.i], n=state.ensayo.length, s=metaArea(state.area);
   $("#qNum").textContent=String(state.i+1).padStart(2,"0");
-  $("#qMeta").textContent=`Pregunta ${state.i+1} de ${n} · ${s.name}`;
-  $("#qText").textContent=q.text;
+  $("#qMeta").innerHTML=`Pregunta ${state.i+1} de ${n} · ${esc(s.name)}${q.eje && state.mode==="practica" ? `<span class="tema">${esc(q.eje)}</span>` : ""}`;
+  $("#qText").innerHTML=(q.imagen?`<img class="qimg" src="${esc(q.imagen)}" alt="Figura de la pregunta ${state.i+1}" loading="lazy" referrerpolicy="no-referrer">`:"")+txt(q.text);
   $("#progressFill").style.width=(n>1?(state.i/(n-1)*100):100)+"%";
 
   const grid=$("#examGrid"), box=$("#passageBox");
   if(q.passage){
     grid.classList.add("has-passage"); box.style.display="block";
-    box.innerHTML=`<div class="kicker">Lectura</div><h2 class="serif">${q.passage.titulo}</h2>`+q.passage.paras.map(p=>`<p>${p}</p>`).join("");
+    box.innerHTML=`<div class="kicker">Lectura</div><h2 class="serif">${esc(q.passage.titulo)}</h2>`+q.passage.paras.map(p=>`<p>${txt(p)}</p>`).join("");
   }else{ grid.classList.remove("has-passage"); box.style.display="none"; }
 
   const ob=$("#optionsBox"); ob.innerHTML="";
-  const given=state.answers[state.i];
-  const reveal=state.mode==="practica" && given!==null;
+  const given=state.answers[state.i], reveal=state.mode==="practica" && given!==null;
   q.options.forEach((opt,idx)=>{
     const b=document.createElement("button"); b.className="opt";
     if(given===idx) b.classList.add("selected");
     if(reveal){ b.disabled=true; if(opt.correct) b.classList.add("correct"); else if(idx===given) b.classList.add("wrong"); }
-    b.innerHTML=`<span class="bubble">${letters[idx]}</span><span class="opt-text">${opt.text}</span>`;
+    b.innerHTML=`<span class="bubble">${LETRAS[idx]}</span><span class="opt-text">${txt(opt.text)}</span>`;
     b.onclick=()=>answer(idx); ob.appendChild(b);
   });
 
   const fb=$("#feedbackBox");
   if(reveal){
-    const ok=q.options[given].correct;
-    const correctLetter=letters[q.options.findIndex(o=>o.correct)];
+    const ok=q.options[given].correct, ci=q.options.findIndex(o=>o.correct);
     fb.className="feedback show "+(ok?"ok":"no");
-    $("#fbBadge").textContent=ok?"¡Correcto!":"Incorrecto · la respuesta es "+correctLetter;
-    $("#fbText").textContent=q.retro;
+    $("#fbBadge").textContent=ok?"¡Correcto!":"Incorrecto · la respuesta es "+LETRAS[ci];
+    $("#fbText").innerHTML=txt(q.retro||"");
   }else fb.className="feedback";
 
   $("#prevBtn").disabled=state.i===0;
@@ -533,80 +598,109 @@ function renderQuestion(){
   refreshAnswerSheet();
 }
 function answer(idx){
+  if(state.finished) return;
   if(state.mode==="practica" && state.answers[state.i]!==null) return;
-  state.answers[state.i]=idx; renderQuestion();
+  state.answers[state.i]=idx; renderQuestion(); guardarEnCurso();
 }
-function next(){ state.i===state.ensayo.length-1 ? finishExam() : (state.i++, renderQuestion()); }
+function next(){
+  if(state.i===state.ensayo.length-1){
+    const sin=state.answers.filter(a=>a===null).length;
+    if(sin && !confirm(`Te quedan ${sin} pregunta${sin>1?"s":""} sin responder. ¿Finalizar igual?`)) return;
+    finishExam();
+  } else { state.i++; renderQuestion(); guardarEnCurso(); }
+}
 function prev(){ if(state.i>0){state.i--;renderQuestion();} }
 
 /* ================================================================
-   Puntaje y resultados
+   RESULTADOS
    ================================================================ */
 function puntajeRef(correct,total){
   const f=total?correct/total:0;
   for(let k=1;k<TABLA_PUNTAJE.length;k++){
-    if(f<=TABLA_PUNTAJE[k][0]){
-      const [x0,y0]=TABLA_PUNTAJE[k-1],[x1,y1]=TABLA_PUNTAJE[k];
-      return Math.round(y0+(y1-y0)*(f-x0)/(x1-x0));
-    }
+    if(f<=TABLA_PUNTAJE[k][0]){ const [x0,y0]=TABLA_PUNTAJE[k-1],[x1,y1]=TABLA_PUNTAJE[k]; return Math.round(y0+(y1-y0)*(f-x0)/(x1-x0)); }
   }
   return TABLA_PUNTAJE[TABLA_PUNTAJE.length-1][1];
 }
 function finishExam(){
-  if(state.finished) return; state.finished=true; clearInterval(state.timerId);
-  const qs=state.ensayo, letters=["A","B","C","D","E"];
-  let correct=0,wrong=0,blank=0;
-  qs.forEach((q,idx)=>{const a=state.answers[idx]; if(a===null)blank++; else if(q.options[a].correct)correct++; else wrong++;});
-  const pct=Math.round(correct/qs.length*100);
-  const elapsed=Math.floor((Date.now()-state.startMs)/1000);
-  const s=state.subjects[state.area];
+  if(state.finished) return; state.finished=true; clearInterval(state.timerId); store.del(K_CURSO);
+  const qs=state.ensayo;
+  let correct=0,wrong=0,blank=0; const ejes={};
+  qs.forEach((q,idx)=>{
+    const a=state.answers[idx], ok=a!==null && q.options[a].correct;
+    if(a===null) blank++; else if(ok) correct++; else wrong++;
+    if(q.eje){ ejes[q.eje]=ejes[q.eje]||{ok:0,n:0}; ejes[q.eje].n++; if(ok) ejes[q.eje].ok++; }
+  });
+  const pct=Math.round(correct/qs.length*100), elapsed=transcurrido(), s=metaArea(state.area), pts=puntajeRef(correct,qs.length);
 
   $("#pctNum").textContent=pct+"%";
   $("#stCorrect").textContent=correct; $("#stWrong").textContent=wrong; $("#stBlank").textContent=blank;
-  $("#stScore").textContent="≈ "+puntajeRef(correct,qs.length); $("#stTime").textContent=fmt(elapsed);
-  $("#resultSub").textContent=`${s.name} · ${correct} de ${qs.length} correctas · semana ${state.semana}`;
+  $("#stScore").textContent="≈ "+pts; $("#stTime").textContent=fmt(elapsed);
+  $("#resultSub").textContent=`${s.name} · ${correct} de ${qs.length} correctas · ${state.semana==="*"?"banco completo":"semana "+state.semana}`;
   $("#resultHeadline").textContent= pct>=80?"¡Excelente dominio!":pct>=50?"Buen avance, sigue puliendo":"A reforzar lo esencial";
-  $("#scoreNote").textContent="El puntaje es referencial: el puntaje PAES oficial se estandariza a nivel nacional y no puede calcularse localmente. Ajusta la tabla de conversión a tu criterio.";
-
+  $("#scoreNote").textContent="El puntaje es referencial: el puntaje PAES oficial se estandariza a nivel nacional y no puede calcularse aquí." + (state.demo?" (Ensayo con preguntas de ejemplo.)":"");
   const circ=2*Math.PI*62; $("#ringFill").style.stroke=s.color; $("#ringFill").style.strokeDashoffset=circ*(1-pct/100);
+
+  // rendimiento por tema (si el Sheet tiene la columna "eje")
+  const lista=Object.entries(ejes).map(([k,v])=>({k,...v,p:v.ok/v.n})).sort((a,b)=>a.p-b.p||b.n-a.n);
+  $("#ejesBox").style.display=lista.length>1?"block":"none";
+  $("#ejesList").innerHTML=lista.map(e=>{
+    const col=e.p>=.7?"var(--correct)":e.p>=.4?"#D97706":"var(--wrong)";
+    return `<div class="eje-row"><span>${esc(e.k)}</span><span class="eje-bar"><i style="width:${Math.max(3,e.p*100)}%;background:${col}"></i></span><b>${e.ok}/${e.n}</b></div>`;
+  }).join("");
 
   const rl=$("#reviewList"); rl.innerHTML="";
   qs.forEach((q,idx)=>{
-    const a=state.answers[idx], ok=a!==null&&q.options[a].correct;
-    const ci=q.options.findIndex(o=>o.correct);
-    const yourTxt=a===null?"— (omitida)":`${letters[a]}) ${q.options[a].text}`;
+    const a=state.answers[idx], ok=a!==null&&q.options[a].correct, ci=q.options.findIndex(o=>o.correct);
+    const yourTxt=a===null?"— (omitida)":`${LETRAS[a]}) ${txt(q.options[a].text)}`;
     const item=document.createElement("div"); item.className="review-item";
-    item.innerHTML=`<p class="rq"><span class="n">${String(idx+1).padStart(2,"0")}</span>${q.text}</p>
+    item.innerHTML=`<p class="rq"><span class="n">${String(idx+1).padStart(2,"0")}</span><span>${txt(q.text)}${q.eje?`<span class="tema">${esc(q.eje)}</span>`:""}</span></p>
       <div class="ans-line ${ok?'ok':'no'}"><span class="lbl">Tu respuesta</span><span class="val">${yourTxt}</span></div>
-      ${ok?"":`<div class="ans-line ok"><span class="lbl">Correcta</span><span class="val">${letters[ci]}) ${q.options[ci].text}</span></div>`}
-      <div class="retro"><b>Retroalimentación · </b>${q.retro||"—"}</div>`;
+      ${ok?"":`<div class="ans-line ok"><span class="lbl">Correcta</span><span class="val">${LETRAS[ci]}) ${txt(q.options[ci].text)}</span></div>`}
+      <div class="retro"><b>Retroalimentación · </b>${q.retro?txt(q.retro):"—"}</div>`;
     rl.appendChild(item);
   });
   $("#examControls").style.display="none"; show("results");
+
+  // historial local
+  const reg={ area:state.area, modo:state.mode, correctas:correct, total:qs.length, puntaje:pts, porcentaje:pct, segundos:elapsed, fecha:Date.now() };
+  const h=store.get(K_HIST)||[]; h.unshift(reg); store.set(K_HIST, h.slice(0,30));
+
+  // resultado en la cuenta del estudiante (si entra con Google)
+  if(CONFIG.GUARDAR_EN_CUENTA && !state.demo && window.DF){
+    const datos={ prueba:s.name, modo:state.mode==="ensayo"?"cronometrado":"práctica", correctas:correct, total:qs.length, omitidas:blank,
+      porcentaje:pct, puntaje:pts, segundos:elapsed, semana:state.semana==="*"?"todas":state.semana };
+    lista.slice(0,8).forEach(e=>{ datos["tema: "+e.k.slice(0,40)]=e.ok+"/"+e.n; });
+    try{ DF.ofrecer({ tipo:"resultado", sim:"paes-"+state.area, titulo:"PAES · "+s.name, texto:`${correct} de ${qs.length} (≈ ${pts} pts)`, datos }); }catch(e){}
+  }
 }
 
 /* ================================================================
-   Eventos + arranque
+   EVENTOS + ARRANQUE
    ================================================================ */
 $("#startBtn").onclick=startExam;
 $("#nextBtn").onclick=next; $("#prevBtn").onclick=prev;
-$("#retryBtn").onclick=()=>{clearInterval(state.timerId);show("home");};
-$("#exitBtn").onclick=()=>{if(confirm("¿Salir del ensayo? Perderás el progreso.")){clearInterval(state.timerId);$("#examControls").style.display="none";show("home");}};
+$("#retryBtn").onclick=()=>{ clearInterval(state.timerId); renderHome(); show("home"); };
+$("#exitBtn").onclick=()=>{
+  if(!confirm("¿Salir del ensayo? Quedará guardado en este dispositivo para continuarlo después.")) return;
+  guardarEnCurso(); clearInterval(state.timerId); $("#examControls").style.display="none"; renderHome(); show("home");
+};
+window.addEventListener("pagehide", guardarEnCurso);
+document.addEventListener("visibilitychange", ()=>{ if(document.hidden) guardarEnCurso(); });
 document.addEventListener("keydown",e=>{
-  if(!screens.exam.classList.contains("on")) return;
+  if(!screens.exam.classList.contains("on") || e.ctrlKey || e.metaKey || e.altKey) return;
   if(e.key==="ArrowRight")next(); if(e.key==="ArrowLeft")prev();
-  const map={a:0,b:1,c:2,d:3,e:4}; if(map[e.key.toLowerCase()]!==undefined)answer(map[e.key.toLowerCase()]);
+  const map={a:0,b:1,c:2,d:3,e:4}, k=map[e.key.toLowerCase()];
+  if(k!==undefined && k<state.ensayo[state.i].options.length) answer(k);
 });
 
 (async function init(){
-  try{ await loadData(); }
+  try{ const b=await loadData(); prepararBanco(b.preguntas, b.lecturas); }
   catch(err){
     console.error("Fallo inesperado al inicializar:", err);
-    state.demo=true; buildSubjects(DEMO_PREGUNTAS, DEMO_LECTURAS);
-    banner("<b>Ocurrió un error inesperado al cargar.</b> Abre la consola (F12) para ver el detalle. Mientras tanto, se muestran datos de ejemplo.");
+    state.demo=true; prepararBanco(DEMO_PREGUNTAS.map(normObj), DEMO_LECTURAS.map(normObj));
+    banner("<b>Ocurrió un error inesperado al cargar.</b> Abre la consola (F12) para ver el detalle. Mientras tanto, se muestran preguntas de ejemplo.");
   }
-  renderHome();
-  show("home");
+  renderHome(); show("home");
 })();
 </script>
 </body>
