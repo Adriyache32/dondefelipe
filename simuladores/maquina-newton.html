@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>La Máquina de Newton</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* Concepto: mesa de trabajo de ingeniería. Lienzo cuadriculado al centro, piezas y controles a la derecha,
+   lecturas de energía debajo. Marca: azul marino + ámbar (como los otros simuladores del sitio). */
+:root{
+  --bg:#EEF2F7; --surface:#FFFFFF; --surface2:#E6ECF4; --fg:#14222F; --muted:#566879; --line:#D0D9E4;
+  --navy:#1A3A5C; --on-navy:#FFFFFF; --amber:#D4891A; --on-amber:#1B1202;
+  --good:#2E7D4F; --bad:#C0392B; --scene:#F7FAFD; --grid:#E1E8F0; --grid2:#C9D5E2;
+  --fijo:#4A5D72; --pieza:#D4891A; --resorte:#2E7D4F; --prop:#1B7FB0; --ball:#C0392B;
+  --r:16px; --shadow:0 1px 2px rgba(20,34,47,.06),0 8px 22px rgba(20,34,47,.07);
+  --fd:'Bricolage Grotesque',system-ui,sans-serif; --fb:'DM Sans',system-ui,sans-serif; --fm:'JetBrains Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0B1622; --surface:#112133; --surface2:#182C42; --fg:#E7EEF6; --muted:#97A9BC; --line:#25405B;
+  --navy:#7FB2E6; --on-navy:#0B1622; --amber:#E9A23B; --good:#58C48A; --bad:#FF7F6B;
+  --scene:#0E1C2B; --grid:#16283B; --grid2:#22384F; --fijo:#8FA3B8; --pieza:#E9A23B; --resorte:#58C48A; --prop:#52B6E6; --ball:#FF7F6B; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0B1622; --surface:#112133; --surface2:#182C42; --fg:#E7EEF6; --muted:#97A9BC; --line:#25405B;
+  --navy:#7FB2E6; --on-navy:#0B1622; --amber:#E9A23B; --good:#58C48A; --bad:#FF7F6B;
+  --scene:#0E1C2B; --grid:#16283B; --grid2:#22384F; --fijo:#8FA3B8; --pieza:#E9A23B; --resorte:#58C48A; --prop:#52B6E6; --ball:#FF7F6B; color-scheme:dark;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--fb);line-height:1.45;min-height:100vh;padding:14px}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.app{max-width:1280px;margin:0 auto;display:grid;gap:12px}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{width:46px;height:46px;border-radius:14px;background:var(--navy);color:var(--amber);display:grid;place-items:center;flex:none;box-shadow:3px 3px 0 var(--amber)}
+.logo svg{width:26px;height:26px}
+h1{font:800 clamp(1.4rem,4vw,1.9rem)/1 var(--fd);letter-spacing:-.02em}
+.sub{font-size:.85rem;color:var(--muted);margin-top:3px}
+.marca{flex:1;min-width:200px}
+.niveles{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}
+.nv{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:7px 12px;text-align:left;min-width:120px}
+.nv b{display:block;font:700 .82rem var(--fd)} .nv small{font-size:.72rem;color:var(--muted)}
+.nv .est{font-size:.75rem;color:var(--amber);letter-spacing:1px}
+.nv.on{background:var(--navy);color:var(--on-navy);border-color:var(--navy)} .nv.on small{color:inherit;opacity:.8}
+.mesa{display:grid;gap:12px}
+@media (min-width:980px){.mesa{grid-template-columns:minmax(0,1fr) 320px;align-items:start}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:14px}
+.escena{padding:10px}
+.mision{display:flex;gap:10px;align-items:flex-start;margin:2px 4px 10px}
+.mision .tag{font:700 .7rem var(--fm);background:var(--amber);color:var(--on-amber);border-radius:999px;padding:3px 9px;white-space:nowrap}
+.mision p{font-size:.9rem}
+.lienzo{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--scene);touch-action:none}
+canvas{display:block;width:100%;height:auto;cursor:grab}
+canvas.arrastrando{cursor:grabbing}
+.hud{position:absolute;right:8px;top:8px;justify-content:flex-end;display:flex;gap:6px;flex-wrap:wrap;pointer-events:none}
+.hud span{font:700 .72rem var(--fm);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 8px;opacity:.92}
+.barra{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.btn{display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:.88rem}
+.btn:hover{border-color:var(--amber)} .btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.go{background:var(--amber);border-color:var(--amber);color:var(--on-amber)}
+.btn.sm{min-height:34px;padding:0 12px;font-size:.8rem}
+.btn.peligro{color:var(--bad)}
+.esp{flex:1}
+.lecturas{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:10px}
+.lec{background:var(--surface2);border-radius:10px;padding:8px 10px}
+.lec small{display:block;font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.lec b{font:700 1rem var(--fm)}
+.energia{margin-top:10px}
+.energia h3,.panel h3{font:700 .95rem var(--fd);margin-bottom:8px}
+.ebar{display:grid;grid-template-columns:120px 1fr 74px;gap:8px;align-items:center;font-size:.8rem;margin:4px 0}
+.ebar .pista-b{height:12px;background:var(--surface2);border-radius:999px;overflow:hidden}
+.ebar i{display:block;height:100%;border-radius:999px;transition:width .1s}
+.ebar span:last-child{font-family:var(--fm);text-align:right}
+.nota{font-size:.78rem;color:var(--muted);margin-top:6px}
+.lado{display:grid;gap:12px}
+.inv{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.inv button{border:1px dashed var(--line);background:var(--surface2);border-radius:12px;padding:8px 4px;font-size:.78rem;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px}
+.inv button:hover:not(:disabled){border-color:var(--amber);border-style:solid}
+.inv button:disabled{opacity:.4;cursor:not-allowed}
+.inv svg{width:30px;height:20px}
+.inv small{font-weight:500;color:var(--muted)}
+.ctrl{display:grid;gap:8px}
+.ctrl label{display:grid;grid-template-columns:1fr auto;gap:2px 8px;font-size:.8rem;font-weight:700;align-items:center}
+.ctrl label output{font:700 .8rem var(--fm);color:var(--amber)}
+.ctrl input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--amber)}
+.ctrl select{grid-column:1/-1;min-height:36px;border:1px solid var(--line);border-radius:10px;background:var(--surface2);padding:0 8px}
+.vacio{font-size:.82rem;color:var(--muted)}
+.ayuda{font-size:.78rem;color:var(--muted)}
+.candado{font-size:.75rem;color:var(--muted)}
+dialog{margin:auto;border:none;border-radius:20px;padding:22px;max-width:520px;width:calc(100% - 32px);background:var(--surface);color:var(--fg);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(10,20,30,.55)}
+dialog h2{font:800 1.5rem var(--fd);margin-bottom:6px}
+.estrellas{display:grid;gap:6px;margin:12px 0}
+.estrellas div{display:flex;gap:10px;align-items:center;font-size:.9rem}
+.estrellas .s{font-size:1.3rem;color:var(--line)} .estrellas .s.on{color:var(--amber)}
+.explica{background:var(--surface2);border-radius:12px;padding:12px;font-size:.86rem;margin-top:8px}
+.explica code{font-family:var(--fm);font-size:.82rem}
+.acciones{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+footer{text-align:center;font-size:.8rem;color:var(--muted);padding:12px}
+footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="17" r="3"/><path d="M3 6l9 6M3 6v2M12 12l3 3"/><path d="M14 4l3 3-3 3"/></svg></div>
+    <div class="marca"><h1>La Máquina de Newton</h1><div class="sub">Trabajo, energía y leyes de Newton · lleva la pelota a la meta</div></div>
+  </header>
+  <nav class="niveles" id="niveles" aria-label="Niveles"></nav>
+
+  <div class="mesa">
+    <section class="panel escena">
+      <div class="mision"><span class="tag" id="tema">Nivel</span><p id="objetivo"></p></div>
+      <div class="lienzo" id="lienzo">
+        <canvas id="cv" width="1280" height="720" tabindex="0" aria-label="Escena del nivel: arrastra las piezas con el mouse o el dedo"></canvas>
+        <div class="hud" id="hud"></div>
+      </div>
+      <div class="barra">
+        <button class="btn go" id="bLanzar">▶ Lanzar</button>
+        <button class="btn" id="bReiniciar">↺ Volver a armar</button>
+        <span class="esp"></span>
+        <button class="btn sm" id="bLimpiar">Quitar todas las piezas</button>
+      </div>
+      <div class="lecturas" id="lecturas"></div>
+      <div class="energia">
+        <h3>¿Adónde va la energía?</h3>
+        <div id="barras"></div>
+        <p class="nota">Lo que aportas (empujón + propulsor) más la energía potencial inicial se reparte en energía cinética, potencial, roce y choques. La suma no cambia: la energía se conserva.</p>
+      </div>
+    </section>
+
+    <aside class="lado">
+      <section class="panel">
+        <h3>Piezas</h3>
+        <div class="inv" id="inv"></div>
+        <p class="ayuda" style="margin-top:8px">Arrastra las piezas en la escena. Toca una para cambiar su ángulo, largo y propiedades.</p>
+      </section>
+      <section class="panel" id="pSel">
+        <h3 id="selTit">Pieza seleccionada</h3>
+        <div class="ctrl" id="selCtrl"><p class="vacio">Toca una pieza en la escena.</p></div>
+      </section>
+      <section class="panel">
+        <h3>Pelota y empujón</h3>
+        <div class="ctrl" id="globCtrl"></div>
+      </section>
+    </aside>
+  </div>
+  <footer>La pelota se modela como un cuerpo que desliza (sin girar), para que valgan las fórmulas del cuaderno: a = g·senθ − μ·g·cosθ. · <a href="../index.html">El Mundo de Felipe</a></footer>
+</div>
+
+<dialog id="dRes">
+  <h2 id="rTit">¡Lo lograste!</h2>
+  <p id="rSub"></p>
+  <div class="estrellas" id="rEst"></div>
+  <div class="explica" id="rExp"></div>
+  <div class="acciones"><button class="btn" id="rOtra">Seguir ajustando</button><button class="btn go" id="rSig">Siguiente nivel →</button></div>
+</dialog>
+
+<script>
+/* ═════════ MOTOR FÍSICO (sin dibujo) ═════════
+   Mundo en metros: 16 × 9, y hacia arriba. La pelota se modela como un bloque que desliza
+   (sin rotación), así a = g·senθ − μ·g·cosθ en una rampa, igual que en el cuaderno. */
+var MUNDO = { W: 16, H: 9 };
+var RADIO = 0.25, DT = 1 / 240, TMAX = 25;
+
+function rad(g) { return g * Math.PI / 180; }
+function segmentosDe(p) {
+  // devuelve los segmentos de colisión de una pieza: [{a:{x,y}, b:{x,y}, mu, e}]
+  if (p.tipo === 'tabla' || p.tipo === 'resorte' || p.tipo === 'muro') {
+    var c = Math.cos(rad(p.ang)), s = Math.sin(rad(p.ang)), h = p.L / 2;
+    return [{ a: { x: p.x - c * h, y: p.y - s * h }, b: { x: p.x + c * h, y: p.y + s * h }, mu: p.tipo === 'resorte' ? 0.05 : (p.mu || 0), e: p.tipo === 'resorte' ? p.e : 0.15, pieza: p }];
+  }
+  return [];
+}
+function dentroZona(z, x, y) {
+  // zona rectangular rotada (propulsor)
+  var c = Math.cos(rad(-z.ang)), s = Math.sin(rad(-z.ang)), dx = x - z.x, dy = y - z.y;
+  var u = dx * c - dy * s, v = dx * s + dy * c;
+  return Math.abs(u) <= z.w / 2 && Math.abs(v) <= z.h / 2;
+}
+function enMeta(m, x, y) { return x >= m.x && x <= m.x + m.w && y >= m.y && y <= m.y + m.h; }
+
+/* nivel: { inicio:{x,y}, piso:{mu}, fijos:[piezas], meta:{x,y,w,h,parar} }
+   cfg:   { masa, g, emp:{F,d,ang}, piezas:[...], pisoMu? }
+   Devuelve un objeto "sim" con paso() para animar o correr() para calcular de una vez. */
+function crearSim(nivel, cfg) {
+  var piezas = (nivel.fijos || []).concat(cfg.piezas || []);
+  var segs = [{ a: { x: -50, y: 0 }, b: { x: 66, y: 0 }, mu: cfg.pisoMu != null ? cfg.pisoMu : nivel.piso.mu, e: 0.15, piso: true }];
+  piezas.forEach(function (p) { segs = segs.concat(segmentosDe(p)); });
+  var zonas = piezas.filter(function (p) { return p.tipo === 'propulsor'; });
+  var m = cfg.masa, g = cfg.g;
+  var ed = { F: cfg.emp.F, d: cfg.emp.d, ux: Math.cos(rad(cfg.emp.ang || 0)), uy: Math.sin(rad(cfg.emp.ang || 0)) };
+  var S = {
+    t: 0, x: nivel.inicio.x, y: nivel.inicio.y + RADIO, vx: 0, vy: 0, ax: 0, ay: 0,
+    x0: nivel.inicio.x, y0: nivel.inicio.y + RADIO,
+    empujando: ed.F > 0 && ed.d > 0, recorridoEmp: 0,
+    Wemp: 0, Wprop: 0, Wroce: 0, Wchoque: 0,
+    estado: 'corriendo', motivo: '', tQuieto: 0, tMeta: 0, rastro: [], vmax: 0, tocados: {}
+  };
+  function paso() {
+    if (S.estado !== 'corriendo') return S;
+    var fx = 0, fy = -m * g;
+    if (S.empujando) {
+      fx += ed.F * ed.ux; fy += ed.F * ed.uy;
+      var antes = S.x * ed.ux + S.y * ed.uy;
+    }
+    var enZona = false;
+    zonas.forEach(function (z) { if (dentroZona(z, S.x, S.y)) { fx += z.F * Math.cos(rad(z.ang + (z.dir || 0))); fy += z.F * Math.sin(rad(z.ang + (z.dir || 0))); enZona = true; S.Wprop += (z.F * Math.cos(rad(z.ang + (z.dir || 0))) * S.vx + z.F * Math.sin(rad(z.ang + (z.dir || 0))) * S.vy) * DT; } });
+    S.ax = fx / m; S.ay = fy / m;
+    S.vx += S.ax * DT; S.vy += S.ay * DT;
+    S.x += S.vx * DT; S.y += S.vy * DT;
+    if (S.empujando) {
+      var avance = (S.x * ed.ux + S.y * ed.uy) - antes;
+      S.recorridoEmp += avance; S.Wemp += ed.F * avance;
+      if (S.recorridoEmp >= ed.d) S.empujando = false;
+    }
+    // colisiones (dos pasadas)
+    for (var it = 0; it < 2; it++) {
+      for (var i = 0; i < segs.length; i++) {
+        var sg = segs[i], ax = sg.a.x, ay = sg.a.y, bx = sg.b.x - ax, by = sg.b.y - ay;
+        var L2 = bx * bx + by * by, tt = L2 ? ((S.x - ax) * bx + (S.y - ay) * by) / L2 : 0;
+        tt = Math.max(0, Math.min(1, tt));
+        var px = ax + bx * tt, py = ay + by * tt, dx = S.x - px, dy = S.y - py, d2 = dx * dx + dy * dy;
+        if (d2 >= RADIO * RADIO || d2 === 0) continue;
+        var d = Math.sqrt(d2), nx = dx / d, ny = dy / d;
+        S.x += nx * (RADIO - d); S.y += ny * (RADIO - d);
+        var vn = S.vx * nx + S.vy * ny;
+        if (vn >= 0) continue;
+        if (sg.pieza) S.tocados[sg.pieza.uid || sg.pieza.tipo] = 1;
+        var e = Math.abs(vn) < 0.6 ? 0 : sg.e;
+        var jn = -(1 + e) * vn;
+        var tx = -ny, ty = nx, vt = S.vx * tx + S.vy * ty;
+        var dvt = Math.min(Math.abs(vt), (sg.mu || 0) * jn);
+        var vt2 = vt - Math.sign(vt) * dvt;
+        S.Wchoque -= 0.5 * m * (vn * vn - (e * vn) * (e * vn));
+        S.Wroce -= 0.5 * m * (vt * vt - vt2 * vt2);
+        S.vx += jn * nx - Math.sign(vt) * dvt * tx;
+        S.vy += jn * ny - Math.sign(vt) * dvt * ty;
+      }
+    }
+    S.t += DT;
+    var v = Math.hypot(S.vx, S.vy); S.vmax = Math.max(S.vmax, v);
+    if (Math.round(S.t / DT) % 12 === 0) S.rastro.push([S.x, S.y]);
+    var meta = nivel.meta;
+    if (enMeta(meta, S.x, S.y)) {
+      S.tMeta += DT;
+      if ((meta.parar ? v < 0.12 : true) && S.tMeta > (meta.parar ? 0.4 : 0.15)) { S.estado = 'meta'; }
+    } else S.tMeta = 0;
+    if (S.estado === 'corriendo') {
+      if (S.x < -1 || S.x > MUNDO.W + 1 || S.y < -2) { S.estado = 'fuera'; S.motivo = 'La pelota salió del mapa.'; }
+      else if (v < 0.03 && !S.empujando && !enZona) { S.tQuieto += DT; if (S.tQuieto > 1.2) { S.estado = 'quieta'; S.motivo = enMeta(meta, S.x, S.y) ? '' : 'La pelota se detuvo fuera de la meta.'; } }
+      else S.tQuieto = 0;
+      if (S.t > TMAX) { S.estado = 'tiempo'; S.motivo = 'Se acabó el tiempo (' + TMAX + ' s).'; }
+      if (meta.parar && enMeta(meta, S.x, S.y) === false && S.estado === 'quieta') {}
+    }
+    return S;
+  }
+  S.paso = paso;
+  S.correr = function () { var n = 0; while (S.estado === 'corriendo' && n++ < TMAX / DT + 10) paso(); return S; };
+  S.energia = function () {
+    var v2 = S.vx * S.vx + S.vy * S.vy;
+    return { Ec: 0.5 * m * v2, Ep: m * g * (S.y - RADIO), Ep0: m * g * (S.y0 - RADIO), Wemp: S.Wemp, Wprop: S.Wprop, Wroce: S.Wroce, Wchoque: S.Wchoque };
+  };
+  return S;
+}
+if (typeof module !== 'undefined') module.exports = { crearSim: crearSim, MUNDO: MUNDO, RADIO: RADIO };
+
+/* ═════════ NIVELES ═════════ */
+var NIVELES = [
+  { id: 'n1', nombre: 'El primer empujón', tema: 'Trabajo y roce',
+    objetivo: 'Empuja la pelota para que se detenga dentro de la meta.',
+    pista: 'Todo el trabajo del empujón (W = F·d) se lo come el roce del piso: F·d = μ·m·g·distancia. Calcula antes de probar.',
+    inicio: { x: 1, y: 0 }, piso: { mu: 0.25 }, fijos: [],
+    meta: { x: 10.5, y: 0, w: 2, h: 1.2, parar: true },
+    emp: { F: 20, d: 0.5, ang: 0, Fmax: 60, dmax: 1.5, angFijo: true },
+    masa: { v: 1, min: 0.5, max: 4 }, g: 9.8, gFija: true, inventario: {},
+    estrellas: [
+      { txt: 'Llega a la meta', ok: function (r) { return r.exito; } },
+      { txt: 'Lógralo en 3 intentos o menos', ok: function (r) { return r.exito && r.intentos <= 3; } },
+      { txt: 'Lógralo con una masa de 2 kg o más', ok: function (r) { return r.exito && r.masa >= 2; } }
+    ] },
+  { id: 'n2', nombre: 'Bajar con estilo', tema: 'Planos inclinados',
+    objetivo: 'Haz que la pelota caiga dentro de la canasta, pasando sobre el muro.',
+    pista: 'En una rampa sin roce, la pelota gana rapidez porque la gravedad hace trabajo: W = m·g·h. Más altura que baja, más rapidez.',
+    inicio: { x: 0.8, y: 6 }, piso: { mu: 0.3 },
+    fijos: [ { tipo: 'tabla', x: 1.5, y: 6, L: 3, ang: 0, mu: 0.1 }, { tipo: 'muro', x: 8, y: 1.25, L: 2.5, ang: 90, mu: 0.3 },
+             { tipo: 'muro', x: 15.2, y: 0.75, L: 1.5, ang: 90, mu: 0.3 } ],
+    meta: { x: 12, y: 0, w: 3, h: 1.4, parar: false },
+    emp: { F: 8, d: 0.4, ang: 0, Fmax: 20, dmax: 0.8, angFijo: true },
+    masa: { v: 1, min: 0.5, max: 4 }, g: 9.8, gFija: true, inventario: { tabla: 2 },
+    estrellas: [
+      { txt: 'Llega a la meta', ok: function (r) { return r.exito; } },
+      { txt: 'Usa una sola rampa', ok: function (r) { return r.exito && r.piezas <= 1; } },
+      { txt: 'Con un empujón de 5 J o menos', ok: function (r) { return r.exito && r.Wemp <= 5.01; } }
+    ] },
+  { id: 'n3', nombre: 'Rebote al segundo piso', tema: 'Energía y choques',
+    objetivo: 'La meta está sobre una repisa alta. Usa la cama elástica para subir.',
+    pista: 'En cada rebote se pierde energía: con restitución e, la pelota vuelve a subir cerca de e²·(altura de caída).',
+    inicio: { x: 0.8, y: 7.2 }, piso: { mu: 0.3 },
+    fijos: [ { tipo: 'tabla', x: 1.25, y: 7.2, L: 2.5, ang: 0, mu: 0.1 }, { tipo: 'tabla', x: 13.5, y: 3.8, L: 4, ang: 0, mu: 0.4 },
+             { tipo: 'muro', x: 15.4, y: 4.6, L: 1.6, ang: 90, mu: 0.3 } ],
+    meta: { x: 12.5, y: 3.8, w: 2.8, h: 1.2, parar: false },
+    emp: { F: 8, d: 0.4, ang: 0, Fmax: 20, dmax: 0.8, angFijo: true },
+    masa: { v: 1, min: 0.5, max: 4 }, g: 9.8, gFija: true, inventario: { resorte: 1, tabla: 1 },
+    estrellas: [
+      { txt: 'Llega a la meta', ok: function (r) { return r.exito; } },
+      { txt: 'Sin usar la rampa', ok: function (r) { return r.exito && !r.usadas.tabla; } },
+      { txt: 'Con restitución 0,85 o menos', ok: function (r) { return r.exito && r.maxE <= 0.851; } }
+    ] },
+  { id: 'n4', nombre: 'Viento a favor', tema: 'Segunda ley de Newton',
+    objetivo: 'Sube la pelota a la meseta con el propulsor.',
+    pista: 'El propulsor ejerce una fuerza F. La aceleración que produce es a = F/m: con más masa, necesitas más fuerza.',
+    inicio: { x: 1, y: 0 }, piso: { mu: 0.2 },
+    fijos: [ { tipo: 'tabla', x: 7, y: 1.5, L: 5, ang: 36.87, mu: 0.2 }, { tipo: 'tabla', x: 11.5, y: 3, L: 5, ang: 0, mu: 0.3 },
+             { tipo: 'muro', x: 14, y: 3.75, L: 1.5, ang: 90, mu: 0.3 } ],
+    meta: { x: 11.5, y: 3, w: 2.4, h: 1.2, parar: false },
+    emp: { F: 10, d: 0.5, ang: 0, Fmax: 10, dmax: 0.5, angFijo: true, fijo: true },
+    masa: { v: 1, min: 0.5, max: 4 }, g: 9.8, gFija: true, inventario: { propulsor: 1 },
+    estrellas: [
+      { txt: 'Llega a la meta', ok: function (r) { return r.exito; } },
+      { txt: 'Con masa de 3 kg o más', ok: function (r) { return r.exito && r.masa >= 3; } },
+      { txt: 'Con el propulsor en 25 N o menos', ok: function (r) { return r.exito && r.maxF <= 25.01; } }
+    ] },
+  { id: 'n5', nombre: 'Hielo y lija', tema: 'Fuerza de roce',
+    objetivo: 'La pelota baja por la rampa larga. Ajusta el roce para que se detenga en la meta.',
+    pista: 'La gravedad hace trabajo m·g·h al bajar; el roce quita μ·m·g·cosθ·d en la rampa y μ·m·g·d en el piso.',
+    inicio: { x: 0.6, y: 5.6 }, piso: { mu: 0.3 },
+    fijos: [ { tipo: 'tabla', x: 4.5, y: 3, L: 9.4, ang: -33.7, mu: 0.1, editableMu: true } ],
+    meta: { x: 12, y: 0, w: 1.8, h: 1.2, parar: true },
+    emp: { F: 5, d: 0.3, ang: 0, Fmax: 10, dmax: 0.5, angFijo: true, fijo: true },
+    masa: { v: 1, min: 0.5, max: 4 }, g: 9.8, gFija: true, inventario: {}, pisoEditable: true,
+    estrellas: [
+      { txt: 'Llega a la meta', ok: function (r) { return r.exito; } },
+      { txt: 'Con el piso en μ = 0,30 (sin tocarlo)', ok: function (r) { return r.exito && Math.abs(r.pisoMu - 0.3) < 0.001; } },
+      { txt: 'Prueba la masa: lógralo con 3 kg', ok: function (r) { return r.exito && r.masa >= 3; } }
+    ] },
+  { id: 'n6', nombre: 'La gran máquina', tema: 'Todo junto',
+    objetivo: 'Supera el muro alto y deja la pelota en la canasta de la derecha.',
+    pista: 'Combina: la rampa transforma altura en rapidez, la cama elástica devuelve parte de la energía y el propulsor la aumenta (W = F·d).',
+    inicio: { x: 0.8, y: 8 }, piso: { mu: 0.3 },
+    fijos: [ { tipo: 'tabla', x: 1.25, y: 8, L: 2.5, ang: 0, mu: 0.1 }, { tipo: 'muro', x: 8, y: 2.75, L: 5.5, ang: 90, mu: 0.3 },
+             { tipo: 'tabla', x: 13.8, y: 4.5, L: 4, ang: 0, mu: 0.4 }, { tipo: 'muro', x: 15.7, y: 5.25, L: 1.5, ang: 90, mu: 0.3 } ],
+    meta: { x: 12.8, y: 4.5, w: 2.7, h: 1.2, parar: false },
+    emp: { F: 8, d: 0.4, ang: 0, Fmax: 20, dmax: 0.8, angFijo: true },
+    masa: { v: 1, min: 0.5, max: 4 }, g: 9.8, gFija: true, inventario: { tabla: 2, resorte: 1, propulsor: 1 },
+    estrellas: [
+      { txt: 'Llega a la meta', ok: function (r) { return r.exito; } },
+      { txt: 'Con 2 piezas o menos', ok: function (r) { return r.exito && r.piezas <= 2; } },
+      { txt: 'Sin propulsor', ok: function (r) { return r.exito && !r.usadas.propulsor; } }
+    ] },
+  { id: 'libre', nombre: 'Laboratorio libre', tema: 'Experimenta',
+    objetivo: 'Arma tu propia máquina. Cambia la gravedad, la masa y las piezas como quieras.',
+    pista: 'Prueba la Luna (g = 1,6 m/s²): ¿cambia el tiempo de caída? ¿cambia dónde se detiene la pelota con roce?',
+    inicio: { x: 0.8, y: 6 }, piso: { mu: 0.3 },
+    fijos: [ { tipo: 'tabla', x: 1.25, y: 6, L: 2.5, ang: 0, mu: 0.1 } ],
+    meta: { x: 13, y: 0, w: 2.5, h: 1.2, parar: false },
+    emp: { F: 10, d: 0.5, ang: 0, Fmax: 60, dmax: 1.5, angFijo: false },
+    masa: { v: 1, min: 0.5, max: 5 }, g: 9.8, gFija: false, inventario: { tabla: 6, resorte: 3, propulsor: 3 }, pisoEditable: true,
+    estrellas: [] }
+];
+if (typeof module !== 'undefined') module.exports = NIVELES;
+
+</script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var cv = $('cv'), ctx = cv.getContext('2d');
+  var ESC = cv.width / MUNDO.W;                      // píxeles por metro
+  var K_GUARDA = 'maquina_v1';
+  var LIMITES = {
+    tabla:     { nombre: 'Rampa',          L: [1, 6, 0.5], ang: [-75, 75, 5], mu: [0, 0.8, 0.05] },
+    resorte:   { nombre: 'Cama elástica',  L: [1, 3, 0.5], ang: [-60, 60, 5], e: [0.3, 0.95, 0.05] },
+    propulsor: { nombre: 'Propulsor',      w: [1.5, 4, 0.5], ang: [-180, 180, 15], F: [0, 80, 1] }
+  };
+  var NUEVA = {
+    tabla: function () { return { tipo: 'tabla', L: 3, ang: -20, mu: 0.1 }; },
+    resorte: function () { return { tipo: 'resorte', L: 2, ang: 0, e: 0.8 }; },
+    propulsor: function () { return { tipo: 'propulsor', w: 2, h: 1.5, ang: 0, F: 20 }; }
+  };
+  var GRAVEDADES = [['Tierra', 9.8], ['Luna', 1.6], ['Marte', 3.7], ['Júpiter', 24.8]];
+
+  /* ── estado guardado: por nivel, la configuración, los intentos y las estrellas ── */
+  var guardado = {};
+  try { guardado = JSON.parse(localStorage.getItem(K_GUARDA) || '{}') || {}; } catch (e) { guardado = {}; }
+  function guardar() { try { localStorage.setItem(K_GUARDA, JSON.stringify(guardado)); } catch (e) {} }
+
+  var nivel = null, cfg = null, sel = null, sim = null, resultado = null, uid = 1;
+  function datosNivel(id) { guardado[id] = guardado[id] || { intentos: 0, estrellas: [] }; return guardado[id]; }
+
+  function cargarNivel(id) {
+    nivel = NIVELES.find(function (n) { return n.id === id; }) || NIVELES[0];
+    var d = datosNivel(nivel.id);
+    var c = d.cfg || {};
+    cfg = {
+      masa: c.masa != null ? c.masa : nivel.masa.v,
+      g: c.g != null && !nivel.gFija ? c.g : nivel.g,
+      emp: { F: nivel.emp.fijo ? nivel.emp.F : (c.emp ? c.emp.F : nivel.emp.F), d: nivel.emp.fijo ? nivel.emp.d : (c.emp ? c.emp.d : nivel.emp.d), ang: nivel.emp.angFijo ? nivel.emp.ang : (c.emp ? c.emp.ang || 0 : 0) },
+      pisoMu: nivel.pisoEditable && c.pisoMu != null ? c.pisoMu : nivel.piso.mu,
+      fijosMu: (nivel.fijos || []).map(function (f, i) { return f.editableMu && c.fijosMu && c.fijosMu[i] != null ? c.fijosMu[i] : f.mu; }),
+      piezas: (c.piezas || []).map(function (p) { return Object.assign({}, p, { uid: uid++ }); })
+    };
+    sel = null; sim = null; resultado = null;
+    guardado.ultimo = nivel.id; guardar();
+    pintarNiveles(); pintarMision(); pintarInv(); pintarSel(); pintarGlob(); pintarLecturas(); dibujar();
+  }
+  function persistir() {
+    var d = datosNivel(nivel.id);
+    d.cfg = { masa: cfg.masa, g: cfg.g, emp: cfg.emp, pisoMu: cfg.pisoMu, fijosMu: cfg.fijosMu,
+      piezas: cfg.piezas.map(function (p) { var o = Object.assign({}, p); delete o.uid; return o; }) };
+    guardar();
+  }
+  function nivelParaSim() {
+    // copia del nivel con el roce editable de las piezas fijas aplicado
+    var n = Object.assign({}, nivel);
+    n.fijos = (nivel.fijos || []).map(function (f, i) { return Object.assign({}, f, { mu: cfg.fijosMu[i] }); });
+    return n;
+  }
+
+  /* ═════════ dibujo ═════════ */
+  // En pantallas chicas el lienzo se achica: los textos crecen para seguir siendo legibles.
+  function fs(px) { var k = Math.max(1, Math.min(2.4, cv.width / Math.max(1, cv.clientWidth) * 0.5)); return Math.round(px * k); }
+  function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+  function X(x) { return x * ESC; } function Y(y) { return cv.height - y * ESC; }
+  function linea(a, b, col, ancho) { ctx.strokeStyle = col; ctx.lineWidth = ancho; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(X(a.x), Y(a.y)); ctx.lineTo(X(b.x), Y(b.y)); ctx.stroke(); }
+  function flecha(x, y, dx, dy, col, txt) {
+    var x1 = X(x), y1 = Y(y), x2 = X(x + dx), y2 = Y(y + dy), an = Math.atan2(y2 - y1, x2 - x1);
+    if (Math.hypot(x2 - x1, y2 - y1) < 4) return;
+    ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x2, y2); ctx.lineTo(x2 - 14 * Math.cos(an - .45), y2 - 14 * Math.sin(an - .45)); ctx.lineTo(x2 - 14 * Math.cos(an + .45), y2 - 14 * Math.sin(an + .45)); ctx.closePath(); ctx.fill();
+    if (txt) { ctx.font = '700 ' + fs(20) + 'px JetBrains Mono, monospace'; ctx.fillText(txt, x2 + 6, y2 - 6); }
+  }
+  function extremos(p) { var c = Math.cos(rad(p.ang)), s = Math.sin(rad(p.ang)), h = p.L / 2; return [{ x: p.x - c * h, y: p.y - s * h }, { x: p.x + c * h, y: p.y + s * h }]; }
+  function dibujarPieza(p, fija, i) {
+    var elegida = sel && ((sel.fija && sel.i === i && fija) || (!sel.fija && sel.p === p));
+    if (p.tipo === 'propulsor') {
+      ctx.save(); ctx.translate(X(p.x), Y(p.y)); ctx.rotate(-rad(p.ang));
+      var w = p.w * ESC, h = p.h * ESC, col = css('--prop');
+      ctx.fillStyle = col + '22'; ctx.strokeStyle = col; ctx.lineWidth = elegida ? 4 : 2; ctx.setLineDash([10, 8]);
+      ctx.fillRect(-w / 2, -h / 2, w, h); ctx.strokeRect(-w / 2, -h / 2, w, h); ctx.setLineDash([]);
+      ctx.fillStyle = col; ctx.strokeStyle = col; ctx.lineWidth = 3;
+      var n = Math.max(2, Math.round(p.w)), largo = Math.min(w * 0.35, 20 + p.F * 1.2);
+      for (var k = 0; k < 3; k++) for (var j = 0; j < n; j++) {
+        var ax = -w / 2 + (j + 0.5) * w / n - largo / 2, ay = -h / 2 + (k + 0.5) * h / 3;
+        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax + largo, ay); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(ax + largo, ay); ctx.lineTo(ax + largo - 9, ay - 6); ctx.lineTo(ax + largo - 9, ay + 6); ctx.fill();
+      }
+      ctx.rotate(rad(p.ang)); ctx.font = '700 ' + fs(20) + 'px JetBrains Mono, monospace'; ctx.fillStyle = col; ctx.textAlign = 'center';
+      ctx.fillText(p.F + ' N', 0, -Math.max(w, h) / 2 - 8); ctx.restore(); ctx.textAlign = 'left';
+      return;
+    }
+    var e = extremos(p);
+    var col = fija ? css('--fijo') : p.tipo === 'resorte' ? css('--resorte') : css('--pieza');
+    if (elegida) linea(e[0], e[1], css('--amber') + '66', 22);
+    if (p.tipo === 'resorte') {
+      linea(e[0], e[1], col, 10);
+      // espiral bajo la cama elástica
+      var c = Math.cos(rad(p.ang)), s = Math.sin(rad(p.ang)), nx = s, ny = -c;
+      ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.beginPath();
+      for (var t = 0; t <= 1.0001; t += 0.05) {
+        var bx = e[0].x + (e[1].x - e[0].x) * t, by = e[0].y + (e[1].y - e[0].y) * t, off = 0.12 + 0.1 * Math.sin(t * Math.PI * 12);
+        var px = X(bx + nx * off), py = Y(by + ny * off); if (t === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    } else {
+      linea(e[0], e[1], col, p.tipo === 'muro' ? 14 : 12);
+      if (!fija || p.editableMu) {
+        ctx.font = '700 ' + fs(17) + 'px JetBrains Mono, monospace'; ctx.fillStyle = col;
+        ctx.fillText('μ ' + String((fija ? cfg.fijosMu[i] : p.mu).toFixed(2)).replace('.', ','), X(p.x) + 8, Y(p.y) - 14);
+      }
+    }
+  }
+  function dibujar() {
+    var W = cv.width, H = cv.height;
+    ctx.fillStyle = css('--scene'); ctx.fillRect(0, 0, W, H);
+    // cuadrícula de 1 m (líneas gruesas cada 5 m)
+    for (var x = 0; x <= MUNDO.W; x++) { ctx.strokeStyle = x % 5 ? css('--grid') : css('--grid2'); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(X(x), 0); ctx.lineTo(X(x), H); ctx.stroke(); }
+    for (var y = 0; y <= MUNDO.H; y++) { ctx.strokeStyle = y % 5 ? css('--grid') : css('--grid2'); ctx.beginPath(); ctx.moveTo(0, Y(y)); ctx.lineTo(W, Y(y)); ctx.stroke(); }
+    ctx.fillStyle = css('--muted'); ctx.font = '500 ' + fs(15) + 'px JetBrains Mono, monospace';
+    for (x = 0; x <= MUNDO.W; x += 2) ctx.fillText(x + ' m', X(x) + 4, H - 6);
+    // meta
+    var m = nivel.meta;
+    ctx.fillStyle = css('--good') + '22'; ctx.fillRect(X(m.x), Y(m.y + m.h), m.w * ESC, m.h * ESC);
+    ctx.strokeStyle = css('--good'); ctx.lineWidth = 3; ctx.setLineDash([12, 8]); ctx.strokeRect(X(m.x), Y(m.y + m.h), m.w * ESC, m.h * ESC); ctx.setLineDash([]);
+    ctx.fillStyle = css('--good'); ctx.font = '800 ' + fs(22) + 'px Bricolage Grotesque, sans-serif';
+    ctx.fillText(m.parar ? 'META · detente aquí' : 'META', X(m.x) + 8, Y(m.y + m.h) - 8);
+    // piso
+    linea({ x: 0, y: 0 }, { x: MUNDO.W, y: 0 }, css('--fijo'), 8);
+    if (nivel.pisoEditable || nivel.id === 'n1') { ctx.fillStyle = css('--fijo'); ctx.font = '700 ' + fs(17) + 'px JetBrains Mono, monospace'; ctx.fillText('piso μ ' + cfg.pisoMu.toFixed(2).replace('.', ','), X(MUNDO.W) - 150, Y(0) - 12); }
+    (nivel.fijos || []).forEach(function (p, i) { dibujarPieza(p, true, i); });
+    cfg.piezas.forEach(function (p) { dibujarPieza(p, false); });
+    // empujón
+    var bx = nivel.inicio.x, by = nivel.inicio.y + RADIO;
+    if (!sim || sim.estado === 'listo') {
+      var u = { x: Math.cos(rad(cfg.emp.ang)), y: Math.sin(rad(cfg.emp.ang)) };
+      ctx.fillStyle = css('--amber'); ctx.globalAlpha = .25;
+      ctx.fillRect(X(bx), Y(by) - 6, cfg.emp.d * ESC * u.x || 0, 12); ctx.globalAlpha = 1;
+      if (cfg.emp.F > 0) flecha(bx - RADIO * u.x - 0.15 - Math.min(2, cfg.emp.F / 15) * u.x, by - Math.min(2, cfg.emp.F / 15) * u.y, Math.min(2, cfg.emp.F / 15) * u.x, Math.min(2, cfg.emp.F / 15) * u.y, css('--amber'), cfg.emp.F + ' N');
+    }
+    // rastro y pelota
+    var S = sim && sim.S;
+    if (S) {
+      ctx.fillStyle = css('--ball') + '55';
+      S.rastro.forEach(function (q) { ctx.beginPath(); ctx.arc(X(q[0]), Y(q[1]), 3, 0, 7); ctx.fill(); });
+      bx = S.x; by = S.y;
+    }
+    ctx.fillStyle = css('--ball'); ctx.beginPath(); ctx.arc(X(bx), Y(by), RADIO * ESC, 0, 7); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = '700 ' + fs(15) + 'px JetBrains Mono, monospace'; ctx.textAlign = 'center'; ctx.fillText(cfg.masa + ' kg', X(bx), Y(by) + 5); ctx.textAlign = 'left';
+    if (S && sim.estado === 'corriendo') {
+      flecha(S.x, S.y, S.vx * 0.25, S.vy * 0.25, css('--navy'), 'v');
+      flecha(S.x, S.y, S.ax * 0.12, S.ay * 0.12, css('--bad'), 'a');
+    }
+  }
+
+  /* ═════════ interacción en la escena ═════════ */
+  function aMundo(ev) { var r = cv.getBoundingClientRect(); return { x: (ev.clientX - r.left) / r.width * MUNDO.W, y: MUNDO.H - (ev.clientY - r.top) / r.height * MUNDO.H }; }
+  function distSeg(p, a, b) { var bx = b.x - a.x, by = b.y - a.y, L2 = bx * bx + by * by, t = L2 ? Math.max(0, Math.min(1, ((p.x - a.x) * bx + (p.y - a.y) * by) / L2)) : 0; return Math.hypot(p.x - a.x - bx * t, p.y - a.y - by * t); }
+  function tocar(q) {
+    for (var i = cfg.piezas.length - 1; i >= 0; i--) {
+      var p = cfg.piezas[i];
+      if (p.tipo === 'propulsor' ? dentroZona(p, q.x, q.y) : distSeg(q, extremos(p)[0], extremos(p)[1]) < 0.35) return { p: p };
+    }
+    var f = nivel.fijos || [];
+    for (i = 0; i < f.length; i++) if (f[i].editableMu && distSeg(q, extremos(f[i])[0], extremos(f[i])[1]) < 0.35) return { fija: true, i: i, p: f[i] };
+    return null;
+  }
+  var arrastre = null;
+  function snap(v) { return Math.round(v * 4) / 4; }
+  cv.addEventListener('pointerdown', function (ev) {
+    if (sim && sim.estado !== 'listo') return;
+    var q = aMundo(ev), t = tocar(q);
+    sel = t; pintarSel(); dibujar();
+    if (t && !t.fija) { arrastre = { dx: t.p.x - q.x, dy: t.p.y - q.y }; cv.setPointerCapture(ev.pointerId); cv.classList.add('arrastrando'); }
+  });
+  cv.addEventListener('pointermove', function (ev) {
+    if (!arrastre || !sel) return;
+    var q = aMundo(ev);
+    sel.p.x = Math.max(0, Math.min(MUNDO.W, snap(q.x + arrastre.dx))); sel.p.y = Math.max(0.1, Math.min(MUNDO.H, snap(q.y + arrastre.dy)));
+    dibujar();
+  });
+  function soltar() { if (arrastre) { arrastre = null; cv.classList.remove('arrastrando'); persistir(); pintarSel(); } }
+  cv.addEventListener('pointerup', soltar); cv.addEventListener('pointercancel', soltar);
+  cv.addEventListener('keydown', function (ev) {
+    if (!sel || sel.fija || (sim && sim.estado !== 'listo')) return;
+    var p = sel.p, l = LIMITES[p.tipo], mov = { ArrowLeft: [-0.25, 0], ArrowRight: [0.25, 0], ArrowUp: [0, 0.25], ArrowDown: [0, -0.25] }[ev.key];
+    if (mov) { p.x = snap(p.x + mov[0]); p.y = snap(p.y + mov[1]); ev.preventDefault(); }
+    else if (ev.key === 'q' || ev.key === 'e') { p.ang = Math.max(l.ang[0], Math.min(l.ang[1], p.ang + (ev.key === 'q' ? l.ang[2] : -l.ang[2]))); }
+    else if (ev.key === 'Delete' || ev.key === 'Backspace') { quitar(p); ev.preventDefault(); return; }
+    else return;
+    persistir(); pintarSel(); dibujar();
+  });
+
+  /* ═════════ paneles ═════════ */
+  function estrellasDe(id) { return (guardado[id] && guardado[id].estrellas) || []; }
+  function pintarNiveles() {
+    $('niveles').innerHTML = NIVELES.map(function (n, i) {
+      var e = estrellasDe(n.id), tot = n.estrellas.length;
+      return '<button class="nv' + (n === nivel ? ' on' : '') + '" data-nivel="' + n.id + '"><b>' + (n.id === 'libre' ? '🧪 ' : (i + 1) + '. ') + n.nombre + '</b><small>' + n.tema + '</small>' +
+        (tot ? '<div class="est">' + '★'.repeat(e.filter(Boolean).length) + '☆'.repeat(tot - e.filter(Boolean).length) + '</div>' : '') + '</button>';
+    }).join('');
+  }
+  function pintarMision() { $('tema').textContent = nivel.tema; $('objetivo').textContent = nivel.objetivo; }
+  var ICONOS = {
+    tabla: '<svg viewBox="0 0 30 20"><line x1="3" y1="5" x2="27" y2="15" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>',
+    resorte: '<svg viewBox="0 0 30 20"><line x1="3" y1="5" x2="27" y2="5" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M4 9 l3 6 l3 -6 l3 6 l3 -6 l3 6 l3 -6 l3 6" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+    propulsor: '<svg viewBox="0 0 30 20"><rect x="2" y="2" width="26" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3"/><path d="M8 10h12m-4-4 4 4-4 4" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>'
+  };
+  function usadas(t) { return cfg.piezas.filter(function (p) { return p.tipo === t; }).length; }
+  function pintarInv() {
+    var tipos = ['tabla', 'resorte', 'propulsor'];
+    $('inv').innerHTML = tipos.map(function (t) {
+      var max = nivel.inventario[t] || 0, quedan = max - usadas(t);
+      return '<button data-agregar="' + t + '"' + (quedan > 0 ? '' : ' disabled') + ' style="color:' + (t === 'tabla' ? 'var(--pieza)' : t === 'resorte' ? 'var(--resorte)' : 'var(--prop)') + '">' + ICONOS[t] +
+        '<span style="color:var(--fg)">' + LIMITES[t].nombre + '</span><small>' + (max ? 'quedan ' + quedan : 'no disponible') + '</small></button>';
+    }).join('');
+  }
+  function slider(id, txt, val, lim, fmt) {
+    return '<label>' + txt + '<output id="o_' + id + '">' + fmt(val) + '</output><input type="range" id="' + id + '" min="' + lim[0] + '" max="' + lim[1] + '" step="' + lim[2] + '" value="' + val + '"></label>';
+  }
+  var f1 = function (u) { return function (v) { return String(+(+v).toFixed(2)).replace('.', ',') + u; }; };
+  function pintarSel() {
+    var box = $('selCtrl');
+    if (!sel) { $('selTit').textContent = 'Pieza seleccionada'; box.innerHTML = '<p class="vacio">Toca una pieza en la escena para ajustarla.</p>'; return; }
+    var p = sel.p;
+    if (sel.fija) {
+      $('selTit').textContent = 'Rampa fija';
+      box.innerHTML = slider('s_mu', 'Roce (μ)', cfg.fijosMu[sel.i], [0, 0.8, 0.05], f1('')) + '<p class="candado">🔒 Esta rampa no se mueve, pero puedes cambiar su roce.</p>';
+      return;
+    }
+    var l = LIMITES[p.tipo];
+    $('selTit').textContent = l.nombre;
+    var h = '';
+    if (p.tipo === 'propulsor') h += slider('s_w', 'Largo de la zona', p.w, l.w, f1(' m')) + slider('s_ang', 'Dirección de la fuerza', p.ang, l.ang, f1('°')) + slider('s_F', 'Fuerza (F)', p.F, l.F, f1(' N'));
+    else h += slider('s_L', 'Largo', p.L, l.L, f1(' m')) + slider('s_ang', 'Ángulo', p.ang, l.ang, f1('°')) +
+      (p.tipo === 'tabla' ? slider('s_mu', 'Roce (μ)', p.mu, l.mu, f1('')) : slider('s_e', 'Restitución (e)', p.e, l.e, f1('')));
+    h += '<p class="ayuda">Posición: x = ' + String(p.x).replace('.', ',') + ' m · y = ' + String(p.y).replace('.', ',') + ' m. Teclado: flechas para mover, Q/E para girar.</p>';
+    h += '<button class="btn sm peligro" data-quitar>Quitar esta pieza</button>';
+    box.innerHTML = h;
+  }
+  function pintarGlob() {
+    var h = slider('g_m', 'Masa de la pelota (m)', cfg.masa, [nivel.masa.min, nivel.masa.max, 0.5], f1(' kg'));
+    if (nivel.emp.fijo) h += '<p class="candado">🔒 Empujón fijo: ' + cfg.emp.F + ' N durante ' + String(cfg.emp.d).replace('.', ',') + ' m (W = ' + String(+(cfg.emp.F * cfg.emp.d).toFixed(2)).replace('.', ',') + ' J).</p>';
+    else {
+      h += slider('g_F', 'Fuerza del empujón (F)', cfg.emp.F, [0, nivel.emp.Fmax, 1], f1(' N')) + slider('g_d', 'Distancia del empujón (d)', cfg.emp.d, [0.05, nivel.emp.dmax, 0.05], f1(' m'));
+      if (!nivel.emp.angFijo) h += slider('g_a', 'Dirección del empujón', cfg.emp.ang, [-60, 60, 5], f1('°'));
+      h += '<p class="ayuda" id="wEmp">Trabajo del empujón: W = F·d = <b>' + String(+(cfg.emp.F * cfg.emp.d).toFixed(2)).replace('.', ',') + ' J</b></p>';
+    }
+    if (nivel.pisoEditable) h += slider('g_pmu', 'Roce del piso (μ)', cfg.pisoMu, [0, 0.8, 0.05], f1(''));
+    if (!nivel.gFija) h += '<label>Gravedad<select id="g_g">' + GRAVEDADES.map(function (g) { return '<option value="' + g[1] + '"' + (g[1] === cfg.g ? ' selected' : '') + '>' + g[0] + ' · ' + String(g[1]).replace('.', ',') + ' m/s²</option>'; }).join('') + '</select></label>';
+    else h += '<p class="candado">Gravedad de la Tierra: g = 9,8 m/s². Peso de la pelota: P = m·g = ' + String(+(cfg.masa * cfg.g).toFixed(1)).replace('.', ',') + ' N.</p>';
+    h += '<p class="ayuda">💡 ' + nivel.pista + '</p>';
+    $('globCtrl').innerHTML = h;
+  }
+  document.addEventListener('input', function (ev) {
+    var t = ev.target, v = +t.value; if (t.type !== 'range' && t.tagName !== 'SELECT') return;
+    if (sim && sim.estado !== 'listo') volver();
+    var o = $('o_' + t.id);
+    if (t.id.indexOf('s_') === 0 && sel) {
+      var k = t.id.slice(2);
+      if (sel.fija) cfg.fijosMu[sel.i] = v; else sel.p[k] = v;
+      if (o) o.textContent = { L: f1(' m'), w: f1(' m'), ang: f1('°'), F: f1(' N') }[k] ? { L: f1(' m'), w: f1(' m'), ang: f1('°'), F: f1(' N') }[k](v) : f1('')(v);
+    }
+    if (t.id === 'g_m') { cfg.masa = v; if (o) o.textContent = f1(' kg')(v); }
+    if (t.id === 'g_F') { cfg.emp.F = v; if (o) o.textContent = f1(' N')(v); }
+    if (t.id === 'g_d') { cfg.emp.d = v; if (o) o.textContent = f1(' m')(v); }
+    if (t.id === 'g_a') { cfg.emp.ang = v; if (o) o.textContent = f1('°')(v); }
+    if (t.id === 'g_pmu') { cfg.pisoMu = v; if (o) o.textContent = f1('')(v); }
+    if (t.id === 'g_g') { cfg.g = v; }
+    var w = $('wEmp'); if (w) w.innerHTML = 'Trabajo del empujón: W = F·d = <b>' + String(+(cfg.emp.F * cfg.emp.d).toFixed(2)).replace('.', ',') + ' J</b>';
+    persistir(); dibujar();
+  });
+  function quitar(p) { cfg.piezas = cfg.piezas.filter(function (x) { return x !== p; }); sel = null; persistir(); pintarInv(); pintarSel(); dibujar(); }
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-nivel]'); if (b) { cargarNivel(b.dataset.nivel); return; }
+    var a = ev.target.closest('[data-agregar]');
+    if (a && !a.disabled) {
+      if (sim && sim.estado !== 'listo') volver();
+      var p = NUEVA[a.dataset.agregar](); p.x = 8; p.y = 4.5; p.uid = uid++;
+      cfg.piezas.push(p); sel = { p: p }; persistir(); pintarInv(); pintarSel(); dibujar(); return;
+    }
+    if (ev.target.closest('[data-quitar]') && sel && !sel.fija) quitar(sel.p);
+  });
+  $('bLimpiar').onclick = function () { if (cfg.piezas.length && confirm('¿Quitar todas las piezas de este nivel?')) { volver(); cfg.piezas = []; sel = null; persistir(); pintarInv(); pintarSel(); dibujar(); } };
+
+  /* ═════════ simulación ═════════ */
+  function fmtN(v, u, dec) { return (Math.abs(v) < 0.005 ? '0' : String(+v.toFixed(dec == null ? 2 : dec)).replace('.', ',')) + (u || ''); }
+  function pintarLecturas() {
+    var S = sim && sim.S, E = S ? S.energia() : null;
+    var v = S ? Math.hypot(S.vx, S.vy) : 0, a = S && sim.estado === 'corriendo' ? Math.hypot(S.ax, S.ay) : 0;
+    var Fn = cfg.masa * a;
+    $('lecturas').innerHTML = [
+      ['Tiempo', fmtN(S ? S.t : 0, ' s', 1)], ['Rapidez', fmtN(v, ' m/s')], ['Aceleración', fmtN(a, ' m/s²')], ['Fuerza neta (m·a)', fmtN(Fn, ' N', 1)], ['Altura', fmtN(S ? S.y - RADIO : nivel.inicio.y, ' m')]
+    ].map(function (x) { return '<div class="lec"><small>' + x[0] + '</small><b>' + x[1] + '</b></div>'; }).join('');
+    var e0 = E ? E.Ep0 : cfg.masa * cfg.g * nivel.inicio.y;
+    var filas = E ? [
+      ['Energía cinética', E.Ec, 'var(--navy)'], ['Energía potencial', E.Ep, 'var(--good)'], ['Trabajo del empujón', E.Wemp, 'var(--amber)'],
+      ['Trabajo del propulsor', E.Wprop, 'var(--prop)'], ['Pérdida en roce', -E.Wroce, 'var(--bad)'], ['Pérdida en choques', -E.Wchoque, 'var(--muted)']
+    ] : [['Energía potencial inicial', e0, 'var(--good)'], ['Trabajo del empujón', cfg.emp.F * cfg.emp.d, 'var(--amber)']];
+    var max = Math.max.apply(null, filas.map(function (f) { return Math.abs(f[1]); }).concat([1]));
+    $('barras').innerHTML = filas.map(function (f) {
+      return '<div class="ebar"><span>' + f[0] + '</span><span class="pista-b"><i style="width:' + Math.min(100, Math.abs(f[1]) / max * 100) + '%;background:' + f[2] + '"></i></span><span>' + fmtN(f[1], ' J', 1) + '</span></div>';
+    }).join('');
+    $('hud').innerHTML = S ? '<span>t ' + fmtN(S.t, ' s', 1) + '</span><span>v ' + fmtN(v, ' m/s', 1) + '</span>' : '<span>Arma tu máquina y presiona Lanzar</span>';
+  }
+  var raf = 0, ultimo = 0;
+  function lanzar() {
+    if (sim && sim.estado === 'corriendo') return;
+    sel = null; pintarSel();
+    sim = { S: crearSim(nivelParaSim(), cfg), estado: 'corriendo' };
+    var d = datosNivel(nivel.id); d.intentos = (d.intentos || 0) + 1; guardar();
+    $('bLanzar').disabled = true;
+    ultimo = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(cuadro);
+  }
+  function cuadro(t) {
+    var dt = Math.min(0.05, (t - ultimo) / 1000); ultimo = t;
+    var pasos = Math.round(dt / DT);
+    for (var i = 0; i < pasos && sim.S.estado === 'corriendo'; i++) sim.S.paso();
+    sim.estado = sim.S.estado;
+    dibujar(); pintarLecturas();
+    if (sim.estado === 'corriendo') raf = requestAnimationFrame(cuadro);
+    else terminar();
+  }
+  function volver() { cancelAnimationFrame(raf); sim = null; $('bLanzar').disabled = false; dibujar(); pintarLecturas(); }
+  $('bLanzar').onclick = lanzar;
+  $('bReiniciar').onclick = volver;
+
+  function terminar() {
+    $('bLanzar').disabled = false;
+    var S = sim.S, E = S.energia(), exito = S.estado === 'meta', d = datosNivel(nivel.id);
+    var r = { exito: exito, intentos: d.intentos, masa: cfg.masa, piezas: cfg.piezas.length, Wemp: cfg.emp.F * cfg.emp.d, pisoMu: cfg.pisoMu,
+      usadas: { tabla: usadas('tabla'), resorte: usadas('resorte'), propulsor: usadas('propulsor') },
+      maxE: Math.max.apply(null, cfg.piezas.filter(function (p) { return p.tipo === 'resorte'; }).map(function (p) { return p.e; }).concat([0])),
+      maxF: Math.max.apply(null, cfg.piezas.filter(function (p) { return p.tipo === 'propulsor'; }).map(function (p) { return p.F; }).concat([0])) };
+    var ganadas = nivel.estrellas.map(function (s) { return !!s.ok(r); });
+    if (exito) { d.estrellas = (d.estrellas || []).length ? d.estrellas.map(function (v, i) { return v || ganadas[i]; }) : ganadas; d.completado = true; d.mejorT = Math.min(d.mejorT || 99, +S.t.toFixed(2)); }
+    guardar(); pintarNiveles();
+    if (nivel.id === 'libre') { if (!exito) return; }
+    $('rTit').textContent = exito ? '¡Lo lograste!' : 'Casi…';
+    $('rSub').textContent = exito ? 'La pelota llegó a la meta en ' + fmtN(S.t, ' s', 1) + '. Intento n° ' + d.intentos + '.' : (S.motivo || 'La pelota no llegó a la meta.') + ' Ajusta y vuelve a lanzar.';
+    $('rEst').innerHTML = nivel.estrellas.map(function (s, i) { return '<div><span class="s' + (ganadas[i] ? ' on' : '') + '">★</span>' + s.txt + '</div>'; }).join('');
+    var g = cfg.g, m = cfg.masa;
+    $('rExp').innerHTML = '<b>La física de tu lanzamiento</b><br>' +
+      'Energía que aportaste: empujón <code>W = F·d = ' + fmtN(cfg.emp.F, ' N') + ' × ' + fmtN(cfg.emp.d, ' m') + ' = ' + fmtN(E.Wemp, ' J', 1) + '</code>' +
+      (E.Wprop ? ', propulsor <code>' + fmtN(E.Wprop, ' J', 1) + '</code>' : '') + '.<br>' +
+      'Energía potencial al inicio: <code>m·g·h = ' + fmtN(m, ' kg') + ' × ' + fmtN(g, '') + ' × ' + fmtN(nivel.inicio.y, ' m') + ' = ' + fmtN(E.Ep0, ' J', 1) + '</code>.<br>' +
+      'El roce se llevó <code>' + fmtN(-E.Wroce, ' J', 1) + '</code> y los choques <code>' + fmtN(-E.Wchoque, ' J', 1) + '</code>. Al final quedan <code>' + fmtN(E.Ec, ' J', 1) + '</code> de energía cinética y <code>' + fmtN(E.Ep, ' J', 1) + '</code> de potencial.' +
+      (exito ? '' : '<br><br>💡 ' + nivel.pista);
+    var i = NIVELES.indexOf(nivel), sig = NIVELES[i + 1];
+    $('rSig').style.display = exito && sig ? '' : 'none';
+    $('rSig').onclick = function () { $('dRes').close(); cargarNivel(sig.id); };
+    $('rOtra').textContent = exito ? 'Seguir en este nivel' : 'Ajustar y reintentar';
+    $('rOtra').onclick = function () { $('dRes').close(); };
+    if (typeof $('dRes').showModal === 'function') $('dRes').showModal();
+  }
+
+  /* resumen para el profe (Panel → Trabajos), si el estudiante entra con Google */
+  window.AUTOGUARDADO_RESUMEN = function () {
+    var est = 0, tot = 0, hechos = 0, det = [];
+    NIVELES.forEach(function (n, i) {
+      if (!n.estrellas.length) return;
+      var d = guardado[n.id] || {}, e = (d.estrellas || []).filter(Boolean).length;
+      est += e; tot += n.estrellas.length; if (d.completado) hechos++;
+      det.push({ k: (i + 1) + '. ' + n.nombre, v: (d.completado ? '✓ ' : '— ') + '★'.repeat(e) + '☆'.repeat(n.estrellas.length - e) + ' · ' + (d.intentos || 0) + ' intentos' + (d.cfg ? ' · masa ' + d.cfg.masa + ' kg' : '') });
+    });
+    return { felipesos: null, avance: hechos + ' de ' + (NIVELES.length - 1) + ' niveles · ' + est + '/' + tot + ' ★', detalle: det };
+  };
+
+  window.addEventListener('resize', dibujar);
+  if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', dibujar);
+  cargarNivel(guardado.ultimo || NIVELES[0].id);
+  window.__maquina = { cargarNivel: cargarNivel, cfg: function () { return cfg; }, lanzar: lanzar };
+})();
+</script>
+<script src="../firebase/df.js" data-sin-aviso></script>
+<script src="../firebase/autoguardado.js" data-clave="maquina-newton" data-titulo="La Máquina de Newton (simulador)" data-claves="maquina_v1"></script>
+</body>
+</html>
