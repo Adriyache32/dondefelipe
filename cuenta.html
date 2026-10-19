@@ -218,7 +218,8 @@ DF.listo().then(() => {
     $('nombre').textContent = u.displayName || 'Sin nombre';
     $('correo').textContent = u.email || '';
     $('av').innerHTML = u.photoURL ? `<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer">` : esc((u.displayName || u.email || '?').charAt(0).toUpperCase());
-    cargarPerfil(); cargarProgreso(); cargarBanco();
+    cargarPerfil(); cargarProgreso();
+    DF.asegurarCuentaBanco().then(cargarBanco, cargarBanco);
   });
 }).catch(e => {
   ver('cargando', false);
@@ -250,7 +251,7 @@ $('pEdad').addEventListener('input', actualizarAp);
 $('btnPerfil').onclick = () => {
   const g = document.querySelector('input[name="pgr"]:checked');
   DF.guardarPerfil({ edad: $('pEdad').value, curso: $('pCurso').value, apoderado: $('pAp').checked, grupo: g ? g.value : '' })
-    .then(pf => { grupoFijo = pf.grupo; actualizarAp(); aviso('✓ Datos guardados.', 'ok'); })
+    .then(pf => { grupoFijo = pf.grupo; actualizarAp(); aviso('✓ Datos guardados.', 'ok'); cargarBanco(); })
     .catch(e => aviso(esc(e.message), 'err'));
 };
 

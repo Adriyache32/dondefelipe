@@ -5,947 +5,478 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bolsa de Comercio Felipesa</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: #0F241C;
-    --bg-deep: #0A1913;
-    --paper: #F1E9D2;
-    --paper-edge: #E4D8B4;
-    --ink: #1C2A22;
-    --ink-soft: #45543E;
-    --green: #163C2E;
-    --green-light: #1F5A42;
-    --gold: #C9A227;
-    --gold-bright: #E4C555;
-    --oxblood: #8A3A32;
-    --line: rgba(201,162,39,0.35);
-    --shadow: 0 20px 50px -20px rgba(0,0,0,0.55);
-    --font-display: 'Fraunces', serif;
-    --font-mono: 'IBM Plex Mono', monospace;
-    --font-body: 'Inter', sans-serif;
-    --radius: 14px;
+    --bg:#0A1913; --bg2:#0F241C; --paper:#F1E9D2; --ink:#1C2A22; --ink2:#45543E;
+    --green:#163C2E; --green2:#1F5A42; --gold:#C9A227; --gold2:#E4C555; --red:#E39A93; --up:#8FD4A8;
+    --line:rgba(201,162,39,.35); --soft:rgba(241,233,210,.06); --mute:rgba(241,233,210,.62);
+    --fd:'Fraunces',serif; --fm:'IBM Plex Mono',monospace; --fb:'Inter',system-ui,sans-serif; --r:14px;
   }
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
-  body{
-    background:
-      radial-gradient(circle at 15% 0%, rgba(201,162,39,0.08), transparent 45%),
-      radial-gradient(circle at 90% 20%, rgba(31,90,66,0.35), transparent 50%),
-      var(--bg-deep);
-    color: var(--paper);
-    font-family: var(--font-body);
-    min-height:100vh;
-    -webkit-font-smoothing: antialiased;
-  }
-  a{color:inherit;}
-  ::selection{ background: var(--gold); color:#1C2A22; }
-
-  /* ---------- Header ---------- */
-  header.top{
-    padding: 22px clamp(16px,4vw,48px) 16px;
-    display:flex; align-items:center; justify-content:space-between; gap:16px;
-    flex-wrap:wrap;
-    border-bottom: 1px solid rgba(201,162,39,0.25);
-  }
-  .brand{
-    display:flex; align-items:center; gap:14px;
-  }
-  .brand .mark{
-    width:44px; height:44px; border-radius:50%;
-    background: radial-gradient(circle at 35% 30%, var(--gold-bright), var(--gold) 60%, #8a6d1c 100%);
-    display:flex;align-items:center;justify-content:center;
-    font-family:var(--font-display); font-weight:700; color:#2a2107; font-size:18px;
-    box-shadow: 0 0 0 3px rgba(201,162,39,0.15), 0 6px 14px rgba(0,0,0,0.4);
-    flex-shrink:0;
-  }
-  .brand h1{
-    font-family: var(--font-display);
-    font-weight:600;
-    font-size: clamp(20px, 3vw, 30px);
-    letter-spacing:0.01em;
-    margin:0;
-    line-height:1.1;
-  }
-  .brand p{
-    margin:2px 0 0;
-    font-size:12px;
-    letter-spacing:0.14em;
-    text-transform:uppercase;
-    color: var(--gold-bright);
-    opacity:0.85;
-  }
-  #adminToggle{
-    background: rgba(201,162,39,0.1);
-    border:1px solid var(--line);
-    color: var(--paper);
-    font-family: var(--font-mono);
-    font-size:12.5px;
-    letter-spacing:0.04em;
-    padding:10px 16px;
-    border-radius: 999px;
-    cursor:pointer;
-    display:flex; align-items:center; gap:8px;
-    transition: background 0.2s ease, transform 0.15s ease;
-  }
-  #adminToggle:hover{ background: rgba(201,162,39,0.2); transform: translateY(-1px); }
-  #adminToggle.active{ background: var(--gold); color:#231a05; border-color:var(--gold); }
-
-  /* ---------- Ticker ---------- */
-  .ticker-wrap{
-    background: linear-gradient(90deg, var(--bg-deep), var(--green) 50%, var(--bg-deep));
-    border-bottom: 1px solid rgba(201,162,39,0.25);
-    overflow:hidden;
-    white-space:nowrap;
-    position:relative;
-  }
-  .ticker-track{
-    display:inline-flex;
-    animation: scroll-ticker 38s linear infinite;
-    padding: 10px 0;
-  }
-  @keyframes scroll-ticker{
-    from{ transform: translateX(0); }
-    to{ transform: translateX(-50%); }
-  }
-  .ticker-item{
-    font-family: var(--font-mono);
-    font-size:13px;
-    padding: 0 26px;
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    color: var(--paper);
-    border-right: 1px solid rgba(241,233,210,0.15);
-  }
-  .ticker-item b{ color: var(--gold-bright); letter-spacing:0.03em;}
-  .tk-up{ color:#8FD4A8; }
-  .tk-down{ color:#E39A93; }
-  @media (prefers-reduced-motion: reduce){
-    .ticker-track{ animation:none; overflow-x:auto; }
-  }
-
-  main{
-    max-width: 1180px;
-    margin: 0 auto;
-    padding: clamp(20px,4vw,44px);
-    display:flex;
-    flex-direction:column;
-    gap: 40px;
-  }
-
-  section h2.section-title{
-    font-family:var(--font-display);
-    font-weight:600;
-    font-size: clamp(18px,2.4vw,24px);
-    margin:0 0 4px;
-    display:flex; align-items:baseline; gap:10px;
-  }
-  section h2.section-title .eyebrow{
-    font-family: var(--font-mono);
-    font-size:11px;
-    letter-spacing:0.16em;
-    text-transform:uppercase;
-    color: var(--gold-bright);
-    opacity:0.8;
-  }
-  section > p.hint{
-    margin:0 0 18px;
-    font-size:13.5px;
-    color: rgba(241,233,210,0.65);
-    max-width:560px;
-  }
-
-  /* ---------- Search ---------- */
-  .search-row{
-    display:flex; gap:12px; flex-wrap:wrap; align-items:center;
-  }
-  .search-row input[type="text"]{
-    flex:1; min-width:220px;
-    background: rgba(241,233,210,0.06);
-    border:1px solid var(--line);
-    color:var(--paper);
-    padding: 13px 16px;
-    border-radius: 10px;
-    font-size:15px;
-    font-family: var(--font-body);
-  }
-  .search-row input::placeholder{ color: rgba(241,233,210,0.4); }
-  .search-row input:focus{ outline:2px solid var(--gold); outline-offset:1px; }
-  .search-results{
-    margin-top:10px;
-    display:flex; flex-direction:column; gap:6px;
-    max-height: 260px; overflow-y:auto;
-  }
-  .search-result-item{
-    display:flex; justify-content:space-between; gap:10px;
-    padding:10px 14px;
-    background: rgba(241,233,210,0.05);
-    border:1px solid transparent;
-    border-radius:8px;
-    cursor:pointer;
-    font-size:14px;
-    transition: background 0.15s ease, border-color .15s ease;
-  }
-  .search-result-item:hover{ background: rgba(201,162,39,0.14); border-color: var(--line); }
-  .search-result-item .curso-tag{
-    font-family:var(--font-mono); font-size:11px; color:var(--gold-bright); opacity:0.85;
-  }
-
-  /* ---------- Layout: certificate + leaderboard ---------- */
-  .grid-two{
-    display:grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: 26px;
-    align-items:start;
-  }
-  @media (max-width: 860px){
-    .grid-two{ grid-template-columns: 1fr; }
-  }
-
-  /* Certificate card */
-  .certificate{
-    background:
-      linear-gradient(var(--paper), var(--paper)) padding-box,
-      repeating-linear-gradient(45deg, var(--gold), var(--gold) 2px, transparent 2px, transparent 10px) border-box;
-    border: 3px solid transparent;
-    border-radius: var(--radius);
-    color: var(--ink);
-    padding: 26px 26px 22px;
-    box-shadow: var(--shadow);
-    position:relative;
-    min-height: 220px;
-  }
-  .certificate.empty{
-    display:flex; align-items:center; justify-content:center;
-    text-align:center;
-    color: rgba(241,233,210,0.5);
-    background: rgba(241,233,210,0.04);
-    border: 1px dashed var(--line);
-    font-family: var(--font-body);
-    font-size:14px;
-    min-height:180px;
-  }
-  .certificate::before{
-    content:"";
-    position:absolute; inset:8px;
-    border:1px solid rgba(28,42,34,0.25);
-    border-radius: 8px;
-    pointer-events:none;
-  }
-  .cert-head{
-    display:flex; justify-content:space-between; align-items:flex-start; gap:12px;
-    border-bottom: 1px solid rgba(28,42,34,0.2);
-    padding-bottom:14px; margin-bottom:16px;
-  }
-  .cert-head .eyebrow{
-    font-family:var(--font-mono); font-size:10.5px; letter-spacing:0.16em; text-transform:uppercase;
-    color: var(--green-light); opacity:0.85;
-  }
-  .cert-head h3{
-    font-family: var(--font-display);
-    font-size: clamp(20px,2.6vw,26px);
-    margin: 2px 0 4px;
-    color: var(--ink);
-  }
-  .cert-head .meta{ font-size:12.5px; color: var(--ink-soft); font-family: var(--font-mono); }
-  .seal{
-    width:56px; height:56px; border-radius:50%; flex-shrink:0;
-    background: radial-gradient(circle at 35% 30%, #234a38, #163c2e 65%);
-    color: var(--gold-bright);
-    display:flex; align-items:center; justify-content:center;
-    font-family:var(--font-display); font-weight:700; font-size:18px;
-    border: 2px solid var(--gold);
-  }
-  table.cert-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
-  table.cert-table th{
-    text-align:left; font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase;
-    letter-spacing:0.08em; color: var(--ink-soft); padding: 6px 6px; border-bottom:1px solid rgba(28,42,34,0.18);
-  }
-  table.cert-table td{ padding: 8px 6px; border-bottom:1px dashed rgba(28,42,34,0.12); }
-  table.cert-table tr:last-child td{ border-bottom:none; }
-  .bar-cell{ width:110px; }
-  .bar-track{ background: rgba(28,42,34,0.1); border-radius:4px; height:6px; overflow:hidden; }
-  .bar-fill{ height:100%; background: linear-gradient(90deg, var(--green-light), var(--gold)); }
-  .cert-total{
-    display:flex; justify-content:space-between; align-items:baseline;
-    margin-top:16px; padding-top:14px; border-top: 2px solid var(--ink);
-  }
-  .cert-total .label{ font-family:var(--font-mono); font-size:12px; text-transform:uppercase; letter-spacing:0.1em; color: var(--ink-soft); }
-  .cert-total .value{ font-family:var(--font-display); font-weight:700; font-size: clamp(22px,3vw,30px); color: var(--green); }
-
-  /* Leaderboard */
-  .leaderboard{
-    background: rgba(241,233,210,0.05);
-    border:1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 20px;
-  }
-  .leaderboard ol{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px; }
-  .leaderboard li{
-    display:flex; align-items:center; gap:12px;
-    padding: 9px 8px;
-    border-radius:8px;
-    font-size:13.5px;
-    cursor:pointer;
-  }
-  .leaderboard li:hover{ background: rgba(201,162,39,0.1); }
-  .lb-rank{
-    font-family:var(--font-mono); width:22px; text-align:right; color: var(--gold-bright); font-size:12.5px; flex-shrink:0;
-  }
-  .lb-name{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .lb-curso{ font-family:var(--font-mono); font-size:11px; opacity:0.6; }
-  .lb-value{ font-family:var(--font-mono); font-size:13px; color: var(--gold-bright); flex-shrink:0; }
-
-  /* ---------- Empresas grid ---------- */
-  .empresas-grid{
-    display:grid; grid-template-columns: repeat(auto-fill,minmax(230px,1fr)); gap:16px;
-  }
-  .empresa-card{
-    background: rgba(241,233,210,0.05);
-    border:1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 18px;
-    display:flex; flex-direction:column; gap:8px;
-  }
-  .empresa-card .row1{ display:flex; justify-content:space-between; align-items:flex-start; }
-  .empresa-card .ticker{ font-family:var(--font-mono); font-weight:700; color:var(--gold-bright); font-size:14px; letter-spacing:0.05em; }
-  .empresa-card .nombre{ font-family:var(--font-display); font-size:16px; margin:2px 0 0; }
-  .empresa-card .valor{ font-family:var(--font-mono); font-size:22px; font-weight:600; }
-  .empresa-card .change{ font-family:var(--font-mono); font-size:12px; }
-  .empresa-card .desc{ font-size:12.5px; color: rgba(241,233,210,0.6); line-height:1.4; }
-  .empresa-card .circ{ font-family:var(--font-mono); font-size:11px; color: rgba(241,233,210,0.5); border-top:1px solid rgba(241,233,210,0.1); padding-top:8px; margin-top:2px; }
-
-  /* ---------- Admin panel ---------- */
-  #adminPanel{
-    display:none;
-    background: rgba(10,25,19,0.6);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 24px;
-    flex-direction:column;
-    gap:26px;
-  }
-  #adminPanel.open{ display:flex; }
-  .admin-block h3{
-    font-family:var(--font-display); font-size:17px; margin:0 0 10px;
-    display:flex; align-items:center; gap:8px;
-  }
-  .admin-block h3 .tag{ font-family:var(--font-mono); font-size:10px; background:var(--gold); color:#231a05; padding:2px 8px; border-radius:999px; letter-spacing:0.06em; }
-  table.admin-table{ width:100%; border-collapse:collapse; font-size:13px; }
-  table.admin-table th{ text-align:left; font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase; color:rgba(241,233,210,0.55); padding:6px; border-bottom:1px solid var(--line); }
-  table.admin-table td{ padding:6px; border-bottom:1px solid rgba(241,233,210,0.08); }
-  table.admin-table input[type="number"]{
-    width:100px; background: rgba(241,233,210,0.08); border:1px solid var(--line); color: var(--paper);
-    padding:6px 8px; border-radius:6px; font-family:var(--font-mono);
-  }
-  .btn{
-    font-family: var(--font-body); font-weight:600; font-size:13.5px;
-    padding: 10px 18px; border-radius:8px; border:1px solid var(--line);
-    background: rgba(201,162,39,0.12); color: var(--paper); cursor:pointer;
-    transition: background .15s ease, transform .15s ease;
-  }
-  .btn:hover{ background: rgba(201,162,39,0.22); transform: translateY(-1px); }
-  .btn.primary{ background: var(--gold); color:#231a05; border-color: var(--gold); }
-  .btn.primary:hover{ background: var(--gold-bright); }
-  .btn.danger{ background: rgba(138,58,50,0.25); border-color: rgba(138,58,50,0.6); }
-  .btn.danger:hover{ background: rgba(138,58,50,0.4); }
-  .btn.small{ padding:7px 12px; font-size:12.5px; }
-
-  .assign-form{
-    display:flex; flex-wrap:wrap; gap:10px; align-items:end;
-  }
-  .assign-form .field{ display:flex; flex-direction:column; gap:4px; }
-  .assign-form label{ font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase; color: rgba(241,233,210,0.55); }
-  .assign-form select, .assign-form input{
-    background: rgba(241,233,210,0.08); border:1px solid var(--line); color:var(--paper);
-    padding:9px 10px; border-radius:8px; font-family:var(--font-body); font-size:13.5px;
-  }
-  .assign-form input[type="number"]{ width:100px; }
-
-  .history-list{ display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto; font-size:12.5px; font-family: var(--font-mono); }
-  .history-list .h-item{ padding:8px 10px; background: rgba(241,233,210,0.04); border-radius:6px; display:flex; justify-content:space-between; gap:10px; }
-  .history-list .h-item span.time{ opacity:0.5; flex-shrink:0; }
-
-  .io-row{ display:flex; gap:10px; flex-wrap:wrap; }
-  #importFile{ display:none; }
-
-  footer{
-    text-align:center; padding: 30px; font-size:12px; color: rgba(241,233,210,0.35);
-    font-family: var(--font-mono);
-  }
-
-  .toast{
-    position:fixed; bottom:22px; left:50%; transform: translateX(-50%) translateY(20px);
-    background: var(--gold); color:#231a05; padding:12px 22px; border-radius:999px;
-    font-family:var(--font-body); font-weight:600; font-size:13.5px;
-    opacity:0; pointer-events:none; transition: all 0.3s ease;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.4);
-    z-index:100;
-  }
-  .toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:radial-gradient(circle at 15% 0%,rgba(201,162,39,.08),transparent 45%),radial-gradient(circle at 90% 20%,rgba(31,90,66,.35),transparent 50%),var(--bg);
+    color:var(--paper);font-family:var(--fb);min-height:100vh;-webkit-font-smoothing:antialiased}
+  a{color:var(--gold2)} button{font:inherit;cursor:pointer}
+  header.top{padding:18px clamp(16px,4vw,48px);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:14px}
+  .mark{width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--gold2),var(--gold) 60%,#8a6d1c);display:grid;place-items:center;font:700 18px var(--fd);color:#2a2107;flex:none}
+  .brand h1{font:600 clamp(20px,3vw,28px)/1.1 var(--fd);margin:0}
+  .brand p{margin:2px 0 0;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2)}
+  .who{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
+  .pill{border:1px solid var(--line);background:rgba(201,162,39,.1);color:var(--paper);padding:9px 15px;border-radius:999px;font:600 13px var(--fb)}
+  .pill.gold{background:var(--gold);color:#231a05;border-color:var(--gold)}
+  .ticker-wrap{background:linear-gradient(90deg,var(--bg),var(--green) 50%,var(--bg));border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap}
+  .ticker-track{display:inline-flex;animation:tk 40s linear infinite;padding:9px 0}
+  @keyframes tk{to{transform:translateX(-50%)}}
+  @media (prefers-reduced-motion:reduce){.ticker-track{animation:none}}
+  .tki{font:13px var(--fm);padding:0 24px;border-right:1px solid rgba(241,233,210,.15)} .tki b{color:var(--gold2)}
+  .up{color:var(--up)} .down{color:var(--red)}
+  main{max-width:1180px;margin:0 auto;padding:clamp(18px,4vw,40px) clamp(16px,4vw,40px);display:flex;flex-direction:column;gap:34px}
+  h2.st{font:600 clamp(18px,2.4vw,23px) var(--fd);margin:0 0 4px;display:flex;align-items:baseline;gap:10px}
+  h2.st .eb{font:11px var(--fm);letter-spacing:.16em;text-transform:uppercase;color:var(--gold2)}
+  .hint{margin:0 0 16px;font-size:13.5px;color:var(--mute);max-width:640px;line-height:1.5}
+  .card{background:var(--soft);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+  /* mi cuenta */
+  .yo{display:grid;grid-template-columns:1.3fr 1fr;gap:18px} @media (max-width:820px){.yo{grid-template-columns:1fr}}
+  .cert{background:linear-gradient(var(--paper),var(--paper)) padding-box,repeating-linear-gradient(45deg,var(--gold),var(--gold) 2px,transparent 2px,transparent 10px) border-box;
+    border:3px solid transparent;border-radius:var(--r);color:var(--ink);padding:22px;position:relative}
+  .cert .eb{font:10.5px var(--fm);letter-spacing:.16em;text-transform:uppercase;color:var(--green2)}
+  .cert h3{font:600 clamp(19px,2.5vw,24px) var(--fd);margin:2px 0 2px}
+  .cert .meta{font:12px var(--fm);color:var(--ink2)}
+  .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+  .nums div{border-top:2px solid var(--ink);padding-top:8px} .nums small{display:block;font:10.5px var(--fm);text-transform:uppercase;letter-spacing:.08em;color:var(--ink2)}
+  .nums b{font:700 clamp(17px,2.2vw,22px) var(--fd);color:var(--green)} .nums b.neg{color:#8A3A32}
+  table{width:100%;border-collapse:collapse;font-size:13px} th{text-align:left;font:10.5px var(--fm);text-transform:uppercase;letter-spacing:.06em;padding:6px;border-bottom:1px solid currentColor;opacity:.75}
+  td{padding:7px 6px;border-bottom:1px dashed rgba(28,42,34,.15)} .cert td{color:var(--ink)} td.n{text-align:right;font-family:var(--fm)}
+  .racha h3{font:600 16px var(--fd);margin:0 0 4px} .dias{display:flex;gap:8px;margin:12px 0}
+  .dia{flex:1;height:42px;border-radius:10px;border:1px dashed var(--line);display:grid;place-items:center;font:600 12px var(--fm);color:var(--mute)}
+  .dia.on{background:linear-gradient(160deg,var(--gold2),var(--gold));color:#231a05;border:0}
+  .dia.bono{outline:2px solid var(--up);outline-offset:2px}
+  .estado{font-size:13px;color:var(--mute);line-height:1.5}
+  /* empresas */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+  .emp{display:flex;flex-direction:column;gap:7px}
+  .emp .r1{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+  .emp .tk{font:700 13.5px var(--fm);color:var(--gold2);letter-spacing:.05em} .emp .nom{font:600 16px var(--fd);margin:1px 0 0}
+  .emp .pr{font:600 23px var(--fm)} .emp .ch{font:12px var(--fm)} .emp .desc{font-size:12.5px;color:var(--mute);line-height:1.45}
+  .emp .reglas{font:11.5px var(--fm);color:var(--mute);border-top:1px solid rgba(241,233,210,.1);padding-top:8px}
+  .emp.cerrada{opacity:.6} .badge{font:10px var(--fm);border:1px solid var(--line);border-radius:999px;padding:2px 8px;color:var(--gold2);white-space:nowrap}
+  .spark{width:100%;height:42px}
+  .trade{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px}
+  .trade input{width:64px;background:rgba(241,233,210,.08);border:1px solid var(--line);color:var(--paper);padding:7px 8px;border-radius:8px;font:13px var(--fm)}
+  .btn{background:rgba(201,162,39,.12);border:1px solid var(--line);color:var(--paper);padding:7px 12px;border-radius:8px;font:600 12.5px var(--fb)}
+  .btn:hover{background:rgba(201,162,39,.25)} .btn.p{background:var(--gold);color:#231a05;border-color:var(--gold)} .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.ok{background:#1f5a42;border-color:#2f7a5a} .btn.no{background:#5a2420;border-color:#8a3a32}
+  .tengo{font:12px var(--fm);color:var(--gold2)}
+  /* ranking */
+  .rk{display:flex;flex-direction:column;gap:3px;margin:0;padding:0;list-style:none}
+  .rk li{display:flex;gap:12px;align-items:center;padding:8px;border-radius:8px;font-size:13.5px} .rk li.yo{background:rgba(201,162,39,.14)}
+  .rk .pos{font:12.5px var(--fm);width:22px;text-align:right;color:var(--gold2)} .rk .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rk .cu{font:11px var(--fm);opacity:.6} .rk .v{font:13px var(--fm)}
+  .como{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+  .como .card > b{display:block;font:600 15px var(--fd);margin-bottom:4px;color:var(--gold2)} .como p{margin:0;font-size:13px;color:var(--mute);line-height:1.5}
+  /* profe */
+  #profe{display:none} #profe.on{display:flex;flex-direction:column;gap:18px}
+  .form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end}
+  .form label{display:flex;flex-direction:column;gap:4px;font:11px var(--fm);text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}
+  .form input,.form textarea{background:rgba(241,233,210,.08);border:1px solid var(--line);color:var(--paper);padding:8px 10px;border-radius:8px;font:13.5px var(--fb);text-transform:none;letter-spacing:0}
+  .ptab td{border-bottom:1px solid rgba(241,233,210,.08);vertical-align:top} .ptab input{width:100%;background:rgba(241,233,210,.08);border:1px solid var(--line);color:var(--paper);padding:6px 8px;border-radius:6px;font:13px var(--fb)}
+  .acc{display:flex;gap:6px;flex-wrap:wrap}
+  .aviso{border:1px solid var(--line);background:rgba(201,162,39,.1);border-radius:10px;padding:12px 14px;font-size:13.5px;line-height:1.5}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--gold);color:#231a05;padding:12px 18px;border-radius:999px;font:600 14px var(--fb);transition:.25s;z-index:50;max-width:92vw;text-align:center}
+  .toast.on{opacity:1;transform:translateX(-50%)}
+  footer{text-align:center;padding:26px 16px 40px;font:12px var(--fm);color:var(--mute)}
+  .vacio{color:var(--mute);font-size:13.5px}
 </style>
 </head>
 <body>
-
 <header class="top">
   <div class="brand">
     <div class="mark">₣</div>
-    <div>
-      <h1>Bolsa de Comercio Felipesa</h1>
-      <p>Mercado de acciones escolar</p>
-    </div>
+    <div><h1>Bolsa de Comercio Felipesa</h1><p>Invierte tus Hipopesos en las metas del colegio</p></div>
   </div>
-  <button id="adminToggle" type="button">🔒 Modo Profesor</button>
+  <div class="who" id="who"><span class="vacio">Cargando…</span></div>
 </header>
-
-<div class="ticker-wrap">
-  <div class="ticker-track" id="tickerTrack"></div>
-</div>
+<div class="ticker-wrap"><div class="ticker-track" id="ticker"></div></div>
 
 <main>
-
-  <section id="buscarSection">
-    <h2 class="section-title"><span class="eyebrow">01</span> Buscar accionista</h2>
-    <p class="hint">Escribe tu nombre, apellido o número de ID para ver tu certificado de acciones.</p>
-    <div class="search-row">
-      <input type="text" id="searchInput" placeholder="Ej: Bastian, Lobos, o 1">
-    </div>
-    <div class="search-results" id="searchResults"></div>
+  <section id="secYo">
+    <h2 class="st"><span class="eb">01</span> Tu cuenta</h2>
+    <div id="yo"></div>
   </section>
 
-  <section id="portafolioSection">
-    <h2 class="section-title"><span class="eyebrow">02</span> Tu portafolio</h2>
-    <div class="grid-two">
-      <div id="certificateSlot">
-        <div class="certificate empty">Busca tu nombre arriba para ver tu certificado de acciones.</div>
-      </div>
-      <div class="leaderboard">
-        <h3 style="font-family:var(--font-display); font-size:15px; margin:0 0 12px;">🏆 Top Accionistas</h3>
-        <ol id="leaderboardList"></ol>
+  <section id="profe">
+    <h2 class="st"><span class="eb">Profe</span> Administrar la bolsa</h2>
+    <div class="card">
+      <h3 style="margin:0 0 10px;font:600 16px var(--fd)">Nueva empresa</h3>
+      <div class="form">
+        <label>Ticker (sigla)<input id="nTk" placeholder="CONV3M" maxlength="8"></label>
+        <label style="grid-column:span 2">Nombre<input id="nNom" placeholder="Convivencia 3° Medio" maxlength="60"></label>
+        <label>Precio inicial ($)<input id="nPr" type="number" min="100" step="100" value="10000"></label>
+        <label>Si cumple, sube (%)<input id="nSu" type="number" min="1" max="100" value="10"></label>
+        <label>Si no cumple, baja (%)<input id="nBa" type="number" min="0" max="90" value="5"></label>
+        <label style="grid-column:1/-1">Qué se evalúa<input id="nDesc" placeholder="Sin anotaciones negativas de convivencia en la semana" maxlength="200"></label>
+        <button class="btn p" id="nCrear">Crear empresa</button>
       </div>
     </div>
+    <div class="card">
+      <h3 style="margin:0 0 4px;font:600 16px var(--fd)">Evaluar y administrar</h3>
+      <p class="hint" style="margin-bottom:10px">«Cumplió» y «No cumplió» cambian el precio de inmediato para todos. «Suspender» detiene compras y ventas. «Cerrar y pagar» compra todas las acciones al precio actual, abona el dinero a cada cuenta y suspende la empresa.</p>
+      <div style="overflow-x:auto"><table class="ptab"><thead><tr><th>Empresa</th><th>Precio</th><th>Acciones</th><th>Nota (opcional)</th><th></th></tr></thead><tbody id="pTabla"></tbody></table></div>
+    </div>
   </section>
 
-  <section id="empresasSection">
-    <h2 class="section-title"><span class="eyebrow">03</span> Empresas en la bolsa</h2>
-    <p class="hint">Cada evento del curso es una "empresa". Su valor por acción lo actualiza el profesor.</p>
-    <div class="empresas-grid" id="empresasGrid"></div>
+  <section>
+    <h2 class="st"><span class="eb">02</span> Empresas en la bolsa</h2>
+    <p class="hint">Cada empresa es una meta del colegio. Cuando el profe la evalúa, si se cumplió la acción <b class="up">sube</b>; si no, <b class="down">baja</b>. Compra barato, vende cuando quieras: el dinero vuelve a tu cuenta del banco.</p>
+    <div class="grid" id="empresas"><div class="vacio">Cargando empresas…</div></div>
   </section>
 
-  <section id="adminSection">
-    <div id="adminPanel">
-      <div class="admin-block">
-        <h3>💹 Valor de las empresas <span class="tag">EDITABLE</span></h3>
-        <table class="admin-table" id="empresasAdminTable"></table>
-        <div style="margin-top:12px;"><button class="btn primary" id="guardarValoresBtn">Guardar valores</button></div>
-      </div>
+  <section>
+    <h2 class="st"><span class="eb">03</span> Mejores inversionistas</h2>
+    <p class="hint">Se ordena por <b>rentabilidad</b> (cuánto ganaste en proporción a lo que invertiste), no por quién tiene más dinero.</p>
+    <div class="card"><ol class="rk" id="ranking"><li class="vacio">Aún no hay inversiones.</li></ol></div>
+  </section>
 
-      <div class="admin-block">
-        <h3>📤 Asignar acciones a un estudiante</h3>
-        <div class="assign-form">
-          <div class="field">
-            <label>Estudiante</label>
-            <select id="assignStudent"></select>
-          </div>
-          <div class="field">
-            <label>Empresa</label>
-            <select id="assignEmpresa"></select>
-          </div>
-          <div class="field">
-            <label>Acciones (+/-)</label>
-            <input type="number" id="assignAmount" value="1">
-          </div>
-          <div class="field">
-            <label>Motivo (opcional)</label>
-            <input type="text" id="assignMotivo" placeholder="Ej: ayudó a ordenar la sala">
-          </div>
-          <button class="btn primary" id="assignBtn">Aplicar</button>
-        </div>
-      </div>
-
-      <div class="admin-block">
-        <h3>📜 Historial de movimientos</h3>
-        <div class="history-list" id="historyList"></div>
-      </div>
-
-      <div class="admin-block">
-        <h3>🔗 Sincronizar con Google Sheets <span class="tag">EN VIVO</span></h3>
-        <p class="hint" style="margin-bottom:12px;">Si tu planilla está publicada en la web, la bolsa puede leer los valores y las acciones directamente desde ahí cada vez que alguien abre la página.</p>
-        <div class="io-row" style="align-items:center;">
-          <button class="btn primary" id="syncNowBtn">🔄 Sincronizar ahora</button>
-          <span id="syncStatus" style="font-family:var(--font-mono); font-size:12px; opacity:0.7;"></span>
-        </div>
-      </div>
-
-      <div class="admin-block">
-        <h3>📁 Respaldo de datos</h3>
-        <div class="io-row">
-          <button class="btn" id="exportBtn">⬇️ Descargar Excel (respaldo)</button>
-          <button class="btn" id="importBtn">⬆️ Importar Excel</button>
-          <input type="file" id="importFile" accept=".xlsx">
-          <button class="btn danger" id="resetBtn">↺ Reiniciar datos de fábrica</button>
-        </div>
-      </div>
+  <section>
+    <h2 class="st"><span class="eb">04</span> Cómo funciona</h2>
+    <div class="como">
+      <div class="card"><b>1 · Entra con Google</b><p>Tu cuenta del sitio está unida a tu cuenta del Banco de Hipopesos. Lo que compras y vendes se descuenta o se abona ahí mismo.</p></div>
+      <div class="card"><b>2 · Compra acciones</b><p>Elige una meta en la que confíes (por ejemplo, la convivencia de un curso) y compra acciones al precio de hoy.</p></div>
+      <div class="card"><b>3 · El profe evalúa</b><p>Si la meta se cumplió, el precio sube (ej. +10 %). Si no, baja (ej. −5 %). Cada empresa muestra cuánto sube y baja.</p></div>
+      <div class="card"><b>4 · Vende cuando quieras</b><p>Vendes al precio del momento y el dinero vuelve a tu cuenta. Si el profe cierra una empresa, paga tus acciones al último precio.</p></div>
+      <div class="card"><b>Bono diario</b><p>Cada día que entras a la bolsa con tu cuenta ganas <b>$1.000</b>. Cada <b>5 días seguidos</b>, <b>$5.000</b> extra.</p></div>
     </div>
   </section>
 
 </main>
+<footer>Bolsa de Comercio Felipesa · Colegio San Agustín · <a href="../banco-felipesos.html">Banco de Hipopesos</a> · <a href="bases.html">Bases</a> · <a href="../index.html">El Mundo de Felipe</a></footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<footer>Bolsa de Comercio Felipesa — Colegio San Agustín · <span id="footerSyncNote">datos guardados localmente en este navegador</span></footer>
-<div class="toast" id="toast"></div>
-
+<script src="../firebase/df.js"></script>
 <script>
-const ADMIN_PIN = "PROFE2026";
+(function () {
+  'use strict';
+  /* ── Reglas del juego (si las cambias, cámbialas también en firestore.rules) ── */
+  var BONO_DIA = 1000, BONO_RACHA = 5000, DIAS_RACHA = 5;
 
-/* ===== Sincronización con Google Sheets (publicado en la web) =====
-   1. En Google Sheets: Archivo > Compartir > Publicar en la web > selecciona cada hoja > Publicar.
-   2. SHEET_PUBLISH_KEY es el código largo que aparece en la URL publicada (después de /d/e/ y antes de /pub).
-   3. SHEET_GIDS son los gid de CADA pestaña (Empresas y Accionistas). El orden no importa:
-      la bolsa detecta sola cuál es cuál mirando los encabezados de cada hoja.
-   4. Mientras falte un gid, dejalo como está (se ignora) y la bolsa sigue usando los datos guardados/importados. */
-const SHEET_PUBLISH_KEY = "2PACX-1vQm7qOPYrZxTHzwaCtHR_cVW0SdNAhd2ryUuR0sRtuB-1mlmMKaB6sVIY4-Bi7MJg";
-const SHEET_GIDS = ["1791925553", "156105981"];
-const AUTOLOAD_FROM_SHEETS = true; // si es true, sincroniza apenas se abre la página (en segundo plano)
+  var $ = function (id) { return document.getElementById(id); };
+  var fmt = function (n) { return '$' + Math.round(n || 0).toLocaleString('es-CL'); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var pct = function (x) { return (x > 0 ? '+' : '') + (x * 100).toFixed(1).replace('.', ',') + ' %'; };
+  var diaHoy = function () { return Math.floor((Date.now() - 14400000) / 86400000); };
+  function toast(m) { var t = $('toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(function () { t.classList.remove('on'); }, 3200); }
 
-const SEED_DATA = {"empresas": [{"ticker": "COMP", "nombre": "Comportamiento en Sala", "valor": 1000, "desc": "Buena convivencia, respeto y actitud positiva en clases."}, {"ticker": "LIMP", "nombre": "Limpieza de Sala", "valor": 800, "desc": "Orden y limpieza del puesto y la sala de clases."}, {"ticker": "ANOT", "nombre": "Anotaciones Positivas", "valor": 1200, "desc": "Anotaciones positivas registradas en el libro de clases."}, {"ticker": "CAMP26", "nombre": "Campeonato 2026", "valor": 2000, "desc": "Participación y logros en la Copa San Agustín / Mundial 2026."}, {"ticker": "EQUIPO", "nombre": "Trabajo en Equipo", "valor": 900, "desc": "Colaboración y aporte en trabajos grupales."}, {"ticker": "TAREA", "nombre": "Tareas Completadas", "valor": 700, "desc": "Cumplimiento de tareas y trabajos asignados."}], "estudiantes": [{"id": 1, "apellido": "Lobos", "nombre": "Bastian", "curso": "7mo", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 2, "apellido": "Espinoza", "nombre": "Vicente", "curso": "7mo", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 3, "apellido": "Alvarez", "nombre": "Samuel", "curso": "7mo", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 4, "apellido": "Espinoza", "nombre": "Sofia", "curso": "3ro", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 5, "apellido": "Villanueva", "nombre": "Nicolas", "curso": "3ro", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 6, "apellido": "Ramoneda", "nombre": "Santiago", "curso": "3ro", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 7, "apellido": "Herandez", "nombre": "Melanny", "curso": "3ro", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 8, "apellido": "Concha", "nombre": "Matias", "curso": "3ro", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 9, "apellido": "Villarroel", "nombre": "Sofia", "curso": "3ro", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 10, "apellido": "Herrera", "nombre": "Daniel", "curso": "3ro", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 11, "apellido": "Aviles", "nombre": "Sergio", "curso": "3ro", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 12, "apellido": "Rojas", "nombre": "Esteban", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 13, "apellido": "Figueroa", "nombre": "Juaquin", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 14, "apellido": "Espinoza", "nombre": "Felipe", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 15, "apellido": "Vicencio", "nombre": "Elier", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 16, "apellido": "Lobos", "nombre": "Francisca", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 17, "apellido": "Silva", "nombre": "Vicente", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 18, "apellido": "Rios", "nombre": "Nicolas", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 19, "apellido": "Lorca", "nombre": "Jose", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 20, "apellido": "Soto", "nombre": "Nicolás", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 21, "apellido": "Campo", "nombre": "Renato", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 22, "apellido": "Urra", "nombre": "Renato", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 23, "apellido": "Cartagena", "nombre": "Enzo", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 24, "apellido": "Vasquez", "nombre": "Martina", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 25, "apellido": "Herrera", "nombre": "Valentina", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 26, "apellido": "Galaz", "nombre": "Benjamin", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 27, "apellido": "Del Rio", "nombre": "Benjamin", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 28, "apellido": "Lynch", "nombre": "Sarah", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 29, "apellido": "Escobar", "nombre": "Martin", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 30, "apellido": "Peters", "nombre": "Kiara", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 31, "apellido": "Cornejo", "nombre": "Edgardo", "curso": "4to", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 32, "apellido": "D.", "nombre": "Benjamin", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 33, "apellido": "", "nombre": "Ignacio", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 34, "apellido": "Suarez", "nombre": "Hector", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 35, "apellido": "Carrrasco", "nombre": "Martin", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 36, "apellido": "Fernandez", "nombre": "Isidora", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 37, "apellido": "Oyarce", "nombre": "Gustavo", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 38, "apellido": "Estay", "nombre": "Bastian", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 39, "apellido": "", "nombre": "Gabriel", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 40, "apellido": "", "nombre": "Jomary", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 41, "apellido": "", "nombre": "Fabi", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}, {"id": 42, "apellido": "", "nombre": "Eva", "curso": "2do", "acciones": {"COMP": 0, "LIMP": 0, "ANOT": 0, "CAMP26": 0, "EQUIPO": 0, "TAREA": 0}}]};
-const STORAGE_KEY = "bolsaFelipesaState_v1";
+  var FB = null, usuario = null, esProfe = false;
+  var empresas = [], posiciones = [], cuentaId = '', cuenta = null, ingresoHoy = null, ingresoAyer = null, aviso = '';
+  var subs = [], cant = {};  // cantidades escritas (se conservan aunque la página se redibuje)
+  function quitarSubs() { subs.forEach(function (u) { try { u(); } catch (e) {} }); subs = []; }
 
-function loadState(){
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if(raw){
-    try{ return JSON.parse(raw); }catch(e){ /* fall through */ }
+  /* ═════════ cálculo ═════════ */
+  function empresa(t) { return empresas.find(function (e) { return e.id === t; }); }
+  function misPos() { return posiciones.filter(function (p) { return p.cuenta === cuentaId; }); }
+  function resumenCuenta(lista) {
+    var inv = 0, ret = 0, val = 0;
+    lista.forEach(function (p) { var e = empresa(p.ticker); inv += p.invertido || 0; ret += p.retirado || 0; val += (p.acciones || 0) * (e ? e.precio : 0); });
+    var gan = ret + val - inv;
+    return { invertido: inv, retirado: ret, valor: val, ganancia: gan, rent: inv > 0 ? gan / inv : 0 };
   }
-  const fresh = JSON.parse(JSON.stringify(SEED_DATA));
-  fresh.empresas.forEach(e => e.valorApertura = e.valor);
-  fresh.movimientos = [];
-  return fresh;
-}
-function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 
-let state = loadState();
-let selectedStudentId = null;
-let adminOpen = false;
-
-function fmtMoney(n){ return "₣ " + Math.round(n).toLocaleString("es-CL"); }
-function showToast(msg){
-  const t = document.getElementById("toast");
-  t.textContent = msg;
-  t.classList.add("show");
-  clearTimeout(showToast._h);
-  showToast._h = setTimeout(()=> t.classList.remove("show"), 2600);
-}
-
-function studentValue(s){
-  return state.empresas.reduce((sum,e)=> sum + (s.acciones[e.ticker]||0) * e.valor, 0);
-}
-function studentTotalAcciones(s){
-  return state.empresas.reduce((sum,e)=> sum + (s.acciones[e.ticker]||0), 0);
-}
-
-/* ---------- Ticker ---------- */
-function renderTicker(){
-  const track = document.getElementById("tickerTrack");
-  const items = state.empresas.map(e=>{
-    const change = e.valorApertura ? ((e.valor - e.valorApertura) / e.valorApertura * 100) : 0;
-    const dir = change > 0 ? "tk-up" : (change < 0 ? "tk-down" : "");
-    const arrow = change > 0 ? "▲" : (change < 0 ? "▼" : "•");
-    return `<span class="ticker-item"><b>${e.ticker}</b> ${fmtMoney(e.valor)} <span class="${dir}">${arrow} ${Math.abs(change).toFixed(1)}%</span></span>`;
-  }).join("");
-  track.innerHTML = items + items; // duplicate for seamless loop
-}
-
-/* ---------- Search ---------- */
-function matchesQuery(s, q){
-  q = q.toLowerCase();
-  return (s.nombre+" "+s.apellido).toLowerCase().includes(q) ||
-         (s.apellido+" "+s.nombre).toLowerCase().includes(q) ||
-         String(s.id).includes(q) ||
-         s.curso.toLowerCase().includes(q);
-}
-document.getElementById("searchInput").addEventListener("input", e=>{
-  const q = e.target.value.trim();
-  const box = document.getElementById("searchResults");
-  if(!q){ box.innerHTML=""; return; }
-  const matches = state.estudiantes.filter(s=>matchesQuery(s,q)).slice(0,10);
-  box.innerHTML = matches.map(s=>`
-    <div class="search-result-item" data-id="${s.id}">
-      <span>${s.nombre} ${s.apellido}</span>
-      <span class="curso-tag">${s.curso} · ID ${s.id}</span>
-    </div>`).join("") || `<div style="opacity:0.5; font-size:13px; padding:8px;">Sin resultados.</div>`;
-  box.querySelectorAll(".search-result-item").forEach(el=>{
-    el.addEventListener("click", ()=>{
-      selectedStudentId = parseInt(el.dataset.id);
-      renderCertificate();
-      document.getElementById("searchResults").innerHTML="";
-      document.getElementById("searchInput").value = "";
-      document.getElementById("portafolioSection").scrollIntoView({behavior:"smooth", block:"start"});
-    });
-  });
-});
-
-/* ---------- Certificate ---------- */
-function renderCertificate(){
-  const slot = document.getElementById("certificateSlot");
-  const s = state.estudiantes.find(x=>x.id===selectedStudentId);
-  if(!s){
-    slot.innerHTML = `<div class="certificate empty">Busca tu nombre arriba para ver tu certificado de acciones.</div>`;
-    return;
+  /* ═════════ dibujo ═════════ */
+  function pintarTicker() {
+    var it = empresas.filter(function (e) { return e.activa; }).map(function (e) {
+      var c = e.apertura ? (e.precio - e.apertura) / e.apertura : 0;
+      return '<span class="tki"><b>' + esc(e.id) + '</b> ' + fmt(e.precio) + ' <span class="' + (c > 0 ? 'up' : c < 0 ? 'down' : '') + '">' + (c > 0 ? '▲' : c < 0 ? '▼' : '•') + ' ' + Math.abs(c * 100).toFixed(1) + '%</span></span>';
+    }).join('');
+    $('ticker').innerHTML = it ? it + it : '<span class="tki">La bolsa abre pronto</span>';
   }
-  const total = studentValue(s);
-  const initials = ((s.nombre[0]||"")+(s.apellido[0]||"")).toUpperCase();
-  const rows = state.empresas.map(e=>{
-    const acc = s.acciones[e.ticker]||0;
-    const sub = acc * e.valor;
-    const pct = total>0 ? (sub/total*100) : 0;
-    return `<tr>
-      <td><b>${e.ticker}</b><br><span style="color:var(--ink-soft); font-size:11px;">${e.nombre}</span></td>
-      <td>${acc}</td>
-      <td>${fmtMoney(e.valor)}</td>
-      <td class="bar-cell">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <div class="bar-track" style="flex:1;"><div class="bar-fill" style="width:${pct}%;"></div></div>
-          <span style="font-family:var(--font-mono); font-size:11px; width:40px; text-align:right;">${fmtMoney(sub)}</span>
-        </div>
-      </td>
-    </tr>`;
-  }).join("");
-  slot.innerHTML = `
-    <div class="certificate">
-      <div class="cert-head">
-        <div>
-          <div class="eyebrow">Certificado de Acciones</div>
-          <h3>${s.nombre} ${s.apellido}</h3>
-          <div class="meta">ID ${s.id} · Curso ${s.curso} · ${studentTotalAcciones(s)} acciones en total</div>
-        </div>
-        <div class="seal">${initials}</div>
-      </div>
-      <table class="cert-table">
-        <thead><tr><th>Empresa</th><th>Acciones</th><th>Valor/acción</th><th>Subtotal</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-      <div class="cert-total">
-        <span class="label">Valor total de la cartera</span>
-        <span class="value">${fmtMoney(total)}</span>
-      </div>
-    </div>`;
-}
+  function spark(e) {
+    var h = (e.historial || []).map(function (x) { return x.p; });
+    h = [e.apertura || e.precio].concat(h);
+    if (h.length < 2) return '';
+    var mn = Math.min.apply(null, h), mx = Math.max.apply(null, h), W = 240, H = 40, r = (mx - mn) || 1;
+    var pts = h.map(function (v, i) { return (i / (h.length - 1) * W).toFixed(1) + ',' + (H - 3 - (v - mn) / r * (H - 6)).toFixed(1); }).join(' ');
+    var col = h[h.length - 1] >= h[0] ? '#8FD4A8' : '#E39A93';
+    return '<svg class="spark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true"><polyline points="' + pts + '" fill="none" stroke="' + col + '" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>';
+  }
+  function pintarEmpresas() {
+    var box = $('empresas');
+    var lista = empresas.filter(function (e) { return e.activa || esProfe || misPos().some(function (p) { return p.ticker === e.id && p.acciones > 0; }); });
+    if (!lista.length) { box.innerHTML = '<div class="vacio">Todavía no hay empresas en la bolsa.' + (esProfe ? ' Crea la primera abajo.' : '') + '</div>'; return; }
+    var puede = !!(cuenta && cuentaId);
+    box.innerHTML = lista.map(function (e) {
+      var c = e.apertura ? (e.precio - e.apertura) / e.apertura : 0;
+      var ult = (e.historial || []).slice(-1)[0];
+      var p = misPos().find(function (x) { return x.ticker === e.id; }) || { acciones: 0 };
+      var circ = posiciones.filter(function (x) { return x.ticker === e.id; }).reduce(function (s, x) { return s + (x.acciones || 0); }, 0);
+      var maxC = puede && e.precio ? Math.floor((cuenta.saldo || 0) / e.precio) : 0;
+      return '<div class="card emp' + (e.activa ? '' : ' cerrada') + '" data-tk="' + esc(e.id) + '">' +
+        '<div class="r1"><div><div class="tk">' + esc(e.id) + '</div><div class="nom">' + esc(e.nombre) + '</div></div>' + (e.activa ? '' : '<span class="badge">suspendida</span>') + '</div>' +
+        '<div class="pr">' + fmt(e.precio) + '</div>' +
+        '<div class="ch ' + (c > 0 ? 'up' : c < 0 ? 'down' : '') + '">' + (c > 0 ? '▲' : c < 0 ? '▼' : '•') + ' ' + Math.abs(c * 100).toFixed(1) + '% desde la apertura (' + fmt(e.apertura) + ')</div>' +
+        spark(e) +
+        (e.desc ? '<div class="desc">' + esc(e.desc) + '</div>' : '') +
+        (ult ? '<div class="desc">Última evaluación: <span class="' + (ult.r === '+' ? 'up' : 'down') + '">' + (ult.r === '+' ? 'cumplió' : 'no cumplió') + '</span>' + (ult.nota ? ' · ' + esc(ult.nota) : '') + '</div>' : '') +
+        '<div class="reglas">Si cumple <span class="up">+' + esc(e.subeP) + '%</span> · si no <span class="down">−' + esc(e.bajaP) + '%</span> · ' + circ + ' acciones en circulación</div>' +
+        (puede && e.activa ? '<div class="tengo">Tienes ' + (p.acciones || 0) + (p.acciones === 1 ? ' acción' : ' acciones') + (p.acciones ? ' · valen ' + fmt(p.acciones * e.precio) : '') + '</div>' +
+          '<div class="trade"><input type="number" min="1" step="1" value="' + (cant[e.id] || 1) + '" data-cant aria-label="Cantidad de acciones de ' + esc(e.nombre) + '">' +
+          '<button class="btn p" data-op="comprar"' + (maxC < 1 ? ' disabled title="No te alcanza"' : '') + '>Comprar</button>' +
+          '<button class="btn" data-op="vender"' + (p.acciones > 0 ? '' : ' disabled') + '>Vender</button></div>' : '') +
+        '</div>';
+    }).join('');
+  }
+  function pintarYo() {
+    var box = $('yo');
+    if (!usuario) {
+      box.innerHTML = '<div class="aviso"><b>Entra con tu cuenta Google</b> para invertir, ver tu cartera y cobrar el bono diario de ' + fmt(BONO_DIA) + '. <button class="btn p" data-a="entrar" style="margin-left:6px">Entrar</button></div>';
+      return;
+    }
+    if (aviso) { box.innerHTML = '<div class="aviso">' + aviso + '</div>'; return; }
+    if (!cuenta) { box.innerHTML = '<div class="vacio">Buscando tu cuenta del banco…</div>'; return; }
+    var r = resumenCuenta(misPos());
+    var filas = misPos().filter(function (p) { return p.acciones > 0; }).map(function (p) {
+      var e = empresa(p.ticker) || { nombre: p.ticker, precio: 0 };
+      return '<tr><td><b>' + esc(p.ticker) + '</b> <small>' + esc(e.nombre) + '</small></td><td class="n">' + p.acciones + '</td><td class="n">' + fmt(e.precio) + '</td><td class="n">' + fmt(p.acciones * e.precio) + '</td></tr>';
+    }).join('');
+    var racha = ingresoHoy ? ingresoHoy.racha : (ingresoAyer ? ingresoAyer.racha : 0);
+    var enCiclo = racha % DIAS_RACHA || (racha ? DIAS_RACHA : 0);
+    var dias = ''; for (var i = 1; i <= DIAS_RACHA; i++) dias += '<div class="dia' + (i <= enCiclo ? ' on' : '') + (i === DIAS_RACHA ? ' bono' : '') + '">' + (i === DIAS_RACHA ? '+' + fmt(BONO_RACHA) : 'Día ' + i) + '</div>';
+    var est = ingresoHoy ? '✓ Hoy ya cobraste ' + fmt(ingresoHoy.bono) + '. Vuelve mañana para seguir la racha.'
+      : (ingresoAyer ? 'Cobrando el bono de hoy…' : 'Cobrando el bono de hoy… Si mañana vuelves, empiezas una racha.');
+    box.innerHTML = '<div class="yo"><div class="cert"><div class="eb">Cuenta N° ' + esc(cuenta.numero || '') + (cuenta.curso ? ' · ' + esc(cuenta.curso) : '') + '</div>' +
+      '<h3>' + esc(((cuenta.nombre || '') + ' ' + (cuenta.apellido || '')).trim()) + '</h3><div class="meta">Saldo y cartera en vivo</div>' +
+      '<div class="nums"><div><small>Saldo disponible</small><b>' + fmt(cuenta.saldo) + '</b></div><div><small>Valor de tus acciones</small><b>' + fmt(r.valor) + '</b></div>' +
+      '<div><small>Ganancia</small><b class="' + (r.ganancia < 0 ? 'neg' : '') + '">' + (r.ganancia < 0 ? '−' : '') + fmt(Math.abs(r.ganancia)) + (r.invertido ? ' <small style="display:inline">(' + pct(r.rent) + ')</small>' : '') + '</b></div></div>' +
+      (filas ? '<table style="margin-top:16px"><thead><tr><th>Empresa</th><th class="n">Acciones</th><th class="n">Precio</th><th class="n">Valor</th></tr></thead><tbody>' + filas + '</tbody></table>' : '<p class="meta" style="margin:14px 0 0">Aún no tienes acciones. Elige una empresa abajo.</p>') +
+      '</div><div class="card racha"><h3>🔥 Racha de ingresos: ' + racha + ' día' + (racha === 1 ? '' : 's') + '</h3><div class="estado">Cada día que entras ganas ' + fmt(BONO_DIA) + '. Al completar ' + DIAS_RACHA + ' días seguidos, ' + fmt(BONO_RACHA) + ' extra.</div>' +
+      '<div class="dias">' + dias + '</div><div class="estado" id="estBono">' + est + '</div></div></div>';
+  }
+  function pintarRanking() {
+    var porCuenta = {};
+    posiciones.forEach(function (p) { (porCuenta[p.cuenta] = porCuenta[p.cuenta] || []).push(p); });
+    var filas = Object.keys(porCuenta).map(function (c) {
+      var r = resumenCuenta(porCuenta[c]), p0 = porCuenta[c][0];
+      return { cuenta: c, nombre: p0.nombre, curso: p0.curso, r: r };
+    }).filter(function (x) { return x.r.invertido > 0; }).sort(function (a, b) { return b.r.rent - a.r.rent || b.r.ganancia - a.r.ganancia; });
+    var top = filas.slice(0, 10);
+    var mio = filas.findIndex(function (x) { return x.cuenta === cuentaId; });
+    if (mio >= 10) top.push(filas[mio]);
+    $('ranking').innerHTML = top.length ? top.map(function (x) {
+      var i = filas.indexOf(x);
+      return '<li class="' + (x.cuenta === cuentaId ? 'yo' : '') + '"><span class="pos">' + (i + 1) + '</span><span class="nm">' + esc(window.DF ? DF.nombreCorto(x.nombre) : x.nombre) + ' <span class="cu">' + esc(x.curso || '') + '</span></span>' +
+        '<span class="v ' + (x.r.rent >= 0 ? 'up' : 'down') + '">' + pct(x.r.rent) + '</span></li>';
+    }).join('') : '<li class="vacio">Aún no hay inversiones.</li>';
+  }
+  function pintarProfe() {
+    $('profe').classList.toggle('on', esProfe);
+    if (!esProfe) return;
+    $('pTabla').innerHTML = empresas.length ? empresas.map(function (e) {
+      var circ = posiciones.filter(function (x) { return x.ticker === e.id; }).reduce(function (s, x) { return s + (x.acciones || 0); }, 0);
+      return '<tr data-tk="' + esc(e.id) + '"><td><b>' + esc(e.id) + '</b><br><small>' + esc(e.nombre) + '</small>' + (e.activa ? '' : '<br><span class="badge">suspendida</span>') + '</td>' +
+        '<td class="n">' + fmt(e.precio) + '<br><small>+' + e.subeP + '% / −' + e.bajaP + '%</small></td><td class="n">' + circ + '</td>' +
+        '<td><input data-nota placeholder="Ej: semana del 20 al 24" maxlength="120"></td>' +
+        '<td><div class="acc"><button class="btn ok" data-p="cumple"' + (e.activa ? '' : ' disabled') + '>✓ Cumplió</button><button class="btn no" data-p="nocumple"' + (e.activa ? '' : ' disabled') + '>✗ No cumplió</button>' +
+        '<button class="btn" data-p="activa">' + (e.activa ? 'Suspender' : 'Reactivar') + '</button><button class="btn" data-p="cerrar"' + (circ ? '' : ' disabled') + '>Cerrar y pagar</button></div></td></tr>';
+    }).join('') : '<tr><td colspan="5" class="vacio">Aún no hay empresas.</td></tr>';
+  }
+  function pintarWho() {
+    var w = $('who');
+    if (!usuario) { w.innerHTML = '<button class="pill gold" data-a="entrar">Entrar con Google</button>'; return; }
+    w.innerHTML = '<span>' + esc(String(usuario.displayName || usuario.email).split(/\s+/)[0]) + (cuenta ? ' · <b>' + fmt(cuenta.saldo) + '</b>' : '') + (esProfe ? ' · profe' : '') + '</span><button class="pill" data-a="salir">Salir</button>';
+  }
+  function pintar() { pintarTicker(); pintarWho(); pintarYo(); pintarEmpresas(); pintarRanking(); pintarProfe(); }
 
-/* ---------- Leaderboard ---------- */
-function renderLeaderboard(){
-  const list = document.getElementById("leaderboardList");
-  const ranked = [...state.estudiantes].map(s=>({s, v: studentValue(s)})).sort((a,b)=>b.v-a.v).slice(0,10);
-  list.innerHTML = ranked.map((r,i)=>`
-    <li data-id="${r.s.id}">
-      <span class="lb-rank">${i+1}</span>
-      <span class="lb-name">${r.s.nombre} ${r.s.apellido} <span class="lb-curso">${r.s.curso}</span></span>
-      <span class="lb-value">${fmtMoney(r.v)}</span>
-    </li>`).join("");
-  list.querySelectorAll("li").forEach(el=>{
-    el.addEventListener("click", ()=>{
-      selectedStudentId = parseInt(el.dataset.id);
-      renderCertificate();
-      document.getElementById("portafolioSection").scrollIntoView({behavior:"smooth", block:"start"});
+  /* ═════════ operaciones del estudiante (una transacción: cuenta + movimiento + posición) ═════════ */
+  function operar(ticker, n) {
+    var F = FB.F, db = FB.db;
+    var rc = F.doc(db, 'banco_cuentas', cuentaId), re = F.doc(db, 'bolsa_empresas', ticker), rp = F.doc(db, 'bolsa_pos', cuentaId + '__' + ticker);
+    return F.runTransaction(db, function (tx) {
+      return Promise.all([tx.get(rc), tx.get(re), tx.get(rp)]).then(function (s) {
+        if (!s[0].exists()) throw new Error('no se encontró tu cuenta del banco');
+        if (!s[1].exists() || !s[1].data().activa) throw new Error('esta empresa está suspendida');
+        var c = s[0].data(), e = s[1].data(), p = s[2].exists() ? s[2].data() : { acciones: 0, invertido: 0, retirado: 0 };
+        var precio = e.precio, monto = -n * precio, saldo = (c.saldo || 0) + monto, ops = (c.ops || 0) + 1;
+        if (n > 0 && saldo < 0) throw new Error('no te alcanza: necesitas ' + fmt(-monto) + ' y tienes ' + fmt(c.saldo));
+        if (n < 0 && (p.acciones || 0) + n < 0) throw new Error('solo tienes ' + (p.acciones || 0) + ' acciones');
+        var nom = ((c.nombre || '') + ' ' + (c.apellido || '')).trim();
+        tx.update(rc, { saldo: saldo, ops: ops, actualizado: F.serverTimestamp() });
+        tx.set(F.doc(db, 'banco_movs', 'op-' + cuentaId + '-' + ops), {
+          cuenta: cuentaId, numero: String(c.numero || ''), nombre: nom, curso: c.curso || '', monto: monto,
+          motivo: (n > 0 ? 'Bolsa: compra ' : 'Bolsa: venta ') + Math.abs(n) + ' × ' + ticker + ' a ' + fmt(precio),
+          tipo: n > 0 ? 'bolsa-compra' : 'bolsa-venta', saldoDespues: saldo, profe: '', fecha: F.serverTimestamp(),
+          ticker: ticker, acciones: n, precio: precio
+        });
+        tx.set(rp, { cuenta: cuentaId, ticker: ticker, acciones: (p.acciones || 0) + n,
+          invertido: (p.invertido || 0) + (n > 0 ? -monto : 0), retirado: (p.retirado || 0) + (n < 0 ? monto : 0),
+          nombre: nom, curso: c.curso || '', actualizado: F.serverTimestamp() });
+        return { precio: precio, monto: monto };
+      });
     });
-  });
-}
+  }
+  var cobrando = false;
+  function cobrarBono() {
+    if (cobrando || ingresoHoy || !cuentaId) return;
+    cobrando = true;
+    var F = FB.F, db = FB.db, dia = diaHoy();
+    var rc = F.doc(db, 'banco_cuentas', cuentaId), rh = F.doc(db, 'bolsa_ingresos', cuentaId + '__' + dia), ra = F.doc(db, 'bolsa_ingresos', cuentaId + '__' + (dia - 1));
+    F.runTransaction(db, function (tx) {
+      return Promise.all([tx.get(rc), tx.get(rh), tx.get(ra)]).then(function (s) {
+        if (!s[0].exists() || s[1].exists()) return null;
+        var c = s[0].data(), racha = s[2].exists() ? (s[2].data().racha || 0) + 1 : 1;
+        var bono = BONO_DIA + (racha % DIAS_RACHA === 0 ? BONO_RACHA : 0), saldo = (c.saldo || 0) + bono, ops = (c.ops || 0) + 1;
+        tx.update(rc, { saldo: saldo, ops: ops, actualizado: F.serverTimestamp() });
+        tx.set(F.doc(db, 'banco_movs', 'op-' + cuentaId + '-' + ops), {
+          cuenta: cuentaId, numero: String(c.numero || ''), nombre: ((c.nombre || '') + ' ' + (c.apellido || '')).trim(), curso: c.curso || '',
+          monto: bono, motivo: 'Bono diario por entrar a la bolsa' + (bono > BONO_DIA ? ' + racha de ' + racha + ' días' : ' (racha: ' + racha + ')'),
+          tipo: 'bono-ingreso', saldoDespues: saldo, profe: '', fecha: F.serverTimestamp()
+        });
+        tx.set(rh, { cuenta: cuentaId, dia: dia, racha: racha, bono: bono, fecha: F.serverTimestamp() });
+        return { bono: bono, racha: racha };
+      });
+    }).then(function (r) {
+      if (r) toast((r.bono > BONO_DIA ? '🔥 ¡Racha de ' + r.racha + ' días! ' : '¡Bono diario! ') + '+' + fmt(r.bono));
+    }).catch(function (e) {
+      var el = $('estBono'); if (el) el.textContent = 'No se pudo cobrar el bono de hoy (' + e.message + '). Intenta recargar la página.';
+    }).then(function () { cobrando = false; });
+  }
 
-/* ---------- Empresas grid ---------- */
-function renderEmpresasGrid(){
-  const grid = document.getElementById("empresasGrid");
-  grid.innerHTML = state.empresas.map(e=>{
-    const change = e.valorApertura ? ((e.valor - e.valorApertura) / e.valorApertura * 100) : 0;
-    const dir = change > 0 ? "tk-up" : (change < 0 ? "tk-down" : "");
-    const arrow = change > 0 ? "▲" : (change < 0 ? "▼" : "•");
-    const circulacion = state.estudiantes.reduce((sum,s)=> sum + (s.acciones[e.ticker]||0), 0);
-    return `<div class="empresa-card">
-      <div class="row1">
-        <div>
-          <div class="ticker">${e.ticker}</div>
-          <div class="nombre">${e.nombre}</div>
-        </div>
-      </div>
-      <div class="valor">${fmtMoney(e.valor)}</div>
-      <div class="change ${dir}">${arrow} ${Math.abs(change).toFixed(1)}% desde la apertura</div>
-      <div class="desc">${e.desc}</div>
-      <div class="circ">${circulacion} acciones en circulación</div>
-    </div>`;
-  }).join("");
-}
+  /* ═════════ operaciones del profe ═════════ */
+  function crearEmpresa() {
+    var tk = $('nTk').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, ''), nom = $('nNom').value.trim();
+    var pr = Math.round(+$('nPr').value || 0), su = Math.round(+$('nSu').value || 0), ba = Math.round(+$('nBa').value || 0);
+    if (tk.length < 2) return toast('El ticker debe tener 2 a 8 letras o números');
+    if (!nom) return toast('Escribe el nombre de la empresa');
+    if (pr < 100) return toast('El precio inicial debe ser al menos $100');
+    if (empresa(tk)) return toast('Ya existe una empresa con ese ticker');
+    var F = FB.F;
+    F.setDoc(F.doc(FB.db, 'bolsa_empresas', tk), { nombre: nom, desc: $('nDesc').value.trim(), precio: pr, apertura: pr, subeP: su, bajaP: ba,
+      activa: true, historial: [], creada: F.serverTimestamp(), actualizado: F.serverTimestamp() })
+      .then(function () { toast('✓ Empresa ' + tk + ' creada'); ['nTk', 'nNom', 'nDesc'].forEach(function (i) { $(i).value = ''; }); })
+      .catch(function (e) { toast('Error: ' + e.message); });
+  }
+  function evaluar(tk, cumple, nota) {
+    var e = empresa(tk); if (!e) return;
+    var nuevo = Math.max(100, Math.round(e.precio * (1 + (cumple ? e.subeP : -e.bajaP) / 100)));
+    if (!confirm((cumple ? '✓ ' + tk + ' cumplió' : '✗ ' + tk + ' no cumplió') + '\nPrecio: ' + fmt(e.precio) + ' → ' + fmt(nuevo))) return;
+    var F = FB.F, ref = F.doc(FB.db, 'bolsa_empresas', tk);
+    F.runTransaction(FB.db, function (tx) {
+      return tx.get(ref).then(function (s) {
+        var d = s.data(), p = Math.max(100, Math.round(d.precio * (1 + (cumple ? d.subeP : -d.bajaP) / 100)));
+        var h = (d.historial || []).concat([{ f: Date.now(), p: p, r: cumple ? '+' : '-', nota: String(nota || '').slice(0, 120) }]).slice(-40);
+        tx.update(ref, { precio: p, historial: h, actualizado: F.serverTimestamp() });
+      });
+    }).then(function () { toast('✓ Precio de ' + tk + ' actualizado'); }).catch(function (e) { toast('Error: ' + e.message); });
+  }
+  function alternar(tk) {
+    var e = empresa(tk); if (!e) return;
+    FB.F.updateDoc(FB.F.doc(FB.db, 'bolsa_empresas', tk), { activa: !e.activa, actualizado: FB.F.serverTimestamp() }).catch(function (x) { toast('Error: ' + x.message); });
+  }
+  function cerrar(tk) {
+    var e = empresa(tk); if (!e) return;
+    var lista = posiciones.filter(function (p) { return p.ticker === tk && p.acciones > 0; });
+    var total = lista.reduce(function (s, p) { return s + p.acciones * e.precio; }, 0);
+    if (!confirm('Cerrar ' + tk + ' y pagar ' + fmt(e.precio) + ' por acción.\n' + lista.length + ' cuenta(s), total ' + fmt(total) + '.\nLa empresa quedará suspendida.')) return;
+    var F = FB.F, db = FB.db, profe = (usuario && usuario.email) || '';
+    FB.F.updateDoc(F.doc(db, 'bolsa_empresas', tk), { activa: false, actualizado: F.serverTimestamp() }).then(function () {
+      return lista.reduce(function (pr, p) {
+        return pr.then(function () {
+          var rc = F.doc(db, 'banco_cuentas', p.cuenta), rp = F.doc(db, 'bolsa_pos', p.cuenta + '__' + tk);
+          return F.runTransaction(db, function (tx) {
+            return Promise.all([tx.get(rc), tx.get(rp), tx.get(F.doc(db, 'bolsa_empresas', tk))]).then(function (s) {
+              if (!s[0].exists() || !s[1].exists()) return;
+              var c = s[0].data(), q = s[1].data(), precio = s[2].data().precio, monto = (q.acciones || 0) * precio;
+              if (!monto) return;
+              var saldo = (c.saldo || 0) + monto;
+              tx.update(rc, { saldo: saldo, actualizado: F.serverTimestamp() });
+              tx.set(F.doc(F.collection(db, 'banco_movs')), { cuenta: p.cuenta, numero: String(c.numero || ''), nombre: ((c.nombre || '') + ' ' + (c.apellido || '')).trim(), curso: c.curso || '',
+                monto: monto, motivo: 'Bolsa: cierre de ' + tk + ' (' + q.acciones + ' × ' + fmt(precio) + ')', tipo: 'bolsa-cierre', saldoDespues: saldo, profe: profe, fecha: F.serverTimestamp(),
+                ticker: tk, acciones: -q.acciones, precio: precio });
+              tx.update(rp, { acciones: 0, retirado: (q.retirado || 0) + monto, actualizado: F.serverTimestamp() });
+            });
+          });
+        });
+      }, Promise.resolve());
+    }).then(function () { toast('✓ ' + tk + ' cerrada y pagada'); }).catch(function (x) { toast('Error: ' + x.message); });
+  }
 
-/* ---------- Admin: valores ---------- */
-function renderEmpresasAdminTable(){
-  const table = document.getElementById("empresasAdminTable");
-  table.innerHTML = `<tr><th>Ticker</th><th>Empresa</th><th>Valor actual</th><th>Nuevo valor</th></tr>` +
-    state.empresas.map(e=>`
-      <tr>
-        <td><b>${e.ticker}</b></td>
-        <td>${e.nombre}</td>
-        <td>${fmtMoney(e.valor)}</td>
-        <td><input type="number" min="0" step="50" data-ticker="${e.ticker}" value="${e.valor}"></td>
-      </tr>`).join("");
-}
-document.getElementById("guardarValoresBtn").addEventListener("click", ()=>{
-  const inputs = document.querySelectorAll("#empresasAdminTable input[type='number']");
-  let cambios = [];
-  inputs.forEach(inp=>{
-    const ticker = inp.dataset.ticker;
-    const nuevo = parseFloat(inp.value);
-    if(isNaN(nuevo) || nuevo < 0) return;
-    const e = state.empresas.find(x=>x.ticker===ticker);
-    if(e && nuevo !== e.valor){
-      cambios.push(`${ticker}: ${fmtMoney(e.valor)} → ${fmtMoney(nuevo)}`);
-      e.valor = nuevo;
+  /* ═════════ eventos ═════════ */
+  document.addEventListener('click', function (ev) {
+    var a = ev.target.closest('[data-a]');
+    if (a && a.dataset.a === 'entrar') { DF.entrar().catch(function (e) { if (!e.cancelado) toast(e.message); }); return; }
+    if (a && a.dataset.a === 'salir') { DF.salir(); return; }
+    var op = ev.target.closest('[data-op]');
+    if (op) {
+      var card = op.closest('[data-tk]'), tk = card.dataset.tk, q = Math.floor(+card.querySelector('input').value || 0), e = empresa(tk);
+      if (q < 1) return toast('Escribe una cantidad válida');
+      var n = op.dataset.op === 'comprar' ? q : -q;
+      if (!confirm((n > 0 ? 'Comprar ' : 'Vender ') + q + ' acción' + (q > 1 ? 'es' : '') + ' de ' + tk + ' a ' + fmt(e.precio) + ' c/u\nTotal: ' + fmt(q * e.precio))) return;
+      op.disabled = true;
+      operar(tk, n).then(function (r) { toast((n > 0 ? '✓ Compraste ' : '✓ Vendiste ') + q + ' × ' + tk + ' · ' + (n > 0 ? '−' : '+') + fmt(Math.abs(r.monto))); })
+        .catch(function (x) { toast('No se pudo: ' + x.message); op.disabled = false; });
+      return;
+    }
+    var pb = ev.target.closest('[data-p]');
+    if (pb && esProfe) {
+      var tr = pb.closest('[data-tk]'), t = tr.dataset.tk, nota = (tr.querySelector('[data-nota]') || {}).value || '';
+      if (pb.dataset.p === 'cumple') evaluar(t, true, nota);
+      if (pb.dataset.p === 'nocumple') evaluar(t, false, nota);
+      if (pb.dataset.p === 'activa') alternar(t);
+      if (pb.dataset.p === 'cerrar') cerrar(t);
     }
   });
-  if(cambios.length){
-    logMovimiento("Cambio de valor — " + cambios.join(" · "));
-    saveState();
-    renderAll();
-    showToast("Valores actualizados.");
-  } else {
-    showToast("No hubo cambios.");
-  }
-});
-
-/* ---------- Admin: asignar acciones ---------- */
-function renderAssignForm(){
-  const studentSelect = document.getElementById("assignStudent");
-  studentSelect.innerHTML = state.estudiantes
-    .slice().sort((a,b)=> (a.apellido+a.nombre).localeCompare(b.apellido+b.nombre))
-    .map(s=>`<option value="${s.id}">${s.apellido}, ${s.nombre} (${s.curso})</option>`).join("");
-  const empresaSelect = document.getElementById("assignEmpresa");
-  empresaSelect.innerHTML = state.empresas.map(e=>`<option value="${e.ticker}">${e.ticker} — ${e.nombre}</option>`).join("");
-}
-document.getElementById("assignBtn").addEventListener("click", ()=>{
-  const id = parseInt(document.getElementById("assignStudent").value);
-  const ticker = document.getElementById("assignEmpresa").value;
-  const amount = parseInt(document.getElementById("assignAmount").value);
-  const motivo = document.getElementById("assignMotivo").value.trim();
-  if(isNaN(amount) || amount === 0){ showToast("Ingresa una cantidad válida."); return; }
-  const s = state.estudiantes.find(x=>x.id===id);
-  if(!s) return;
-  s.acciones[ticker] = (s.acciones[ticker]||0) + amount;
-  if(s.acciones[ticker] < 0) s.acciones[ticker] = 0;
-  const signo = amount > 0 ? "+" : "";
-  logMovimiento(`${s.nombre} ${s.apellido}: ${signo}${amount} acciones de ${ticker}${motivo ? " — " + motivo : ""}`);
-  document.getElementById("assignMotivo").value = "";
-  saveState();
-  renderAll();
-  showToast("Acciones asignadas.");
-});
-
-/* ---------- Historial ---------- */
-function logMovimiento(text){
-  state.movimientos = state.movimientos || [];
-  state.movimientos.unshift({ text, time: new Date().toLocaleString("es-CL") });
-  state.movimientos = state.movimientos.slice(0, 60);
-}
-function renderHistory(){
-  const list = document.getElementById("historyList");
-  if(!state.movimientos || !state.movimientos.length){
-    list.innerHTML = `<div style="opacity:0.5;">Sin movimientos todavía.</div>`;
-    return;
-  }
-  list.innerHTML = state.movimientos.slice(0,20).map(m=>`
-    <div class="h-item"><span>${m.text}</span><span class="time">${m.time}</span></div>`).join("");
-}
-
-/* ---------- Admin toggle / PIN ---------- */
-document.getElementById("adminToggle").addEventListener("click", ()=>{
-  if(adminOpen){
-    adminOpen = false;
-    document.getElementById("adminPanel").classList.remove("open");
-    document.getElementById("adminToggle").classList.remove("active");
-    document.getElementById("adminToggle").textContent = "🔒 Modo Profesor";
-    return;
-  }
-  const pin = prompt("Ingresa el PIN de profesor:");
-  if(pin === null) return;
-  if(pin !== ADMIN_PIN){ showToast("PIN incorrecto."); return; }
-  adminOpen = true;
-  document.getElementById("adminPanel").classList.add("open");
-  document.getElementById("adminToggle").classList.add("active");
-  document.getElementById("adminToggle").textContent = "🔓 Modo Profesor";
-  document.getElementById("adminSection").scrollIntoView({behavior:"smooth", block:"start"});
-});
-
-/* ---------- Reset ---------- */
-document.getElementById("resetBtn").addEventListener("click", ()=>{
-  if(!confirm("Esto borrará todos los cambios guardados en este navegador y volverá a los valores de fábrica. ¿Continuar?")) return;
-  localStorage.removeItem(STORAGE_KEY);
-  state = loadState();
-  selectedStudentId = null;
-  renderAll();
-  showToast("Datos reiniciados.");
-});
-
-/* ---------- Export a Excel ---------- */
-document.getElementById("exportBtn").addEventListener("click", ()=>{
-  const wb = XLSX.utils.book_new();
-
-  const empresasRows = [["Ticker","Empresa (Evento)","Valor por Acción (₣)","Descripción"]];
-  state.empresas.forEach(e=> empresasRows.push([e.ticker, e.nombre, e.valor, e.desc]));
-  const wsEmpresas = XLSX.utils.aoa_to_sheet(empresasRows);
-  wsEmpresas["!cols"] = [{wch:10},{wch:26},{wch:20},{wch:50}];
-  XLSX.utils.book_append_sheet(wb, wsEmpresas, "Empresas");
-
-  const headers = ["ID","Apellido","Nombre","Curso", ...state.empresas.map(e=>e.ticker), "Total Acciones", "Valor Cartera (₣)"];
-  const estudiantesRows = [headers];
-  state.estudiantes.forEach(s=>{
-    const accVals = state.empresas.map(e=> s.acciones[e.ticker]||0);
-    const totalAcc = accVals.reduce((a,b)=>a+b,0);
-    estudiantesRows.push([s.id, s.apellido, s.nombre, s.curso, ...accVals, totalAcc, studentValue(s)]);
+  document.addEventListener('input', function (ev) {
+    if (ev.target.hasAttribute && ev.target.hasAttribute('data-cant')) { var c = ev.target.closest('[data-tk]'); if (c) cant[c.dataset.tk] = ev.target.value; }
   });
-  const wsEst = XLSX.utils.aoa_to_sheet(estudiantesRows);
-  wsEst["!cols"] = [{wch:6},{wch:16},{wch:14},{wch:8}, ...state.empresas.map(()=>({wch:9})), {wch:14},{wch:18}];
-  XLSX.utils.book_append_sheet(wb, wsEst, "Accionistas");
+  $('nCrear').onclick = function () { if (esProfe) crearEmpresa(); };
 
-  const fecha = new Date().toISOString().slice(0,10);
-  XLSX.writeFile(wb, `Bolsa_Felipesa_respaldo_${fecha}.xlsx`);
-  showToast("Excel descargado.");
-});
-
-/* ---------- Parsing compartido (xlsx y CSV de Google Sheets usan la misma lógica) ---------- */
-// Las filas pueden venir precedidas por una fila de título fusionada, así que la fila de
-// encabezado real se busca por contenido en vez de asumir que es la primera fila.
-function findHeaderRow(rows, firstCellMatch){
-  for(let i=0;i<Math.min(rows.length,6);i++){
-    const cell = (rows[i] && rows[i][0]!==undefined) ? String(rows[i][0]).trim().toLowerCase() : "";
-    if(firstCellMatch.test(cell)) return i;
+  /* ═════════ arranque y datos en vivo ═════════ */
+  function conUsuario(u) {
+    usuario = u; esProfe = !!(u && DF.esProfe(u)); cuenta = null; cuentaId = ''; ingresoHoy = ingresoAyer = null; aviso = '';
+    quitarSubs();
+    pintar();
+    if (!u) return;
+    var F = FB.F, db = FB.db;
+    DF.perfil().then(function (pf) {
+      if (esProfe) { aviso = 'Entraste como profe: administra la bolsa más abajo.'; pintar(); return; }
+      if (!DF.perfilCompleto(pf)) { aviso = 'Para invertir, primero completa tu perfil en <a href="../cuenta.html">Mi cuenta</a> y vuelve.'; pintar(); return; }
+      return (DF.asegurarCuentaBanco ? DF.asegurarCuentaBanco() : Promise.resolve()).then(function () {
+        return F.getDoc(F.doc(db, 'banco_vinculos', u.email.toLowerCase()));
+      }).then(function (v) {
+        if (!v.exists()) { aviso = 'Tu correo aún no está vinculado a una cuenta del Banco de Hipopesos. Pídele al profe que te la asigne y vuelve a entrar.'; pintar(); return; }
+        cuentaId = v.data().cuenta;
+        var dia = diaHoy();
+        subs.push(F.onSnapshot(F.doc(db, 'banco_cuentas', cuentaId), function (s) {
+          cuenta = s.exists() ? s.data() : null;
+          if (!cuenta) aviso = 'No se encontró tu cuenta del banco. Avísale al profe.';
+          pintar();
+        }));
+        subs.push(F.onSnapshot(F.doc(db, 'bolsa_ingresos', cuentaId + '__' + (dia - 1)), function (s) { ingresoAyer = s.exists() ? s.data() : null; pintarYo(); }));
+        var primera = true;
+        subs.push(F.onSnapshot(F.doc(db, 'bolsa_ingresos', cuentaId + '__' + dia), function (s) {
+          ingresoHoy = s.exists() ? s.data() : null; pintarYo();
+          if (primera) { primera = false; if (!ingresoHoy) setTimeout(cobrarBono, 600); }
+        }));
+      });
+    }).catch(function (e) { aviso = 'No se pudo cargar tu cuenta: ' + esc(e.message); pintar(); });
   }
-  return -1;
-}
-function tryParseEmpresas(rows){
-  const idx = findHeaderRow(rows, /^ticker$/);
-  if(idx === -1) return null;
-  const header = rows[idx].map(h=> (h||"").toString().toLowerCase());
-  const idxNombre = header.findIndex(h=>h.includes("empresa"));
-  const idxValor = header.findIndex(h=>h.includes("valor por acci") || h.includes("valor actual"));
-  const idxDesc = header.findIndex(h=>h.includes("descrip"));
-  const out = rows.slice(idx+1).filter(r=>r[0]).map(r=>({
-    ticker: String(r[0]).trim(),
-    nombre: idxNombre>=0 ? r[idxNombre] : r[1],
-    valor: parseFloat(idxValor>=0 ? r[idxValor] : r[2])||0,
-    desc: idxDesc>=0 ? (r[idxDesc]||"") : (r[3]||""),
-  }));
-  return out.length ? out : null;
-}
-function tryParseEstudiantes(rows){
-  const idx = findHeaderRow(rows, /^id$/);
-  if(idx === -1) return null;
-  const header = rows[idx];
-  const tickerCols = [];
-  header.forEach((h, i)=>{
-    if(i >= 4 && !["Total Acciones","Valor Cartera (₣)"].includes(h)) tickerCols.push({ticker: h, idx: i});
+
+  if (!window.DF) { $('who').innerHTML = ''; $('empresas').innerHTML = '<div class="vacio">No se pudo cargar la bolsa.</div>'; return; }
+  DF.listo().then(function (fb) {
+    FB = fb;
+    var F = fb.F, db = fb.db;
+    F.onSnapshot(F.collection(db, 'bolsa_empresas'), function (s) {
+      empresas = s.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); })
+        .sort(function (a, b) { return (b.activa ? 1 : 0) - (a.activa ? 1 : 0) || String(a.nombre).localeCompare(String(b.nombre), 'es'); });
+      pintar();
+    }, function (e) { $('empresas').innerHTML = '<div class="vacio">No se pudieron leer las empresas: ' + esc(e.message) + '</div>'; });
+    F.onSnapshot(F.collection(db, 'bolsa_pos'), function (s) {
+      posiciones = s.docs.map(function (d) { return d.data(); }); pintar();
+    }, function () {});
+    DF.alCambiarUsuario(conUsuario);
+  }, function () {
+    $('who').innerHTML = ''; $('empresas').innerHTML = '<div class="vacio">La bolsa necesita conexión con Firebase y no está disponible ahora.</div>';
   });
-  const out = rows.slice(idx+1).filter(r=>r[0]!==undefined && r[0]!=="").map(r=>{
-    const acciones = {};
-    tickerCols.forEach(tc=> acciones[tc.ticker] = parseInt(r[tc.idx])||0);
-    return { id: parseInt(r[0]), apellido: r[1]||"", nombre: r[2]||"", curso: r[3]||"", acciones };
-  });
-  return out.length ? out : null;
-}
-
-/* ---------- Import desde Excel ---------- */
-document.getElementById("importBtn").addEventListener("click", ()=> document.getElementById("importFile").click());
-document.getElementById("importFile").addEventListener("change", (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = (evt)=>{
-    try{
-      const wb = XLSX.read(evt.target.result, {type:"binary"});
-      const empresasSheetName = wb.SheetNames.find(n=>n.toLowerCase().includes("empresa"));
-      const estSheetName = wb.SheetNames.find(n=>n.toLowerCase().includes("accionista") || n.toLowerCase().includes("estudiante"));
-      if(!empresasSheetName || !estSheetName){ showToast("No se encontraron las hojas esperadas."); return; }
-
-      const newEmpresas = tryParseEmpresas(XLSX.utils.sheet_to_json(wb.Sheets[empresasSheetName], {header:1}));
-      const newEstudiantes = tryParseEstudiantes(XLSX.utils.sheet_to_json(wb.Sheets[estSheetName], {header:1}));
-      if(!newEmpresas || !newEstudiantes){ showToast("El archivo no tiene el formato esperado."); return; }
-
-      newEmpresas.forEach(e=> e.valorApertura = e.valor);
-      state.empresas = newEmpresas;
-      state.estudiantes = newEstudiantes;
-      logMovimiento(`Datos importados desde archivo Excel: ${file.name}`);
-      saveState();
-      selectedStudentId = null;
-      renderAll();
-      showToast("Datos importados correctamente.");
-    }catch(err){
-      console.error(err);
-      showToast("Error al leer el archivo.");
-    }
-  };
-  reader.readAsBinaryString(file);
-  e.target.value = "";
-});
-
-/* ---------- Sincronizar con Google Sheets (CSV publicado) ---------- */
-function sheetCsvUrl(gid){
-  return `https://docs.google.com/spreadsheets/d/e/${SHEET_PUBLISH_KEY}/pub?gid=${gid}&single=true&output=csv`;
-}
-function updateSyncStatus(text){
-  const el = document.getElementById("syncStatus");
-  if(el) el.textContent = text;
-  const foot = document.getElementById("footerSyncNote");
-  if(foot && state.lastSync) foot.textContent = `última sincronización con Google Sheets: ${state.lastSync}`;
-}
-async function syncFromGoogleSheets(showToasts){
-  const gids = SHEET_GIDS.filter(g=> g && !g.startsWith("PON_AQUI"));
-  if(!gids.length){
-    updateSyncStatus("Falta configurar los GID de las hojas en el código.");
-    if(showToasts) showToast("Faltan GID por configurar.");
-    return false;
-  }
-  let foundEmpresas = null, foundEstudiantes = null, anyOk = false;
-  for(const gid of gids){
-    try{
-      const res = await fetch(sheetCsvUrl(gid));
-      if(!res.ok) continue;
-      const text = await res.text();
-      const rows = Papa.parse(text, {skipEmptyLines:false}).data;
-      const emp = tryParseEmpresas(rows);
-      if(emp){ foundEmpresas = emp; anyOk = true; continue; }
-      const est = tryParseEstudiantes(rows);
-      if(est){ foundEstudiantes = est; anyOk = true; continue; }
-    }catch(err){ console.error("Error sincronizando gid", gid, err); }
-  }
-  if(!anyOk){
-    updateSyncStatus("No se pudo conectar con Google Sheets (revisa que esté publicado).");
-    if(showToasts) showToast("No se pudo sincronizar con Google Sheets.");
-    return false;
-  }
-  if(foundEmpresas){
-    foundEmpresas.forEach(e=> e.valorApertura = e.valor);
-    state.empresas = foundEmpresas;
-  }
-  if(foundEstudiantes) state.estudiantes = foundEstudiantes;
-  state.lastSync = new Date().toLocaleString("es-CL");
-  logMovimiento(`Sincronizado con Google Sheets${foundEmpresas && foundEstudiantes ? "" : foundEmpresas ? " (solo empresas — falta el gid de accionistas)" : " (solo accionistas — falta el gid de empresas)"}`);
-  saveState();
-  renderAll();
-  updateSyncStatus(`Última sincronización: ${state.lastSync}`);
-  if(showToasts) showToast("Sincronizado con Google Sheets.");
-  return true;
-}
-document.getElementById("syncNowBtn").addEventListener("click", ()=> syncFromGoogleSheets(true));
-
-/* ---------- Render all ---------- */
-function renderAll(){
-  renderTicker();
-  renderCertificate();
-  renderLeaderboard();
-  renderEmpresasGrid();
-  renderEmpresasAdminTable();
-  renderAssignForm();
-  renderHistory();
-  updateSyncStatus(state.lastSync ? `Última sincronización: ${state.lastSync}` : "Aún no sincronizado en este navegador.");
-}
-renderAll();
-if(AUTOLOAD_FROM_SHEETS){ syncFromGoogleSheets(false); }
+})();
 </script>
 </body>
 </html>
