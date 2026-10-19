@@ -108,6 +108,7 @@ dialog.ancho{max-width:min(860px,calc(100vw - 32px))}
       <button data-t="banco" class="on">Banco</button>
       <button data-t="juegos">Juegos</button>
       <button data-t="sims">Simuladores</button>
+      <button data-t="trabajos">Trabajos</button>
       <button data-t="alumnos">Usuarios</button>
       <button data-t="visitas">Visitas</button>
     </nav>
@@ -205,6 +206,19 @@ dialog.ancho{max-width:min(860px,calc(100vw - 32px))}
       <div class="tabla-wrap"><table><thead><tr><th>Fecha</th><th>Estudiante</th><th>Correo</th><th>Curso</th><th>Simulador</th><th>Resultado</th></tr></thead><tbody id="sTabla"></tbody></table></div>
     </section>
 
+    <!-- ═════════ TRABAJOS (autoguardado de sesiones) ═════════ -->
+    <section id="t-trabajos" class="oculto">
+      <div class="barra">
+        <select id="wRec"></select>
+        <input id="wBuscar" type="search" placeholder="Buscar nombre o correo…" style="flex:1;min-width:160px">
+        <button class="btn sm" id="wCargar">Actualizar</button>
+        <button class="btn sm" id="wExportar">Descargar CSV</button>
+        <span class="muted" id="wCuenta"></span>
+      </div>
+      <p class="muted" style="margin:0 0 10px">Solo aparece el trabajo de quienes entraron con Google en esa página. Los Felipesos son los que marca la página (provisorios): revísalos antes de abonarlos en el Banco.</p>
+      <div class="tabla-wrap"><table><thead><tr><th>Estudiante</th><th>Correo</th><th>Avance</th><th class="num">Felipesos</th><th>Último guardado</th><th></th></tr></thead><tbody id="wTabla"></tbody></table></div>
+    </section>
+
     <!-- ═════════ ESTUDIANTES ═════════ -->
     <section id="t-alumnos" class="oculto">
       <div class="barra">
@@ -257,6 +271,14 @@ dialog.ancho{max-width:min(860px,calc(100vw - 32px))}
   <h4 style="margin:14px 0 6px">Todos los movimientos</h4>
   <div class="lista-movs" id="hMovs" style="max-height:30vh"></div>
   <div class="acc"><button class="btn" id="hCsv">Descargar CSV</button><button class="btn p" data-cerrar>Cerrar</button></div>
+</dialog>
+
+<!-- Diálogo: trabajo de un estudiante -->
+<dialog id="dTrab" class="ancho">
+  <h3 id="wTit">Trabajo</h3>
+  <div class="muted" id="wSub"></div>
+  <div class="tabla-wrap" style="max-height:62vh;margin-top:10px"><table><tbody id="wDet"></tbody></table></div>
+  <div class="acc"><button class="btn p" data-cerrar>Cerrar</button></div>
 </dialog>
 
 <!-- Diálogo: vincular cuentas con estudiantes -->
@@ -346,8 +368,9 @@ DF.listo().then(fb => {
 $('tabs').onclick = ev => {
   const t = ev.target.dataset.t; if (!t) return;
   [...$('tabs').children].forEach(b => b.classList.toggle('on', b.dataset.t === t));
-  ['banco', 'juegos', 'sims', 'alumnos', 'visitas'].forEach(x => $('t-' + x).classList.toggle('oculto', x !== t));
+  ['banco', 'juegos', 'sims', 'trabajos', 'alumnos', 'visitas'].forEach(x => $('t-' + x).classList.toggle('oculto', x !== t));
   if (t === 'alumnos') cargarAlumnos();
+  if (t === 'trabajos') cargarTrabajos();
   if (t === 'juegos') cargarJuegos();
   if (t === 'sims') cargarSims();
   if (t === 'visitas') cargarVisitas();
@@ -858,6 +881,61 @@ async function cargarVisitas() {
     $('vDias').innerHTML = barras(dias, 'd');
   } catch (e) { toast('Error: ' + e.message); }
 }
+
+/* ═════════ TRABAJOS (sesiones con autoguardado) ═════════ */
+// Para sumar un recurso nuevo: agrega su clave (la de data-clave en la página) y su nombre.
+const TRABAJOS = [
+  { clave: 'sesion5-penuelas', nombre: 'Sesión 5 · Buscando problemas (3° Medio Biología)' },
+  { clave: 'taller-trabajo-potencia', nombre: 'Taller: trabajo y potencia (4° Medio Física)' }
+];
+let trabajos = [];
+$('wRec').innerHTML = TRABAJOS.map(t => `<option value="${esc(t.clave)}">${esc(t.nombre)}</option>`).join('');
+async function cargarTrabajos() {
+  const { F, db } = FB, clave = $('wRec').value;
+  $('wTabla').innerHTML = '<tr><td colspan="6" class="muted">Cargando…</td></tr>';
+  try {
+    if (!alumnos.length) {
+      const s = await F.getDocs(F.collection(db, 'alumnos'));
+      alumnos = s.docs.map(d => Object.assign({ uid: d.id }, d.data())).sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es'));
+    }
+    const filas = await Promise.all(alumnos.map(async a => {
+      const d = await F.getDoc(F.doc(db, 'progreso', a.uid, 'items', clave)).catch(() => null);
+      if (!d || !d.exists()) return null;
+      const x = d.data();
+      return { a, datos: x.datos || {}, fecha: x.actualizado };
+    }));
+    trabajos = filas.filter(Boolean);
+    pintarTrabajos();
+  } catch (e) { $('wTabla').innerHTML = `<tr><td colspan="6" class="muted">Error: ${esc(e.message)}</td></tr>`; }
+}
+function trabajosFiltrados() {
+  const q = $('wBuscar').value.trim().toLowerCase();
+  return trabajos.filter(w => !q || `${w.a.nombre} ${w.a.email}`.toLowerCase().includes(q));
+}
+function pintarTrabajos() {
+  const l = trabajosFiltrados();
+  $('wCuenta').textContent = `${l.length} estudiante${l.length !== 1 ? 's' : ''} con trabajo guardado`;
+  $('wTabla').innerHTML = l.length ? l.map((w, i) => `<tr><td>${esc(w.a.nombre)}</td><td class="muted">${esc(w.a.email)}</td><td>${esc(w.datos.avance || '—')}</td><td class="num">${esc(w.datos.felipesos != null ? w.datos.felipesos : '—')}</td><td class="muted">${fecha(w.fecha)}</td><td><button class="btn sm" data-w="${trabajos.indexOf(w)}">Ver trabajo</button></td></tr>`).join('')
+    : '<tr><td colspan="6" class="muted">Nadie ha guardado este trabajo todavía con su cuenta.</td></tr>';
+}
+$('wRec').onchange = cargarTrabajos;
+$('wCargar').onclick = cargarTrabajos;
+$('wBuscar').oninput = pintarTrabajos;
+$('wTabla').onclick = ev => {
+  const b = ev.target.closest('[data-w]'); if (!b) return;
+  const w = trabajos[+b.dataset.w]; if (!w) return;
+  $('wTit').textContent = w.a.nombre || w.a.email;
+  $('wSub').textContent = `${w.datos.titulo || $('wRec').selectedOptions[0].text} · ${w.datos.avance || ''} · ${w.datos.felipesos != null ? w.datos.felipesos + ' Felipesos' : ''} · guardado ${fecha(w.fecha)}`;
+  const det = w.datos.detalle || [];
+  $('wDet').innerHTML = det.length ? det.map(x => `<tr><td style="width:34%;vertical-align:top"><b>${esc(x.k)}</b></td><td style="white-space:pre-wrap">${esc(x.v)}</td></tr>`).join('') : '<tr><td class="muted">Sin detalle.</td></tr>';
+  $('dTrab').showModal();
+};
+$('wExportar').onclick = () => {
+  const l = trabajosFiltrados(), cols = [];
+  l.forEach(w => (w.datos.detalle || []).forEach(x => { if (!cols.includes(x.k)) cols.push(x.k); }));
+  descargarCSV(`trabajos-${$('wRec').value}-${DF.hoy()}.csv`, [['Nombre', 'Correo', 'Avance', 'Felipesos', 'Último guardado'].concat(cols)]
+    .concat(l.map(w => { const m = {}; (w.datos.detalle || []).forEach(x => m[x.k] = x.v); return [w.a.nombre, w.a.email, w.datos.avance || '', w.datos.felipesos != null ? w.datos.felipesos : '', fecha(w.fecha)].concat(cols.map(c => m[c] || '')); })));
+};
 </script>
 </body>
 </html>
