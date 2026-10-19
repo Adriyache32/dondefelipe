@@ -997,5 +997,25 @@
   go(isNaN(h0) ? 0 : h0 - 1, true);
 })();
 </script>
+<script src="../../firebase/df.js" data-sin-aviso></script>
+<script>
+/* Lo que el profe ve en el Panel → Trabajos */
+window.AUTOGUARDADO_RESUMEN = function () {
+  var cs = Array.prototype.slice.call(document.querySelectorAll('.chk input[data-k]'));
+  var hechas = cs.filter(function (c) { return c.checked; }).length;
+  var det = [];
+  var nm = document.getElementById('nm');
+  if (nm && nm.value.trim()) det.push({ k: 'Nombre y curso (escrito en la sesión)', v: nm.value.trim() });
+  cs.forEach(function (c) {
+    var lab = c.closest('label'), t = c.getAttribute('data-lbl') || (lab ? lab.textContent.replace(/\+\d+\s*$/, '').trim() : c.getAttribute('data-k'));
+    var sl = c.closest('.slide'), h = sl && sl.querySelector('h1');
+    if (!c.getAttribute('data-lbl') && h) t = h.textContent.trim() + ': ' + t;
+    det.push({ k: t, v: c.checked ? '✓ hecho' : '—' });
+  });
+  var fp = document.getElementById('fpBig');
+  return { felipesos: fp ? parseInt(fp.textContent, 10) || 0 : 0, avance: hechas + ' de ' + cs.length, detalle: det };
+};
+</script>
+<script src="../../firebase/autoguardado.js" data-clave="sesion5-penuelas" data-titulo="Sesión 5 · Buscando problemas (3° Medio)" data-claves="sesion5-lago-penuelas,sesion5-nombre"></script>
 </body>
 </html>

@@ -727,5 +727,36 @@ body{padding:0}
   apply(false);
 })();
 </script>
+<script src="../../firebase/df.js" data-sin-aviso></script>
+<script>
+/* Lo que el profe ve en el Panel → Trabajos */
+window.AUTOGUARDADO_RESUMEN = function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var get = function (k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
+  var MIS = { cases_all: 'Los 8 casos correctos', sim_acc: 'Misión: acelerar la caja', sim_ang: 'Misión: 200 J tirando en ángulo', sim_still: 'Misión: casi mueve la caja',
+    sim_e100: 'Misión: trabajo neto 100 J', table3: 'Tabla con 3 ensayos', t_q: 'Profe: pregunta de investigación', t_h: 'Profe: hipótesis', t_v: 'Profe: variables',
+    t_r: 'Profe: datos con repeticiones', t_c: 'Profe: conclusión', t_p: 'Profe: presentación' };
+  var earned = (window.Bank && window.Bank.earned && window.Bank.earned()) || {}, asked = {};
+  try { asked = JSON.parse(get('trab_bank_ask') || '{}') || {}; } catch (e) {}
+  var det = [];
+  var campos = [['f_team', 'Equipo (integrantes)'], ['f_q', '1. Pregunta de investigación'], ['f_h', '2. Hipótesis'], ['f_vi', '3. Variable independiente'],
+    ['f_vd', '3. Variable dependiente'], ['f_vc', '3. Variables controladas'], ['f_m', '4. Materiales y montaje'], ['f_p', '5. Procedimiento'],
+    ['f_a', '7. Análisis'], ['f_c', '8. Conclusión'], ['f_close', 'Pregunta de cierre: ¿por qué tenemos que trabajar?']];
+  campos.forEach(function (c) { var el = $(c[0]); var v = el ? el.value : get('trab_' + c[0]); if (v && v.trim()) det.push({ k: c[1], v: v.trim() }); });
+  var rows = []; try { rows = JSON.parse(get('trab_rows') || '[]') || []; } catch (e) {}
+  rows.forEach(function (r, i) {
+    if (!r || !(r.F || r.d || r.t)) return;
+    det.push({ k: '6. Ensayo ' + (i + 1), v: 'F = ' + (r.F || '—') + ' N · d = ' + (r.d || '—') + ' m · θ = ' + (r.th || '0') + '° · t = ' + (r.t || '—') + ' s' + (r.n ? ' · ' + r.n : '') });
+  });
+  var sem = get('trab_sem'); if (sem !== '') det.push({ k: 'Semáforo de cierre', v: ['Rojo', 'Amarillo', 'Verde'][+sem] || sem });
+  var casos = 0; for (var i = 0; i < 8; i++) if (earned['case' + i]) casos++;
+  det.push({ k: 'Casos de la fase 2', v: casos + ' de 8 correctos' });
+  Object.keys(MIS).forEach(function (k) { if (earned[k]) det.push({ k: MIS[k], v: '✓ logrado' }); else if (asked[k]) det.push({ k: MIS[k], v: '⏳ pidió visto bueno' }); });
+  var hechas = Object.keys(earned).filter(function (k) { return earned[k]; }).length;
+  var bal = $('bal');
+  return { felipesos: bal ? parseInt(bal.textContent, 10) || 0 : 0, avance: hechas + ' de 20 logros', detalle: det };
+};
+</script>
+<script src="../../firebase/autoguardado.js" data-clave="taller-trabajo-potencia" data-titulo="Taller: trabajo y potencia (4° Medio)" data-claves="trab_*"></script>
 </body>
 </html>
