@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#08080c">
+<title>Cine · El Mundo de Felipe</title>
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#08080c; --ink:#0e0f16; --slab:#14161f; --slab-2:#1b1e2b; --slab-3:#232739;
+  --acid:#ccff00; --acid-deep:#5e7a00; --tyrian:#ff2e7e; --cyan:#22e3ff; --brass:#e9b949;
+  --bone:#f2f0e9; --mute:#9498ab; --line:rgba(204,255,0,.16); --line-2:rgba(255,255,255,.08);
+  --ff-display:'Big Shoulders Display','Impact',sans-serif;
+  --ff-body:'Space Grotesk',-apple-system,'Segoe UI',sans-serif;
+  --r-sm:6px; --r-md:10px; --r-lg:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{min-height:100vh;font-family:var(--ff-body);color:var(--bone);background:var(--void);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 70% 50% at 12% 0%,rgba(122,15,61,.5),transparent 62%),radial-gradient(ellipse 60% 45% at 88% 8%,rgba(94,122,0,.3),transparent 60%)}
+a{color:var(--acid);text-decoration:none} a:hover{color:var(--cyan)}
+button,textarea,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--acid);outline-offset:3px}
+.frieze{position:relative;z-index:5;height:4px;background:linear-gradient(90deg,var(--void),var(--tyrian) 26%,var(--acid) 50%,var(--cyan) 74%,var(--void))}
+nav{position:sticky;top:0;z-index:50;background:rgba(10,11,16,.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--line-2)}
+.nav-in{max-width:1140px;margin:0 auto;padding:0 1.2rem;height:56px;display:flex;align-items:center;gap:14px}
+.brand{font:900 1.3rem var(--ff-display);letter-spacing:2px;color:var(--acid)}
+.nav-in .esp{flex:1}
+.yo{font-size:.74rem;color:var(--mute);display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.yo b{color:var(--bone)}
+.lnk{background:none;border:0;color:var(--acid);text-decoration:underline;font-size:.74rem;padding:0}
+main{position:relative;z-index:5;max-width:1140px;margin:1.6rem auto 3rem;padding:0 1rem}
+.tablet{background:linear-gradient(170deg,rgba(20,22,31,.94),rgba(12,13,19,.96));border:1px solid var(--line-2);border-top:3px solid var(--acid);border-radius:var(--r-lg);padding:2.2rem 2.4rem}
+.cab{padding-bottom:1.4rem;margin-bottom:1.4rem;border-bottom:1px solid var(--line-2)}
+h1{font:900 clamp(2.2rem,6vw,3.8rem)/.95 var(--ff-display);letter-spacing:-.5px;text-transform:uppercase}
+.sub{font-size:.74rem;color:var(--mute);letter-spacing:2.4px;text-transform:uppercase;margin-top:10px}
+.intro{font-size:.92rem;color:var(--mute);max-width:62ch;margin-top:12px;line-height:1.6}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 1.6rem}
+.tab{padding:9px 16px;border-radius:2px;border:1.5px solid var(--line-2);background:transparent;color:var(--mute);font-size:.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;display:inline-flex;gap:8px;align-items:center}
+.tab:hover{color:var(--bone);border-color:rgba(255,255,255,.28)}
+.tab.on{background:var(--acid);border-color:var(--acid);color:#0a0c00}
+.tab small{font-weight:700;opacity:.7}
+.lista{display:grid;gap:22px}
+.peli{display:grid;grid-template-columns:230px 1fr;gap:0;background:var(--slab);border:1px solid var(--line-2);border-radius:var(--r-md);overflow:hidden}
+.poster{position:relative;min-height:330px;display:flex;flex-direction:column;justify-content:flex-end;padding:18px 16px;background:linear-gradient(165deg,var(--c1),var(--c2));overflow:hidden}
+.poster::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(255,255,255,.05) 0 1px,transparent 1px 4px)}
+.poster::after{content:'';position:absolute;left:-30%;right:-30%;bottom:-20%;height:60%;background:radial-gradient(ellipse at 50% 100%,rgba(0,0,0,.55),transparent 70%)}
+.poster .ano{position:relative;z-index:1;font:700 .8rem var(--ff-body);letter-spacing:3px;color:rgba(255,255,255,.75)}
+.poster .tit{position:relative;z-index:1;font:900 clamp(2rem,4vw,2.7rem)/.9 var(--ff-display);text-transform:uppercase;letter-spacing:-.5px;color:#fff;text-shadow:3px 3px 0 rgba(0,0,0,.45);overflow-wrap:break-word}
+.poster .gen{position:relative;z-index:1;margin-top:10px;font-size:.62rem;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:rgba(255,255,255,.85)}
+.cuerpo{padding:1.4rem 1.6rem;display:flex;flex-direction:column;gap:12px;min-width:0}
+.cuerpo h2{font:800 1.5rem/1.1 var(--ff-display);text-transform:uppercase;letter-spacing:.5px}
+.datos{display:flex;gap:8px;flex-wrap:wrap}
+.dato{font-size:.62rem;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;padding:4px 10px;border-radius:2px;background:rgba(204,255,0,.12);color:var(--acid)}
+.dato.r{background:rgba(255,46,126,.14);color:var(--tyrian)}
+.sinopsis{font-size:.92rem;color:#c6c9d6;line-height:1.6}
+.pregunta{border-left:4px solid var(--brass);background:rgba(233,185,73,.07);padding:10px 14px;font-size:.88rem;line-height:1.55}
+.pregunta b{color:var(--brass);display:block;font-size:.64rem;letter-spacing:1.8px;text-transform:uppercase;margin-bottom:3px}
+.prom{display:flex;align-items:center;gap:10px;font-size:.84rem;color:var(--mute)}
+.est{color:var(--brass);letter-spacing:2px;font-size:1rem}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:var(--r-sm);padding:.75rem 1.3rem;font-size:.74rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;background:var(--acid);color:#0a0c00}
+.btn:hover:not(:disabled){background:var(--cyan)}
+.btn:disabled{opacity:.5;cursor:wait}
+.btn.s{background:transparent;color:var(--acid);border:1.5px solid rgba(204,255,0,.4)}
+.btn.s:hover{background:rgba(204,255,0,.1)}
+.com{border-top:1px solid var(--line-2);margin-top:4px;padding-top:14px;display:none}
+.com.on{display:block}
+.form{display:grid;gap:10px;margin-bottom:16px}
+.form textarea{width:100%;min-height:86px;resize:vertical;background:var(--slab-2);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:.75rem .9rem;font-size:.92rem;line-height:1.5}
+.form textarea:focus{outline:2px solid var(--acid);outline-offset:1px}
+.fila{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.fila .esp{flex:1}
+.cont{font-size:.7rem;color:var(--mute)}
+.stars{display:inline-flex;gap:2px}
+.stars button{background:none;border:0;font-size:1.5rem;line-height:1;color:#454a5e;padding:2px}
+.stars button.on{color:var(--brass)}
+.nota{font-size:.8rem;color:var(--mute);line-height:1.5}
+.err{color:#ff8fa3;font-size:.82rem}
+.ok{color:var(--acid);font-size:.82rem}
+.cm{background:var(--slab-2);border:1px solid var(--line-2);border-left:3px solid var(--nc,var(--acid));border-radius:var(--r-sm);padding:11px 14px;margin-bottom:10px}
+.cm .quien{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:.76rem;margin-bottom:5px}
+.cm .quien b{color:var(--nc,var(--acid));font-size:.84rem}
+.cm .quien span{color:var(--mute)}
+.cm .quien .est{font-size:.8rem}
+.cm .quien .del{margin-left:auto}
+.cm p{font-size:.92rem;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.vacio{text-align:center;color:var(--mute);padding:2.2rem 1rem;font-size:.92rem;border:1px dashed var(--line-2);border-radius:var(--r-md)}
+.pie{text-align:center;font-size:.68rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.32);padding:1.4rem}
+@media (max-width:760px){
+  .tablet{padding:1.4rem 1rem;border-radius:0}
+  main{padding:0;margin-top:.6rem}
+  .peli{grid-template-columns:1fr}
+  .poster{min-height:190px}
+  .cuerpo{padding:1.1rem 1rem}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+</style>
+<link rel="stylesheet" href="assets/mc-sutil.css">
+</head>
+<body>
+<div class="frieze"></div>
+<nav><div class="nav-in">
+  <a class="brand" href="index.html" aria-label="Volver al inicio">EMF</a>
+  <a href="index.html" style="font-size:.74rem">← Volver al sitio</a>
+  <span class="esp"></span>
+  <div class="yo" id="yo"></div>
+</div></nav>
+
+<main><div class="tablet">
+  <header class="cab">
+    <h1>Cine del curso</h1>
+    <div class="sub">Películas que vimos juntos/as · por curso</div>
+    <p class="intro">Después de cada película, aquí se conversa. Elige tu curso, lee la pregunta para pensar y deja tu comentario. Se escribe con respeto: se ve tu nombre y la inicial de tu apellido.</p>
+  </header>
+  <div class="tabs" id="tabs" role="tablist" aria-label="Cursos"></div>
+  <div class="lista" id="lista"></div>
+</div></main>
+<div class="pie">El Mundo de Felipe · Cine</div>
+
+<script src="firebase/df.js" data-sin-aviso></script>
+<script>
+(function(){
+'use strict';
+/* ═════════ Catálogo: agrega aquí las películas nuevas ═════════
+   id: solo a-z, 0-9 y guion · curso: clave de CURSOS · c1/c2: colores del afiche */
+var CURSOS=[
+  {k:'6b',n:'6° Básico'},{k:'7b',n:'7° Básico'},{k:'8b',n:'8° Básico'},
+  {k:'1m',n:'1° Medio'},{k:'2m',n:'2° Medio'},{k:'3m',n:'3° Medio'},{k:'4m',n:'4° Medio'}
+];
+var PELIS=[
+  {id:'scream-1996',curso:'6b',titulo:'Scream',ano:1996,dir:'Wes Craven',gen:'Terror · Suspenso',dur:'111 min',c1:'#7a0f1e',c2:'#14060a',
+   sin:'En un pueblo tranquilo, un asesino llama por teléfono a sus víctimas y las obliga a responder preguntas de películas de terror. Un grupo de adolescentes descubre que conocer las "reglas" del género no basta para sobrevivir.',
+   preg:'¿Por qué da miedo una película cuando ya conocemos las reglas del género? ¿Qué da más susto: lo que se ve o lo que se imagina? Cuéntanos una escena y por qué funcionó (o no).'}
+];
+
+/* ═════════ utilidades ═════════ */
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function estrellas(n){n=Math.round(n||0);return '★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n)}
+var COLS=['#ccff00','#22e3ff','#ff2e7e','#e9b949','#a78bfa','#34d399'];
+function colorDe(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return COLS[h%COLS.length]}
+function fechaTxt(ts){try{var d=ts&&ts.toDate?ts.toDate():new Date();return d.toLocaleDateString('es-CL',{day:'numeric',month:'short',year:'numeric'})}catch(e){return ''}}
+/* Filtro simple: sin enlaces, correos ni teléfonos (los profes además pueden borrar). */
+function limpiar(t){
+  return String(t).replace(/\s+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim()
+    .replace(/https?:\/\/\S+|www\.\S+/gi,'[enlace]')
+    .replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g,'[correo]')
+    .replace(/\+?\d[\d\s-]{7,}\d/g,'[número]');
+}
+
+/* ═════════ estado ═════════ */
+var cursoAct=(function(){try{return localStorage.getItem('cine_curso')||'6b'}catch(e){return '6b'}})();
+var DFok=false,usuario=null,perfil=null,esProfe=false;
+var COM={};   // idPeli → [comentarios]
+var abiertos={};
+var nota={};  // idPeli → estrellas elegidas en el formulario
+
+function dfListo(){return (window.DF&&DF.listo)?DF.listo():Promise.reject(new Error('sin DF'))}
+
+/* ═════════ pintar ═════════ */
+function pintaTabs(){
+  $('tabs').innerHTML=CURSOS.map(function(c){
+    var n=PELIS.filter(function(p){return p.curso===c.k}).length;
+    return '<button class="tab'+(c.k===cursoAct?' on':'')+'" role="tab" aria-selected="'+(c.k===cursoAct)+'" data-k="'+c.k+'">'+esc(c.n)+' <small>'+n+'</small></button>';
+  }).join('');
+}
+function pintaYo(){
+  var e=$('yo');
+  if(!DFok){e.innerHTML='<span>Comentarios no disponibles ahora</span>';return}
+  if(!usuario){e.innerHTML='<button class="lnk" data-a="entrar">Entrar con Google</button>';return}
+  e.innerHTML='<span>Hola, <b>'+esc(DF.nombreCorto(usuario.displayName,usuario.email))+'</b></span><button class="lnk" data-a="salir">salir</button>';
+}
+function promedio(id){
+  var a=(COM[id]||[]).filter(function(c){return c.estrellas>0});
+  if(!a.length)return null;
+  return a.reduce(function(s,c){return s+c.estrellas},0)/a.length;
+}
+function pintaLista(){
+  var ps=PELIS.filter(function(p){return p.curso===cursoAct});
+  var cn=CURSOS.filter(function(c){return c.k===cursoAct})[0].n;
+  if(!ps.length){$('lista').innerHTML='<div class="vacio">Todavía no hay películas registradas para '+esc(cn)+'.<br>Cuando veamos una, aparecerá aquí.</div>';return}
+  $('lista').innerHTML=ps.map(function(p){
+    var n=(COM[p.id]||[]).length,pr=promedio(p.id);
+    return '<article class="peli" id="p-'+p.id+'">'+
+      '<div class="poster" style="--c1:'+p.c1+';--c2:'+p.c2+'" aria-hidden="true"><span class="ano">'+p.ano+'</span><div class="tit">'+esc(p.titulo)+'</div><span class="gen">'+esc(p.gen)+'</span></div>'+
+      '<div class="cuerpo"><h2>'+esc(p.titulo)+'</h2>'+
+      '<div class="datos"><span class="dato">'+esc(cn)+'</span><span class="dato">'+p.ano+'</span><span class="dato">'+esc(p.dir)+'</span><span class="dato">'+esc(p.dur)+'</span></div>'+
+      '<p class="sinopsis">'+esc(p.sin)+'</p>'+
+      '<div class="pregunta"><b>Para pensar y comentar</b>'+esc(p.preg)+'</div>'+
+      '<div class="prom">'+(pr!=null?'<span class="est" aria-label="Promedio '+pr.toFixed(1)+' de 5">'+estrellas(pr)+'</span><span>'+pr.toFixed(1).replace('.',',')+' / 5</span>':'<span>Aún sin notas</span>')+'</div>'+
+      '<div class="fila"><button class="btn" data-a="abrir" data-id="'+p.id+'">💬 Comentarios'+(DFok?' ('+n+')':'')+'</button></div>'+
+      '<section class="com'+(abiertos[p.id]?' on':'')+'" id="c-'+p.id+'" aria-label="Comentarios de '+esc(p.titulo)+'"></section>'+
+      '</div></article>';
+  }).join('');
+  ps.forEach(function(p){if(abiertos[p.id])pintaCom(p.id)});
+}
+function pintaCom(id){
+  var box=$('c-'+id);if(!box)return;
+  var h='';
+  if(!DFok){box.innerHTML='<p class="nota">Los comentarios no están disponibles en este momento. Inténtalo más tarde.</p>';return}
+  if(!usuario){
+    h+='<p class="nota" style="margin-bottom:12px">Para leer y escribir comentarios, entra con tu cuenta de Google.</p><button class="btn" data-a="entrar">Entrar con Google</button>';
+    box.innerHTML=h;return;
+  }
+  if(!perfil||!DF.perfilCompleto(perfil)){
+    h+='<p class="nota" style="margin-bottom:12px">Antes de comentar, completa tu perfil (nombre, edad y curso) en <a href="cuenta.html" target="_blank" rel="noopener">Mi cuenta</a> y vuelve aquí.</p>';
+  }else{
+    var ne=nota[id]||0;
+    h+='<div class="form"><label class="nota" for="t-'+id+'">Tu comentario</label>'+
+      '<textarea id="t-'+id+'" maxlength="500" placeholder="¿Qué te pareció? Responde la pregunta de arriba o cuenta qué escena te llamó la atención." data-id="'+id+'"></textarea>'+
+      '<div class="fila"><span class="nota">Tu nota:</span><span class="stars" data-id="'+id+'">'+[1,2,3,4,5].map(function(i){return '<button type="button" class="'+(i<=ne?'on':'')+'" data-a="nota" data-id="'+id+'" data-n="'+i+'" aria-label="'+i+' de 5">★</button>'}).join('')+'</span>'+
+      '<span class="esp"></span><span class="cont" id="n-'+id+'">0 / 500</span>'+
+      '<button class="btn" data-a="enviar" data-id="'+id+'">Publicar</button></div>'+
+      '<div id="m-'+id+'" role="status"></div></div>';
+  }
+  var l=(COM[id]||[]);
+  if(!l.length)h+='<div class="vacio">Aún no hay comentarios. ¡Sé la primera persona en escribir!</div>';
+  else h+=l.map(function(c){
+    var puedeBorrar=esProfe||c.uid===usuario.uid;
+    return '<div class="cm" style="--nc:'+colorDe(c.uid||c.nombre)+'"><div class="quien"><b>'+esc(c.nombre)+'</b>'+(c.curso?'<span>'+esc(c.curso)+'</span>':'')+
+      (c.estrellas?'<span class="est">'+estrellas(c.estrellas)+'</span>':'')+'<span>'+fechaTxt(c.fecha)+'</span>'+
+      (puedeBorrar?'<button class="lnk del" data-a="borrar" data-id="'+id+'" data-cid="'+esc(c._id)+'">borrar</button>':'')+'</div><p>'+esc(c.texto)+'</p></div>';
+  }).join('');
+  box.innerHTML=h;
+}
+
+/* ═════════ datos ═════════ */
+function cargarCom(id){
+  return dfListo().then(function(fb){
+    if(!usuario)return;
+    var F=fb.F;
+    return F.getDocs(F.query(F.collection(fb.db,'peliculas_comentarios'),F.where('peli','==',id),F.limit(150))).then(function(s){
+      COM[id]=s.docs.map(function(d){var o=d.data();o._id=d.id;return o}).sort(function(a,b){
+        var ta=a.fecha&&a.fecha.toMillis?a.fecha.toMillis():Date.now(),tb=b.fecha&&b.fecha.toMillis?b.fecha.toMillis():Date.now();return tb-ta});
+    });
+  });
+}
+function cargarCurso(){
+  var ps=PELIS.filter(function(p){return p.curso===cursoAct});
+  return Promise.all(ps.map(function(p){return cargarCom(p.id).catch(function(){})})).then(function(){pintaLista()});
+}
+function enviar(id){
+  var ta=$('t-'+id),msg=$('m-'+id),txt=limpiar(ta.value);
+  if(txt.length<2){msg.innerHTML='<span class="err">Escribe al menos unas palabras.</span>';return}
+  var btn=document.querySelector('[data-a=enviar][data-id="'+id+'"]');btn.disabled=true;msg.innerHTML='';
+  dfListo().then(function(fb){
+    var F=fb.F;
+    return F.addDoc(F.collection(fb.db,'peliculas_comentarios'),{
+      peli:id,uid:usuario.uid,nombre:DF.nombreCorto(usuario.displayName,usuario.email),curso:(perfil&&perfil.curso)||'',
+      texto:txt.slice(0,500),estrellas:nota[id]||0,fecha:F.serverTimestamp()});
+  }).then(function(){
+    nota[id]=0;return cargarCom(id);
+  }).then(function(){pintaLista();var m=$('m-'+id);if(m)m.innerHTML='<span class="ok">✓ Comentario publicado.</span>'})
+  .catch(function(e){btn.disabled=false;msg.innerHTML='<span class="err">No se pudo publicar ('+esc(e.message||e)+').</span>'});
+}
+function borrar(id,cid){
+  if(!confirm('¿Borrar este comentario?'))return;
+  dfListo().then(function(fb){return fb.F.deleteDoc(fb.F.doc(fb.db,'peliculas_comentarios',cid))})
+    .then(function(){return cargarCom(id)}).then(pintaLista).catch(function(e){alert('No se pudo borrar: '+(e.message||e))});
+}
+
+/* ═════════ eventos ═════════ */
+document.addEventListener('click',function(ev){
+  var t=ev.target.closest('[data-a],.tab');if(!t)return;
+  if(t.classList.contains('tab')){cursoAct=t.dataset.k;try{localStorage.setItem('cine_curso',cursoAct)}catch(e){}pintaTabs();pintaLista();cargarCurso();return}
+  var a=t.dataset.a,id=t.dataset.id;
+  if(a==='abrir'){abiertos[id]=!abiertos[id];$('c-'+id).classList.toggle('on',!!abiertos[id]);if(abiertos[id])pintaCom(id)}
+  else if(a==='entrar'){DF.entrar().catch(function(e){if(!e.cancelado)alert(e.message||e)})}
+  else if(a==='salir'){DF.salir()}
+  else if(a==='nota'){var n=+t.dataset.n;nota[id]=nota[id]===n?0:n;var tx=$('t-'+id),v=tx?tx.value:'';pintaCom(id);var t2=$('t-'+id);if(t2)t2.value=v}
+  else if(a==='enviar')enviar(id);
+  else if(a==='borrar')borrar(id,t.dataset.cid);
+});
+document.addEventListener('input',function(ev){
+  var t=ev.target;if(t.tagName==='TEXTAREA'&&t.dataset.id){var c=$('n-'+t.dataset.id);if(c)c.textContent=t.value.length+' / 500'}
+});
+
+/* ═════════ arranque ═════════ */
+(function(){var h=(location.hash||'').slice(1),p=PELIS.filter(function(x){return x.id===h})[0];if(p){cursoAct=p.curso;abiertos[p.id]=true}})();
+pintaTabs();pintaLista();pintaYo();
+if(window.DF){
+  dfListo().then(function(){
+    DFok=true;
+    DF.alCambiarUsuario(function(u){
+      usuario=u;esProfe=!!(u&&DF.esProfe());perfil=null;COM={};
+      pintaYo();
+      if(!u){pintaLista();return}
+      DF.perfil().then(function(pf){perfil=pf}).catch(function(){}).then(function(){return cargarCurso()});
+    });
+    pintaLista();
+  },function(){DFok=false;pintaYo();pintaLista()});
+}
+})();
+</script>
+</body>
+</html>

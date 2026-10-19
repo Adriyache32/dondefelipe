@@ -126,6 +126,24 @@ service cloud.firestore {
       allow delete: if esProfe() || esDueno();
     }
 
+    // ── Comentarios de la sección Cine (películas vistas por curso) ──
+    // Solo con cuenta: se leen y se escriben con sesión iniciada. El profe y quien
+    // escribió pueden borrar. Nadie puede editar un comentario ya publicado.
+    match /peliculas_comentarios/{id} {
+      allow read: if esColegio();
+      allow create: if esColegio()
+        && request.resource.data.keys().hasOnly(['peli', 'uid', 'nombre', 'curso', 'texto', 'estrellas', 'fecha'])
+        && request.resource.data.uid == request.auth.uid
+        && idJuego(request.resource.data.peli)
+        && texto(request.resource.data.nombre, 80)
+        && texto(request.resource.data.curso, 40)
+        && texto(request.resource.data.texto, 500) && request.resource.data.texto.size() >= 2
+        && request.resource.data.estrellas is int
+        && request.resource.data.estrellas >= 0 && request.resource.data.estrellas <= 5
+        && request.resource.data.fecha == request.time;
+      allow delete: if esProfe() || esDueno();
+    }
+
     // ── Contador de visitas: cualquiera suma 1, nadie puede poner otro número ──
     function sumaUno() {
       return request.resource.data.keys().hasOnly(['n', 'ultima'])
