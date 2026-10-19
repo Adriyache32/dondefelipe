@@ -76,7 +76,7 @@
   function avisar() {
     pintarBotonCuenta();
     aplicarGrupo();
-    if (usuario) leerPerfil().then(aplicarGrupo, function () {});
+    if (usuario) leerPerfil().then(function () { aplicarGrupo(); asegurarCuentaBanco(); }, function () {});
     oyentes.forEach(function (cb) { try { cb(usuario); } catch (e) {} });
   }
   function listo() {
@@ -214,7 +214,7 @@
       return fb.F.setDoc(fb.F.doc(fb.db, 'alumnos', usuario.uid), doc).then(function () {
         perfil = { uid: usuario.uid, existe: true, nombre: doc.nombre, email: doc.email, edad: edad, curso: doc.curso, apoderado: doc.apoderado, grupo: grupo };
         pintarBotonCuenta(); aplicarGrupo();
-        return perfil;
+        return asegurarCuentaBanco().then(function () { return perfil; });
       });
     });
   }
@@ -315,6 +315,46 @@
         });
       });
     });
+  }
+
+  /* ---------- cuenta del banco automática para estudiantes ----------
+     Solo si el profe activó la creación automática (config/banco.autoCrear) y
+     el estudiante aún no tiene cuenta vinculada. Se crea con saldo 0. */
+  var _asegurando = null;
+  function separarNombre(n) {
+    var p = String(n || '').trim().split(/\s+/).filter(Boolean);
+    if (p.length <= 1) return { nombre: p[0] || '', apellido: '' };
+    if (p.length === 2) return { nombre: p[0], apellido: p[1] };
+    return { nombre: p.slice(0, p.length - 2).join(' '), apellido: p.slice(-2).join(' ') };
+  }
+  function asegurarCuentaBanco() {
+    if (_asegurando) return _asegurando;
+    _asegurando = listo().then(function (fb) {
+      if (!usuario || !usuario.email) return null;
+      return leerPerfil().then(function (pf) {
+        if (!pf || !perfilCompleto(pf) || pf.grupo !== 'estudiante') return null;
+        var F = fb.F, db = fb.db, correo = usuario.email.toLowerCase();
+        var refCfg = F.doc(db, 'config', 'banco'), refV = F.doc(db, 'banco_vinculos', correo);
+        return Promise.all([F.getDoc(refCfg), F.getDoc(refV)]).then(function (r) {
+          var c = r[0].exists() ? r[0].data() : {};
+          if (!c.autoCrear || r[1].exists()) return null;
+          var id = 'u-' + usuario.uid, refC = F.doc(db, 'banco_cuentas', id), nom = separarNombre(usuario.displayName);
+          return F.runTransaction(db, function (tx) {
+            return Promise.all([tx.get(refCfg), tx.get(refV)]).then(function (x) {
+              if (x[1].exists()) return null;
+              var n = (x[0].data() || {}).siguiente || 1;
+              tx.update(refCfg, { siguiente: n + 1 });
+              tx.set(refC, { numero: String(n), nombre: nom.nombre, apellido: nom.apellido, curso: '', saldo: 0, estado: 'Activa',
+                extra: {}, auto: true, creada: F.serverTimestamp(), actualizado: F.serverTimestamp() });
+              tx.set(refV, { cuenta: id, numero: String(n), nombre: (nom.nombre + ' ' + nom.apellido).trim(), actualizado: F.serverTimestamp() });
+              return { id: id, numero: String(n) };
+            });
+          });
+        });
+      });
+    }).catch(function (e) { console.info('[DF] cuenta del banco no creada: ' + e.message); return null; })
+      .then(function (r) { _asegurando = null; return r; });
+    return _asegurando;
   }
 
   /* ---------- mis datos: ver, descargar, borrar ---------- */
@@ -578,6 +618,7 @@
     leerProgreso: leerProgreso,
     misDatos: misDatos,
     miBanco: miBanco,
+    asegurarCuentaBanco: asegurarCuentaBanco,
     borrarMisDatos: borrarMisDatos,
     top: top,
     visita: visita,

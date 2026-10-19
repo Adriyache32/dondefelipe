@@ -145,22 +145,124 @@ service cloud.firestore {
       allow delete: if esProfe();
     }
 
-    // ── Banco de Hipopesos ──
-    // Saldos públicos (igual que la hoja publicada); solo el profe escribe.
-    match /banco_cuentas/{id} {
-      allow read: if true;
-      allow write: if esProfe();
-    }
-    // Vínculo cuenta del banco ↔ correo del estudiante (el documento se llama como el correo).
+    // Cuenta del banco vinculada al correo de quien escribe ("" si no tiene).
     function miCuentaBanco() {
       return conCuenta()
         && exists(/databases/$(database)/documents/banco_vinculos/$(request.auth.token.email.lower()))
         ? get(/databases/$(database)/documents/banco_vinculos/$(request.auth.token.email.lower())).data.cuenta
         : '';
     }
+    // ── Funciones de la Bolsa y el bono diario (se usan en el banco más abajo) ──
+    function rutaCuenta(c) { return /databases/$(database)/documents/banco_cuentas/$(c); }
+    function rutaOp(c, n) { return /databases/$(database)/documents/banco_movs/$('op-' + c + '-' + string(n)); }
+    function rutaEmpresa(t) { return /databases/$(database)/documents/bolsa_empresas/$(t); }
+    function rutaPos(c, t) { return /databases/$(database)/documents/bolsa_pos/$(c + '__' + t); }
+    function rutaIngreso(c, d) { return /databases/$(database)/documents/bolsa_ingresos/$(c + '__' + string(d)); }
+    // Día escolar (hora de Chile aproximada, UTC−4) como número entero.
+    function diaHoy() { return math.floor((request.time.toMillis() - 14400000) / 86400000); }
+    function opsAntes(c) { return get(rutaCuenta(c)).data.get('ops', 0); }
+    function opsDespues(c) { return getAfter(rutaCuenta(c)).data.ops; }
+    function accAntes(c, t) { return exists(rutaPos(c, t)) ? get(rutaPos(c, t)).data.acciones : 0; }
+    function posAntes(c, t, k) { return exists(rutaPos(c, t)) ? get(rutaPos(c, t)).data.get(k, 0) : 0; }
+
+    function opValida(id, d) {
+      return d.cuenta == miCuentaBanco() && d.cuenta != ''
+        && opsDespues(d.cuenta) == opsAntes(d.cuenta) + 1
+        && id == 'op-' + d.cuenta + '-' + string(opsDespues(d.cuenta))
+        && d.keys().hasOnly(['cuenta', 'numero', 'nombre', 'curso', 'monto', 'motivo', 'tipo', 'saldoDespues', 'profe', 'fecha', 'ticker', 'acciones', 'precio'])
+        && d.profe == '' && d.fecha == request.time
+        && texto(d.numero, 20) && texto(d.nombre, 160) && texto(d.curso, 40) && texto(d.motivo, 200)
+        && d.monto is int
+        && d.saldoDespues == getAfter(rutaCuenta(d.cuenta)).data.saldo
+        && ((d.tipo in ['bolsa-compra', 'bolsa-venta'] && opBolsa(d)) || (d.tipo == 'bono-ingreso' && opBono(d)));
+    }
+    function opBolsa(d) {
+      return d.ticker is string && exists(rutaEmpresa(d.ticker))
+        && get(rutaEmpresa(d.ticker)).data.activa == true
+        && d.precio == get(rutaEmpresa(d.ticker)).data.precio
+        && d.acciones is int && d.acciones != 0 && d.acciones >= -1000 && d.acciones <= 1000
+        && (d.tipo == 'bolsa-compra') == (d.acciones > 0)
+        && d.monto == 0 - d.acciones * d.precio
+        && getAfter(rutaPos(d.cuenta, d.ticker)).data.acciones == accAntes(d.cuenta, d.ticker) + d.acciones;
+    }
+    function opBono(d) {
+      return !exists(rutaIngreso(d.cuenta, diaHoy()))
+        && getAfter(rutaIngreso(d.cuenta, diaHoy())).data.bono == d.monto;
+    }
+
+    function posCuadra(p, m) {
+      return opsDespues(p.cuenta) == opsAntes(p.cuenta) + 1
+        && m.ticker == p.ticker && m.tipo in ['bolsa-compra', 'bolsa-venta']
+        && p.acciones == accAntes(p.cuenta, p.ticker) + m.acciones && p.acciones >= 0
+        && p.invertido == posAntes(p.cuenta, p.ticker, 'invertido') + (m.acciones > 0 ? 0 - m.monto : 0)
+        && p.retirado == posAntes(p.cuenta, p.ticker, 'retirado') + (m.acciones < 0 ? m.monto : 0);
+    }
+
+    // ── Banco de Hipopesos ──
+    // Configuración del banco: autoCrear (bool) y siguiente (próximo N° de cuenta).
+    function cfgBanco() { return get(/databases/$(database)/documents/config/banco).data; }
+    function autoCrearActivo() {
+      return exists(/databases/$(database)/documents/config/banco) && cfgBanco().get('autoCrear', false) == true;
+    }
+    function soyEstudiante() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/alumnos/$(request.auth.uid))
+        && get(/databases/$(database)/documents/alumnos/$(request.auth.uid)).data.get('grupo', '') == 'estudiante';
+    }
+    function cuentaPropia() { return 'u-' + request.auth.uid; }
+    match /config/banco {
+      allow read: if true;
+      allow write: if esProfe();
+      // Un estudiante solo puede avanzar el contador en 1, y solo al crear su propia cuenta.
+      allow update: if esColegio() && autoCrearActivo() && soyEstudiante()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['siguiente'])
+        && request.resource.data.siguiente == resource.data.siguiente + 1
+        && !exists(/databases/$(database)/documents/banco_cuentas/$(cuentaPropia()))
+        && existsAfter(/databases/$(database)/documents/banco_cuentas/$(cuentaPropia()));
+    }
+
+    // Saldos públicos (igual que la hoja publicada); el profe escribe.
+    // Excepción: con la creación automática activa, un estudiante sin cuenta puede crear
+    // la suya, siempre con saldo 0 y el número que le da el contador.
+    match /banco_cuentas/{id} {
+      allow read: if true;
+      allow write: if esProfe();
+      allow create: if esColegio() && autoCrearActivo() && soyEstudiante()
+        && id == cuentaPropia()
+        && !exists(/databases/$(database)/documents/banco_vinculos/$(request.auth.token.email.lower()))
+        && request.resource.data.keys().hasOnly(['numero', 'nombre', 'apellido', 'curso', 'saldo', 'estado', 'extra', 'auto', 'creada', 'actualizado'])
+        && request.resource.data.saldo == 0
+        && request.resource.data.estado == 'Activa'
+        && request.resource.data.auto == true
+        && request.resource.data.curso == ''
+        && request.resource.data.extra is map && request.resource.data.extra.size() == 0
+        && texto(request.resource.data.nombre, 80) && texto(request.resource.data.apellido, 80)
+        && request.resource.data.numero == string(getAfter(/databases/$(database)/documents/config/banco).data.siguiente - 1)
+        && request.resource.data.creada == request.time
+        && request.resource.data.actualizado == request.time;
+      // Operación del propio estudiante (bolsa o bono diario): el saldo cambia exactamente
+      // en el monto del movimiento 'op-<cuenta>-<ops>' que se crea en la misma escritura.
+      allow update: if esColegio() && id == miCuentaBanco() && id != ''
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['saldo', 'ops', 'actualizado'])
+        && request.resource.data.ops == resource.data.get('ops', 0) + 1
+        && request.resource.data.actualizado == request.time
+        && existsAfter(rutaOp(id, request.resource.data.ops))
+        && request.resource.data.saldo == resource.data.saldo + getAfter(rutaOp(id, request.resource.data.ops)).data.monto
+        && (getAfter(rutaOp(id, request.resource.data.ops)).data.monto > 0 || request.resource.data.saldo >= 0);
+    }
+    // Vínculo cuenta del banco ↔ correo del estudiante (el documento se llama como el correo).
     match /banco_vinculos/{correo} {
       allow read: if esProfe() || (conCuenta() && request.auth.token.email.lower() == correo);
       allow write: if esProfe();
+      // Creación automática: el estudiante vincula su correo con la cuenta que acaba de crear.
+      allow create: if esColegio() && autoCrearActivo() && soyEstudiante()
+        && request.auth.token.email.lower() == correo
+        && request.resource.data.keys().hasOnly(['cuenta', 'numero', 'nombre', 'actualizado'])
+        && request.resource.data.cuenta == cuentaPropia()
+        && existsAfter(/databases/$(database)/documents/banco_cuentas/$(cuentaPropia()))
+        && !exists(/databases/$(database)/documents/banco_cuentas/$(cuentaPropia()))
+        && texto(request.resource.data.nombre, 160)
+        && request.resource.data.actualizado == request.time;
     }
 
     // Movimientos: los crea el profe y no se borran (un error se corrige con un movimiento inverso).
@@ -169,9 +271,49 @@ service cloud.firestore {
     match /banco_movs/{id} {
       allow read: if esProfe() || (resource.data.cuenta == miCuentaBanco() && miCuentaBanco() != '');
       allow create: if esProfe();
+      allow create: if esColegio() && opValida(id, request.resource.data);
       allow update: if esProfe()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['canje', 'canjeNota', 'canjeFecha', 'canjeProfe']);
       allow delete: if false;
+    }
+      // ═════ Bolsa de Comercio y bono diario ═════
+    // Cada operación del estudiante escribe, en una sola transacción:
+    //   banco_cuentas/<cuenta>       saldo ± monto, ops + 1
+    //   banco_movs/op-<cuenta>-<ops> el movimiento (tipo bolsa-compra, bolsa-venta o bono-ingreso)
+    //   bolsa_pos/<cuenta>__<TICKER> (compra/venta)  ·  bolsa_ingresos/<cuenta>__<día> (bono)
+    // Las reglas cruzan los cuatro documentos: nadie puede inventar saldo ni precios.
+    // Empresas: públicas; solo el profe las crea, evalúa y cierra.
+    match /bolsa_empresas/{t} {
+      allow read: if true;
+      allow write: if esProfe();
+    }
+    // Posición de cada cuenta en cada empresa (pública, como los saldos).
+    match /bolsa_pos/{pid} {
+      allow read: if true;
+      allow write: if esProfe();
+      allow create, update: if esColegio()
+        && request.resource.data.cuenta == miCuentaBanco() && request.resource.data.cuenta != ''
+        && pid == request.resource.data.cuenta + '__' + request.resource.data.ticker
+        && request.resource.data.keys().hasOnly(['cuenta', 'ticker', 'acciones', 'invertido', 'retirado', 'nombre', 'curso', 'actualizado'])
+        && texto(request.resource.data.nombre, 160) && texto(request.resource.data.curso, 40)
+        && request.resource.data.actualizado == request.time
+        && posCuadra(request.resource.data, getAfter(rutaOp(request.resource.data.cuenta, opsDespues(request.resource.data.cuenta))).data);
+    }
+    // Bono por ingreso: $1.000 una vez al día; cada 5 días seguidos, +$5.000 extra.
+    match /bolsa_ingresos/{iid} {
+      allow read: if true;
+      allow write: if esProfe();
+      allow create: if esColegio()
+        && request.resource.data.cuenta == miCuentaBanco() && request.resource.data.cuenta != ''
+        && request.resource.data.dia == diaHoy()
+        && iid == request.resource.data.cuenta + '__' + string(diaHoy())
+        && request.resource.data.keys().hasOnly(['cuenta', 'dia', 'racha', 'bono', 'fecha'])
+        && request.resource.data.fecha == request.time
+        && request.resource.data.racha == (exists(rutaIngreso(request.resource.data.cuenta, diaHoy() - 1))
+             ? get(rutaIngreso(request.resource.data.cuenta, diaHoy() - 1)).data.racha + 1 : 1)
+        && request.resource.data.bono == 1000 + (request.resource.data.racha % 5 == 0 ? 5000 : 0)
+        && opsDespues(request.resource.data.cuenta) == opsAntes(request.resource.data.cuenta) + 1
+        && getAfter(rutaOp(request.resource.data.cuenta, opsDespues(request.resource.data.cuenta))).data.tipo == 'bono-ingreso';
     }
   }
 }

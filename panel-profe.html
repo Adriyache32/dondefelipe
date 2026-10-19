@@ -141,6 +141,11 @@ dialog.ancho{max-width:min(860px,calc(100vw - 32px))}
               <tbody id="tCuentas"><tr><td colspan="6" class="muted">Cargando…</td></tr></tbody>
             </table>
           </div>
+          <div class="card" style="margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+            <div style="flex:1;min-width:240px"><b>Cuentas automáticas para estudiantes</b>
+              <div class="muted" style="font-size:13px" id="autoTxt">Cargando…</div></div>
+            <button class="btn sm" id="btnAuto">…</button>
+          </div>
           <div class="card porcanjear" style="margin-top:16px">
             <h3 style="margin:0 0 4px">Compras por canjear <span class="pill" id="nPend">0</span></h3>
             <p class="muted" style="margin:0 0 8px;font-size:13px">Lo que los estudiantes compraron y todavía no usan. Al aplicarlo (por ejemplo, borrar la formativa), márcalo como usado y anota dónde.</p>
@@ -226,9 +231,10 @@ dialog.ancho{max-width:min(860px,calc(100vw - 32px))}
         <select id="aGrupo"><option value="">Todos los grupos</option><option value="estudiante">Estudiantes</option><option value="docente">Docentes</option><option value="publico">Público general</option><option value="-">Sin grupo</option></select>
         <button class="btn sm" id="aCargar">Actualizar</button>
         <button class="btn sm" id="aExportar">Descargar CSV</button>
+        <button class="btn sm" id="aCrearTodas" title="Crea una cuenta del banco (saldo 0) para cada estudiante que todavía no tiene">Crear cuentas faltantes</button>
         <span class="muted" id="aCuenta"></span>
       </div>
-      <div class="tabla-wrap"><table><thead><tr><th>Nombre</th><th>Correo</th><th class="num">Edad</th><th>Grupo</th><th>Apoderado</th><th>Plan química</th><th>Actualizado</th></tr></thead><tbody id="aTabla"></tbody></table></div>
+      <div class="tabla-wrap"><table><thead><tr><th>Nombre</th><th>Correo</th><th class="num">Edad</th><th>Grupo</th><th>Banco</th><th>Apoderado</th><th>Plan química</th><th>Actualizado</th></tr></thead><tbody id="aTabla"></tbody></table></div>
     </section>
 
     <!-- ═════════ VISITAS ═════════ -->
@@ -279,6 +285,15 @@ dialog.ancho{max-width:min(860px,calc(100vw - 32px))}
   <div class="muted" id="wSub"></div>
   <div class="tabla-wrap" style="max-height:62vh;margin-top:10px"><table><tbody id="wDet"></tbody></table></div>
   <div class="acc"><button class="btn p" data-cerrar>Cerrar</button></div>
+</dialog>
+
+<!-- Diálogo: asignar cuenta existente -->
+<dialog id="dAsignar">
+  <h3 id="asTit">Asignar cuenta</h3>
+  <p class="muted" id="asSub" style="margin-top:-6px"></p>
+  <label>Cuenta del banco (solo las que aún no tienen correo; las que coinciden por nombre van primero)</label>
+  <select id="asSel" style="width:100%"></select>
+  <div class="acc"><button class="btn" data-cerrar>Cancelar</button><button class="btn p" id="asOk">Asignar</button></div>
 </dialog>
 
 <!-- Diálogo: vincular cuentas con estudiantes -->
@@ -391,7 +406,10 @@ function iniciarBanco() {
   }, e => console.info(e)));
   desuscribir.push(F.onSnapshot(F.collection(db, 'banco_vinculos'), s => {
     vinculos = {}; s.docs.forEach(d => { vinculos[d.data().cuenta] = d.id; });
-    pintarCuentas();
+    pintarCuentas(); if (alumnos.length) pintarAlumnos();
+  }, e => console.info(e)));
+  desuscribir.push(F.onSnapshot(F.doc(db, 'config', 'banco'), s => {
+    cfgBanco = s.exists() ? s.data() : {}; pintarAuto();
   }, e => console.info(e)));
   desuscribir.push(F.onSnapshot(F.query(F.collection(db, 'banco_movs'), F.where('canje', '==', 'pendiente')), s => {
     pendientes = s.docs.map(d => Object.assign({ id: d.id }, d.data()));
@@ -400,7 +418,49 @@ function iniciarBanco() {
   }, e => console.info(e)));
 }
 const ms = ts => (ts && ts.toDate ? ts.toDate().getTime() : 0);
-let vinculos = {}, pendientes = [];
+let vinculos = {}, pendientes = [], cfgBanco = {};
+function cuentaDeCorreo(correo) { correo = String(correo || '').toLowerCase(); const id = Object.keys(vinculos).find(k => vinculos[k] === correo); return id ? cuentas.find(c => c.id === id) || { id, numero: '?' } : null; }
+function siguienteNumero() {
+  const max = Math.max(0, ...cuentas.map(c => parseInt(c.numero, 10) || 0));
+  return Math.max(max + 1, +cfgBanco.siguiente || 0);
+}
+function separarNombre(n) {
+  const p = String(n || '').trim().split(/\s+/).filter(Boolean);
+  if (p.length <= 1) return { nombre: p[0] || '', apellido: '' };
+  if (p.length === 2) return { nombre: p[0], apellido: p[1] };
+  return { nombre: p.slice(0, -2).join(' '), apellido: p.slice(-2).join(' ') };
+}
+function pintarAuto() {
+  const on = !!cfgBanco.autoCrear;
+  $('autoTxt').innerHTML = on
+    ? `<span class="pos">Activadas.</span> Cada estudiante que entra con su cuenta y no tiene cuenta del banco recibe una nueva con saldo 0 (próximo N° ${esc(cfgBanco.siguiente || '—')}).`
+    : 'Desactivadas. Primero asigna o crea las cuentas de quienes ya entraron (pestaña <b>Usuarios</b>, columna Banco). Cuando esté todo al día, actívalas.';
+  $('btnAuto').textContent = on ? 'Desactivar' : 'Activar';
+  $('btnAuto').classList.toggle('p', !on);
+}
+$('btnAuto').onclick = async () => {
+  const { F, db } = FB, on = !cfgBanco.autoCrear;
+  if (on && !confirm('Activar las cuentas automáticas: cada estudiante nuevo que entre con su cuenta recibirá una cuenta del banco con saldo 0.\n\nAsegúrate de haber asignado antes las cuentas de quienes ya tenían una, para no duplicarlas.')) return;
+  try {
+    await F.setDoc(F.doc(db, 'config', 'banco'), { autoCrear: on, siguiente: siguienteNumero() }, { merge: true });
+    toast(on ? '✓ Cuentas automáticas activadas' : 'Cuentas automáticas desactivadas');
+  } catch (e) { toast('Error: ' + e.message); }
+};
+// Crea una cuenta nueva (saldo 0) y la vincula con el correo del estudiante.
+async function crearCuentaPara(a) {
+  const { F, db } = FB;
+  if (cuentaDeCorreo(a.email)) throw new Error(a.nombre + ' ya tiene cuenta');
+  const n = siguienteNumero(), numero = String(n);
+  let id = DF.idSeguro(numero); if (cuentas.find(c => c.id === id)) id = 'n-' + id + '-' + Date.now().toString(36);
+  const nom = separarNombre(a.nombre), b = F.writeBatch(db);
+  b.set(F.doc(db, 'banco_cuentas', id), { numero, nombre: nom.nombre, apellido: nom.apellido, curso: a.curso || '', saldo: 0, estado: 'Activa', extra: {}, creada: F.serverTimestamp(), actualizado: F.serverTimestamp() });
+  b.set(F.doc(db, 'banco_vinculos', a.email.toLowerCase()), { cuenta: id, numero, nombre: `${nom.nombre} ${nom.apellido}`.trim(), actualizado: F.serverTimestamp() });
+  b.set(F.doc(db, 'config', 'banco'), { siguiente: n + 1 }, { merge: true });
+  await b.commit();
+  cfgBanco.siguiente = n + 1;
+  cuentas.push({ id, numero, nombre: nom.nombre, apellido: nom.apellido, saldo: 0 }); vinculos[id] = a.email.toLowerCase();
+  return numero;
+}
 function correoDe(cuentaId) { return vinculos[cuentaId] || ''; }
 function pintarPendientes() {
   $('nPend').textContent = pendientes.length;
@@ -620,7 +680,7 @@ function pintarMovs() {
   $('listaMovs').innerHTML = movs.length ? movs.map(m => `
     <div class="m"><div class="t"><b class="${m.monto < 0 ? 'neg' : 'pos'}">${m.monto < 0 ? '−' : '+'}$${fmt(Math.abs(m.monto))}</b> ${esc(m.nombre)}
       <small>${esc(m.motivo)} · ${fecha(m.fecha)}</small></div>
-      ${m.tipo === 'reverso' || m.tipo === 'importacion' ? '' : `<button class="btn sm" data-rev="${esc(m.id)}" title="Crear el movimiento contrario">Revertir</button>`}</div>`).join('')
+      ${m.tipo === 'reverso' || m.tipo === 'importacion' || /^bolsa-/.test(m.tipo || '') ? '' : `<button class="btn sm" data-rev="${esc(m.id)}" title="Crear el movimiento contrario">Revertir</button>`}</div>`).join('')
     : '<div class="muted">Aún no hay movimientos.</div>';
 }
 $('listaMovs').onclick = async ev => {
@@ -851,11 +911,59 @@ const GRUPOS = { estudiante: 'Estudiante', docente: 'Docente', publico: 'Públic
 function selGrupo(a) {
   return `<select data-uid="${esc(a.uid)}" style="padding:4px 6px">${a.grupo ? '' : '<option value="">—</option>'}${Object.entries(GRUPOS).map(([k, n]) => `<option value="${k}"${a.grupo === k ? ' selected' : ''}${k !== 'estudiante' && (a.edad || 0) < 18 ? ' disabled' : ''}>${n}</option>`).join('')}</select>`;
 }
+function celdaBanco(a) {
+  if (a.grupo !== 'estudiante') return '<span class="muted">—</span>';
+  const c = cuentaDeCorreo(a.email);
+  if (c) return `<span class="vinc">N° ${esc(c.numero)}</span> <span class="muted">${fmt(c.saldo)} ₣</span>`;
+  return `<button class="btn sm" data-asignar="${esc(a.uid)}">Asignar…</button> <button class="btn sm p" data-crear="${esc(a.uid)}">Crear</button>`;
+}
+function sinCuenta() { return alumnos.filter(a => a.grupo === 'estudiante' && a.email && !cuentaDeCorreo(a.email)); }
+$('aTabla').onclick = async ev => {
+  const t = ev.target, uidC = t.dataset && t.dataset.crear, uidA = t.dataset && t.dataset.asignar;
+  if (uidC) {
+    const a = alumnos.find(x => x.uid === uidC); if (!a) return;
+    t.disabled = true;
+    try { const n = await crearCuentaPara(a); toast(`✓ Cuenta N° ${n} creada para ${a.nombre}`); pintarAlumnos(); pintarCuentas(); }
+    catch (e) { toast('Error: ' + e.message); t.disabled = false; }
+  }
+  if (uidA) abrirAsignar(alumnos.find(x => x.uid === uidA));
+};
+$('aCrearTodas').onclick = async () => {
+  const l = sinCuenta();
+  if (!l.length) { toast('Todos los estudiantes ya tienen cuenta'); return; }
+  if (!confirm(`Crear ${l.length} cuenta${l.length > 1 ? 's' : ''} nueva${l.length > 1 ? 's' : ''} con saldo 0?\n\n${l.slice(0, 12).map(a => '• ' + a.nombre).join('\n')}${l.length > 12 ? '\n…' : ''}\n\nSi alguno ya tenía cuenta en el banco (importada de la hoja), usa "Asignar…" en su fila antes de esto.`)) return;
+  let ok = 0;
+  for (const a of l) { try { await crearCuentaPara(a); ok++; } catch (e) { toast('Error con ' + a.nombre + ': ' + e.message); } }
+  toast(`✓ ${ok} cuentas creadas`); pintarAlumnos(); pintarCuentas();
+};
+// Asignar una cuenta existente (sin correo) a un estudiante
+let asignando = null;
+function abrirAsignar(a) {
+  if (!a) return;
+  asignando = a;
+  const libres = cuentas.filter(c => !correoDe(c.id) && c.estado !== 'Cerrada');
+  const t = norm(a.nombre);
+  const puntaje = c => norm(c.nombre).filter(w => t.some(x => x.startsWith(w) || w.startsWith(x))).length + norm(c.apellido).filter(w => t.includes(w)).length * 2;
+  libres.sort((x, y) => puntaje(y) - puntaje(x) || String(x.apellido).localeCompare(String(y.apellido), 'es'));
+  $('asTit').textContent = 'Asignar cuenta a ' + a.nombre;
+  $('asSub').textContent = a.email;
+  $('asSel').innerHTML = libres.length ? libres.map(c => `<option value="${esc(c.id)}">${esc(c.apellido)} ${esc(c.nombre)} · N° ${esc(c.numero)} · ${esc(c.curso || 'sin curso')} · ${fmt(c.saldo)} ₣${puntaje(c) >= 3 ? '  ← coincide' : ''}</option>`).join('')
+    : '<option value="">No hay cuentas libres (todas tienen correo)</option>';
+  $('asOk').disabled = !libres.length;
+  $('dAsignar').showModal();
+}
+$('asOk').onclick = async () => {
+  const c = cuentas.find(x => x.id === $('asSel').value); if (!c || !asignando) return;
+  try { await guardarVinculo(c, asignando.email); vinculos[c.id] = asignando.email.toLowerCase(); $('dAsignar').close(); toast(`✓ ${asignando.nombre} → cuenta N° ${c.numero}`); pintarAlumnos(); pintarCuentas(); }
+  catch (e) { toast('Error: ' + e.message); }
+};
 function pintarAlumnos() {
   const l = alumnosFiltrados();
   const cuenta = g => alumnos.filter(a => a.grupo === g).length;
-  $('aCuenta').textContent = `${l.length} de ${alumnos.length} · ${cuenta('estudiante')} estudiantes · ${cuenta('docente')} docentes · ${cuenta('publico')} público`;
-  $('aTabla').innerHTML = l.length ? l.map(a => `<tr><td>${esc(a.nombre)}</td><td class="muted">${esc(a.email)}</td><td class="num">${esc(a.edad || '—')}</td><td>${selGrupo(a)}</td><td>${a.apoderado ? 'Sí (menor de ' + (window.DF_CONFIG && DF_CONFIG.edadMinimaSinApoderado || 14) + ')' : '—'}</td><td>${esc(a.plan || '—')}</td><td class="muted">${fecha(a.actualizado)}</td></tr>`).join('') : '<tr><td colspan="7" class="muted">No hay usuarios que mostrar.</td></tr>';
+  const faltan = sinCuenta().length;
+  $('aCuenta').textContent = `${l.length} de ${alumnos.length} · ${cuenta('estudiante')} estudiantes · ${cuenta('docente')} docentes · ${cuenta('publico')} público` + (faltan ? ` · ${faltan} estudiante${faltan > 1 ? 's' : ''} sin cuenta del banco` : '');
+  $('aCrearTodas').disabled = !faltan;
+  $('aTabla').innerHTML = l.length ? l.map(a => `<tr><td>${esc(a.nombre)}</td><td class="muted">${esc(a.email)}</td><td class="num">${esc(a.edad || '—')}</td><td>${selGrupo(a)}</td><td style="white-space:nowrap">${celdaBanco(a)}</td><td>${a.apoderado ? 'Sí (menor de ' + (window.DF_CONFIG && DF_CONFIG.edadMinimaSinApoderado || 14) + ')' : '—'}</td><td>${esc(a.plan || '—')}</td><td class="muted">${fecha(a.actualizado)}</td></tr>`).join('') : '<tr><td colspan="8" class="muted">No hay usuarios que mostrar.</td></tr>';
 }
 $('aExportar').onclick = () => {
   descargarCSV(`estudiantes-${DF.hoy()}.csv`, [['Nombre', 'Correo', 'Edad', 'Grupo', 'Apoderado de acuerdo', 'Plan química (metas)', 'Actualizado']]
