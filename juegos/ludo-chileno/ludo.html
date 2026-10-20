@@ -891,7 +891,7 @@ async function accionLanzar(seq){
     const dado=1+azar(6),r=L.lanzar(e,dado);
     return {juego:e,dado,fase:r.tipo==='elegir'?'mover':'tirar',estado:'jugando',turnoDesde:F.serverTimestamp(),
       ultimo:{tipo:'lanzar',eq,dado,resultado:r.tipo,autor:miUid(),auto:false}};
-  });}catch(e){msg('⚠️ '+esc(e.message||e));}
+  });}catch(e){msg('⚠️ '+esc(e.message||e));reintentar(seq);}
   accionando=false;
 }
 async function accionMover(seq,m){
@@ -908,7 +908,7 @@ async function accionMover(seq,m){
     const res=L.jugar(e,mm,capturar);
     return {juego:e,fase:'tirar',estado:e.fin?'fin':'jugando',turnoDesde:F.serverTimestamp(),
       ultimo:{tipo:'mover',eq,dado:e.dado,autor:miUid(),auto:false,mov:{f:mm.f,desde:mm.desde,hasta:mm.hasta,sale:mm.sale,meta:mm.meta,capturadas:res.capturadas,gano:res.gano,fallaPaes:mm.captura.length>0&&!capturar}}};
-  });}catch(e){msg('⚠️ '+esc(e.message||e));}
+  });}catch(e){msg('⚠️ '+esc(e.message||e));reintentar(seq);}
   accionando=false;
 }
 // el computador juega un turno completo (asiento de computador o turno vencido)
@@ -927,9 +927,10 @@ async function accionAuto(seq){
     }
     return {juego:e,dado:dado,fase:'tirar',estado:e.fin?'fin':'jugando',turnoDesde:F.serverTimestamp(),
       ultimo:{tipo:'jugada',eq,dado:dado||e.dado,resultado:r.tipo,autor:miUid(),auto:d.asientos[eq].tipo!=='cpu',mov}};
-  });}catch(e){console.warn(e);}
+  });}catch(e){console.warn(e);reintentar(seq);}
   accionando=false;
 }
+function reintentar(seq){setTimeout(()=>{if(SALA&&SALA.seq===seq&&SALA.estado==='jugando'&&salaSeq===seq)programar(SALA);},2500);}
 
 /* ═════════════ eventos ═════════════ */
 $('b-tirar').addEventListener('click',tirarClick);

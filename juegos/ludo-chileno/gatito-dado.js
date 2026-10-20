@@ -35,7 +35,11 @@
   const espera = ms => new Promise(r => setTimeout(r, ms));
   const suave = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
-  async function lanzar(cont, final, op) {
+  function lanzar(cont, final, op) {
+    // como máximo espera 2,5 s; si algo falla, el juego sigue
+    return Promise.race([lanzarReal(cont, final, op).catch(e => console.warn('[gatito]', e)), espera(2500)]);
+  }
+  async function lanzarReal(cont, final, op) {
     op = op || {};
     if (!activo || !cont || sinMovimiento() || !img.corre1.complete || !img.corre1.naturalWidth) return;
     const W = cont.clientWidth, H = cont.clientHeight;
@@ -52,8 +56,10 @@
     let cara = 0, ultCara = 0;
     const t0 = performance.now();
     await new Promise(fin => {
-      function paso(ahora) {
-        const t = Math.min(1, (ahora - t0) / dur), e = suave(t);
+      function paso() {
+        try {
+        const ahora = performance.now(), dt = Math.max(0, ahora - t0);
+        const t = Math.min(1, dt / dur), e = suave(t);
         // el dado rebota cada vez más bajo y gira
         const dx = x0 + (x1 - x0) * e;
         const rebote = Math.abs(Math.sin(t * Math.PI * 3.2)) * (1 - t) * H * .2;
@@ -65,7 +71,7 @@
         // el gato corre detrás y al final salta hacia el dado
         let n, gx, gy = 0;
         if (t < .7) {
-          n = 'corre' + (1 + Math.floor((ahora - t0) / 70) % 5);
+          n = 'corre' + (1 + Math.floor(dt / 70) % 5);
           gx = dx - (150 + 40 * Math.sin(t * 6)) * k;
         } else {
           const s = (t - .7) / .3;
@@ -74,10 +80,11 @@
           gy = Math.sin(s * Math.PI) * H * .12;
         }
         const alto = (ALTO[n] || 100) * k;
-        if (gato.dataset.n !== n) { gato.src = img[n].src; gato.dataset.n = n; }
+        if (gato.dataset.n !== n && img[n]) { gato.src = img[n].src; gato.dataset.n = n; }
         gato.style.height = alto + 'px';
         gato.style.transform = `translate(${gx}px,${suelo - alto + 4 - gy}px)`;
         if (t < 1) requestAnimationFrame(paso); else fin();
+        } catch (err) { console.warn('[gatito]', err); fin(); }
       }
       requestAnimationFrame(paso);
     });
