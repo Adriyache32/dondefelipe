@@ -160,6 +160,7 @@ header .esp{flex:1}
 .explica.bien{background:#e8f6ee;border:2px solid var(--ok)} .explica.mal{background:#fbeaea;border:2px solid var(--mal)}
 .explica b{display:block;font:800 1.05rem 'Baloo 2',sans-serif;margin-bottom:2px}
 .tag{display:inline-block;background:rgba(255,255,255,.22);border-radius:999px;padding:2px 10px;font-size:.75rem;font-weight:800;margin-top:4px}
+.ilus{display:block;margin:0 auto 6px;max-height:150px;max-width:70%;filter:drop-shadow(0 10px 14px rgba(0,0,0,.25))}
 .efecto{font-size:1.08rem;line-height:1.5;text-align:center}
 .efecto .grande{font:800 2rem 'Baloo 2',sans-serif;display:block;margin-top:4px}
 .efecto .grande.mas{color:var(--ok)} .efecto .grande.menos{color:var(--mal)}
@@ -235,6 +236,7 @@ header .esp{flex:1}
       <g id="p-nubes"></g>
       <g id="p-lejos"></g>
       <g id="p-volcan"></g>
+      <g id="p-montes"></g>
       <g id="cordillera"></g>
       <g id="suelo"></g>
       <g id="mar"></g>
@@ -402,13 +404,21 @@ function roca(g,x,y,s){
   el('path',{d:'M-4 -20 L10 -16 L20 0 L6 0Z',fill:'#646d78'},a);
   if(nieve)el('path',{d:'M-15 -14 L-4 -20 L10 -16 L4 -13 L-6 -15Z',fill:'#f7fbff'},a);
 }
+/* ── sprites (ilustraciones recortadas de la hoja de recursos) ── */
+const SPR={"arbol-conifera":[156,233],"arbol-otono":[199,207],"arbol-redondo":[183,208],"arbol-retorcido":[192,204],"arbol-roble":[236,231],"arbol-seco":[172,192],"arbusto":[182,143],"mar-arrecife":[230,204],"mar-claro":[234,202],"mar-hondo":[240,202],"mar-ola":[239,206],"mar-ola2":[233,200],"mar-roca":[239,205],"monte-bosque":[295,213],"monte-nevado":[311,237],"monte-nieve":[286,192],"monte-rocoso":[284,203],"monte-verde":[283,221],"nube-lluvia":[268,187],"nube":[285,104]};
+function spr(g,n,x,y,s,base,extra){ // (x,y) = punto de apoyo; base = fracción desde abajo donde "apoya"
+  const [w,h]=SPR[n],b=base==null?.06:base;
+  const im=el('image',Object.assign({href:'sprites/'+n+'.webp',x:(-w/2).toFixed(1),y:(-h*(1-b)).toFixed(1),width:w,height:h,preserveAspectRatio:'none',transform:`translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s.toFixed(3)})`},extra||{}),g);
+  return im;
+}
+const arbolSpr=n=>(g,x,y,s)=>spr(g,n,x,y,s*.34,.07);
 function arbolDe(x,frente){
   const z=zonaDe(x).n,r=rnd();
-  if(z==='Playa')return r<.35?palma:(frente?roca:arbusto);
-  if(z==='Dunas y matorral costero')return r<.25?palma:arbusto;
-  if(z==='Bosque valdiviano')return frente?(r<.45?nalca:(r<.75?helecho:coihue)):(r<.8?coihue:araucaria);
-  if(z==='Bosque de araucarias')return frente?(r<.6?araucaria:helecho):(r<.75?araucaria:coihue);
-  return r<.55?lenga:roca;
+  if(z==='Playa')return r<.3?palma:(frente?(r<.65?roca:arbolSpr('arbusto')):arbolSpr('arbusto'));
+  if(z==='Dunas y matorral costero')return r<.2?palma:(r<.6?arbolSpr('arbusto'):(r<.88?arbolSpr('arbol-retorcido'):arbolSpr('arbol-seco')));
+  if(z==='Bosque valdiviano')return frente?(r<.3?nalca:(r<.45?helecho:(r<.75?arbolSpr('arbol-roble'):arbolSpr('arbol-redondo')))):(r<.45?arbolSpr('arbol-roble'):(r<.85?arbolSpr('arbol-redondo'):arbolSpr('arbusto')));
+  if(z==='Bosque de araucarias')return frente?(r<.45?araucaria:(r<.8?arbolSpr('arbol-conifera'):helecho)):(r<.55?araucaria:arbolSpr('arbol-conifera'));
+  return r<.5?arbolSpr('arbol-otono'):(r<.7?arbolSpr('arbol-conifera'):(r<.85?arbolSpr('arbol-seco'):roca));
 }
 
 function cordon(g,x0,x1,base,ymin,ymax,paso,fill,nieve){
@@ -445,13 +455,16 @@ function dibujarPaisaje(){
   el('path',{d:`M${vx-240} ${HZ+20} L${vx-26} 92 L${vx+26} 92 L${vx+240} ${HZ+20}Z`,fill:'#56657a'},gv);
   el('path',{d:`M${vx-90} 158 L${vx-26} 92 L${vx+26} 92 L${vx+90} 158 L${vx+64} 150 L${vx+44} 168 L${vx+20} 150 L${vx} 170 L${vx-22} 150 L${vx-46} 168 L${vx-66} 150Z`,fill:'#f7fbff'},gv);
   el('path',{d:`M${vx-4} 86 q12 -22 2 -44 q18 16 8 44z`,fill:'#d7dde4',opacity:.75},gv);
+  // montañas ilustradas sobre el horizonte (ocultas en su base por el suelo)
+  const gmo=$('p-montes'),f=.28;
+  [[430,'monte-verde',.95],[980,'monte-bosque',1.05],[1560,'monte-verde',1.1],[2050,'monte-rocoso',1.15],[2560,'monte-bosque',1.2],[3050,'monte-nevado',1.25]]
+   .forEach(([x,n,s])=>spr(gmo,n,x-(x-500)*f,HZ+34,s,.12));
   // nubes
   semilla=5;const gn=$('p-nubes');
   for(let x=-100;x<W;x+=380+rnd()*260){
     const y=40+rnd()*110,s=.7+rnd()*.8;
     const n=el('g',{class:'nube',style:`animation-delay:${(-rnd()*90).toFixed(1)}s`},gn);
-    const h=el('g',{transform:`translate(${x.toFixed(0)},${y.toFixed(0)}) scale(${s.toFixed(2)})`},n);
-    [[0,12,24],[26,0,32],[58,10,24],[34,16,26]].forEach(([cx,cy,r])=>el('circle',{cx:cx,cy:cy,r:r,fill:'#fff',opacity:.95},h));
+    spr(n,'nube',x,y,s*.62,0,{opacity:.97});
   }
   // suelo con lomas suaves
   let d=`M-60 ${HZ+8}`;for(let x=-60;x<=W+60;x+=120)d+=` Q${x+60} ${HZ-6-((x/120)%3)*4} ${x+120} ${HZ+8}`;d+=` L${W+60} ${H+20} L-60 ${H+20}Z`;
@@ -459,11 +472,11 @@ function dibujarPaisaje(){
   el('rect',{x:-60,y:H-160,width:W+120,height:180,fill:'url(#g-sombra)'},$('suelo'));
   // cordillera cercana: aquí sube el camino hasta la cumbre
   const gc=$('cordillera');
-  const P=[[3120,HZ+30],[3300,240],[3420,190],[3520,250],[3660,140],[3800,215],[3950,95],[4080,175],[4180,150],[4262,104],[4340,170],[W+60,140],[W+60,H+20],[3120,H+20]];
-  el('path',{d:'M'+P.map(p=>p.join(' ')).join(' L')+'Z',fill:'url(#g-roca)'},gc);
-  [[3420,190,3300,240,3520,250],[3660,140,3520,250,3800,215],[3950,95,3800,215,4080,175],[4262,104,4180,150,4340,170]].forEach(([x,y,ax,ay,bx,by])=>{
-    const t=.45;el('path',{d:`M${x} ${y} L${x+(bx-x)*t} ${y+(by-y)*t} L${x+(bx-x)*t*.5} ${y+(by-y)*t+8} L${x} ${y+(by-y)*t*.7+12} L${x+(ax-x)*t*.5} ${y+(ay-y)*t+8} L${x+(ax-x)*t} ${y+(ay-y)*t}Z`,fill:'#f7fbff'},gc);
-  });
+  [[3330,'monte-nevado',1.05,330],[3640,'monte-nieve',1.15,300],[3960,'monte-nevado',1.15,262],[4300,'monte-nieve',1.2,220]].forEach(([x,n,sc,y])=>spr(gc,n,x,y,sc,.15));
+  const P=[[3120,HZ+30],[3300,318],[3500,300],[3700,282],[3900,258],[4100,232],[4262,205],[W+60,214],[W+60,H+20],[3120,H+20]];
+  let dp='M'+P[0].join(' ');for(let k=1;k<P.length;k++)dp+=` L${P[k][0]} ${P[k][1]}`;
+  el('path',{d:dp+'Z',fill:'url(#g-roca)'},gc);
+  el('path',{d:'M'+P.slice(0,8).map(p=>p.join(' ')).join(' L'),fill:'none',stroke:'#f7fbff','stroke-width':10,'stroke-linejoin':'round',opacity:.9},gc);
   // campos de nieve y glaciar (junto a la casilla 33)
   el('path',{d:`M3480 ${H+20} Q3700 520 3900 470 Q4100 420 4300 330 L${W+60} 300 L${W+60} ${H+20}Z`,fill:'#e8f0f6',opacity:.85},gc);
   const g33=TILES[33];
@@ -494,7 +507,7 @@ function dibujarPaisaje(){
     if(fondo>tope){const y=tope+rnd()*(fondo-tope),s=.5+(y-tope)/Math.max(1,fondo-tope)*.45;atras.push([y,x,s]);}
   }
   for(let x=-30;x<W+30;x+=34+rnd()*60){
-    const s=1.15+rnd()*.6,cy=caminoY(x),yMin=cy+46+70*s;if(yMin>H+40)continue;
+    const s=1.15+rnd()*.6,cy=caminoY(x),yMin=cy+46+80*s;if(yMin>H+40)continue;
     frente.push([yMin+rnd()*Math.max(0,H+40-yMin),x,s]);
   }
   const ga=$('atras'),gf=$('frente');
@@ -504,6 +517,7 @@ function dibujarPaisaje(){
   const gfa=$('fauna');
   [[64,612,26],[92,628,22],[40,632,20]].forEach(([x,y,s])=>emoji(gfa,x,y,s,'🐧'));
   const t24=TILES[24];emoji(gfa,t24.x+70,t24.y-80,34,'🦌');
+  const t20=TILES[20],ll=el('g',{class:'mecer'},gfa);spr(ll,'nube-lluvia',t20.x,t20.y-48,.55,0,{opacity:.95});
   const t14=TILES[14];emoji(gfa,t14.x-10,t14.y+70,26,'🏕️');
   const cg=el('g',{transform:'translate(3200,150)'},gfa),co=el('g',{class:'condor'},cg);
   el('path',{d:'M0 0 q18 -13 36 0 q18 -13 36 0 q-18 -5 -36 5 q-18 -10 -36 -5z',fill:'#1f2328'},co);
@@ -566,7 +580,7 @@ function infoCasilla(i){
 /* ═════════════ cámara y mapa de ruta ═════════════ */
 const cam={x:0,obj:0,seguir:true,vel:.12,ult:-1,uvw:-1,zona:''};
 let visW=1000;
-const PARALAJE=[['p-sol',.97],['p-lejos2',.8],['p-nubes',.86],['p-lejos',.62],['p-volcan',.4]];
+const PARALAJE=[['p-sol',.97],['p-lejos2',.8],['p-nubes',.86],['p-lejos',.62],['p-volcan',.4],['p-montes',.28]];
 function medir(){const r=$('tablero').getBoundingClientRect();visW=Math.max(300,Math.min(W,H*r.width/Math.max(1,r.height)));}
 function limitar(v){return Math.max(0,Math.min(W-visW,v));}
 function objetivo(){if(!cam.seguir)return cam.obj;const j=J[turno];return ((j?TILES[j.pos]:TILES[0]).x)-visW*.42;}
@@ -806,7 +820,9 @@ async function alCaer(j){
       await aviso('💎','¡Súper premio!',`${esc(c.d)}<span class="grande mas">+${c.v} F$</span>`);break;
   }
 }
+const ILUS={3:'arbol-retorcido',6:'arbusto',7:'mar-roca',10:'nube',11:'mar-ola2',14:'mar-claro',15:'monte-bosque',17:'arbol-seco',20:'nube-lluvia',22:'arbol-roble',24:'arbol-redondo',28:'nube',29:'mar-arrecife',32:'monte-rocoso',33:'monte-nevado',35:'monte-nieve',36:'monte-verde'};
 function aviso(ic,titulo,cuerpo){
+  const il=ILUS[J[turno].pos];if(il)cuerpo=`<img class="ilus" src="sprites/${il}.webp" alt="">`+cuerpo;
   return ventana(cab(ic,esc(titulo),'Casilla '+J[turno].pos)+`<div class="v-cuerpo"><p class="efecto">${cuerpo}</p><div class="v-pie"><button class="btn grande" data-r="ok">Continuar</button></div></div>`).then(cerrar);
 }
 async function pregunta(j){
