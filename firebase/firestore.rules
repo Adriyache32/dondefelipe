@@ -175,6 +175,24 @@ service cloud.firestore {
       allow delete: if esMod();
     }
 
+    // ── Tutores virtuales (enlaces a cuadernos de NotebookLM) ──
+    // Todos los ven; el profe y los moderadores los agregan, editan o borran.
+    match /tutores/{id} {
+      allow read: if true;
+      allow create, update: if esMod()
+        && request.resource.data.keys().hasOnly(['nombre', 'asignatura', 'curso', 'emoji', 'url', 'desc', 'por', 'actualizado'])
+        && texto(request.resource.data.nombre, 80) && request.resource.data.nombre.size() >= 2
+        && texto(request.resource.data.asignatura, 60)
+        && request.resource.data.curso in ['6b', '7b', '8b', '1m', '2m', '3m', '4m', 'general']
+        && texto(request.resource.data.emoji, 16)
+        && texto(request.resource.data.url, 300)
+        && request.resource.data.url.matches('^https://notebooklm[.]google[.]com/[^ ]+$')
+        && texto(request.resource.data.desc, 400)
+        && texto(request.resource.data.por, 80)
+        && request.resource.data.actualizado == request.time;
+      allow delete: if esMod();
+    }
+
     // ── Contador de visitas: cualquiera suma 1, nadie puede poner otro número ──
     function sumaUno() {
       return request.resource.data.keys().hasOnly(['n', 'ultima'])

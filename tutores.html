@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#08080c">
+<title>Tutores virtuales · El Mundo de Felipe</title>
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#08080c; --ink:#0e0f16; --slab:#14161f; --slab-2:#1b1e2b; --slab-3:#232739;
+  --acid:#ccff00; --acid-deep:#5e7a00; --tyrian:#ff2e7e; --cyan:#22e3ff; --brass:#e9b949;
+  --bone:#f2f0e9; --mute:#9498ab; --line:rgba(204,255,0,.16); --line-2:rgba(255,255,255,.08);
+  --ff-display:'Big Shoulders Display','Impact',sans-serif;
+  --ff-body:'Space Grotesk',-apple-system,'Segoe UI',sans-serif;
+  --r-sm:6px; --r-md:10px; --r-lg:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{min-height:100vh;font-family:var(--ff-body);color:var(--bone);background:var(--void);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 70% 50% at 12% 0%,rgba(122,15,61,.5),transparent 62%),radial-gradient(ellipse 60% 45% at 88% 8%,rgba(94,122,0,.3),transparent 60%)}
+a{color:var(--acid);text-decoration:none} a:hover{color:var(--cyan)}
+button,textarea,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--acid);outline-offset:3px}
+.frieze{position:relative;z-index:5;height:4px;background:linear-gradient(90deg,var(--void),var(--tyrian) 26%,var(--acid) 50%,var(--cyan) 74%,var(--void))}
+nav{position:sticky;top:0;z-index:50;background:rgba(10,11,16,.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--line-2)}
+.nav-in{max-width:1140px;margin:0 auto;padding:0 1.2rem;height:56px;display:flex;align-items:center;gap:14px}
+.brand{font:900 1.3rem var(--ff-display);letter-spacing:2px;color:var(--acid)}
+.nav-in .esp{flex:1}
+.yo{font-size:.74rem;color:var(--mute);display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.yo b{color:var(--bone)}
+.lnk{background:none;border:0;color:var(--acid);text-decoration:underline;font-size:.74rem;padding:0}
+main{position:relative;z-index:5;max-width:1140px;margin:1.6rem auto 3rem;padding:0 1rem}
+.tablet{background:linear-gradient(170deg,rgba(20,22,31,.94),rgba(12,13,19,.96));border:1px solid var(--line-2);border-top:3px solid var(--acid);border-radius:var(--r-lg);padding:2.2rem 2.4rem}
+.cab{padding-bottom:1.4rem;margin-bottom:1.4rem;border-bottom:1px solid var(--line-2)}
+h1{font:900 clamp(2.2rem,6vw,3.8rem)/.95 var(--ff-display);letter-spacing:-.5px;text-transform:uppercase}
+.sub{font-size:.74rem;color:var(--mute);letter-spacing:2.4px;text-transform:uppercase;margin-top:10px}
+.intro{font-size:.92rem;color:var(--mute);max-width:62ch;margin-top:12px;line-height:1.6}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 1.6rem}
+.tab{padding:9px 16px;border-radius:2px;border:1.5px solid var(--line-2);background:transparent;color:var(--mute);font-size:.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;display:inline-flex;gap:8px;align-items:center}
+.tab:hover{color:var(--bone);border-color:rgba(255,255,255,.28)}
+.tab.on{background:var(--acid);border-color:var(--acid);color:#0a0c00}
+.tab small{font-weight:700;opacity:.7}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:var(--r-sm);padding:.75rem 1.3rem;font-size:.74rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;background:var(--acid);color:#0a0c00}
+.btn:hover:not(:disabled){background:var(--cyan)}
+.btn:disabled{opacity:.5;cursor:wait}
+.btn.s{background:transparent;color:var(--acid);border:1.5px solid rgba(204,255,0,.4)}
+.btn.s:hover{background:rgba(204,255,0,.1)}
+
+.lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
+.tutor{position:relative;display:flex;flex-direction:column;gap:10px;background:var(--slab);border:1px solid var(--line-2);border-top:3px solid var(--tc,var(--acid));border-radius:var(--r-md);padding:1.2rem 1.2rem 1.1rem;min-width:0}
+.tutor .ico{font-size:2rem;line-height:1}
+.tutor h2{font:800 1.35rem/1.1 var(--ff-display);text-transform:uppercase;letter-spacing:.5px;overflow-wrap:anywhere}
+.datos{display:flex;gap:8px;flex-wrap:wrap}
+.dato{font-size:.62rem;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;padding:4px 10px;border-radius:2px;background:rgba(204,255,0,.12);color:var(--acid)}
+.desc{font-size:.9rem;color:#c6c9d6;line-height:1.55;flex:1}
+.tutor .fila{margin-top:4px}
+.info{border-left:4px solid var(--cyan);background:rgba(34,227,255,.06);padding:12px 16px;border-radius:0 var(--r-sm) var(--r-sm) 0;margin:0 0 1.6rem;font-size:.86rem;line-height:1.6;color:#c6c9d6}
+.info b{color:var(--cyan)}
+.info ul{margin:.4rem 0 0 1.1rem}
+.fila{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.fila .esp{flex:1}
+.nota{font-size:.8rem;color:var(--mute);line-height:1.5}
+.err{color:#ff8fa3;font-size:.82rem}
+.ok{color:var(--acid);font-size:.82rem}
+.vacio{text-align:center;color:var(--mute);padding:2.2rem 1rem;font-size:.92rem;border:1px dashed var(--line-2);border-radius:var(--r-md);grid-column:1/-1}
+.mod{border:1px solid rgba(233,185,73,.35);border-left:4px solid var(--brass);border-radius:var(--r-md);padding:1rem 1.1rem;margin:0 0 1.6rem;background:rgba(233,185,73,.05)}
+.mod h3{font-family:var(--ff-display);font-size:1.15rem;letter-spacing:1px;text-transform:uppercase;color:var(--brass);margin:0 0 .4rem}
+.mod .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:.7rem 0}
+.mod input,.mod select,.mod textarea{width:100%;background:var(--slab-2);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:.6rem .75rem;font-size:.88rem;min-width:0}
+.mod textarea{min-height:70px;resize:vertical;grid-column:1/-1}
+.mod .ancho{grid-column:1/-1}
+.mod input:focus,.mod select:focus,.mod textarea:focus{outline:2px solid var(--brass);outline-offset:1px}
+.mod-tag{display:inline-block;font-size:.62rem;letter-spacing:1.5px;text-transform:uppercase;color:#0a0c00;background:var(--brass);border-radius:4px;padding:2px 7px;margin-left:6px;vertical-align:middle}
+.pie{position:relative;z-index:5;text-align:center;font-size:.66rem;letter-spacing:2.4px;text-transform:uppercase;color:var(--mute);padding:0 1rem 2.4rem}
+@media (max-width:640px){
+  .tablet{padding:1.4rem 1rem;border-radius:0}
+  main{padding:0;margin-top:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+</style>
+<link rel="stylesheet" href="assets/mc-sutil.css">
+</head>
+<body>
+<div class="frieze"></div>
+<nav><div class="nav-in">
+  <a class="brand" href="index.html" aria-label="Volver al inicio">EMF</a>
+  <a href="index.html" style="font-size:.74rem">← Volver al sitio</a>
+  <span class="esp"></span>
+  <div class="yo" id="yo"></div>
+</div></nav>
+
+<main><div class="tablet">
+  <header class="cab">
+    <h1>Tutores virtuales</h1>
+    <div class="sub">Pregúntale a tus apuntes · con NotebookLM</div>
+    <p class="intro">Cada tutor es un cuaderno de NotebookLM armado con el material de clases. Puedes hacerle preguntas, pedir resúmenes, escuchar el resumen en audio o practicar con tarjetas. Responde solo a partir de esos documentos.</p>
+  </header>
+  <div class="info">
+    <b>Antes de entrar</b>
+    <ul>
+      <li>El tutor se abre en una pestaña nueva, en NotebookLM (Google).</li>
+      <li>Necesitas una cuenta Google de 13 años o más. Si eres menor, lo usamos juntos en clase.</li>
+      <li>No escribas datos personales en el chat. Si algo no te cuadra, revísalo con tu cuaderno o pregúntale al profe.</li>
+    </ul>
+  </div>
+  <section class="mod" id="modpanel" hidden aria-label="Administrar tutores"></section>
+  <div class="tabs" id="tabs" role="tablist" aria-label="Cursos"></div>
+  <div class="lista" id="lista"><div class="vacio">Cargando tutores…</div></div>
+</div></main>
+<div class="pie">El Mundo de Felipe · Tutores virtuales</div>
+
+<script src="firebase/df.js" data-sin-aviso></script>
+<script>
+(function(){
+'use strict';
+var CURSOS=[
+  {k:'todos',n:'Todos'},
+  {k:'6b',n:'6° Básico'},{k:'7b',n:'7° Básico'},{k:'8b',n:'8° Básico'},
+  {k:'1m',n:'1° Medio'},{k:'2m',n:'2° Medio'},{k:'3m',n:'3° Medio'},{k:'4m',n:'4° Medio'},
+  {k:'general',n:'General'}
+];
+var COLS=['#ccff00','#22e3ff','#ff2e7e','#e9b949','#a78bfa','#34d399'];
+var URL_OK=/^https:\/\/notebooklm\.google\.com\/\S+$/;
+
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function colorDe(s){var h=0;s=String(s||'');for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return COLS[h%COLS.length]}
+function nombreCurso(k){var c=CURSOS.filter(function(x){return x.k===k})[0];return c?c.n:''}
+function dfListo(){return (window.DF&&DF.listo)?DF.listo():Promise.reject(new Error('sin DF'))}
+
+var cursoAct=(function(){try{return localStorage.getItem('tutores_curso')||'todos'}catch(e){return 'todos'}})();
+var DFok=false,usuario=null,esProfe=false,esMod=false;
+var TUT=[],cargado=false,editId=null;
+
+function pintaTabs(){
+  $('tabs').innerHTML=CURSOS.map(function(c){
+    var n=c.k==='todos'?TUT.length:TUT.filter(function(t){return t.curso===c.k}).length;
+    if(c.k!=='todos'&&!n&&!esMod)return '';
+    return '<button class="tab'+(c.k===cursoAct?' on':'')+'" role="tab" aria-selected="'+(c.k===cursoAct)+'" data-k="'+c.k+'">'+esc(c.n)+(cargado?' <small>'+n+'</small>':'')+'</button>';
+  }).join('');
+}
+function pintaYo(){
+  var e=$('yo');
+  if(!DFok){e.innerHTML='';return}
+  if(!usuario){e.innerHTML='<button class="lnk" data-a="entrar">Entrar</button>';return}
+  e.innerHTML='<span>Hola, <b>'+esc(DF.nombreCorto(usuario.displayName,usuario.email))+'</b>'+(esMod?'<span class="mod-tag">'+(esProfe?'Admin':'Moderación')+'</span>':'')+'</span><button class="lnk" data-a="salir">salir</button>';
+}
+function pintaLista(){
+  if(!cargado){return}
+  var l=cursoAct==='todos'?TUT:TUT.filter(function(t){return t.curso===cursoAct});
+  if(!l.length){
+    $('lista').innerHTML='<div class="vacio">'+(TUT.length?'Todavía no hay tutores para '+esc(nombreCurso(cursoAct))+'.':'Muy pronto aparecerán aquí los primeros tutores.')+'</div>';return;
+  }
+  $('lista').innerHTML=l.map(function(t){
+    return '<article class="tutor" style="--tc:'+colorDe(t.asignatura||t.nombre)+'">'+
+      '<div class="ico" aria-hidden="true">'+esc(t.emoji||'🤖')+'</div>'+
+      '<h2>'+esc(t.nombre)+'</h2>'+
+      '<div class="datos">'+(t.asignatura?'<span class="dato">'+esc(t.asignatura)+'</span>':'')+'<span class="dato">'+esc(nombreCurso(t.curso))+'</span></div>'+
+      (t.desc?'<p class="desc">'+esc(t.desc)+'</p>':'<p class="desc"></p>')+
+      '<div class="fila">'+(URL_OK.test(t.url)?'<a class="btn" href="'+esc(t.url)+'" target="_blank" rel="noopener noreferrer">Abrir tutor ↗</a>':'<span class="nota">Enlace no disponible</span>')+
+      (esMod?'<span class="esp"></span><button class="lnk" data-a="editar" data-id="'+esc(t._id)+'">editar</button><button class="lnk" data-a="borrar" data-id="'+esc(t._id)+'">borrar</button>':'')+'</div>'+
+      '</article>';
+  }).join('');
+}
+function pintaPanel(){
+  var box=$('modpanel');
+  if(!esMod){box.hidden=true;box.innerHTML='';return}
+  var t=editId?TUT.filter(function(x){return x._id===editId})[0]||{}:{};
+  box.hidden=false;
+  box.innerHTML='<h3>'+(editId?'✏️ Editar tutor':'➕ Nuevo tutor')+'</h3>'+
+    '<p class="nota">En NotebookLM: <b>Compartir → Cualquier persona con el enlace</b> (desde una cuenta Gmail personal), copia el enlace y pégalo aquí.</p>'+
+    '<div class="grid">'+
+    '<input id="f-nom" maxlength="80" placeholder="Nombre del tutor (ej: Tutor de Célula)" value="'+esc(t.nombre||'')+'" aria-label="Nombre">'+
+    '<input id="f-asig" maxlength="60" placeholder="Asignatura (ej: Biología)" value="'+esc(t.asignatura||'')+'" aria-label="Asignatura">'+
+    '<select id="f-curso" aria-label="Curso">'+CURSOS.filter(function(c){return c.k!=='todos'}).map(function(c){return '<option value="'+c.k+'"'+((t.curso||cursoAct)===c.k?' selected':'')+'>'+esc(c.n)+'</option>'}).join('')+'</select>'+
+    '<input id="f-emoji" maxlength="8" placeholder="Ícono (emoji) 🧬" value="'+esc(t.emoji||'')+'" aria-label="Ícono">'+
+    '<input id="f-url" class="ancho" type="url" placeholder="https://notebooklm.google.com/notebook/…" value="'+esc(t.url||'')+'" aria-label="Enlace de NotebookLM">'+
+    '<textarea id="f-desc" maxlength="400" placeholder="¿Qué sabe este tutor? (ej: Unidad 1 de 1° Medio: célula, organelos y transporte)" aria-label="Descripción">'+esc(t.desc||'')+'</textarea>'+
+    '</div><div class="fila"><button class="btn" data-a="guardar">'+(editId?'Guardar cambios':'Agregar tutor')+'</button>'+
+    (editId?'<button class="btn s" data-a="cancelar">Cancelar</button>':'')+'</div><div id="f-msg" role="status"></div>';
+}
+function pintaTodo(){pintaTabs();pintaLista();pintaYo();pintaPanel()}
+
+function cargar(){
+  return dfListo().then(function(fb){
+    var F=fb.F;
+    return F.getDocs(F.collection(fb.db,'tutores')).then(function(s){
+      TUT=s.docs.map(function(d){var o=d.data();o._id=d.id;return o}).sort(function(a,b){
+        return (a.curso||'').localeCompare(b.curso||'')||String(a.nombre||'').localeCompare(String(b.nombre||''));
+      });
+    });
+  }).catch(function(){TUT=[]}).then(function(){cargado=true;pintaTodo()});
+}
+function revisarMod(u){
+  if(!u)return Promise.resolve(false);
+  if(DF.esProfe())return Promise.resolve(true);
+  return dfListo().then(function(fb){
+    var F=fb.F;
+    return F.getDoc(F.doc(fb.db,'moderadores',String(u.email||'').toLowerCase())).then(function(d){return d.exists()});
+  }).catch(function(){return false});
+}
+function guardar(){
+  var msg=$('f-msg');
+  var d={nombre:$('f-nom').value.trim().slice(0,80),asignatura:$('f-asig').value.trim().slice(0,60),curso:$('f-curso').value,
+    emoji:$('f-emoji').value.trim().slice(0,8),url:$('f-url').value.trim(),desc:$('f-desc').value.trim().slice(0,400)};
+  if(d.nombre.length<2){msg.innerHTML='<span class="err">Ponle un nombre al tutor.</span>';return}
+  if(!URL_OK.test(d.url)||d.url.length>300){msg.innerHTML='<span class="err">El enlace debe empezar con https://notebooklm.google.com/</span>';return}
+  dfListo().then(function(fb){
+    var F=fb.F;
+    d.por=DF.nombreCorto(usuario.displayName,usuario.email).slice(0,80);d.actualizado=F.serverTimestamp();
+    return editId?F.setDoc(F.doc(fb.db,'tutores',editId),d):F.addDoc(F.collection(fb.db,'tutores'),d);
+  }).then(function(){var era=editId;editId=null;if(!era)cursoAct=d.curso;return cargar()})
+  .then(function(){var m=$('f-msg');if(m)m.innerHTML='<span class="ok">✓ Tutor guardado.</span>'})
+  .catch(function(e){msg.innerHTML='<span class="err">No se pudo guardar ('+esc(e.message||e)+'). ¿Publicaste las reglas nuevas?</span>'});
+}
+function borrar(id){
+  var t=TUT.filter(function(x){return x._id===id})[0];
+  if(!confirm('¿Borrar el tutor "'+(t?t.nombre:'')+'"? (el cuaderno en NotebookLM no se toca)'))return;
+  dfListo().then(function(fb){return fb.F.deleteDoc(fb.F.doc(fb.db,'tutores',id))})
+    .then(function(){if(editId===id)editId=null;return cargar()}).catch(function(e){alert('No se pudo borrar: '+(e.message||e))});
+}
+
+document.addEventListener('click',function(ev){
+  var t=ev.target.closest('[data-a],.tab');if(!t)return;
+  if(t.classList.contains('tab')){cursoAct=t.dataset.k;try{localStorage.setItem('tutores_curso',cursoAct)}catch(e){}pintaTabs();pintaLista();return}
+  var a=t.dataset.a;
+  if(a==='entrar'){DF.entrar().catch(function(e){if(!e.cancelado)alert(e.message||e)})}
+  else if(a==='salir'){DF.salir()}
+  else if(a==='guardar')guardar();
+  else if(a==='cancelar'){editId=null;pintaPanel()}
+  else if(a==='editar'){editId=t.dataset.id;pintaPanel();$('modpanel').scrollIntoView({behavior:'smooth',block:'start'})}
+  else if(a==='borrar')borrar(t.dataset.id);
+});
+
+pintaTabs();
+if(window.DF){
+  dfListo().then(function(){
+    DFok=true;cargar();
+    DF.alCambiarUsuario(function(u){
+      usuario=u;esProfe=!!(u&&DF.esProfe());esMod=false;editId=null;pintaTodo();
+      revisarMod(u).then(function(m){esMod=m;pintaTodo()});
+    });
+  },function(){cargado=true;$('lista').innerHTML='<div class="vacio">Los tutores no están disponibles en este momento. Inténtalo más tarde.</div>'});
+}else{cargado=true;$('lista').innerHTML='<div class="vacio">Los tutores no están disponibles en este momento.</div>'}
+})();
+</script>
+</body>
+</html>
