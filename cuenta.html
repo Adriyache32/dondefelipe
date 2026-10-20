@@ -37,6 +37,19 @@ h2 i{color:var(--acid);font-size:20px}
 .quien span{color:var(--mute);font-size:14px}
 .quien .sp{flex:1}
 .muted{color:var(--mute)}
+.gfav{display:flex;gap:16px;align-items:center;background:radial-gradient(300px 140px at 20% 50%,color-mix(in srgb,var(--rc) 25%,transparent),transparent 75%);border:1px solid var(--line2);border-radius:16px;padding:12px 16px}
+.gfav img{height:120px;filter:drop-shadow(0 10px 14px rgba(0,0,0,.5))}
+.gfav small{display:block;color:var(--mute);font-size:12px;letter-spacing:2px;text-transform:uppercase}
+.gfav b{display:block;font:900 32px/1 var(--ff-d);text-transform:uppercase}
+.gfav span{color:var(--rc);font-weight:700;font-size:14px}
+.ggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.gmini{background:var(--slab2);border:1px solid color-mix(in srgb,var(--rc) 45%,transparent);border-radius:12px;padding:6px;text-align:center}
+.gmini img{height:62px;max-width:100%;object-fit:contain}
+.gmini span{display:block;font-size:11px;color:var(--mute);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gmini.falta{border-color:var(--line)}
+.gmini.falta img{filter:brightness(0) opacity(.35)}
+.gvacio{display:flex;gap:14px;align-items:center;color:var(--mute)}
+.gvacio img{height:80px;opacity:.85}
 .aviso{padding:12px 14px;border-radius:12px;background:#2a2410;color:#ffe9a6;border:1px solid #5a4a12;margin-top:16px}
 .aviso.err{background:#2b1414;color:#ffc2bd;border-color:#5c2020}
 .aviso.ok{background:#16240c;color:#d9ffa6;border-color:#3d5a12}
@@ -125,6 +138,11 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:v
   </section>
 
   <!-- Mis datos -->
+  <section class="card oculto" id="gatitosSec">
+    <h2><i class="fa-solid fa-cat"></i> Mis gatitos</h2>
+    <div id="gCont"><div class="vacio">Cargando…</div></div>
+  </section>
+
   <section class="card oculto" id="datos">
     <h2><i class="fa-solid fa-database"></i> Mis datos</h2>
     <p>Puedes descargar todo lo que el sitio tiene guardado sobre ti, o borrarlo para siempre.</p>
@@ -185,6 +203,7 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:v
   <footer>El Mundo de Felipe · Colegio San Agustín, Villa Alemana</footer>
 </div>
 
+<script src="gatitos/catalogo.js"></script>
 <script src="firebase/df.js" data-sin-visita data-sin-aviso></script>
 <script>
 const $ = id => document.getElementById(id);
@@ -213,13 +232,14 @@ DF.listo().then(() => {
   DF.alCambiarUsuario(u => {
     ver('cargando', false);
     ver('fuera', !u); ver('dentro', !!u);
-    ['perfil', 'progreso', 'banco', 'datos'].forEach(s => ver(s, !!u));
+    ['perfil', 'progreso', 'banco', 'gatitosSec', 'datos'].forEach(s => ver(s, !!u));
     if (!u) return;
     $('nombre').textContent = u.displayName || 'Sin nombre';
     $('correo').textContent = u.email || '';
     $('av').innerHTML = u.photoURL ? `<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer">` : esc((u.displayName || u.email || '?').charAt(0).toUpperCase());
     cargarPerfil(); cargarProgreso();
     DF.asegurarCuentaBanco().then(cargarBanco, cargarBanco);
+    cargarGatitos(u);
   });
 }).catch(e => {
   ver('cargando', false);
@@ -276,6 +296,28 @@ function cargarProgreso() {
       return `<div class="it"><b>${esc(nombre(r.sim))}</b><span class="v">${esc(det)}</span><small>${fecha(r.fecha)}</small></div>`;
     }).join('') : '<div class="vacio">Aún no guardas resultados.</div>';
   }).catch(e => { ['lProg', 'lJuegos', 'lSims'].forEach(id => $(id).innerHTML = `<div class="vacio">No se pudo cargar: ${esc(e.message)}</div>`); });
+}
+
+async function cargarGatitos(u) {
+  const G = window.GATITOS || [], R = window.RAREZAS || {};
+  try {
+    const { F, db } = await DF.listo();
+    const s = await F.getDoc(F.doc(db, 'gatitos', u.uid));
+    const col = s.exists() ? s.data() : { ids: [] }, ids = col.ids || [];
+    const mios = G.filter(g => ids.includes(g.id)), fav = G.find(g => g.id === col.favorito) || mios[mios.length - 1];
+    if (!mios.length) {
+      $('gCont').innerHTML = `<div class="gvacio"><img src="gatitos/img/caja.webp" alt=""><div>Aún no tienes gatitos. Con tus Hipopesos puedes comprarlos en la <a href="gatitos.html">tienda de gatitos</a>: desde ${new Intl.NumberFormat('es-CL').format(Math.min(...G.map(g => g.precio)))} ₣.</div></div>`;
+      return;
+    }
+    const valor = mios.reduce((t, g) => t + g.precio, 0);
+    $('gCont').innerHTML = `
+      <div class="gfav" style="--rc:${(R[fav.rareza] || {}).color || '#ccff00'}"><img src="gatitos/img/${esc(fav.id)}.webp" alt="">
+        <div><small>Mi gatito favorito</small><b>${esc(fav.nombre)}</b><span>${esc((R[fav.rareza] || {}).nombre || '')}</span></div></div>
+      <p class="sub">Colección: ${mios.length} de ${G.length} · valor ${new Intl.NumberFormat('es-CL').format(valor)} ₣</p>
+      <div class="ggrid">${G.map(g => { const t = ids.includes(g.id), r = R[g.rareza] || {};
+        return `<div class="gmini ${t ? '' : 'falta'}" style="--rc:${r.color || '#888'}" title="${t ? esc(g.nombre) : '???'}"><img src="gatitos/img/${esc(g.id)}.webp" alt="${t ? esc(g.nombre) : 'Gatito por descubrir'}" loading="lazy"><span>${t ? esc(g.nombre) : '???'}</span></div>`; }).join('')}</div>
+      <p class="muted" style="font-size:14px;margin-top:12px"><a href="gatitos.html">Ir a la tienda de gatitos</a> · ahí eliges cuál aparece como favorito (⭐).</p>`;
+  } catch (e) { $('gCont').innerHTML = `<div class="vacio">No se pudieron cargar tus gatitos: ${esc(e.message)}</div>`; }
 }
 
 function cargarBanco() {

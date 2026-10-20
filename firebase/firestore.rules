@@ -267,12 +267,53 @@ service cloud.firestore {
       return d.cuenta == miCuentaBanco() && d.cuenta != ''
         && opsDespues(d.cuenta) == opsAntes(d.cuenta) + 1
         && id == 'op-' + d.cuenta + '-' + string(opsDespues(d.cuenta))
-        && d.keys().hasOnly(['cuenta', 'numero', 'nombre', 'curso', 'monto', 'motivo', 'tipo', 'saldoDespues', 'profe', 'fecha', 'ticker', 'acciones', 'precio'])
+        && d.keys().hasOnly(['cuenta', 'numero', 'nombre', 'curso', 'monto', 'motivo', 'tipo', 'saldoDespues', 'profe', 'fecha', 'ticker', 'acciones', 'precio', 'gatito'])
         && d.profe == '' && d.fecha == request.time
         && texto(d.numero, 20) && texto(d.nombre, 160) && texto(d.curso, 40) && texto(d.motivo, 200)
         && d.monto is int
         && d.saldoDespues == getAfter(rutaCuenta(d.cuenta)).data.saldo
-        && ((d.tipo in ['bolsa-compra', 'bolsa-venta'] && opBolsa(d)) || (d.tipo == 'bono-ingreso' && opBono(d)));
+        && ((d.tipo in ['bolsa-compra', 'bolsa-venta'] && opBolsa(d)) || (d.tipo == 'bono-ingreso' && opBono(d))
+            || (d.tipo == 'gatito-compra' && opGatito(d)));
+    }
+    // ═════ Tienda de gatitos ═════
+    // Precios oficiales (deben coincidir con gatitos/catalogo.js). Para cambiar un precio, cámbialo aquí y allá.
+    function precioGatito(g) {
+      return {'naranjo': 10000, 'gris': 12000, 'dormilon': 15000, 'patitas': 18000,
+              'aseo': 25000, 'blanconegro': 30000, 'tricolor': 35000, 'comelon': 40000,
+              'siames': 60000, 'negro': 70000, 'estirado': 80000, 'jugueton': 100000,
+              'caja': 150000, 'tronco': 200000, 'barril': 250000,
+              'muro': 400000, 'fantasma': 500000,
+              'cosmico': 750000, 'dorado': 1000000}.get(g, 0);
+    }
+    function rutaGatitos(uid) { return /databases/$(database)/documents/gatitos/$(uid); }
+    function gatitosAntes(uid) { return exists(rutaGatitos(uid)) ? get(rutaGatitos(uid)).data.ids : []; }
+    // El movimiento de compra cobra exactamente el precio, por un gatito que aún no tenía y que queda en su colección.
+    function opGatito(d) {
+      return d.gatito is string && precioGatito(d.gatito) > 0
+        && d.monto == 0 - precioGatito(d.gatito)
+        && !(d.gatito in gatitosAntes(request.auth.uid))
+        && getAfter(rutaGatitos(request.auth.uid)).data.ids.hasAll([d.gatito]);
+    }
+    // La colección solo crece con una compra pagada en la misma escritura.
+    function compraDeGatito(uid) {
+      let c = miCuentaBanco();
+      return c != '' && opsDespues(c) == opsAntes(c) + 1
+        && getAfter(rutaOp(c, opsDespues(c))).data.tipo == 'gatito-compra'
+        && request.resource.data.ids == gatitosAntes(uid).concat([getAfter(rutaOp(c, opsDespues(c))).data.gatito]);
+    }
+    // Colección de cada persona (todos los que tienen cuenta la pueden ver; solo crece comprando).
+    match /gatitos/{uid} {
+      allow read: if conCuenta();
+      allow create, update: if esColegio() && soyYo(uid)
+        && request.resource.data.keys().hasOnly(['uid', 'nombre', 'ids', 'favorito', 'actualizado'])
+        && request.resource.data.uid == uid
+        && texto(request.resource.data.nombre, 80)
+        && request.resource.data.ids is list && request.resource.data.ids.size() <= 40
+        && request.resource.data.favorito in request.resource.data.ids
+        && request.resource.data.actualizado == request.time
+        && ((resource != null && request.resource.data.ids == resource.data.ids)   // solo cambia el favorito
+            || compraDeGatito(uid));
+      allow delete: if esProfe();
     }
     function opBolsa(d) {
       return d.ticker is string && exists(rutaEmpresa(d.ticker))

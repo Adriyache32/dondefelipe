@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#08080c">
+<title>Tienda de gatitos · El Mundo de Felipe</title>
+<meta name="description" content="Compra gatitos con tus Hipopesos y colecciónalos. Aparecen en tu perfil.">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+:root{--bg:#08080c;--slab:#111118;--slab2:#181822;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);
+--ink:#f2f1ec;--mute:#9b9aab;--acid:#ccff00;--cyan:#22e3ff;--pink:#ff2e7e;--brass:#e9b949;--neg:#ff7a70;
+--ff-d:'Big Shoulders Display',Impact,'Arial Narrow',sans-serif;--ff:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(900px 420px at 85% -120px,rgba(255,46,126,.14),transparent),radial-gradient(700px 380px at 0% 0%,rgba(204,255,0,.07),transparent),var(--bg);color:var(--ink);font:16px/1.5 var(--ff)}
+a{color:var(--cyan)}
+.wrap{max-width:1100px;margin:0 auto;padding:22px 16px 70px}
+.crumb{color:var(--mute);text-decoration:none;font-size:14px}.crumb:hover{color:var(--ink)}
+.cab{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;margin-top:26px}
+.kick{font:700 12px var(--ff);letter-spacing:4px;text-transform:uppercase;color:var(--pink);margin:0 0 6px}
+h1{font-family:var(--ff-d);font-weight:900;font-size:clamp(46px,10vw,88px);line-height:.9;letter-spacing:1px;text-transform:uppercase;margin:0}
+h1 span{color:var(--acid)}
+.cab .gato-h{height:110px;margin-left:auto;filter:drop-shadow(0 10px 18px rgba(0,0,0,.5))}
+.intro{color:var(--mute);max-width:62ch;margin:12px 0 0}
+.card{background:var(--slab);border:1px solid var(--line);border-radius:18px;padding:18px clamp(16px,3vw,24px);margin-top:18px}
+.estado{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.estado .saldo{font:900 40px/1 var(--ff-d);color:var(--acid)}
+.estado .saldo small{display:block;font:600 12px var(--ff);letter-spacing:2px;text-transform:uppercase;color:var(--mute);margin-top:4px}
+.estado .col{flex:1;min-width:200px}
+.barra{height:12px;border-radius:9px;background:var(--slab2);overflow:hidden;border:1px solid var(--line)}
+.barra i{display:block;height:100%;background:linear-gradient(90deg,var(--acid),var(--cyan),var(--pink));border-radius:9px;transition:width .5s}
+.estado .col b{font:800 22px var(--ff-d);letter-spacing:.5px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line2);background:var(--slab2);color:var(--ink);border-radius:999px;padding:9px 16px;font:600 14px var(--ff);text-decoration:none;cursor:pointer}
+.btn:hover{border-color:var(--acid)}
+.btn.p{background:var(--acid);color:#101400;border-color:var(--acid)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.filtros{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}
+.filtros button{border:1px solid var(--line2);background:transparent;color:var(--mute);border-radius:999px;padding:7px 14px;font:700 13px var(--ff);cursor:pointer}
+.filtros button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-top:16px}
+.gato{position:relative;background:var(--slab);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.gato::before{content:'';position:absolute;inset:0;background:radial-gradient(260px 160px at 50% 18%,color-mix(in srgb,var(--rc) 28%,transparent),transparent 70%);pointer-events:none}
+.gato .img{position:relative;height:150px;display:grid;place-items:center}
+.gato .img img{max-height:140px;max-width:100%;filter:drop-shadow(0 10px 14px rgba(0,0,0,.45));transition:transform .25s}
+.gato:hover .img img{transform:translateY(-4px) scale(1.04)}
+.gato.bloq .img img{filter:brightness(.15) drop-shadow(0 6px 8px rgba(0,0,0,.6))}
+.gato.mio{border-color:color-mix(in srgb,var(--rc) 60%,transparent)}
+.rz{align-self:flex-start;font:800 11px var(--ff);letter-spacing:1.5px;text-transform:uppercase;color:#0b0b10;background:var(--rc);border-radius:999px;padding:3px 9px}
+.gato h3{font:800 24px/1 var(--ff-d);letter-spacing:.5px;margin:2px 0 0;text-transform:uppercase}
+.gato p{margin:0;color:var(--mute);font-size:13.5px;line-height:1.4;flex:1}
+.gato .pie{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-top:4px}
+.precio{font:900 24px/1 var(--ff-d);color:var(--brass);white-space:nowrap}
+.mio-tag{font:700 13px var(--ff);color:var(--acid)}
+.fav{position:absolute;top:10px;right:10px;font-size:18px;background:none;border:0;cursor:pointer;color:var(--mute);z-index:1}
+.fav.on{color:#ffd23f}
+.gato.mitico .img img{animation:brillo 2.4s ease-in-out infinite}
+@keyframes brillo{50%{filter:drop-shadow(0 0 16px color-mix(in srgb,var(--rc) 80%,transparent)) drop-shadow(0 10px 14px rgba(0,0,0,.45))}}
+.aviso{padding:12px 14px;border-radius:12px;background:#2a2410;color:#ffe9a6;border:1px solid #5a4a12;margin-top:16px}
+.aviso.err{background:#2b1417;border-color:#5c2228;color:#ffb3ad}
+.aviso.ok{background:#14301f;border-color:#2c6b44;color:#c9f7d9}
+.velo{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);display:grid;place-items:center;padding:16px;z-index:50}
+.velo[hidden]{display:none}
+.modal{width:min(440px,100%);background:var(--slab);border:1px solid var(--line2);border-radius:22px;padding:22px;text-align:center;animation:entra .25s cubic-bezier(.3,1.4,.5,1)}
+@keyframes entra{from{transform:scale(.92);opacity:0}}
+.modal img{max-height:170px;filter:drop-shadow(0 12px 18px rgba(0,0,0,.5))}
+.modal h3{font:900 34px/1 var(--ff-d);text-transform:uppercase;margin:8px 0 4px}
+.modal .fila{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.modal .cuentas{display:grid;grid-template-columns:1fr auto;gap:4px 16px;text-align:left;margin:14px auto 0;max-width:280px;font-size:15px}
+.modal .cuentas b{text-align:right}
+.oculto{display:none !important}
+.confeti{position:fixed;top:-20px;z-index:70;width:10px;height:14px;border-radius:2px;pointer-events:none;animation:cae linear forwards}
+@keyframes cae{to{transform:translateY(110vh) rotate(720deg)}}
+@media (max-width:560px){.grid{grid-template-columns:repeat(2,1fr);gap:10px}.gato{padding:10px}.gato .img{height:110px}.gato .img img{max-height:104px}.gato h3{font-size:19px}.gato p{display:none}.cab .gato-h{height:80px}}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="crumb" href="index.html">← El Mundo de Felipe</a>
+  <div class="cab">
+    <div><p class="kick">Colección · Banco de Hipopesos</p><h1>Tienda de <span>gatitos</span></h1>
+      <p class="intro">Compra gatitos con tus Hipopesos (₣) y colecciónalos todos: desde el Michi Naranjo hasta el legendario Gato Dorado. Los que tengas aparecen en tu perfil.</p></div>
+    <img class="gato-h" src="gatitos/img/caja.webp" alt="">
+  </div>
+
+  <div id="avisos"></div>
+
+  <section class="card" id="estado">
+    <div class="estado">
+      <div><div class="saldo" id="saldo">—<small>Tu saldo</small></div></div>
+      <div class="col"><b id="progTxt">Tu colección</b><div class="barra"><i id="prog" style="width:0"></i></div></div>
+      <div id="sesion"></div>
+    </div>
+  </section>
+
+  <div class="filtros" id="filtros"></div>
+  <div class="grid" id="grid"></div>
+  <p class="intro" style="margin-top:22px">¿Cómo se ganan Hipopesos? Revisa las <a href="banco-felipeso/bases.html">Bases de los Hipopesos</a> y la <a href="banco-felipeso/bolsa.html">Bolsa de Comercio</a> (bono diario). Tu colección se ve en <a href="cuenta.html#gatitosSec">Mi cuenta</a>.</p>
+</div>
+
+<div class="velo" id="velo" hidden><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
+
+<script src="gatitos/catalogo.js"></script>
+<script src="firebase/df.js"></script>
+<script>
+(function () {
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = n => new Intl.NumberFormat('es-CL').format(Math.round(n || 0)) + ' ₣';
+const R = window.RAREZAS, G = window.GATITOS;
+let usuario = null, cuentaId = null, cuenta = null, coleccion = { ids: [], favorito: null }, filtro = 'todos', comprando = false;
+
+function aviso(html, tipo) { $('avisos').innerHTML = html ? `<div class="aviso ${tipo || ''}">${html}</div>` : ''; }
+function confeti(n) { const cs = ['#ccff00', '#22e3ff', '#ff2e7e', '#e9b949', '#fff']; for (let i = 0; i < n; i++) { const d = document.createElement('div'); d.className = 'confeti'; d.style.left = Math.random() * 100 + 'vw'; d.style.background = cs[i % cs.length]; d.style.animationDuration = (1.8 + Math.random() * 1.8) + 's'; document.body.appendChild(d); setTimeout(() => d.remove(), 4000); } }
+
+/* ── pintar ── */
+function pintarFiltros() {
+  const l = [['todos', 'Todos'], ['mios', 'Mis gatitos'], ...Object.entries(R).map(([k, r]) => [k, r.nombre])];
+  $('filtros').innerHTML = l.map(([k, n]) => `<button data-f="${k}" class="${k === filtro ? 'on' : ''}">${esc(n)}</button>`).join('');
+}
+function pintar() {
+  const tengo = new Set(coleccion.ids || []);
+  const total = G.length, n = G.filter(g => tengo.has(g.id)).length;
+  $('progTxt').textContent = `Tu colección: ${n} de ${total} gatitos`;
+  $('prog').style.width = (n / total * 100) + '%';
+  $('saldo').innerHTML = (cuenta ? fmt(cuenta.saldo) : '—') + '<small>' + (cuenta ? 'Tu saldo · cuenta N° ' + esc(cuenta.numero || '') : 'Tu saldo') + '</small>';
+  $('sesion').innerHTML = usuario ? `<span class="muted" style="color:var(--mute);font-size:14px">${esc(DF.nombreCorto(usuario.displayName, usuario.email))}</span> <button class="btn" data-a="salir">Salir</button>`
+    : `<button class="btn p" data-a="entrar"><i class="fa-brands fa-google"></i> Entrar para comprar</button>`;
+  const lista = G.filter(g => filtro === 'todos' || (filtro === 'mios' ? tengo.has(g.id) : g.rareza === filtro));
+  $('grid').innerHTML = lista.map(g => {
+    const r = R[g.rareza], mio = tengo.has(g.id), alcanza = cuenta && (cuenta.saldo || 0) >= g.precio;
+    let accion;
+    if (mio) accion = `<span class="mio-tag"><i class="fa-solid fa-check"></i> Es tuyo</span>`;
+    else if (!usuario) accion = `<button class="btn" data-a="entrar">Entrar</button>`;
+    else if (!cuenta) accion = `<button class="btn" disabled>Sin cuenta</button>`;
+    else accion = `<button class="btn ${alcanza ? 'p' : ''}" data-comprar="${g.id}"${alcanza ? '' : ' disabled title="No te alcanza todavía"'}>${alcanza ? 'Comprar' : 'Te falta ' + fmt(g.precio - (cuenta.saldo || 0)).replace(' ₣', '')}</button>`;
+    return `<article class="gato ${mio ? 'mio' : 'bloq'} ${g.rareza}" style="--rc:${r.color}">
+      ${mio ? `<button class="fav ${coleccion.favorito === g.id ? 'on' : ''}" data-fav="${g.id}" title="Mostrar en mi perfil"><i class="fa-solid fa-star"></i></button>` : ''}
+      <div class="img"><img src="gatitos/img/${g.id}.webp" alt="${esc(g.nombre)}" loading="lazy"></div>
+      <span class="rz">${esc(r.nombre)}</span>
+      <h3>${esc(g.nombre)}</h3>
+      <p>${esc(g.txt)}</p>
+      <div class="pie"><span class="precio">${fmt(g.precio)}</span>${accion}</div>
+    </article>`;
+  }).join('') || '<p class="intro">Todavía no tienes gatitos en esta categoría.</p>';
+}
+
+/* ── datos ── */
+async function cargar() {
+  const { F, db } = await DF.listo();
+  usuario = DF.usuario(); cuentaId = null; cuenta = null; coleccion = { ids: [], favorito: null };
+  aviso('');
+  if (usuario) {
+    try {
+      await DF.asegurarCuentaBanco().catch(() => null);
+      const [v, g] = await Promise.all([
+        F.getDoc(F.doc(db, 'banco_vinculos', usuario.email.toLowerCase())),
+        F.getDoc(F.doc(db, 'gatitos', usuario.uid))
+      ]);
+      if (g.exists()) coleccion = g.data();
+      if (v.exists()) {
+        cuentaId = v.data().cuenta;
+        const c = await F.getDoc(F.doc(db, 'banco_cuentas', cuentaId));
+        if (c.exists()) cuenta = c.data();
+      }
+      if (!cuenta) aviso('Tu cuenta del banco todavía no está conectada con este correo. Pídele al profe que la vincule para poder comprar.');
+    } catch (e) { aviso('No se pudo cargar tu cuenta: ' + esc(e.message), 'err'); }
+  }
+  pintar();
+}
+
+// Una sola transacción: descuenta del saldo, registra el movimiento y agrega el gatito a tu colección.
+async function comprar(g) {
+  const { F, db } = await DF.listo();
+  const rc = F.doc(db, 'banco_cuentas', cuentaId), rg = F.doc(db, 'gatitos', usuario.uid);
+  return F.runTransaction(db, async tx => {
+    const [sc, sg] = await Promise.all([tx.get(rc), tx.get(rg)]);
+    if (!sc.exists()) throw new Error('no se encontró tu cuenta del banco');
+    const c = sc.data(), prev = sg.exists() ? sg.data() : { ids: [] }, ids = prev.ids || [];
+    if (ids.includes(g.id)) throw new Error('ya tienes este gatito');
+    const saldo = (c.saldo || 0) - g.precio, ops = (c.ops || 0) + 1;
+    if (saldo < 0) throw new Error('no te alcanza: cuesta ' + fmt(g.precio) + ' y tienes ' + fmt(c.saldo));
+    tx.update(rc, { saldo, ops, actualizado: F.serverTimestamp() });
+    tx.set(F.doc(db, 'banco_movs', 'op-' + cuentaId + '-' + ops), {
+      cuenta: cuentaId, numero: String(c.numero || ''), nombre: ((c.nombre || '') + ' ' + (c.apellido || '')).trim(), curso: c.curso || '',
+      monto: -g.precio, motivo: 'Tienda de gatitos: ' + g.nombre, tipo: 'gatito-compra', saldoDespues: saldo, profe: '',
+      fecha: F.serverTimestamp(), gatito: g.id
+    });
+    const nuevos = ids.concat([g.id]);
+    tx.set(rg, { uid: usuario.uid, nombre: DF.nombreCorto(usuario.displayName, usuario.email).slice(0, 80), ids: nuevos,
+      favorito: prev.favorito && nuevos.includes(prev.favorito) ? prev.favorito : g.id, actualizado: F.serverTimestamp() });
+    return { saldo };
+  });
+}
+async function elegirFavorito(id) {
+  const { F, db } = await DF.listo();
+  await F.setDoc(F.doc(db, 'gatitos', usuario.uid), { uid: usuario.uid, nombre: DF.nombreCorto(usuario.displayName, usuario.email).slice(0, 80),
+    ids: coleccion.ids, favorito: id, actualizado: F.serverTimestamp() });
+  coleccion.favorito = id; pintar();
+}
+
+/* ── ventana de compra ── */
+function abrirCompra(g) {
+  const r = R[g.rareza];
+  $('modal').innerHTML = `<img src="gatitos/img/${g.id}.webp" alt="">
+    <div><span class="rz" style="--rc:${r.color};background:${r.color};color:#0b0b10;font:800 11px var(--ff);letter-spacing:1.5px;text-transform:uppercase;border-radius:999px;padding:3px 9px">${esc(r.nombre)}</span></div>
+    <h3>${esc(g.nombre)}</h3><p style="color:var(--mute);margin:0">${esc(g.txt)}</p>
+    <div class="cuentas"><span>Tu saldo</span><b>${fmt(cuenta.saldo)}</b><span>Precio</span><b style="color:var(--neg)">− ${fmt(g.precio)}</b><span>Te quedan</span><b style="color:var(--acid)">${fmt((cuenta.saldo || 0) - g.precio)}</b></div>
+    <div id="mMsg"></div>
+    <div class="fila"><button class="btn" data-a="cerrar">Cancelar</button><button class="btn p" data-a="confirmar" data-id="${g.id}"><i class="fa-solid fa-cat"></i> Comprar</button></div>`;
+  $('velo').hidden = false;
+}
+async function confirmar(id) {
+  if (comprando) return;
+  const g = G.find(x => x.id === id); if (!g) return;
+  comprando = true; const b = document.querySelector('[data-a=confirmar]'); if (b) b.disabled = true;
+  try {
+    await comprar(g);
+    $('modal').innerHTML = `<img src="gatitos/img/${g.id}.webp" alt=""><h3>¡Es tuyo!</h3><p style="color:var(--mute)">${esc(g.nombre)} ya está en tu colección y en tu perfil.</p>
+      <div class="fila"><button class="btn p" data-a="cerrar">¡Genial!</button></div>`;
+    confeti(g.precio >= 400000 ? 180 : 90);
+    await cargar();
+  } catch (e) {
+    const m = String(e.message || e);
+    $('mMsg').innerHTML = `<div class="aviso err">No se pudo comprar: ${esc(/permission/i.test(m) ? 'el banco rechazó la compra (¿el profe publicó las reglas nuevas?)' : m)}</div>`;
+    if (b) b.disabled = false;
+  }
+  comprando = false;
+}
+
+/* ── eventos ── */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-a],[data-f],[data-comprar],[data-fav]'); if (!t) { if (e.target === $('velo')) $('velo').hidden = true; return; }
+  if (t.dataset.f) { filtro = t.dataset.f; pintarFiltros(); pintar(); return; }
+  if (t.dataset.comprar) { const g = G.find(x => x.id === t.dataset.comprar); if (g && cuenta) abrirCompra(g); return; }
+  if (t.dataset.fav) { elegirFavorito(t.dataset.fav).catch(err => aviso('No se pudo elegir: ' + esc(err.message), 'err')); return; }
+  const a = t.dataset.a;
+  if (a === 'entrar') DF.entrar().catch(err => { if (!err.cancelado) aviso(esc(err.message), 'err'); });
+  else if (a === 'salir') DF.salir();
+  else if (a === 'cerrar') $('velo').hidden = true;
+  else if (a === 'confirmar') confirmar(t.dataset.id);
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $('velo').hidden = true; });
+
+pintarFiltros(); pintar();
+DF.listo().then(() => DF.alCambiarUsuario(() => cargar()))
+  .catch(() => aviso('No se pudo conectar con el servicio de cuentas. Revisa tu conexión a internet.', 'err'));
+})();
+</script>
+</body>
+</html>
