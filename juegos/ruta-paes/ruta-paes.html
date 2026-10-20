@@ -33,13 +33,13 @@ header .esp{flex:1}
 .hbtn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:var(--papel);border-radius:999px;padding:7px 14px;font-weight:700;font-size:.85rem}
 .hbtn:hover{background:rgba(255,255,255,.22)}
 
-.app{max-width:1280px;margin:0 auto;padding:0 16px 28px;display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
-@media (max-width:960px){.app{grid-template-columns:1fr}}
+.juego{max-width:1440px;margin:0 auto;padding:0 12px 26px}
 
-/* ── tablero ── */
-.tablero{position:relative;border-radius:var(--r);overflow:hidden;border:6px solid var(--madera);
-  box-shadow:0 0 0 2px #8a6440,0 18px 40px rgba(0,0,0,.45);background:#bfe3f5}
-.tablero svg{display:block;width:100%;height:auto}
+/* ── tablero: un camino que se recorre con la cámara ── */
+.tablero{position:relative;height:clamp(400px,calc(100vh - 104px),800px);border-radius:var(--r);overflow:hidden;border:5px solid var(--madera);
+  box-shadow:0 0 0 2px #8a6440,0 18px 40px rgba(0,0,0,.45);background:#8fcdf0;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none}
+.tablero.arrastra{cursor:grabbing}
+.tablero svg{position:absolute;inset:0;width:100%;height:100%;display:block}
 .casilla{cursor:pointer}
 .casilla .disco{stroke:#fff;stroke-width:4}
 .casilla:hover .disco{stroke:var(--oro)}
@@ -51,29 +51,65 @@ header .esp{flex:1}
 .ficha.lento{transition:transform .9s cubic-bezier(.45,.05,.3,1)}
 .ficha .cuerpo{transform-box:fill-box;transform-origin:center bottom}
 .ficha.salta .cuerpo{animation:salto .26s ease-out}
-@keyframes salto{40%{transform:translateY(-14px) scale(1.08)}}
-.ficha text{font-family:var(--emoji);font-size:26px;text-anchor:middle;dominant-baseline:central}
-.ficha.activa circle{stroke:var(--oro);stroke-width:5}
-.olas{animation:olas 6s linear infinite}
-@keyframes olas{to{transform:translateX(-80px)}}
-.nube{animation:nube 60s linear infinite}
-@keyframes nube{from{transform:translateX(-200px)}to{transform:translateX(1100px)}}
-.condor{animation:vuelo 38s linear infinite}
-@keyframes vuelo{from{transform:translate(-80px,0)}50%{transform:translate(520px,-25px)}to{transform:translate(1080px,10px)}}
+@keyframes salto{40%{transform:translateY(-16px) scale(1.1)}}
+.ficha text{font-family:var(--emoji);font-size:28px;text-anchor:middle;dominant-baseline:central}
+.ficha.activa .aro{stroke:var(--oro);stroke-width:6}
+.ficha.activa .pulso{animation:pulso 1.4s ease-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pulso{from{opacity:.8;transform:scale(1)}to{opacity:0;transform:scale(1.9)}}
+.olas{animation:olas 5s linear infinite}
+@keyframes olas{to{transform:translateX(-60px)}}
+.nube{animation:nube 90s linear infinite}
+@keyframes nube{from{transform:translateX(-300px)}to{transform:translateX(300px)}}
+.condor{animation:vuelo 40s linear infinite}
+@keyframes vuelo{from{transform:translate(-120px,0)}50%{transform:translate(560px,-30px)}to{transform:translate(1240px,10px)}}
+.mecer{animation:mecer 4s ease-in-out infinite;transform-box:fill-box;transform-origin:center bottom}
+@keyframes mecer{50%{transform:rotate(3deg) translateY(-3px)}}
 
-.leyenda{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.chip{display:inline-flex;align-items:center;gap:6px;background:rgba(251,246,233,.92);border-radius:999px;padding:4px 10px 4px 5px;font-size:.78rem;font-weight:700}
-.chip i{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-family:var(--emoji);border:2px solid #fff}
+.hud-arriba{position:absolute;top:10px;left:10px;right:10px;display:flex;gap:10px;align-items:center;pointer-events:none;z-index:2}
+.hud-arriba>*{pointer-events:auto}
+.turno{background:rgba(251,246,233,.95);border-radius:999px;padding:5px 18px 5px 5px;box-shadow:0 6px 18px rgba(0,0,0,.25);display:flex;gap:10px;align-items:center;max-width:44%;min-width:0}
+.turno .av{font-family:var(--emoji);width:48px;height:48px;font-size:1.75rem;border-radius:50%;display:grid;place-items:center;border:3px solid var(--oro);background:#fff;flex:none}
+.turno b{display:block;font:800 1.15rem/1.05 'Baloo 2',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.turno small{display:block;color:var(--gris);font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.turno>div:last-child{min-width:0}
+.mini{flex:1;height:42px;background:rgba(251,246,233,.93);border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.25);position:relative;cursor:pointer;min-width:160px}
+.mini .pista{position:absolute;left:18px;right:18px;top:50%;height:10px;margin-top:-5px;border-radius:9px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.mini .cam{position:absolute;top:4px;bottom:4px;border:2px solid rgba(29,42,32,.85);border-radius:10px;background:rgba(255,255,255,.2);pointer-events:none}
+.mini .mt{position:absolute;top:50%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;border:1.5px solid #fff;pointer-events:none}
+.mini .mj{position:absolute;top:50%;transform:translate(-50%,-64%);font-family:var(--emoji);font-size:18px;line-height:1;transition:left .35s;pointer-events:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.45))}
+.mini .mj.on{font-size:24px;z-index:2}
+.hud-dado{position:absolute;right:12px;bottom:12px;z-index:2;display:flex;gap:12px;align-items:center;background:rgba(251,246,233,.95);padding:10px;border-radius:20px;box-shadow:0 10px 26px rgba(0,0,0,.35)}
+.hud-dado .btn{padding:15px 22px;font-size:1.15rem}
+.hud-zona{position:absolute;left:12px;bottom:12px;z-index:2;background:rgba(15,42,28,.82);color:#fff;border-radius:999px;padding:7px 14px;font-weight:800;font-size:.86rem;pointer-events:none;transition:opacity .3s}
+.hud-seguir{position:absolute;left:12px;bottom:54px;z-index:2;padding:9px 14px !important;font-size:.92rem !important}
+
+.bajo{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:14px;margin-top:14px;align-items:start}
+@media (max-width:980px){.bajo{grid-template-columns:1fr 1fr}}
+@media (max-width:680px){
+  .bajo{grid-template-columns:1fr}
+  .juego{padding:0 8px 20px}
+  .tablero{height:min(calc(100vh - 150px),128vw);min-height:380px;border-width:4px}
+  .hud-arriba{top:8px;left:8px;right:8px;gap:6px;flex-wrap:wrap}
+  .turno{flex:1 1 0;max-width:none;margin-right:158px;padding:4px 12px 4px 4px;gap:7px}
+  .turno .av{width:40px;height:40px;font-size:1.4rem}
+  .turno b{font-size:1rem} .turno small{font-size:.64rem}
+  .mini{height:32px;flex:1 1 100%;margin-top:14px}
+  .mini .mj{font-size:15px} .mini .mj.on{font-size:19px}
+  .hud-dado{top:8px;bottom:auto;padding:7px;gap:7px;border-radius:16px}
+  .hud-dado .dado{width:48px;height:48px;font-size:2.4rem;border-radius:10px;box-shadow:0 3px 0 var(--tinta)}
+  .hud-dado .btn{padding:11px 12px;font-size:.98rem}
+  .hud-zona{font-size:.74rem;padding:6px 10px;left:8px;bottom:8px}
+  .hud-seguir{left:8px;bottom:44px}
+  .hud-dado{right:8px}
+}
+.leyenda{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:#fff;border-radius:999px;padding:4px 10px 4px 5px;font-size:.78rem;font-weight:700;border:1px solid #e5dec9}
+.chip i{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-family:var(--emoji);border:2px solid #fff;box-shadow:0 0 0 1px #ddd}
 
 /* ── panel ── */
 .panel{display:grid;gap:14px}
 .tarjeta{background:var(--papel);border-radius:var(--r);padding:16px;box-shadow:0 10px 26px rgba(0,0,0,.3);border-top:6px solid var(--musgo)}
 .tarjeta h2{font:800 1.15rem 'Baloo 2',sans-serif;margin-bottom:8px;color:var(--bosque)}
-.turno{display:flex;align-items:center;gap:12px}
-.turno .av{font-family:var(--emoji);font-size:2.2rem;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;border:4px solid var(--oro);background:#fff;flex:none}
-.turno b{display:block;font:800 1.3rem/1.1 'Baloo 2',sans-serif}
-.turno small{color:var(--gris);font-weight:700}
-.dado-zona{display:flex;align-items:center;gap:14px;margin-top:14px}
 .dado{width:74px;height:74px;border-radius:16px;background:#fff;border:3px solid var(--tinta);display:grid;place-items:center;font-size:3.6rem;line-height:1;box-shadow:0 5px 0 var(--tinta);flex:none;user-select:none}
 .dado.gira{animation:gira .5s linear infinite}
 @keyframes gira{25%{transform:rotate(14deg) translateY(-4px)}75%{transform:rotate(-14deg) translateY(-2px)}}
@@ -177,59 +213,58 @@ header .esp{flex:1}
   <button class="hbtn" id="b-nueva">🔄 Nueva partida</button>
 </header>
 
-<div class="app">
-  <section>
-    <div class="tablero">
-      <svg id="mapa" viewBox="0 0 960 640" role="img" aria-label="Tablero: un sendero de 40 casillas desde la playa, cruzando el bosque, hasta la cumbre nevada">
-        <defs>
-          <linearGradient id="g-cielo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fcdf0"/><stop offset=".55" stop-color="#d8eef8"/><stop offset="1" stop-color="#eaf6fb"/></linearGradient>
-          <linearGradient id="g-lejos" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9aa9c4"/><stop offset="1" stop-color="#7d8ca8"/></linearGradient>
-          <linearGradient id="g-cerca" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5d6b80"/><stop offset="1" stop-color="#3f4c5c"/></linearGradient>
-          <linearGradient id="g-bosque" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d4a2f"/><stop offset="1" stop-color="#2f6a3d"/></linearGradient>
-          <linearGradient id="g-matorral" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6e9a45"/><stop offset="1" stop-color="#9dbb63"/></linearGradient>
-          <linearGradient id="g-arena" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9d29a"/><stop offset="1" stop-color="#f4e3b8"/></linearGradient>
-          <linearGradient id="g-mar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b8cc4"/><stop offset="1" stop-color="#0f4f78"/></linearGradient>
-          <radialGradient id="g-oro"><stop offset="0" stop-color="#fff3b0"/><stop offset=".6" stop-color="#f2b632"/><stop offset="1" stop-color="#c98a06"/></radialGradient>
-          <marker id="flecha" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker>
-        </defs>
-        <rect width="960" height="640" fill="url(#g-cielo)"/>
-        <g id="nubes" opacity=".9"></g>
-        <g id="cordillera"></g>
-        <g class="condor" opacity=".75"><path d="M60 70 q14 -10 28 0 q14 -10 28 0 q-14 -4 -28 4 q-14 -8 -28 -4z" fill="#1f2328"/></g>
-        <path d="M0 205 Q40 185 80 200 T160 198 T240 202 T320 196 T400 204 T480 196 T560 202 T640 194 T720 202 T800 196 T880 204 T960 196 V520 H0z" fill="url(#g-bosque)"/>
-        <path d="M0 395 Q60 380 120 392 T240 388 T360 396 T480 386 T600 394 T720 388 T840 396 T960 388 V560 H0z" fill="url(#g-matorral)"/>
-        <path d="M0 505 Q80 492 160 504 T320 500 T480 506 T640 498 T800 504 T960 498 V640 H0z" fill="url(#g-arena)"/>
-        <g id="arboles"></g>
-        <path d="M0 600 Q120 586 240 598 T480 596 T720 600 T960 594 V640 H0z" fill="url(#g-mar)"/>
-        <g class="olas" opacity=".7"><path id="ola" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/></g>
-        <g id="sendero"></g>
-        <g id="atajos"></g>
-        <g id="casillas"></g>
-        <g id="fichas"></g>
-      </svg>
+<main class="juego">
+  <div class="tablero" id="tablero">
+    <svg id="mapa" viewBox="0 0 1000 700" preserveAspectRatio="xMinYMid meet" role="img" aria-label="Camino de 40 casillas que va desde la caleta, junto al mar, cruzando dunas y bosques, hasta la cumbre de la cordillera">
+      <defs>
+        <linearGradient id="g-cielo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6fbde9"/><stop offset=".45" stop-color="#bfe3f5"/><stop offset=".62" stop-color="#e9f6fb"/><stop offset="1" stop-color="#f3fafc"/></linearGradient>
+        <linearGradient id="g-lejos2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c6d1e3"/><stop offset="1" stop-color="#d9e2ee"/></linearGradient>
+        <linearGradient id="g-lejos" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8e9dba"/><stop offset="1" stop-color="#a9b6cc"/></linearGradient>
+        <linearGradient id="g-roca" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5d6b7e"/><stop offset=".5" stop-color="#7a8696"/><stop offset="1" stop-color="#a3adb8"/></linearGradient>
+        <linearGradient id="g-mar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a9bd0"/><stop offset="1" stop-color="#11557f"/></linearGradient>
+        <linearGradient id="g-suelo" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="4420" y2="0"></linearGradient>
+        <linearGradient id="g-sombra" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></linearGradient>
+        <radialGradient id="g-oro"><stop offset="0" stop-color="#fff3b0"/><stop offset=".6" stop-color="#f2b632"/><stop offset="1" stop-color="#c98a06"/></radialGradient>
+        <radialGradient id="g-sol"><stop offset="0" stop-color="#fffbe0"/><stop offset=".45" stop-color="#ffe9a3" stop-opacity=".9"/><stop offset="1" stop-color="#ffe9a3" stop-opacity="0"/></radialGradient>
+        <clipPath id="c-mar"><path id="d-mar"/></clipPath>
+        <marker id="flecha" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker>
+      </defs>
+      <g id="cielo"></g>
+      <g id="p-sol"></g>
+      <g id="p-lejos2"></g>
+      <g id="p-nubes"></g>
+      <g id="p-lejos"></g>
+      <g id="p-volcan"></g>
+      <g id="cordillera"></g>
+      <g id="suelo"></g>
+      <g id="mar"></g>
+      <g id="atras"></g>
+      <g id="sendero"></g>
+      <g id="atajos"></g>
+      <g id="casillas"></g>
+      <g id="fauna"></g>
+      <g id="fichas"></g>
+      <g id="frente"></g>
+    </svg>
+    <div class="hud-arriba">
+      <div class="turno" id="turno"><div class="av">🌲</div><div><b>Ruta PAES</b><small>Configura la partida</small></div></div>
+      <div class="mini" id="mini" title="Toca para mirar esa parte del camino"><div class="pista" id="pista"></div><div class="cam" id="mcam"></div></div>
     </div>
-    <div class="leyenda" id="leyenda"></div>
-  </section>
+    <div class="hud-zona" id="zona">🏖️ Playa</div>
+    <button class="btn sec hud-seguir" id="b-seguir" hidden>📍 Volver a la ficha</button>
+    <div class="hud-dado">
+      <div class="dado" id="dado" aria-live="polite">⚀</div>
+      <button class="btn" id="b-tirar" disabled>🎲 Lanzar</button>
+    </div>
+  </div>
 
-  <aside class="panel">
-    <div class="tarjeta">
-      <div class="turno" id="turno"><div class="av">🌲</div><div><b>Ruta PAES</b><small>Configura la partida para comenzar</small></div></div>
-      <div class="dado-zona">
-        <div class="dado" id="dado" aria-live="polite">⚀</div>
-        <button class="btn grande" id="b-tirar" disabled>🎲 Lanzar dado</button>
-      </div>
-      <div class="atajo-tecla">Tecla <b>Espacio</b> para lanzar · toca una casilla para ver qué hace</div>
-    </div>
-    <div class="tarjeta">
-      <h2>Expedición</h2>
-      <div class="jugadores" id="jugadores"></div>
-    </div>
-    <div class="tarjeta">
-      <h2>Bitácora</h2>
-      <div class="bitacora" id="bitacora" aria-live="polite"></div>
-    </div>
-  </aside>
-</div>
+  <div class="bajo">
+    <div class="tarjeta"><h2>Expedición</h2><div class="jugadores" id="jugadores"></div></div>
+    <div class="tarjeta"><h2>Bitácora</h2><div class="bitacora" id="bitacora" aria-live="polite"></div></div>
+    <div class="tarjeta"><h2>Casillas</h2><div class="leyenda" id="leyenda"></div>
+      <p class="atajo-tecla">Tecla <b>Espacio</b>: lanzar el dado · Arrastra el paisaje o usa la rueda del mouse para mirar el camino · Toca una casilla para ver qué hace</p></div>
+  </div>
+</main>
 
 <div class="velo" id="velo" hidden><div class="ventana" id="ventana" role="dialog" aria-modal="true"></div></div>
 <div class="toast" id="toast"></div>
@@ -239,11 +274,29 @@ header .esp{flex:1}
 <script>
 (function(){
 'use strict';
-/* ═════════════ Tablero ═════════════ */
-const COLS=8, N=40, META=N-1;
-const FILA_Y=[560,450,340,230,120];
-function pos(i){const r=Math.floor(i/COLS),c=i%COLS,col=r%2===0?c:COLS-1-c;return {x:84+col*113,y:FILA_Y[r]};}
-const ZONAS=['Playa','Dunas','Bosque de coihues','Bosque de araucarias','Cordillera'];
+/* ═════════════ Camino: de oeste (mar) a este (cordillera) ═════════════ */
+const N=40, META=N-1, H=700, W=4420, X0=170, X1=4260, HZ=310;
+function medioY(x){if(x<1500)return 560;if(x<2800)return 560-(x-1500)/1300*90;if(x<3500)return 470-(x-2800)/700*90;return 380-(Math.min(x,X1)-3500)/760*150;}
+function amplitud(x){return x<3400?72:Math.max(16,72-(x-3400)/860*56);}
+function caminoY(x){x=Math.max(X0,Math.min(X1,x));return medioY(x)+amplitud(x)*Math.sin((x-X0)/235);}
+function costaY(x){return x>=820?HZ:HZ+205*Math.pow((820-x)/820,.8);}
+const CAMINO=[];for(let x=X0;x<=X1;x+=5)CAMINO.push({x:x,y:caminoY(x)});
+const TILES=(function(){
+  const acc=[0];for(let k=1;k<CAMINO.length;k++)acc.push(acc[k-1]+Math.hypot(CAMINO[k].x-CAMINO[k-1].x,CAMINO[k].y-CAMINO[k-1].y));
+  const L=acc[acc.length-1],t=[];let k=0;
+  for(let i=0;i<N;i++){const s=L*i/(N-1);while(k<acc.length-2&&acc[k+1]<s)k++;const f=Math.min(1,(s-acc[k])/((acc[k+1]-acc[k])||1));
+    t.push({x:CAMINO[k].x+(CAMINO[k+1].x-CAMINO[k].x)*f,y:CAMINO[k].y+(CAMINO[k+1].y-CAMINO[k].y)*f});}
+  return t;
+})();
+function pos(i){return TILES[i];}
+const ZONAS=[
+  {hasta:780, n:'Playa',ic:'🏖️'},
+  {hasta:1500,n:'Dunas y matorral costero',ic:'🌾'},
+  {hasta:2600,n:'Bosque valdiviano',ic:'🌳'},
+  {hasta:3400,n:'Bosque de araucarias',ic:'🌲'},
+  {hasta:1e9, n:'Cordillera de los Andes',ic:'🏔️'}
+];
+function zonaDe(x){return ZONAS.find(z=>x<z.hasta);}
 
 const TIPOS={
   salida:   {c:'#ffffff',t:'Salida'},
@@ -260,7 +313,7 @@ const TIPOS={
   meta:     {c:'#ffffff',t:'Cumbre'}
 };
 const CAS=(function(){
-  const c=[];for(let i=0;i<N;i++)c.push({t:'normal',n:ZONAS[Math.floor(i/COLS)],i:''});
+  const c=[];for(let i=0;i<N;i++)c.push({t:'normal',n:zonaDe(TILES[i].x).n,i:''});
   const s=(k,o)=>{c[k]=o};
   s(0,{t:'salida',n:'Caleta de inicio',i:'⚓',d:'Aquí parte la expedición.'});
   [2,5,8,12,16,19,21,23,27,31,34,37,38].forEach(k=>s(k,{t:'pregunta',n:'Pregunta PAES',i:'📝',d:'Correcta: +50 F$ y avanzas 2. Incorrecta: retrocedes 2.'}));
@@ -304,99 +357,203 @@ function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clear
 function confeti(n){const cs=['#f2b632','#e63946','#2b8cc4','#2e8b57','#fff','#c8102e'];for(let i=0;i<n;i++){const d=document.createElement('div');d.className='confeti';d.style.left=Math.random()*100+'vw';d.style.background=cs[i%cs.length];d.style.animationDuration=(1.8+Math.random()*1.8)+'s';d.style.animationDelay=(Math.random()*.4)+'s';document.body.appendChild(d);setTimeout(()=>d.remove(),4200);}}
 
 /* ═════════════ paisaje ═════════════ */
+const svg=$('mapa');
+const EMO='Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,sans-serif';
+function emoji(g,x,y,s,txt,extra){const t=el('text',Object.assign({x:x,y:y,'font-size':s,'text-anchor':'middle','dominant-baseline':'central','font-family':EMO},extra||{}),g);t.textContent=txt;return t;}
+
+// ── árboles y plantas (origen en la base) ──
+function araucaria(g,x,y,s,osc){
+  const a=el('g',{transform:`translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s.toFixed(2)})`},g),c=osc?'#0f2c1b':'#173d27';
+  el('path',{d:'M-2.5 0 L-1.8 -58 L1.8 -58 L2.5 0Z',fill:'#5a3a22'},a);
+  [[-62,24],[-52,20],[-43,15]].forEach(([yy,w])=>el('path',{d:`M${-w} ${yy+7} Q0 ${yy-12} ${w} ${yy+7} Q0 ${yy-1} ${-w} ${yy+7}Z`,fill:c},a));
+  el('path',{d:'M-15 -62 Q0 -78 15 -62 Q0 -68 -15 -62Z',fill:osc?'#163a24':'#1f4d2e'},a);
+}
+function coihue(g,x,y,s,osc){
+  const a=el('g',{transform:`translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s.toFixed(2)})`},g);
+  el('path',{d:'M-3 0 L-2 -26 L2 -26 L3 0Z',fill:'#5a3a22'},a);
+  (osc?[[-11,-32,14,'#123821'],[11,-34,15,'#164229'],[0,-48,16,'#1b4c30']]:[[-11,-32,14,'#1f5232'],[11,-34,15,'#245c38'],[0,-48,16,'#2b6a40']]).forEach(([cx,cy,r,f])=>el('circle',{cx:cx,cy:cy,r:r,fill:f},a));
+}
+function nalca(g,x,y,s){
+  const a=el('g',{transform:`translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s.toFixed(2)})`},g);
+  [[-14,-30],[12,-36],[0,-44]].forEach(([dx,dy])=>{el('path',{d:`M0 0 Q${dx/2} ${dy/2} ${dx} ${dy}`,stroke:'#8c2f2f','stroke-width':3,fill:'none'},a);
+    el('path',{d:`M${dx-16} ${dy+2} Q${dx} ${dy-18} ${dx+16} ${dy+2} Q${dx} ${dy-4} ${dx-16} ${dy+2}Z`,fill:'#3f8a3a'},a);});
+}
+function helecho(g,x,y,s){
+  const a=el('g',{transform:`translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s.toFixed(2)})`},g);
+  [-50,-25,0,25,50].forEach(r=>el('path',{d:'M0 0 Q4 -14 0 -26',stroke:'#4d9a45','stroke-width':5,'stroke-linecap':'round',fill:'none',transform:`rotate(${r})`},a));
+}
+function arbusto(g,x,y,s,osc){
+  const a=el('g',{transform:`translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s.toFixed(2)})`},g),c=osc?'#3d6428':'#5b8a3a';
+  [[-9,-7,9],[7,-8,10],[0,-14,9]].forEach(([cx,cy,r])=>el('circle',{cx:cx,cy:cy,r:r,fill:c},a));
+}
+function palma(g,x,y,s){ // palma chilena
+  const a=el('g',{transform:`translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s.toFixed(2)})`},g);
+  el('path',{d:'M-6 0 Q-8 -30 -4 -62 L4 -62 Q8 -30 6 0Z',fill:'#8a8178'},a);
+  [-70,-40,-12,12,40,70].forEach(r=>el('path',{d:'M0 -62 Q16 -74 30 -62',stroke:'#3f7a3a','stroke-width':5,fill:'none','stroke-linecap':'round',transform:`rotate(${r} 0 -62)`},a));
+}
+function lenga(g,x,y,s,osc,k){
+  const a=el('g',{transform:`translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s.toFixed(2)})`},g),cs=['#b5532a','#c97a2b','#6f8f3a','#a8452a'];
+  el('path',{d:'M-2.5 0 L-1.5 -22 L1.5 -22 L2.5 0Z',fill:'#5a3a22'},a);
+  el('path',{d:'M-16 -18 Q-18 -40 0 -50 Q18 -40 16 -18 Q0 -12 -16 -18Z',fill:cs[k%cs.length]},a);
+}
+function roca(g,x,y,s){
+  const nieve=x>3400;const a=el('g',{transform:`translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s.toFixed(2)})`},g);
+  el('path',{d:'M-20 0 L-15 -14 L-4 -20 L10 -16 L20 0Z',fill:'#7b8591'},a);
+  el('path',{d:'M-4 -20 L10 -16 L20 0 L6 0Z',fill:'#646d78'},a);
+  if(nieve)el('path',{d:'M-15 -14 L-4 -20 L10 -16 L4 -13 L-6 -15Z',fill:'#f7fbff'},a);
+}
+function arbolDe(x,frente){
+  const z=zonaDe(x).n,r=rnd();
+  if(z==='Playa')return r<.35?palma:(frente?roca:arbusto);
+  if(z==='Dunas y matorral costero')return r<.25?palma:arbusto;
+  if(z==='Bosque valdiviano')return frente?(r<.45?nalca:(r<.75?helecho:coihue)):(r<.8?coihue:araucaria);
+  if(z==='Bosque de araucarias')return frente?(r<.6?araucaria:helecho):(r<.75?araucaria:coihue);
+  return r<.55?lenga:roca;
+}
+
+function cordon(g,x0,x1,base,ymin,ymax,paso,fill,nieve){
+  const pts=[[x0,base]];let pico=true;
+  for(let x=x0;x<=x1;x+=paso*(.55+rnd()*.7)){
+    const y=pico?ymin+rnd()*(ymax-ymin)*.6:ymin+(ymax-ymin)*(.55+rnd()*.45);pts.push([x,y]);pico=!pico;
+  }
+  pts.push([x1,base]);
+  el('path',{d:'M'+pts.map(p=>p[0].toFixed(0)+' '+p[1].toFixed(0)).join(' L')+'Z',fill:fill},g);
+  if(!nieve)return;
+  for(let k=1;k<pts.length-1;k++){
+    const [x,y]=pts[k],a=pts[k-1],b=pts[k+1];if(a[1]<y||b[1]<y)continue; // solo cimas
+    if(y>ymin+(ymax-ymin)*.45)continue;
+    const ta=Math.min(.42,30/Math.max(1,a[1]-y)),tb=Math.min(.42,30/Math.max(1,b[1]-y));
+    const ax=x+(a[0]-x)*ta,ay=y+(a[1]-y)*ta,bx=x+(b[0]-x)*tb,by=y+(b[1]-y)*tb;
+    el('path',{d:`M${x.toFixed(0)} ${y.toFixed(0)} L${bx.toFixed(0)} ${by.toFixed(0)} L${((x+bx)/2+3).toFixed(0)} ${(by-6).toFixed(0)} L${x.toFixed(0)} ${(Math.max(ay,by)+4).toFixed(0)} L${((x+ax)/2-3).toFixed(0)} ${(ay-6).toFixed(0)} L${ax.toFixed(0)} ${ay.toFixed(0)}Z`,fill:'#f7fbff',opacity:nieve},g);
+  }
+}
+
 function dibujarPaisaje(){
+  // suelo que cambia de oeste a este: arena → matorral → bosque → roca → nieve
+  const gs=$('g-suelo');
+  [[0,'#ecd6a0'],[760,'#e6cf95'],[980,'#a9c46c'],[1450,'#86ab55'],[1750,'#3f7b46'],[2600,'#2f6a3d'],[3250,'#24553a'],[3550,'#6f7c8a'],[3950,'#b9c4cf'],[W,'#eef4f8']]
+    .forEach(([x,c])=>el('stop',{offset:(x/W).toFixed(4),'stop-color':c},gs));
+  el('rect',{x:-60,y:-10,width:W+120,height:H+20,fill:'url(#g-cielo)'},$('cielo'));
+  // sol (casi fijo en el cielo)
+  el('circle',{cx:620,cy:110,r:120,fill:'url(#g-sol)'},$('p-sol'));
+  el('circle',{cx:620,cy:110,r:34,fill:'#fff6cc'},$('p-sol'));
+  // cordones de los Andes, siempre visibles al este (con profundidad)
+  semilla=3; cordon($('p-lejos2'),-60,W+60,HZ+20,130,250,120,'url(#g-lejos2)',.85);
+  semilla=9; cordon($('p-lejos'),-60,W+60,HZ+20,95,265,150,'url(#g-lejos)',1);
+  // volcán nevado (estilo Osorno)
+  const gv=$('p-volcan'),vx=2150;
+  el('path',{d:`M${vx-240} ${HZ+20} L${vx-26} 92 L${vx+26} 92 L${vx+240} ${HZ+20}Z`,fill:'#56657a'},gv);
+  el('path',{d:`M${vx-90} 158 L${vx-26} 92 L${vx+26} 92 L${vx+90} 158 L${vx+64} 150 L${vx+44} 168 L${vx+20} 150 L${vx} 170 L${vx-22} 150 L${vx-46} 168 L${vx-66} 150Z`,fill:'#f7fbff'},gv);
+  el('path',{d:`M${vx-4} 86 q12 -22 2 -44 q18 16 8 44z`,fill:'#d7dde4',opacity:.75},gv);
   // nubes
-  const gn=$('nubes');
-  [[40,30,1],[300,60,.8],[620,24,1.1],[860,70,.7]].forEach(([x,y,s],k)=>{
-    const g=el('g',{class:'nube',style:'animation-delay:'+(-k*15)+'s'},gn);
-    const h=el('g',{transform:`translate(${x},${y}) scale(${s})`},g);
-    [[0,10,22],[22,0,28],[50,8,22],[30,14,24]].forEach(([cx,cy,r])=>el('circle',{cx,cy,r,fill:'#fff'},h));
-  });
-  // cordillera de los Andes: dos cordones con nieve y un volcán
+  semilla=5;const gn=$('p-nubes');
+  for(let x=-100;x<W;x+=380+rnd()*260){
+    const y=40+rnd()*110,s=.7+rnd()*.8;
+    const n=el('g',{class:'nube',style:`animation-delay:${(-rnd()*90).toFixed(1)}s`},gn);
+    const h=el('g',{transform:`translate(${x.toFixed(0)},${y.toFixed(0)}) scale(${s.toFixed(2)})`},n);
+    [[0,12,24],[26,0,32],[58,10,24],[34,16,26]].forEach(([cx,cy,r])=>el('circle',{cx:cx,cy:cy,r:r,fill:'#fff',opacity:.95},h));
+  }
+  // suelo con lomas suaves
+  let d=`M-60 ${HZ+8}`;for(let x=-60;x<=W+60;x+=120)d+=` Q${x+60} ${HZ-6-((x/120)%3)*4} ${x+120} ${HZ+8}`;d+=` L${W+60} ${H+20} L-60 ${H+20}Z`;
+  el('path',{d:d,fill:'url(#g-suelo)'},$('suelo'));
+  el('rect',{x:-60,y:H-160,width:W+120,height:180,fill:'url(#g-sombra)'},$('suelo'));
+  // cordillera cercana: aquí sube el camino hasta la cumbre
   const gc=$('cordillera');
-  function cordon(picos,base,fill,nieve){
-    let d=`M0 ${base} `;picos.forEach(([x,y])=>d+=`L${x} ${y} `);d+=`L960 ${base} Z`;
-    el('path',{d,fill},gc);
-    for(let k=1;k<picos.length-1;k++){
-      const [x,y]=picos[k],[xa,ya]=picos[k-1],[xb,yb]=picos[k+1];
-      if(y>base-60)continue;
-      const f=nieve;
-      const ax=x+(xa-x)*Math.min(.45,f/Math.max(1,ya-y)), ay=y+(ya-y)*Math.min(.45,f/Math.max(1,ya-y));
-      const bx=x+(xb-x)*Math.min(.45,f/Math.max(1,yb-y)), by=y+(yb-y)*Math.min(.45,f/Math.max(1,yb-y));
-      el('path',{d:`M${x} ${y} L${bx} ${by} L${(x+bx)/2+4} ${by-6} L${x+2} ${by+4} L${(x+ax)/2-4} ${ay-5} L${ax} ${ay} Z`,fill:'#f7fbff'},gc);
-    }
+  const P=[[3120,HZ+30],[3300,240],[3420,190],[3520,250],[3660,140],[3800,215],[3950,95],[4080,175],[4180,150],[4262,104],[4340,170],[W+60,140],[W+60,H+20],[3120,H+20]];
+  el('path',{d:'M'+P.map(p=>p.join(' ')).join(' L')+'Z',fill:'url(#g-roca)'},gc);
+  [[3420,190,3300,240,3520,250],[3660,140,3520,250,3800,215],[3950,95,3800,215,4080,175],[4262,104,4180,150,4340,170]].forEach(([x,y,ax,ay,bx,by])=>{
+    const t=.45;el('path',{d:`M${x} ${y} L${x+(bx-x)*t} ${y+(by-y)*t} L${x+(bx-x)*t*.5} ${y+(by-y)*t+8} L${x} ${y+(by-y)*t*.7+12} L${x+(ax-x)*t*.5} ${y+(ay-y)*t+8} L${x+(ax-x)*t} ${y+(ay-y)*t}Z`,fill:'#f7fbff'},gc);
+  });
+  // campos de nieve y glaciar (junto a la casilla 33)
+  el('path',{d:`M3480 ${H+20} Q3700 520 3900 470 Q4100 420 4300 330 L${W+60} 300 L${W+60} ${H+20}Z`,fill:'#e8f0f6',opacity:.85},gc);
+  const g33=TILES[33];
+  {const x=g33.x+10,y=g33.y,gl=el('g',{},gc);
+   el('path',{d:`M${x-34} 190 C${x-58} 250 ${x-70} ${y-110} ${x-62} ${y-46} Q${x-40} ${y-22} ${x} ${y-30} Q${x+42} ${y-22} ${x+62} ${y-50} C${x+66} ${y-110} ${x+52} 250 ${x+30} 190 Z`,fill:'#d6f1fd',stroke:'#9fd3ef','stroke-width':3},gl);
+   [[-30,-10],[-8,8],[16,-4],[34,10]].forEach(([dx,o])=>el('path',{d:`M${x+dx*.6} 215 Q${x+dx+o} ${(215+y)/2-30} ${x+dx} ${y-52}`,fill:'none',stroke:'#8cc8e8','stroke-width':2.5,opacity:.8},gl));
+   const brillo=el('g',{class:'mecer'},gl);emoji(brillo,x+48,y-90,22,'✨');}
+  // mar y playa
+  let dm=`M-60 ${HZ} L830 ${HZ}`;for(let x=830;x>=-60;x-=10)dm+=` L${x} ${costaY(Math.max(0,x)).toFixed(1)}`;dm+=' Z';
+  $('d-mar').setAttribute('d',dm);
+  const gm=$('mar');
+  el('path',{d:dm,fill:'url(#g-mar)'},gm);
+  const olas=el('g',{'clip-path':'url(#c-mar)'},gm),ol=el('g',{class:'olas'},olas);
+  let dw='';for(let y=330;y<540;y+=24)for(let x=-120+((y/24)%2)*30;x<920;x+=60)dw+=`M${x} ${y} q8 -6 16 0 q8 6 16 0 `;
+  el('path',{d:dw,fill:'none',stroke:'#fff','stroke-width':2.5,'stroke-linecap':'round',opacity:.55},ol);
+  let dc='';for(let x=830;x>=-60;x-=10)dc+=(dc?' L':'M')+x+' '+(costaY(Math.max(0,x))+2).toFixed(1);
+  el('path',{d:dc,fill:'none',stroke:'#fff','stroke-width':7,'stroke-linecap':'round',opacity:.75},gm);
+  // botes y lobos marinos
+  [[250,368,1],[560,334,.75]].forEach(([x,y,s])=>{const b=el('g',{transform:`translate(${x},${y}) scale(${s})`},gm),m=el('g',{class:'mecer'},b);
+    el('path',{d:'M-26 0 L26 0 L18 12 L-18 12Z',fill:'#b23a3a'},m);el('path',{d:'M0 0 L0 -44 L22 -6Z',fill:'#fff'},m);el('path',{d:'M-2 -40 L-2 0 L-20 -6Z',fill:'#f2d28a'},m);el('rect',{x:-1,y:-46,width:2,height:46,fill:'#5a3a22'},m);});
+  roca(gm,410,446,1.4);emoji(gm,410,410,30,'🦭');
+  // árboles detrás del camino y delante (más grandes, dan profundidad)
+  const atras=[],frente=[];
+  semilla=21;
+  for(let x=-20;x<W+20;x+=12+rnd()*20){
+    const cy=caminoY(x),tope=Math.max(HZ+6,x<830?costaY(Math.max(0,x))+14:HZ+6),fondo=cy-62;
+    if(x>3150&&x<4400&&rnd()<.6)continue;
+    if(fondo>tope){const y=tope+rnd()*(fondo-tope),s=.5+(y-tope)/Math.max(1,fondo-tope)*.45;atras.push([y,x,s]);}
   }
-  cordon([[0,150],[60,95],[120,130],[180,52],[250,110],[310,70],[380,125],[440,40],[510,105],[570,64],[640,120],[700,48],[770,100],[840,58],[900,112],[960,80]],230,'url(#g-lejos)',34);
-  cordon([[0,190],[70,140],[150,175],[220,110],[300,170],[360,126],[430,185],[500,135],[560,175],[600,180],[680,170],[760,182],[830,130],[900,170],[960,150]],240,'url(#g-cerca)',22);
-  // volcán (cono simétrico, estilo Osorno)
-  el('path',{d:'M560 225 L668 58 L690 58 L800 225 Z',fill:'#4a5868'},gc);
-  el('path',{d:'M640 102 L668 58 L690 58 L718 102 L705 96 L694 108 L680 96 L667 108 L654 96 Z',fill:'#f7fbff'},gc);
-  el('path',{d:'M672 52 q6 -14 0 -26 q10 10 4 26z',fill:'#cfd6de',opacity:'.7'},gc);
-  // árboles: araucarias arriba, coihues al medio, arbustos en las dunas
-  const ga=$('arboles');
-  function araucaria(x,y,s){
-    const g=el('g',{transform:`translate(${x},${y}) scale(${s})`},ga);
-    el('path',{d:'M-2 0 L-2 -46 L2 -46 L2 0 Z',fill:'#5a3a22'},g);
-    [[-50,22],[-40,18],[-31,14]].forEach(([yy,w])=>el('path',{d:`M${-w} ${yy+6} Q0 ${yy-10} ${w} ${yy+6} Q0 ${yy-2} ${-w} ${yy+6}Z`,fill:'#173d27'},g));
-    el('path',{d:'M-14 -50 Q0 -64 14 -50 Q0 -56 -14 -50Z',fill:'#1f4d2e'},g);
+  for(let x=-30;x<W+30;x+=34+rnd()*60){
+    const s=1.15+rnd()*.6,cy=caminoY(x),yMin=cy+46+70*s;if(yMin>H+40)continue;
+    frente.push([yMin+rnd()*Math.max(0,H+40-yMin),x,s]);
   }
-  function coihue(x,y,s){
-    const g=el('g',{transform:`translate(${x},${y}) scale(${s})`},ga);
-    el('rect',{x:-2.5,y:-22,width:5,height:22,fill:'#5a3a22'},g);
-    [[-10,-30,13,'#1f5232'],[10,-32,14,'#245c38'],[0,-44,15,'#2b6a40']].forEach(([cx,cy,r,f])=>el('circle',{cx,cy,r,fill:f},g));
-  }
-  function arbusto(x,y,s){
-    const g=el('g',{transform:`translate(${x},${y}) scale(${s})`},ga);
-    [[-8,-6,8],[6,-7,9],[0,-12,8]].forEach(([cx,cy,r])=>el('circle',{cx,cy,r,fill:'#4f7d34'},g));
-  }
-  const centros=[];for(let i=0;i<N;i++)centros.push(pos(i));
-  function libre(x,y,m){return centros.every(p=>Math.hypot(p.x-x,p.y-y)>m);}
-  semilla=11;
-  for(let k=0;k<70;k++){const x=rnd()*960,y=190+rnd()*30;if(libre(x,y-20,52))araucaria(x,y,.7+rnd()*.4);}
-  for(let k=0;k<55;k++){const x=rnd()*960,y=285+rnd()*30;if(libre(x,y-20,50))(rnd()<.55?araucaria:coihue)(x,y,.7+rnd()*.35);}
-  for(let k=0;k<55;k++){const x=rnd()*960,y=395+rnd()*22;if(libre(x,y-20,50))coihue(x,y,.75+rnd()*.35);}
-  for(let k=0;k<30;k++){const x=rnd()*960,y=500+rnd()*14;if(libre(x,y-8,48))arbusto(x,y,.8+rnd()*.5);}
-  // olas
-  let d='';for(let x=0;x<1100;x+=40)d+=`M${x} 616 q10 -7 20 0 q10 7 20 0 `;for(let x=20;x<1100;x+=40)d+=`M${x} 630 q10 -6 20 0 `;
-  $('ola').setAttribute('d',d);
+  const ga=$('atras'),gf=$('frente');
+  atras.sort((a,b)=>a[0]-b[0]).forEach(([y,x,s],k)=>arbolDe(x,false)(ga,x,y,s,false,k));
+  frente.sort((a,b)=>a[0]-b[0]).forEach(([y,x,s],k)=>{const f=arbolDe(x,true);f(gf,x,y,s,true,k);});
+  // fauna
+  const gfa=$('fauna');
+  [[64,612,26],[92,628,22],[40,632,20]].forEach(([x,y,s])=>emoji(gfa,x,y,s,'🐧'));
+  const t24=TILES[24];emoji(gfa,t24.x+70,t24.y-80,34,'🦌');
+  const t14=TILES[14];emoji(gfa,t14.x-10,t14.y+70,26,'🏕️');
+  const cg=el('g',{transform:'translate(3200,150)'},gfa),co=el('g',{class:'condor'},cg);
+  el('path',{d:'M0 0 q18 -13 36 0 q18 -13 36 0 q-18 -5 -36 5 q-18 -10 -36 -5z',fill:'#1f2328'},co);
+  el('circle',{cx:36,cy:1,r:3,fill:'#fff'},co);
+  // bandera en la cumbre
+  const tm=TILES[META],fb=el('g',{transform:`translate(${tm.x+30},${tm.y-36})`},gfa);
+  el('rect',{x:0,y:-70,width:3,height:72,fill:'#5a3a22'},fb);
+  const fl=el('g',{class:'mecer'},fb);
+  el('rect',{x:3,y:-70,width:48,height:16,fill:'#fff'},fl);el('rect',{x:3,y:-54,width:48,height:16,fill:'#d52b1e'},fl);el('rect',{x:3,y:-70,width:16,height:16,fill:'#0039a6'},fl);
+  el('path',{d:'M11 -66 l1.4 4.2 h4.4 l-3.6 2.6 1.4 4.2 -3.6 -2.6 -3.6 2.6 1.4 -4.2 -3.6 -2.6 h4.4z',fill:'#fff'},fl);
+  // cartel de partida
+  const t0=TILES[0],cart=el('g',{transform:`translate(${t0.x-10},${t0.y-60})`},gfa);
+  el('rect',{x:-2,y:-6,width:4,height:30,fill:'#5a3a22'},cart);el('rect',{x:-52,y:-34,width:104,height:30,rx:5,fill:'#7a4f2c',stroke:'#5a3a22','stroke-width':2},cart);
+  const tx=el('text',{x:0,y:-18,'text-anchor':'middle','dominant-baseline':'central',fill:'#fbf6e9','font-weight':800,'font-size':15,'font-family':'Nunito,sans-serif'},cart);tx.textContent='CALETA';
 }
 
 function dibujarTablero(){
-  // sendero de tierra
-  const gs=$('sendero');let pts=[];for(let i=0;i<N;i++){const p=pos(i);pts.push(p.x+','+p.y);}
-  el('polyline',{points:pts.join(' '),fill:'none',stroke:'#7a4f2c',  'stroke-width':34,'stroke-linejoin':'round','stroke-linecap':'round',opacity:.55},gs);
-  el('polyline',{points:pts.join(' '),fill:'none',stroke:'#d9b67c','stroke-width':22,'stroke-linejoin':'round','stroke-linecap':'round'},gs);
-  el('polyline',{points:pts.join(' '),fill:'none',stroke:'#fff','stroke-width':2.5,'stroke-dasharray':'2 12','stroke-linecap':'round',opacity:.8},gs);
-  // atajos y retrocesos
+  const gs=$('sendero'),d='M'+CAMINO.map(p=>p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' L');
+  el('path',{d:d,fill:'none',stroke:'#3d2814','stroke-width':52,'stroke-linecap':'round','stroke-linejoin':'round',opacity:.25,transform:'translate(0,6)'},gs);
+  el('path',{d:d,fill:'none',stroke:'#a07644','stroke-width':44,'stroke-linecap':'round','stroke-linejoin':'round'},gs);
+  el('path',{d:d,fill:'none',stroke:'#dcbb84','stroke-width':34,'stroke-linecap':'round','stroke-linejoin':'round'},gs);
+  el('path',{d:d,fill:'none',stroke:'#fff','stroke-width':3,'stroke-dasharray':'2 16','stroke-linecap':'round',opacity:.85},gs);
+  // atajos (arcos verdes por arriba) y retrocesos (arcos morados por abajo)
   const gA=$('atajos');
   CAS.forEach((c,i)=>{
     if(c.t!=='atajo'&&c.t!=='resbalon')return;
-    const a=pos(i),b=pos(c.a),col=c.t==='atajo'?'#1f7a46':'#6a3d91';
-    const mx=(a.x+b.x)/2,my=(a.y+b.y)/2,dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1;
-    const curva=Math.abs(dy)<5?60:Math.min(90,len*.22);
-    const cx=mx-dy/len*curva*(c.t==='atajo'?1:-1),cy=my+dx/len*curva*(c.t==='atajo'?1:-1);
-    const cable=c.i==='🚡';
-    const d=cable?`M${a.x} ${a.y} L${b.x} ${b.y}`:`M${a.x} ${a.y} Q${cx} ${cy} ${b.x} ${b.y}`;
-    el('path',{d,fill:'none',stroke:'#fff','stroke-width':9,'stroke-linecap':'round',opacity:.75},gA);
-    el('path',{d,fill:'none',stroke:col,'stroke-width':5,'stroke-dasharray':cable?'none':'10 7','stroke-linecap':'round','marker-end':'url(#flecha)'},gA);
-    const lx=cable?mx:(mx+cx)/2,ly=cable?my:(my+cy)/2;
-    el('circle',{cx:lx,cy:ly,r:17,fill:'#fff',stroke:col,'stroke-width':3},gA);
-    const t=el('text',{x:lx,y:ly+1,'font-size':18,'text-anchor':'middle','dominant-baseline':'central','font-family':'Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji'},gA);t.textContent=c.i;
+    const a=pos(i),b=pos(c.a),atajo=c.t==='atajo',col=atajo?'#1f7a46':'#6a3d91',cable=c.i==='🚡';
+    const cx=(a.x+b.x)/2,cy=atajo?Math.max(40,Math.min(a.y,b.y)-200):Math.min(H-24,Math.max(a.y,b.y)+130);
+    const dd=cable?`M${a.x} ${a.y} L${b.x} ${b.y}`:`M${a.x} ${a.y} Q${cx} ${cy} ${b.x} ${b.y}`;
+    if(cable){[a,b].forEach(p=>el('path',{d:`M${p.x-8} ${p.y+26} L${p.x} ${p.y-50} L${p.x+8} ${p.y+26}`,fill:'none',stroke:'#4a4f55','stroke-width':4},gA));}
+    el('path',{d:dd,fill:'none',stroke:'#fff','stroke-width':10,'stroke-linecap':'round',opacity:.7},gA);
+    el('path',{d:dd,fill:'none',stroke:cable?'#3b4046':col,'stroke-width':cable?4:6,'stroke-dasharray':cable?'none':'12 8','stroke-linecap':'round','marker-end':'url(#flecha)'},gA);
+    const lx=cable?(a.x+b.x)/2:.25*a.x+.5*cx+.25*b.x,ly=cable?(a.y+b.y)/2:.25*a.y+.5*cy+.25*b.y;
+    el('circle',{cx:lx,cy:ly,r:22,fill:'#fff',stroke:col,'stroke-width':3},gA);
+    emoji(gA,lx,ly+1,24,c.i);
+    const et=el('text',{x:lx,y:ly+(atajo?-32:36),'text-anchor':'middle','font-weight':800,'font-size':15,'font-family':'Nunito,sans-serif',fill:'#fff',stroke:col,'stroke-width':5,'paint-order':'stroke'},gA);
+    et.textContent=`${c.n}: ${i} → ${c.a}`;
   });
   // casillas
   const gc=$('casillas');
   CAS.forEach((c,i)=>{
     const p=pos(i),tp=TIPOS[c.t];
-    const g=el('g',{class:'casilla'+(c.t==='super'?' super':''),transform:`translate(${p.x},${p.y})`,'data-i':i,tabindex:0,role:'button','aria-label':`Casilla ${i}: ${c.n}`},gc);
-    el('circle',{r:40,fill:'rgba(0,0,0,.22)',cy:4},g);
+    const g=el('g',{class:'casilla'+(c.t==='super'?' super':''),transform:`translate(${p.x.toFixed(1)},${p.y.toFixed(1)})`,'data-i':i,tabindex:0,role:'button','aria-label':`Casilla ${i}: ${c.n}`},gc);
+    el('ellipse',{cx:0,cy:8,rx:40,ry:34,fill:'rgba(40,25,10,.3)'},g);
     el('circle',{class:'disco',r:36,fill:tp.c},g);
-    if(c.t==='salida'||c.t==='meta'){el('circle',{r:29,fill:'none',stroke:c.t==='meta'?'#c8102e':'#2b8cc4','stroke-width':4,'stroke-dasharray':'6 5'},g);}
-    const t=el('text',{class:'ico',y:1},g);t.textContent=c.i||'';
-    if(!c.i){const n=el('text',{class:'num',y:1,'font-size':20},g);n.textContent=i;n.style.fontSize='20px';n.style.fill='#7a6a4f';}
-    else{el('circle',{cx:-27,cy:-27,r:12,fill:'#fff',stroke:'#1d2a20','stroke-width':1.5},g);const n=el('text',{class:'num',x:-27,y:-26.5},g);n.textContent=i;}
+    if(c.t==='salida'||c.t==='meta')el('circle',{r:29,fill:'none',stroke:c.t==='meta'?'#c8102e':'#2b8cc4','stroke-width':4,'stroke-dasharray':'6 5'},g);
+    if(c.i){const t=el('text',{class:'ico',y:1},g);t.textContent=c.i;el('circle',{cx:-27,cy:-27,r:12,fill:'#fff',stroke:'#1d2a20','stroke-width':1.5},g);const n=el('text',{class:'num',x:-27,y:-26.5},g);n.textContent=i;}
+    else{const n=el('text',{class:'num',y:1},g);n.textContent=i;n.style.fontSize='20px';n.style.fill='#7a6a4f';}
     const ti=el('title',{},g);ti.textContent=`${i} · ${c.n}${c.d?' — '+c.d:''}`;
   });
-  // leyenda
   const ley=[['pregunta','📝'],['ganar','🪙'],['perder','💸'],['atajo','🚡'],['resbalon','🌊'],['avanza','💨'],['retrocede','🪨'],['turno','🌧️'],['super','💎']];
   $('leyenda').innerHTML=ley.map(([k,ic])=>`<span class="chip"><i style="background:${k==='super'?'#f2b632':TIPOS[k].c}">${ic}</i>${TIPOS[k].t}</span>`).join('');
 }
@@ -405,6 +562,60 @@ function infoCasilla(i){
   if(c.t==='ganar')ef=` (+${c.v} F$)`;else if(c.t==='perder')ef=` (−${c.v} F$)`;
   toast(`Casilla ${i} · ${c.n}${ef}${c.d?': '+c.d:''}`);
 }
+
+/* ═════════════ cámara y mapa de ruta ═════════════ */
+const cam={x:0,obj:0,seguir:true,vel:.12,ult:-1,uvw:-1,zona:''};
+let visW=1000;
+const PARALAJE=[['p-sol',.97],['p-lejos2',.8],['p-nubes',.86],['p-lejos',.62],['p-volcan',.4]];
+function medir(){const r=$('tablero').getBoundingClientRect();visW=Math.max(300,Math.min(W,H*r.width/Math.max(1,r.height)));}
+function limitar(v){return Math.max(0,Math.min(W-visW,v));}
+function objetivo(){if(!cam.seguir)return cam.obj;const j=J[turno];return ((j?TILES[j.pos]:TILES[0]).x)-visW*.42;}
+function mx(x){return `calc(18px + (100% - 36px) * ${(x/W).toFixed(4)})`;}
+function bucle(){
+  const t=limitar(objetivo());
+  cam.x+=(t-cam.x)*cam.vel;if(Math.abs(t-cam.x)<.4)cam.x=t;
+  if(cam.x!==cam.ult||visW!==cam.uvw){
+    cam.ult=cam.x;cam.uvw=visW;
+    svg.setAttribute('viewBox',`${cam.x.toFixed(1)} 0 ${visW.toFixed(1)} ${H}`);
+    PARALAJE.forEach(([id,f])=>$(id).setAttribute('transform',`translate(${(cam.x*f).toFixed(1)},0)`));
+    const mc=$('mcam');mc.style.left=mx(cam.x);mc.style.width=`calc((100% - 36px) * ${(visW/W).toFixed(4)})`;
+    const z=zonaDe(cam.x+visW*.42);if(z.n!==cam.zona){cam.zona=z.n;$('zona').textContent=z.ic+' '+z.n;}
+  }
+  requestAnimationFrame(bucle);
+}
+function mostrarSeguir(){$('b-seguir').hidden=cam.seguir||!J.length;}
+function seguirFicha(){cam.seguir=true;cam.vel=.12;mostrarSeguir();}
+function mirar(x){cam.seguir=false;cam.obj=limitar(x);mostrarSeguir();}
+function dibujarMini(){
+  const pc=x=>(x/W*100).toFixed(2);
+  $('pista').style.background=`linear-gradient(90deg,#2b8cc4 0 ${pc(380)}%,#e9d29a ${pc(380)}% ${pc(780)}%,#a9c46c ${pc(780)}% ${pc(1500)}%,#3f7b46 ${pc(1500)}% ${pc(2600)}%,#1d4a2f ${pc(2600)}% ${pc(3400)}%,#8d99a6 ${pc(3400)}% ${pc(3950)}%,#eef4f8 ${pc(3950)}%)`;
+  const m=$('mini');
+  CAS.forEach((c,i)=>{if(c.t==='normal')return;const d=document.createElement('i');d.className='mt';d.style.left=mx(TILES[i].x);d.style.background=c.t==='super'?'#f2b632':(c.t==='salida'||c.t==='meta'?'#c8102e':TIPOS[c.t].c);m.appendChild(d);});
+}
+function pintarMini(){
+  const m=$('mini');m.querySelectorAll('.mj').forEach(e=>e.remove());
+  J.forEach((j,k)=>{const d=document.createElement('span');d.className='mj'+(jugando&&k===turno?' on':'');d.textContent=j.ficha;d.style.left=mx(TILES[j.pos].x);m.appendChild(d);});
+}
+// arrastrar y rueda para mirar el camino
+let arr=null,arrastro=false;
+(function(){
+  const tab=$('tablero'),fuera=e=>e.target.closest('.hud-arriba,.hud-dado,.hud-seguir');
+  tab.addEventListener('pointerdown',e=>{if(fuera(e))return;arr={x:e.clientX,c:cam.x,id:e.pointerId};arrastro=false;});
+  tab.addEventListener('pointermove',e=>{
+    if(!arr)return;const dx=e.clientX-arr.x;if(!arrastro&&Math.abs(dx)<7)return;
+    if(!arrastro){arrastro=true;tab.classList.add('arrastra');try{tab.setPointerCapture(arr.id);}catch(_){}}
+    mirar(arr.c-dx*visW/tab.clientWidth);cam.x=cam.obj;
+  });
+  const soltar=()=>{arr=null;tab.classList.remove('arrastra');};
+  tab.addEventListener('pointerup',soltar);tab.addEventListener('pointercancel',soltar);
+  tab.addEventListener('wheel',e=>{
+    if(fuera(e))return;const d=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;if(!d)return;
+    e.preventDefault();const base=cam.seguir?cam.x:cam.obj;mirar(base+d*1.3*visW/tab.clientWidth);
+  },{passive:false});
+  $('mini').addEventListener('click',e=>{const r=$('mini').getBoundingClientRect();const f=(e.clientX-r.left-18)/Math.max(1,r.width-36);mirar(f*W-visW/2);});
+  $('b-seguir').addEventListener('click',seguirFicha);
+  window.addEventListener('resize',medir);
+})();
 
 /* ═════════════ estado ═════════════ */
 let J=[],turno=0,jugando=false,ocupado=false,BANCO=[],mazo=[],ejesSel=EJES.slice(),turnos=0;
@@ -416,23 +627,25 @@ function pintarFichas(){
     if(!f){
       f=el('g',{class:'ficha','data-j':k},g);
       const c=el('g',{class:'cuerpo'},f);
-      el('ellipse',{cx:0,cy:24,rx:18,ry:5,fill:'rgba(0,0,0,.3)'},c);
-      el('circle',{r:22,fill:'#fff',stroke:j.color,'stroke-width':4},c);
+      el('ellipse',{cx:0,cy:28,rx:20,ry:6,fill:'rgba(0,0,0,.32)'},c);
+      el('circle',{class:'pulso',r:26,fill:'none',stroke:j.color,'stroke-width':4},c);
+      el('circle',{class:'aro',r:25,fill:'#fff',stroke:j.color,'stroke-width':4},c);
       const t=el('text',{y:1},c);t.textContent=j.ficha;
     }
     const mismos=J.filter(o=>o.pos===j.pos),idx=mismos.indexOf(j);
-    const off=mismos.length>1?[[-15,-12],[15,-12],[-15,14],[15,14]][idx]:[0,-4];
+    const off=mismos.length>1?[[-17,-22],[17,-22],[-17,8],[17,8]][idx]:[0,-14];
     const p=pos(j.pos);
     f.style.transform=`translate(${p.x+off[0]}px,${p.y+off[1]}px)`;
     f.classList.toggle('activa',jugando&&k===turno);
   });
   // la ficha del turno, encima
   const act=g.querySelector(`[data-j="${turno}"]`);if(act)g.appendChild(act);
+  pintarMini();
 }
 function pintarPanel(){
   const j=J[turno];
   if(jugando&&j){
-    $('turno').innerHTML=`<div class="av" style="border-color:${j.color}">${j.ficha}</div><div><small>Turno ${turnos+1} · le toca a</small><b>${esc(j.nombre)}</b><small>Casilla ${j.pos} · ${esc(CAS[j.pos].n)}</small></div>`;
+    $('turno').innerHTML=`<div class="av" style="border-color:${j.color}">${j.ficha}</div><div><small>Turno ${turnos+1} · le toca a</small><b>${esc(j.nombre)}</b><small>Casilla ${j.pos}/${META} · ${j.f} F$</small></div>`;
   }
   $('jugadores').innerHTML=J.map((p,k)=>`<div class="jug${jugando&&k===turno?' on':''}" style="border-left:5px solid ${p.color}">
     <div class="e">${p.ficha}</div>
@@ -458,7 +671,7 @@ function cab(ic,titulo,sub){return `<div class="v-cab"><div class="ic">${ic}</di
 const REGLAS=`<ul class="reglas">
  <li>Cada jugador parte en la <b>Caleta</b> con <b>${INICIAL} Felipesos (F$)</b>. Gana quien llega primero a la <b>Cumbre</b> (casilla ${META}), y recibe <b>+${BONO_META} F$</b>.</li>
  <li>📝 <b>Pregunta PAES</b>: si aciertas ganas <b>+${PREMIO_OK} F$</b> y avanzas <b>${AVANZA_OK}</b>; si fallas retrocedes <b>${RETRO_MAL}</b>. Siempre verás la explicación.</li>
- <li>🚡 <b>Atajos</b> (líneas verdes) te suben de golpe. 🌊 <b>Retrocesos</b> (líneas moradas) te devuelven.</li>
+ <li>🚡 <b>Atajos</b> (arcos verdes) te adelantan de golpe. 🌊 <b>Retrocesos</b> (arcos morados) te devuelven.</li>
  <li>🪙 Ganas o 💸 pierdes Felipesos · 💨 avanzas · 🪨 retrocedes · 🌧️ pierdes un turno.</li>
  <li>💎 Busca el <b>Glaciar Dorado</b> (casilla 33): ¡súper premio de 300 F$!</li>
  <li>Los movimientos extra (por pregunta o casilla) no activan la casilla donde caes.</li>
@@ -521,6 +734,9 @@ async function configurar(){
   $('fichas').innerHTML='';$('bitacora').innerHTML='';
   log(`🗺️ Parte la expedición: ${J.map(j=>j.ficha+' '+esc(j.nombre)).join(', ')}.`,'oro');
   pintarFichas();pintarPanel();
+  // vuelo de presentación: de la cumbre a la caleta
+  cam.seguir=false;cam.x=limitar(W);cam.obj=0;cam.vel=.03;mostrarSeguir();
+  setTimeout(()=>{if(!cam.seguir&&cam.obj===0)seguirFicha();},2600);
 }
 
 /* ═════════════ juego ═════════════ */
@@ -550,7 +766,7 @@ async function saltar(j,dest){
 function sumar(j,v){j.f=Math.max(0,j.f+v);}
 async function tirar(){
   if(!jugando||ocupado)return;
-  ocupado=true;pintarPanel();
+  ocupado=true;pintarPanel();seguirFicha();
   const j=J[turno];
   const n=await animarDado();
   log(`🎲 ${j.ficha} <b>${esc(j.nombre)}</b> sacó un <b>${n}</b>.`);
@@ -625,7 +841,7 @@ function siguiente(){
     if(j.pierde){j.pierde=false;log(`🌧️ ${j.ficha} <b>${esc(j.nombre)}</b> esperó a que pasara la lluvia.`);}
     break;
   }
-  ocupado=false;pintarFichas();pintarPanel();
+  ocupado=false;seguirFicha();pintarFichas();pintarPanel();
 }
 async function ganar(j){
   jugando=false;sumar(j,BONO_META);j.gano=true;
@@ -672,13 +888,13 @@ document.addEventListener('keydown',e=>{
   if(e.code==='Space'&&$('velo').hidden&&!/INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement.tagName)){e.preventDefault();tirar();}
   if(e.key==='Escape'&&!$('velo').hidden&&$('ventana').querySelector('[data-r=cerrar]')){$('ventana').querySelector('[data-r=cerrar]').click();}
 });
-$('casillas').addEventListener('click',e=>{const g=e.target.closest('.casilla');if(g)infoCasilla(+g.dataset.i);});
+$('casillas').addEventListener('click',e=>{if(arrastro)return;const g=e.target.closest('.casilla');if(g)infoCasilla(+g.dataset.i);});
 $('casillas').addEventListener('keydown',e=>{if(e.key==='Enter'){const g=e.target.closest('.casilla');if(g)infoCasilla(+g.dataset.i);}});
 $('b-reglas').addEventListener('click',()=>{ventana(cab('📜','Reglas','Ruta PAES')+`<div class="v-cuerpo">${REGLAS}<div class="v-pie"><button class="btn" data-r="cerrar">Entendido</button></div></div>`,{cerrable:true}).then(cerrar);});
 $('b-nueva').addEventListener('click',()=>{if(ocupado)return;if(jugando&&!confirm('¿Terminar esta partida y empezar otra?'))return;jugando=false;configurar();});
 
 /* ═════════════ arranque ═════════════ */
-dibujarPaisaje();dibujarTablero();pintarPanel();
+dibujarPaisaje();dibujarTablero();dibujarMini();medir();requestAnimationFrame(bucle);pintarPanel();
 cargarBanco().then(b=>{BANCO=b;configurar();});
 })();
 </script>
