@@ -62,6 +62,31 @@ header .esp{flex:1}
 @keyframes nube{from{transform:translateX(-300px)}to{transform:translateX(300px)}}
 .condor{animation:vuelo 40s linear infinite}
 @keyframes vuelo{from{transform:translate(-120px,0)}50%{transform:translate(560px,-30px)}to{transform:translate(1240px,10px)}}
+.brillo{animation:brillo2 3s ease-in-out infinite}
+@keyframes brillo2{0%,100%{opacity:.15}50%{opacity:.85}}
+.deriva{animation:deriva 30s ease-in-out infinite alternate}
+@keyframes deriva{to{transform:translateX(90px)}}
+.rayo{animation:rayo 6s ease-in-out infinite}
+@keyframes rayo{50%{opacity:.16}}
+.alga{animation:alga 5s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center bottom}
+@keyframes alga{from{transform:rotate(-4deg)}to{transform:rotate(5deg)}}
+.pez{animation:pez 14s linear infinite}
+@keyframes pez{0%{transform:translateX(260px);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateX(-260px);opacity:0}}
+.buzo{animation:buzo 9s ease-in-out infinite}
+@keyframes buzo{0%{transform:translate(-120px,30px)}50%{transform:translate(160px,-20px)}100%{transform:translate(-120px,30px)}}
+.burbuja{animation:burbuja 7s linear infinite}
+@keyframes burbuja{0%{transform:translateY(0);opacity:0}15%{opacity:.9}100%{transform:translateY(-150px);opacity:0}}
+.olas2{animation:olas2 3.2s linear infinite}
+@keyframes olas2{to{transform:translateX(60px)}}
+.olas3{animation:olas3 5s linear infinite}
+@keyframes olas3{to{transform:translateX(-60px)}}
+.rompe{animation:rompe 4s ease-in-out infinite;transform-box:fill-box;transform-origin:center bottom}
+@keyframes rompe{0%,100%{transform:translateX(-14px) scale(.94)}50%{transform:translateX(10px) scale(1.04)}}
+.salpica{animation:salpica 2.6s ease-out infinite;transform-box:fill-box;transform-origin:center bottom}
+@keyframes salpica{0%{transform:scale(.6);opacity:0}25%{opacity:1}70%{transform:scale(1.05);opacity:.9}100%{transform:scale(1.15);opacity:0}}
+.copo{animation:copo linear infinite}
+@keyframes copo{from{transform:translate(0,0)}to{transform:translate(40px,760px)}}
+.niebla{animation:deriva 14s ease-in-out infinite alternate}
 .mecer{animation:mecer 4s ease-in-out infinite;transform-box:fill-box;transform-origin:center bottom}
 @keyframes mecer{50%{transform:rotate(3deg) translateY(-3px)}}
 
@@ -228,6 +253,10 @@ header .esp{flex:1}
         <radialGradient id="g-oro"><stop offset="0" stop-color="#fff3b0"/><stop offset=".6" stop-color="#f2b632"/><stop offset="1" stop-color="#c98a06"/></radialGradient>
         <radialGradient id="g-sol"><stop offset="0" stop-color="#fffbe0"/><stop offset=".45" stop-color="#ffe9a3" stop-opacity=".9"/><stop offset="1" stop-color="#ffe9a3" stop-opacity="0"/></radialGradient>
         <clipPath id="c-mar"><path id="d-mar"/></clipPath>
+        <clipPath id="c-corte"><rect x="-1300" y="470" width="1410" height="300"/></clipPath>
+        <linearGradient id="g-mar-lejos" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fcbe8"/><stop offset=".5" stop-color="#4fa7d6"/><stop offset="1" stop-color="#2f86bb"/></linearGradient>
+        <linearGradient id="g-agua" gradientUnits="userSpaceOnUse" x1="0" y1="500" x2="0" y2="700"><stop offset="0" stop-color="#2fa1d6"/><stop offset=".35" stop-color="#16719f"/><stop offset="1" stop-color="#073450"/></linearGradient>
+        <linearGradient id="g-fondo" gradientUnits="userSpaceOnUse" x1="0" y1="560" x2="0" y2="720"><stop offset="0" stop-color="#ead29d"/><stop offset=".5" stop-color="#cfab72"/><stop offset="1" stop-color="#8f6a3e"/></linearGradient>
         <marker id="flecha" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker>
       </defs>
       <g id="cielo"></g>
@@ -277,11 +306,12 @@ header .esp{flex:1}
 (function(){
 'use strict';
 /* ═════════════ Camino: de oeste (mar) a este (cordillera) ═════════════ */
-const N=40, META=N-1, H=700, W=4420, X0=170, X1=4260, HZ=310;
-function medioY(x){if(x<1500)return 560;if(x<2800)return 560-(x-1500)/1300*90;if(x<3500)return 470-(x-2800)/700*90;return 380-(Math.min(x,X1)-3500)/760*150;}
-function amplitud(x){return x<3400?72:Math.max(16,72-(x-3400)/860*56);}
+const N=40, META=N-1, H=700, W=4420, X0=170, X1=4260, HZ=310, XMIN=-980, SEA=500, SHORE=120;
+function medioY(x){if(x<1500)return 468;if(x<2800)return 468-(x-1500)/1300*28;if(x<3500)return 440-(x-2800)/700*60;return 380-(Math.min(x,X1)-3500)/760*150;}
+function amplitud(x){if(x<700)return 14+(x-X0)/530*48;return x<3400?62:Math.max(16,62-(x-3400)/860*46);}
 function caminoY(x){x=Math.max(X0,Math.min(X1,x));return medioY(x)+amplitud(x)*Math.sin((x-X0)/235);}
-function costaY(x){return x>=820?HZ:HZ+205*Math.pow((820-x)/820,.8);}
+function costaY(x){return x>=820?HZ:(x<=SHORE?SEA:HZ+(SEA-HZ)*Math.pow((820-x)/(820-SHORE),.8));}
+function fondoY(x){if(x>SHORE+90)return SEA-36;if(x>SHORE-430){const t=(SHORE+90-x)/520;return SEA-36+t*206;}return 670+10*Math.sin(x/95)+6*Math.sin(x/37);}
 const CAMINO=[];for(let x=X0;x<=X1;x+=5)CAMINO.push({x:x,y:caminoY(x)});
 const TILES=(function(){
   const acc=[0];for(let k=1;k<CAMINO.length;k++)acc.push(acc[k-1]+Math.hypot(CAMINO[k].x-CAMINO[k-1].x,CAMINO[k].y-CAMINO[k-1].y));
@@ -405,13 +435,18 @@ function roca(g,x,y,s){
   if(nieve)el('path',{d:'M-15 -14 L-4 -20 L10 -16 L4 -13 L-6 -15Z',fill:'#f7fbff'},a);
 }
 /* ── sprites (ilustraciones recortadas de la hoja de recursos) ── */
-const SPR={"arbol-conifera":[156,233],"arbol-otono":[199,207],"arbol-redondo":[183,208],"arbol-retorcido":[192,204],"arbol-roble":[236,231],"arbol-seco":[172,192],"arbusto":[182,143],"mar-arrecife":[230,204],"mar-claro":[234,202],"mar-hondo":[240,202],"mar-ola":[239,206],"mar-ola2":[233,200],"mar-roca":[239,205],"monte-bosque":[295,213],"monte-nevado":[311,237],"monte-nieve":[286,192],"monte-rocoso":[284,203],"monte-verde":[283,221],"nube-lluvia":[268,187],"nube":[285,104]};
+const SPR={"arbol-conifera":[156,233],"arbol-otono":[199,207],"arbol-redondo":[183,208],"arbol-retorcido":[192,204],"arbol-roble":[236,231],"arbol-seco":[172,192],"arbusto":[182,143],"cascada":[166,168],"espuma":[146,90],"glacial":[185,166],"gotas":[124,125],"lago":[187,164],"monte-bosque":[295,213],"monte-nevado":[311,237],"monte-nieve":[286,192],"monte-rocoso":[284,203],"monte-verde":[283,221],"neblina":[179,122],"nube-lluvia":[268,187],"nube":[285,104],"ola-rompe":[178,122],"oleaje-rocas":[179,157],"orilla-rocosa":[171,149],"playa":[176,152],"rizo":[176,76],"salpicadura-chica":[138,108],"salpicadura":[142,108]};
 function spr(g,n,x,y,s,base,extra){ // (x,y) = punto de apoyo; base = fracción desde abajo donde "apoya"
   const [w,h]=SPR[n],b=base==null?.06:base;
   const im=el('image',Object.assign({href:'sprites/'+n+'.webp',x:(-w/2).toFixed(1),y:(-h*(1-b)).toFixed(1),width:w,height:h,preserveAspectRatio:'none',transform:`translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s.toFixed(3)})`},extra||{}),g);
   return im;
 }
 const arbolSpr=n=>(g,x,y,s)=>spr(g,n,x,y,s*.34,.07);
+function bote(g,x,y,s){
+  const b=el('g',{transform:`translate(${x},${y}) scale(${s})`},g),m=el('g',{class:'mecer'},b);
+  el('path',{d:'M-30 0 L30 0 L21 13 L-21 13Z',fill:'#b23a3a'},m);el('path',{d:'M-30 0 L30 0',stroke:'#fff','stroke-width':2},m);
+  el('rect',{x:-1.2,y:-50,width:2.4,height:50,fill:'#5a3a22'},m);el('path',{d:'M1 -48 L1 -4 L26 -6Z',fill:'#fff'},m);el('path',{d:'M-2 -42 L-2 -4 L-22 -7Z',fill:'#f2d28a'},m);
+}
 function arbolDe(x,frente){
   const z=zonaDe(x).n,r=rnd();
   if(z==='Playa')return r<.3?palma:(frente?(r<.65?roca:arbolSpr('arbusto')):arbolSpr('arbusto'));
@@ -443,13 +478,13 @@ function dibujarPaisaje(){
   const gs=$('g-suelo');
   [[0,'#ecd6a0'],[760,'#e6cf95'],[980,'#a9c46c'],[1450,'#86ab55'],[1750,'#3f7b46'],[2600,'#2f6a3d'],[3250,'#24553a'],[3550,'#6f7c8a'],[3950,'#b9c4cf'],[W,'#eef4f8']]
     .forEach(([x,c])=>el('stop',{offset:(x/W).toFixed(4),'stop-color':c},gs));
-  el('rect',{x:-60,y:-10,width:W+120,height:H+20,fill:'url(#g-cielo)'},$('cielo'));
+  el('rect',{x:XMIN-200,y:-10,width:W-XMIN+300,height:H+20,fill:'url(#g-cielo)'},$('cielo'));
   // sol (casi fijo en el cielo)
   el('circle',{cx:620,cy:110,r:120,fill:'url(#g-sol)'},$('p-sol'));
   el('circle',{cx:620,cy:110,r:34,fill:'#fff6cc'},$('p-sol'));
   // cordones de los Andes, siempre visibles al este (con profundidad)
-  semilla=3; cordon($('p-lejos2'),-60,W+60,HZ+20,130,250,120,'url(#g-lejos2)',.85);
-  semilla=9; cordon($('p-lejos'),-60,W+60,HZ+20,95,265,150,'url(#g-lejos)',1);
+  semilla=3; cordon($('p-lejos2'),XMIN-200,W+60,HZ+20,130,250,120,'url(#g-lejos2)',.85);
+  semilla=9; cordon($('p-lejos'),XMIN-200,W+60,HZ+20,95,265,150,'url(#g-lejos)',1);
   // volcán nevado (estilo Osorno)
   const gv=$('p-volcan'),vx=2150;
   el('path',{d:`M${vx-240} ${HZ+20} L${vx-26} 92 L${vx+26} 92 L${vx+240} ${HZ+20}Z`,fill:'#56657a'},gv);
@@ -457,67 +492,117 @@ function dibujarPaisaje(){
   el('path',{d:`M${vx-4} 86 q12 -22 2 -44 q18 16 8 44z`,fill:'#d7dde4',opacity:.75},gv);
   // montañas ilustradas sobre el horizonte (ocultas en su base por el suelo)
   const gmo=$('p-montes'),f=.28;
-  [[430,'monte-verde',.95],[980,'monte-bosque',1.05],[1560,'monte-verde',1.1],[2050,'monte-rocoso',1.15],[2560,'monte-bosque',1.2],[3050,'monte-nevado',1.25]]
+  [[430,'monte-verde',.95],[980,'monte-verde',1.0],[1560,'monte-verde',1.1],[2050,'monte-rocoso',1.15],[2560,'monte-rocoso',1.15],[3050,'monte-nevado',1.25]]
    .forEach(([x,n,s])=>spr(gmo,n,x-(x-500)*f,HZ+34,s,.12));
   // nubes
   semilla=5;const gn=$('p-nubes');
-  for(let x=-100;x<W;x+=380+rnd()*260){
+  for(let x=XMIN;x<W;x+=380+rnd()*260){
     const y=40+rnd()*110,s=.7+rnd()*.8;
     const n=el('g',{class:'nube',style:`animation-delay:${(-rnd()*90).toFixed(1)}s`},gn);
     spr(n,'nube',x,y,s*.62,0,{opacity:.97});
   }
   // suelo con lomas suaves
-  let d=`M-60 ${HZ+8}`;for(let x=-60;x<=W+60;x+=120)d+=` Q${x+60} ${HZ-6-((x/120)%3)*4} ${x+120} ${HZ+8}`;d+=` L${W+60} ${H+20} L-60 ${H+20}Z`;
+  let d=`M${XMIN-240} ${HZ+8}`;for(let x=XMIN-240;x<=W+60;x+=120)d+=` Q${x+60} ${HZ-6-(Math.abs(x/120)%3)*4} ${x+120} ${HZ+8}`;d+=` L${W+180} ${H+20} L${XMIN-240} ${H+20}Z`;
   el('path',{d:d,fill:'url(#g-suelo)'},$('suelo'));
-  el('rect',{x:-60,y:H-160,width:W+120,height:180,fill:'url(#g-sombra)'},$('suelo'));
+  el('rect',{x:SHORE,y:H-160,width:W+120,height:180,fill:'url(#g-sombra)'},$('suelo'));
+  // cascada y lago al fondo del bosque (el suelo tapa su base)
+  spr($('suelo'),'cascada',1880,HZ+86,.95,.3);spr($('suelo'),'lago',2470,HZ+92,.85,.3);
   // cordillera cercana: aquí sube el camino hasta la cumbre
   const gc=$('cordillera');
   [[3330,'monte-nevado',1.05,330],[3640,'monte-nieve',1.15,300],[3960,'monte-nevado',1.15,262],[4300,'monte-nieve',1.2,220]].forEach(([x,n,sc,y])=>spr(gc,n,x,y,sc,.15));
+  {const g33=TILES[33];spr(gc,'glacial',g33.x+30,330,1.1,.06);const br=el('g',{class:'mecer'},gc);emoji(br,g33.x+86,214,24,'✨');}
   const P=[[3120,HZ+30],[3300,318],[3500,300],[3700,282],[3900,258],[4100,232],[4262,205],[W+60,214],[W+60,H+20],[3120,H+20]];
   let dp='M'+P[0].join(' ');for(let k=1;k<P.length;k++)dp+=` L${P[k][0]} ${P[k][1]}`;
   el('path',{d:dp+'Z',fill:'url(#g-roca)'},gc);
   el('path',{d:'M'+P.slice(0,8).map(p=>p.join(' ')).join(' L'),fill:'none',stroke:'#f7fbff','stroke-width':10,'stroke-linejoin':'round',opacity:.9},gc);
   // campos de nieve y glaciar (junto a la casilla 33)
   el('path',{d:`M3480 ${H+20} Q3700 520 3900 470 Q4100 420 4300 330 L${W+60} 300 L${W+60} ${H+20}Z`,fill:'#e8f0f6',opacity:.85},gc);
-  const g33=TILES[33];
-  {const x=g33.x+10,y=g33.y,gl=el('g',{},gc);
-   el('path',{d:`M${x-34} 190 C${x-58} 250 ${x-70} ${y-110} ${x-62} ${y-46} Q${x-40} ${y-22} ${x} ${y-30} Q${x+42} ${y-22} ${x+62} ${y-50} C${x+66} ${y-110} ${x+52} 250 ${x+30} 190 Z`,fill:'#d6f1fd',stroke:'#9fd3ef','stroke-width':3},gl);
-   [[-30,-10],[-8,8],[16,-4],[34,10]].forEach(([dx,o])=>el('path',{d:`M${x+dx*.6} 215 Q${x+dx+o} ${(215+y)/2-30} ${x+dx} ${y-52}`,fill:'none',stroke:'#8cc8e8','stroke-width':2.5,opacity:.8},gl));
-   const brillo=el('g',{class:'mecer'},gl);emoji(brillo,x+48,y-90,22,'✨');}
-  // mar y playa
-  let dm=`M-60 ${HZ} L830 ${HZ}`;for(let x=830;x>=-60;x-=10)dm+=` L${x} ${costaY(Math.max(0,x)).toFixed(1)}`;dm+=' Z';
-  $('d-mar').setAttribute('d',dm);
+  // ═══ mar: lejano (detrás de la playa) y en corte lateral, con profundidad ═══
   const gm=$('mar');
-  el('path',{d:dm,fill:'url(#g-mar)'},gm);
-  const olas=el('g',{'clip-path':'url(#c-mar)'},gm),ol=el('g',{class:'olas'},olas);
-  let dw='';for(let y=330;y<540;y+=24)for(let x=-120+((y/24)%2)*30;x<920;x+=60)dw+=`M${x} ${y} q8 -6 16 0 q8 6 16 0 `;
-  el('path',{d:dw,fill:'none',stroke:'#fff','stroke-width':2.5,'stroke-linecap':'round',opacity:.55},ol);
-  let dc='';for(let x=830;x>=-60;x-=10)dc+=(dc?' L':'M')+x+' '+(costaY(Math.max(0,x))+2).toFixed(1);
-  el('path',{d:dc,fill:'none',stroke:'#fff','stroke-width':7,'stroke-linecap':'round',opacity:.75},gm);
-  // botes y lobos marinos
-  [[250,368,1],[560,334,.75]].forEach(([x,y,s])=>{const b=el('g',{transform:`translate(${x},${y}) scale(${s})`},gm),m=el('g',{class:'mecer'},b);
-    el('path',{d:'M-26 0 L26 0 L18 12 L-18 12Z',fill:'#b23a3a'},m);el('path',{d:'M0 0 L0 -44 L22 -6Z',fill:'#fff'},m);el('path',{d:'M-2 -40 L-2 0 L-20 -6Z',fill:'#f2d28a'},m);el('rect',{x:-1,y:-46,width:2,height:46,fill:'#5a3a22'},m);});
-  roca(gm,410,446,1.4);emoji(gm,410,410,30,'🦭');
+  let dm=`M${XMIN-140} ${HZ} L830 ${HZ}`;for(let x=830;x>=XMIN-140;x-=10)dm+=` L${x} ${costaY(x).toFixed(1)}`;dm+=' Z';
+  $('d-mar').setAttribute('d',dm);
+  el('path',{d:dm,fill:'url(#g-mar-lejos)'},gm);
+  {const cm=el('g',{'clip-path':'url(#c-mar)'},gm);
+   el('rect',{x:XMIN-200,y:HZ,width:1200-XMIN,height:16,fill:'#dff1fa',opacity:.55},cm);
+   semilla=37;for(let k=0;k<170;k++){const x=XMIN-120+rnd()*(940-XMIN),y=HZ+10+Math.pow(rnd(),1.6)*(SEA-HZ),w=4+(y-HZ)/(SEA-HZ)*18;
+     el('path',{class:'brillo',style:`animation-delay:${(-rnd()*4).toFixed(1)}s;animation-duration:${(2.5+rnd()*3).toFixed(1)}s`,d:`M${x.toFixed(0)} ${y.toFixed(0)} q${(w/2).toFixed(1)} -2.5 ${w.toFixed(1)} 0`,fill:'none',stroke:'#fff','stroke-width':1.2+(y-HZ)/(SEA-HZ)*1.6,'stroke-linecap':'round'},cm);}}
+  // camanchaca (neblina marina) sobre el horizonte
+  semilla=31;for(let x=XMIN;x<760;x+=260+rnd()*120){const g=el('g',{class:'deriva',style:`animation-delay:${(-rnd()*30).toFixed(1)}s`},gm);spr(g,'neblina',x,HZ+46,1.5+rnd()*.6,.5,{opacity:.6});}
+  // botes lejanos
+  [[330,372,.7],[620,344,.55],[-520,HZ+36,.5]].forEach(([x,y,s])=>bote(gm,x,y,s));
+  // ── agua en corte: el mar visto de lado ──
+  const corte=el('g',{'clip-path':'url(#c-corte)'},gm);
+  el('rect',{x:XMIN-160,y:SEA,width:SHORE+200-XMIN,height:H-SEA+40,fill:'url(#g-agua)'},corte);
+  // rayos de luz bajo la superficie
+  semilla=41;for(let x=XMIN;x<SHORE-40;x+=110+rnd()*90){const w=26+rnd()*30;el('path',{class:'rayo',style:`animation-delay:${(-rnd()*6).toFixed(1)}s`,d:`M${x} ${SEA+4} L${x+w} ${SEA+4} L${x+w+70} ${H} L${x+40} ${H}Z`,fill:'#fff',opacity:.07},corte);}
+  // huiros (algas pardas de la costa chilena)
+  semilla=47;for(let x=XMIN+30;x<SHORE-120;x+=26+rnd()*40){
+    const yb=fondoY(x),alto=Math.min(yb-SEA-14,90+rnd()*120),g=el('g',{class:'alga',style:`animation-delay:${(-rnd()*5).toFixed(1)}s;animation-duration:${(4+rnd()*3).toFixed(1)}s`},corte);
+    let d=`M${x} ${yb}`;const seg=5;for(let k=1;k<=seg;k++){const yy=yb-alto*k/seg,dx=(k%2?1:-1)*(8+rnd()*8);d+=` Q${(x+dx).toFixed(1)} ${(yy+alto/seg/2).toFixed(1)} ${x.toFixed(1)} ${yy.toFixed(1)}`;}
+    el('path',{d,fill:'none',stroke:rnd()<.5?'#6b5a1e':'#7d6b25','stroke-width':4+rnd()*3,'stroke-linecap':'round'},g);
+    for(let k=1;k<=4;k++){const yy=yb-alto*k/5;el('ellipse',{cx:(x+(k%2?9:-9)).toFixed(1),cy:yy.toFixed(1),rx:9,ry:3.5,fill:'#8a7a2e',transform:`rotate(${k%2?-25:25} ${x} ${yy.toFixed(1)})`},g);}
+  }
+  // peces, pingüino buceando y burbujas
+  [[-700,SEA+70,34,'🐟',14],[-420,SEA+125,30,'🐠',18],[-250,SEA+62,28,'🐟',11],[-820,SEA+140,34,'🐡',22],[-140,SEA+105,26,'🐟',9]].forEach(([x,y,s,e,dur],k)=>{
+    const g=el('g',{class:'pez',style:`animation-duration:${dur}s;animation-delay:${-k*3}s`},corte);emoji(g,x,y,s,e);});
+  {const g=el('g',{class:'buzo'},corte);emoji(g,-560,SEA+95,30,'🐧',{transform:`rotate(-75 -560 ${SEA+95})`});}
+  semilla=53;for(let k=0;k<9;k++){const x=XMIN+60+rnd()*(SHORE-XMIN-200),g=el('g',{class:'burbuja',style:`animation-delay:${(-rnd()*7).toFixed(1)}s;animation-duration:${(5+rnd()*4).toFixed(1)}s`},corte);spr(g,'gotas',x,fondoY(x)-10,.22+rnd()*.12,0,{opacity:.85});}
+  // fondo marino en corte (arena y capas)
+  let df=`M${XMIN-160} ${H+30}`;for(let x=XMIN-160;x<=SHORE+90;x+=10)df+=` L${x} ${fondoY(x).toFixed(1)}`;df+=` Q${SHORE+200} ${SEA-30} ${SHORE+330} ${H+30}Z`;
+  el('path',{d:df,fill:'url(#g-fondo)'},gm);
+  semilla=59;for(let k=0;k<3;k++){let d='';for(let x=XMIN-160;x<=SHORE+60;x+=20)d+=(d?' L':'M')+x+' '+(fondoY(x)+18+k*16+Math.sin(x/70+k)*3).toFixed(1);el('path',{d,fill:'none',stroke:'#b8935c','stroke-width':2,opacity:.5},gm);}
+  [[-760,1.1],[-300,.9],[-40,.8]].forEach(([x,s])=>roca(gm,x,fondoY(x)+6,s));
+  // roquerío que sale del agua, con lobo marino
+  {const x=-430,b=fondoY(x)+10;el('path',{d:`M${x-95} ${b} L${x-80} ${SEA+30} L${x-60} ${SEA-30} L${x-25} ${SEA-62} L${x+10} ${SEA-58} L${x+45} ${SEA-20} L${x+70} ${SEA+40} L${x+85} ${b}Z`,fill:'#7a818c'},gm);
+   el('path',{d:`M${x-25} ${SEA-62} L${x+10} ${SEA-58} L${x+45} ${SEA-20} L${x+70} ${SEA+40} L${x+85} ${b} L${x+20} ${b} L${x+5} ${SEA}Z`,fill:'#59606b'},gm);
+   el('path',{d:`M${x-60} ${SEA-30} L${x-25} ${SEA-62} L${x-10} ${SEA-40} L${x-40} ${SEA-8}Z`,fill:'#9aa1ab'},gm);
+   el('path',{d:`M${x-92} ${SEA+12} L${x+78} ${SEA+12} L${x+86} ${b} L${x-95} ${b}Z`,fill:'#0b3550',opacity:.35},gm);
+   [[-60,SEA+30],[-30,SEA+60],[20,SEA+42],[50,SEA+80]].forEach(([dx,yy])=>el('ellipse',{cx:x+dx,cy:yy,rx:9,ry:4,fill:'#c7b98a',opacity:.8},gm));
+   emoji(gm,x-8,SEA-84,40,'🦭');}
+  // superficie con olas (dos capas que se mueven a distinto ritmo)
+  const sup=el('g',{'clip-path':'url(#c-corte)'},gm);
+  [[.9,'olas2','#7fd0f2',0],[.55,'olas3','#a9e2f7',6]].forEach(([op,cl,col,dy])=>{
+    let d=`M${XMIN-260} ${SEA+dy}`;for(let x=XMIN-260;x<SHORE+120;x+=60)d+=` q15 -9 30 0 q15 9 30 0`;
+    const g=el('g',{class:cl},sup);
+    el('path',{d:d+` L${SHORE+120} ${SEA+16+dy} L${XMIN-260} ${SEA+16+dy}Z`,fill:col,opacity:op*.55},g);
+    el('path',{d,fill:'none',stroke:'#fff','stroke-width':3,opacity:op},g);
+  });
+  // espuma y ola que rompe en la orilla; salpicaduras en el roquerío
+  {const g=el('g',{class:'rompe'},gm);const im=spr(g,'ola-rompe',SHORE-120,SEA+14,.75,.12);im.setAttribute('transform',`translate(${SHORE-120},${SEA+14}) scale(-.75,.75)`);}
+  spr(gm,'espuma',SHORE-20,SEA+10,.55,.3,{opacity:.95});
+  [[-470,SEA+6,.55],[-360,SEA+8,.45]].forEach(([x,y,s],k)=>{const g=el('g',{class:'salpica',style:`animation-delay:${-k*1.3}s`},gm);spr(g,k?'salpicadura-chica':'salpicadura',x,y,s,.15);});
+  // muelle de la caleta, con bote amarrado y pingüinos
+  {const g=el('g',{},gm),y=SEA-26;
+   for(let x=-170;x<=SHORE+30;x+=46)el('rect',{x:x-4,y:y,width:8,height:fondoY(x)-y+6,fill:'#5a3a22'},g);
+   el('rect',{x:-190,y:y-8,width:SHORE+240,height:12,rx:3,fill:'#8a5a33',stroke:'#5a3a22','stroke-width':2},g);
+   [[-150,24],[-118,20],[-90,22]].forEach(([x,s])=>emoji(g,x,y-22,s,'🐧'));
+   bote(gm,-250,SEA+2,.95);}
   // árboles detrás del camino y delante (más grandes, dan profundidad)
   const atras=[],frente=[];
   semilla=21;
   for(let x=-20;x<W+20;x+=12+rnd()*20){
     const cy=caminoY(x),tope=Math.max(HZ+6,x<830?costaY(Math.max(0,x))+14:HZ+6),fondo=cy-62;
+    if(x<SHORE+50)continue;
     if(x>3150&&x<4400&&rnd()<.6)continue;
     if(fondo>tope){const y=tope+rnd()*(fondo-tope),s=.5+(y-tope)/Math.max(1,fondo-tope)*.45;atras.push([y,x,s]);}
   }
   for(let x=-30;x<W+30;x+=34+rnd()*60){
+    if(x<SHORE+120)continue;
     const s=1.15+rnd()*.6,cy=caminoY(x),yMin=cy+46+80*s;if(yMin>H+40)continue;
     frente.push([yMin+rnd()*Math.max(0,H+40-yMin),x,s]);
   }
   const ga=$('atras'),gf=$('frente');
   atras.sort((a,b)=>a[0]-b[0]).forEach(([y,x,s],k)=>arbolDe(x,false)(ga,x,y,s,false,k));
   frente.sort((a,b)=>a[0]-b[0]).forEach(([y,x,s],k)=>{const f=arbolDe(x,true);f(gf,x,y,s,true,k);});
+  // nevada en la cordillera
+  {const gn2=el('g',{opacity:.9},gf);semilla=71;for(let k=0;k<90;k++){const x=3260+rnd()*(W-3200),y=-40-rnd()*700,r=1.5+rnd()*2.5;
+    el('circle',{class:'copo',cx:x.toFixed(0),cy:y.toFixed(0),r:r.toFixed(1),fill:'#fff',style:`animation-duration:${(7+rnd()*7).toFixed(1)}s;animation-delay:${(-rnd()*14).toFixed(1)}s`},gn2);}}
   // fauna
   const gfa=$('fauna');
-  [[64,612,26],[92,628,22],[40,632,20]].forEach(([x,y,s])=>emoji(gfa,x,y,s,'🐧'));
   const t24=TILES[24];emoji(gfa,t24.x+70,t24.y-80,34,'🦌');
   const t20=TILES[20],ll=el('g',{class:'mecer'},gfa);spr(ll,'nube-lluvia',t20.x,t20.y-48,.55,0,{opacity:.95});
+  spr(gfa,'rizo',t20.x+46,t20.y+44,.45,.5,{opacity:.8});
+  const t28=TILES[28];[[-60,-30,1.2],[40,-10,1.4],[0,30,1.1]].forEach(([dx,dy,sc],k)=>{const g=el('g',{class:'niebla',style:`animation-delay:${-k*4}s`},$('frente'));spr(g,'neblina',t28.x+dx,t28.y+dy,sc,.5,{opacity:.75});});
   const t14=TILES[14];emoji(gfa,t14.x-10,t14.y+70,26,'🏕️');
   const cg=el('g',{transform:'translate(3200,150)'},gfa),co=el('g',{class:'condor'},cg);
   el('path',{d:'M0 0 q18 -13 36 0 q18 -13 36 0 q-18 -5 -36 5 q-18 -10 -36 -5z',fill:'#1f2328'},co);
@@ -581,10 +666,10 @@ function infoCasilla(i){
 const cam={x:0,obj:0,seguir:true,vel:.12,ult:-1,uvw:-1,zona:''};
 let visW=1000;
 const PARALAJE=[['p-sol',.97],['p-lejos2',.8],['p-nubes',.86],['p-lejos',.62],['p-volcan',.4],['p-montes',.28]];
-function medir(){const r=$('tablero').getBoundingClientRect();visW=Math.max(300,Math.min(W,H*r.width/Math.max(1,r.height)));}
-function limitar(v){return Math.max(0,Math.min(W-visW,v));}
+function medir(){const r=$('tablero').getBoundingClientRect();visW=Math.max(300,Math.min(W-XMIN,H*r.width/Math.max(1,r.height)));}
+function limitar(v){return Math.max(XMIN,Math.min(W-visW,v));}
 function objetivo(){if(!cam.seguir)return cam.obj;const j=J[turno];return ((j?TILES[j.pos]:TILES[0]).x)-visW*.42;}
-function mx(x){return `calc(18px + (100% - 36px) * ${(x/W).toFixed(4)})`;}
+function mx(x){return `calc(18px + (100% - 36px) * ${((x-XMIN)/(W-XMIN)).toFixed(4)})`;}
 function bucle(){
   const t=limitar(objetivo());
   cam.x+=(t-cam.x)*cam.vel;if(Math.abs(t-cam.x)<.4)cam.x=t;
@@ -592,8 +677,8 @@ function bucle(){
     cam.ult=cam.x;cam.uvw=visW;
     svg.setAttribute('viewBox',`${cam.x.toFixed(1)} 0 ${visW.toFixed(1)} ${H}`);
     PARALAJE.forEach(([id,f])=>$(id).setAttribute('transform',`translate(${(cam.x*f).toFixed(1)},0)`));
-    const mc=$('mcam');mc.style.left=mx(cam.x);mc.style.width=`calc((100% - 36px) * ${(visW/W).toFixed(4)})`;
-    const z=zonaDe(cam.x+visW*.42);if(z.n!==cam.zona){cam.zona=z.n;$('zona').textContent=z.ic+' '+z.n;}
+    const mc=$('mcam');mc.style.left=mx(cam.x);mc.style.width=`calc((100% - 36px) * ${(visW/(W-XMIN)).toFixed(4)})`;
+    const zx=cam.x+visW*.42,z=zx<SHORE?{n:'Océano Pacífico',ic:'🌊'}:zonaDe(zx);if(z.n!==cam.zona){cam.zona=z.n;$('zona').textContent=z.ic+' '+z.n;}
   }
   requestAnimationFrame(bucle);
 }
@@ -601,8 +686,8 @@ function mostrarSeguir(){$('b-seguir').hidden=cam.seguir||!J.length;}
 function seguirFicha(){cam.seguir=true;cam.vel=.12;mostrarSeguir();}
 function mirar(x){cam.seguir=false;cam.obj=limitar(x);mostrarSeguir();}
 function dibujarMini(){
-  const pc=x=>(x/W*100).toFixed(2);
-  $('pista').style.background=`linear-gradient(90deg,#2b8cc4 0 ${pc(380)}%,#e9d29a ${pc(380)}% ${pc(780)}%,#a9c46c ${pc(780)}% ${pc(1500)}%,#3f7b46 ${pc(1500)}% ${pc(2600)}%,#1d4a2f ${pc(2600)}% ${pc(3400)}%,#8d99a6 ${pc(3400)}% ${pc(3950)}%,#eef4f8 ${pc(3950)}%)`;
+  const pc=x=>((x-XMIN)/(W-XMIN)*100).toFixed(2);
+  $('pista').style.background=`linear-gradient(90deg,#0f5f8f 0 ${pc(SHORE)}%,#e9d29a ${pc(SHORE)}% ${pc(380)}%,#e9d29a ${pc(380)}%,#e9d29a ${pc(380)}% ${pc(780)}%,#a9c46c ${pc(780)}% ${pc(1500)}%,#3f7b46 ${pc(1500)}% ${pc(2600)}%,#1d4a2f ${pc(2600)}% ${pc(3400)}%,#8d99a6 ${pc(3400)}% ${pc(3950)}%,#eef4f8 ${pc(3950)}%)`;
   const m=$('mini');
   CAS.forEach((c,i)=>{if(c.t==='normal')return;const d=document.createElement('i');d.className='mt';d.style.left=mx(TILES[i].x);d.style.background=c.t==='super'?'#f2b632':(c.t==='salida'||c.t==='meta'?'#c8102e':TIPOS[c.t].c);m.appendChild(d);});
 }
@@ -626,7 +711,7 @@ let arr=null,arrastro=false;
     if(fuera(e))return;const d=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;if(!d)return;
     e.preventDefault();const base=cam.seguir?cam.x:cam.obj;mirar(base+d*1.3*visW/tab.clientWidth);
   },{passive:false});
-  $('mini').addEventListener('click',e=>{const r=$('mini').getBoundingClientRect();const f=(e.clientX-r.left-18)/Math.max(1,r.width-36);mirar(f*W-visW/2);});
+  $('mini').addEventListener('click',e=>{const r=$('mini').getBoundingClientRect();const f=(e.clientX-r.left-18)/Math.max(1,r.width-36);mirar(XMIN+f*(W-XMIN)-visW/2);});
   $('b-seguir').addEventListener('click',seguirFicha);
   window.addEventListener('resize',medir);
 })();
@@ -820,7 +905,7 @@ async function alCaer(j){
       await aviso('💎','¡Súper premio!',`${esc(c.d)}<span class="grande mas">+${c.v} F$</span>`);break;
   }
 }
-const ILUS={3:'arbol-retorcido',6:'arbusto',7:'mar-roca',10:'nube',11:'mar-ola2',14:'mar-claro',15:'monte-bosque',17:'arbol-seco',20:'nube-lluvia',22:'arbol-roble',24:'arbol-redondo',28:'nube',29:'mar-arrecife',32:'monte-rocoso',33:'monte-nevado',35:'monte-nieve',36:'monte-verde'};
+const ILUS={3:'arbol-retorcido',6:'arbusto',7:'oleaje-rocas',10:'nube',11:'ola-rompe',14:'playa',15:'monte-bosque',17:'arbol-seco',20:'nube-lluvia',22:'cascada',24:'lago',28:'neblina',29:'orilla-rocosa',32:'monte-rocoso',33:'glacial',35:'monte-nieve',36:'monte-verde'};
 function aviso(ic,titulo,cuerpo){
   const il=ILUS[J[turno].pos];if(il)cuerpo=`<img class="ilus" src="sprites/${il}.webp" alt="">`+cuerpo;
   return ventana(cab(ic,esc(titulo),'Casilla '+J[turno].pos)+`<div class="v-cuerpo"><p class="efecto">${cuerpo}</p><div class="v-pie"><button class="btn grande" data-r="ok">Continuar</button></div></div>`).then(cerrar);
