@@ -175,7 +175,7 @@ service cloud.firestore {
       allow delete: if esMod();
     }
 
-    // ── Tutores virtuales (enlaces a cuadernos de NotebookLM) ──
+    // ── Tutores virtuales (enlaces a cuadernos de NotebookLM: notebook.google.com o notebooklm.google.com) ──
     // Todos los ven; el profe y los moderadores los agregan, editan o borran.
     match /tutores/{id} {
       allow read: if true;
@@ -186,7 +186,7 @@ service cloud.firestore {
         && request.resource.data.curso in ['6b', '7b', '8b', '1m', '2m', '3m', '4m', 'general']
         && texto(request.resource.data.emoji, 16)
         && texto(request.resource.data.url, 300)
-        && request.resource.data.url.matches('^https://notebooklm[.]google[.]com/[^ ]+$')
+        && request.resource.data.url.matches('^https://notebook(lm)?[.]google[.]com/[^ ]+$')
         && texto(request.resource.data.desc, 400)
         && texto(request.resource.data.por, 80)
         && request.resource.data.actualizado == request.time;

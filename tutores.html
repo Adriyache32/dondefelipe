@@ -129,7 +129,7 @@ var CURSOS=[
 ];
 var COLS=['#ccff00','#22e3ff','#ff2e7e','#e9b949','#a78bfa','#34d399'];
 var MENORES=['6b','7b'];  // cursos donde la mayoría tiene menos de 13 años
-var URL_OK=/^https:\/\/notebooklm\.google\.com\/\S+$/;
+var URL_OK=/^https:\/\/notebook(lm)?\.google\.com\/\S+$/;
 
 function $(id){return document.getElementById(id)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -184,7 +184,7 @@ function pintaPanel(){
     '<input id="f-asig" maxlength="60" placeholder="Asignatura (ej: Biología)" value="'+esc(t.asignatura||'')+'" aria-label="Asignatura">'+
     '<select id="f-curso" aria-label="Curso">'+CURSOS.filter(function(c){return c.k!=='todos'}).map(function(c){return '<option value="'+c.k+'"'+((t.curso||cursoAct)===c.k?' selected':'')+'>'+esc(c.n)+'</option>'}).join('')+'</select>'+
     '<input id="f-emoji" maxlength="8" placeholder="Ícono (emoji) 🧬" value="'+esc(t.emoji||'')+'" aria-label="Ícono">'+
-    '<input id="f-url" class="ancho" type="url" placeholder="https://notebooklm.google.com/notebook/…" value="'+esc(t.url||'')+'" aria-label="Enlace de NotebookLM">'+
+    '<input id="f-url" class="ancho" type="url" placeholder="https://notebook.google.com/notebook/…" value="'+esc(t.url||'')+'" aria-label="Enlace de NotebookLM">'+
     '<textarea id="f-desc" maxlength="400" placeholder="¿Qué sabe este tutor? (ej: Unidad 1 de 1° Medio: célula, organelos y transporte)" aria-label="Descripción">'+esc(t.desc||'')+'</textarea>'+
     '</div><div class="fila"><button class="btn" data-a="guardar">'+(editId?'Guardar cambios':'Agregar tutor')+'</button>'+
     (editId?'<button class="btn s" data-a="cancelar">Cancelar</button>':'')+'</div><div id="f-msg" role="status"></div>';
@@ -214,7 +214,7 @@ function guardar(){
   var d={nombre:$('f-nom').value.trim().slice(0,80),asignatura:$('f-asig').value.trim().slice(0,60),curso:$('f-curso').value,
     emoji:$('f-emoji').value.trim().slice(0,8),url:$('f-url').value.trim(),desc:$('f-desc').value.trim().slice(0,400)};
   if(d.nombre.length<2){msg.innerHTML='<span class="err">Ponle un nombre al tutor.</span>';return}
-  if(!URL_OK.test(d.url)||d.url.length>300){msg.innerHTML='<span class="err">El enlace debe empezar con https://notebooklm.google.com/</span>';return}
+  if(!URL_OK.test(d.url)||d.url.length>300){msg.innerHTML='<span class="err">El enlace debe ser de NotebookLM (https://notebook.google.com/…)</span>';return}
   dfListo().then(function(fb){
     var F=fb.F;
     d.por=DF.nombreCorto(usuario.displayName,usuario.email).slice(0,80);d.actualizado=F.serverTimestamp();
