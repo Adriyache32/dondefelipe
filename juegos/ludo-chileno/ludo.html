@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#173d27">
+<title>Ludo Chileno</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --noche:#0f2a1c; --bosque:#173d27; --bosque-2:#21543a; --musgo:#5f8f3e;
+  --madera:#5a3a22; --papel:#fbf6e9; --tinta:#1d2a20; --gris:#5e6b62; --oro:#f2b632; --ok:#2e8b57; --mal:#b23a3a;
+  --azul:#1f5fbf; --verde:#2e8b57; --blanco:#eef2f7; --morado:#7b3fa0;
+  --emoji:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif; --r:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;font-family:'Nunito',system-ui,sans-serif;color:var(--tinta);
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,#2b6b45,transparent 70%),linear-gradient(180deg,var(--bosque),var(--noche));-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--oro);outline-offset:2px}
+header{max-width:1200px;margin:0 auto;padding:16px 16px 10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--papel)}
+.guirnalda{height:54px;background:url(sprites/deco-guirnalda.webp) repeat-x center/auto 54px;opacity:.95;filter:drop-shadow(0 4px 4px rgba(0,0,0,.35));pointer-events:none}
+.volantin{height:84px;animation:volantin 3.5s ease-in-out infinite;transform-origin:50% 100%;filter:drop-shadow(0 6px 6px rgba(0,0,0,.35))}
+@keyframes volantin{50%{transform:rotate(7deg) translateY(-6px)}}
+.isp{width:100%;height:100%;object-fit:contain}
+.vuelo{position:absolute;top:30%;left:-40%;width:42%;pointer-events:none;z-index:5;animation:vuelo 1.6s ease-in-out forwards;filter:drop-shadow(0 10px 10px rgba(0,0,0,.35))}
+@keyframes vuelo{0%{transform:translate(0,40px) rotate(-6deg)}50%{transform:translate(170%,-20px) rotate(3deg)}100%{transform:translate(340%,30px) rotate(-4deg)}}
+.cueca{display:flex;justify-content:center;gap:8px;align-items:flex-end}
+.cueca img{height:110px;animation:baile .9s ease-in-out infinite alternate;filter:drop-shadow(0 6px 6px rgba(0,0,0,.25))}
+.cueca img:nth-child(2){animation-delay:.45s}
+.cueca img.chica{height:64px;animation:none}
+@keyframes baile{from{transform:translateY(0) rotate(-4deg)}to{transform:translateY(-10px) rotate(4deg)}}
+.cuenta{font-size:.85rem;font-weight:700;display:flex;gap:8px;align-items:center}
+.cuenta:empty{display:none}
+.cuenta button{background:none;border:0;color:var(--oro);text-decoration:underline;font-weight:700}
+.acceso{text-align:center;display:grid;gap:12px;justify-items:center}
+.acceso img{height:90px}
+.yo-sel{display:flex;gap:8px;flex-wrap:wrap}
+.yo-sel label{flex:1 1 120px;display:flex;gap:8px;align-items:center;background:#fff;border:2px solid #e5dec9;border-radius:12px;padding:8px 10px;font-weight:800;font-size:.86rem;cursor:pointer}
+.yo-sel input{accent-color:var(--musgo)}
+.yo-sel label:has(input:checked){border-color:var(--oro);background:#fff8e3}
+.yo-sel .e{width:30px;height:30px;font-size:1rem;border-width:2px}
+.guardado{background:#e8f6ee;border:2px solid var(--ok);border-radius:12px;padding:10px 12px;font-size:.9rem;font-weight:700}
+.guardado.err{background:#fbeaea;border-color:var(--mal)}
+.logo{font:800 clamp(1.6rem,4vw,2.3rem)/1 'Baloo 2',sans-serif}
+.logo span{color:var(--oro)}
+.lema{font-size:.9rem;opacity:.85}
+header .esp{flex:1}
+.hbtn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:var(--papel);border-radius:999px;padding:7px 14px;font-weight:700;font-size:.85rem}
+.hbtn:hover{background:rgba(255,255,255,.22)}
+
+.app{max-width:1200px;margin:0 auto;padding:0 16px 28px;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+@media (max-width:920px){.app{grid-template-columns:1fr}}
+.tablero{position:relative;width:100%;max-width:min(100%,calc(100vh - 110px));margin:0 auto;aspect-ratio:1;border-radius:18px;border:8px solid var(--madera);
+  box-shadow:0 0 0 2px #8a6440,0 18px 40px rgba(0,0,0,.45);background:#f4ecd6;overflow:hidden}
+.tablero svg{display:block;width:100%;height:100%}
+.celda{stroke:#b9ab8a;stroke-width:1}
+.ficha{transition:transform .17s ease-out;cursor:default}
+.ficha.vuela{transition:transform .7s cubic-bezier(.5,-.3,.4,1.3)}
+.ficha .ico{font-family:var(--emoji);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.ficha.puede{cursor:pointer}
+.ficha .halo{opacity:0}
+.ficha.puede .halo{opacity:1;animation:halo 1s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes halo{50%{transform:scale(1.25);opacity:.35}}
+.ficha.salta .cuerpo{animation:salto .17s ease-out}
+.ficha .cuerpo{transform-box:fill-box;transform-origin:center bottom}
+@keyframes salto{50%{transform:translateY(-7px) scale(1.08)}}
+.destino{pointer-events:none;animation:parpadeo 1s ease-in-out infinite}
+@keyframes parpadeo{50%{opacity:.25}}
+.base-activa{animation:base 1.6s ease-in-out infinite}
+@keyframes base{50%{opacity:.55}}
+
+.panel{display:grid;gap:14px}
+.tarjeta{background:var(--papel);border-radius:var(--r);padding:16px;box-shadow:0 10px 26px rgba(0,0,0,.3);border-top:6px solid var(--musgo)}
+.tarjeta h2{font:800 1.1rem 'Baloo 2',sans-serif;margin-bottom:8px;color:var(--bosque)}
+.turno{display:flex;align-items:center;gap:12px}
+.turno .av{font-family:var(--emoji);font-size:2rem;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;border:4px solid var(--oro);background:#fff;flex:none}
+.turno b{display:block;font:800 1.25rem/1.1 'Baloo 2',sans-serif}
+.turno small{color:var(--gris);font-weight:700;display:block}
+.msg{margin-top:10px;font-weight:700;font-size:.92rem;min-height:1.4em;color:var(--bosque)}
+.dado-zona{display:flex;align-items:center;gap:14px;margin-top:12px}
+.dado{width:78px;height:78px;border-radius:16px;background:#fff;border:3px solid var(--tinta);display:grid;place-items:center;font-size:3.8rem;line-height:1;box-shadow:0 5px 0 var(--tinta);flex:none;user-select:none}
+.dado.gira{animation:gira .45s linear infinite}
+@keyframes gira{25%{transform:rotate(16deg) translateY(-4px)}75%{transform:rotate(-16deg) translateY(-2px)}}
+.btn{border:0;border-radius:14px;padding:13px 18px;font:800 1rem 'Baloo 2',sans-serif;background:var(--oro);color:#2a1d00;box-shadow:0 4px 0 #a8770c}
+.btn:hover:not(:disabled){filter:brightness(1.07)}
+.btn:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 #a8770c}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.verde{background:var(--ok);color:#fff;box-shadow:0 4px 0 #1d5e3a}
+.btn.sec{background:#e7e1cf;color:var(--tinta);box-shadow:0 4px 0 #b9b19a}
+.btn.grande{flex:1;font-size:1.15rem;padding:16px}
+.nota{font-size:.78rem;color:var(--gris);margin-top:8px}
+.equipos{display:grid;gap:8px}
+.eq{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;background:#fff;border:2px solid transparent}
+.eq.on{border-color:var(--oro);background:#fff8e3}
+.eq.fuera{opacity:.45}
+.eq .e{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-family:var(--emoji);font-size:1.4rem;border:3px solid}
+.eq .n{font-weight:800;line-height:1.15;overflow-wrap:anywhere}
+.eq .n small{display:block;font-weight:600;color:var(--gris);font-size:.74rem}
+.eq .m{font:800 1rem 'Baloo 2',sans-serif;white-space:nowrap;text-align:right}
+.eq .m small{display:block;font:700 .7rem 'Nunito',sans-serif;color:var(--gris)}
+.bitacora{max-height:230px;overflow:auto;display:grid;gap:6px;font-size:.85rem;padding-right:4px}
+.bitacora p{background:#fff;border-radius:10px;padding:7px 10px;line-height:1.35;border-left:4px solid var(--c,var(--musgo))}
+
+.velo{position:fixed;inset:0;z-index:50;background:rgba(9,25,16,.72);backdrop-filter:blur(3px);display:grid;place-items:center;padding:16px;overflow:auto}
+.velo[hidden]{display:none}
+.ventana{width:min(680px,100%);background:var(--papel);border-radius:20px;box-shadow:0 30px 70px rgba(0,0,0,.5);overflow:hidden;animation:entra .28s cubic-bezier(.3,1.4,.5,1)}
+@keyframes entra{from{transform:translateY(18px) scale(.96);opacity:0}}
+.v-cab{padding:16px 20px;color:#fff;background:linear-gradient(120deg,var(--bosque-2),var(--musgo));display:flex;gap:12px;align-items:center}
+.v-cab .ic{font-family:var(--emoji);font-size:2.2rem}
+.v-cab h3{font:800 1.4rem/1.1 'Baloo 2',sans-serif}
+.v-cab small{display:block;opacity:.9;font-weight:700;font-size:.8rem}
+.v-cuerpo{padding:18px 20px 20px;display:grid;gap:14px}
+.v-pie{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.etq{font-weight:800;font-size:.86rem;color:var(--bosque)}
+.cfg-eq{display:grid;grid-template-columns:42px 1fr 140px;gap:8px;align-items:center;background:#fff;border:2px solid #e5dec9;border-radius:12px;padding:8px}
+.cfg-eq .e{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-family:var(--emoji);font-size:1.3rem;border:3px solid}
+.cfg-eq input,.cfg-eq select,.opc select{width:100%;background:#fbf8ef;border:2px solid #ddd5bf;border-radius:10px;padding:8px 10px;font-weight:600}
+.cfg-eq .t{font-weight:800;font-size:.8rem;color:var(--gris);margin-bottom:3px}
+.opcs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opc{display:flex;gap:8px;align-items:flex-start;background:#fff;border:2px solid #e5dec9;border-radius:10px;padding:9px 10px;font-weight:700;font-size:.86rem;cursor:pointer;line-height:1.3}
+.opc input{width:18px;height:18px;accent-color:var(--musgo);margin-top:1px;flex:none}
+.opc small{display:block;font-weight:600;color:var(--gris);font-size:.74rem}
+.aviso{background:#fff3d6;border:2px solid var(--oro);border-radius:12px;padding:10px 12px;font-size:.9rem;line-height:1.45}
+.aviso.err{background:#fbeaea;border-color:var(--mal)}
+.reglas{font-size:.92rem;line-height:1.55;display:grid;gap:6px}
+.reglas li{margin-left:1.2rem}
+.texto-lectura{background:#fff;border-left:5px solid #2d5fa8;border-radius:10px;padding:12px 14px;font-size:.95rem;line-height:1.6;max-height:34vh;overflow:auto}
+.enunciado{font-size:1.06rem;font-weight:800;line-height:1.45}
+.alts{display:grid;gap:8px}
+.alt{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:center;text-align:left;background:#fff;border:2px solid #ddd5bf;border-radius:12px;padding:10px 12px;font-weight:600;line-height:1.35}
+.alt b{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#ece5d1;font-weight:800}
+.alt:hover:not(:disabled){border-color:#2d5fa8;background:#f2f6ff}
+.alt.ok{border-color:var(--ok);background:#e8f6ee} .alt.ok b{background:var(--ok);color:#fff}
+.alt.no{border-color:var(--mal);background:#fbeaea} .alt.no b{background:var(--mal);color:#fff}
+.explica{border-radius:12px;padding:12px 14px;line-height:1.5;font-size:.95rem}
+.explica.bien{background:#e8f6ee;border:2px solid var(--ok)} .explica.mal{background:#fbeaea;border:2px solid var(--mal)}
+.explica b{display:block;font:800 1.05rem 'Baloo 2',sans-serif;margin-bottom:2px}
+.podio{display:grid;gap:8px}
+.podio div{display:grid;grid-template-columns:36px 44px 1fr auto;gap:8px;align-items:center;background:#fff;border-radius:12px;padding:8px 12px;font-weight:700}
+.podio div:first-child{background:#fff3d6;border:2px solid var(--oro)}
+.podio .pos{font:800 1.2rem 'Baloo 2',sans-serif;color:var(--gris)}
+.records{font-size:.86rem;width:100%;border-collapse:collapse}
+.records td,.records th{padding:5px 6px;text-align:left;border-bottom:1px solid #e5dec9}
+.records th{font-size:.72rem;color:var(--gris);text-transform:uppercase;letter-spacing:.6px}
+.confeti{position:fixed;top:-20px;z-index:70;width:10px;height:14px;border-radius:2px;pointer-events:none;animation:cae linear forwards}
+@keyframes cae{to{transform:translateY(110vh) rotate(720deg)}}
+@media (max-width:560px){
+  .cfg-eq{grid-template-columns:38px 1fr;}
+  .cfg-eq>div:last-child{grid-column:2}
+  .opcs{grid-template-columns:1fr}
+  .v-cuerpo{padding:14px}
+  .tablero{border-width:5px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+</head>
+<body>
+<div class="guirnalda" aria-hidden="true"></div>
+<header>
+  <div><div class="logo">Ludo <span>Chileno</span></div><div class="lema">Cóndores, araucarias, montañas y flores · el primero que lleva sus fichas al centro gana</div></div>
+  <span class="esp"></span>
+  <img class="volantin" src="sprites/deco-volantin.webp" alt="" onerror="this.remove()">
+  <span class="cuenta" id="cuenta"></span>
+  <button class="hbtn" id="b-reglas">📜 Reglas</button>
+  <button class="hbtn" id="b-nueva">🔄 Nueva partida</button>
+</header>
+
+<div class="app">
+  <section><div class="tablero"><svg id="tab" viewBox="0 0 600 600" role="img" aria-label="Tablero de ludo de 15 por 15 casillas"></svg></div></section>
+  <aside class="panel">
+    <div class="tarjeta">
+      <div class="turno" id="turno"><div class="av">🇨🇱</div><div><small>Ludo Chileno</small><b>Configura la partida</b></div></div>
+      <div class="dado-zona"><div class="dado" id="dado" aria-live="polite">⚀</div><button class="btn grande" id="b-tirar" disabled>🎲 Lanzar</button></div>
+      <div class="msg" id="msg" aria-live="polite"></div>
+      <div class="nota">Espacio: lanzar · Toca la ficha que quieres mover · 1–4 eligen ficha</div>
+    </div>
+    <div class="tarjeta"><h2>Equipos</h2><div class="equipos" id="equipos"></div></div>
+    <div class="tarjeta"><h2>Bitácora</h2><div class="bitacora" id="bitacora" aria-live="polite"></div></div>
+  </aside>
+</div>
+
+<div class="velo" id="velo" hidden><div class="ventana" id="ventana" role="dialog" aria-modal="true"></div></div>
+
+<!-- Login de El Mundo de Felipe: en el sitio exige cuenta; sin el archivo (modo sin internet) se juega sin login -->
+<script src="../../firebase/df.js"></script>
+<script src="ludo-logica.js"></script>
+<script>
+(function(){
+'use strict';
+const L=window.LudoLogica;
+/* ═════════════ Apariencia de cada equipo ═════════════
+   Cuando lleguen los sprites, basta con dejar los archivos en sprites/
+   con estos nombres (ver sprites/LEEME.txt). Si un archivo no existe,
+   se usa el dibujo provisorio. */
+const TEMA=[
+  {id:'condor',   nombre:'Cóndores azules',  icono:'🦅',color:'#1f5fbf',claro:'#cfe0f7',oscuro:'#123c7a',texto:'#fff'},
+  {id:'araucaria',nombre:'Araucarias verdes',icono:'🌲',color:'#2e8b57',claro:'#d3eedd',oscuro:'#1b5a37',texto:'#fff'},
+  {id:'montana',  nombre:'Montañas blancas', icono:'🏔️',color:'#eef2f7',claro:'#f7f9fc',oscuro:'#5b6b7c',texto:'#1d2a20',celda:'#cfd8e4'},
+  {id:'flor',     nombre:'Flores moradas',   icono:'🌸',color:'#7b3fa0',claro:'#e9d9f3',oscuro:'#4e2468',texto:'#fff'}
+];
+const SPRITES={fichas:{},bases:{},centro:null};
+function icoEq(eq){const t=TEMA[eq],s=SPRITES.fichas[t.id];return s?`<img class="isp" src="${s}" alt="">`:t.icono;}
+function probarSprite(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(src);i.onerror=()=>r(null);i.src=src;});}
+async function cargarSprites(){
+  const t=[];
+  TEMA.forEach(e=>{t.push(probarSprite(`sprites/ficha-${e.id}.webp`).then(s=>SPRITES.fichas[e.id]=s));t.push(probarSprite(`sprites/base-${e.id}.webp`).then(s=>SPRITES.bases[e.id]=s));});
+  t.push(probarSprite('sprites/centro.webp').then(s=>SPRITES.centro=s));
+  await Promise.all(t);
+}
+
+/* ═════════════ Geometría del tablero (15 × 15) ═════════════ */
+const C=40;
+const PISTA=(function(){const p=[];
+  for(let c=1;c<=5;c++)p.push([c,6]); for(let r=5;r>=0;r--)p.push([6,r]); p.push([7,0]);
+  for(let r=0;r<=5;r++)p.push([8,r]); for(let c=9;c<=14;c++)p.push([c,6]); p.push([14,7]);
+  for(let c=14;c>=9;c--)p.push([c,8]); for(let r=9;r<=14;r++)p.push([8,r]); p.push([7,14]);
+  for(let r=14;r>=9;r--)p.push([6,r]); for(let c=5;c>=0;c--)p.push([c,8]); p.push([0,7]); p.push([0,6]);
+  return p;})();
+const PASILLO=[[[1,7],[2,7],[3,7],[4,7],[5,7]],[[7,1],[7,2],[7,3],[7,4],[7,5]],[[13,7],[12,7],[11,7],[10,7],[9,7]],[[7,13],[7,12],[7,11],[7,10],[7,9]]];
+const META_XY=[[6.35,7],[7,6.35],[7.65,7],[7,7.65]];
+const BASE0=[[0,0],[9,0],[9,9],[0,9]];
+const BASE_PUNTOS=[[1.75,1.75],[4.25,1.75],[1.75,4.25],[4.25,4.25]];
+function centro(cr){return {x:(cr[0]+.5)*C,y:(cr[1]+.5)*C};}
+function xyFicha(eq,p,f){
+  if(p===-1){const b=BASE0[eq],q=BASE_PUNTOS[f];return {x:(b[0]+q[0]+.5)*C-C/2+C/2,y:(b[1]+q[1]+.5)*C-C/2+C/2};}
+  if(p<=L.ULTIMA)return centro(PISTA[L.casillaPista(eq,p)]);
+  if(p<L.META)return centro(PASILLO[eq][p-51]);
+  const m=META_XY[eq];return {x:(m[0]+.5)*C,y:(m[1]+.5)*C};
+}
+
+/* ═════════════ utilidades ═════════════ */
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+function el(tag,a,padre){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(padre)padre.appendChild(e);return e;}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+const espera=ms=>new Promise(r=>setTimeout(r,ms));
+const azar=n=>Math.floor(Math.random()*n);
+function barajar(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=azar(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
+function confeti(n){const cs=['#1f5fbf','#2e8b57','#fff','#7b3fa0','#f2b632','#d52b1e'];for(let i=0;i<n;i++){const d=document.createElement('div');d.className='confeti';d.style.left=Math.random()*100+'vw';d.style.background=cs[i%cs.length];d.style.animationDuration=(1.8+Math.random()*1.8)+'s';document.body.appendChild(d);setTimeout(()=>d.remove(),4000);}}
+const CARAS='⚀⚁⚂⚃⚄⚅';
+function estrella(cx,cy,r,fill,padre,extra){let d='';for(let k=0;k<10;k++){const a=-Math.PI/2+k*Math.PI/5,rr=k%2?r*.42:r;d+=(k?'L':'M')+(cx+rr*Math.cos(a)).toFixed(1)+' '+(cy+rr*Math.sin(a)).toFixed(1);}return el('path',Object.assign({d:d+'Z',fill},extra||{}),padre);}
+
+/* ═════════════ dibujo del tablero ═════════════ */
+function dibujarBase(g,eq){
+  const t=TEMA[eq],[bx,by]=BASE0[eq],x=bx*C,y=by*C,W=6*C;
+  el('rect',{x,y,width:W,height:W,fill:t.color,stroke:t.oscuro,'stroke-width':2},g);
+  if(SPRITES.bases[t.id]){el('image',{href:SPRITES.bases[t.id],x,y,width:W,height:W,preserveAspectRatio:'xMidYMid slice'},g);}
+  else{ // ilustración provisoria
+    const cl=el('g',{opacity:.55},g);
+    if(t.id==='condor'){el('path',{d:`M${x} ${y+W} L${x+60} ${y+150} L${x+110} ${y+190} L${x+170} ${y+120} L${x+W} ${y+190} L${x+W} ${y+W}Z`,fill:'#123c7a'},cl);el('path',{d:`M${x+150} ${y+136} L${x+170} ${y+120} L${x+190} ${y+138} L${x+178} ${y+134} L${x+170} ${y+142}Z`,fill:'#fff'},cl);el('path',{d:`M${x+40} ${y+50} q14 -10 28 0 q14 -10 28 0 q-14 -4 -28 4 q-14 -8 -28 -4z`,fill:'#0b2350'},cl);}
+    if(t.id==='araucaria'){[[50,200,1],[120,215,1.3],[190,200,1.1],[90,120,.7],[180,110,.6]].forEach(([dx,dy,s])=>{const a=el('g',{transform:`translate(${x+dx},${y+dy}) scale(${s})`},cl);el('rect',{x:-2,y:-40,width:4,height:40,fill:'#0f3b22'},a);[[-44,18],[-36,14],[-29,10]].forEach(([yy,w])=>el('path',{d:`M${-w} ${yy+5} Q0 ${yy-9} ${w} ${yy+5}Z`,fill:'#0f3b22'},a));});}
+    if(t.id==='montana'){el('path',{d:`M${x} ${y+W} L${x+70} ${y+110} L${x+120} ${y+170} L${x+175} ${y+80} L${x+W} ${y+200} L${x+W} ${y+W}Z`,fill:'#9aa9bd'},cl);el('path',{d:`M${x+150} ${y+120} L${x+175} ${y+80} L${x+200} ${y+122} L${x+186} ${y+114} L${x+175} ${y+126} L${x+163} ${y+114}Z`,fill:'#fff'},cl);}
+    if(t.id==='flor'){for(let k=0;k<14;k++){const fx=x+18+((k*53)%200),fy=y+20+((k*37)%200),f2=el('g',{transform:`translate(${fx},${fy})`},cl);for(let a=0;a<5;a++)el('ellipse',{cx:0,cy:-6,rx:3.5,ry:6,fill:'#e9d9f3',transform:`rotate(${a*72})`},f2);el('circle',{r:2.6,fill:'#f2b632'},f2);}}
+  }
+  const ilus=!!SPRITES.bases[t.id];
+  el('rect',{x:x+C*.75,y:y+C*.75,width:C*4.5,height:C*4.5,rx:18,fill:ilus?'rgba(255,255,255,.28)':'rgba(255,255,255,.88)',stroke:ilus?'rgba(255,255,255,.9)':t.oscuro,'stroke-width':ilus?3:2},g);
+  BASE_PUNTOS.forEach(q=>{el('circle',{cx:x+(q[0]+.5)*C,cy:y+(q[1]+.5)*C,r:C*.55,fill:t.claro,opacity:ilus?.85:1,stroke:t.oscuro,'stroke-width':2,'stroke-dasharray':'4 3'},g);});
+  const tx=el('text',{x:x+W/2,y:y+W/2+5,'text-anchor':'middle','font-size':13,'font-weight':800,'font-family':'Nunito,sans-serif',fill:t.oscuro,stroke:'#fff','stroke-width':4,'paint-order':'stroke'},g);tx.textContent=t.nombre.toUpperCase();
+  el('rect',{class:'marco-base',id:'mb-'+eq,x:x+3,y:y+3,width:W-6,height:W-6,rx:6,fill:'none',stroke:'#f2b632','stroke-width':6,opacity:0},g);
+}
+function dibujarTablero(){
+  const s=$('tab');s.innerHTML='';
+  el('rect',{width:600,height:600,fill:'#f4ecd6'},s);
+  const g=el('g',{},s);
+  [0,1,2,3].forEach(e=>dibujarBase(g,e));
+  // pista
+  PISTA.forEach((cr,idx)=>{
+    const salida=L.INICIO.indexOf(idx);
+    const fill=salida>=0?(TEMA[salida].celda||TEMA[salida].color):'#fffdf6';
+    el('rect',{class:'celda',x:cr[0]*C,y:cr[1]*C,width:C,height:C,fill,stroke:salida===2?'#5b6b7c':'#b9ab8a'},g);
+    const c=centro(cr);
+    if(salida>=0){const t=el('text',{x:c.x,y:c.y+1,'font-size':20,'text-anchor':'middle','dominant-baseline':'central','font-family':'Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji'},g);t.textContent=TEMA[salida].icono;}
+    else if(L.esSegura(idx)){estrella(c.x,c.y,13,'#c8102e',g,{opacity:.85});}
+  });
+  // pasillos de color
+  PASILLO.forEach((l,e)=>l.forEach(cr=>el('rect',{class:'celda',x:cr[0]*C,y:cr[1]*C,width:C,height:C,fill:TEMA[e].celda||TEMA[e].color,stroke:e===2?'#5b6b7c':TEMA[e].oscuro,opacity:e===2?1:.9},g)));
+  // flechas de entrada al pasillo
+  [[0,7,0],[7,0,90],[14,7,180],[7,14,270]].forEach(([c,r,rot],e)=>{const p=centro([c,r]);el('path',{d:'M-9 -7 L5 0 L-9 7Z',fill:TEMA[e].oscuro,transform:`translate(${p.x},${p.y}) rotate(${rot})`},g);});
+  // centro: cuatro triángulos y la estrella
+  const cx=7.5*C,cy=7.5*C,a=6*C,b=9*C;
+  [[`${a},${a} ${a},${b} ${cx},${cy}`,0],[`${a},${a} ${b},${a} ${cx},${cy}`,1],[`${b},${a} ${b},${b} ${cx},${cy}`,2],[`${a},${b} ${b},${b} ${cx},${cy}`,3]]
+    .forEach(([pts,e])=>el('polygon',{points:pts,fill:TEMA[e].celda||TEMA[e].color,stroke:e===2?'#5b6b7c':TEMA[e].oscuro,'stroke-width':1.5},g));
+  if(SPRITES.centro)el('image',{href:SPRITES.centro,x:a,y:a,width:3*C,height:3*C},g);
+  else{el('circle',{cx,cy,r:22,fill:'#fff',stroke:'#c8102e','stroke-width':3},g);estrella(cx,cy,15,'#c8102e',g);}
+  el('rect',{x:0,y:0,width:600,height:600,fill:'none',stroke:'#5a3a22','stroke-width':4},g);
+  el('g',{id:'destinos'},s);
+  el('g',{id:'fichas'},s);
+}
+
+/* ═════════════ fichas ═════════════ */
+let est=null,JUG={},SOBRE={};  // SOBRE: posición visual temporal durante animaciones
+function posVisual(eq,f){return SOBRE[eq+'-'+f]!==undefined?SOBRE[eq+'-'+f]:est.fichas[eq][f];}
+function crearFicha(eq,f){
+  const t=TEMA[eq],g=el('g',{class:'ficha','data-eq':eq,'data-f':f,role:'button','aria-label':`${t.nombre}, ficha ${f+1}`},$('fichas'));
+  el('circle',{class:'halo',r:19,fill:'none',stroke:'#f2b632','stroke-width':4},g);
+  const c=el('g',{class:'cuerpo'},g);
+  el('ellipse',{cx:0,cy:13,rx:13,ry:4,fill:'rgba(0,0,0,.3)'},c);
+  if(SPRITES.fichas[t.id]){el('ellipse',{cx:0,cy:8,rx:15,ry:7,fill:t.color,stroke:t.oscuro,'stroke-width':2.5},c);el('image',{href:SPRITES.fichas[t.id],x:-20,y:-28,width:40,height:40},c);}
+  else{
+    el('circle',{r:15,cy:-3,fill:t.color,stroke:t.oscuro,'stroke-width':2.5},c);
+    el('circle',{r:11,cy:-3,fill:'rgba(255,255,255,.18)'},c);
+    const i=el('text',{class:'ico',y:-2,'font-size':16},c);i.textContent=t.icono;
+  }
+  return g;
+}
+function pintarFichas(){
+  if(!est)return;
+  const grupos={};
+  est.equipos.forEach(eq=>est.fichas[eq].forEach((_,f)=>{
+    const p=posVisual(eq,f),xy=xyFicha(eq,p,f),k=p===-1?`b${eq}-${f}`:(p===L.META?`m${eq}`:`${Math.round(xy.x)},${Math.round(xy.y)}`);
+    (grupos[k]=grupos[k]||[]).push({eq,f,xy});
+  }));
+  Object.values(grupos).forEach(l=>{
+    const n=l.length,off=n===1?[[0,0]]:n===2?[[-8,0],[8,0]]:n===3?[[-8,-6],[8,-6],[0,7]]:[[-8,-7],[8,-7],[-8,8],[8,8]];
+    l.forEach((o,k)=>{
+      let g=$('fichas').querySelector(`[data-eq="${o.eq}"][data-f="${o.f}"]`);if(!g)g=crearFicha(o.eq,o.f);
+      const sc=n>1?.72:1,d=off[Math.min(k,off.length-1)]||[0,0];
+      g.style.transform=`translate(${(o.xy.x+d[0]).toFixed(1)}px,${(o.xy.y+d[1]).toFixed(1)}px) scale(${sc})`;
+    });
+  });
+  document.querySelectorAll('.marco-base').forEach(m=>m.setAttribute('opacity',0));
+  if(!est.fin){const mb=$('mb-'+est.turno);if(mb)mb.setAttribute('opacity',1),mb.setAttribute('class','marco-base base-activa');}
+}
+function fichaEl(eq,f){return $('fichas').querySelector(`[data-eq="${eq}"][data-f="${f}"]`);}
+
+/* ═════════════ panel ═════════════ */
+function nombreEq(eq){return JUG[eq]?JUG[eq].nombre:TEMA[eq].nombre;}
+function pintarPanel(){
+  if(est){
+    const eq=est.turno,t=TEMA[eq],j=JUG[eq];
+    $('turno').innerHTML=est.fin?`<div class="av">🏆</div><div><small>Partida terminada</small><b>${esc(nombreEq(est.ganadores[0]))}</b></div>`
+      :`<div class="av" style="border-color:${t.color==='#eef2f7'?'#5b6b7c':t.color}">${icoEq(eq)}</div><div><small>Le toca a · ${esc(t.nombre)}</small><b>${esc(j.nombre)}</b><small>${j.tipo==='cpu'?'🤖 Computador':'🙋 Humano'}${est.seisSeguidos?' · 6 seguidos: '+est.seisSeguidos:''}</small></div>`;
+    $('equipos').innerHTML=est.equipos.map(eq=>{
+      const t=TEMA[eq],fi=est.fichas[eq],meta=fi.filter(p=>p===L.META).length,base=fi.filter(p=>p===-1).length,st=est.stats[eq],pos=est.ganadores.indexOf(eq);
+      return `<div class="eq${!est.fin&&eq===est.turno?' on':''}${pos>=0?' fuera':''}"><div class="e" style="background:${t.claro};border-color:${t.color==='#eef2f7'?'#5b6b7c':t.color}">${icoEq(eq)}</div>
+        <div class="n">${esc(JUG[eq].nombre)}${pos>=0?' · '+(pos+1)+'°':''}<small>${esc(t.nombre)} · ${JUG[eq].tipo==='cpu'?'🤖':'🙋'} · capturas ${st.capturas}</small></div>
+        <div class="m">${meta}/${fi.length} 🏁<small>${base} en casa</small></div></div>`;
+    }).join('');
+  }
+}
+function msg(t){$('msg').innerHTML=t||'';}
+function log(t,eq){const p=document.createElement('p');if(eq!=null)p.style.setProperty('--c',TEMA[eq].color==='#eef2f7'?'#5b6b7c':TEMA[eq].color);p.innerHTML=t;const b=$('bitacora');b.prepend(p);while(b.children.length>80)b.lastChild.remove();}
+
+/* ═════════════ ventanas ═════════════ */
+function ventana(html,{cerrable=false}={}){
+  const v=$('velo'),w=$('ventana');w.innerHTML=html;v.hidden=false;
+  const f=w.querySelector('button,input,select');if(f)setTimeout(()=>f.focus(),60);
+  return new Promise(res=>{w.onclick=e=>{const b=e.target.closest('[data-r]');if(b)res(b.dataset.r);};v.onclick=e=>{if(cerrable&&e.target===v){cerrar();res('cerrar');}};});
+}
+function cerrar(){$('velo').hidden=true;$('ventana').innerHTML='';}
+function cab(ic,t,sub){return `<div class="v-cab"><div class="ic">${ic}</div><div><small>${sub||''}</small><h3>${t}</h3></div></div>`;}
+const REGLAS_HTML=()=>`<ul class="reglas">
+  <li>Cada equipo tiene sus fichas en su base. Para sacar una ficha necesitas un <b>6</b>${CONF.reglas.salida==='1y6'?' o un <b>1</b>':''}.</li>
+  <li>Las fichas recorren la pista en el sentido de las agujas del reloj y entran por su <b>pasillo de color</b> hasta el centro. A la meta se llega con el <b>número exacto</b>.</li>
+  <li>Si caes donde hay una ficha rival, la <b>capturas</b> y vuelve a su base${CONF.reglas.capturaExtra?' (y lanzas otra vez)':''}. En las casillas de salida y en las <b>estrellas</b> ★ nadie puede ser capturado.</li>
+  <li>Con un <b>6</b> vuelves a lanzar${CONF.reglas.tresSeis?'; con tres 6 seguidos pierdes el turno':''}.${CONF.reglas.metaExtra?' Llevar una ficha a la meta también da otro lanzamiento.':''}</li>
+  ${CONF.reglas.barreras?'<li><b>Barreras</b>: dos fichas del mismo equipo juntas no dejan pasar a los rivales.</li>':''}
+  ${CONF.paes?'<li><b>Desafío PAES</b>: para capturar debes responder bien una pregunta. Si fallas, tu ficha avanza igual, pero no captura.</li>':''}
+  <li>Gana quien lleva primero ${CONF.reglas.fichas===2?'sus 2 fichas':'sus 4 fichas'} al centro.</li></ul>`;
+
+/* ═════════════ cuenta del sitio ═════════════ */
+let ONLINE=false,USR=null;
+function pintarCuenta(){
+  const c=$('cuenta');
+  if(!ONLINE){c.innerHTML='';return;}
+  c.innerHTML=USR?`🙋 ${esc(DF.nombreCorto(USR.displayName,USR.email))} <button id="b-salir">salir</button>`:'';
+  const b=$('b-salir');if(b)b.onclick=()=>{if(est&&!est.fin&&!confirm('Si sales, se termina esta partida. ¿Salir?'))return;DF.salir();};
+}
+async function exigirCuenta(){
+  // devuelve cuando hay sesión y perfil completo
+  for(;;){
+    if(!USR){
+      window._entrando=null;
+      const r=await ventana(cab('🔐','Entra para jugar','Ludo Chileno · El Mundo de Felipe')+`<div class="v-cuerpo acceso">
+        <img src="sprites/deco-escarapela.webp" alt="" onerror="this.remove()">
+        <p>Para jugar y guardar tus partidas en el ranking, entra con tu cuenta del sitio.</p>
+        <div id="acc-msg"></div>
+        <button class="btn verde grande" data-r="entrar" onclick="window._entrando=DF.entrar()">Entrar con Google</button></div>`);
+      if(r==='entrar'){try{await (window._entrando||DF.entrar());}catch(e){if(!e.cancelado){cerrar();await ventana(cab('⚠️','No se pudo entrar','Ludo Chileno')+`<div class="v-cuerpo"><div class="aviso err">${esc(e.message||e)}</div><div class="v-pie"><button class="btn" data-r="ok">Intentar otra vez</button></div></div>`);}}}
+      cerrar();USR=DF.usuario();pintarCuenta();continue;
+    }
+    let pf=null;try{pf=await DF.perfil();}catch(e){}
+    if(DF.perfilCompleto(pf))return;
+    await ventana(cab('📝','Completa tu perfil','Un paso más')+`<div class="v-cuerpo"><p>Antes de jugar, completa tu nombre y edad en <a href="../../cuenta.html" target="_blank" rel="noopener">Mi cuenta</a>. Después vuelve aquí.</p>
+      <div class="v-pie"><button class="btn verde" data-r="ok">Ya lo completé</button></div></div>`);
+    cerrar();
+  }
+}
+
+/* ═════════════ configuración ═════════════ */
+let CONF={jug:[{tipo:'humano',nombre:''},{tipo:'cpu',nombre:''},{tipo:'humano',nombre:''},{tipo:'cpu',nombre:''}],nivel:'normal',
+  reglas:Object.assign({},L.REGLAS_BASE),paes:false,auto:true,vel:'normal'};
+try{const g=JSON.parse(localStorage.getItem('ludo_conf')||'null');if(g&&g.jug&&g.reglas)CONF=Object.assign(CONF,g,{reglas:Object.assign({},L.REGLAS_BASE,g.reglas)});}catch(e){}
+let BANCO=[],mazo=[];
+async function cargarBanco(){
+  for(const r of ['api/preguntas','preguntas.json','../ruta-paes/preguntas.json']){
+    try{const res=await fetch(r,{cache:'no-store'});if(!res.ok)continue;const d=await res.json();
+      if(Array.isArray(d)&&d.length)return d.filter(p=>p&&Array.isArray(p.alternativas)&&p.alternativas.length===4&&p.correcta>=0&&p.correcta<4);}catch(e){}
+  }
+  return [];
+}
+function mostrarConfig(html){
+  const p=ventana(html);
+  if(USR){const marcar=()=>{const r=document.querySelector('input[name=yo]:checked'),yo=r?+r.value:0;
+      [0,1,2,3].forEach(e=>{const f=$('t'+e).closest('.cfg-eq');f.style.display=e===yo?'none':'';});};
+    document.querySelectorAll('input[name=yo]').forEach(i=>i.addEventListener('change',marcar));marcar();}
+  return p;
+}
+async function configurar(){
+  if(ONLINE){await exigirCuenta();}
+  const fila=(e)=>{const t=TEMA[e],j=CONF.jug[e];return `<div class="cfg-eq"><div class="e" style="background:${t.claro};border-color:${t.color==='#eef2f7'?'#5b6b7c':t.color}">${icoEq(e)}</div>
+    <div><div class="t">${esc(t.nombre)}</div><input id="n${e}" maxlength="18" placeholder="${esc(t.nombre)}" value="${esc(j.nombre)}"></div>
+    <div><div class="t">Juega</div><select id="t${e}"><option value="humano"${j.tipo==='humano'?' selected':''}>🙋 Persona</option><option value="cpu"${j.tipo==='cpu'?' selected':''}>🤖 Computador</option><option value="nadie"${j.tipo==='nadie'?' selected':''}>— No juega</option></select></div></div>`;};
+  const op=(id,t,sub,on)=>`<label class="opc"><input type="checkbox" id="${id}"${on?' checked':''}><span>${t}<small>${sub}</small></span></label>`;
+  const html=cab(SPRITES.centro?'<img src="sprites/deco-escarapela.webp" alt="" style="height:46px">':'🇨🇱','Nueva partida','Ludo Chileno')+`<div class="v-cuerpo">
+    ${USR?`<span class="etq">Tú (${esc(DF.nombreCorto(USR.displayName,USR.email))}) juegas con</span>
+    <div class="yo-sel">${[0,1,2,3].map(e=>`<label><input type="radio" name="yo" value="${e}"${(CONF.yo||0)===e?' checked':''}><span class="e" style="width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--emoji);background:${TEMA[e].claro};border:2px solid ${TEMA[e].color==='#eef2f7'?'#5b6b7c':TEMA[e].color}">${icoEq(e)}</span>${esc(TEMA[e].nombre)}</label>`).join('')}</div>
+    <span class="etq">Los demás equipos</span>`:`<span class="etq">Equipos (de 2 a 4)</span>`}
+    <div style="display:grid;gap:8px">${[0,1,2,3].map(fila).join('')}</div>
+    <span class="etq">Reglas</span>
+    <div class="opcs">
+      ${op('o-16','Salir con 1 o con 6','Si no, solo con 6',CONF.reglas.salida==='1y6')}
+      ${op('o-rap','Partida rápida','2 fichas por equipo',CONF.reglas.fichas===2)}
+      ${op('o-tres','Tres 6 seguidos: pierdes el turno','Evita rachas eternas',CONF.reglas.tresSeis)}
+      ${op('o-bar','Barreras','2 fichas juntas bloquean el paso',CONF.reglas.barreras)}
+      ${op('o-cap','Capturar da otro lanzamiento','',CONF.reglas.capturaExtra)}
+      ${op('o-meta','Llegar a la meta da otro lanzamiento','',CONF.reglas.metaExtra)}
+      ${op('o-fin','Terminar con el primer ganador','Si no, se juega hasta el último puesto',CONF.reglas.terminarPrimero)}
+      ${op('o-paes','Desafío PAES al capturar','Responde bien para capturar'+(BANCO.length?'':' (sin preguntas cargadas)'),CONF.paes&&BANCO.length)}
+      ${op('o-auto','Mover solo si hay una opción','Ahorra clics',CONF.auto)}
+      <label class="opc" style="display:grid;gap:6px"><span>Computador<small>Nivel y rapidez</small></span>
+        <div style="display:flex;gap:6px"><select id="o-niv"><option value="normal"${CONF.nivel==='normal'?' selected':''}>Astuto</option><option value="facil"${CONF.nivel==='facil'?' selected':''}>Fácil</option></select>
+        <select id="o-vel"><option value="lento"${CONF.vel==='lento'?' selected':''}>Lento</option><option value="normal"${CONF.vel==='normal'?' selected':''}>Normal</option><option value="rapido"${CONF.vel==='rapido'?' selected':''}>Rápido</option></select></div></label>
+    </div>
+    <div id="cfg-msg"></div>
+    <div class="v-pie"><button class="btn verde grande" data-r="ok">🎲 ¡A jugar!</button></div></div>`;
+  await mostrarConfig(html);
+  for(;;){
+    const jug=[0,1,2,3].map(e=>({tipo:$('t'+e).value,nombre:($('n'+e).value.trim()||'').slice(0,18)}));
+    if(USR){const r=document.querySelector('input[name=yo]:checked');CONF.yo=r?+r.value:0;jug[CONF.yo]={tipo:'humano',nombre:'',yo:true};}
+    if(jug.filter(j=>j.tipo!=='nadie').length>=2){
+      CONF.jug=jug;
+      CONF.reglas={salida:$('o-16').checked?'1y6':'6',fichas:$('o-rap').checked?2:4,tresSeis:$('o-tres').checked,barreras:$('o-bar').checked,
+        capturaExtra:$('o-cap').checked,metaExtra:$('o-meta').checked,terminarPrimero:$('o-fin').checked};
+      CONF.paes=$('o-paes').checked&&BANCO.length>0;CONF.auto=$('o-auto').checked;CONF.nivel=$('o-niv').value;CONF.vel=$('o-vel').value;
+      break;
+    }
+    $('cfg-msg').innerHTML='<div class="aviso err">Se necesitan al menos 2 equipos.</div>';
+    await new Promise(r=>$('ventana').querySelector('[data-r=ok]').addEventListener('click',r,{once:true}));
+  }
+  try{localStorage.setItem('ludo_conf',JSON.stringify(CONF));}catch(e){}
+  cerrar();
+  const activos=CONF.jug.map((j,e)=>j.tipo!=='nadie'?e:-1).filter(e=>e>=0);
+  JUG={};activos.forEach(e=>{const j=CONF.jug[e];JUG[e]={tipo:j.tipo,yo:!!j.yo,paesOk:0,paesN:0,nombre:j.yo&&USR?DF.nombreCorto(USR.displayName,USR.email):(j.nombre||(j.tipo==='cpu'?TEMA[e].nombre+' 🤖':TEMA[e].nombre))};});
+  est=L.crearEstado(activos,CONF.reglas);SOBRE={};mazo=barajar(BANCO);
+  dibujarTablero();pintarFichas();pintarPanel();$('bitacora').innerHTML='';
+  log(`🇨🇱 Empieza la partida: ${activos.map(e=>TEMA[e].icono+' '+esc(JUG[e].nombre)).join(', ')}.`);
+  partida();
+}
+
+/* ═════════════ desarrollo de la partida ═════════════ */
+const VEL={lento:1.6,normal:1,rapido:.45};
+let esperandoDado=null,esperandoFicha=null,idPartida=0;
+function velo(ms){return espera(ms*(JUG[est.turno]&&JUG[est.turno].tipo==='cpu'?VEL[CONF.vel]:1));}
+async function animarDado(){
+  const d=$('dado');d.classList.add('gira');let n=1;
+  for(let k=0;k<8;k++){n=1+azar(6);d.textContent=CARAS[n-1];await espera(45+k*9);}
+  d.classList.remove('gira');return n;
+}
+function pedirDado(){$('b-tirar').disabled=false;return new Promise(r=>{esperandoDado=r;});}
+function tirarClick(){if(esperandoDado){const r=esperandoDado;esperandoDado=null;$('b-tirar').disabled=true;r();}}
+function pedirFicha(movs){
+  const mapa={};
+  movs.forEach(m=>{
+    if(m.sale)est.fichas[m.eq].forEach((p,f)=>{if(p===-1)mapa[f]=m;});else mapa[m.f]=m;
+  });
+  Object.keys(mapa).forEach(f=>{const g=fichaEl(movs[0].eq,+f);if(g){g.classList.add('puede');$('fichas').appendChild(g);}});
+  // destino de cada opción
+  const gd=$('destinos');gd.innerHTML='';
+  movs.forEach(m=>{const xy=xyFicha(m.eq,m.hasta,m.f);el('circle',{class:'destino',cx:xy.x,cy:xy.y,r:15,fill:'none',stroke:'#f2b632','stroke-width':3,'stroke-dasharray':'5 4'},gd);});
+  return new Promise(r=>{esperandoFicha={mapa,r};});
+}
+function elegirFicha(f){
+  if(!esperandoFicha)return;const m=esperandoFicha.mapa[f];if(!m)return;
+  const r=esperandoFicha.r;esperandoFicha=null;
+  document.querySelectorAll('.ficha.puede').forEach(g=>g.classList.remove('puede'));$('destinos').innerHTML='';
+  r(m);
+}
+async function animarMovimiento(m,fVisual){
+  const key=m.eq+'-'+fVisual,g=fichaEl(m.eq,fVisual);
+  if(m.desde===-1){SOBRE[key]=0;pintarFichas();await velo(260);}
+  else for(let p=m.desde+1;p<=m.hasta;p++){
+    SOBRE[key]=p;if(g){g.classList.remove('salta');void g.getBBox();g.classList.add('salta');}
+    pintarFichas();await velo(170);
+  }
+  if(g)g.classList.remove('salta');
+  delete SOBRE[key];
+}
+function vueloCondor(){const t=document.querySelector('.tablero');if(!t)return;const i=new Image();i.className='vuelo';i.src='sprites/deco-condor-vuela.webp';i.alt='';i.onerror=()=>i.remove();t.appendChild(i);setTimeout(()=>i.remove(),1700);}
+async function preguntaPAES(eq){
+  if(!mazo.length)mazo=barajar(BANCO);const q=mazo.pop();if(!q)return true;
+  const orden=barajar([0,1,2,3]),ok=orden.indexOf(q.correcta),t=TEMA[eq];
+  const r=+(await ventana(cab('📝','Desafío PAES: ¿capturas?',`${esc(t.icono+' '+JUG[eq].nombre)} · ${esc(q.eje)}`)+`<div class="v-cuerpo">
+    ${q.texto?`<div class="texto-lectura">${esc(q.texto)}</div>`:''}<p class="enunciado">${esc(q.enunciado)}</p>
+    <div class="alts">${orden.map((o,k)=>`<button class="alt" data-r="${k}"><b>${'ABCD'[k]}</b><span>${esc(q.alternativas[o])}</span></button>`).join('')}</div><div id="res"></div></div>`));
+  const w=$('ventana');w.onclick=null;const bien=r===ok;
+  w.querySelectorAll('.alt').forEach((b,k)=>{b.disabled=true;if(k===ok)b.classList.add('ok');else if(k===r)b.classList.add('no');});
+  $('res').innerHTML=`<div class="explica ${bien?'bien':'mal'}"><b>${bien?'✅ ¡Correcta! Capturas la ficha rival.':'❌ Incorrecta: tu ficha avanza, pero no captura.'}</b>${esc(q.explicacion)}</div>
+    <div class="v-pie" style="margin-top:12px"><button class="btn grande" id="b-sigue">Continuar</button></div>`;
+  $('b-sigue').focus();await new Promise(res=>$('b-sigue').addEventListener('click',res,{once:true}));cerrar();
+  return bien;
+}
+async function partida(){
+  const yo=++idPartida;
+  while(!est.fin&&yo===idPartida){
+    const eq=est.turno,j=JUG[eq],t=TEMA[eq];
+    pintarFichas();pintarPanel();
+    if(j.tipo==='cpu'){msg(`🤖 ${esc(j.nombre)} está pensando…`);await velo(550);}
+    else{msg(`${t.icono} ${esc(j.nombre)}: lanza el dado.`);await pedirDado();}
+    if(yo!==idPartida)return;
+    const d=await animarDado();
+    const r=L.lanzar(est,d);
+    const quien=`${t.icono} <b>${esc(j.nombre)}</b>`;
+    if(r.tipo==='tresSeis'){log(`${quien} sacó tres 6 seguidos y pierde el turno.`,eq);msg('Tres 6 seguidos: pierdes el turno.');await velo(900);continue;}
+    if(r.tipo==='sinMovimiento'){log(`${quien} sacó ${d}: no puede mover.`,eq);msg(`Sacaste ${d}: no hay movimientos.`);await velo(800);continue;}
+    if(r.tipo==='sinMovimientoRepite'){log(`${quien} sacó 6, no puede mover y lanza otra vez.`,eq);msg('Sacaste 6 sin movimientos: lanza otra vez.');await velo(700);continue;}
+    let m;
+    if(j.tipo==='cpu'){m=L.elegirIA(est,r.movs,CONF.nivel);await velo(250);}
+    else if(r.movs.length===1&&CONF.auto){m=r.movs[0];msg(`Sacaste ${d}.`);await espera(350);}
+    else{msg(`Sacaste <b>${d}</b>: elige qué ficha mover.`);m=await pedirFicha(r.movs);}
+    if(yo!==idPartida)return;
+    // la ficha que se ve moverse (si sale de la base, la primera en casa)
+    const fv=m.f;
+    let capturar=true;
+    if(m.captura.length&&CONF.paes){capturar=j.tipo==='cpu'?Math.random()<(CONF.nivel==='normal'?.7:.5):await preguntaPAES(eq);if(j.tipo!=='cpu'){j.paesN++;if(capturar)j.paesOk++;}}
+    await animarMovimiento(m,fv);
+    const res=L.jugar(est,m,capturar);
+    if(res.capturadas.length){
+      vueloCondor();
+      res.capturadas.forEach(o=>{const g=fichaEl(o.eq,o.f);if(g){g.classList.add('vuela');setTimeout(()=>g.classList.remove('vuela'),800);}});
+      log(`${quien} capturó a ${res.capturadas.map(o=>TEMA[o.eq].icono+' '+esc(JUG[o.eq].nombre)).join(', ')}.`,eq);
+    }else if(m.captura.length&&!capturar)log(`${quien} falló el desafío PAES: no captura.`,eq);
+    if(m.sale)log(`${quien} saca una ficha a la pista (dado ${d}).`,eq);
+    else if(m.meta)log(`${quien} lleva una ficha a la meta 🏁.`,eq);
+    else if(!res.capturadas.length)log(`${quien} avanza ${d}.`,eq);
+    pintarFichas();pintarPanel();
+    if(res.gano){confeti(80);log(`🏆 ${quien} terminó en el lugar ${est.ganadores.indexOf(eq)+1}.`,eq);}
+    if(res.extra&&!est.fin)msg(`${t.icono} ¡Lanza otra vez!`);
+    await velo(res.capturadas.length?650:250);
+  }
+  if(yo===idPartida&&est.fin)terminar();
+}
+
+/* ═════════════ final ═════════════ */
+async function terminar(){
+  pintarFichas();pintarPanel();msg('');confeti(160);
+  const prog=eq=>est.fichas[eq].reduce((s,p)=>s+(p<0?0:p),0);
+  const orden=est.ganadores.concat(est.equipos.filter(e=>est.ganadores.indexOf(e)<0).sort((a,b)=>prog(b)-prog(a)));
+  let records='',guardado='';
+  const mio=est.equipos.find(e=>JUG[e].yo);
+  if(ONLINE&&USR&&mio!=null){
+    const pos=orden.indexOf(mio)+1,st=est.stats[mio],enMeta=est.fichas[mio].filter(p=>p===L.META).length,J=JUG[mio];
+    const puntos=(pos===1?600:0)+enMeta*100+st.capturas*40+J.paesOk*30;
+    const datos={'Puesto':`${pos}° de ${orden.length}`,'Equipo':TEMA[mio].nombre,'Rivales':orden.filter(e=>e!==mio).map(e=>JUG[e].tipo==='cpu'?'CPU':'persona').join(', '),
+      'Fichas en meta':`${enMeta}/${est.fichas[mio].length}`,'Capturas':st.capturas,'Capturado':st.capturado,'Puntaje':puntos};
+    if(CONF.paes)datos['Desafío PAES']=`${J.paesOk}/${J.paesN}`;
+    try{
+      const r=await DF.guardarPuntaje('ludo-chileno',puntos,{puesto:pos,jugadores:orden.length,capturas:st.capturas,enMeta,paesOk:J.paesOk,paesN:J.paesN});
+      DF.guardarResultado('ludo-chileno',datos).catch(()=>{});
+      guardado=`<div class="guardado">💾 Partida guardada en tu cuenta: <b>${puntos} pts</b>${r&&r.record?' · ¡nuevo récord personal!':''} · <a href="../../rankings.html#ludo-chileno" target="_blank" rel="noopener">ver ranking</a></div>`;
+    }catch(e){guardado=`<div class="guardado err">No se pudo guardar la partida: ${esc(e.message||e)}</div>`;}
+  }
+  if(!ONLINE)try{
+    await fetch('api/partida',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jugadores:orden.map((eq,k)=>({nombre:JUG[eq].nombre,equipo:TEMA[eq].nombre,tipo:JUG[eq].tipo,puesto:k+1,capturas:est.stats[eq].capturas,enMeta:est.fichas[eq].filter(p=>p===L.META).length,lanzamientos:est.stats[eq].turnos}))})});
+    const r=await fetch('api/ranking',{cache:'no-store'});
+    if(r.ok){const l=await r.json();if(Array.isArray(l)&&l.length)records=`<div><span class="etq">🏅 Victorias en este computador</span><table class="records"><tr><th>#</th><th>Nombre</th><th>Victorias</th><th>Partidas</th><th>Capturas</th></tr>${l.map((x,k)=>`<tr><td>${k+1}</td><td>${esc(x.nombre)}</td><td><b>${esc(x.victorias)}</b></td><td>${esc(x.partidas)}</td><td>${esc(x.capturas)}</td></tr>`).join('')}</table></div>`;}
+  }catch(e){}
+  const g=orden[0];
+  const r=await ventana(cab('🏆',`¡Ganó ${esc(JUG[g].nombre)}!`,`${esc(TEMA[g].nombre)} · ${est.turnosTotales} lanzamientos`)+`<div class="v-cuerpo">
+    <div class="cueca" aria-hidden="true"><img src="sprites/deco-huaso.webp" alt="" onerror="this.remove()"><img src="sprites/deco-china.webp" alt="" onerror="this.remove()"><img class="chica" src="sprites/deco-empanadas.webp" alt="" onerror="this.remove()"><img src="sprites/deco-huaso2.webp" alt="" onerror="this.remove()"><img src="sprites/deco-china2.webp" alt="" onerror="this.remove()"></div>
+    <div class="podio">${orden.map((eq,k)=>`<div><span class="pos">${k+1}°</span><span style="font-family:var(--emoji);font-size:1.5rem;width:40px;height:40px;display:grid;place-items:center">${icoEq(eq)}</span><span>${esc(JUG[eq].nombre)}<br><small style="color:var(--gris)">${esc(TEMA[eq].nombre)} · capturas ${est.stats[eq].capturas} · capturado ${est.stats[eq].capturado}</small></span><b>${est.fichas[eq].filter(p=>p===L.META).length}/${est.fichas[eq].length} 🏁</b></div>`).join('')}</div>
+    ${guardado}${records}
+    <div class="v-pie"><button class="btn sec" data-r="ver">Ver tablero</button><button class="btn verde" data-r="otra">🔄 Otra partida</button></div></div>`);
+  cerrar();if(r==='otra')configurar();
+}
+
+/* ═════════════ eventos ═════════════ */
+$('b-tirar').addEventListener('click',tirarClick);
+$('tab').addEventListener('click',e=>{const g=e.target.closest('.ficha');if(g)elegirFicha(+g.dataset.f);});
+document.addEventListener('keydown',e=>{
+  if(!$('velo').hidden)return;
+  if(e.code==='Space'&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();tirarClick();}
+  if(/^[1-4]$/.test(e.key)&&esperandoFicha){const f=+e.key-1;if(esperandoFicha.mapa[f])elegirFicha(f);else{const ks=Object.keys(esperandoFicha.mapa);if(ks[f]!==undefined)elegirFicha(+ks[f]);}}
+});
+$('b-reglas').addEventListener('click',()=>ventana(cab('📜','Reglas','Ludo Chileno')+`<div class="v-cuerpo">${REGLAS_HTML()}<div class="v-pie"><button class="btn" data-r="cerrar">Entendido</button></div></div>`,{cerrable:true}).then(cerrar));
+$('b-nueva').addEventListener('click',()=>{if(est&&!est.fin&&!confirm('¿Terminar esta partida y empezar otra?'))return;idPartida++;esperandoDado=null;esperandoFicha=null;configurar();});
+
+/* ═════════════ arranque ═════════════ */
+(async function(){
+  await cargarSprites();
+  dibujarTablero();
+  BANCO=await cargarBanco();
+  if(window.DF){
+    try{await DF.listo();ONLINE=true;}catch(e){ONLINE=false;}
+  }
+  if(ONLINE){
+    USR=DF.usuario();pintarCuenta();
+    DF.alCambiarUsuario(u=>{const antes=USR;USR=u;pintarCuenta();
+      if(antes&&!u){idPartida++;esperandoDado=null;esperandoFicha=null;est=null;$('fichas')&&($('fichas').innerHTML='');configurar();}});
+  }
+  configurar();
+})();
+})();
+</script>
+</body>
+</html>
