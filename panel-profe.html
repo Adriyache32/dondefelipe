@@ -971,15 +971,17 @@ $('aExportar').onclick = () => {
 };
 
 /* ═════════ VISITAS ═════════ */
+function hace30dias() { try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(Date.now() - 29 * 86400000)); } catch (e) { return new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10); } }
 async function cargarVisitas() {
   const { F, db } = FB;
   try {
     const [pg, ds] = await Promise.all([
       F.getDocs(F.collection(db, 'visitas')),
-      F.getDocs(F.query(F.collection(db, 'visitas_dias'), F.orderBy(F.documentId(), 'desc'), F.limit(30)))
+      // Sin orden descendente: así Firestore no exige crear un índice compuesto.
+      F.getDocs(F.query(F.collection(db, 'visitas_dias'), F.where(F.documentId(), '>=', hace30dias())))
     ]);
     const paginas = pg.docs.map(d => ({ p: d.id.replace(/~/g, '/'), n: d.data().n || 0 })).sort((a, b) => b.n - a.n);
-    const dias = ds.docs.map(d => ({ d: d.id, n: d.data().n || 0 })).reverse();
+    const dias = ds.docs.map(d => ({ d: d.id, n: d.data().n || 0 })).sort((x, y) => x.d < y.d ? -1 : 1).slice(-30);
     const hoy = dias.find(x => x.d === DF.hoy());
     $('vTotal').textContent = fmt(dias.length ? paginas.reduce((s, x) => s + (x.p.includes('#') ? 0 : x.n), 0) : 0);
     $('vHoy').textContent = fmt(hoy ? hoy.n : 0);
@@ -987,7 +989,7 @@ async function cargarVisitas() {
     const barras = (l, k) => { const mx = Math.max(1, ...l.map(x => x.n)); return l.map(x => `<div class="f"><span title="${esc(x[k])}">${esc(x[k])}</span><i style="width:${Math.max(2, x.n / mx * 100)}%"></i><span class="num">${fmt(x.n)}</span></div>`).join('') || '<div class="muted">Sin datos todavía.</div>'; };
     $('vLista').innerHTML = barras(paginas.slice(0, 40), 'p');
     $('vDias').innerHTML = barras(dias, 'd');
-  } catch (e) { toast('Error: ' + e.message); }
+  } catch (e) { $('vLista').innerHTML = `<div class="muted">No se pudieron cargar las visitas: ${esc(e.message)}</div>`; }
 }
 
 /* ═════════ TRABAJOS (sesiones con autoguardado) ═════════ */
