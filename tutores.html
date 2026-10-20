@@ -60,6 +60,8 @@ h1{font:900 clamp(2.2rem,6vw,3.8rem)/.95 var(--ff-display);letter-spacing:-.5px;
 .dato{font-size:.62rem;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;padding:4px 10px;border-radius:2px;background:rgba(204,255,0,.12);color:var(--acid)}
 .desc{font-size:.9rem;color:#c6c9d6;line-height:1.55;flex:1}
 .tutor .fila{margin-top:4px}
+.aviso{font-size:.8rem;line-height:1.5;color:var(--bone);background:rgba(233,185,73,.1);border:1px solid rgba(233,185,73,.35);border-radius:var(--r-sm);padding:8px 10px}
+.aviso b{color:var(--brass)}
 .info{border-left:4px solid var(--cyan);background:rgba(34,227,255,.06);padding:12px 16px;border-radius:0 var(--r-sm) var(--r-sm) 0;margin:0 0 1.6rem;font-size:.86rem;line-height:1.6;color:#c6c9d6}
 .info b{color:var(--cyan)}
 .info ul{margin:.4rem 0 0 1.1rem}
@@ -126,6 +128,7 @@ var CURSOS=[
   {k:'general',n:'General'}
 ];
 var COLS=['#ccff00','#22e3ff','#ff2e7e','#e9b949','#a78bfa','#34d399'];
+var MENORES=['6b','7b'];  // cursos donde la mayoría tiene menos de 13 años
 var URL_OK=/^https:\/\/notebooklm\.google\.com\/\S+$/;
 
 function $(id){return document.getElementById(id)}
@@ -163,6 +166,7 @@ function pintaLista(){
       '<h2>'+esc(t.nombre)+'</h2>'+
       '<div class="datos">'+(t.asignatura?'<span class="dato">'+esc(t.asignatura)+'</span>':'')+'<span class="dato">'+esc(nombreCurso(t.curso))+'</span></div>'+
       (t.desc?'<p class="desc">'+esc(t.desc)+'</p>':'<p class="desc"></p>')+
+      (MENORES.indexOf(t.curso)>=0?'<p class="aviso"><b>👨‍👩‍👧 Con tu apoderado o en clase.</b> NotebookLM pide una cuenta Google de 13 años o más: úsalo en casa con la cuenta de un adulto, o en clase con el profe.</p>':'')+
       '<div class="fila">'+(URL_OK.test(t.url)?'<a class="btn" href="'+esc(t.url)+'" target="_blank" rel="noopener noreferrer">Abrir tutor ↗</a>':'<span class="nota">Enlace no disponible</span>')+
       (esMod?'<span class="esp"></span><button class="lnk" data-a="editar" data-id="'+esc(t._id)+'">editar</button><button class="lnk" data-a="borrar" data-id="'+esc(t._id)+'">borrar</button>':'')+'</div>'+
       '</article>';
