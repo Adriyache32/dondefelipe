@@ -36,9 +36,11 @@ window.DF_CONFIG = {
   pedirCurso: false,
   cursos: ["6° Básico", "7° Básico", "8° Básico", "1° Medio", "2° Medio", "3° Medio", "4° Medio", "Profe / Otro"],
 
-  // La sesión se cierra sola tras estas horas sin uso (computadores compartidos).
-  // 0 = no cerrar nunca.
-  cerrarSesionTrasHoras: 3,
+  // La sesión se cierra sola tras estas horas sin uso.
+  // 720 = 30 días sin entrar (en tu celular o PC queda abierta).
+  // En computadores compartidos, cada estudiante debe tocar "salir".
+  // 0 = no cerrar nunca · 3 = cerrar tras 3 horas sin uso.
+  cerrarSesionTrasHoras: 720,
 
   // Mostrar el aviso de privacidad la primera vez que alguien entra al sitio.
   aviso: true,
