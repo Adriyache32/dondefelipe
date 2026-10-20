@@ -188,6 +188,8 @@ header .esp{flex:1}
   <span class="esp"></span>
   <img class="volantin" src="sprites/deco-volantin.webp" alt="" onerror="this.remove()">
   <span class="cuenta" id="cuenta"></span>
+  <button class="hbtn" id="b-musica" title="Música de fondo"></button>
+  <button class="hbtn" id="b-sonidos" title="Sonidos del dado y las capturas"></button>
   <button class="hbtn" id="b-gato" title="Encender o apagar el gatito que persigue el dado"></button>
   <button class="hbtn" id="b-reglas">📜 Reglas</button>
   <button class="hbtn" id="b-nueva">🔄 Nueva partida</button>
@@ -214,6 +216,7 @@ header .esp{flex:1}
 <script src="../../firebase/df.js"></script>
 <script src="ludo-logica.js"></script>
 <script src="gatito-dado.js"></script>
+<script src="sonido.js"></script>
 <script>
 (function(){
 'use strict';
@@ -349,7 +352,14 @@ function pintarFichas(){
     });
   });
   document.querySelectorAll('.marco-base').forEach(m=>m.setAttribute('opacity',0));
+  revisarTension();
   if(!est.fin){const mb=$('mb-'+est.turno);if(mb)mb.setAttribute('opacity',1),mb.setAttribute('class','marco-base base-activa');}
+}
+// música de tensión: algún equipo tiene una sola ficha por llegar y ya va cerca de la meta
+function revisarTension(){
+  if(!window.Sonido)return;
+  const cerca=!!est&&!est.fin&&est.equipos.some(e=>{const r=est.fichas[e].filter(p=>p!==L.META);return r.length===1&&r[0]>=40;});
+  Sonido.setModo(cerca?'tension':'tranquila');
 }
 function fichaEl(eq,f){return $('fichas').querySelector(`[data-eq="${eq}"][data-f="${f}"]`);}
 
@@ -495,11 +505,14 @@ let esperandoDado=null,esperandoFicha=null,idPartida=0;
 function velo(ms){return espera(ms*(JUG[est.turno]&&JUG[est.turno].tipo==='cpu'?VEL[CONF.vel]:1));}
 async function animarDado(final){
   const n=final||1+azar(6),d=$('dado');d.classList.add('gira');
+  if(window.Sonido)Sonido.dado();
   const j=est&&JUG[est.turno],rapido=!!(j&&j.tipo==='cpu'&&CONF.vel==='rapido');
   const gato=window.GatitoDado?GatitoDado.lanzar(document.querySelector('.tablero'),n,{rapido,suelo:.56}):null;
   for(let k=0;k<8;k++){d.textContent=CARAS[azar(6)];await espera(45+k*9);}
   if(gato)await gato;
-  d.textContent=CARAS[n-1];d.classList.remove('gira');return n;
+  d.textContent=CARAS[n-1];d.classList.remove('gira');
+  if(n===6&&window.Sonido)Sonido.seis();
+  return n;
 }
 function pedirDado(){$('b-tirar').disabled=false;return new Promise(r=>{esperandoDado=r;});}
 function tirarClick(){if(esperandoDado){const r=esperandoDado;esperandoDado=null;$('b-tirar').disabled=true;r(true);}}
@@ -530,7 +543,7 @@ async function animarMovimiento(m,fVisual){
   if(g)g.classList.remove('salta');
   delete SOBRE[key];
 }
-function vueloCondor(){const t=document.querySelector('.tablero');if(!t)return;const i=new Image();i.className='vuelo';i.src='sprites/deco-condor-vuela.webp';i.alt='';i.onerror=()=>i.remove();t.appendChild(i);setTimeout(()=>i.remove(),1700);}
+function vueloCondor(){if(window.Sonido)Sonido.captura();const t=document.querySelector('.tablero');if(!t)return;const i=new Image();i.className='vuelo';i.src='sprites/deco-condor-vuela.webp';i.alt='';i.onerror=()=>i.remove();t.appendChild(i);setTimeout(()=>i.remove(),1700);}
 async function preguntaPAES(eq){
   if(!mazo.length)mazo=barajar(BANCO);const q=mazo.pop();if(!q)return true;
   const orden=barajar([0,1,2,3]),ok=orden.indexOf(q.correcta),t=TEMA[eq];
@@ -935,6 +948,7 @@ function reintentar(seq){setTimeout(()=>{if(SALA&&SALA.seq===seq&&SALA.estado===
 /* ═════════════ eventos ═════════════ */
 $('b-tirar').addEventListener('click',tirarClick);
 if(window.GatitoDado)GatitoDado.boton($('b-gato'));else $('b-gato').remove();
+if(window.Sonido)Sonido.botones($('b-musica'),$('b-sonidos'));else{$('b-musica').remove();$('b-sonidos').remove();}
 $('tab').addEventListener('click',e=>{const g=e.target.closest('.ficha');if(g)elegirFicha(+g.dataset.f);});
 document.addEventListener('keydown',e=>{
   if(!$('velo').hidden)return;

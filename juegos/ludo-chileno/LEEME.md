@@ -41,3 +41,9 @@ Cada jugador lanza y mueve solo en su turno, desde su propio dispositivo. Si alg
 Al terminar, cada jugador guarda su puntaje en su propia cuenta.
 
 Las salas se guardan en la colección `ludo_salas` de Firestore. Sus reglas de seguridad están en `firebase/firestore.rules` del sitio.
+
+## Música y sonidos
+- `musica/tranquila.mp3` ("The Slope of Quiet") suena durante la partida.
+- `musica/tension.mp3` ("Sombras de la cordillera") entra con un fundido cuando algún equipo tiene una sola ficha por llegar y ya va cerca de la meta (a 16 pasos o menos).
+- El dado, el 6 (sonido de premio) y las capturas tienen efectos generados por el navegador; no usan archivos.
+- Los botones 🎵 y 🔊 apagan la música y los efectos por separado. Los navegadores no dejan sonar nada hasta el primer clic, así que la música parte con la primera interacción.
