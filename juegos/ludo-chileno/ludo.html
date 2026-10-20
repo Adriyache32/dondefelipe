@@ -66,6 +66,8 @@ header{max-width:1200px;margin:0 auto;padding:16px 16px 10px;display:flex;align-
 .espera{font-weight:800;color:var(--gris);align-self:center}
 .reloj{display:inline-block;background:var(--bosque);color:#fff;border-radius:999px;padding:1px 9px;font-size:.78rem;margin-left:4px}
 #sala-info b{letter-spacing:2px}
+.con-gato{display:flex;align-items:flex-end;justify-content:space-between}
+.gato-deco{height:46px;margin:-14px 0 -6px}
 .logo{font:800 clamp(1.6rem,4vw,2.3rem)/1 'Baloo 2',sans-serif}
 .logo span{color:var(--oro)}
 .lema{font-size:.9rem;opacity:.85}
@@ -186,6 +188,7 @@ header .esp{flex:1}
   <span class="esp"></span>
   <img class="volantin" src="sprites/deco-volantin.webp" alt="" onerror="this.remove()">
   <span class="cuenta" id="cuenta"></span>
+  <button class="hbtn" id="b-gato" title="Encender o apagar el gatito que persigue el dado"></button>
   <button class="hbtn" id="b-reglas">📜 Reglas</button>
   <button class="hbtn" id="b-nueva">🔄 Nueva partida</button>
 </header>
@@ -201,7 +204,7 @@ header .esp{flex:1}
       <div class="nota">Espacio: lanzar · Toca la ficha que quieres mover · 1–4 eligen ficha</div>
     </div>
     <div class="tarjeta"><h2>Equipos</h2><div class="equipos" id="equipos"></div></div>
-    <div class="tarjeta"><h2>Bitácora</h2><div class="bitacora" id="bitacora" aria-live="polite"></div></div>
+    <div class="tarjeta"><h2 class="con-gato">Bitácora <img class="gato-deco" src="gatito/duerme-caja.webp" alt="" onerror="this.remove()"></h2><div class="bitacora" id="bitacora" aria-live="polite"></div></div>
   </aside>
 </div>
 
@@ -210,6 +213,7 @@ header .esp{flex:1}
 <!-- Login de El Mundo de Felipe: en el sitio exige cuenta; sin el archivo (modo sin internet) se juega sin login -->
 <script src="../../firebase/df.js"></script>
 <script src="ludo-logica.js"></script>
+<script src="gatito-dado.js"></script>
 <script>
 (function(){
 'use strict';
@@ -490,10 +494,12 @@ const VEL={lento:1.6,normal:1,rapido:.45};
 let esperandoDado=null,esperandoFicha=null,idPartida=0;
 function velo(ms){return espera(ms*(JUG[est.turno]&&JUG[est.turno].tipo==='cpu'?VEL[CONF.vel]:1));}
 async function animarDado(final){
-  const d=$('dado');d.classList.add('gira');let n=1;
-  for(let k=0;k<8;k++){n=1+azar(6);d.textContent=CARAS[n-1];await espera(45+k*9);}
-  if(final){n=final;d.textContent=CARAS[n-1];}
-  d.classList.remove('gira');return n;
+  const n=final||1+azar(6),d=$('dado');d.classList.add('gira');
+  const j=est&&JUG[est.turno],rapido=!!(j&&j.tipo==='cpu'&&CONF.vel==='rapido');
+  const gato=window.GatitoDado?GatitoDado.lanzar(document.querySelector('.tablero'),n,{rapido,suelo:.56}):null;
+  for(let k=0;k<8;k++){d.textContent=CARAS[azar(6)];await espera(45+k*9);}
+  if(gato)await gato;
+  d.textContent=CARAS[n-1];d.classList.remove('gira');return n;
 }
 function pedirDado(){$('b-tirar').disabled=false;return new Promise(r=>{esperandoDado=r;});}
 function tirarClick(){if(esperandoDado){const r=esperandoDado;esperandoDado=null;$('b-tirar').disabled=true;r(true);}}
@@ -605,7 +611,7 @@ async function terminar(){
   }catch(e){}
   const g=orden[0];
   const r=await ventana(cab('🏆',`¡Ganó ${esc(JUG[g].nombre)}!`,`${esc(TEMA[g].nombre)} · ${est.turnosTotales} lanzamientos`)+`<div class="v-cuerpo">
-    <div class="cueca" aria-hidden="true"><img src="sprites/deco-huaso.webp" alt="" onerror="this.remove()"><img src="sprites/deco-china.webp" alt="" onerror="this.remove()"><img class="chica" src="sprites/deco-empanadas.webp" alt="" onerror="this.remove()"><img src="sprites/deco-huaso2.webp" alt="" onerror="this.remove()"><img src="sprites/deco-china2.webp" alt="" onerror="this.remove()"></div>
+    <div class="cueca" aria-hidden="true"><img src="sprites/deco-huaso.webp" alt="" onerror="this.remove()"><img src="sprites/deco-china.webp" alt="" onerror="this.remove()"><img class="chica" src="gatito/feliz.webp" alt="" onerror="this.remove()"><img class="chica" src="sprites/deco-empanadas.webp" alt="" onerror="this.remove()"><img src="sprites/deco-huaso2.webp" alt="" onerror="this.remove()"><img src="sprites/deco-china2.webp" alt="" onerror="this.remove()"></div>
     <div class="podio">${orden.map((eq,k)=>`<div><span class="pos">${k+1}°</span><span style="font-family:var(--emoji);font-size:1.5rem;width:40px;height:40px;display:grid;place-items:center">${icoEq(eq)}</span><span>${esc(JUG[eq].nombre)}<br><small style="color:var(--gris)">${esc(TEMA[eq].nombre)} · capturas ${est.stats[eq].capturas} · capturado ${est.stats[eq].capturado}</small></span><b>${est.fichas[eq].filter(p=>p===L.META).length}/${est.fichas[eq].length} 🏁</b></div>`).join('')}</div>
     ${guardado}${records}
     <div class="v-pie"><button class="btn sec" data-r="ver">Ver tablero</button><button class="btn verde" data-r="otra">🔄 Otra partida</button></div></div>`);
@@ -927,6 +933,7 @@ async function accionAuto(seq){
 
 /* ═════════════ eventos ═════════════ */
 $('b-tirar').addEventListener('click',tirarClick);
+if(window.GatitoDado)GatitoDado.boton($('b-gato'));else $('b-gato').remove();
 $('tab').addEventListener('click',e=>{const g=e.target.closest('.ficha');if(g)elegirFicha(+g.dataset.f);});
 document.addEventListener('keydown',e=>{
   if(!$('velo').hidden)return;

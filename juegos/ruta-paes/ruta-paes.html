@@ -235,6 +235,7 @@ header .esp{flex:1}
     <div class="lema">De la costa a la cordillera · lanza el dado, responde y llega a la cumbre</div>
   </div>
   <span class="esp"></span>
+  <button class="hbtn" id="b-gato" title="Encender o apagar el gatito que persigue el dado"></button>
   <button class="hbtn" id="b-reglas">📜 Reglas</button>
   <button class="hbtn" id="b-nueva">🔄 Nueva partida</button>
 </header>
@@ -300,6 +301,7 @@ header .esp{flex:1}
 <div class="velo" id="velo" hidden><div class="ventana" id="ventana" role="dialog" aria-modal="true"></div></div>
 <div class="toast" id="toast"></div>
 
+<script src="gatito-dado.js"></script>
 <!-- Login y ranking de El Mundo de Felipe (si no existe, el juego funciona igual) -->
 <script src="../../firebase/df.js"></script>
 <script>
@@ -840,9 +842,11 @@ async function configurar(){
 
 /* ═════════════ juego ═════════════ */
 async function animarDado(){
-  const d=$('dado');d.classList.add('gira');
-  let n=1;for(let k=0;k<9;k++){n=1+azar(6);d.textContent=CARAS[n-1];await espera(55+k*8);}
-  d.classList.remove('gira');return n;
+  const n=1+azar(6),d=$('dado');d.classList.add('gira');
+  const gato=window.GatitoDado?GatitoDado.lanzar($('tablero'),n,{suelo:.9}):null;
+  for(let k=0;k<9;k++){d.textContent=CARAS[azar(6)];await espera(55+k*8);}
+  if(gato)await gato;
+  d.textContent=CARAS[n-1];d.classList.remove('gira');return n;
 }
 async function mover(j,pasos){
   const dir=pasos>0?1:-1;const f=$('fichas').querySelector(`[data-j="${J.indexOf(j)}"]`);
@@ -985,6 +989,7 @@ document.addEventListener('click',e=>{
 
 /* ═════════════ eventos ═════════════ */
 $('b-tirar').addEventListener('click',tirar);
+if(window.GatitoDado)GatitoDado.boton($('b-gato'));else $('b-gato').remove();
 document.addEventListener('keydown',e=>{
   if(e.code==='Space'&&$('velo').hidden&&!/INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement.tagName)){e.preventDefault();tirar();}
   if(e.key==='Escape'&&!$('velo').hidden&&$('ventana').querySelector('[data-r=cerrar]')){$('ventana').querySelector('[data-r=cerrar]').click();}
