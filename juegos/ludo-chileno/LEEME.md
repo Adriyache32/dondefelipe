@@ -30,3 +30,14 @@ No abras `ludo.html` con doble clic: usa siempre el servidor.
 ## El computador
 - Fácil: elige cualquier jugada válida.
 - Astuto: prefiere llegar a la meta, capturar, sacar fichas, entrar a su pasillo y pararse en casillas seguras, y evita las casillas donde un rival lo puede alcanzar.
+
+## En línea (en El Mundo de Felipe)
+En el sitio, después de entrar con la cuenta, se elige:
+- **Crear sala en línea**: eliges tu equipo, qué equipos quedan libres para otras personas, cuáles juega el computador y las reglas. Recibes un código de 4 caracteres y un enlace para compartir.
+- **Unirme con código**: escribes el código y tomas un equipo libre. Si la partida ya empezó y no estás en ella, puedes mirarla (sirve para proyectarla en la sala).
+- **En este equipo**: el modo de siempre, contra el computador o pasándose el equipo.
+
+Cada jugador lanza y mueve solo en su turno, desde su propio dispositivo. Si alguien no juega en 30 segundos (por ejemplo, porque se desconectó), el computador juega ese turno por él. Al volver a entrar con el mismo código, recupera su equipo.
+Al terminar, cada jugador guarda su puntaje en su propia cuenta.
+
+Las salas se guardan en la colección `ludo_salas` de Firestore. Sus reglas de seguridad están en `firebase/firestore.rules` del sitio.

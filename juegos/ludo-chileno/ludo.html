@@ -45,6 +45,27 @@ header{max-width:1200px;margin:0 auto;padding:16px 16px 10px;display:flex;align-
 .yo-sel .e{width:30px;height:30px;font-size:1rem;border-width:2px}
 .guardado{background:#e8f6ee;border:2px solid var(--ok);border-radius:12px;padding:10px 12px;font-size:.9rem;font-weight:700}
 .guardado.err{background:#fbeaea;border-color:var(--mal)}
+.modos{display:grid;gap:10px}
+.modo{display:grid;grid-template-columns:48px 1fr;grid-template-rows:auto auto;column-gap:12px;text-align:left;background:#fff;border:2px solid #e5dec9;border-radius:14px;padding:12px 14px}
+.modo:hover{border-color:var(--oro);background:#fff8e3}
+.modo span{grid-row:1/3;font-family:var(--emoji);font-size:2rem;display:grid;place-items:center}
+.modo b{font:800 1.1rem 'Baloo 2',sans-serif}
+.modo small{color:var(--gris);font-weight:600;font-size:.84rem}
+.codigo-in{width:100%;font:800 2rem 'Baloo 2',sans-serif;letter-spacing:8px;text-align:center;text-transform:uppercase;border:3px solid #ddd5bf;border-radius:14px;padding:8px;background:#fff}
+.codigo-grande{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#fff8e3;border:2px dashed var(--oro);border-radius:14px;padding:10px 14px}
+.codigo-grande small{font-weight:800;color:var(--gris)}
+.codigo-grande b{font:800 2.4rem/1 'Baloo 2',sans-serif;letter-spacing:6px;color:var(--bosque);flex:1}
+.asientos{display:grid;gap:8px}
+.asiento{display:grid;grid-template-columns:42px 1fr auto;gap:10px;align-items:center;background:#fff;border:2px solid #e5dec9;border-radius:12px;padding:8px 10px}
+.asiento .e{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-family:var(--emoji);border:3px solid}
+.asiento small{font-weight:800;color:var(--gris);font-size:.74rem}
+.asiento .acc{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.btn.chico{padding:7px 12px;font-size:.88rem;box-shadow:0 3px 0 #a8770c}
+.btn.verde.chico{box-shadow:0 3px 0 #1d5e3a}.btn.sec.chico{box-shadow:0 3px 0 #b9b19a}
+.sel-chico{border:2px solid #ddd5bf;border-radius:10px;padding:6px 8px;background:#fbf8ef;font-weight:700;font-size:.82rem}
+.espera{font-weight:800;color:var(--gris);align-self:center}
+.reloj{display:inline-block;background:var(--bosque);color:#fff;border-radius:999px;padding:1px 9px;font-size:.78rem;margin-left:4px}
+#sala-info b{letter-spacing:2px}
 .logo{font:800 clamp(1.6rem,4vw,2.3rem)/1 'Baloo 2',sans-serif}
 .logo span{color:var(--oro)}
 .lema{font-size:.9rem;opacity:.85}
@@ -176,6 +197,7 @@ header .esp{flex:1}
       <div class="turno" id="turno"><div class="av">🇨🇱</div><div><small>Ludo Chileno</small><b>Configura la partida</b></div></div>
       <div class="dado-zona"><div class="dado" id="dado" aria-live="polite">⚀</div><button class="btn grande" id="b-tirar" disabled>🎲 Lanzar</button></div>
       <div class="msg" id="msg" aria-live="polite"></div>
+      <div class="nota" id="sala-info"></div>
       <div class="nota">Espacio: lanzar · Toca la ficha que quieres mover · 1–4 eligen ficha</div>
     </div>
     <div class="tarjeta"><h2>Equipos</h2><div class="equipos" id="equipos"></div></div>
@@ -410,7 +432,8 @@ function mostrarConfig(html){
     document.querySelectorAll('input[name=yo]').forEach(i=>i.addEventListener('change',marcar));marcar();}
   return p;
 }
-async function configurar(){
+async function configurarLocal(){
+  salirDeSala();
   if(ONLINE){await exigirCuenta();}
   const fila=(e)=>{const t=TEMA[e],j=CONF.jug[e];return `<div class="cfg-eq"><div class="e" style="background:${t.claro};border-color:${t.color==='#eef2f7'?'#5b6b7c':t.color}">${icoEq(e)}</div>
     <div><div class="t">${esc(t.nombre)}</div><input id="n${e}" maxlength="18" placeholder="${esc(t.nombre)}" value="${esc(j.nombre)}"></div>
@@ -466,13 +489,14 @@ async function configurar(){
 const VEL={lento:1.6,normal:1,rapido:.45};
 let esperandoDado=null,esperandoFicha=null,idPartida=0;
 function velo(ms){return espera(ms*(JUG[est.turno]&&JUG[est.turno].tipo==='cpu'?VEL[CONF.vel]:1));}
-async function animarDado(){
+async function animarDado(final){
   const d=$('dado');d.classList.add('gira');let n=1;
   for(let k=0;k<8;k++){n=1+azar(6);d.textContent=CARAS[n-1];await espera(45+k*9);}
+  if(final){n=final;d.textContent=CARAS[n-1];}
   d.classList.remove('gira');return n;
 }
 function pedirDado(){$('b-tirar').disabled=false;return new Promise(r=>{esperandoDado=r;});}
-function tirarClick(){if(esperandoDado){const r=esperandoDado;esperandoDado=null;$('b-tirar').disabled=true;r();}}
+function tirarClick(){if(esperandoDado){const r=esperandoDado;esperandoDado=null;$('b-tirar').disabled=true;r(true);}}
 function pedirFicha(movs){
   const mapa={};
   movs.forEach(m=>{
@@ -586,6 +610,319 @@ async function terminar(){
     ${guardado}${records}
     <div class="v-pie"><button class="btn sec" data-r="ver">Ver tablero</button><button class="btn verde" data-r="otra">🔄 Otra partida</button></div></div>`);
   cerrar();if(r==='otra')configurar();
+}
+
+/* ═════════════ menú: local o en línea ═════════════ */
+async function configurar(){
+  salirDeSala();
+  if(!ONLINE)return configurarLocal();
+  await exigirCuenta();
+  const pend=new URLSearchParams(location.search).get('sala');
+  if(pend){history.replaceState(null,'',location.pathname);return unirse(pend.toUpperCase());}
+  const r=await ventana(cab(SPRITES.centro?'<img src="sprites/deco-escarapela.webp" alt="" style="height:46px">':'🇨🇱','¿Cómo quieres jugar?','Ludo Chileno')+`<div class="v-cuerpo">
+    <div class="modos">
+      <button class="modo" data-r="crear"><span>🌐</span><b>Crear sala en línea</b><small>Recibes un código para que tus compañeros entren desde sus equipos</small></button>
+      <button class="modo" data-r="unir"><span>🔑</span><b>Unirme con código</b><small>Entra a la sala que creó otra persona (o mírala si ya empezó)</small></button>
+      <button class="modo" data-r="local"><span>💻</span><b>En este equipo</b><small>Contra el computador o pasándose el equipo</small></button>
+    </div></div>`);
+  cerrar();
+  if(r==='crear')return crearSalaUI();
+  if(r==='unir'){
+    const c=await pedirCodigo();if(!c)return configurar();
+    return unirse(c);
+  }
+  return configurarLocal();
+}
+async function pedirCodigo(msgErr){
+  const r=await ventana(cab('🔑','Unirme a una sala','Ludo Chileno en línea')+`<div class="v-cuerpo">
+    <label class="etq" for="cod">Código de la sala</label>
+    <input id="cod" class="codigo-in" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="Ej: K7QM">
+    ${msgErr?`<div class="aviso err">${esc(msgErr)}</div>`:''}
+    <div class="v-pie"><button class="btn sec" data-r="volver">Volver</button><button class="btn verde" data-r="ok">Entrar a la sala</button></div></div>`);
+  const c=(($('cod')||{}).value||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');cerrar();
+  if(r!=='ok')return null;
+  if(c.length<4)return pedirCodigo('Escribe el código completo (4 letras o números).');
+  return c;
+}
+
+/* ═════════════ salas en Firestore ═════════════ */
+const COLECCION='ludo_salas',ALFA='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+let SALA=null,salaRef=null,salaUnsub=null,salaSeq=-1,cola=Promise.resolve(),enJuego=false,timerAccion=null,timerReloj=null,recibido=0,accionando=false,guardadoFin=false;
+function miUid(){return USR&&USR.uid;}
+function miNombre(){return DF.nombreCorto(USR.displayName,USR.email);}
+function copia(o){return JSON.parse(JSON.stringify(o));}
+async function FB(){return await DF.listo();}
+function salirDeSala(){
+  if(salaUnsub){try{salaUnsub();}catch(e){}}
+  salaUnsub=null;SALA=null;salaRef=null;salaSeq=-1;enJuego=false;guardadoFin=false;
+  clearTimeout(timerAccion);clearInterval(timerReloj);cancelarEsperas();
+  const si=$('sala-info');if(si)si.innerHTML='';
+}
+function cancelarEsperas(){
+  if(esperandoDado){const r=esperandoDado;esperandoDado=null;$('b-tirar').disabled=true;r(false);}
+  if(esperandoFicha){const r=esperandoFicha.r;esperandoFicha=null;document.querySelectorAll('.ficha.puede').forEach(g=>g.classList.remove('puede'));$('destinos').innerHTML='';r(null);}
+}
+
+async function crearSalaUI(){
+  // misma pantalla de reglas que el modo local, con asientos para otras personas
+  const op=(id,t,sub,on)=>`<label class="opc"><input type="checkbox" id="${id}"${on?' checked':''}><span>${t}<small>${sub}</small></span></label>`;
+  const asiento=e=>`<div class="cfg-eq"><div class="e" style="background:${TEMA[e].claro};border-color:${TEMA[e].color==='#eef2f7'?'#5b6b7c':TEMA[e].color}">${icoEq(e)}</div>
+    <div><div class="t">${esc(TEMA[e].nombre)}</div><small style="color:var(--gris);font-weight:700">Quién lo juega</small></div>
+    <div><select id="a${e}"><option value="libre">🙋 Libre (otra persona)</option><option value="cpu">🤖 Computador</option><option value="cerrado">— Nadie</option></select></div></div>`;
+  const html=cab('🌐','Crear sala en línea','Ludo Chileno')+`<div class="v-cuerpo">
+    <span class="etq">Tú (${esc(miNombre())}) juegas con</span>
+    <div class="yo-sel">${[0,1,2,3].map(e=>`<label><input type="radio" name="yo" value="${e}"${(CONF.yo||0)===e?' checked':''}><span class="e" style="width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--emoji);background:${TEMA[e].claro};border:2px solid ${TEMA[e].color==='#eef2f7'?'#5b6b7c':TEMA[e].color}">${icoEq(e)}</span>${esc(TEMA[e].nombre)}</label>`).join('')}</div>
+    <span class="etq">Los demás equipos</span>
+    <div style="display:grid;gap:8px">${[0,1,2,3].map(e=>`<div data-fila="${e}">${asiento(e)}</div>`).join('')}</div>
+    <span class="etq">Reglas</span>
+    <div class="opcs">
+      ${op('o-16','Salir con 1 o con 6','Si no, solo con 6',CONF.reglas.salida==='1y6')}
+      ${op('o-rap','Partida rápida','2 fichas por equipo',CONF.reglas.fichas===2)}
+      ${op('o-tres','Tres 6 seguidos: pierdes el turno','',CONF.reglas.tresSeis)}
+      ${op('o-bar','Barreras','2 fichas juntas bloquean el paso',CONF.reglas.barreras)}
+      ${op('o-cap','Capturar da otro lanzamiento','',CONF.reglas.capturaExtra)}
+      ${op('o-meta','Llegar a la meta da otro lanzamiento','',CONF.reglas.metaExtra)}
+      ${op('o-fin','Terminar con el primer ganador','',CONF.reglas.terminarPrimero)}
+      ${op('o-paes','Desafío PAES al capturar','Responde bien para capturar',CONF.paes&&BANCO.length)}
+    </div>
+    <div id="cfg-msg"></div>
+    <div class="v-pie"><button class="btn sec" data-r="volver">Volver</button><button class="btn verde" data-r="ok">Crear sala</button></div></div>`;
+  const p=ventana(html);
+  const marcar=()=>{const yo=+document.querySelector('input[name=yo]:checked').value;[0,1,2,3].forEach(e=>{document.querySelector(`[data-fila="${e}"]`).style.display=e===yo?'none':'';});};
+  document.querySelectorAll('input[name=yo]').forEach(i=>i.addEventListener('change',marcar));marcar();
+  const r=await p;
+  if(r!=='ok'){cerrar();return configurar();}
+  const yo=+document.querySelector('input[name=yo]:checked').value;CONF.yo=yo;
+  CONF.reglas={salida:$('o-16').checked?'1y6':'6',fichas:$('o-rap').checked?2:4,tresSeis:$('o-tres').checked,barreras:$('o-bar').checked,
+    capturaExtra:$('o-cap').checked,metaExtra:$('o-meta').checked,terminarPrimero:$('o-fin').checked};
+  CONF.paes=$('o-paes').checked&&BANCO.length>0;
+  const asientos={};[0,1,2,3].forEach(e=>{const v=e===yo?'yo':$('a'+e).value;
+    asientos[e]=v==='yo'?{tipo:'humano',uid:miUid(),nombre:miNombre()}:v==='cpu'?{tipo:'cpu',nombre:TEMA[e].nombre+' 🤖'}:{tipo:v};});
+  try{localStorage.setItem('ludo_conf',JSON.stringify(CONF));}catch(e){}
+  cerrar();
+  const {db,F}=await FB();
+  let codigo=null;
+  for(let k=0;k<6&&!codigo;k++){
+    const c=Array.from({length:4},()=>ALFA[azar(ALFA.length)]).join(''),ref=F.doc(db,COLECCION,c);
+    try{
+      await F.runTransaction(db,async tx=>{
+        const s=await tx.get(ref);if(s.exists())throw new Error('ocupado');
+        tx.set(ref,{codigo:c,creador:miUid(),creadorNombre:miNombre(),estado:'espera',reglas:CONF.reglas,paes:CONF.paes,
+          asientos,jugadores:[miUid()],seq:0,creado:F.serverTimestamp(),actualizado:F.serverTimestamp()});
+      });
+      codigo=c;
+    }catch(e){if(e.message!=='ocupado'){await ventana(cab('⚠️','No se pudo crear la sala','Ludo Chileno')+`<div class="v-cuerpo"><div class="aviso err">${esc(e.message||e)}<br><small>¿Están publicadas las reglas nuevas de Firebase?</small></div><div class="v-pie"><button class="btn" data-r="ok">Volver</button></div></div>`);cerrar();return configurar();}}
+  }
+  if(!codigo){alert('No se pudo generar un código. Intenta otra vez.');return configurar();}
+  escucharSala(codigo);
+}
+
+async function unirse(codigo){
+  const {db,F}=await FB(),ref=F.doc(db,COLECCION,codigo);
+  let s;try{s=await F.getDoc(ref);}catch(e){const c=await pedirCodigo('No se pudo leer la sala: '+(e.message||e));return c?unirse(c):configurar();}
+  if(!s.exists()){const c=await pedirCodigo(`No existe la sala ${codigo}.`);return c?unirse(c):configurar();}
+  escucharSala(codigo);
+}
+
+function escucharSala(codigo){
+  FB().then(({db,F})=>{
+    salaRef=F.doc(db,COLECCION,codigo);
+    salaUnsub=F.onSnapshot(salaRef,snap=>{
+      if(!snap.exists()){salirDeSala();cerrar();ventana(cab('🚪','La sala se cerró','Ludo Chileno')+`<div class="v-cuerpo"><p>El anfitrión eliminó la sala ${esc(codigo)}.</p><div class="v-pie"><button class="btn" data-r="ok">Volver</button></div></div>`).then(()=>{cerrar();configurar();});return;}
+      const d=snap.data();
+      cola=cola.then(()=>procesar(d)).catch(e=>console.warn(e));
+    },err=>{console.warn(err);});
+  });
+}
+
+/* ── sala de espera ── */
+function pintarEspera(d){
+  const yo=miUid(),soyAnf=d.creador===yo,miAsiento=[0,1,2,3].find(e=>d.asientos[e]&&d.asientos[e].uid===yo);
+  const ocupados=[0,1,2,3].filter(e=>['humano','cpu'].indexOf(d.asientos[e].tipo)>=0).length;
+  const enlace=location.origin+location.pathname+'?sala='+d.codigo;
+  const fila=e=>{const a=d.asientos[e],t=TEMA[e];let estado,acc='';
+    if(a.tipo==='humano')estado=`🙋 <b>${esc(a.nombre)}</b>${a.uid===yo?' (tú)':''}${a.uid===d.creador?' · anfitrión':''}`;
+    else if(a.tipo==='cpu')estado='🤖 Computador';else if(a.tipo==='libre')estado='<span style="color:var(--ok)">Libre</span>';else estado='<span style="color:var(--gris)">— Nadie</span>';
+    if(a.tipo==='libre'&&miAsiento===undefined)acc=`<button class="btn verde chico" data-tomar="${e}">Tomar</button>`;
+    if(a.tipo==='libre'&&miAsiento!==undefined)acc=`<button class="btn sec chico" data-tomar="${e}">Cambiarme</button>`;
+    if(soyAnf&&a.uid!==yo)acc+=`<select data-cambiar="${e}" class="sel-chico"><option value="">Cambiar…</option><option value="libre">Libre</option><option value="cpu">Computador</option><option value="cerrado">Nadie</option></select>`;
+    return `<div class="asiento"><div class="e" style="background:${t.claro};border-color:${t.color==='#eef2f7'?'#5b6b7c':t.color}">${icoEq(e)}</div><div><small>${esc(t.nombre)}</small><div>${estado}</div></div><div class="acc">${acc}</div></div>`;};
+  $('ventana').innerHTML=cab('🌐',`Sala ${esc(d.codigo)}`,`Anfitrión: ${esc(d.creadorNombre||'')}`)+`<div class="v-cuerpo">
+    <div class="codigo-grande"><small>Código para entrar</small><b>${esc(d.codigo)}</b><button class="btn sec chico" id="b-copiar">📋 Copiar enlace</button></div>
+    <div class="asientos">${[0,1,2,3].map(fila).join('')}</div>
+    <div class="nota">${CONF_TXT(d)}</div>
+    <div class="v-pie">
+      <button class="btn sec" id="b-salir-sala">${soyAnf?'Cerrar sala':'Salir de la sala'}</button>
+      ${soyAnf?`<button class="btn verde" id="b-comenzar"${ocupados<2?' disabled':''}>🎲 Comenzar (${ocupados} equipos)</button>`:'<span class="espera">⏳ Esperando a que el anfitrión comience…</span>'}
+    </div></div>`;
+  $('velo').hidden=false;
+  const w=$('ventana');w.onclick=async ev=>{
+    const t=ev.target.closest('[data-tomar]');if(t)return tomarAsiento(+t.dataset.tomar);
+    if(ev.target.id==='b-copiar'){try{await navigator.clipboard.writeText(enlace);ev.target.textContent='✓ Copiado';}catch(e){prompt('Copia este enlace:',enlace);}return;}
+    if(ev.target.id==='b-salir-sala')return dejarSala(d);
+    if(ev.target.id==='b-comenzar')return comenzar();
+  };
+  w.onchange=ev=>{const s=ev.target.closest('[data-cambiar]');if(s&&s.value)cambiarAsiento(+s.dataset.cambiar,s.value);};
+  $('velo').onclick=null;
+  const si=$('sala-info');if(si)si.innerHTML=`🌐 Sala <b>${esc(d.codigo)}</b> · sala de espera`;
+}
+const CONF_TXT=d=>{const r=d.reglas||{};return `Reglas: salir con ${r.salida==='1y6'?'1 o 6':'6'} · ${r.fichas===2?'2 fichas':'4 fichas'}${r.barreras?' · barreras':''}${d.paes?' · Desafío PAES':''}`;};
+async function trans(fn){
+  const {db,F}=await FB();
+  return F.runTransaction(db,async tx=>{const s=await tx.get(salaRef);if(!s.exists())throw new Error('La sala ya no existe');const d=s.data();const u=fn(d,F);if(u)tx.update(salaRef,Object.assign(u,{seq:d.seq+1,actualizado:F.serverTimestamp()}));});
+}
+function tomarAsiento(e){
+  trans(d=>{
+    if(d.estado!=='espera')throw new Error('La partida ya comenzó');
+    if(d.asientos[e].tipo!=='libre')throw new Error('Ese equipo ya está ocupado');
+    const as=copia(d.asientos);[0,1,2,3].forEach(k=>{if(as[k].uid===miUid())as[k]={tipo:'libre'};});
+    as[e]={tipo:'humano',uid:miUid(),nombre:miNombre()};
+    const jug=d.jugadores.indexOf(miUid())<0?d.jugadores.concat([miUid()]):d.jugadores;
+    return {asientos:as,jugadores:jug};
+  }).catch(err=>alert(err.message||err));
+}
+function cambiarAsiento(e,v){
+  trans(d=>{const as=copia(d.asientos),antes=as[e].uid;as[e]=v==='cpu'?{tipo:'cpu',nombre:TEMA[e].nombre+' 🤖'}:{tipo:v};
+    return {asientos:as,jugadores:antes?d.jugadores.filter(u=>u!==antes||u===d.creador):d.jugadores};}).catch(err=>alert(err.message||err));
+}
+async function dejarSala(d){
+  const yo=miUid();
+  try{
+    if(d.creador===yo){if(!confirm('¿Cerrar la sala para todos?'))return;const {F}=await FB();await F.deleteDoc(salaRef);}
+    else await trans(x=>{const as=copia(x.asientos);[0,1,2,3].forEach(k=>{if(as[k].uid===yo)as[k]={tipo:'libre'};});return {asientos:as,jugadores:x.jugadores.filter(u=>u!==yo)};});
+  }catch(e){}
+  salirDeSala();cerrar();configurar();
+}
+function comenzar(){
+  trans((d,F)=>{
+    if(d.creador!==miUid()||d.estado!=='espera')return null;
+    const eqs=[0,1,2,3].filter(e=>['humano','cpu'].indexOf(d.asientos[e].tipo)>=0);
+    if(eqs.length<2)throw new Error('Se necesitan al menos 2 equipos');
+    const juego=copia(L.crearEstado(eqs,d.reglas));
+    return {estado:'jugando',juego,dado:null,fase:'tirar',ultimo:null,turnoDesde:F.serverTimestamp()};
+  }).catch(err=>alert(err.message||err));
+}
+
+/* ── la partida en línea ── */
+function armarJugadores(d){
+  JUG={};
+  d.juego.equipos.forEach(e=>{const a=d.asientos[e];JUG[e]={tipo:a.tipo==='cpu'?'cpu':'humano',nombre:a.nombre||TEMA[e].nombre,yo:a.uid===miUid(),uid:a.uid||null,paesOk:0,paesN:0};});
+}
+async function procesar(d){
+  const anterior=SALA;SALA=d;
+  if(d.estado==='espera'){pintarEspera(d);salaSeq=d.seq;return;}
+  if(!enJuego){ // entrar a la partida (al comenzar o al reconectar)
+    enJuego=true;cerrar();armarJugadores(d);
+    est=copia(d.juego);SOBRE={};mazo=barajar(BANCO);CONF.paes=!!d.paes;
+    $('fichas').innerHTML='';dibujarTablero();pintarFichas();pintarPanel();$('bitacora').innerHTML='';
+    const yo=est.equipos.find(e=>JUG[e].yo);
+    log(`🌐 Sala ${esc(d.codigo)}: ${est.equipos.map(e=>TEMA[e].icono+' '+esc(JUG[e].nombre)).join(', ')}.${yo==null?' (estás mirando)':''}`);
+    salaSeq=d.seq;
+  }else if(d.seq>salaSeq){
+    cancelarEsperas();clearTimeout(timerAccion);
+    if(d.seq===salaSeq+1&&d.ultimo)await animarRemoto(d.ultimo);
+    est=copia(d.juego);salaSeq=d.seq;
+  }else return;
+  pintarFichas();pintarPanel();
+  const si=$('sala-info');if(si)si.innerHTML=`🌐 Sala <b>${esc(d.codigo)}</b> · ${est.equipos.find(e=>JUG[e].yo)==null?'mirando':'en línea'}`;
+  if(d.estado==='fin'||est.fin){clearInterval(timerReloj);msg('');if(!guardadoFin){guardadoFin=true;terminar();}return;}
+  programar(d);
+}
+async function animarRemoto(u){
+  const t=TEMA[u.eq],j=JUG[u.eq]||{nombre:t.nombre},quien=`${t.icono} <b>${esc(j.nombre)}</b>`;
+  if(u.dado&&u.tipo!=='mover'){await animarDado(u.dado);}
+  if(u.auto&&j.tipo!=='cpu')log(`⏱️ Se le acabó el tiempo a ${esc(j.nombre)}: jugó el computador.`,u.eq);
+  if(u.resultado==='tresSeis'){log(`${quien} sacó tres 6 seguidos y pierde el turno.`,u.eq);return;}
+  if(u.resultado==='sinMovimiento'){log(`${quien} sacó ${u.dado}: no puede mover.`,u.eq);await espera(350);return;}
+  if(u.resultado==='sinMovimientoRepite'){log(`${quien} sacó 6, no puede mover y lanza otra vez.`,u.eq);return;}
+  if(u.mov){
+    const m=u.mov;
+    await animarMovimiento({eq:u.eq,f:m.f,desde:m.desde,hasta:m.hasta},m.f);
+    if(m.capturadas&&m.capturadas.length){vueloCondor();m.capturadas.forEach(o=>{const g=fichaEl(o.eq,o.f);if(g){g.classList.add('vuela');setTimeout(()=>g.classList.remove('vuela'),800);}});
+      log(`${quien} capturó a ${m.capturadas.map(o=>TEMA[o.eq].icono+' '+esc((JUG[o.eq]||{}).nombre||'')).join(', ')}.`,u.eq);}
+    else if(m.fallaPaes)log(`${quien} falló el desafío PAES: no captura.`,u.eq);
+    if(m.sale)log(`${quien} saca una ficha a la pista (dado ${u.dado}).`,u.eq);
+    else if(m.meta)log(`${quien} lleva una ficha a la meta 🏁.`,u.eq);
+    else if(!(m.capturadas&&m.capturadas.length))log(`${quien} avanza ${u.dado}.`,u.eq);
+    if(m.gano){confeti(80);log(`🏆 ${quien} terminó.`,u.eq);}
+  }
+}
+function programar(d){
+  clearTimeout(timerAccion);clearInterval(timerReloj);
+  const eq=est.turno,a=d.asientos[eq],yo=miUid(),t=TEMA[eq];
+  const participo=d.jugadores.indexOf(yo)>=0,orden=Math.max(0,d.jugadores.indexOf(yo));
+  recibido=Date.now();
+  if(a.tipo==='humano'&&a.uid===yo){
+    if(d.fase==='tirar'){msg(`${t.icono} ¡Te toca! Lanza el dado.`);pedirDado().then(ok=>{if(ok)accionLanzar(d.seq);});}
+    else{
+      const movs=L.movimientos(est,eq,est.dado);
+      if(movs.length===1&&CONF.auto){msg(`Sacaste ${est.dado}.`);setTimeout(()=>accionMover(d.seq,movs[0]),350);}
+      else{msg(`Sacaste <b>${est.dado}</b>: elige qué ficha mover.`);pedirFicha(movs).then(m=>{if(m)accionMover(d.seq,m);});}
+    }
+    relojTurno(t,'Tú');
+    return;
+  }
+  if(!participo){msg(`Mirando la partida · le toca a ${t.icono} ${esc(a.nombre||t.nombre)}`);return;}
+  if(a.tipo==='cpu'){
+    msg(`🤖 ${esc(a.nombre)} está pensando…`);
+    const espera=d.creador===yo?900:5000+orden*1500;
+    timerAccion=setTimeout(()=>accionAuto(d.seq),espera);return;
+  }
+  // turno de otra persona: si no juega en 30 s, juega el computador por ella
+  msg(`${t.icono} Le toca a ${esc(a.nombre)}…`);relojTurno(t,a.nombre);
+  timerAccion=setTimeout(()=>accionAuto(d.seq),30000+orden*2000);
+}
+function relojTurno(t,quien){
+  clearInterval(timerReloj);
+  timerReloj=setInterval(()=>{const s=Math.max(0,30-Math.floor((Date.now()-recibido)/1000));const el=$('reloj');if(el)el.textContent=s+' s';},1000);
+  const m=$('msg');if(m&&!$('reloj'))m.insertAdjacentHTML('beforeend',' <span class="reloj" id="reloj">30 s</span>');
+}
+async function accionLanzar(seq){
+  if(accionando)return;accionando=true;
+  try{await trans((d,F)=>{
+    if(d.seq!==seq||d.fase!=='tirar')return null;
+    const e=copia(d.juego),eq=e.turno;if(d.asientos[eq].uid!==miUid())return null;
+    const dado=1+azar(6),r=L.lanzar(e,dado);
+    return {juego:e,dado,fase:r.tipo==='elegir'?'mover':'tirar',estado:'jugando',turnoDesde:F.serverTimestamp(),
+      ultimo:{tipo:'lanzar',eq,dado,resultado:r.tipo,autor:miUid(),auto:false}};
+  });}catch(e){msg('⚠️ '+esc(e.message||e));}
+  accionando=false;
+}
+async function accionMover(seq,m){
+  if(accionando)return;
+  let capturar=true;
+  if(m.captura.length&&SALA&&SALA.paes){const eq=m.eq;capturar=await preguntaPAES(eq);JUG[eq].paesN++;if(capturar)JUG[eq].paesOk++;}
+  if(!SALA||SALA.seq!==seq)return; // mientras respondía, el turno se venció
+  accionando=true;
+  try{await trans((d,F)=>{
+    if(d.seq!==seq||d.fase!=='mover')return null;
+    const e=copia(d.juego),eq=e.turno;if(d.asientos[eq].uid!==miUid())return null;
+    const mm=L.movimientos(e,eq,e.dado).find(x=>x.f===m.f&&x.hasta===m.hasta)||L.movimientos(e,eq,e.dado).find(x=>x.sale&&m.sale);
+    if(!mm)return null;
+    const res=L.jugar(e,mm,capturar);
+    return {juego:e,fase:'tirar',estado:e.fin?'fin':'jugando',turnoDesde:F.serverTimestamp(),
+      ultimo:{tipo:'mover',eq,dado:e.dado,autor:miUid(),auto:false,mov:{f:mm.f,desde:mm.desde,hasta:mm.hasta,sale:mm.sale,meta:mm.meta,capturadas:res.capturadas,gano:res.gano,fallaPaes:mm.captura.length>0&&!capturar}}};
+  });}catch(e){msg('⚠️ '+esc(e.message||e));}
+  accionando=false;
+}
+// el computador juega un turno completo (asiento de computador o turno vencido)
+async function accionAuto(seq){
+  if(accionando)return;accionando=true;
+  try{await trans((d,F)=>{
+    if(d.seq!==seq||d.estado!=='jugando')return null;
+    const e=copia(d.juego),eq=e.turno;let dado=null,r={tipo:'elegir'};
+    if(d.fase==='tirar'){dado=1+azar(6);r=L.lanzar(e,dado);}
+    let mov=null;
+    if(r.tipo==='elegir'){
+      const movs=L.movimientos(e,eq,e.dado),m=L.elegirIA(e,movs,'normal');
+      const capturar=!(m.captura.length&&d.paes)||Math.random()<.7;
+      const res=L.jugar(e,m,capturar);
+      mov={f:m.f,desde:m.desde,hasta:m.hasta,sale:m.sale,meta:m.meta,capturadas:res.capturadas,gano:res.gano,fallaPaes:m.captura.length>0&&!capturar};
+    }
+    return {juego:e,dado:dado,fase:'tirar',estado:e.fin?'fin':'jugando',turnoDesde:F.serverTimestamp(),
+      ultimo:{tipo:'jugada',eq,dado:dado||e.dado,resultado:r.tipo,autor:miUid(),auto:d.asientos[eq].tipo!=='cpu',mov}};
+  });}catch(e){console.warn(e);}
+  accionando=false;
 }
 
 /* ═════════════ eventos ═════════════ */

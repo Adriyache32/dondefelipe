@@ -193,6 +193,37 @@ service cloud.firestore {
       allow delete: if esMod();
     }
 
+    // ── Ludo Chileno en línea: una sala por documento (el id es el código) ──
+    // Sala de espera: el anfitrión configura; los demás solo toman o dejan un asiento.
+    // Partida: solo participantes, una jugada a la vez (seq + 1), y solo en su turno.
+    // El computador puede jugar su asiento, o el de alguien que lleva más de 25 s sin jugar.
+    function turnoDe(d) { return d.asientos[string(d.juego.turno)]; }
+    match /ludo_salas/{codigo} {
+      allow read: if conCuenta();
+      allow create: if esColegio() && codigo.matches('^[A-Z0-9]{4,8}$')
+        && request.resource.data.codigo == codigo
+        && request.resource.data.creador == request.auth.uid
+        && request.resource.data.estado == 'espera'
+        && request.resource.data.seq == 0
+        && request.resource.data.jugadores == [request.auth.uid];
+      allow update: if esColegio() && resource.data.estado == 'espera'
+        && request.resource.data.seq == resource.data.seq + 1
+        && request.resource.data.creador == resource.data.creador
+        && request.resource.data.codigo == resource.data.codigo
+        && (resource.data.creador == request.auth.uid
+            || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['asientos', 'jugadores', 'seq', 'actualizado']));
+      allow update: if esColegio() && resource.data.estado == 'jugando'
+        && request.auth.uid in resource.data.jugadores
+        && request.resource.data.seq == resource.data.seq + 1
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['juego', 'dado', 'fase', 'ultimo', 'seq', 'turnoDesde', 'actualizado', 'estado'])
+        && request.resource.data.estado in ['jugando', 'fin']
+        && request.resource.data.ultimo.autor == request.auth.uid
+        && (turnoDe(resource.data).get('uid', '') == request.auth.uid
+            || turnoDe(resource.data).tipo == 'cpu'
+            || request.time > resource.data.turnoDesde + duration.value(25, 's'));
+      allow delete: if conCuenta() && (resource.data.creador == request.auth.uid || esProfe());
+    }
+
     // ── Contador de visitas: cualquiera suma 1, nadie puede poner otro número ──
     function sumaUno() {
       return request.resource.data.keys().hasOnly(['n', 'ultima'])
