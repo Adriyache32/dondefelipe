@@ -47,3 +47,7 @@ Las salas se guardan en la colección `ludo_salas` de Firestore. Sus reglas de s
 - `musica/tension.mp3` ("Sombras de la cordillera") entra con un fundido cuando algún equipo tiene una sola ficha por llegar y ya va cerca de la meta (a 16 pasos o menos).
 - El dado, el 6 (sonido de premio) y las capturas tienen efectos generados por el navegador; no usan archivos.
 - Los botones 🎵 y 🔊 apagan la música y los efectos por separado. Los navegadores no dejan sonar nada hasta el primer clic, así que la música parte con la primera interacción.
+
+## Congelar una partida
+- **En este equipo**: la partida se guarda sola al comienzo de cada turno (en el navegador y, si iniciaste sesión, en tu cuenta). Con **⏸ Congelar partida** se deja guardada y se vuelve al menú; después aparece **Continuar partida congelada**. Al empezar una partida nueva en este equipo, se reemplaza la congelada.
+- **En línea**: cualquier jugador puede congelar la sala. Mientras está congelada nadie juega, ni siquiera el computador. Para seguir, se entra con el código o desde **Mis partidas en línea** en el menú y se toca **Reanudar**.

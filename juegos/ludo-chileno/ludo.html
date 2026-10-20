@@ -68,6 +68,13 @@ header{max-width:1200px;margin:0 auto;padding:16px 16px 10px;display:flex;align-
 #sala-info b{letter-spacing:2px}
 .con-gato{display:flex;align-items:flex-end;justify-content:space-between}
 .gato-deco{height:46px;margin:-14px 0 -6px}
+.lista-salas{display:grid;gap:8px}
+.sala-item{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;text-align:left;background:#fff;border:2px solid #e5dec9;border-radius:12px;padding:8px 12px}
+.sala-item:hover{border-color:var(--oro);background:#fff8e3}
+.sala-item b{font:800 1.3rem 'Baloo 2',sans-serif;letter-spacing:3px;color:var(--bosque)}
+.sala-item small{color:var(--gris);font-weight:700;font-size:.8rem;line-height:1.3}
+.sala-item .est{font-size:.75rem;font-weight:800;border-radius:999px;padding:2px 9px;background:#ece5d1}
+.sala-item .est.pausa{background:#dbe9ff;color:#1f5fbf}.sala-item .est.jugando{background:#e8f6ee;color:#1d5e3a}
 .logo{font:800 clamp(1.6rem,4vw,2.3rem)/1 'Baloo 2',sans-serif}
 .logo span{color:var(--oro)}
 .lema{font-size:.9rem;opacity:.85}
@@ -203,6 +210,7 @@ header .esp{flex:1}
       <div class="dado-zona"><div class="dado" id="dado" aria-live="polite">⚀</div><button class="btn grande" id="b-tirar" disabled>🎲 Lanzar</button></div>
       <div class="msg" id="msg" aria-live="polite"></div>
       <div class="nota" id="sala-info"></div>
+      <button class="btn sec chico" id="b-congelar" hidden style="margin-top:8px">⏸ Congelar partida</button>
       <div class="nota">Espacio: lanzar · Toca la ficha que quieres mover · 1–4 eligen ficha</div>
     </div>
     <div class="tarjeta"><h2>Equipos</h2><div class="equipos" id="equipos"></div></div>
@@ -493,7 +501,7 @@ async function configurarLocal(){
   cerrar();
   const activos=CONF.jug.map((j,e)=>j.tipo!=='nadie'?e:-1).filter(e=>e>=0);
   JUG={};activos.forEach(e=>{const j=CONF.jug[e];JUG[e]={tipo:j.tipo,yo:!!j.yo,paesOk:0,paesN:0,nombre:j.yo&&USR?DF.nombreCorto(USR.displayName,USR.email):(j.nombre||(j.tipo==='cpu'?TEMA[e].nombre+' 🤖':TEMA[e].nombre))};});
-  est=L.crearEstado(activos,CONF.reglas);SOBRE={};mazo=barajar(BANCO);
+  MODO='local';est=L.crearEstado(activos,CONF.reglas);SOBRE={};mazo=barajar(BANCO);tomarFoto.nube=0;
   dibujarTablero();pintarFichas();pintarPanel();$('bitacora').innerHTML='';
   log(`🇨🇱 Empieza la partida: ${activos.map(e=>TEMA[e].icono+' '+esc(JUG[e].nombre)).join(', ')}.`);
   partida();
@@ -561,6 +569,7 @@ async function partida(){
   const yo=++idPartida;
   while(!est.fin&&yo===idPartida){
     const eq=est.turno,j=JUG[eq],t=TEMA[eq];
+    tomarFoto();pintarCongelar();
     pintarFichas();pintarPanel();
     if(j.tipo==='cpu'){msg(`🤖 ${esc(j.nombre)} está pensando…`);await velo(550);}
     else{msg(`${t.icono} ${esc(j.nombre)}: lanza el dado.`);await pedirDado();}
@@ -600,6 +609,8 @@ async function partida(){
 
 /* ═════════════ final ═════════════ */
 async function terminar(){
+  if(MODO==='local')borrarCongelada();
+  pintarCongelar();
   pintarFichas();pintarPanel();msg('');confeti(160);
   const prog=eq=>est.fichas[eq].reduce((s,p)=>s+(p<0?0:p),0);
   const orden=est.ganadores.concat(est.equipos.filter(e=>est.ganadores.indexOf(e)<0).sort((a,b)=>prog(b)-prog(a)));
@@ -631,20 +642,97 @@ async function terminar(){
   cerrar();if(r==='otra')configurar();
 }
 
+/* ═════════════ partidas congeladas ═════════════ */
+const K_LOCAL='ludo_congelada_v1',CLAVE_NUBE='ludo-congelada';
+let MODO=null,FOTO=null;   // FOTO: estado al inicio del turno actual (lo que se guarda)
+function tomarFoto(){
+  if(MODO!=='local'||!est||est.fin)return;
+  FOTO={v:1,uid:USR?USR.uid:null,est:copia(est),jug:copia(JUG),conf:{reglas:CONF.reglas,paes:!!CONF.paes,auto:!!CONF.auto,nivel:CONF.nivel,vel:CONF.vel},fecha:Date.now()};
+  try{localStorage.setItem(K_LOCAL,JSON.stringify(FOTO));}catch(e){}
+  // en la cuenta, como máximo cada 20 s (para no gastar la cuota diaria de Firebase)
+  if(ONLINE&&USR&&Date.now()-(tomarFoto.nube||0)>20000){tomarFoto.nube=Date.now();DF.guardarProgreso(CLAVE_NUBE,FOTO).catch(()=>{});}
+}
+function borrarCongelada(){
+  try{localStorage.removeItem(K_LOCAL);}catch(e){}
+  if(ONLINE&&USR)DF.guardarProgreso(CLAVE_NUBE,{v:0}).catch(()=>{});
+}
+async function leerCongelada(){
+  let loc=null,nube=null;
+  try{loc=JSON.parse(localStorage.getItem(K_LOCAL)||'null');}catch(e){}
+  if(loc&&ONLINE&&(!USR||loc.uid!==USR.uid))loc=null;            // en un computador compartido, solo la tuya
+  if(ONLINE&&USR){try{nube=await DF.leerProgreso(CLAVE_NUBE);}catch(e){}}
+  const ok=d=>d&&d.v===1&&d.est&&!d.est.fin&&d.jug;
+  const l=[loc,nube].filter(ok).sort((a,b)=>(b.fecha||0)-(a.fecha||0));
+  return l[0]||null;
+}
+function resumenCongelada(d){
+  const eqs=d.est.equipos.map(e=>TEMA[e].icono+' '+esc((d.jug[e]||{}).nombre||TEMA[e].nombre)).join(' · ');
+  const meta=d.est.equipos.map(e=>d.est.fichas[e].filter(p=>p===L.META).length).reduce((a,b)=>a+b,0);
+  return `${eqs}<br>Guardada el ${new Date(d.fecha).toLocaleString('es-CL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} · ${d.est.turnosTotales} lanzamientos · ${meta} fichas en la meta`;
+}
+function retomar(d){
+  salirDeSala();MODO='local';
+  est=d.est;JUG=d.jug;Object.assign(CONF,d.conf||{});SOBRE={};mazo=barajar(BANCO);FOTO=d;
+  $('fichas').innerHTML='';dibujarTablero();pintarFichas();pintarPanel();$('bitacora').innerHTML='';
+  log(`▶️ Se retoma la partida congelada (${new Date(d.fecha).toLocaleString('es-CL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}).`);
+  partida();
+}
+async function congelar(){
+  if(MODO==='local'&&est&&!est.fin){
+    idPartida++;cancelarEsperas();
+    if(FOTO){FOTO.fecha=Date.now();try{localStorage.setItem(K_LOCAL,JSON.stringify(FOTO));}catch(e){}
+      if(ONLINE&&USR){try{await DF.guardarProgreso(CLAVE_NUBE,FOTO);}catch(e){}}}
+    await ventana(cab('⏸','Partida congelada','Ludo Chileno')+`<div class="v-cuerpo"><p>La partida quedó guardada tal como estaba al comienzo de este turno.${ONLINE&&USR?' Está en tu cuenta, así que puedes retomarla desde cualquier equipo entrando con el mismo correo.':' Está guardada en este navegador.'}</p>
+      <p>Para seguir, elige <b>Continuar partida congelada</b> en el menú.</p><div class="v-pie"><button class="btn verde" data-r="ok">Ir al menú</button></div></div>`);
+    cerrar();MODO=null;est=null;$('fichas').innerHTML='';pintarCongelar();configurar();
+  }else if(MODO==='linea'&&SALA&&SALA.estado==='jugando'){
+    try{await trans((d,F)=>d.estado==='jugando'?{estado:'pausa',pausadoPor:miNombre(),turnoDesde:F.serverTimestamp()}:null);}catch(e){msg('⚠️ '+esc(e.message||e));}
+  }
+}
+function pintarCongelar(){
+  const b=$('b-congelar');if(!b)return;
+  const enLinea=MODO==='linea'&&SALA&&SALA.estado==='jugando'&&SALA.jugadores.indexOf(miUid())>=0;
+  b.hidden=!((MODO==='local'&&est&&!est.fin)||enLinea);
+}
+async function misSalas(){
+  if(!ONLINE||!USR)return [];
+  try{
+    const {db,F}=await FB();
+    const s=await F.getDocs(F.query(F.collection(db,COLECCION),F.where('jugadores','array-contains',miUid())));
+    return s.docs.map(d=>d.data()).filter(d=>['espera','jugando','pausa'].indexOf(d.estado)>=0)
+      .sort((a,b)=>((b.actualizado&&b.actualizado.toMillis?b.actualizado.toMillis():0)-(a.actualizado&&a.actualizado.toMillis?a.actualizado.toMillis():0))).slice(0,6);
+  }catch(e){return [];}
+}
+
 /* ═════════════ menú: local o en línea ═════════════ */
 async function configurar(){
-  salirDeSala();
-  if(!ONLINE)return configurarLocal();
+  salirDeSala();MODO=null;pintarCongelar();
+  if(!ONLINE){
+    const c=await leerCongelada();
+    if(!c)return configurarLocal();
+    const r=await ventana(cab('⏸','Tienes una partida congelada','Ludo Chileno')+`<div class="v-cuerpo"><div class="modos">
+      <button class="modo" data-r="seguir"><span>▶️</span><b>Continuar partida congelada</b><small>${resumenCongelada(c)}</small></button>
+      <button class="modo" data-r="nueva"><span>🎲</span><b>Partida nueva</b><small>Reemplaza la partida congelada</small></button></div></div>`);
+    cerrar();return r==='seguir'?retomar(c):configurarLocal();
+  }
   await exigirCuenta();
   const pend=new URLSearchParams(location.search).get('sala');
   if(pend){history.replaceState(null,'',location.pathname);return unirse(pend.toUpperCase());}
+  const [cong,salas]=await Promise.all([leerCongelada(),misSalas()]);
+  const ESTADO={espera:'Sala de espera',jugando:'En juego',pausa:'Congelada'};
   const r=await ventana(cab(SPRITES.centro?'<img src="sprites/deco-escarapela.webp" alt="" style="height:46px">':'🇨🇱','¿Cómo quieres jugar?','Ludo Chileno')+`<div class="v-cuerpo">
+    ${cong?`<div class="modos"><button class="modo" data-r="seguir"><span>▶️</span><b>Continuar partida congelada</b><small>${resumenCongelada(cong)}</small></button></div>`:''}
+    ${salas.length?`<span class="etq">Mis partidas en línea</span><div class="lista-salas">${salas.map(d=>`<button class="sala-item" data-r="sala:${esc(d.codigo)}"><b>${esc(d.codigo)}</b>
+      <small>${[0,1,2,3].filter(e=>d.asientos[e]&&['humano','cpu'].indexOf(d.asientos[e].tipo)>=0).map(e=>TEMA[e].icono+' '+esc(d.asientos[e].nombre||'')).join(' · ')}${d.pausadoPor?'<br>Congelada por '+esc(d.pausadoPor):''}</small>
+      <span class="est ${d.estado}">${ESTADO[d.estado]}</span></button>`).join('')}</div>`:''}
     <div class="modos">
       <button class="modo" data-r="crear"><span>🌐</span><b>Crear sala en línea</b><small>Recibes un código para que tus compañeros entren desde sus equipos</small></button>
       <button class="modo" data-r="unir"><span>🔑</span><b>Unirme con código</b><small>Entra a la sala que creó otra persona (o mírala si ya empezó)</small></button>
-      <button class="modo" data-r="local"><span>💻</span><b>En este equipo</b><small>Contra el computador o pasándose el equipo</small></button>
+      <button class="modo" data-r="local"><span>💻</span><b>En este equipo</b><small>Contra el computador o pasándose el equipo${cong?' (reemplaza la partida congelada)':''}</small></button>
     </div></div>`);
   cerrar();
+  if(r==='seguir'&&cong)return retomar(cong);
+  if(r&&r.indexOf('sala:')===0)return unirse(r.slice(5));
   if(r==='crear')return crearSalaUI();
   if(r==='unir'){
     const c=await pedirCodigo();if(!c)return configurar();
@@ -830,6 +918,7 @@ function armarJugadores(d){
 async function procesar(d){
   const anterior=SALA;SALA=d;
   if(d.estado==='espera'){pintarEspera(d);salaSeq=d.seq;return;}
+  MODO='linea';
   if(!enJuego){ // entrar a la partida (al comenzar o al reconectar)
     enJuego=true;cerrar();armarJugadores(d);
     est=copia(d.juego);SOBRE={};mazo=barajar(BANCO);CONF.paes=!!d.paes;
@@ -839,13 +928,29 @@ async function procesar(d){
     salaSeq=d.seq;
   }else if(d.seq>salaSeq){
     cancelarEsperas();clearTimeout(timerAccion);
-    if(d.seq===salaSeq+1&&d.ultimo)await animarRemoto(d.ultimo);
+    const nueva=d.ultimo&&(!anterior||JSON.stringify(d.ultimo)!==JSON.stringify(anterior.ultimo));
+    if(d.seq===salaSeq+1&&nueva)await animarRemoto(d.ultimo);
     est=copia(d.juego);salaSeq=d.seq;
   }else return;
   pintarFichas();pintarPanel();
   const si=$('sala-info');if(si)si.innerHTML=`🌐 Sala <b>${esc(d.codigo)}</b> · ${est.equipos.find(e=>JUG[e].yo)==null?'mirando':'en línea'}`;
+  pintarCongelar();
   if(d.estado==='fin'||est.fin){clearInterval(timerReloj);msg('');if(!guardadoFin){guardadoFin=true;terminar();}return;}
+  if(d.estado==='pausa'){clearTimeout(timerAccion);clearInterval(timerReloj);cancelarEsperas();msg('⏸ Partida congelada');mostrarPausa(d);return;}
+  if(anterior&&anterior.estado==='pausa'){cerrar();log('▶️ La partida se reanudó.');}
   programar(d);
+}
+function mostrarPausa(d){
+  const participo=d.jugadores.indexOf(miUid())>=0;
+  $('ventana').innerHTML=cab('⏸','Partida congelada',`Sala ${esc(d.codigo)}${d.pausadoPor?' · la congeló '+esc(d.pausadoPor):''}`)+`<div class="v-cuerpo">
+    <p>La partida queda guardada tal como está. Para seguir otro día, entren con el código <b>${esc(d.codigo)}</b> o desde <b>Mis partidas en línea</b> en el menú.</p>
+    <div class="v-pie"><button class="btn sec" id="b-pausa-menu">Volver al menú</button>${participo?'<button class="btn verde" id="b-reanudar">▶️ Reanudar</button>':''}</div></div>`;
+  $('velo').hidden=false;$('velo').onclick=null;
+  const w=$('ventana');w.onclick=async ev=>{
+    if(ev.target.id==='b-pausa-menu'){salirDeSala();cerrar();configurar();}
+    if(ev.target.id==='b-reanudar'){ev.target.disabled=true;
+      try{await trans((x,F)=>x.estado==='pausa'?{estado:'jugando',pausadoPor:'',turnoDesde:F.serverTimestamp()}:null);}catch(e){ev.target.disabled=false;alert(e.message||e);}}
+  };
 }
 async function animarRemoto(u){
   const t=TEMA[u.eq],j=JUG[u.eq]||{nombre:t.nombre},quien=`${t.icono} <b>${esc(j.nombre)}</b>`;
@@ -947,6 +1052,7 @@ function reintentar(seq){setTimeout(()=>{if(SALA&&SALA.seq===seq&&SALA.estado===
 
 /* ═════════════ eventos ═════════════ */
 $('b-tirar').addEventListener('click',tirarClick);
+$('b-congelar').addEventListener('click',()=>congelar());
 if(window.GatitoDado)GatitoDado.boton($('b-gato'));else $('b-gato').remove();
 if(window.Sonido)Sonido.botones($('b-musica'),$('b-sonidos'));else{$('b-musica').remove();$('b-sonidos').remove();}
 $('tab').addEventListener('click',e=>{const g=e.target.closest('.ficha');if(g)elegirFicha(+g.dataset.f);});
