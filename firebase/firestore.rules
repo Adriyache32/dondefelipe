@@ -28,6 +28,24 @@ service cloud.firestore {
 
     function esDueno() { return request.auth != null && resource.data.uid == request.auth.uid; }
 
+    // ── Grupo de moderación ──
+    // Cada documento se llama como el correo (en minúsculas) de un moderador.
+    // Solo el profe agrega o quita moderadores (desde Cine → Moderación).
+    function esMod() {
+      return esProfe() || (conCuenta()
+        && exists(/databases/$(database)/documents/moderadores/$(request.auth.token.email.lower())));
+    }
+    match /moderadores/{correo} {
+      allow read: if esProfe() || (conCuenta() && request.auth.token.email.lower() == correo);
+      allow create, update: if esProfe() && correo == correo.lower()
+        && correo.matches('^[^@ ]+@[^@ ]+[.][^@ ]+$')
+        && request.resource.data.keys().hasOnly(['nombre', 'agregadoPor', 'fecha'])
+        && texto(request.resource.data.nombre, 80)
+        && request.resource.data.agregadoPor == request.auth.token.email
+        && request.resource.data.fecha == request.time;
+      allow delete: if esProfe();
+    }
+
     // ── Perfil del estudiante: nombre, correo y edad (curso opcional) ──
     // Grupo: 'estudiante' (sus datos solo sirven para su progreso), 'docente' o 'publico'.
     // Docente y público exigen 18 años o más. El estudiante elige al crear la cuenta;
@@ -127,8 +145,8 @@ service cloud.firestore {
     }
 
     // ── Comentarios de la sección Cine (películas vistas por curso) ──
-    // Solo con cuenta: se leen y se escriben con sesión iniciada. El profe y quien
-    // escribió pueden borrar. Nadie puede editar un comentario ya publicado.
+    // Solo con cuenta: se leen y se escriben con sesión iniciada. El profe, los
+    // moderadores y quien escribió pueden borrar. Nadie puede editar un comentario ya publicado.
     match /peliculas_comentarios/{id} {
       allow read: if esColegio();
       allow create: if esColegio()
@@ -141,7 +159,20 @@ service cloud.firestore {
         && request.resource.data.estrellas is int
         && request.resource.data.estrellas >= 0 && request.resource.data.estrellas <= 5
         && request.resource.data.fecha == request.time;
-      allow delete: if esProfe() || esDueno();
+      allow delete: if esMod() || esDueno();
+    }
+
+    // ── Preguntas de cada película (los moderadores las editan) ──
+    // Si existe el documento, reemplaza la pregunta escrita en peliculas.html.
+    // Borrarlo devuelve la pregunta original.
+    match /peliculas_preguntas/{peli} {
+      allow read: if true;
+      allow create, update: if esMod() && idJuego(peli)
+        && request.resource.data.keys().hasOnly(['preg', 'por', 'actualizado'])
+        && texto(request.resource.data.preg, 600) && request.resource.data.preg.size() >= 5
+        && texto(request.resource.data.por, 80)
+        && request.resource.data.actualizado == request.time;
+      allow delete: if esMod();
     }
 
     // ── Contador de visitas: cualquiera suma 1, nadie puede poner otro número ──

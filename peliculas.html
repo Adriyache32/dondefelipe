@@ -82,6 +82,16 @@ h1{font:900 clamp(2.2rem,6vw,3.8rem)/.95 var(--ff-display);letter-spacing:-.5px;
 .stars button.on{color:var(--brass)}
 .nota{font-size:.8rem;color:var(--mute);line-height:1.5}
 .err{color:#ff8fa3;font-size:.82rem}
+.mod{border:1px solid rgba(233,185,73,.35);border-left:4px solid var(--brass);border-radius:var(--r-md);padding:1rem 1.1rem;margin:0 0 1.6rem;background:rgba(233,185,73,.05)}
+.mod h3{font-family:var(--ff-display);font-size:1.15rem;letter-spacing:1px;text-transform:uppercase;color:var(--brass);margin:0 0 .4rem}
+.mod ul{list-style:none;padding:0;margin:.6rem 0;display:grid;gap:6px}
+.mod li{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:.86rem;background:var(--slab-2);border-radius:var(--r-sm);padding:.5rem .7rem}
+.mod li span{color:var(--mute);font-size:.78rem;overflow-wrap:anywhere}
+.mod input{background:var(--slab-2);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:.6rem .75rem;font-size:.88rem;min-width:0;flex:1 1 180px}
+.mod input:focus{outline:2px solid var(--brass);outline-offset:1px}
+.mod-tag{display:inline-block;font-size:.62rem;letter-spacing:1.5px;text-transform:uppercase;color:#0a0c00;background:var(--brass);border-radius:4px;padding:2px 7px;margin-left:6px;vertical-align:middle}
+.pregunta .ed{display:block;margin-top:6px}
+.pregunta .por{display:block;margin-top:6px;color:var(--mute);font-size:.72rem}
 .ok{color:var(--acid);font-size:.82rem}
 .cm{background:var(--slab-2);border:1px solid var(--line-2);border-left:3px solid var(--nc,var(--acid));border-radius:var(--r-sm);padding:11px 14px;margin-bottom:10px}
 .cm .quien{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:.76rem;margin-bottom:5px}
@@ -118,6 +128,7 @@ h1{font:900 clamp(2.2rem,6vw,3.8rem)/.95 var(--ff-display);letter-spacing:-.5px;
     <div class="sub">Películas que vimos juntos/as · por curso</div>
     <p class="intro">Después de cada película, aquí se conversa. Elige tu curso, lee la pregunta para pensar y deja tu comentario. Se escribe con respeto: se ve tu nombre y la inicial de tu apellido.</p>
   </header>
+  <section class="mod" id="modpanel" hidden aria-label="Moderación"></section>
   <div class="tabs" id="tabs" role="tablist" aria-label="Cursos"></div>
   <div class="lista" id="lista"></div>
 </div></main>
@@ -156,7 +167,10 @@ function limpiar(t){
 
 /* ═════════ estado ═════════ */
 var cursoAct=(function(){try{return localStorage.getItem('cine_curso')||'6b'}catch(e){return '6b'}})();
-var DFok=false,usuario=null,perfil=null,esProfe=false;
+var DFok=false,usuario=null,perfil=null,esProfe=false,esMod=false;
+var PREG={};      // idPeli → {preg,por} pregunta editada por moderación
+var editando={};  // idPeli → true mientras se edita la pregunta
+var MODS=[];      // lista de moderadores (solo la ve el profe)
 var COM={};   // idPeli → [comentarios]
 var abiertos={};
 var nota={};  // idPeli → estrellas elegidas en el formulario
@@ -174,7 +188,7 @@ function pintaYo(){
   var e=$('yo');
   if(!DFok){e.innerHTML='<span>Comentarios no disponibles ahora</span>';return}
   if(!usuario){e.innerHTML='<button class="lnk" data-a="entrar">Entrar con Google</button>';return}
-  e.innerHTML='<span>Hola, <b>'+esc(DF.nombreCorto(usuario.displayName,usuario.email))+'</b></span><button class="lnk" data-a="salir">salir</button>';
+  e.innerHTML='<span>Hola, <b>'+esc(DF.nombreCorto(usuario.displayName,usuario.email))+'</b>'+(esMod?'<span class="mod-tag">'+(esProfe?'Admin':'Moderación')+'</span>':'')+'</span><button class="lnk" data-a="salir">salir</button>';
 }
 function promedio(id){
   var a=(COM[id]||[]).filter(function(c){return c.estrellas>0});
@@ -192,13 +206,40 @@ function pintaLista(){
       '<div class="cuerpo"><h2>'+esc(p.titulo)+'</h2>'+
       '<div class="datos"><span class="dato">'+esc(cn)+'</span><span class="dato">'+p.ano+'</span><span class="dato">'+esc(p.dir)+'</span><span class="dato">'+esc(p.dur)+'</span></div>'+
       '<p class="sinopsis">'+esc(p.sin)+'</p>'+
-      '<div class="pregunta"><b>Para pensar y comentar</b>'+esc(p.preg)+'</div>'+
+      pintaPreg(p)+
       '<div class="prom">'+(pr!=null?'<span class="est" aria-label="Promedio '+pr.toFixed(1)+' de 5">'+estrellas(pr)+'</span><span>'+pr.toFixed(1).replace('.',',')+' / 5</span>':'<span>Aún sin notas</span>')+'</div>'+
       '<div class="fila"><button class="btn" data-a="abrir" data-id="'+p.id+'">💬 Comentarios'+(DFok?' ('+n+')':'')+'</button></div>'+
       '<section class="com'+(abiertos[p.id]?' on':'')+'" id="c-'+p.id+'" aria-label="Comentarios de '+esc(p.titulo)+'"></section>'+
       '</div></article>';
   }).join('');
   ps.forEach(function(p){if(abiertos[p.id])pintaCom(p.id)});
+}
+function pregDe(p){return PREG[p.id]?PREG[p.id].preg:p.preg}
+function pintaPreg(p){
+  if(esMod&&editando[p.id]){
+    return '<div class="pregunta form" style="margin:0"><b>Editar pregunta</b>'+
+      '<textarea id="q-'+p.id+'" maxlength="600">'+esc(pregDe(p))+'</textarea>'+
+      '<div class="fila"><button class="btn" data-a="guardapreg" data-id="'+p.id+'">Guardar</button>'+
+      '<button class="btn s" data-a="cancelapreg" data-id="'+p.id+'">Cancelar</button>'+
+      (PREG[p.id]?'<button class="lnk" data-a="restaurapreg" data-id="'+p.id+'">volver a la original</button>':'')+'</div>'+
+      '<div id="qm-'+p.id+'" role="status"></div></div>';
+  }
+  return '<div class="pregunta"><b>Para pensar y comentar</b>'+esc(pregDe(p))+
+    (esMod&&PREG[p.id]&&PREG[p.id].por?'<span class="por">Editada por '+esc(PREG[p.id].por)+'</span>':'')+
+    (esMod?'<button class="lnk ed" data-a="editpreg" data-id="'+p.id+'">✏️ editar pregunta</button>':'')+'</div>';
+}
+function pintaMods(){
+  var box=$('modpanel');
+  if(!esProfe){box.hidden=true;box.innerHTML='';return}
+  box.hidden=false;
+  box.innerHTML='<h3>🛡 Moderación</h3>'+
+    '<p class="nota">Los moderadores pueden borrar cualquier comentario y editar las preguntas de las películas. Deben entrar con la misma cuenta Google que agregues aquí.</p>'+
+    (MODS.length?'<ul>'+MODS.map(function(m){
+      return '<li><b>'+esc(m.nombre||m._id)+'</b><span>'+esc(m._id)+'</span><span class="esp" style="flex:1"></span><button class="lnk del" data-a="quitamod" data-mail="'+esc(m._id)+'">quitar</button></li>';
+    }).join('')+'</ul>':'<p class="nota" style="margin:.6rem 0">Aún no hay moderadores.</p>')+
+    '<div class="fila" style="flex-wrap:wrap"><input id="mod-nom" placeholder="Nombre" maxlength="80" aria-label="Nombre del moderador">'+
+    '<input id="mod-mail" type="email" placeholder="correo@gmail.com" aria-label="Correo del moderador">'+
+    '<button class="btn" data-a="agregamod">Agregar</button></div><div id="mod-msg" role="status"></div>';
 }
 function pintaCom(id){
   var box=$('c-'+id);if(!box)return;
@@ -222,7 +263,7 @@ function pintaCom(id){
   var l=(COM[id]||[]);
   if(!l.length)h+='<div class="vacio">Aún no hay comentarios. ¡Sé la primera persona en escribir!</div>';
   else h+=l.map(function(c){
-    var puedeBorrar=esProfe||c.uid===usuario.uid;
+    var puedeBorrar=esMod||c.uid===usuario.uid;
     return '<div class="cm" style="--nc:'+colorDe(c.uid||c.nombre)+'"><div class="quien"><b>'+esc(c.nombre)+'</b>'+(c.curso?'<span>'+esc(c.curso)+'</span>':'')+
       (c.estrellas?'<span class="est">'+estrellas(c.estrellas)+'</span>':'')+'<span>'+fechaTxt(c.fecha)+'</span>'+
       (puedeBorrar?'<button class="lnk del" data-a="borrar" data-id="'+id+'" data-cid="'+esc(c._id)+'">borrar</button>':'')+'</div><p>'+esc(c.texto)+'</p></div>';
@@ -245,6 +286,61 @@ function cargarCurso(){
   var ps=PELIS.filter(function(p){return p.curso===cursoAct});
   return Promise.all(ps.map(function(p){return cargarCom(p.id).catch(function(){})})).then(function(){pintaLista()});
 }
+function cargarPreguntas(){
+  return dfListo().then(function(fb){
+    var F=fb.F;
+    return F.getDocs(F.collection(fb.db,'peliculas_preguntas')).then(function(s){
+      PREG={};s.docs.forEach(function(d){var o=d.data();if(o&&o.preg)PREG[d.id]={preg:o.preg,por:o.por||''}});
+    });
+  }).catch(function(){});
+}
+function revisarMod(u){
+  if(!u)return Promise.resolve(false);
+  if(DF.esProfe())return Promise.resolve(true);
+  return dfListo().then(function(fb){
+    var F=fb.F;
+    return F.getDoc(F.doc(fb.db,'moderadores',String(u.email||'').toLowerCase())).then(function(d){return d.exists()});
+  }).catch(function(){return false});
+}
+function cargarMods(){
+  if(!esProfe)return Promise.resolve();
+  return dfListo().then(function(fb){
+    var F=fb.F;
+    return F.getDocs(F.collection(fb.db,'moderadores')).then(function(s){
+      MODS=s.docs.map(function(d){var o=d.data();o._id=d.id;return o}).sort(function(a,b){return String(a.nombre||a._id).localeCompare(String(b.nombre||b._id))});
+    });
+  }).catch(function(e){MODS=[];var m=$('mod-msg');if(m)m.innerHTML='<span class="err">No se pudo leer la lista ('+esc(e.message||e)+'). ¿Publicaste las reglas nuevas?</span>'});
+}
+function agregarMod(){
+  var mail=$('mod-mail').value.trim().toLowerCase(),nom=$('mod-nom').value.trim(),msg=$('mod-msg');
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)){msg.innerHTML='<span class="err">Escribe un correo válido.</span>';return}
+  dfListo().then(function(fb){
+    var F=fb.F;
+    return F.setDoc(F.doc(fb.db,'moderadores',mail),{nombre:(nom||mail.split('@')[0]).slice(0,80),agregadoPor:usuario.email,fecha:F.serverTimestamp()});
+  }).then(cargarMods).then(function(){pintaMods();$('mod-msg').innerHTML='<span class="ok">✓ '+esc(mail)+' ahora es moderador/a.</span>'})
+  .catch(function(e){msg.innerHTML='<span class="err">No se pudo agregar ('+esc(e.message||e)+').</span>'});
+}
+function quitarMod(mail){
+  if(!confirm('¿Quitar a '+mail+' de la moderación?'))return;
+  dfListo().then(function(fb){return fb.F.deleteDoc(fb.F.doc(fb.db,'moderadores',mail))})
+    .then(cargarMods).then(pintaMods).catch(function(e){alert('No se pudo quitar: '+(e.message||e))});
+}
+function guardarPreg(id){
+  var t=$('q-'+id),msg=$('qm-'+id),txt=String(t.value).replace(/\s+$/,'').trim();
+  if(txt.length<5){msg.innerHTML='<span class="err">La pregunta es muy corta.</span>';return}
+  var por=DF.nombreCorto(usuario.displayName,usuario.email);
+  dfListo().then(function(fb){
+    var F=fb.F;
+    return F.setDoc(F.doc(fb.db,'peliculas_preguntas',id),{preg:txt.slice(0,600),por:por.slice(0,80),actualizado:F.serverTimestamp()});
+  }).then(function(){PREG[id]={preg:txt.slice(0,600),por:por};editando[id]=false;pintaLista()})
+  .catch(function(e){msg.innerHTML='<span class="err">No se pudo guardar ('+esc(e.message||e)+').</span>'});
+}
+function restaurarPreg(id){
+  if(!confirm('¿Volver a la pregunta original de esta película?'))return;
+  dfListo().then(function(fb){return fb.F.deleteDoc(fb.F.doc(fb.db,'peliculas_preguntas',id))})
+    .then(function(){delete PREG[id];editando[id]=false;pintaLista()})
+    .catch(function(e){alert('No se pudo restaurar: '+(e.message||e))});
+}
 function enviar(id){
   var ta=$('t-'+id),msg=$('m-'+id),txt=limpiar(ta.value);
   if(txt.length<2){msg.innerHTML='<span class="err">Escribe al menos unas palabras.</span>';return}
@@ -260,7 +356,9 @@ function enviar(id){
   .catch(function(e){btn.disabled=false;msg.innerHTML='<span class="err">No se pudo publicar ('+esc(e.message||e)+').</span>'});
 }
 function borrar(id,cid){
-  if(!confirm('¿Borrar este comentario?'))return;
+  var c=(COM[id]||[]).filter(function(x){return x._id===cid})[0];
+  var ajeno=c&&usuario&&c.uid!==usuario.uid;
+  if(!confirm(ajeno?'¿Borrar el comentario de '+(c.nombre||'esta persona')+'? (moderación)':'¿Borrar este comentario?'))return;
   dfListo().then(function(fb){return fb.F.deleteDoc(fb.F.doc(fb.db,'peliculas_comentarios',cid))})
     .then(function(){return cargarCom(id)}).then(pintaLista).catch(function(e){alert('No se pudo borrar: '+(e.message||e))});
 }
@@ -276,6 +374,12 @@ document.addEventListener('click',function(ev){
   else if(a==='nota'){var n=+t.dataset.n;nota[id]=nota[id]===n?0:n;var tx=$('t-'+id),v=tx?tx.value:'';pintaCom(id);var t2=$('t-'+id);if(t2)t2.value=v}
   else if(a==='enviar')enviar(id);
   else if(a==='borrar')borrar(id,t.dataset.cid);
+  else if(a==='editpreg'){editando[id]=true;pintaLista();var q=$('q-'+id);if(q)q.focus()}
+  else if(a==='cancelapreg'){editando[id]=false;pintaLista()}
+  else if(a==='guardapreg')guardarPreg(id);
+  else if(a==='restaurapreg')restaurarPreg(id);
+  else if(a==='agregamod')agregarMod();
+  else if(a==='quitamod')quitarMod(t.dataset.mail);
 });
 document.addEventListener('input',function(ev){
   var t=ev.target;if(t.tagName==='TEXTAREA'&&t.dataset.id){var c=$('n-'+t.dataset.id);if(c)c.textContent=t.value.length+' / 500'}
@@ -287,11 +391,14 @@ pintaTabs();pintaLista();pintaYo();
 if(window.DF){
   dfListo().then(function(){
     DFok=true;
+    cargarPreguntas().then(pintaLista);
     DF.alCambiarUsuario(function(u){
-      usuario=u;esProfe=!!(u&&DF.esProfe());perfil=null;COM={};
-      pintaYo();
+      usuario=u;esProfe=!!(u&&DF.esProfe());esMod=false;perfil=null;COM={};MODS=[];editando={};
+      pintaYo();pintaMods();
       if(!u){pintaLista();return}
-      DF.perfil().then(function(pf){perfil=pf}).catch(function(){}).then(function(){return cargarCurso()});
+      revisarMod(u).then(function(m){esMod=m;pintaYo();return cargarMods()}).then(pintaMods)
+        .then(function(){return DF.perfil()}).then(function(pf){perfil=pf},function(){})
+        .then(function(){return cargarCurso()});
     });
     pintaLista();
   },function(){DFok=false;pintaYo();pintaLista()});
