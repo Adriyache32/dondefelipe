@@ -228,6 +228,21 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'seq', 'actualizado', 'turnoDesde', 'pausadoPor'])
         && request.resource.data.estado in ['jugando', 'pausa'];
       allow delete: if conCuenta() && (resource.data.creador == request.auth.uid || esProfe());
+
+      // Mini chat de la sala: escriben solo los jugadores; mensajes cortos, con su nombre y la hora del servidor.
+      match /chat/{mid} {
+        allow read: if conCuenta();
+        allow create: if esColegio()
+          && request.auth.uid in get(/databases/$(database)/documents/ludo_salas/$(codigo)).data.jugadores
+          && request.resource.data.keys().hasOnly(['uid', 'nombre', 'eq', 'texto', 'tipo', 'fecha'])
+          && request.resource.data.uid == request.auth.uid
+          && texto(request.resource.data.nombre, 60)
+          && texto(request.resource.data.texto, 120) && request.resource.data.texto.size() > 0
+          && request.resource.data.tipo in ['texto', 'rapido']
+          && request.resource.data.eq is int && request.resource.data.eq >= -1 && request.resource.data.eq <= 3
+          && request.resource.data.fecha == request.time;
+        allow delete: if esProfe() || (conCuenta() && get(/databases/$(database)/documents/ludo_salas/$(codigo)).data.creador == request.auth.uid);
+      }
     }
 
     // ── Contador de visitas: cualquiera suma 1, nadie puede poner otro número ──

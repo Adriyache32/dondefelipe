@@ -178,6 +178,27 @@ header .esp{flex:1}
 .records th{font-size:.72rem;color:var(--gris);text-transform:uppercase;letter-spacing:.6px}
 .confeti{position:fixed;top:-20px;z-index:70;width:10px;height:14px;border-radius:2px;pointer-events:none;animation:cae linear forwards}
 @keyframes cae{to{transform:translateY(110vh) rotate(720deg)}}
+/* mini chat */
+.chat-lista{max-height:190px;min-height:60px;overflow:auto;display:flex;flex-direction:column;gap:5px;padding-right:4px;font-size:.86rem}
+.chat-lista .vacio{color:var(--gris);font-weight:600;font-size:.8rem}
+.cm{background:#fff;border-radius:12px;padding:6px 10px;line-height:1.3;border-left:4px solid var(--c,var(--musgo));max-width:100%;overflow-wrap:anywhere}
+.cm b{font-size:.78rem;display:block;color:var(--gris)}
+.cm.mio{background:#fff8e3;align-self:flex-end;border-left:0;border-right:4px solid var(--c,var(--oro));text-align:right}
+.cm.cpu{background:#f2f0e8;font-style:italic}
+.rapidos{display:flex;gap:5px;overflow-x:auto;scrollbar-width:thin;margin:8px 0;padding-bottom:4px}
+.rapidos button{flex:none;white-space:nowrap}
+.rapidos button{border:2px solid #e5dec9;background:#fff;border-radius:999px;padding:3px 9px;font-weight:700;font-size:.78rem;line-height:1.4}
+.rapidos button:hover:not(:disabled){border-color:var(--oro);background:#fff8e3}
+.rapidos button:disabled,.chat-form button:disabled{opacity:.45;cursor:not-allowed}
+.chat-form{display:flex;gap:6px}
+.chat-form input{flex:1;min-width:0;border:2px solid #ddd5bf;border-radius:12px;padding:8px 10px;background:#fff;font-weight:600}
+.chat-form .btn{padding:8px 14px}
+.chat-nota{font-size:.74rem;color:var(--gris);margin-top:6px;font-weight:600}
+.burbuja{position:absolute;z-index:7;transform:translate(-50%,-50%);max-width:46%;background:#fff;border:3px solid var(--c,var(--oro));border-radius:16px;padding:6px 12px;
+  font:800 clamp(.72rem,1.9vw,1rem)/1.25 'Nunito',sans-serif;color:var(--tinta);box-shadow:0 8px 18px rgba(0,0,0,.3);pointer-events:none;text-align:center;overflow-wrap:anywhere;animation:burbuja 3.6s ease forwards}
+@keyframes burbuja{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}8%{opacity:1;transform:translate(-50%,-50%) scale(1)}85%{opacity:1}100%{opacity:0;transform:translate(-50%,-70%)}}
+.espera-chat{background:#fff;border:2px solid #e5dec9;border-radius:12px;padding:10px}
+.espera-chat .chat-lista{max-height:130px}
 @media (max-width:560px){
   .cfg-eq{grid-template-columns:38px 1fr;}
   .cfg-eq>div:last-child{grid-column:2}
@@ -212,6 +233,12 @@ header .esp{flex:1}
       <div class="nota" id="sala-info"></div>
       <button class="btn sec chico" id="b-congelar" hidden style="margin-top:8px">⏸ Congelar partida</button>
       <div class="nota">Espacio: lanzar · Toca la ficha que quieres mover · 1–4 eligen ficha</div>
+    </div>
+    <div class="tarjeta" id="chat"><h2>💬 Chat</h2>
+      <div class="chat-lista" id="chat-lista" aria-live="polite"><div class="vacio">Aquí aparecen los mensajes de la partida.</div></div>
+      <div class="rapidos" id="chat-rapidos"></div>
+      <form class="chat-form" id="chat-form" autocomplete="off"><input id="chat-in" maxlength="120" placeholder="Escribe un mensaje…" aria-label="Mensaje para el chat"><button class="btn chico" id="chat-env">Enviar</button></form>
+      <div class="chat-nota" id="chat-nota"></div>
     </div>
     <div class="tarjeta"><h2>Equipos</h2><div class="equipos" id="equipos"></div></div>
     <div class="tarjeta"><h2 class="con-gato">Bitácora <img class="gato-deco" src="gatito/duerme-caja.webp" alt="" onerror="this.remove()"></h2><div class="bitacora" id="bitacora" aria-live="polite"></div></div>
@@ -502,7 +529,7 @@ async function configurarLocal(){
   const activos=CONF.jug.map((j,e)=>j.tipo!=='nadie'?e:-1).filter(e=>e>=0);
   JUG={};activos.forEach(e=>{const j=CONF.jug[e];JUG[e]={tipo:j.tipo,yo:!!j.yo,paesOk:0,paesN:0,nombre:j.yo&&USR?DF.nombreCorto(USR.displayName,USR.email):(j.nombre||(j.tipo==='cpu'?TEMA[e].nombre+' 🤖':TEMA[e].nombre))};});
   MODO='local';est=L.crearEstado(activos,CONF.reglas);SOBRE={};mazo=barajar(BANCO);tomarFoto.nube=0;
-  dibujarTablero();pintarFichas();pintarPanel();$('bitacora').innerHTML='';
+  dibujarTablero();pintarFichas();pintarPanel();$('bitacora').innerHTML='';CHAT=[];pintarChat();
   log(`🇨🇱 Empieza la partida: ${activos.map(e=>TEMA[e].icono+' '+esc(JUG[e].nombre)).join(', ')}.`);
   partida();
 }
@@ -575,7 +602,9 @@ async function partida(){
     else{msg(`${t.icono} ${esc(j.nombre)}: lanza el dado.`);await pedirDado();}
     if(yo!==idPartida)return;
     const d=await animarDado();
+    if(yo!==idPartida)return;
     const r=L.lanzar(est,d);
+    if(d===6)reaccionar(eq,'seis',.25);
     const quien=`${t.icono} <b>${esc(j.nombre)}</b>`;
     if(r.tipo==='tresSeis'){log(`${quien} sacó tres 6 seguidos y pierde el turno.`,eq);msg('Tres 6 seguidos: pierdes el turno.');await velo(900);continue;}
     if(r.tipo==='sinMovimiento'){log(`${quien} sacó ${d}: no puede mover.`,eq);msg(`Sacaste ${d}: no hay movimientos.`);await velo(800);continue;}
@@ -589,18 +618,21 @@ async function partida(){
     const fv=m.f;
     let capturar=true;
     if(m.captura.length&&CONF.paes){capturar=j.tipo==='cpu'?Math.random()<(CONF.nivel==='normal'?.7:.5):await preguntaPAES(eq);if(j.tipo!=='cpu'){j.paesN++;if(capturar)j.paesOk++;}}
+    if(yo!==idPartida)return;
     await animarMovimiento(m,fv);
+    if(yo!==idPartida)return;
     const res=L.jugar(est,m,capturar);
     if(res.capturadas.length){
       vueloCondor();
       res.capturadas.forEach(o=>{const g=fichaEl(o.eq,o.f);if(g){g.classList.add('vuela');setTimeout(()=>g.classList.remove('vuela'),800);}});
       log(`${quien} capturó a ${res.capturadas.map(o=>TEMA[o.eq].icono+' '+esc(JUG[o.eq].nombre)).join(', ')}.`,eq);
+      reaccionar(eq,'captura',.5);[...new Set(res.capturadas.map(o=>o.eq))].forEach(o=>reaccionar(o,'capturado',.6,1300));
     }else if(m.captura.length&&!capturar)log(`${quien} falló el desafío PAES: no captura.`,eq);
     if(m.sale)log(`${quien} saca una ficha a la pista (dado ${d}).`,eq);
-    else if(m.meta)log(`${quien} lleva una ficha a la meta 🏁.`,eq);
+    else if(m.meta){log(`${quien} lleva una ficha a la meta 🏁.`,eq);if(!res.gano)reaccionar(eq,'meta',.4);}
     else if(!res.capturadas.length)log(`${quien} avanza ${d}.`,eq);
     pintarFichas();pintarPanel();
-    if(res.gano){confeti(80);log(`🏆 ${quien} terminó en el lugar ${est.ganadores.indexOf(eq)+1}.`,eq);}
+    if(res.gano){confeti(80);reaccionar(eq,'gana',1);log(`🏆 ${quien} terminó en el lugar ${est.ganadores.indexOf(eq)+1}.`,eq);}
     if(res.extra&&!est.fin)msg(`${t.icono} ¡Lanza otra vez!`);
     await velo(res.capturadas.length?650:250);
   }
@@ -673,7 +705,7 @@ function resumenCongelada(d){
 function retomar(d){
   salirDeSala();MODO='local';
   est=d.est;JUG=d.jug;Object.assign(CONF,d.conf||{});SOBRE={};mazo=barajar(BANCO);FOTO=d;
-  $('fichas').innerHTML='';dibujarTablero();pintarFichas();pintarPanel();$('bitacora').innerHTML='';
+  $('fichas').innerHTML='';dibujarTablero();pintarFichas();pintarPanel();$('bitacora').innerHTML='';CHAT=[];pintarChat();
   log(`▶️ Se retoma la partida congelada (${new Date(d.fecha).toLocaleString('es-CL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}).`);
   partida();
 }
@@ -706,7 +738,7 @@ async function misSalas(){
 
 /* ═════════════ menú: local o en línea ═════════════ */
 async function configurar(){
-  salirDeSala();MODO=null;pintarCongelar();
+  salirDeSala();MODO=null;pintarCongelar();pintarChat();
   if(!ONLINE){
     const c=await leerCongelada();
     if(!c)return configurarLocal();
@@ -762,6 +794,7 @@ async function FB(){return await DF.listo();}
 function salirDeSala(){
   if(salaUnsub){try{salaUnsub();}catch(e){}}
   salaUnsub=null;SALA=null;salaRef=null;salaSeq=-1;enJuego=false;guardadoFin=false;
+  dejarChat();
   clearTimeout(timerAccion);clearInterval(timerReloj);cancelarEsperas();
   const si=$('sala-info');if(si)si.innerHTML='';
 }
@@ -834,6 +867,7 @@ async function unirse(codigo){
 function escucharSala(codigo){
   FB().then(({db,F})=>{
     salaRef=F.doc(db,COLECCION,codigo);
+    escucharChat(codigo);
     salaUnsub=F.onSnapshot(salaRef,snap=>{
       if(!snap.exists()){salirDeSala();cerrar();ventana(cab('🚪','La sala se cerró','Ludo Chileno')+`<div class="v-cuerpo"><p>El anfitrión eliminó la sala ${esc(codigo)}.</p><div class="v-pie"><button class="btn" data-r="ok">Volver</button></div></div>`).then(()=>{cerrar();configurar();});return;}
       const d=snap.data();
@@ -854,15 +888,21 @@ function pintarEspera(d){
     if(a.tipo==='libre'&&miAsiento!==undefined)acc=`<button class="btn sec chico" data-tomar="${e}">Cambiarme</button>`;
     if(soyAnf&&a.uid!==yo)acc+=`<select data-cambiar="${e}" class="sel-chico"><option value="">Cambiar…</option><option value="libre">Libre</option><option value="cpu">Computador</option><option value="cerrado">Nadie</option></select>`;
     return `<div class="asiento"><div class="e" style="background:${t.claro};border-color:${t.color==='#eef2f7'?'#5b6b7c':t.color}">${icoEq(e)}</div><div><small>${esc(t.nombre)}</small><div>${estado}</div></div><div class="acc">${acc}</div></div>`;};
+  const borr=$('chat-espera-in'),txt=borr?borr.value:'',foco=borr&&document.activeElement===borr;
   $('ventana').innerHTML=cab('🌐',`Sala ${esc(d.codigo)}`,`Anfitrión: ${esc(d.creadorNombre||'')}`)+`<div class="v-cuerpo">
     <div class="codigo-grande"><small>Código para entrar</small><b>${esc(d.codigo)}</b><button class="btn sec chico" id="b-copiar">📋 Copiar enlace</button></div>
     <div class="asientos">${[0,1,2,3].map(fila).join('')}</div>
     <div class="nota">${CONF_TXT(d)}</div>
+    <div class="espera-chat"><span class="etq">💬 Chat de la sala</span><div class="chat-lista" id="chat-espera-lista"></div>
+      <div class="rapidos">${RAPIDOS.slice(0,6).map(t=>`<button type="button" data-rapido="${esc(t)}">${esc(t)}</button>`).join('')}</div>
+      <form class="chat-form" id="chat-espera-form" autocomplete="off"><input id="chat-espera-in" maxlength="120" placeholder="Saluda mientras esperan…" aria-label="Mensaje para la sala"><button class="btn chico" id="chat-espera-env">Enviar</button></form></div>
     <div class="v-pie">
       <button class="btn sec" id="b-salir-sala">${soyAnf?'Cerrar sala':'Salir de la sala'}</button>
       ${soyAnf?`<button class="btn verde" id="b-comenzar"${ocupados<2?' disabled':''}>🎲 Comenzar (${ocupados} equipos)</button>`:'<span class="espera">⏳ Esperando a que el anfitrión comience…</span>'}
     </div></div>`;
   $('velo').hidden=false;
+  const ni=$('chat-espera-in');if(ni){ni.value=txt;if(foco){ni.focus();ni.setSelectionRange(txt.length,txt.length);}}
+  pintarChat();
   const w=$('ventana');w.onclick=async ev=>{
     const t=ev.target.closest('[data-tomar]');if(t)return tomarAsiento(+t.dataset.tomar);
     if(ev.target.id==='b-copiar'){try{await navigator.clipboard.writeText(enlace);ev.target.textContent='✓ Copiado';}catch(e){prompt('Copia este enlace:',enlace);}return;}
@@ -925,7 +965,7 @@ async function procesar(d){
     $('fichas').innerHTML='';dibujarTablero();pintarFichas();pintarPanel();$('bitacora').innerHTML='';
     const yo=est.equipos.find(e=>JUG[e].yo);
     log(`🌐 Sala ${esc(d.codigo)}: ${est.equipos.map(e=>TEMA[e].icono+' '+esc(JUG[e].nombre)).join(', ')}.${yo==null?' (estás mirando)':''}`);
-    salaSeq=d.seq;
+    salaSeq=d.seq;pintarChat();
   }else if(d.seq>salaSeq){
     cancelarEsperas();clearTimeout(timerAccion);
     const nueva=d.ultimo&&(!anterior||JSON.stringify(d.ultimo)!==JSON.stringify(anterior.ultimo));
@@ -1050,6 +1090,97 @@ async function accionAuto(seq){
 }
 function reintentar(seq){setTimeout(()=>{if(SALA&&SALA.seq===seq&&SALA.estado==='jugando'&&salaSeq===seq)programar(SALA);},2500);}
 
+/* ═════════════ mini chat ═════════════
+   En línea: los mensajes van a ludo_salas/<código>/chat (solo escriben los jugadores de la sala).
+   En este equipo: los mensajes se ven solo aquí y el computador a veces reacciona. */
+const RAPIDOS=['¡Hola! 👋','¡Suerte! 🍀','¡Buena jugada! 👏','¡Uy, casi! 😅','¡Vamos que se puede! 💪','¡Qué dado! 🎲','jajaja 😂','¡Ups! 🙈','Ya vuelvo ⏳','¡Bien jugado! 🤝'];
+const REACCION={
+  captura:['¡Te alcancé! 😄','¡A la casa! 🏠','¡Sorry! 😇','Así es el ludo 🤷'],
+  capturado:['¡Noooo! 😱','¡Me las vas a pagar! 😤','Volveré… 🦅','¡Qué mala suerte! 😩'],
+  seis:['¡Seis! 🎉','¡Qué dado! 🎲'],
+  meta:['¡Una más a la meta! 🏁','¡Llegó! 🙌'],
+  gana:['¡Ganamos! 🏆','¡Bien jugado a todos! 🤝']
+};
+// Palabras que se tapan con *** (se comparan sin tildes, sin mayúsculas y sin letras repetidas)
+const TAPAR=['weon','won','wn','hueon','huevon','aweonao','aweonado','ctm','csm','conchetumare','conchesumare','conchatumadre','chuchetumare','culiao','culiado','qlo','ql','puta','puto','putas','mierda','pico','raja','maricon','maraco','zorra','perra','pendejo','imbecil','idiota','estupido','estupida','gil'];
+const TAPAR_INICIO=['weo','aweo','hueo','huev','conche','conchet','chuchet','culia','maric','putit','mierd','imbec','estupi'];
+function normal(w){return w.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[0@4]/g,m=>({'0':'o','@':'a','4':'a'}[m])).replace(/[1!]/g,'i').replace(/3/g,'e').replace(/[^a-zñ]/g,'').replace(/(.)\1+/g,'$1');}
+function limpiarTexto(t){
+  return String(t||'').replace(/\s+/g,' ').trim().slice(0,120).split(' ').map(w=>{const n=normal(w);
+    return n&&(TAPAR.indexOf(n)>=0||TAPAR_INICIO.some(p=>n.indexOf(p)===0))?'*'.repeat(Math.min(6,Math.max(3,w.length))):w;}).join(' ');
+}
+let CHAT=[],chatUnsub=null,chatVistos=new Set(),chatPrimera=true,envios=[];
+function colorEq(eq){return eq>=0&&TEMA[eq]?(TEMA[eq].color==='#eef2f7'?'#5b6b7c':TEMA[eq].color):'#5f8f3e';}
+function htmlChat(){
+  if(!CHAT.length)return '<div class="vacio">Aquí aparecen los mensajes de la partida.</div>';
+  return CHAT.slice(-40).map(m=>`<div class="cm${m.mio?' mio':''}${m.cpu?' cpu':''}" style="--c:${colorEq(m.eq)}"><b>${m.eq>=0&&TEMA[m.eq]?TEMA[m.eq].icono+' ':''}${esc(m.nombre)}</b>${esc(m.texto)}</div>`).join('');
+}
+function pintarChat(){
+  ['chat-lista','chat-espera-lista'].forEach(id=>{const l=$(id);if(!l)return;const abajo=l.scrollHeight-l.scrollTop-l.clientHeight<40;l.innerHTML=htmlChat();if(abajo||id==='chat-espera-lista')l.scrollTop=l.scrollHeight;});
+  const r=$('chat-rapidos');if(r&&!r.children.length)r.innerHTML=RAPIDOS.map(t=>`<button type="button" data-rapido="${esc(t)}">${esc(t)}</button>`).join('');
+  const st=estadoChat();
+  document.querySelectorAll('[data-rapido],#chat-in,#chat-env,#chat-espera-in,#chat-espera-env').forEach(e=>e.disabled=!st.puede);
+  const n=$('chat-nota');if(n)n.textContent=st.nota;
+}
+function estadoChat(){
+  if(SALA){const yo=SALA.jugadores&&SALA.jugadores.indexOf(miUid())>=0;
+    return yo?{puede:true,linea:true,nota:`Lo ven quienes están en la sala ${SALA.codigo}. Sé amable: el profe puede revisar el chat.`}:{puede:false,nota:'Estás mirando: solo los jugadores de la sala pueden escribir.'};}
+  if(MODO==='local'&&est)return {puede:true,linea:false,nota:'Partida en este equipo: los mensajes se ven solo aquí.'};
+  return {puede:false,nota:'El chat se activa cuando empieza una partida.'};
+}
+function burbuja(eq,texto){
+  const t=document.querySelector('.tablero');if(!t||!(eq>=0)||!BASE0[eq])return;
+  t.querySelectorAll(`.burbuja[data-eq="${eq}"]`).forEach(b=>b.remove());
+  const b=document.createElement('div');b.className='burbuja';b.dataset.eq=eq;b.style.setProperty('--c',colorEq(eq));
+  b.style.left=((BASE0[eq][0]+3)/15*100)+'%';b.style.top=((BASE0[eq][1]+3)/15*100)+'%';b.textContent=texto;
+  t.appendChild(b);setTimeout(()=>b.remove(),3700);
+}
+function agregarLocal(eq,texto,cpu){
+  CHAT.push({eq,nombre:JUG[eq]?JUG[eq].nombre:'',texto,mio:!cpu,cpu:!!cpu});if(CHAT.length>60)CHAT.shift();
+  burbuja(eq,texto);pintarChat();
+}
+function reaccionar(eq,tipo,prob,demora){
+  if(MODO!=='local'||!JUG[eq]||JUG[eq].tipo!=='cpu'||Math.random()>prob)return;
+  const l=REACCION[tipo];setTimeout(()=>{if(MODO==='local'&&est)agregarLocal(eq,l[azar(l.length)],true);},demora||0);
+}
+function miEquipoChat(){
+  if(SALA){const e=[0,1,2,3].find(k=>SALA.asientos&&SALA.asientos[k]&&SALA.asientos[k].uid===miUid());return e==null?-1:e;}
+  if(!est)return -1;
+  const h=est.equipos.filter(e=>JUG[e]&&JUG[e].tipo!=='cpu');
+  if(JUG[est.turno]&&JUG[est.turno].tipo!=='cpu')return est.turno;   // pasándose el equipo: escribe a quien le toca
+  const yo=h.find(e=>JUG[e].yo);return yo!=null?yo:(h.length?h[0]:-1);
+}
+async function enviarChat(texto,tipo){
+  const st=estadoChat();if(!st.puede)return;
+  texto=limpiarTexto(texto);if(!texto)return;
+  const ahora=Date.now();envios=envios.filter(t=>ahora-t<10000);
+  if(envios.length>=4||(envios.length&&ahora-envios[envios.length-1]<1200)){const n=$('chat-nota');if(n)n.textContent='Espera un momento antes de enviar otro mensaje.';return false;}
+  envios.push(ahora);
+  const eq=miEquipoChat();
+  if(!st.linea){if(eq>=0)agregarLocal(eq,texto,false);return true;}
+  try{const {db,F}=await FB();
+    await F.addDoc(F.collection(db,COLECCION,SALA.codigo,'chat'),{uid:miUid(),nombre:miNombre(),eq,texto,tipo:tipo||'texto',fecha:F.serverTimestamp()});
+    return true;
+  }catch(e){const n=$('chat-nota');if(n)n.textContent='No se pudo enviar: '+(e.message||e);return false;}
+}
+function escucharChat(codigo){
+  dejarChat();chatPrimera=true;
+  FB().then(({db,F})=>{
+    chatUnsub=F.onSnapshot(F.query(F.collection(db,COLECCION,codigo,'chat'),F.orderBy('fecha','desc'),F.limit(40)),s=>{
+      const docs=s.docs.slice().reverse();
+      CHAT=docs.map(d=>{const x=d.data();return {id:d.id,eq:typeof x.eq==='number'?x.eq:-1,nombre:x.nombre||'',texto:limpiarTexto(x.texto),mio:x.uid===miUid()};});
+      docs.forEach(d=>{if(!chatVistos.has(d.id)){chatVistos.add(d.id);if(!chatPrimera){const x=d.data();burbuja(typeof x.eq==='number'?x.eq:-1,limpiarTexto(x.texto));}}});
+      chatPrimera=false;pintarChat();
+    },e=>console.info('chat:',e.message));
+  }).catch(()=>{});
+}
+function dejarChat(){if(chatUnsub){try{chatUnsub();}catch(e){}}chatUnsub=null;CHAT=[];chatVistos=new Set();pintarChat();}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-rapido]');if(b&&!b.disabled)enviarChat(b.dataset.rapido,'rapido');});
+document.addEventListener('submit',async e=>{
+  const f=e.target;if(f.id!=='chat-form'&&f.id!=='chat-espera-form')return;
+  e.preventDefault();const i=f.querySelector('input');const ok=await enviarChat(i.value,'texto');if(ok!==false)i.value='';
+});
+
 /* ═════════════ eventos ═════════════ */
 $('b-tirar').addEventListener('click',tirarClick);
 $('b-congelar').addEventListener('click',()=>congelar());
@@ -1058,11 +1189,12 @@ if(window.Sonido)Sonido.botones($('b-musica'),$('b-sonidos'));else{$('b-musica')
 $('tab').addEventListener('click',e=>{const g=e.target.closest('.ficha');if(g)elegirFicha(+g.dataset.f);});
 document.addEventListener('keydown',e=>{
   if(!$('velo').hidden)return;
-  if(e.code==='Space'&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();tirarClick();}
+  if(/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName))return;
+  if(e.code==='Space'){e.preventDefault();tirarClick();}
   if(/^[1-4]$/.test(e.key)&&esperandoFicha){const f=+e.key-1;if(esperandoFicha.mapa[f])elegirFicha(f);else{const ks=Object.keys(esperandoFicha.mapa);if(ks[f]!==undefined)elegirFicha(+ks[f]);}}
 });
 $('b-reglas').addEventListener('click',()=>ventana(cab('📜','Reglas','Ludo Chileno')+`<div class="v-cuerpo">${REGLAS_HTML()}<div class="v-pie"><button class="btn" data-r="cerrar">Entendido</button></div></div>`,{cerrable:true}).then(cerrar));
-$('b-nueva').addEventListener('click',()=>{if(est&&!est.fin&&!confirm('¿Terminar esta partida y empezar otra?'))return;idPartida++;esperandoDado=null;esperandoFicha=null;configurar();});
+$('b-nueva').addEventListener('click',()=>{if(est&&!est.fin&&!confirm('¿Terminar esta partida y empezar otra?'))return;idPartida++;cancelarEsperas();configurar();});
 
 /* ═════════════ arranque ═════════════ */
 (async function(){
@@ -1075,8 +1207,9 @@ $('b-nueva').addEventListener('click',()=>{if(est&&!est.fin&&!confirm('¿Termina
   if(ONLINE){
     USR=DF.usuario();pintarCuenta();
     DF.alCambiarUsuario(u=>{const antes=USR;USR=u;pintarCuenta();
-      if(antes&&!u){idPartida++;esperandoDado=null;esperandoFicha=null;est=null;$('fichas')&&($('fichas').innerHTML='');configurar();}});
+      if(antes&&!u){idPartida++;cancelarEsperas();est=null;$('fichas')&&($('fichas').innerHTML='');configurar();}});
   }
+  pintarChat();
   configurar();
 })();
 })();
