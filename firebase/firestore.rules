@@ -288,13 +288,79 @@ service cloud.firestore {
       return d.cuenta == miCuentaBanco() && d.cuenta != ''
         && opsDespues(d.cuenta) == opsAntes(d.cuenta) + 1
         && id == 'op-' + d.cuenta + '-' + string(opsDespues(d.cuenta))
-        && d.keys().hasOnly(['cuenta', 'numero', 'nombre', 'curso', 'monto', 'motivo', 'tipo', 'saldoDespues', 'profe', 'fecha', 'ticker', 'acciones', 'precio', 'gatito'])
+        && d.keys().hasOnly(['cuenta', 'numero', 'nombre', 'curso', 'monto', 'motivo', 'tipo', 'saldoDespues', 'profe', 'fecha', 'ticker', 'acciones', 'precio', 'gatito', 'tiro', 'item', 'canje'])
         && d.profe == '' && d.fecha == request.time
         && texto(d.numero, 20) && texto(d.nombre, 160) && texto(d.curso, 40) && texto(d.motivo, 200)
         && d.monto is int
         && d.saldoDespues == getAfter(rutaCuenta(d.cuenta)).data.saldo
+        // Solo la ruleta puede dejar un beneficio por canjear (así nadie cuela canjes falsos al panel).
+        && (d.tipo == 'ruleta' || !d.keys().hasAny(['tiro', 'item', 'canje']))
         && ((d.tipo in ['bolsa-compra', 'bolsa-venta'] && opBolsa(d)) || (d.tipo == 'bono-ingreso' && opBono(d))
-            || (d.tipo == 'gatito-compra' && opGatito(d)));
+            || (d.tipo == 'gatito-compra' && opGatito(d)) || (d.tipo == 'ruleta' && opRuleta(d)));
+    }
+
+    // ═════ Ruleta de Hipopesos ═════
+    // Cada tiro cuesta costoRuleta(). El resultado NO lo elige el navegador: sale del hash
+    // sha256(sal | cuenta | número de tiro), y estas reglas lo recalculan y lo exigen.
+    // Mismo cálculo en ruleta.html (objeto RULETA): si cambias algo aquí, cámbialo allá.
+    //   1er carácter del hash  →  0-2: +10.000 · 3-4: +20.000 · 5: +50.000
+    //                             6-8: −10.000 · 9-a: −20.000 · b: −50.000
+    //                             c-d: beneficio canjeable · e-f: gatito gratis
+    function costoRuleta() { return 5000; }
+    function salRuleta() { return 'dondefelipe-ruleta-v1'; }
+    function rutaRuleta(c) { return /databases/$(database)/documents/ruleta/$(c); }
+    function tirosAntes(c) { return exists(rutaRuleta(c)) ? get(rutaRuleta(c)).data.n : 0; }
+    function hashTiro(c, n) { return hashing.sha256(salRuleta() + '|' + c + '|' + string(n)).toHexString().lower(); }
+    function dineroRuleta(h) {
+      return h.matches('^[0-2].*') ? 10000
+        : (h.matches('^[34].*') ? 20000
+        : (h.matches('^5.*') ? 50000
+        : (h.matches('^[6-8].*') ? -10000
+        : (h.matches('^[9a].*') ? -20000
+        : (h.matches('^b.*') ? -50000 : 0)))));
+    }
+    // Beneficios (el texto queda tal cual en "Compras por canjear" del panel).
+    function beneficioRuleta(h) { return h.matches('^c.*') ? 'Ruleta: pase de tarea' : 'Ruleta: 5 minutos extra en una prueba'; }
+    // Gatito gratis: uno de los comunes, según el 2° carácter del hash.
+    function gatitoRuleta(h) {
+      return h.matches('^.[0-3].*') ? 'naranjo'
+        : (h.matches('^.[4-7].*') ? 'gris'
+        : (h.matches('^.[89ab].*') ? 'dormilon' : 'patitas'));
+    }
+    function opRuleta(d) {
+      let c = d.cuenta;
+      let n = tirosAntes(c) + 1;
+      let h = hashTiro(c, n);
+      let saldo = get(rutaCuenta(c)).data.saldo;
+      let esBenef = h.matches('^[cd].*');
+      let esGatito = h.matches('^[ef].*');
+      let g = gatitoRuleta(h);
+      let yaTiene = g in gatitosAntes(request.auth.uid);
+      // Si ya tenía ese gatito, recibe su precio en Hipopesos.
+      let premio = esGatito ? (yaTiene ? precioGatito(g) : 0) : dineroRuleta(h);
+      let neto = premio - costoRuleta();
+      return saldo >= costoRuleta()
+        && d.tiro == n
+        && getAfter(rutaRuleta(c)).data.n == n
+        // Un castigo nunca deja el saldo bajo 0: queda en 0.
+        && d.monto == (saldo + neto < 0 ? 0 - saldo : neto)
+        && (esBenef
+              ? (d.item == beneficioRuleta(h) && d.canje == 'pendiente')
+              : !d.keys().hasAny(['item', 'canje']))
+        && ((esGatito && !yaTiene)
+              ? (d.gatito == g && getAfter(rutaGatitos(request.auth.uid)).data.ids.hasAll([g]))
+              : !d.keys().hasAny(['gatito']));
+    }
+    // Contador de tiros de cada cuenta: solo sube de a 1 y junto con un movimiento de ruleta.
+    match /ruleta/{c} {
+      allow read: if esProfe() || (c == miCuentaBanco() && c != '');
+      allow write: if esProfe();
+      allow create, update: if esColegio() && c == miCuentaBanco() && c != ''
+        && request.resource.data.keys().hasOnly(['n', 'actualizado'])
+        && request.resource.data.n == tirosAntes(c) + 1
+        && request.resource.data.actualizado == request.time
+        && opsDespues(c) == opsAntes(c) + 1
+        && getAfter(rutaOp(c, opsDespues(c))).data.tipo == 'ruleta';
     }
     // ═════ Tienda de gatitos ═════
     // Precios oficiales (deben coincidir con gatitos/catalogo.js). Para cambiar un precio, cámbialo aquí y allá.
@@ -315,11 +381,11 @@ service cloud.firestore {
         && !(d.gatito in gatitosAntes(request.auth.uid))
         && getAfter(rutaGatitos(request.auth.uid)).data.ids.hasAll([d.gatito]);
     }
-    // La colección solo crece con una compra pagada en la misma escritura.
+    // La colección solo crece con una compra pagada (o un gatito ganado en la ruleta) en la misma escritura.
     function compraDeGatito(uid) {
       let c = miCuentaBanco();
       return c != '' && opsDespues(c) == opsAntes(c) + 1
-        && getAfter(rutaOp(c, opsDespues(c))).data.tipo == 'gatito-compra'
+        && getAfter(rutaOp(c, opsDespues(c))).data.tipo in ['gatito-compra', 'ruleta']
         && request.resource.data.ids == gatitosAntes(uid).concat([getAfter(rutaOp(c, opsDespues(c))).data.gatito]);
     }
     // Colección de cada persona (todos los que tienen cuenta la pueden ver; solo crece comprando).

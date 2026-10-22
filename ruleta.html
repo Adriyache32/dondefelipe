@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ruleta de Hipopesos · El Mundo de Felipe</title>
+<meta name="description" content="Gira la ruleta con tus Hipopesos: premios, castigos, beneficios y gatitos.">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#08080c;--slab:#111118;--slab2:#181822;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);
+--ink:#f2f1ec;--mute:#9b9aab;--acid:#ccff00;--cyan:#22e3ff;--pink:#ff2e7e;--brass:#e9b949;--brass2:#8a6514;--neg:#ff7a70;--pos:#4bd08c;
+--ff-d:'Big Shoulders Display',Impact,'Arial Narrow',sans-serif;--ff:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+--r-size:min(86vw,460px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--ink);font:15px/1.5 var(--ff);
+  background:radial-gradient(900px 420px at 85% -120px,rgba(233,185,73,.14),transparent),radial-gradient(700px 380px at 0% 0%,rgba(204,255,0,.07),transparent),var(--bg)}
+a{color:var(--cyan)}
+.wrap{max-width:980px;margin:0 auto;padding:22px 16px 70px}
+.crumb{color:var(--mute);text-decoration:none;font-size:14px}.crumb:hover{color:var(--ink)}
+.kick{font:700 12px var(--ff);letter-spacing:4px;text-transform:uppercase;color:var(--brass);margin:26px 0 6px}
+h1{font-family:var(--ff-d);font-weight:900;font-size:clamp(46px,10vw,88px);line-height:.9;letter-spacing:1px;text-transform:uppercase;margin:0}
+h1 span{color:var(--acid)}
+.intro{color:var(--mute);max-width:62ch;margin:12px 0 0}
+.card{background:var(--slab);border:1px solid var(--line);border-radius:18px;padding:18px clamp(16px,3vw,24px);margin-top:18px}
+.estado{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.dato{font:900 38px/1 var(--ff-d);color:var(--acid)}
+.dato small{display:block;font:600 12px var(--ff);letter-spacing:2px;text-transform:uppercase;color:var(--mute);margin-top:4px}
+.dato.b{color:var(--brass)}
+.estado .sesion{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:var(--mute);font-size:13px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line2);background:var(--slab2);color:var(--ink);border-radius:999px;padding:9px 16px;font:600 14px var(--ff);text-decoration:none;cursor:pointer}
+.btn:hover{border-color:var(--acid)}
+.btn.p{background:var(--acid);color:#101400;border-color:var(--acid)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.aviso{padding:12px 14px;border-radius:12px;background:#2a2410;color:#ffe9a6;border:1px solid #5a4a12;margin-top:16px}
+.aviso.err{background:#2b1417;border-color:#5c2228;color:#ffb3ad}
+
+/* ── Rueda ── */
+.mesa{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;margin-top:22px}
+@media (min-width:900px){.mesa{grid-template-columns:auto minmax(0,1fr);align-items:start}}
+.stage{position:relative;width:var(--r-size);aspect-ratio:1;margin:12px auto}
+.stage.shake{animation:shake .55s cubic-bezier(.36,.07,.19,.97)}
+.glow{position:absolute;inset:-12%;border-radius:50%;z-index:-1;filter:blur(8px);
+  background:radial-gradient(circle,rgba(233,185,73,.3) 0%,transparent 62%);animation:breathe 4s ease-in-out infinite}
+.girando .glow{animation-duration:.9s}
+.rim{position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(var(--brass),var(--brass2),#ffe7a3,var(--brass2),var(--brass),#ffe7a3,var(--brass));
+  box-shadow:0 18px 50px rgba(0,0,0,.6),inset 0 0 0 2px rgba(255,255,255,.35),inset 0 -6px 14px rgba(0,0,0,.4)}
+.bulb{position:absolute;left:50%;top:50%;width:3%;aspect-ratio:1;border-radius:50%;background:#fff6d6;box-shadow:0 0 6px 2px rgba(255,230,150,.9);
+  transform:translate(-50%,-50%) rotate(calc(var(--i) * 15deg)) translateY(calc(var(--r-size) * -0.474));
+  animation:blink 1.2s steps(1,end) infinite}
+.bulb:nth-child(odd){animation-delay:-.6s}
+.girando .bulb{animation:chase .5s linear infinite;animation-delay:calc(var(--i) * -0.5s / 24)}
+.wheel{position:absolute;inset:7.5%;border-radius:50%;overflow:hidden;box-shadow:0 0 0 3px rgba(0,0,0,.4),inset 0 0 30px rgba(0,0,0,.45)}
+.wheel canvas{display:block;width:100%;height:100%;will-change:transform}
+.wheel::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  background:radial-gradient(120% 70% at 30% 10%,rgba(255,255,255,.2),transparent 45%),radial-gradient(circle,transparent 60%,rgba(0,0,0,.35) 100%)}
+.pointer{position:absolute;left:50%;top:-1.5%;width:11%;aspect-ratio:.8;transform:translateX(-50%);transform-origin:50% 18%;z-index:3;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.pointer svg{width:100%;height:100%;display:block}
+.hub{position:absolute;left:50%;top:50%;width:25%;aspect-ratio:1;transform:translate(-50%,-50%);border:0;border-radius:50%;cursor:pointer;z-index:4;
+  font:900 calc(var(--r-size) * .046)/1 var(--ff-d);letter-spacing:1px;text-transform:uppercase;color:#2a1a00;
+  background:radial-gradient(circle at 35% 30%,#fff3c4 0%,var(--brass) 45%,var(--brass2) 100%);
+  box-shadow:0 0 0 5px #15151f,0 0 0 8px var(--brass2),0 10px 24px rgba(0,0,0,.6),inset 0 -5px 10px rgba(0,0,0,.25);
+  transition:transform .15s ease,filter .2s}
+.hub small{display:block;font:700 calc(var(--r-size) * .026) var(--ff);letter-spacing:0;text-transform:none;margin-top:3px;opacity:.8}
+.hub::before{content:"";position:absolute;inset:-14px;border-radius:50%;border:2px solid var(--brass);opacity:0;animation:ping 2s ease-out infinite}
+.hub:hover:not(:disabled){transform:translate(-50%,-50%) scale(1.06)}
+.hub:active:not(:disabled){transform:translate(-50%,-50%) scale(.95)}
+.hub:focus-visible{outline:3px solid #fff;outline-offset:6px}
+.hub:disabled{cursor:wait;filter:saturate(.6) brightness(.85)}
+.hub:disabled::before{animation:none}
+.controles{display:flex;justify-content:center;gap:8px;margin-top:6px}
+
+/* ── Tabla de probabilidades e historial ── */
+.lado h2{font:900 26px/1 var(--ff-d);text-transform:uppercase;letter-spacing:.5px;margin:0 0 10px}
+.prob{width:100%;border-collapse:collapse;font-size:14px}
+.prob td{padding:6px 4px;border-bottom:1px solid var(--line)}
+.prob td:last-child{text-align:right;color:var(--mute);white-space:nowrap}
+.prob i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;background:var(--c)}
+.nota{color:var(--mute);font-size:13px;margin:10px 0 0}
+.hist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.hist li{display:flex;justify-content:space-between;gap:10px;padding:8px 12px;border-radius:10px;background:var(--slab2);border-left:3px solid var(--c);font-size:14px;animation:pop .35s cubic-bezier(.34,1.56,.64,1)}
+.hist b{white-space:nowrap}
+.hist .vacio{border:0;color:var(--mute);background:none;padding:0}
+
+/* ── Resultado ── */
+.velo{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(5px);display:grid;place-items:center;padding:16px;z-index:50;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}
+.velo.on{opacity:1;visibility:visible}
+.modal{position:relative;width:min(380px,100%);text-align:center;padding:26px 22px 22px;border-radius:22px;
+  background:linear-gradient(160deg,#1c1c28,#111118);border:1px solid color-mix(in srgb,var(--c) 60%,transparent);
+  box-shadow:0 30px 60px rgba(0,0,0,.6),0 0 60px color-mix(in srgb,var(--c) 35%,transparent);
+  transform:scale(.7) translateY(20px);transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
+.velo.on .modal{transform:none}
+.modal .emo{font-size:64px;line-height:1;display:block;animation:float 2.4s ease-in-out infinite}
+.modal img{width:130px;height:130px;object-fit:contain;display:block;margin:0 auto;animation:float 2.4s ease-in-out infinite}
+.modal .badge{display:inline-block;margin-top:12px;font:800 11px var(--ff);letter-spacing:2.5px;text-transform:uppercase;padding:4px 12px;border-radius:999px;background:color-mix(in srgb,var(--c) 22%,transparent);color:var(--c)}
+.modal h3{font:900 40px/1 var(--ff-d);text-transform:uppercase;margin:10px 0 8px}
+.modal p{color:var(--mute);margin:0 0 6px}
+.modal .saldo{color:var(--ink);font-weight:700;margin:12px 0 18px}
+.confeti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+@keyframes breathe{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.04)}}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:.25}}
+@keyframes chase{0%{opacity:1}30%,100%{opacity:.2}}
+@keyframes ping{0%{transform:scale(.8);opacity:.8}100%{transform:scale(1.3);opacity:0}}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-8px) rotate(4deg)}}
+@keyframes shake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-8px) rotate(-1deg)}40%,60%{transform:translateX(8px) rotate(1deg)}}
+@media (prefers-reduced-motion:reduce){*,*::before{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="crumb" href="index.html">← El Mundo de Felipe</a>
+  <p class="kick">Juego · Banco de Hipopesos</p>
+  <h1>Ruleta de <span>Hipopesos</span></h1>
+  <p class="intro">Cada tiro cuesta <b id="costoTxt">5.000 ₣</b>. Puedes ganar o perder hasta 50.000 ₣, llevarte un beneficio para canjear con el profe o un gatito gratis para tu colección.</p>
+
+  <div id="avisos"></div>
+
+  <section class="card">
+    <div class="estado">
+      <div class="dato" id="saldo">—<small>Tu saldo</small></div>
+      <div class="dato b" id="tiros">—<small>Tiros jugados</small></div>
+      <div class="sesion" id="sesion"></div>
+    </div>
+  </section>
+
+  <div class="mesa">
+    <div>
+      <div class="stage" id="stage">
+        <div class="glow"></div>
+        <div class="rim" id="rim"></div>
+        <div class="wheel"><canvas id="rueda"></canvas></div>
+        <div class="pointer" id="pointer" aria-hidden="true">
+          <svg viewBox="0 0 40 50"><defs><linearGradient id="pg" x1="0" x2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".5" stop-color="#e9b949"/><stop offset="1" stop-color="#8a6514"/></linearGradient></defs>
+            <path d="M20 48 L4 12 A16 16 0 1 1 36 12 Z" fill="url(#pg)" stroke="#5a3c05" stroke-width="2"/><circle cx="20" cy="14" r="5" fill="#15151f"/></svg>
+        </div>
+        <button class="hub" id="hub" type="button">Entrar</button>
+      </div>
+      <div class="controles"><button class="btn" id="sonido" type="button" aria-pressed="true">🔊 Sonido</button></div>
+    </div>
+
+    <div class="lado">
+      <section class="card">
+        <h2>Probabilidades</h2>
+        <table class="prob" id="prob"></table>
+        <p class="nota">La ruleta tiene 16 casillas iguales y cada una sale con la misma probabilidad (1 de 16). Si un castigo es mayor que tu saldo, quedas en 0. Si ganas un gatito que ya tenías, recibes su precio en Hipopesos.</p>
+      </section>
+      <section class="card">
+        <h2>Tus últimos tiros</h2>
+        <ul class="hist" id="hist"><li class="vacio">Entra con tu cuenta para ver tus tiros.</li></ul>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div class="velo" id="velo"><div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitulo"></div></div>
+<canvas class="confeti" id="confeti"></canvas>
+<p class="sr" id="anuncio" aria-live="assertive"></p>
+
+<script src="gatitos/catalogo.js"></script>
+<script src="firebase/df.js"></script>
+<script>
+'use strict';
+/* ═══════════════════════════════════════════════════════════════
+   RULETA — debe coincidir con firebase/firestore.rules (sección "Ruleta de Hipopesos").
+   El resultado de cada tiro sale de sha256(sal | cuenta | n° de tiro): el navegador
+   solo lo calcula para mostrarlo; las reglas lo recalculan y rechazan cualquier otro.
+   ═══════════════════════════════════════════════════════════════ */
+const RULETA = {
+  costo: 5000,
+  sal: 'dondefelipe-ruleta-v1',
+  dinero: c => '012'.includes(c) ? 10000 : '34'.includes(c) ? 20000 : c === '5' ? 50000
+             : '678'.includes(c) ? -10000 : '9a'.includes(c) ? -20000 : c === 'b' ? -50000 : 0,
+  beneficio: c => c === 'c' ? 'Ruleta: pase de tarea' : 'Ruleta: 5 minutos extra en una prueba',
+  gatito: c2 => '0123'.includes(c2) ? 'naranjo' : '4567'.includes(c2) ? 'gris' : '89ab'.includes(c2) ? 'dormilon' : 'patitas',
+};
+// Cómo se ve cada casilla (una por carácter hexadecimal).
+const CASILLA = c => {
+  const d = RULETA.dinero(c);
+  if ('cd'.includes(c)) return { tipo: 'beneficio', emoji: '🎟️', txt: c === 'c' ? 'Pase tarea' : '+5 min', color: '#1f9fd0' };
+  if ('ef'.includes(c)) return { tipo: 'gatito', emoji: '🐱', txt: 'Gatito', color: '#ff2e7e' };
+  const t = (d > 0 ? '+' : '−') + new Intl.NumberFormat('es-CL').format(Math.abs(d));
+  const colores = { 10000: '#2fae6a', 20000: '#139a8f', 50000: '#d9a520', '-10000': '#e5483f', '-20000': '#a8327a', '-50000': '#6b1a28' };
+  const emojis  = { 10000: '💰', 20000: '💵', 50000: '💎', '-10000': '💸', '-20000': '🔥', '-50000': '💀' };
+  return { tipo: d > 0 ? 'premio' : 'castigo', emoji: emojis[d], txt: t, color: colores[d], dinero: d };
+};
+// Orden de las 16 casillas alrededor de la rueda (intercaladas para que se vea pareja).
+const ORDEN = ['5','6','0','9','c','3','7','e','b','1','a','4','8','d','2','f'];
+
+const $ = id => document.getElementById(id);
+const fmt = n => new Intl.NumberFormat('es-CL').format(Math.round(n || 0)) + ' ₣';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const precioGatito = id => (window.GATITOS || []).find(g => g.id === id)?.precio || 0;
+const nombreGatito = id => (window.GATITOS || []).find(g => g.id === id)?.nombre || id;
+const reducido = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let usuario = null, cuentaId = null, cuenta = null, tiros = 0, perfilOk = false;
+let girando = false, angulo = 0, sonido = true, audio = null;
+
+async function sha256hex(s) {
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+function resultadoDe(h, saldoAntes, tengo) {
+  const c = h[0], cas = CASILLA(c);
+  const g = RULETA.gatito(h[1]);
+  const yaTenia = cas.tipo === 'gatito' && tengo.includes(g);
+  const premio = cas.tipo === 'gatito' ? (yaTenia ? precioGatito(g) : 0) : RULETA.dinero(c);
+  const neto = premio - RULETA.costo;
+  const monto = saldoAntes + neto < 0 ? -saldoAntes : neto;
+  return { c, tipo: cas.tipo, premio, monto, alCero: saldoAntes + neto < 0,
+           gatito: cas.tipo === 'gatito' ? g : null, yaTenia,
+           beneficio: cas.tipo === 'beneficio' ? RULETA.beneficio(c) : null };
+}
+function motivoDe(r, n) {
+  const base = 'Ruleta (tiro ' + n + '): ';
+  if (r.tipo === 'beneficio') return base + r.beneficio.replace(/^Ruleta: /, '');
+  if (r.tipo === 'gatito') return base + (r.yaTenia ? 'gatito repetido, recibe ' + fmt(r.premio) : 'gatito gratis (' + nombreGatito(r.gatito) + ')');
+  return base + (r.premio > 0 ? 'gana ' : 'pierde ') + fmt(Math.abs(r.premio)) + (r.alCero ? ', saldo queda en 0' : '');
+}
+
+/* ── Datos ── */
+async function cargar() {
+  usuario = DF.usuario(); cuentaId = null; cuenta = null; tiros = 0; perfilOk = false;
+  aviso('');
+  try {
+    const { F, db } = await DF.listo();
+    if (usuario) {
+      const pf = await DF.perfil().catch(() => null);
+      perfilOk = DF.perfilCompleto(pf);
+      if (!perfilOk) aviso('Antes de jugar completa tu perfil (edad y grupo) en <a href="cuenta.html">Mi cuenta</a>.');
+      else {
+        await DF.asegurarCuentaBanco().catch(() => null);
+        const v = await F.getDoc(F.doc(db, 'banco_vinculos', usuario.email.toLowerCase()));
+        if (v.exists()) {
+          cuentaId = v.data().cuenta;
+          const [c, r] = await Promise.all([F.getDoc(F.doc(db, 'banco_cuentas', cuentaId)), F.getDoc(F.doc(db, 'ruleta', cuentaId))]);
+          if (c.exists()) cuenta = c.data();
+          tiros = r.exists() ? (r.data().n || 0) : 0;
+        }
+        if (!cuenta) aviso('Tu cuenta del banco todavía no está conectada con este correo. Pídele al profe que la vincule para poder jugar.');
+        else if ((cuenta.saldo || 0) < RULETA.costo) aviso('Necesitas al menos ' + fmt(RULETA.costo) + ' para girar. Revisa el bono diario en la <a href="banco-felipeso/bolsa.html">Bolsa</a>.');
+      }
+    }
+  } catch (e) { aviso('No se pudo cargar tu cuenta: ' + esc(e.message), 'err'); }
+  pintar();
+  cargarHistorial();
+}
+async function cargarHistorial() {
+  const ul = $('hist');
+  if (!cuentaId) { ul.innerHTML = '<li class="vacio">' + (usuario ? 'Sin cuenta del banco vinculada.' : 'Entra con tu cuenta para ver tus tiros.') + '</li>'; return; }
+  try {
+    const { F, db } = await DF.listo();
+    const s = await F.getDocs(F.query(F.collection(db, 'banco_movs'), F.where('cuenta', '==', cuentaId), F.where('tipo', '==', 'ruleta')));
+    const movs = s.docs.map(d => d.data()).sort((a, b) => (b.tiro || 0) - (a.tiro || 0)).slice(0, 8);
+    ul.innerHTML = movs.length ? movs.map(m => {
+      const col = m.canje ? '#1f9fd0' : m.gatito ? '#ff2e7e' : m.monto >= 0 ? 'var(--pos)' : 'var(--neg)';
+      const txt = esc(String(m.motivo || '').replace(/^Ruleta \(tiro \d+\): /, ''));
+      return `<li style="--c:${col}"><span>#${m.tiro} · ${txt}</span><b style="color:${m.monto >= 0 ? 'var(--pos)' : 'var(--neg)'}">${m.monto >= 0 ? '+' : '−'}${fmt(Math.abs(m.monto))}</b></li>`;
+    }).join('') : '<li class="vacio">Todavía no has girado.</li>';
+  } catch (e) { ul.innerHTML = '<li class="vacio">No se pudo cargar el historial.</li>'; }
+}
+
+// Una sola transacción: cobra el tiro, aplica el resultado, registra el movimiento,
+// sube el contador de tiros y, si toca, agrega el gatito a la colección.
+async function tirar() {
+  const { F, db } = await DF.listo();
+  const rc = F.doc(db, 'banco_cuentas', cuentaId), rr = F.doc(db, 'ruleta', cuentaId), rg = F.doc(db, 'gatitos', usuario.uid);
+  return F.runTransaction(db, async tx => {
+    const [sc, sr, sg] = await Promise.all([tx.get(rc), tx.get(rr), tx.get(rg)]);
+    if (!sc.exists()) throw new Error('no se encontró tu cuenta del banco');
+    const c = sc.data(), saldoAntes = c.saldo || 0;
+    if (saldoAntes < RULETA.costo) throw new Error('cada tiro cuesta ' + fmt(RULETA.costo) + ' y tienes ' + fmt(saldoAntes));
+    const n = (sr.exists() ? (sr.data().n || 0) : 0) + 1;
+    const prev = sg.exists() ? sg.data() : { ids: [], favorito: null };
+    const ids = prev.ids || [];
+    const r = resultadoDe(await sha256hex(RULETA.sal + '|' + cuentaId + '|' + n), saldoAntes, ids);
+    const saldo = saldoAntes + r.monto, ops = (c.ops || 0) + 1;
+    tx.update(rc, { saldo, ops, actualizado: F.serverTimestamp() });
+    const mov = {
+      cuenta: cuentaId, numero: String(c.numero || ''), nombre: ((c.nombre || '') + ' ' + (c.apellido || '')).trim(), curso: c.curso || '',
+      monto: r.monto, motivo: motivoDe(r, n).slice(0, 200), tipo: 'ruleta', saldoDespues: saldo, profe: '',
+      fecha: F.serverTimestamp(), tiro: n
+    };
+    if (r.beneficio) { mov.item = r.beneficio; mov.canje = 'pendiente'; }
+    const gatoNuevo = r.tipo === 'gatito' && !r.yaTenia;
+    if (gatoNuevo) mov.gatito = r.gatito;
+    tx.set(F.doc(db, 'banco_movs', 'op-' + cuentaId + '-' + ops), mov);
+    tx.set(rr, { n, actualizado: F.serverTimestamp() });
+    if (gatoNuevo) {
+      const nuevos = ids.concat([r.gatito]);
+      tx.set(rg, { uid: usuario.uid, nombre: DF.nombreCorto(usuario.displayName, usuario.email).slice(0, 80), ids: nuevos,
+        favorito: prev.favorito && nuevos.includes(prev.favorito) ? prev.favorito : r.gatito, actualizado: F.serverTimestamp() });
+    }
+    return Object.assign(r, { saldo, n });
+  });
+}
+
+/* ── Interfaz ── */
+function aviso(html, tipo) { $('avisos').innerHTML = html ? `<div class="aviso ${tipo || ''}">${html}</div>` : ''; }
+function pintar() {
+  $('costoTxt').textContent = fmt(RULETA.costo);
+  $('saldo').innerHTML = (cuenta ? fmt(cuenta.saldo) : '—') + '<small>Tu saldo</small>';
+  $('tiros').innerHTML = (cuenta ? tiros : '—') + '<small>Tiros jugados</small>';
+  $('sesion').innerHTML = usuario
+    ? `<span>${esc(usuario.email)}</span><button class="btn" type="button" data-a="salir">Salir</button>`
+    : `<button class="btn p" type="button" data-a="entrar">Entrar con Google</button>`;
+  const hub = $('hub');
+  if (girando) return;
+  const puede = cuenta && (cuenta.saldo || 0) >= RULETA.costo;
+  hub.disabled = !!usuario && !puede;
+  hub.innerHTML = !usuario ? 'Entrar' : puede ? `Girar<small>${fmt(RULETA.costo)}</small>` : 'Girar';
+  hub.setAttribute('aria-label', !usuario ? 'Entrar con Google para jugar' : 'Girar la ruleta por ' + fmt(RULETA.costo));
+}
+function pintarProbabilidades() {
+  const filas = {};
+  ORDEN.forEach(c => { const k = CASILLA(c); const key = k.txt.startsWith('Pase') || k.txt === '+5 min' ? k.txt : k.txt; (filas[key] ||= { ...k, n: 0 }).n++; });
+  const peso = f => f.dinero ?? (f.tipo === 'beneficio' ? -1e9 : -2e9);
+  const orden = Object.values(filas).sort((a, b) => peso(b) - peso(a));
+  $('prob').innerHTML = orden.map(f => {
+    const nombre = f.tipo === 'beneficio' ? 'Beneficio: ' + (f.txt === '+5 min' ? '5 min extra en prueba' : 'pase de tarea')
+                 : f.tipo === 'gatito' ? 'Gatito gratis (común)' : f.txt + ' ₣';
+    return `<tr><td><i style="--c:${f.color}"></i>${f.emoji} ${esc(nombre)}</td><td>${f.n}/16 · ${(f.n / 16 * 100).toLocaleString('es-CL', { maximumFractionDigits: 1 })}%</td></tr>`;
+  }).join('');
+}
+
+/* ── Dibujo de la rueda ── */
+const canvas = $('rueda'), ctx = canvas.getContext('2d');
+function dibujar() {
+  const size = canvas.clientWidth; if (!size) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.height = Math.round(size * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const c = size / 2, r = c, arco = Math.PI * 2 / ORDEN.length;
+  ORDEN.forEach((ch, i) => {
+    const k = CASILLA(ch), a0 = -Math.PI / 2 + i * arco;
+    const g = ctx.createRadialGradient(c, c, r * .1, c, c, r);
+    g.addColorStop(0, aclarar(k.color, -40)); g.addColorStop(.55, k.color); g.addColorStop(1, aclarar(k.color, 22));
+    ctx.beginPath(); ctx.moveTo(c, c); ctx.arc(c, c, r, a0, a0 + arco); ctx.closePath();
+    ctx.fillStyle = g; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.3)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.save(); ctx.translate(c, c); ctx.rotate(a0 + arco / 2);
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 1;
+    ctx.font = Math.round(size * .055) + 'px serif'; ctx.fillText(k.emoji, r - size * .025, 0);
+    let fs = size * .043; ctx.font = `800 ${fs}px 'Big Shoulders Display', Impact, sans-serif`;
+    while (ctx.measureText(k.txt).width > r * .5 && fs > 8) { fs -= .5; ctx.font = `800 ${fs}px 'Big Shoulders Display', Impact, sans-serif`; }
+    ctx.fillStyle = '#fff'; ctx.fillText(k.txt, r - size * .105, 0);
+    ctx.restore();
+  });
+  ctx.beginPath(); ctx.arc(c, c, r * .3, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 6; ctx.stroke();
+}
+function aclarar(hex, pct) {
+  const n = parseInt(hex.slice(1), 16), f = v => Math.max(0, Math.min(255, Math.round(v + pct / 100 * (pct > 0 ? 255 - v : v))));
+  return `rgb(${f(n >> 16)},${f(n >> 8 & 255)},${f(n & 255)})`;
+}
+// Ampolletas del aro
+$('rim').innerHTML = Array.from({ length: 24 }, (_, i) => `<span class="bulb" style="--i:${i}"></span>`).join('');
+new ResizeObserver(dibujar).observe(canvas);
+document.fonts?.ready.then(dibujar);
+
+/* ── Giro ── */
+const easing = t => t < .08 ? .5 * Math.pow(t / .08, 2) * .04 : .02 + .98 * (1 - Math.pow(1 - (t - .08) / .92, 4));
+const casillaEn = g => Math.floor((((-g % 360) + 360) % 360) / (360 / ORDEN.length));
+function animarHasta(indice) {
+  const arcoG = 360 / ORDEN.length;
+  const offset = arcoG * (.15 + Math.random() * .7);        // solo estética: dónde cae dentro de la casilla
+  const deseado = (360 - (indice * arcoG + offset)) % 360;
+  const actual = ((angulo % 360) + 360) % 360;
+  const inicio = angulo, destino = angulo + (reducido ? 1 : 6) * 360 + ((deseado - actual + 360) % 360);
+  const dur = reducido ? 1200 : 5600;
+  let ultima = casillaEn(inicio);
+  return new Promise(ok => {
+    const t0 = performance.now();
+    const paso = ahora => {
+      const t = Math.min((ahora - t0) / dur, 1), a = inicio + (destino - inicio) * easing(t);
+      canvas.style.transform = `rotate(${a}deg)`;
+      const k = casillaEn(a); if (k !== ultima) { ultima = k; tick(); }
+      if (t < 1) requestAnimationFrame(paso); else { angulo = destino; ok(); }
+    };
+    requestAnimationFrame(paso);
+  });
+}
+// Mientras el banco confirma el tiro, la rueda ya empieza a moverse.
+let precalentando = false;
+function precalentar() {
+  precalentando = true;
+  let v = 0, prev = performance.now();
+  const paso = ahora => {
+    if (!precalentando) return;
+    const dt = ahora - prev; prev = ahora;
+    v = Math.min(v + dt * .002, .9);
+    angulo += v * dt; canvas.style.transform = `rotate(${angulo}deg)`;
+    requestAnimationFrame(paso);
+  };
+  requestAnimationFrame(paso);
+}
+
+async function alPulsar() {
+  if (girando) return;
+  if (!usuario) { entrar(); return; }
+  if (!cuenta || !perfilOk) return;
+  girando = true; iniciarAudio();
+  document.body.classList.add('girando');
+  const hub = $('hub'); hub.disabled = true; hub.textContent = '…';
+  precalentar();
+  try {
+    const r = await tirar();
+    precalentando = false;
+    await animarHasta(ORDEN.indexOf(r.c));
+    cuenta.saldo = r.saldo; tiros = r.n;
+    mostrar(r);
+    cargarHistorial();
+  } catch (e) {
+    precalentando = false;
+    const m = String(e.message || e);
+    aviso('No se pudo girar: ' + esc(/permission/i.test(m) ? 'el banco rechazó el tiro (¿el profe publicó las reglas nuevas?)' : m), 'err');
+  }
+  girando = false;
+  document.body.classList.remove('girando');
+  pintar();
+}
+
+function mostrar(r) {
+  const cas = CASILLA(r.c);
+  const col = r.tipo === 'castigo' ? 'var(--neg)' : r.tipo === 'beneficio' ? '#22a7ff' : r.tipo === 'gatito' ? 'var(--pink)' : 'var(--acid)';
+  let cabeza = `<span class="emo">${cas.emoji}</span>`, badge, titulo, texto;
+  if (r.tipo === 'premio') { badge = '¡Premio!'; titulo = '+' + fmt(r.premio); texto = `Ganaste ${fmt(r.premio)} y el tiro costó ${fmt(RULETA.costo)}.`; }
+  else if (r.tipo === 'castigo') { badge = 'Castigo'; titulo = '−' + fmt(-r.premio); texto = r.alCero ? 'El castigo era mayor que tu saldo: quedaste en 0.' : `Pierdes ${fmt(-r.premio)} más el tiro (${fmt(RULETA.costo)}).`; }
+  else if (r.tipo === 'beneficio') { badge = 'Beneficio'; titulo = r.beneficio.replace(/^Ruleta: /, ''); texto = 'Quedó guardado como pendiente. Pídele al profe que te lo canjee.'; }
+  else {
+    cabeza = `<img src="gatitos/img/${esc(r.gatito)}.webp" alt="">`;
+    badge = r.yaTenia ? 'Gatito repetido' : '¡Gatito gratis!'; titulo = nombreGatito(r.gatito);
+    texto = r.yaTenia ? `Ya lo tenías, así que recibes su precio: ${fmt(r.premio)}.` : 'Ya está en tu colección de la <a href="gatitos.html">tienda de gatitos</a>.';
+  }
+  $('modal').style.setProperty('--c', col);
+  $('modal').innerHTML = `${cabeza}<span class="badge">${badge}</span><h3 id="mTitulo">${esc(titulo)}</h3><p>${texto}</p>
+    <p class="saldo">Tu saldo: ${fmt(r.saldo)}</p>
+    <div style="display:flex;gap:8px;justify-content:center"><button class="btn" type="button" data-a="cerrar">Cerrar</button>
+    ${r.saldo >= RULETA.costo ? '<button class="btn p" type="button" data-a="otra">Girar otra vez</button>' : ''}</div>`;
+  $('velo').classList.add('on');
+  ($('modal').querySelector('[data-a="otra"]') || $('modal').querySelector('[data-a="cerrar"]')).focus({ preventScroll: true });
+  $('anuncio').textContent = badge + ': ' + titulo;
+  if (r.tipo === 'castigo') { sonCastigo(); const s = $('stage'); s.classList.remove('shake'); void s.offsetWidth; s.classList.add('shake'); }
+  else { sonPremio(); if (!reducido) confeti(r.premio >= 50000 || r.tipo === 'gatito' ? 180 : 100); }
+}
+function cerrar() { $('velo').classList.remove('on'); $('hub').focus({ preventScroll: true }); }
+
+function entrar() {
+  DF.entrar().then(cargar).catch(e => { if (!e.cancelado) aviso(esc(e.message), 'err'); });
+}
+
+/* ── Efectos ── */
+function tick() {
+  $('pointer').animate([{ transform: 'translateX(-50%) rotate(-22deg)' }, { transform: 'translateX(-50%) rotate(0)' }],
+    { duration: 140, easing: 'cubic-bezier(.3,1.6,.6,1)' });
+  beep(1600, .012, 'square', .05);
+}
+function iniciarAudio() {
+  if (!audio) try { audio = new AudioContext(); } catch (e) { audio = null; }
+  if (audio && audio.state === 'suspended') audio.resume();
+}
+function beep(f, dur, tipo = 'sine', vol = .15, cuando = 0) {
+  if (!sonido || !audio) return;
+  const t = audio.currentTime + cuando, o = audio.createOscillator(), g = audio.createGain();
+  o.type = tipo; o.frequency.setValueAtTime(f, t);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(g).connect(audio.destination); o.start(t); o.stop(t + dur + .02);
+}
+const sonPremio = () => [523, 659, 784, 1047].forEach((f, i) => beep(f, .35, 'triangle', .18, i * .1));
+function sonCastigo() {
+  if (!sonido || !audio) return;
+  const t = audio.currentTime, o = audio.createOscillator(), g = audio.createGain();
+  o.type = 'sawtooth'; o.frequency.setValueAtTime(320, t); o.frequency.exponentialRampToValueAtTime(70, t + .7);
+  g.gain.setValueAtTime(.14, t); g.gain.exponentialRampToValueAtTime(.0001, t + .75);
+  o.connect(g).connect(audio.destination); o.start(t); o.stop(t + .8);
+}
+function confeti(cant) {
+  const cv = $('confeti'), cx = cv.getContext('2d'), dpr = window.devicePixelRatio || 1;
+  const w = innerWidth, h = innerHeight; cv.width = w * dpr; cv.height = h * dpr; cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const cols = ['#ccff00', '#22e3ff', '#ff2e7e', '#e9b949', '#ffffff'];
+  const ps = Array.from({ length: cant }, () => ({ x: w / 2, y: h * .4, vx: (Math.random() - .5) * 16, vy: -Math.random() * 14 - 4,
+    s: 5 + Math.random() * 6, r: Math.random() * 6, vr: (Math.random() - .5) * .4, c: cols[Math.floor(Math.random() * cols.length)] }));
+  const t0 = performance.now();
+  const paso = t => {
+    const vida = (t - t0) / 2600; cx.clearRect(0, 0, w, h);
+    ps.forEach(p => { p.vy += .32; p.vx *= .985; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      cx.save(); cx.globalAlpha = Math.max(0, 1 - vida); cx.translate(p.x, p.y); cx.rotate(p.r); cx.fillStyle = p.c; cx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); cx.restore(); });
+    if (vida < 1) requestAnimationFrame(paso); else cx.clearRect(0, 0, w, h);
+  };
+  requestAnimationFrame(paso);
+}
+
+/* ── Eventos ── */
+$('hub').addEventListener('click', alPulsar);
+$('sonido').addEventListener('click', e => {
+  sonido = !sonido; e.currentTarget.setAttribute('aria-pressed', sonido);
+  e.currentTarget.textContent = sonido ? '🔊 Sonido' : '🔇 Silencio';
+});
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-a]')?.dataset.a;
+  if (a === 'entrar') entrar();
+  if (a === 'salir') DF.salir().then(cargar);
+  if (a === 'cerrar') cerrar();
+  if (a === 'otra') { cerrar(); alPulsar(); }
+});
+$('velo').addEventListener('click', e => { if (e.target === $('velo')) cerrar(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrar(); });
+
+pintarProbabilidades();
+pintar();
+DF.alCambiarUsuario(() => { if (!girando) cargar(); });
+</script>
+</body>
+</html>
