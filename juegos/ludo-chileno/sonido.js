@@ -19,7 +19,10 @@
 
   const pistas = {};
   ['tranquila', 'tension'].forEach(n => {
-    const a = new Audio(); a.src = BASE + n + '.mp3'; a.loop = true; a.preload = n === 'tranquila' ? 'auto' : 'metadata'; a.volume = 0;
+    // sin música activada no se descarga nada; la de tensión se baja recién cuando hace falta
+    const a = new Audio(); a.loop = true; a.preload = 'none'; a.volume = 0;
+    a.dataset.src = BASE + n + '.mp3';
+    if (n === 'tranquila' && musicaOn) { a.src = a.dataset.src; a.preload = 'auto'; }
     pistas[n] = a;
   });
   const fades = {};
@@ -36,7 +39,7 @@
     if (!desbloqueado) return;
     ['tranquila', 'tension'].forEach(n => {
       const a = pistas[n], activa = musicaOn && n === modo;
-      if (activa) { if (a.paused) { a.play().catch(() => {}); } fundir(a, VOL_MUSICA, FUNDIDO); }
+      if (activa) { if (!a.getAttribute('src')) a.src = a.dataset.src; if (a.paused) { a.play().catch(() => {}); } fundir(a, VOL_MUSICA, FUNDIDO); }
       else if (!a.paused) fundir(a, 0, FUNDIDO, () => { a.pause(); });
     });
   }

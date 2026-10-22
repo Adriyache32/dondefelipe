@@ -51,3 +51,9 @@ Las salas se guardan en la colección `ludo_salas` de Firestore. Sus reglas de s
 ## Congelar una partida
 - **En este equipo**: la partida se guarda sola al comienzo de cada turno (en el navegador y, si iniciaste sesión, en tu cuenta). Con **⏸ Congelar partida** se deja guardada y se vuelve al menú; después aparece **Continuar partida congelada**. Al empezar una partida nueva en este equipo, se reemplaza la congelada.
 - **En línea**: cualquier jugador puede congelar la sala. Mientras está congelada nadie juega, ni siquiera el computador. Para seguir, se entra con el código o desde **Mis partidas en línea** en el menú y se toca **Reanudar**.
+
+## Mini chat
+- **En línea**: los jugadores de la sala (no los que solo miran) pueden escribir mensajes de hasta 120 caracteres o tocar una expresión rápida. Funciona también en la sala de espera. Cada mensaje aparece en el panel y como globo sobre la base de su equipo.
+- **En este equipo**: los mensajes se ven solo en ese computador y el computador a veces reacciona (al capturar, al ser capturado, al sacar 6, al llegar a la meta y al ganar).
+- Se tapan con *** las groserías más comunes (lista `TAPAR` en `ludo.html`). Se puede enviar como máximo 4 mensajes cada 10 segundos.
+- Los mensajes se guardan en `ludo_salas/<código>/chat`. El profe y el anfitrión pueden borrarlos; el profe puede leerlos desde la consola de Firebase.
