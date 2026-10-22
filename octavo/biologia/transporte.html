@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bloque C · Transporte Celular y Fluidez de la Membrana</title>
+<style>
+:root{
+  --navy:#1A1F3A; --navy-2:#232a4d; --navy-3:#2c3560;
+  --teal:#2DD4BF; --coral:#FF6B6B; --gold:#FFD166; --amber:#F4A300; --purple:#9B7EDE; --green:#6BCB77; --blue:#5aa9ff;
+  --ink:#eef1fb; --ink-dim:#b8bfe0; --glass:#f7f8fc; --glass-line:#d7dcf0; --text:#1c2140; --muted:#5a5f80;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;scroll-padding-top:74px;}
+body{
+  font-family:Calibri,'Trebuchet MS',sans-serif; color:var(--ink); min-height:100vh;
+  background:radial-gradient(circle at 15% 5%, var(--navy-3), var(--navy) 55%) fixed;
+}
+h1,h2,h3,h4{font-family:'Trebuchet MS',Calibri,sans-serif;}
+a{color:inherit;}
+
+/* ---------- top nav ---------- */
+.topnav{position:sticky; top:0; z-index:50; background:rgba(15,18,38,.94); backdrop-filter:blur(6px); border-bottom:1px solid rgba(255,255,255,.1);}
+.nav-inner{max-width:1080px; margin:0 auto; display:flex; align-items:center; gap:12px; padding:8px 14px;}
+.brand{font-family:'Trebuchet MS',sans-serif; font-weight:800; font-size:.82rem; color:var(--teal); white-space:nowrap;}
+.links{display:flex; gap:4px; overflow-x:auto; flex:1; scrollbar-width:none;}
+.links::-webkit-scrollbar{display:none;}
+.links a{font-size:.72rem; font-weight:700; text-decoration:none; color:var(--ink-dim); padding:6px 10px; border-radius:14px; white-space:nowrap; transition:.15s;}
+.links a:hover{color:#fff; background:rgba(255,255,255,.08);}
+.links a.on{background:var(--teal); color:#062824;}
+.score-badge{display:flex; align-items:center; gap:5px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); padding:4px 11px; border-radius:18px; font-size:.82rem; font-weight:800; white-space:nowrap;}
+.score-badge .star{color:var(--gold);}
+.progress{height:3px; background:rgba(255,255,255,.08);}
+.progress span{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--teal),var(--purple)); transition:width .2s;}
+
+.tn-toggle{position:fixed; right:12px; bottom:12px; z-index:60; background:var(--amber); color:#3a2400; border:none; font-weight:800; font-size:.72rem; padding:8px 13px; border-radius:18px; cursor:pointer; box-shadow:0 6px 16px rgba(0,0,0,.35);}
+.tn-panel{display:none; background:#3a2a00; border:1px solid var(--amber); color:#ffe9b8; border-radius:10px; padding:11px 14px; margin-top:14px; font-size:.82rem; line-height:1.5;}
+.tn-panel.show{display:block;}
+.tn-panel b{color:var(--amber);}
+
+/* ---------- layout ---------- */
+main{max-width:1080px; margin:0 auto; padding:18px 14px 80px;}
+.hero{text-align:center; padding:44px 12px 34px;}
+.kicker{font-size:.78rem; letter-spacing:.14em; text-transform:uppercase; color:var(--teal); font-weight:800; margin-bottom:10px;}
+.hero h1{font-size:2.1rem; line-height:1.18; margin-bottom:12px;}
+.hero p{color:var(--ink-dim); max-width:680px; margin:0 auto 18px; font-size:.95rem; line-height:1.55;}
+.chips-hero{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:22px;}
+.chips-hero span{font-size:.74rem; font-weight:700; padding:5px 12px; border-radius:16px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.06);}
+.start-btn{background:linear-gradient(135deg,var(--teal),var(--purple)); border:none; color:#fff; font-weight:800; padding:13px 30px; border-radius:26px; cursor:pointer; font-size:1rem; box-shadow:0 10px 24px rgba(45,212,191,.3); text-decoration:none; display:inline-block;}
+
+.lamina{background:linear-gradient(180deg,var(--glass),#eef0fa); color:var(--text); border-radius:16px; padding:24px 26px 28px; position:relative; box-shadow:0 20px 45px rgba(0,0,0,.35); border-top:6px solid var(--accent,var(--teal)); margin-bottom:34px;}
+.accent-tag{display:inline-block; font-size:.68rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:#fff; background:var(--accent,var(--teal)); padding:3px 10px; border-radius:12px; margin-bottom:10px;}
+.lamina h2{font-size:1.55rem; color:var(--navy); margin-bottom:6px; line-height:1.25;}
+.lamina h3{font-size:1.05rem; color:var(--navy); margin:16px 0 6px;}
+.sub{font-size:.92rem; color:#4a5178; margin-bottom:14px; line-height:1.5;}
+.lamina p{font-size:.92rem; line-height:1.55; margin-bottom:10px;}
+.hint{font-size:.78rem; color:var(--muted);}
+
+.notebook-note{margin-top:16px; padding:11px 14px; border-radius:8px; background:repeating-linear-gradient(#fdfaf0,#fdfaf0 21px,#eee6cf 22px); border-left:4px solid var(--navy); font-size:.84rem; line-height:1.55; color:#2a2410;}
+.notebook-note b{color:var(--navy);}
+
+.btn{background:var(--purple); color:#fff; border:none; font-weight:800; font-size:.82rem; padding:9px 18px; border-radius:20px; cursor:pointer; transition:.15s;}
+.btn:hover{transform:translateY(-1px);}
+.btn.teal{background:var(--teal); color:#062824;}
+.btn.coral{background:var(--coral);}
+.btn.outline{background:transparent; border:1.5px solid var(--navy); color:var(--navy);}
+.btn:disabled{opacity:.4; cursor:not-allowed;}
+
+/* ---------- life cards ---------- */
+.life-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin-top:14px;}
+.life-card{background:#fff; border:1px solid var(--glass-line); border-left:5px solid var(--c,var(--teal)); border-radius:12px; padding:14px 15px; cursor:pointer; transition:.2s; min-height:150px; display:flex; flex-direction:column; gap:6px;}
+.life-card:hover{transform:translateY(-3px); box-shadow:0 10px 20px rgba(0,0,0,.14);}
+.life-card .ic{font-size:1.7rem;}
+.life-card h4{font-size:.98rem; color:var(--navy);}
+.life-card .q{font-size:.82rem; color:var(--muted);}
+.life-card .ans{display:none; font-size:.82rem; line-height:1.5;}
+.life-card .tag{display:none; align-self:flex-start; font-size:.66rem; font-weight:800; text-transform:uppercase; color:#fff; background:var(--c,var(--teal)); padding:2px 9px; border-radius:10px;}
+.life-card.open{background:var(--navy-2); color:#fff;}
+.life-card.open h4{color:var(--gold);} .life-card.open .q{color:#c9cde0;}
+.life-card.open .ans,.life-card.open .tag{display:block;}
+
+/* ---------- facts ---------- */
+.fact-grid{display:flex; flex-direction:column; gap:8px; margin:12px 0;}
+.fact-row{display:flex; gap:10px; align-items:baseline; font-size:.88rem; padding:8px 11px; background:#fff; border:1px solid var(--glass-line); border-radius:8px; line-height:1.45;}
+.fact-label{font-weight:800; color:var(--accent,var(--teal)); min-width:104px; font-size:.74rem; text-transform:uppercase; letter-spacing:.03em;}
+
+/* ---------- bilayer svg ---------- */
+.bilayer-wrap{display:flex; gap:18px; flex-wrap:wrap; align-items:flex-start; margin-top:12px;}
+#bilayerSvg{flex:1 1 440px; max-width:680px; width:100%; background:linear-gradient(180deg,#e8f3ff 0%,#e8f3ff 22%,#fdf6e9 22%,#fdf6e9 78%,#e8f3ff 78%); border-radius:12px; border:1px solid var(--glass-line); cursor:pointer;}
+#bilayerSvg .part{transition:.15s;}
+#bilayerSvg .part.sel circle,#bilayerSvg .part.sel rect,#bilayerSvg .part.sel line{stroke:#1A1F3A!important; stroke-width:3!important;}
+.part-info{flex:1 1 240px; min-width:220px; background:#fff; border:1px solid var(--glass-line); border-radius:12px; padding:14px 16px; font-size:.86rem; line-height:1.55;}
+.part-info h4{color:var(--navy); margin-bottom:6px;}
+.part-btns{display:flex; flex-wrap:wrap; gap:7px; margin-bottom:10px;}
+.pbtn{border:2px solid var(--glass-line); background:#fff; font-weight:800; font-size:.76rem; padding:6px 12px; border-radius:16px; cursor:pointer;}
+.pbtn.on{background:var(--navy); color:#fff; border-color:var(--navy);}
+
+/* ---------- simulator ---------- */
+.sim-grid{display:grid; grid-template-columns:1fr; gap:14px; margin-top:12px;}
+.sim-box{background:#0c0f22; border-radius:12px; padding:10px;}
+.sim-box canvas{width:100%; display:block; border-radius:8px;}
+.controls{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px; background:#fff; border:1px solid var(--glass-line); border-radius:12px; padding:14px 16px; margin-top:12px;}
+.ctrl label{display:flex; justify-content:space-between; font-size:.82rem; font-weight:800; color:var(--navy); margin-bottom:6px;}
+.ctrl label span{color:var(--purple);}
+.ctrl input[type=range]{width:100%; accent-color:var(--purple);}
+.toggle-row{display:flex; gap:8px; flex-wrap:wrap;}
+.tbtn{border:2px solid var(--glass-line); background:#fff; font-weight:800; font-size:.76rem; padding:7px 12px; border-radius:16px; cursor:pointer;}
+.tbtn.on{background:var(--teal); border-color:var(--teal); color:#062824;}
+.presets{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+.meters{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-top:12px;}
+.meter{background:#fff; border:1px solid var(--glass-line); border-radius:10px; padding:10px 12px;}
+.meter .lab{font-size:.74rem; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; margin-bottom:6px; display:flex; justify-content:space-between;}
+.bar{height:10px; background:#e6e9f6; border-radius:6px; overflow:hidden;}
+.bar i{display:block; height:100%; width:0; background:var(--teal); border-radius:6px; transition:width .25s, background .25s;}
+.state-pill{display:inline-block; font-size:.8rem; font-weight:800; padding:5px 14px; border-radius:16px; color:#fff;}
+.state-text{margin-top:10px; padding:12px 14px; background:#fff; border-left:4px solid var(--purple); border-radius:8px; font-size:.86rem; line-height:1.55;}
+.challenges{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:10px; margin-top:14px;}
+.chal{display:flex; gap:10px; align-items:flex-start; background:#fff; border:2px solid var(--glass-line); border-radius:10px; padding:10px 12px; font-size:.84rem; line-height:1.45;}
+.chal .ck{flex:none; width:22px; height:22px; border-radius:50%; border:2px solid var(--glass-line); display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:800; color:#fff;}
+.chal.done{border-color:var(--teal); background:#e5fbf8;}
+.chal.done .ck{background:var(--teal); border-color:var(--teal);}
+
+/* ---------- transport lab ---------- */
+.mode-row{display:flex; flex-wrap:wrap; gap:8px; margin:12px 0;}
+.mbtn{border:2px solid var(--glass-line); background:#fff; font-weight:800; font-size:.78rem; padding:8px 13px; border-radius:18px; cursor:pointer; transition:.15s; color:var(--navy);}
+.mbtn:hover{border-color:var(--purple);}
+.mbtn.on{background:var(--navy); color:#fff; border-color:var(--navy);}
+.mbtn.seen::after{content:" ✓"; color:var(--teal);}
+.lab-bar{display:flex; flex-wrap:wrap; gap:14px; align-items:center; margin-top:10px; background:#fff; border:1px solid var(--glass-line); border-radius:12px; padding:10px 14px;}
+.lab-bar .ctrl{min-width:170px; flex:1;}
+.counts{display:flex; gap:16px; font-size:.84rem; font-weight:800; color:var(--navy); flex-wrap:wrap;}
+.counts b{color:var(--purple); font-size:1rem;}
+.info-chips{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0;}
+.chip{font-size:.76rem; font-weight:800; padding:5px 12px; border-radius:14px; background:#eceffa; color:var(--navy);}
+.chip.yes{background:#ffe3e3; color:#a4222b;} .chip.no{background:#e2faf3; color:#0d6b4c;}
+.lab-desc{background:#fff; border-left:4px solid var(--teal); border-radius:8px; padding:12px 14px; font-size:.86rem; line-height:1.55; margin-top:8px;}
+.step-line{margin-top:8px; font-size:.84rem; font-weight:700; color:var(--navy); min-height:22px;}
+
+/* ---------- classify game / quiz ---------- */
+.game-card{background:#fff; border:1px solid var(--glass-line); border-radius:12px; padding:16px 18px; margin-top:12px;}
+.game-card .mol{font-size:1.15rem; font-weight:800; color:var(--navy); margin-bottom:4px;}
+.game-card .ctx{font-size:.86rem; color:var(--muted); margin-bottom:12px;}
+.opts{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:8px;}
+.opt{border:2px solid var(--glass-line); border-radius:10px; padding:9px 12px; font-size:.84rem; font-weight:700; cursor:pointer; background:#fff; text-align:left; transition:.15s; color:var(--text);}
+.opt:hover{border-color:var(--teal);}
+.opt.correct{background:#e2faf3; border-color:#1fae7c; color:#0d6b4c;}
+.opt.incorrect{background:#fde8e8; border-color:var(--coral); color:#a4222b;}
+.opt.locked{pointer-events:none;}
+.fb{margin-top:10px; font-size:.85rem; line-height:1.5; font-weight:600; display:none; padding:9px 12px; border-radius:8px;}
+.fb.show{display:block;} .fb.ok{background:#e2faf3; color:#0d6b4c;} .fb.bad{background:#fff0f0; color:#8c2b2b;}
+.q-block{border:1px solid var(--glass-line); border-radius:12px; padding:14px 16px; margin-bottom:14px; background:#fff;}
+.q-level{font-size:.68rem; font-weight:800; text-transform:uppercase; color:var(--purple); margin-bottom:4px;}
+.q-text{font-weight:700; font-size:.92rem; margin-bottom:10px; color:var(--navy); line-height:1.45;}
+.q-block .opts{grid-template-columns:1fr;}
+
+.aer-field{margin-bottom:12px;}
+.aer-field label{display:block; font-size:.8rem; font-weight:800; color:var(--navy); margin-bottom:4px;}
+.aer-field label .letter{color:var(--coral);}
+.aer-field textarea{width:100%; min-height:62px; border:1px solid var(--glass-line); border-radius:8px; padding:9px 11px; font-family:Calibri,sans-serif; font-size:.88rem; resize:vertical;}
+.checklist{display:flex; flex-direction:column; gap:9px; margin:12px 0;}
+.check-item{display:flex; align-items:flex-start; gap:9px; font-size:.86rem; cursor:pointer; line-height:1.4;}
+.check-item input{margin-top:3px; width:16px; height:16px;}
+.summary{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:14px 0;}
+.summary div{background:#fff; border:1px solid var(--glass-line); border-radius:10px; padding:10px 12px; text-align:center; font-size:.76rem; color:var(--muted); font-weight:700;}
+.summary b{display:block; font-size:1.4rem; color:var(--navy); font-family:'Trebuchet MS',sans-serif;}
+
+#toast-container{position:fixed; top:64px; left:50%; transform:translateX(-50%); z-index:80; display:flex; flex-direction:column; gap:8px; pointer-events:none;}
+.toast{background:var(--navy-2); border:1px solid var(--teal); color:#fff; padding:9px 16px; border-radius:20px; font-size:.8rem; font-weight:700; box-shadow:0 8px 18px rgba(0,0,0,.4); animation:toastIn .3s ease;}
+@keyframes toastIn{from{opacity:0; transform:translateY(-10px);} to{opacity:1; transform:translateY(0);}}
+#confetti-layer{position:fixed; inset:0; pointer-events:none; z-index:90; overflow:hidden;}
+.confetti-piece{position:absolute; top:-20px; width:9px; height:14px; opacity:.9;}
+footer.sig{text-align:center; font-size:.7rem; color:var(--ink-dim); padding:10px 0 30px;}
+
+@media (max-width:640px){
+  .hero h1{font-size:1.6rem;} .lamina{padding:18px 16px 22px;} .brand{display:none;}
+}
+@media print{
+  body{background:#fff; color:#000;} .topnav,.tn-toggle,.start-btn,#toast-container,#confetti-layer,.mode-row,.controls,.lab-bar,.presets{display:none!important;}
+  .lamina{box-shadow:none; break-inside:avoid; border:1px solid #ccc;} .hero{color:#000;} .hero p,.kicker{color:#333;}
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav" id="topnav">
+  <div class="nav-inner">
+    <span class="brand">Bloque C · Transporte celular</span>
+    <div class="links" id="navLinks">
+      <a href="#s1">1 Vida diaria</a>
+      <a href="#s2">2 La membrana</a>
+      <a href="#s3">3 Fluidez y colesterol</a>
+      <a href="#s4">4 Laboratorio de transporte</a>
+      <a href="#s5">5 ¿Cómo cruza?</a>
+      <a href="#s6">6 Casos</a>
+      <a href="#s7">7 Cierre</a>
+    </div>
+    <div class="score-badge"><span class="star">★</span><span id="scoreCount">0</span></div>
+  </div>
+  <div class="progress"><span id="progressBar"></span></div>
+</nav>
+
+<button class="tn-toggle" id="tnToggle">📝 Notas docente</button>
+<div id="toast-container"></div>
+<div id="confetti-layer"></div>
+
+<main>
+
+  <!-- ================= HERO ================= -->
+  <header class="hero" id="s0">
+    <div class="kicker">Unidad 2 · La Célula — Bloque C</div>
+    <h1>Transporte celular: por qué tu membrana<br>no es un simple muro</h1>
+    <p>Cada segundo, tus células deciden qué entra y qué sale. De ese control depende que respires, que tu sangre lleve azúcar a los músculos, que una lechuga quede crujiente o que un alimento salado no se descomponga. Hoy exploramos cómo lo logra la membrana: su estructura fluida, el rol del colesterol, el efecto de la temperatura y los mecanismos de transporte.</p>
+    <div class="chips-hero">
+      <span>🧬 Mosaico fluido</span><span>🌡️ Temperatura</span><span>🟠 Colesterol</span><span>⚡ Transporte pasivo y activo</span><span>🫧 Endocitosis y exocitosis</span>
+    </div>
+    <a class="start-btn" href="#s1">Comenzar →</a>
+    <div class="tn-panel" data-tn>
+      <b>Nota docente:</b> Recurso para el Bloque C (sesiones 9–12). Se puede usar completo en una sesión de 2 horas o por secciones: S9-S10 (secciones 1, 3 y 4 en modo ósmosis/difusión), S11 (secciones 2, 3 y 4), S12 (secciones 4 y 5, cierre de bloque antes del Kahoot). Todas las secciones funcionan sin internet.
+    </div>
+  </header>
+
+  <!-- ================= S1: VIDA DIARIA ================= -->
+  <section class="lamina" id="s1" style="--accent:var(--coral)">
+    <span class="accent-tag">1 · Importancia para la vida cotidiana</span>
+    <h2>Seis situaciones que dependen del transporte celular</h2>
+    <p class="sub">Toca cada tarjeta, piensa primero qué crees que ocurre y luego revela el proceso celular detrás.</p>
+    <div class="life-grid" id="lifeGrid"></div>
+    <p class="hint" style="margin-top:10px;">Tarjetas reveladas: <b id="lifeCount">0</b> / 6</p>
+    <div class="notebook-note">📓 <b>Para tu cuaderno:</b> elige 3 de las 6 situaciones y escribe, para cada una, el proceso celular implicado y una frase que explique por qué es importante para tu vida diaria.</div>
+    <div class="tn-panel" data-tn><b>Nota docente:</b> Pide una predicción oral antes de revelar. La tarjeta de “Frío y calor” anticipa la sección 3 (fluidez de membrana). Aclara que el colesterol de la membrana no es “el colesterol malo”: lo problemático es el exceso en la sangre, pero las células animales lo necesitan.</div>
+  </section>
+
+  <!-- ================= S2: MEMBRANA ================= -->
+  <section class="lamina" id="s2" style="--accent:var(--purple)">
+    <span class="accent-tag">2 · Modelo de mosaico fluido</span>
+    <h2>Una bicapa de fosfolípidos con proteínas incrustadas</h2>
+    <p class="sub">Toca las partes del esquema (o los botones) para descubrir qué función cumple cada una.</p>
+    <div class="bilayer-wrap">
+      <svg id="bilayerSvg" viewBox="0 0 640 260" role="img" aria-label="Esquema de la bicapa lipídica con proteína de membrana y colesterol"></svg>
+      <div class="part-info">
+        <div class="part-btns" id="partBtns">
+          <button class="pbtn" data-part="head">Cabezas</button>
+          <button class="pbtn" data-part="tail">Colas</button>
+          <button class="pbtn" data-part="protein">Proteína</button>
+          <button class="pbtn" data-part="chol">Colesterol</button>
+        </div>
+        <h4 id="partTitle">Elige una parte</h4>
+        <p id="partText">Cada fosfolípido tiene una cabeza que “ama” el agua y dos colas que la evitan. Esa doble naturaleza hace que, en agua, se ordenen solos formando una bicapa.</p>
+        <p class="hint">Partes exploradas: <b id="partCount">0</b> / 4</p>
+      </div>
+    </div>
+    <div class="fact-grid">
+      <div class="fact-row"><span class="fact-label">¿Por qué “fluido”?</span><span>Los fosfolípidos no están fijos: se desplazan lateralmente y sus colas se agitan. La membrana se comporta como un líquido espeso, no como una pared rígida.</span></div>
+      <div class="fact-row"><span class="fact-label">¿Por qué “mosaico”?</span><span>Entre los lípidos hay piezas de distinto tipo (proteínas, colesterol, carbohidratos) que forman un patrón variable.</span></div>
+      <div class="fact-row"><span class="fact-label">Consecuencia</span><span>El centro hidrofóbico bloquea el paso libre de iones y moléculas polares: por eso existen proteínas que los transportan de forma selectiva.</span></div>
+    </div>
+    <div class="notebook-note">📓 <b>Para tu cuaderno:</b> dibuja la bicapa (al menos 6 fosfolípidos por capa), rotula cabeza hidrofílica, colas hidrofóbicas, proteína y colesterol, y marca el exterior y el interior de la célula.</div>
+    <div class="tn-panel" data-tn><b>Nota docente:</b> Conecta con la vía exocítica (S6): las vesículas se fusionan con la membrana porque ambas son bicapas. En células vegetales hay fitoesteroles en vez de colesterol; las bacterias en general no tienen colesterol.</div>
+  </section>
+
+  <!-- ================= S3: FLUIDEZ ================= -->
+  <section class="lamina" id="s3" style="--accent:var(--amber)">
+    <span class="accent-tag">3 · Simulador · temperatura, fluidez y colesterol</span>
+    <h2>¿Cómo mantiene su fluidez una membrana cuando cambia la temperatura?</h2>
+    <p class="sub">Mueve los controles y observa la membrana. <b>Antes de mover nada, predice:</b> ¿qué le pasa a una membrana sin colesterol a 5 °C y a 55 °C?</p>
+
+    <div class="sim-box"><canvas id="fluidCanvas" width="720" height="300"></canvas></div>
+
+    <div class="controls">
+      <div class="ctrl">
+        <label>🌡️ Temperatura <span id="tempVal">37 °C</span></label>
+        <input type="range" id="tempSlider" min="0" max="60" value="37" step="1">
+      </div>
+      <div class="ctrl">
+        <label>🟠 Colesterol en la membrana <span id="cholVal">0 %</span></label>
+        <input type="range" id="cholSlider" min="0" max="40" value="0" step="5">
+      </div>
+      <div class="ctrl">
+        <label>Tipo de colas de los fosfolípidos</label>
+        <div class="toggle-row">
+          <button class="tbtn on" id="satBtn">Saturadas (rectas)</button>
+          <button class="tbtn" id="unsatBtn">Insaturadas (con doblez)</button>
+        </div>
+      </div>
+    </div>
+    <div class="presets">
+      <button class="btn outline" data-preset="5">❄️ Día muy frío (5 °C)</button>
+      <button class="btn outline" data-preset="37">🧍 Cuerpo humano (37 °C)</button>
+      <button class="btn outline" data-preset="55">🔥 Calor extremo (55 °C)</button>
+    </div>
+
+    <div class="meters">
+      <div class="meter"><div class="lab"><span>Fluidez</span><span id="mFluid">–</span></div><div class="bar"><i id="bFluid"></i></div></div>
+      <div class="meter"><div class="lab"><span>Permeabilidad (fugas)</span><span id="mPerm">–</span></div><div class="bar"><i id="bPerm"></i></div></div>
+      <div class="meter"><div class="lab"><span>Actividad de las proteínas</span><span id="mProt">–</span></div><div class="bar"><i id="bProt"></i></div></div>
+      <div class="meter"><div class="lab"><span>Estado de la membrana</span></div><span class="state-pill" id="statePill">–</span></div>
+    </div>
+    <div class="state-text" id="stateText"></div>
+
+    <h3>Gráfico: fluidez según la temperatura</h3>
+    <div class="sim-box"><canvas id="fluidGraph" width="720" height="230"></canvas></div>
+    <p class="hint">Línea gris punteada: membrana sin colesterol y con colas saturadas. Línea turquesa: tu configuración actual. Observa cómo el colesterol “aplana” la curva.</p>
+
+    <h3>Retos</h3>
+    <div class="challenges" id="challenges"></div>
+
+    <div class="fact-grid">
+      <div class="fact-row"><span class="fact-label">Frío</span><span>Las colas se empaquetan y la membrana tiende a ponerse rígida (como mantequilla refrigerada). El colesterol <b>estorba el empaquetamiento</b> y evita la rigidez.</span></div>
+      <div class="fact-row"><span class="fact-label">Calor</span><span>Las colas se agitan demasiado y la membrana se desordena. El colesterol <b>restringe el movimiento</b> de las colas y evita el exceso de fluidez.</span></div>
+      <div class="fact-row"><span class="fact-label">Colas insaturadas</span><span>Los dobleces impiden que las colas se junten: aumentan la fluidez a bajas temperaturas. Muchos organismos de ambientes fríos tienen más ácidos grasos insaturados.</span></div>
+      <div class="fact-row"><span class="fact-label">Idea clave</span><span>El colesterol es un <b>amortiguador de fluidez</b>: mantiene a la membrana en el rango donde sus proteínas y el transporte funcionan bien.</span></div>
+    </div>
+    <p class="hint">Nota: el simulador es un modelo didáctico cualitativo; las cifras de temperatura y los umbrales son simplificaciones.</p>
+    <div class="notebook-note">📓 <b>Para tu cuaderno:</b> completa una tabla con 3 filas (frío, temperatura corporal, calor extremo) y 2 columnas (sin colesterol / con colesterol) describiendo el estado de la membrana. Escribe una frase final: “El colesterol es importante porque…”.</div>
+    <div class="tn-panel" data-tn><b>Nota docente:</b> El modelo usa fluidez = T/60 (+ corrección por colas insaturadas) y el colesterol acerca ese valor a 0,5 (amortiguación). Rígida &lt; 0,25 · funcional 0,25–0,75 · demasiado fluida &gt; 0,75. Sirve para discutir por qué la fiebre alta o la hipotermia afectan el funcionamiento celular, y por qué los peces de aguas frías ajustan la composición de sus membranas.</div>
+  </section>
+
+  <!-- ================= S4: LABORATORIO ================= -->
+  <section class="lamina" id="s4" style="--accent:var(--teal)">
+    <span class="accent-tag">4 · Laboratorio virtual de transporte</span>
+    <h2>Seis formas de cruzar la membrana</h2>
+    <p class="sub">Elige un mecanismo y observa el comportamiento de las partículas. Exterior a la izquierda, interior de la célula a la derecha.</p>
+    <div class="mode-row" id="modeRow">
+      <button class="mbtn on" data-mode="simple">Difusión simple</button>
+      <button class="mbtn" data-mode="facil">Difusión facilitada</button>
+      <button class="mbtn" data-mode="osmosis">Ósmosis</button>
+      <button class="mbtn" data-mode="activo">Transporte activo</button>
+      <button class="mbtn" data-mode="endo">Endocitosis</button>
+      <button class="mbtn" data-mode="exo">Exocitosis</button>
+    </div>
+
+    <div class="sim-box"><canvas id="labCanvas" width="720" height="320"></canvas></div>
+
+    <div class="lab-bar">
+      <div class="ctrl" id="concCtrl">
+        <label>Partículas iniciales afuera <span id="concVal">40</span></label>
+        <input type="range" id="concSlider" min="10" max="60" value="40" step="5">
+      </div>
+      <div class="ctrl">
+        <label>🌡️ Temperatura del medio <span id="labTempVal">media</span></label>
+        <input type="range" id="labTemp" min="1" max="3" value="2" step="1">
+      </div>
+      <div class="toggle-row" id="atpRow" style="display:none;">
+        <button class="tbtn on" id="atpBtn">ATP: disponible</button>
+      </div>
+      <div class="toggle-row" id="scrubRow" style="display:none; align-items:center; flex:1; min-width:220px;">
+        <button class="btn teal" id="playBtn">▶ Reproducir</button>
+        <input type="range" id="scrub" min="0" max="100" value="0" style="flex:1; accent-color:var(--teal);">
+      </div>
+      <button class="btn outline" id="resetLab">↺ Reiniciar</button>
+    </div>
+
+    <div class="counts" style="margin-top:10px;">
+      <span id="cLabelL">Exterior:</span> <b id="cL">0</b>
+      <span id="cLabelR">Interior:</span> <b id="cR">0</b>
+    </div>
+    <div class="step-line" id="stepLine"></div>
+
+    <div class="info-chips" id="infoChips"></div>
+    <div class="lab-desc" id="labDesc"></div>
+    <p class="hint" style="margin-top:8px;">Modos explorados: <b id="modeCount">0</b> / 6 · A mayor temperatura, mayor agitación de las partículas y difusión más rápida (pero recuerda la sección 3: una membrana demasiado fluida pierde control).</p>
+
+    <div class="notebook-note">📓 <b>Para tu cuaderno:</b> arma un cuadro con los 6 mecanismos y 4 columnas: ¿usa proteína?, ¿gasta ATP?, ¿a favor o en contra del gradiente?, ejemplo cotidiano.</div>
+    <div class="tn-panel" data-tn><b>Nota docente:</b> En ósmosis el agua tiene menos “partículas de agua” del lado con soluto, por eso el flujo neto va hacia ese lado. En transporte activo, desactiva el ATP para mostrar que sin energía no hay acumulación en contra del gradiente. Endocitosis y exocitosis son inversas: usa el control deslizante para ir paso a paso. Enlaza con S6 (vía exocítica).</div>
+  </section>
+
+  <!-- ================= S5: CLASIFICAR ================= -->
+  <section class="lamina" id="s5" style="--accent:var(--gold)">
+    <span class="accent-tag">5 · Práctica</span>
+    <h2>¿Cómo cruza? Clasifica cada caso</h2>
+    <p class="sub">Elige el mecanismo de transporte más adecuado para cada situación.</p>
+    <div id="gameArea"></div>
+    <div class="notebook-note">📓 <b>Para tu cuaderno:</b> anota las situaciones que fallaste, el mecanismo correcto y una frase que explique por qué.</div>
+  </section>
+
+  <!-- ================= S6: CASOS ================= -->
+  <section class="lamina" id="s6" style="--accent:var(--purple)">
+    <span class="accent-tag">6 · Aplicación · Analizar / Evaluar</span>
+    <h2>Casos de la vida real</h2>
+    <div id="quizArea"></div>
+    <div class="notebook-note">📓 <b>Para tu cuaderno:</b> copia las preguntas que fallaste con su respuesta correcta para repasarlas antes del Kahoot de cierre del bloque.</div>
+  </section>
+
+  <!-- ================= S7: CIERRE ================= -->
+  <section class="lamina" id="s7" style="--accent:var(--teal)">
+    <span class="accent-tag">7 · Cierre</span>
+    <h2>Explica con evidencia (AER)</h2>
+    <p class="sub"><b>Pregunta:</b> Una célula animal pasa del frío intenso (5 °C) al calor (40 °C). ¿Por qué su membrana necesita colesterol y qué ocurriría con el transporte si no lo tuviera?</p>
+    <div class="aer-field"><label><span class="letter">A ·</span> Afirmación</label><textarea id="aerA" placeholder="Responde directamente la pregunta..."></textarea></div>
+    <div class="aer-field"><label><span class="letter">E ·</span> Evidencia (usa lo que viste en el simulador)</label><textarea id="aerE" placeholder="Qué pasó con la fluidez, las colas y las fugas al cambiar la temperatura con y sin colesterol..."></textarea></div>
+    <div class="aer-field"><label><span class="letter">R ·</span> Razonamiento</label><textarea id="aerR" placeholder="Relaciona fluidez, proteínas de transporte y control de lo que entra y sale..."></textarea></div>
+    <button class="btn coral" id="aerSave">Guardar argumento</button>
+
+    <h3>Autoevaluación</h3>
+    <div class="checklist" id="selfCheck">
+      <label class="check-item"><input type="checkbox"> Puedo explicar por qué la membrana es “fluida” y cuál es el rol del colesterol.</label>
+      <label class="check-item"><input type="checkbox"> Puedo predecir qué le pasa a la membrana con frío y con calor, con y sin colesterol.</label>
+      <label class="check-item"><input type="checkbox"> Puedo distinguir transporte pasivo, activo, endocitosis y exocitosis.</label>
+      <label class="check-item"><input type="checkbox"> Puedo dar un ejemplo cotidiano de difusión, ósmosis y transporte activo.</label>
+      <label class="check-item"><input type="checkbox"> Registré todo en mi cuaderno de Ciencias.</label>
+    </div>
+
+    <h3>Mi progreso</h3>
+    <div class="summary">
+      <div><b id="sumScore">0</b>estrellas</div>
+      <div><b id="sumLife">0/6</b>situaciones</div>
+      <div><b id="sumChal">0/4</b>retos del simulador</div>
+      <div><b id="sumModes">0/6</b>mecanismos</div>
+      <div><b id="sumGame">–</b>clasificación</div>
+      <div><b id="sumQuiz">–</b>casos</div>
+    </div>
+    <button class="btn outline" id="printBtn">🖨️ Imprimir / guardar PDF</button>
+    <div class="tn-panel" data-tn><b>Nota docente:</b> La pregunta AER permite evaluar si el estudiante conecta colesterol → amortiguación de fluidez → funcionamiento de proteínas de transporte. Respuesta esperada: sin colesterol, el frío vuelve rígida la membrana (transporte se frena) y el calor la vuelve demasiado fluida (fugas, pérdida de control). Los textos escritos no se almacenan; se pueden imprimir con el botón.</div>
+  </section>
+
+  <footer class="sig">Unidad 2 · Bloque C: Transporte celular · Prof. Felipe Jiménez · Ciencias Naturales 8° Básico</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+
+/* ================= HELPERS ================= */
+const $  = (s,c)=>(c||document).querySelector(s);
+const $$ = (s,c)=>Array.from((c||document).querySelectorAll(s));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+
+let score=0; const awarded=new Set();
+const prog={life:0, chal:0, modes:0, game:null, quiz:null};
+
+function toast(msg){
+  const c=$('#toast-container'); const t=document.createElement('div');
+  t.className='toast'; t.textContent=msg; c.appendChild(t);
+  setTimeout(()=>{t.style.transition='.3s'; t.style.opacity='0'; t.style.transform='translateY(-8px)';},1800);
+  setTimeout(()=>t.remove(),2200);
+}
+function updateSummary(){
+  $('#scoreCount').textContent=score;
+  $('#sumScore').textContent=score;
+  $('#sumLife').textContent=prog.life+'/6';
+  $('#sumChal').textContent=prog.chal+'/4';
+  $('#sumModes').textContent=prog.modes+'/6';
+  $('#sumGame').textContent=prog.game===null?'–':prog.game+'/7';
+  $('#sumQuiz').textContent=prog.quiz===null?'–':prog.quiz+'/5';
+}
+function award(key,n,msg){
+  if(awarded.has(key)) return;
+  awarded.add(key); score+=n; updateSummary();
+  if(msg) toast('★ +'+n+' · '+msg);
+}
+function confetti(){
+  const layer=$('#confetti-layer'); const cols=['#2DD4BF','#FF6B6B','#FFD166','#9B7EDE','#F4A300'];
+  for(let i=0;i<70;i++){
+    const p=document.createElement('div'); p.className='confetti-piece';
+    p.style.left=(Math.random()*100)+'vw'; p.style.background=cols[Math.floor(Math.random()*cols.length)];
+    p.style.transform='rotate('+(Math.random()*360)+'deg)';
+    const d=2.2+Math.random()*1.6;
+    p.style.transition='top '+d+'s linear, opacity .3s ease '+d+'s';
+    layer.appendChild(p);
+    requestAnimationFrame(()=>{p.style.top=(100+Math.random()*20)+'vh'; p.style.opacity='0';});
+    setTimeout(()=>p.remove(),(d+.6)*1000);
+  }
+}
+
+/* ================= NAV / PROGRESS / NOTES ================= */
+(function(){
+  const links=$$('#navLinks a'); const ids=links.map(a=>a.getAttribute('href').slice(1));
+  function onScroll(){
+    const h=document.documentElement; const max=h.scrollHeight-h.clientHeight;
+    $('#progressBar').style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+    let cur=null;
+    ids.forEach(id=>{const el=document.getElementById(id); if(el && el.getBoundingClientRect().top<140) cur=id;});
+    links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+cur));
+  }
+  window.addEventListener('scroll',onScroll,{passive:true}); onScroll();
+  let on=false;
+  $('#tnToggle').addEventListener('click',()=>{
+    on=!on; $$('[data-tn]').forEach(p=>p.classList.toggle('show',on));
+    $('#tnToggle').textContent=on?'🙈 Ocultar notas':'📝 Notas docente';
+  });
+  $('#printBtn').addEventListener('click',()=>window.print());
+})();
+
+/* ================= S1: TARJETAS ================= */
+(function(){
+  const LIFE=[
+    {ic:'🫁',t:'Respirar',q:'¿Cómo pasa el oxígeno del aire a tu sangre y el CO₂ de tu sangre al aire?',tag:'Difusión simple',c:'#2DD4BF',
+     a:'El O₂ y el CO₂ son moléculas pequeñas y apolares: atraviesan directamente la bicapa de los alvéolos, siempre desde donde hay más hacia donde hay menos. No se gasta energía en ese paso.'},
+    {ic:'🍬',t:'Azúcar en la sangre',q:'Después de comer sube la glucosa. ¿Cómo entra a las células de tu músculo?',tag:'Difusión facilitada',c:'#FFD166',
+     a:'La glucosa es grande y polar: no cruza sola la bicapa. Entra por proteínas transportadoras (GLUT), a favor de su gradiente y sin gasto de ATP. La insulina ayuda a que más transportadores lleguen a la membrana en músculo y grasa.'},
+    {ic:'🥓',t:'Conservar con sal',q:'¿Por qué el charqui, el jamón o el pescado salado casi no se echan a perder?',tag:'Ósmosis',c:'#9B7EDE',
+     a:'La sal crea un medio hipertónico: el agua sale por ósmosis desde las células de los microorganismos hacia afuera. Sin agua disponible, no pueden multiplicarse.'},
+    {ic:'🧃',t:'Suero oral',q:'Cuando hay diarrea se toma suero con sal y glucosa, no solo agua. ¿Por qué?',tag:'Transporte activo secundario + ósmosis',c:'#5aa9ff',
+     a:'En el intestino, el sodio y la glucosa entran juntos por un mismo transportador (cotransporte). El gradiente de sodio lo mantiene una bomba que gasta ATP. Después, el agua sigue a esos solutos por ósmosis.'},
+    {ic:'🛡️',t:'Defensa del cuerpo',q:'Un glóbulo blanco “se come” una bacteria. ¿Cómo la introduce en la célula?',tag:'Endocitosis (fagocitosis)',c:'#FF6B6B',
+     a:'La membrana rodea la partícula, se invagina y forma una vesícula que la lleva al interior. Es un transporte en masa que gasta energía. Las células pancreáticas hacen lo inverso para liberar insulina: exocitosis.'},
+    {ic:'🥶',t:'Frío y calor',q:'¿Por qué las membranas de un pez de agua fría no se vuelven rígidas como la mantequilla?',tag:'Fluidez de membrana',c:'#F4A300',
+     a:'Ajustan su composición: más ácidos grasos insaturados (colas con dobleces) y colesterol como amortiguador. Así la membrana conserva la fluidez que necesitan sus proteínas de transporte.'}
+  ];
+  const grid=$('#lifeGrid');
+  LIFE.forEach((d,i)=>{
+    const el=document.createElement('div'); el.className='life-card'; el.style.setProperty('--c',d.c);
+    el.innerHTML='<div class="ic">'+d.ic+'</div><h4>'+d.t+'</h4><div class="q">'+d.q+'</div><span class="tag">'+d.tag+'</span><div class="ans">'+d.a+'</div>';
+    el.addEventListener('click',()=>{
+      el.classList.toggle('open');
+      if(el.classList.contains('open') && !awarded.has('life'+i)){
+        awarded.add('life'+i); prog.life++; score+=1; $('#lifeCount').textContent=prog.life; updateSummary();
+        if(prog.life===6) award('lifeAll',3,'Las 6 situaciones');
+      }
+    });
+    grid.appendChild(el);
+  });
+})();
+
+/* ================= S2: BICAPA SVG ================= */
+(function(){
+  const svg=$('#bilayerSvg'); const x0=28, dx=38;
+  let heads='',tails='',chol='',prot='';
+  const topChol=[3,12], botChol=[4,11];
+  for(let i=0;i<16;i++){
+    const x=x0+i*dx+10;
+    if(i===7||i===8) continue;
+    // capa superior
+    if(topChol.includes(i)){
+      chol+='<rect x="'+(x-6)+'" y="84" width="12" height="46" rx="6" fill="#ff9f43" stroke="#b86a14" stroke-width="1.5"/><circle cx="'+x+'" cy="76" r="5" fill="#ffd0a0" stroke="#b86a14" stroke-width="1.5"/>';
+    } else {
+      heads+='<circle cx="'+x+'" cy="72" r="9" fill="#ffd166" stroke="#c99a2e" stroke-width="1.5"/>';
+      tails+='<line x1="'+(x-3.5)+'" y1="81" x2="'+(x-3.5)+'" y2="128" stroke="#9aa0c0" stroke-width="2.5" stroke-linecap="round"/><line x1="'+(x+3.5)+'" y1="81" x2="'+(x+3.5)+'" y2="128" stroke="#9aa0c0" stroke-width="2.5" stroke-linecap="round"/>';
+    }
+    // capa inferior
+    if(botChol.includes(i)){
+      chol+='<rect x="'+(x-6)+'" y="130" width="12" height="46" rx="6" fill="#ff9f43" stroke="#b86a14" stroke-width="1.5"/><circle cx="'+x+'" cy="184" r="5" fill="#ffd0a0" stroke="#b86a14" stroke-width="1.5"/>';
+    } else {
+      heads+='<circle cx="'+x+'" cy="188" r="9" fill="#ffd166" stroke="#c99a2e" stroke-width="1.5"/>';
+      tails+='<line x1="'+(x-3.5)+'" y1="179" x2="'+(x-3.5)+'" y2="132" stroke="#9aa0c0" stroke-width="2.5" stroke-linecap="round"/><line x1="'+(x+3.5)+'" y1="179" x2="'+(x+3.5)+'" y2="132" stroke="#9aa0c0" stroke-width="2.5" stroke-linecap="round"/>';
+    }
+  }
+  prot='<rect x="296" y="52" width="76" height="156" rx="20" fill="#c9b6f2" stroke="#7a5bc4" stroke-width="2"/><rect x="326" y="62" width="16" height="136" rx="8" fill="#e8f3ff" stroke="#7a5bc4" stroke-width="1.5"/>';
+  svg.innerHTML=
+    '<text x="12" y="22" font-size="12" font-weight="700" fill="#2a5a8a">Exterior de la célula (medio acuoso)</text>'+
+    '<text x="12" y="250" font-size="12" font-weight="700" fill="#2a5a8a">Interior de la célula (citoplasma)</text>'+
+    '<g class="part" data-part="tail">'+tails+'</g>'+
+    '<g class="part" data-part="head">'+heads+'</g>'+
+    '<g class="part" data-part="chol">'+chol+'</g>'+
+    '<g class="part" data-part="protein">'+prot+'</g>';
+  const INFO={
+    head:['Cabeza del fosfolípido','Es polar e hidrofílica (“ama” el agua). Mira hacia el medio acuoso, tanto del exterior como del interior de la célula.'],
+    tail:['Colas de ácidos grasos','Son apolares e hidrofóbicas: se esconden del agua en el centro de la membrana. Ese interior graso es una barrera para iones y moléculas polares.'],
+    protein:['Proteína de membrana','Está incrustada en la bicapa. Forma canales o transportadores que permiten el paso selectivo de sustancias (difusión facilitada y transporte activo). Es parte del “mosaico”.'],
+    chol:['Colesterol','Presente en membranas de células animales. Se inserta entre los fosfolípidos y amortigua los cambios de fluidez: evita la rigidez con frío y el exceso de fluidez con calor (lo verás en la sección 3).']
+  };
+  const seen=new Set();
+  function pick(k){
+    $$('.part',svg).forEach(g=>g.classList.toggle('sel',g.dataset.part===k));
+    $$('#partBtns .pbtn').forEach(b=>b.classList.toggle('on',b.dataset.part===k));
+    $('#partTitle').textContent=INFO[k][0]; $('#partText').textContent=INFO[k][1];
+    if(!seen.has(k)){seen.add(k); $('#partCount').textContent=seen.size; award('part'+k,1);
+      if(seen.size===4) award('partsAll',2,'Membrana explorada');}
+  }
+  $$('.part',svg).forEach(g=>g.addEventListener('click',()=>pick(g.dataset.part)));
+  $$('#partBtns .pbtn').forEach(b=>b.addEventListener('click',()=>pick(b.dataset.part)));
+})();
+
+/* ================= S3: SIMULADOR DE FLUIDEZ ================= */
+(function(){
+  const cv=$('#fluidCanvas'), ctx=cv.getContext('2d'); const W=cv.width,H=cv.height;
+  const gv=$('#fluidGraph'), gctx=gv.getContext('2d'); const GW=gv.width,GH=gv.height;
+  const tS=$('#tempSlider'), cS=$('#cholSlider');
+  let unsat=false, visible=true;
+  const N=18, sp=W/N;
+  const ph1=[...Array(N)].map(()=>Math.random()*6.28), ph2=[...Array(N)].map(()=>Math.random()*6.28);
+  const cholOrder=[3,9,14,6,11,1];
+  const leaks=[];
+
+  function model(T,chol,u){
+    let m=T/60; if(u) m=m+0.12*(1-m);
+    const b=Math.min(1,chol/40)*0.75;
+    return m+(0.5-m)*b;
+  }
+  function perm(eff){ return clamp(eff<0.75 ? 0.04+0.1*eff : 0.115+(eff-0.75)*3.5,0,1); }
+  function stateOf(eff){ return eff<0.25?'rigid':(eff>0.75?'fluid':'ok'); }
+  const STATE={
+    rigid:{n:'Rígida (tipo gel)',c:'#4a7fd6',t:'Las colas se empaquetan muy juntas y casi no se mueven: la membrana se vuelve rígida como gelatina. Las proteínas no pueden cambiar de forma y el transporte se frena.'},
+    ok:{n:'Fluida y funcional',c:'#1fae7c',t:'Hay movimiento suficiente para que lípidos y proteínas se desplacen, pero también orden suficiente para controlar qué entra y qué sale. Es el estado donde el transporte funciona bien.'},
+    fluid:{n:'Demasiado fluida',c:'#d9534f',t:'Las colas se agitan tanto que aparecen huecos: la membrana pierde orden, deja pasar sustancias que no debería y se vuelve inestable (aparecen fugas).'}
+  };
+  function cholNote(T,chol){
+    if(chol===0) return ' Sin colesterol, la membrana depende solo de la temperatura: no tiene amortiguador.';
+    if(T<25) return ' El colesterol estorba el empaquetamiento de las colas y evita que se ponga rígida.';
+    if(T>42) return ' El colesterol restringe el movimiento de las colas y evita que se ponga demasiado fluida.';
+    return ' A esta temperatura el colesterol mantiene la fluidez estable (efecto amortiguador).';
+  }
+
+  function drawLipid(x,yHead,y0,y1,ph,eff,t,u){
+    const jx=Math.sin(t*0.003*(0.4+eff*2)+ph)*(0.4+8*eff);
+    const hx=x+jx; const len=(y1-y0)*(1-0.1*eff);
+    ctx.fillStyle='#ffd166'; ctx.strokeStyle='#c99a2e'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.arc(hx,yHead,7.5,0,6.283); ctx.fill(); ctx.stroke();
+    for(const k of [-3.5,3.5]){
+      ctx.beginPath(); ctx.moveTo(hx+k,y0);
+      for(let s=1;s<=6;s++){
+        const f=s/6; let xx=hx+k+Math.sin(t*0.005*(0.5+eff*2.5)+ph*1.3+s*0.9)*(0.4+6.5*eff)*f;
+        if(u && k>0 && s>=3 && s<=4) xx+=5;
+        ctx.lineTo(xx,y0+len*f);
+      }
+      ctx.strokeStyle='#9aa0c0'; ctx.lineWidth=2.4; ctx.stroke();
+    }
+  }
+  function drawChol(x,top,eff,t,ph){
+    const jx=Math.sin(t*0.003+ph)*(0.4+1.4*eff); const cx=x+jx;
+    const yb= top? 100:200; const yo= top? 102:198; const y1=top?132:168;
+    ctx.fillStyle='#ff9f43'; ctx.strokeStyle='#b86a14'; ctx.lineWidth=1.5;
+    const y0=Math.min(yo+(top?8:-8),y1), h=Math.abs(y1-(yo+(top?8:-8)));
+    ctx.beginPath(); ctx.roundRect(cx-5,Math.min(yo+(top?6:-6),y1),10,h+0.01,5); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#ffd0a0'; ctx.beginPath(); ctx.arc(cx,yo,5,0,6.283); ctx.fill(); ctx.stroke();
+  }
+
+  function frame(t){
+    if(visible){
+      const T=+tS.value, chol=+cS.value; const eff=model(T,chol,unsat); const pm=perm(eff);
+      ctx.clearRect(0,0,W,H);
+      // fondo según temperatura
+      const warm=clamp((T-20)/40,0,1), cold=clamp((25-T)/25,0,1);
+      ctx.fillStyle='#10163a'; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='rgba(90,169,255,'+(0.10+0.15*cold)+')'; ctx.fillRect(0,0,W,86);
+      ctx.fillStyle='rgba(90,169,255,'+(0.10+0.15*cold)+')'; ctx.fillRect(0,214,W,86);
+      ctx.fillStyle='rgba(255,209,102,0.07)'; ctx.fillRect(0,86,W,128);
+      if(warm>0){ctx.fillStyle='rgba(255,107,107,'+(0.18*warm)+')'; ctx.fillRect(0,0,W,H);}
+      ctx.fillStyle='rgba(255,255,255,.55)'; ctx.font='bold 11px Calibri,sans-serif';
+      ctx.fillText('Exterior de la célula',10,16); ctx.fillText('Interior de la célula',10,H-8);
+      ctx.fillText((T<15?'❄️ ':(T>45?'🔥 ':'🌡️ '))+T+' °C',W-70,16);
+
+      // fugas
+      if(Math.random()<pm*pm*0.14) leaks.push({x:20+Math.random()*(W-40),y:24,vy:1+Math.random()*0.8,a:1});
+      for(let i=leaks.length-1;i>=0;i--){
+        const l=leaks[i]; l.y+=l.vy; if(l.y>H-10) l.a-=0.08;
+        if(l.y>H || l.a<=0){leaks.splice(i,1); continue;}
+        ctx.fillStyle='rgba(90,169,255,'+l.a+')'; ctx.beginPath(); ctx.arc(l.x,l.y,4,0,6.283); ctx.fill();
+      }
+      // lípidos
+      const cn=Math.round(chol/40*6); const cholSlots=new Set(cholOrder.slice(0,cn));
+      for(let i=0;i<N;i++){
+        const x=(i+0.5)*sp;
+        if(cholSlots.has(i)){ drawChol(x,true,eff,t,ph1[i]); drawChol(x,false,eff,t,ph2[i]); continue; }
+        drawLipid(x,92,100,146,ph1[i],eff,t,unsat);
+        drawLipid(x,208,200,154,ph2[i],eff,t,unsat);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function drawGraph(){
+    const T=+tS.value, chol=+cS.value;
+    const L=44,R=GW-12,Tp=12,B=GH-26; const gx=T0=>L+(T0/60)*(R-L), gy=v=>B-clamp(v,0,1)*(B-Tp);
+    gctx.clearRect(0,0,GW,GH); gctx.fillStyle='#10163a'; gctx.fillRect(0,0,GW,GH);
+    gctx.fillStyle='rgba(90,127,214,.25)'; gctx.fillRect(L,gy(0.25),R-L,B-gy(0.25));
+    gctx.fillStyle='rgba(31,174,124,.22)'; gctx.fillRect(L,gy(0.75),R-L,gy(0.25)-gy(0.75));
+    gctx.fillStyle='rgba(217,83,79,.25)'; gctx.fillRect(L,Tp,R-L,gy(0.75)-Tp);
+    gctx.font='bold 10px Calibri,sans-serif'; gctx.fillStyle='rgba(255,255,255,.7)';
+    gctx.fillText('demasiado fluida',L+6,Tp+12); gctx.fillText('fluida y funcional',L+6,gy(0.5)+4); gctx.fillText('rígida',L+6,B-6);
+    // ejes
+    gctx.strokeStyle='rgba(255,255,255,.4)'; gctx.lineWidth=1; gctx.beginPath(); gctx.moveTo(L,Tp); gctx.lineTo(L,B); gctx.lineTo(R,B); gctx.stroke();
+    for(let t=0;t<=60;t+=10){gctx.fillStyle='rgba(255,255,255,.7)'; gctx.fillText(t+'°',gx(t)-8,B+14);}
+    gctx.fillText('Fluidez',4,Tp+10);
+    // 37 °C
+    gctx.setLineDash([3,4]); gctx.strokeStyle='rgba(255,209,102,.7)'; gctx.beginPath(); gctx.moveTo(gx(37),Tp); gctx.lineTo(gx(37),B); gctx.stroke(); gctx.setLineDash([]);
+    gctx.fillStyle='#ffd166'; gctx.fillText('37 °C',gx(37)+4,B-6);
+    // curva base
+    gctx.setLineDash([5,4]); gctx.strokeStyle='#aab0d0'; gctx.lineWidth=2; gctx.beginPath();
+    for(let t=0;t<=60;t++){const y=gy(model(t,0,false)); t===0?gctx.moveTo(gx(t),y):gctx.lineTo(gx(t),y);} gctx.stroke(); gctx.setLineDash([]);
+    // curva actual
+    gctx.strokeStyle='#2DD4BF'; gctx.lineWidth=3; gctx.beginPath();
+    for(let t=0;t<=60;t++){const y=gy(model(t,chol,unsat)); t===0?gctx.moveTo(gx(t),y):gctx.lineTo(gx(t),y);} gctx.stroke();
+    // marcador
+    const eff=model(T,chol,unsat);
+    gctx.fillStyle='#fff'; gctx.strokeStyle='#2DD4BF'; gctx.lineWidth=3; gctx.beginPath(); gctx.arc(gx(T),gy(eff),6,0,6.283); gctx.fill(); gctx.stroke();
+  }
+
+  const CH=[
+    {t:'Sin colesterol y en frío intenso (≤ 10 °C), haz que la membrana quede rígida.',f:(T,c,e,s)=>c===0&&T<=10&&s==='rigid'},
+    {t:'Sin colesterol y con calor extremo (≥ 48 °C), haz que quede demasiado fluida.',f:(T,c,e,s)=>c===0&&T>=48&&s==='fluid'},
+    {t:'Con frío (≤ 10 °C), logra una membrana fluida y funcional agregando colesterol.',f:(T,c,e,s)=>T<=10&&s==='ok'&&c>0},
+    {t:'Con calor extremo (≥ 50 °C), logra una membrana funcional agregando colesterol.',f:(T,c,e,s)=>T>=50&&s==='ok'&&c>0}
+  ];
+  const chBox=$('#challenges');
+  CH.forEach((c,i)=>{const d=document.createElement('div'); d.className='chal'; d.id='chal'+i; d.innerHTML='<div class="ck">✓</div><div>'+(i+1)+'. '+c.t+'</div>'; chBox.appendChild(d);});
+
+  function update(){
+    const T=+tS.value, chol=+cS.value; const eff=model(T,chol,unsat); const pm=perm(eff); const st=stateOf(eff);
+    $('#tempVal').textContent=T+' °C'; $('#cholVal').textContent=chol+' %';
+    const prot=clamp(1-Math.abs(eff-0.5)/0.5,0,1);
+    $('#bFluid').style.width=Math.round(eff*100)+'%'; $('#mFluid').textContent=Math.round(eff*100)+'%';
+    $('#bPerm').style.width=Math.round(pm*100)+'%'; $('#mPerm').textContent=pm<0.2?'baja':(pm<0.5?'media':'alta');
+    $('#bPerm').style.background=pm>0.5?'#d9534f':(pm>0.2?'#F4A300':'#2DD4BF');
+    $('#bProt').style.width=Math.round(prot*100)+'%'; $('#mProt').textContent=prot>0.5?'óptima':(prot>0.2?'reducida':'muy baja');
+    $('#bProt').style.background=prot>0.5?'#2DD4BF':(prot>0.2?'#F4A300':'#d9534f');
+    const pill=$('#statePill'); pill.textContent=STATE[st].n; pill.style.background=STATE[st].c;
+    $('#stateText').textContent=STATE[st].t+cholNote(T,chol);
+    drawGraph();
+    CH.forEach((c,i)=>{
+      if(c.f(T,chol,eff,st) && !awarded.has('chal'+i)){
+        awarded.add('chal'+i); prog.chal++; $('#chal'+i).classList.add('done'); score+=2; updateSummary(); toast('★ +2 · Reto '+(i+1)+' superado');
+        if(prog.chal===4){ award('chalAll',3,'¡Todos los retos!'); confetti(); }
+      }
+    });
+    if(!awarded.has('simUse')) awarded.add('simUse');
+  }
+  tS.addEventListener('input',update); cS.addEventListener('input',update);
+  $('#satBtn').addEventListener('click',()=>{unsat=false; $('#satBtn').classList.add('on'); $('#unsatBtn').classList.remove('on'); update();});
+  $('#unsatBtn').addEventListener('click',()=>{unsat=true; $('#unsatBtn').classList.add('on'); $('#satBtn').classList.remove('on'); update(); award('unsat',1,'Colas insaturadas');});
+  $$('[data-preset]').forEach(b=>b.addEventListener('click',()=>{tS.value=b.dataset.preset; update();}));
+  new IntersectionObserver(es=>{visible=es[0].isIntersecting;},{threshold:0}).observe(cv);
+  update(); requestAnimationFrame(frame);
+})();
+
+/* ================= S4: LABORATORIO DE TRANSPORTE ================= */
+(function(){
+  const lab=$('#labCanvas'), lc=lab.getContext('2d'); const LW=lab.width, LH=lab.height, MX=360;
+  const CHN={facil:[70,160,250], activo:[100,220]};
+  const MODES={
+    simple:{n:'Difusión simple',e:false,g:'A favor del gradiente',p:'No usa proteína',tag:'solutos pequeños',lab:['Exterior:','Interior:'],
+      d:'Moléculas pequeñas y apolares (O₂, CO₂) atraviesan directamente la bicapa, desde donde hay más hacia donde hay menos, hasta alcanzar el equilibrio dinámico: las partículas siguen moviéndose pero sin flujo neto.',
+      ex:'Ejemplo cotidiano: intercambio de O₂ y CO₂ en los pulmones.'},
+    facil:{n:'Difusión facilitada',e:false,g:'A favor del gradiente',p:'Usa proteína (canal/transportador)',tag:'glucosa',lab:['Exterior:','Interior:'],
+      d:'Moléculas grandes o polares (glucosa, iones) no cruzan la bicapa sola, pero sí por proteínas específicas. Sigue siendo pasivo: el movimiento es a favor del gradiente y sin ATP. Solo cruzan por los canales.',
+      ex:'Ejemplo cotidiano: entrada de glucosa a las células musculares.'},
+    osmosis:{n:'Ósmosis',e:false,g:'Agua hacia mayor concentración de soluto',p:'Bicapa o acuaporinas',tag:'agua',lab:['Agua afuera:','Agua adentro:'],
+      d:'Es la difusión del agua a través de una membrana semipermeable. El soluto (naranja) no cruza; por eso, hacia el lado con más soluto (menos agua libre) el flujo neto de agua es mayor.',
+      ex:'Ejemplo cotidiano: la lechuga marchita que se pone crujiente en agua; el charqui salado.'},
+    activo:{n:'Transporte activo',e:true,g:'En contra del gradiente',p:'Usa proteína (bomba)',tag:'iones Na⁺/K⁺',lab:['Exterior:','Interior:'],
+      d:'Una bomba usa energía (ATP) para mover partículas desde donde hay menos hacia donde hay más. Sin ATP las bombas se detienen y la concentración interior no aumenta. Observa cómo se acumulan adentro.',
+      ex:'Ejemplo cotidiano: bomba Na⁺/K⁺ de tus neuronas, esencial para transmitir impulsos nerviosos.'},
+    endo:{n:'Endocitosis',e:true,g:'Transporte en masa (hacia adentro)',p:'Vesícula formada por la membrana',tag:'partícula grande',lab:['',''],
+      d:'La membrana rodea partículas grandes (bacterias, nutrientes), se invagina y forma una vesícula que las introduce en la célula. Requiere energía. Si la partícula es sólida se llama fagocitosis.',
+      ex:'Ejemplo cotidiano: un glóbulo blanco fagocita una bacteria.'},
+    exo:{n:'Exocitosis',e:true,g:'Transporte en masa (hacia afuera)',p:'Vesícula que se fusiona con la membrana',tag:'insulina',lab:['',''],
+      d:'Una vesícula con contenido (hormonas, enzimas, desechos) se fusiona con la membrana y lo libera al exterior. Es el proceso inverso a la endocitosis y también requiere energía. Es el final de la vía exocítica (S6).',
+      ex:'Ejemplo cotidiano: las células del páncreas liberan insulina a la sangre.'}
+  };
+  const ENDO_STEPS=['La célula detecta la partícula grande.','La membrana se invagina rodeándola.','Se cierra y se forma la vesícula.','La vesícula se desplaza hacia el interior.'];
+  const EXO_STEPS=['Una vesícula con insulina viaja hacia la membrana.','La vesícula se acerca y contacta la membrana.','Se fusiona y se abre hacia el exterior.','El contenido queda liberado fuera de la célula.'];
+
+  let mode='simple', ps=[], speed=1, atp=true, phase=0, playing=false, flashes=[0,0], visible=true;
+  const seen=new Set(['simple']);
+  const rnd=(a,b)=>a+Math.random()*(b-a);
+  const nearGap=(y,arr,r)=>{for(let i=0;i<arr.length;i++) if(Math.abs(y-arr[i])<r) return i; return -1;};
+
+  function add(n,side,type,r,col){
+    for(let i=0;i<n;i++) ps.push({x:side==='L'?rnd(r+4,MX-r-12):rnd(MX+r+12,LW-r-4),y:rnd(r+4,LH-r-4),vx:rnd(-1,1),vy:rnd(-1,1),r:r,type:type,col:col});
+  }
+  function init(){
+    ps=[]; flashes=[0,0]; const conc=+$('#concSlider').value;
+    if(mode==='simple'){ add(conc,'L','sol',4.5,'#2DD4BF'); add(Math.round(conc*0.12),'R','sol',4.5,'#2DD4BF'); }
+    if(mode==='facil'){ add(conc,'L','sol',6,'#FFD166'); add(Math.round(conc*0.12),'R','sol',6,'#FFD166'); }
+    if(mode==='osmosis'){ add(26,'L','w',3.6,'#5aa9ff'); add(46,'R','w',3.6,'#5aa9ff'); add(22,'L','s',6.5,'#ff9f43'); }
+    if(mode==='activo'){ add(8,'L','sol',5,'#c9a2ff'); add(34,'R','sol',5,'#c9a2ff'); }
+    phase=0; playing=false; $('#scrub').value=0; $('#playBtn').textContent='▶ Reproducir';
+  }
+
+  function tryCross(p,side,y){
+    if(p.type==='s') return false;
+    switch(mode){
+      case 'simple': return Math.random()<0.18;
+      case 'facil': return nearGap(y,CHN.facil,16)>=0 && Math.random()<0.65;
+      case 'osmosis': return Math.random()<0.2;
+      case 'activo':{
+        if(!atp||side!=='L') return false; const g=nearGap(y,CHN.activo,18);
+        if(g>=0 && Math.random()<0.6){flashes[g]=18; return true;} return false; }
+    }
+    return false;
+  }
+
+  function stepParticles(){
+    const sp=speed;
+    for(const p of ps){
+      p.vx+=(Math.random()-.5)*0.45*sp; p.vy+=(Math.random()-.5)*0.45*sp;
+      const mx=1.9*sp, v=Math.hypot(p.vx,p.vy);
+      if(v>mx){p.vx*=mx/v; p.vy*=mx/v;} else if(v<0.5*sp){p.vx*=1.15; p.vy*=1.15;}
+      let nx=p.x+p.vx*0.9*sp, ny=p.y+p.vy*0.9*sp;
+      if(ny<p.r){ny=p.r; p.vy=Math.abs(p.vy);} if(ny>LH-p.r){ny=LH-p.r; p.vy=-Math.abs(p.vy);}
+      if(nx<p.r){nx=p.r; p.vx=Math.abs(p.vx);} if(nx>LW-p.r){nx=LW-p.r; p.vx=-Math.abs(p.vx);}
+      const side=p.x<MX?'L':'R';
+      const hit=(side==='L'&&nx+p.r>MX-7)||(side==='R'&&nx-p.r<MX+7);
+      if(hit){
+        if(tryCross(p,side,ny)){ nx= side==='L'? MX+7+p.r+1 : MX-7-p.r-1; }
+        else { nx= side==='L'? MX-7-p.r-0.5 : MX+7+p.r+0.5; p.vx*=-1; }
+      }
+      p.x=nx; p.y=ny;
+    }
+  }
+
+  // ---- dibujo de membrana (con curvatura opcional y huecos) ----
+  function drawMembrane(bump,gaps){
+    lc.lineCap='round';
+    for(let y=4;y<LH;y+=9){
+      if(gaps && gaps.some(g=>Math.abs(y-g)<17)) continue;
+      const xm=MX+bump(y);
+      for(const s of [-1,1]){
+        lc.strokeStyle='#9aa0c0'; lc.lineWidth=2.2; lc.beginPath(); lc.moveTo(xm+s*7,y); lc.lineTo(xm+s*1.5,y); lc.stroke();
+        lc.fillStyle='#ffd166'; lc.beginPath(); lc.arc(xm+s*9,y,4.2,0,6.283); lc.fill();
+      }
+    }
+  }
+  function drawProteins(){
+    const arr=CHN[mode]; if(!arr) return;
+    arr.forEach((gy,i)=>{
+      const fl=flashes[i]>0;
+      lc.fillStyle=fl?'#ffd166':'#c9b6f2'; lc.strokeStyle='#7a5bc4'; lc.lineWidth=2;
+      lc.beginPath(); lc.roundRect(MX-14,gy-17,28,34,9); lc.fill(); lc.stroke();
+      lc.fillStyle=mode==='facil'?'#e8f3ff':'#7a5bc4'; lc.fillRect(MX-4,gy-17+2,8,30);
+      if(mode==='activo'){
+        lc.fillStyle=atp?(fl?'#b86a14':'#2a1a5a'):'#9aa0c0'; lc.font='bold 9px Calibri,sans-serif'; lc.textAlign='center'; lc.fillText(atp?'ATP':'sin',MX,gy-22); lc.textAlign='left';
+        if(flashes[i]>0) flashes[i]--;
+      }
+    });
+  }
+  const ease=x=>x<0.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
+
+  function drawEndoScene(tt,exo){
+    const cy=LH/2; let d=0, cx, ves=false, vx=0;
+    if(tt<0.45){ const s=tt/0.45; d=72*ease(s); cx=lerp(MX-95,MX+34,s); }
+    else if(tt<0.7){ const s=(tt-0.45)/0.25; d=72*(1-s); vx=MX+34+s*22; cx=vx; ves=true; }
+    else { const s=(tt-0.7)/0.3; vx=MX+56+s*110; cx=vx; ves=true; d=0; }
+    const bump=y=>d*Math.exp(-Math.pow(Math.abs(y-cy)/38,2.6));
+    drawMembrane(bump,null);
+    if(ves){
+      lc.fillStyle='rgba(155,126,222,.15)'; lc.strokeStyle='#9B7EDE'; lc.lineWidth=6;
+      lc.beginPath(); lc.arc(vx,cy,29,0,6.283); lc.fill(); lc.stroke();
+    }
+    lc.fillStyle=exo?'#ff9f43':'#ff6b81'; lc.strokeStyle='#8c2b3b'; lc.lineWidth=2;
+    lc.beginPath(); lc.arc(cx,cy,14,0,6.283); lc.fill(); lc.stroke();
+    lc.fillStyle='rgba(255,255,255,.8)'; lc.font='bold 11px Calibri,sans-serif';
+    lc.fillText(exo?'Insulina (carga)':'Partícula grande / bacteria',MX-150,LH-14);
+  }
+
+  function drawScene(){
+    lc.clearRect(0,0,LW,LH);
+    lc.fillStyle='#14204a'; lc.fillRect(0,0,MX,LH); lc.fillStyle='#1a2c5c'; lc.fillRect(MX,0,LW-MX,LH);
+    lc.fillStyle='rgba(255,255,255,.55)'; lc.font='bold 11px Calibri,sans-serif';
+    lc.fillText('EXTERIOR',10,16); lc.fillText('INTERIOR DE LA CÉLULA',MX+12,16);
+    if(mode==='endo'||mode==='exo'){
+      const tt= mode==='endo'? phase : 1-phase;
+      drawEndoScene(tt,mode==='exo');
+      return;
+    }
+    drawMembrane(()=>0,CHN[mode]);
+    drawProteins();
+    for(const p of ps){
+      lc.fillStyle=p.col; lc.strokeStyle='rgba(0,0,0,.35)'; lc.lineWidth=1;
+      lc.beginPath(); lc.arc(p.x,p.y,p.r,0,6.283); lc.fill(); lc.stroke();
+    }
+    if(mode==='osmosis'){lc.fillStyle='#ff9f43'; lc.beginPath(); lc.arc(20,LH-16,6,0,6.283); lc.fill(); lc.fillStyle='rgba(255,255,255,.8)'; lc.fillText('soluto (no cruza)',32,LH-12);
+      lc.fillStyle='#5aa9ff'; lc.beginPath(); lc.arc(160,LH-16,3.6,0,6.283); lc.fill(); lc.fillStyle='rgba(255,255,255,.8)'; lc.fillText('agua',170,LH-12);}
+  }
+
+  function refreshCounts(){
+    const m=MODES[mode];
+    if(mode==='endo'||mode==='exo'){
+      const steps=mode==='endo'?ENDO_STEPS:EXO_STEPS; const i=phase<0.25?0:(phase<0.5?1:(phase<0.75?2:3));
+      $('#stepLine').textContent='Paso '+(i+1)+': '+steps[i];
+      $('#cLabelL').textContent=''; $('#cLabelR').textContent=''; $('#cL').textContent=''; $('#cR').textContent=''; return;
+    }
+    const type= mode==='osmosis'?'w':'sol'; let L=0,R=0;
+    for(const p of ps){ if(p.type!==type) continue; p.x<MX?L++:R++; }
+    $('#cLabelL').textContent=m.lab[0]; $('#cLabelR').textContent=m.lab[1]; $('#cL').textContent=L; $('#cR').textContent=R;
+    let msg='';
+    if(mode==='activo') msg=atp?'Con ATP, las partículas se acumulan dentro aunque ya haya más adentro (en contra del gradiente).':'Sin ATP la bomba se detiene: no hay transporte.';
+    else if(L+R>0 && Math.abs(L-R)<=0.14*(L+R)) msg='≈ Equilibrio dinámico: las partículas siguen moviéndose, pero sin flujo neto.';
+    else if(mode==='osmosis') msg='El agua se mueve hacia el lado con más soluto.';
+    else msg='Flujo neto: desde donde hay más partículas hacia donde hay menos.';
+    $('#stepLine').textContent=msg;
+  }
+
+  function setInfo(){
+    const m=MODES[mode];
+    $('#infoChips').innerHTML='<span class="chip '+(m.e?'yes':'no')+'">'+(m.e?'⚡ Gasta ATP':'🟢 No gasta ATP')+'</span><span class="chip">'+m.g+'</span><span class="chip">'+m.p+'</span>';
+    $('#labDesc').innerHTML='<b>'+m.n+'.</b> '+m.d+'<br><span class="hint">'+m.ex+'</span>';
+    $('#concCtrl').style.display=(mode==='simple'||mode==='facil')?'':'none';
+    $('#atpRow').style.display=mode==='activo'?'flex':'none';
+    $('#scrubRow').style.display=(mode==='endo'||mode==='exo')?'flex':'none';
+  }
+
+  function setMode(m){
+    mode=m; $$('#modeRow .mbtn').forEach(b=>{b.classList.toggle('on',b.dataset.mode===m); if(seen.has(b.dataset.mode)) b.classList.add('seen');});
+    if(!seen.has(m)){ seen.add(m); prog.modes=seen.size-1+1; }
+    seen.add(m); prog.modes=0; $$('#modeRow .mbtn').forEach(b=>{ if(b.dataset.mode===m||b.classList.contains('seen')) b.classList.add('seen'); });
+    // contar modos explorados (el modo inicial cuenta al visitarlo explícitamente)
+    exploredSet.add(m); prog.modes=exploredSet.size; $('#modeCount').textContent=prog.modes;
+    if(!awarded.has('mode_'+m)) award('mode_'+m,1);
+    if(prog.modes===6) award('modesAll',3,'Los 6 mecanismos');
+    init(); setInfo(); refreshCounts();
+  }
+  const exploredSet=new Set();
+
+  $$('#modeRow .mbtn').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
+  $('#concSlider').addEventListener('input',()=>{$('#concVal').textContent=$('#concSlider').value; init(); refreshCounts();});
+  $('#labTemp').addEventListener('input',()=>{const v=+$('#labTemp').value; speed=[0,0.55,1,1.8][v]; $('#labTempVal').textContent=['','baja','media','alta'][v];});
+  $('#resetLab').addEventListener('click',()=>{init(); refreshCounts();});
+  $('#atpBtn').addEventListener('click',()=>{atp=!atp; $('#atpBtn').classList.toggle('on',atp); $('#atpBtn').textContent=atp?'ATP: disponible':'ATP: agotado'; refreshCounts();});
+  $('#playBtn').addEventListener('click',()=>{ if(phase>=1){phase=0;} playing=!playing; $('#playBtn').textContent=playing?'⏸ Pausar':'▶ Reproducir'; });
+  $('#scrub').addEventListener('input',()=>{phase=+$('#scrub').value/100; playing=false; $('#playBtn').textContent='▶ Reproducir'; refreshCounts();});
+
+  let tick=0;
+  function loop(){
+    if(visible){
+      if(mode==='endo'||mode==='exo'){
+        if(playing){ phase+=0.0035*speed; if(phase>=1){phase=1; playing=false; $('#playBtn').textContent='▶ Repetir';} $('#scrub').value=Math.round(phase*100); }
+      } else stepParticles();
+      drawScene();
+      if(++tick%6===0) refreshCounts();
+    }
+    requestAnimationFrame(loop);
+  }
+  new IntersectionObserver(es=>{visible=es[0].isIntersecting;},{threshold:0}).observe(lab);
+  exploredSet.add('simple'); prog.modes=1; $('#modeCount').textContent=1; $$('#modeRow .mbtn')[0].classList.add('seen'); award('mode_simple',1);
+  init(); setInfo(); refreshCounts(); requestAnimationFrame(loop);
+})();
+
+/* ================= S5: CLASIFICACIÓN ================= */
+(function(){
+  const MECH=[['simple','Difusión simple'],['facil','Difusión facilitada'],['osmosis','Ósmosis'],['activo','Transporte activo'],['endo','Endocitosis'],['exo','Exocitosis']];
+  const ITEMS=[
+    {m:'Oxígeno (O₂)',c:'Pasa del aire de los alvéolos a la sangre.',a:'simple',w:'El O₂ es pequeño y apolar: cruza la bicapa solo, a favor de su gradiente.'},
+    {m:'Glucosa',c:'Entra a una célula muscular por una proteína específica, a favor de su gradiente y sin ATP.',a:'facil',w:'Es polar y grande: necesita proteína transportadora, pero no gasta energía.'},
+    {m:'Agua',c:'Sale de una célula de lechuga al ponerla en agua muy salada.',a:'osmosis',w:'Movimiento de agua a través de una membrana semipermeable hacia el medio con más soluto.'},
+    {m:'Ión sodio (Na⁺)',c:'Sale de una neurona aunque afuera ya hay más sodio que adentro.',a:'activo',w:'Va en contra del gradiente: una bomba usa ATP.'},
+    {m:'Bacteria',c:'Un glóbulo blanco la introduce rodeándola con su membrana.',a:'endo',w:'Partícula grande que entra en una vesícula formada por la membrana.'},
+    {m:'Insulina',c:'Una célula del páncreas la libera a la sangre desde vesículas.',a:'exo',w:'La vesícula se fusiona con la membrana y libera su contenido al exterior.'},
+    {m:'Dióxido de carbono (CO₂)',c:'Sale de las células de tu músculo hacia la sangre.',a:'simple',w:'Molécula pequeña y apolar que difunde directamente a través de la bicapa.'}
+  ];
+  const area=$('#gameArea'); let i=0, ok=0, locked=false;
+  function render(){
+    if(i>=ITEMS.length){
+      prog.game=ok; updateSummary();
+      area.innerHTML='<div class="game-card"><div class="mol">Resultado: '+ok+' de '+ITEMS.length+'</div><p class="ctx">'+(ok>=6?'¡Excelente dominio de los mecanismos!':(ok>=4?'Buen trabajo. Repasa los que fallaste en el laboratorio.':'Vuelve al laboratorio de transporte y repasa cada mecanismo.'))+'</p><button class="btn teal" id="gRestart">↺ Intentar de nuevo</button></div>';
+      if(ok>=6){ award('gameTop',3,'Clasificación sobresaliente'); confetti(); }
+      $('#gRestart').addEventListener('click',()=>{i=0; ok=0; render();});
+      return;
+    }
+    const it=ITEMS[i]; locked=false;
+    area.innerHTML='<div class="game-card"><div class="hint">Caso '+(i+1)+' de '+ITEMS.length+'</div><div class="mol">'+it.m+'</div><div class="ctx">'+it.c+'</div><div class="opts">'+
+      MECH.map(x=>'<button class="opt" data-k="'+x[0]+'">'+x[1]+'</button>').join('')+'</div><div class="fb" id="gFb"></div><div style="margin-top:10px"><button class="btn teal" id="gNext" style="display:none">Siguiente →</button></div></div>';
+    $$('#gameArea .opt').forEach(b=>b.addEventListener('click',()=>{
+      if(locked) return; locked=true; const good=b.dataset.k===it.a;
+      $$('#gameArea .opt').forEach(o=>{o.classList.add('locked'); if(o.dataset.k===it.a) o.classList.add('correct');});
+      if(!good) b.classList.add('incorrect'); else {ok++; score+=1; updateSummary();}
+      const fb=$('#gFb'); fb.className='fb show '+(good?'ok':'bad'); fb.textContent=(good?'✓ Correcto. ':'✗ No exactamente. ')+it.w;
+      $('#gNext').style.display='inline-block'; $('#gNext').textContent=(i===ITEMS.length-1?'Ver resultado':'Siguiente →');
+    }));
+    $('#gNext').addEventListener('click',()=>{i++; render();});
+  }
+  render();
+})();
+
+/* ================= S6: CASOS ================= */
+(function(){
+  const Q=[
+    {l:'Comprender',q:'1. Una lechuga marchita vuelve a quedar crujiente al sumergirla en agua fría. ¿Qué ocurre en sus células?',
+     o:['Entra agua por ósmosis porque el medio es hipotónico y las células se ponen túrgidas.','Sale agua de las células porque el medio es hipertónico.','Entra sal por transporte activo.','Las células se dividen más rápido.'],a:0,
+     w:'El agua pura es hipotónica respecto del interior: el agua entra por ósmosis y la vacuola presiona la pared celular (turgencia).'},
+    {l:'Aplicar',q:'2. Se salan trozos de carne para conservarlos. ¿Por qué los microorganismos casi no crecen?',
+     o:['La sal los alimenta con exceso de nutrientes.','La sal crea un medio hipertónico y el agua sale de sus células por ósmosis.','La sal aumenta la temperatura del alimento.','La sal destruye el ADN de todas las células.'],a:1,
+     w:'Sin agua disponible, los microorganismos se deshidratan y no pueden multiplicarse.'},
+    {l:'Analizar',q:'3. Un pez de agua muy fría tiene muchos fosfolípidos con colas insaturadas. ¿Qué ventaja le da?',
+     o:['Hace que su membrana se vuelva más rígida y resistente.','Evita que el colesterol entre a la membrana.','Impide que las colas se empaqueten demasiado, así la membrana sigue fluida con frío.','Aumenta la temperatura de su cuerpo.'],a:2,
+     w:'Los dobleces de las colas insaturadas dificultan el empaquetamiento y mantienen la fluidez a bajas temperaturas.'},
+    {l:'Analizar',q:'4. En una membrana sin colesterol, ¿qué se espera si la temperatura sube mucho?',
+     o:['Las colas se agitan en exceso, la membrana se desordena y aparecen fugas.','La membrana se vuelve más rígida.','No cambia nada, la fluidez es constante.','El colesterol se forma automáticamente.'],a:0,
+     w:'Sin el amortiguador, la fluidez depende solo de la temperatura: con calor extremo se vuelve demasiado fluida y pierde control.'},
+    {l:'Evaluar',q:'5. Un compañero dice: “el colesterol es solo dañino, las células estarían mejor sin él”. ¿Qué respuesta es la más adecuada?',
+     o:['Tiene razón: no cumple ninguna función útil.','Solo sirve para dar energía a las células.','Es un error: forma parte de las membranas animales y amortigua su fluidez; lo problemático es el exceso en la sangre.','Solo está presente en las células vegetales.'],a:2,
+     w:'El colesterol es un componente esencial de las membranas animales. Los problemas de salud se asocian a niveles elevados en sangre, no a su presencia en la membrana.'}
+  ];
+  const area=$('#quizArea'); let correct=0, answered=0;
+  Q.forEach((it,qi)=>{
+    const d=document.createElement('div'); d.className='q-block';
+    d.innerHTML='<div class="q-level">'+it.l+'</div><div class="q-text">'+it.q+'</div><div class="opts">'+it.o.map((t,k)=>'<button class="opt" data-k="'+k+'">'+t+'</button>').join('')+'</div><div class="fb"></div>';
+    $$('.opt',d).forEach(b=>b.addEventListener('click',()=>{
+      const k=+b.dataset.k; const good=k===it.a;
+      $$('.opt',d).forEach(o=>{o.classList.add('locked'); if(+o.dataset.k===it.a) o.classList.add('correct');});
+      if(!good) b.classList.add('incorrect');
+      const fb=$('.fb',d); fb.className='fb show '+(good?'ok':'bad'); fb.textContent=(good?'✓ Correcto. ':'✗ La respuesta correcta está en verde. ')+it.w;
+      answered++; if(good){correct++; score+=2; updateSummary();}
+      if(answered===Q.length){ prog.quiz=correct; updateSummary(); if(correct===Q.length){confetti(); award('quizTop',3,'Casos perfectos');} toast('Casos: '+correct+' de '+Q.length+' correctos'); }
+    }));
+    area.appendChild(d);
+  });
+})();
+
+/* ================= S7: CIERRE ================= */
+(function(){
+  $('#aerSave').addEventListener('click',()=>{
+    const a=$('#aerA').value.trim(), e=$('#aerE').value.trim(), r=$('#aerR').value.trim();
+    if(!a||!e||!r){ toast('Completa Afirmación, Evidencia y Razonamiento.'); return; }
+    award('aer',4,'Argumento AER guardado'); toast('Argumento guardado. Cópialo también en tu cuaderno.');
+  });
+  $$('#selfCheck input').forEach(c=>c.addEventListener('change',()=>{ if(c.checked) award('chk'+$$('#selfCheck input').indexOf(c),1); }));
+  updateSummary();
+})();
+
+})();
+</script>
+</body>
+</html>
