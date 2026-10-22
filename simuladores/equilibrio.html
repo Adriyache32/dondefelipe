@@ -35,13 +35,13 @@ button,select,input{font:inherit;color:inherit}
 .wallet{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:6px 14px;font-weight:700}
 .wallet small{font-weight:400;opacity:.8}
 
-.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;grid-template-areas:"stage panel" "charts panel" "explain explain" "guide guide";gap:14px;align-items:start}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;grid-template-areas:"stage panel" "charts panel";gap:14px;align-items:start}
 .stage{grid-area:stage;min-width:0;display:flex;flex-direction:column;gap:8px}
 .panel{grid-area:panel;display:flex;flex-direction:column;gap:10px;min-width:0;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow-y:auto;padding-right:2px}
 .charts{grid-area:charts;min-width:0}
-.explain{grid-area:explain;min-width:0}
-.guide{grid-area:guide;min-width:0}
-@media (max-width:980px){.layout{grid-template-columns:minmax(0,1fr);grid-template-areas:"stage" "panel" "charts" "explain" "guide"}.panel{position:static;max-height:none;overflow:visible}}
+.below{display:grid;gap:14px;margin-top:14px;min-width:0}
+.explain,.guide{min-width:0}
+@media (max-width:980px){.layout{grid-template-columns:minmax(0,1fr);grid-template-areas:"stage" "panel" "charts"}.panel{position:static;max-height:none;overflow:visible}}
 
 .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
 .card h2{font-size:15px;margin-bottom:8px}
@@ -110,7 +110,42 @@ th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-
 th{color:var(--muted);font-weight:700;font-size:12px}
 .formulas{display:grid;gap:6px;margin-top:10px}
 
-.guidegrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.fold>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;margin:-2px 0 0}
+.fold>summary::-webkit-details-marker{display:none}
+.fold .stagehead{display:block}
+.foldtitle{font-size:17px;color:var(--navy,inherit)}
+.fold .chev{transition:transform .2s;border:1px solid var(--line);border-radius:999px;width:26px;height:26px;display:grid;place-items:center;flex:none}
+.fold:not([open]) .chev{transform:rotate(-90deg)}
+.fold[open]>summary{margin-bottom:10px}
+.fold>summary:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:6px}
+
+.wsbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:12px}
+.wsprog{flex:1 1 180px;height:10px;border-radius:99px;background:var(--surface2);border:1px solid var(--line);overflow:hidden}.wsprog i{display:block;height:100%;width:0;background:var(--amber);transition:width .3s}
+.wsbtns{display:flex;flex-wrap:wrap;gap:6px}
+.wshead{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:10px}.wshead label{font-weight:700;font-size:13px;display:block}
+.wsec{border:1px solid var(--line);border-radius:10px;margin-top:8px;background:var(--surface)}
+.wsec>summary{cursor:pointer;padding:10px 12px;font-weight:700;color:var(--navy,inherit)}
+.wsec>summary:focus-visible{outline:2px solid var(--amber);border-radius:8px}
+.wsin{padding:2px 14px 14px}.wsin h3{margin:14px 0 6px;font-size:15px}
+.wshead input[type=text],.wsin input[type=text],.wsin textarea{width:100%;font:inherit;font-size:14px;color:var(--fg);background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+.wsin textarea{resize:vertical;min-height:52px;display:block;margin-top:4px}
+.wshead input:focus,.wsin input:focus,.wsin textarea:focus{outline:2px solid var(--amber);outline-offset:1px}
+.fld{display:inline-flex;gap:4px;align-items:center;width:100%}.fld input{min-width:70px}
+.cap{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:15px}.cap:hover{background:var(--amber);color:#fff}
+p .fld{width:110px}
+.qs{padding-left:20px}.qs li{margin:10px 0}.qt{font-weight:600}
+table.wst td,table.wst th{white-space:normal;vertical-align:middle}
+table.wst td .fld{min-width:110px}
+.wsexp{margin:2px 6px 8px 0}.btnrow{margin-top:8px}
+.chk{list-style:none;padding:0;margin:0}.chk li{margin:6px 0}.chk label{display:flex;gap:8px;align-items:flex-start}
+.wsfel{margin-top:12px;padding:10px;border-radius:8px;background:var(--surface2)}
+.gl dt{font-weight:700;margin-top:6px}.gl dd{margin:0 0 0 0}
+@media print{html.printws .topbar,html.printws .layout,html.printws .below>section,html.printws .toasts{display:none!important}html.printws .below{display:block;margin:0}
+html.printws #worksheet>summary,html.printws .wsbar,html.printws .cap,html.printws .wsexp,html.printws #wsStages,html.printws .toasts{display:none!important}
+html.printws #worksheet{border:0;padding:0;display:block}html.printws .wsec{break-inside:auto}html.printws body{background:#fff;color:#000}
+html.printws .wsin input[type=text],html.printws .wsin textarea{border:1px solid #888;background:#fff;color:#000}html.printws .wsin textarea{overflow:visible}
+html.printws .wsec>summary{border-bottom:2px solid #D4891A}html.printws table.wst{break-inside:avoid}}
+.guidegrid{align-items:start;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 @media (max-width:1000px){.guidegrid{grid-template-columns:minmax(0,1fr)}}
 .stagehead{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--amber);font-weight:700;margin-bottom:4px}
 .exps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
@@ -236,6 +271,7 @@ th{color:var(--muted);font-weight:700;font-size:12px}
       </div>
     </section>
 
+  </div><div class="below">
     <section class="explain">
       <div class="explgrid">
         <div class="card"><h2>¿Qué está pasando?</h2><div id="live"></div><div id="calc"></div></div>
@@ -254,22 +290,29 @@ th{color:var(--muted);font-weight:700;font-size:12px}
         <div class="card"><div class="stagehead">Inicio</div><h2>Activa lo que ya sabes</h2>
           <p style="margin:0 0 8px">Si mezclas agua a 20 °C con agua a 80 °C en cantidades iguales, ¿a cuántos grados queda? ¿Y si uno de los cuerpos es un metal?</p>
           <p class="muted small" style="margin:0 0 10px">Escribe tu idea en el cuaderno, fija una predicción en el panel y contrástala con la simulación.</p>
-          <button class="btn" id="btnStart" type="button">Probar con metal en agua</button>
+          <button class="btn" id="btnStart" type="button">Probar con metal en agua</button> <button class="btn" id="btnOpenGuide" type="button">📝 Abrir mi guía de trabajo</button>
         </div>
         <div class="card"><div class="stagehead">Desarrollo</div><h2>Explora y gana Felipesos</h2>
           <ul class="exps" id="exps"></ul>
         </div>
-        <div class="card"><div class="stagehead">Cierre</div><h2>Ticket de salida</h2>
+        <details class="card fold" id="ticket" open><summary><span><span class="stagehead">Cierre</span><b class="foldtitle">Ticket de salida</b></span><span class="chev" aria-hidden="true">▾</span></summary>
           <div id="quiz"></div>
-        </div>
+        </details>
       </div>
     </section>
+
+    <details class="card fold" id="worksheet"><summary><span><span class="stagehead">Guía de trabajo</span><b class="foldtitle">Mi guía rellenable</b></span><span class="chev" aria-hidden="true">▾</span></summary>
+      <p class="muted small" style="margin:0 0 10px">Escribe aquí tus predicciones y respuestas. Se guardan solas en este dispositivo. Usa ▶ para cargar cada experimento y ⤓ para traer el dato que muestra el simulador.</p>
+      <div class="wsbar"><div class="wsprog" role="progressbar" aria-label="Avance de la guía"><i id="wsProg"></i></div><span id="wsProgT" class="small muted"></span>
+        <span class="wsbtns"><button class="btn small" id="wsPrint" type="button">🖨 Imprimir / PDF</button><button class="btn small" id="wsTxt" type="button">⬇ Descargar respuestas</button><button class="btn small" id="wsClear" type="button">Borrar todo</button></span></div>
+      <div id="wsBody"></div>
+    </details>
   </div>
 </div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="../firebase/df.js"></script>
+<script src="../firebase/df.js" data-sin-aviso></script>
 <script>
 /* ===== MOTOR FÍSICO (sin DOM) ===== */
 const SIG = 5.670374e-8;
@@ -1251,6 +1294,29 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
+
+/* API mínima para la guía de trabajo (ws.js) */
+const stateOf = (b, p) => {
+  if (!b.mat.phase) return b.mat.state || 'sólido';
+  if (p.ice >= 1 - 1e-9) return 'hielo';
+  if (p.ice > 1e-6) return 'hielo + agua';
+  if (p.vap >= 1 - 1e-9) return 'vapor';
+  if (p.vap > 1e-6) return 'agua + vapor';
+  return 'agua líquida';
+};
+window.SIMAPI = {
+  snap() {
+    if (!sim) return null;
+    const pa = phase(sim.A.mat, sim.A.m, sim.A.H), pb = phase(sim.B.mat, sim.B.m, sim.B.H);
+    return { mode: sim.mode, t: sim.t, P: Math.abs(sim.P), TA: pa.T, TB: pb.T, TA0: sim.A.T0, TB0: sim.B.T0,
+      Q: Math.abs(sim.A.H - sim.A.H0) / 1000, stA: stateOf(sim.A, pa), stB: stateOf(sim.B, pb),
+      stages: sim.stages || null, Qtot: sim.Qtot || 0, power: sim.power };
+  },
+  felipesos: () => store.total,
+  startExp: id => { loadPreset(id); $('#viewport').scrollIntoView({ behavior: 'smooth', block: 'center' }); },
+  toast
+};
+
 fillSelects(); wire(); renderExps(); renderQuiz();
 $('#walletN').textContent = store.total;
 try { V = init3D(); } catch (e) { console.error(e); V = null; $('#fallback').style.display = 'flex'; }
@@ -1259,5 +1325,160 @@ requestAnimationFrame(frame);
 })();
 
 </script>
+<script>
+/* Guía de trabajo rellenable: se guarda en este navegador */
+(function () {
+'use strict';
+const KEY = 'guia-equilibrio-v1';
+const root = document.getElementById('wsBody');
+if (!root) return;
+let data = {};
+try { data = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { data = {}; }
+let saveT = 0;
+function save() { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} }, 250); }
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const nf = (x, d = 1) => (Number.isFinite(x) ? x : 0).toFixed(d).replace('.', ',');
+const durS = s => s < 90 ? nf(s, 0) + ' s' : nf(s / 60, 1) + ' min';
+let uid = 0; const fields = [];
+
+/* ---- constructores de contenido ---- */
+const H = t => '<h3>' + t + '</h3>';
+const P = t => '<p>' + t + '</p>';
+const OL = a => '<ol>' + a.map(x => '<li>' + x + '</li>').join('') + '</ol>';
+const EXP = (id, label) => '<button type="button" class="btn small wsexp" data-exp="' + id + '">▶ Cargar experimento: ' + label + '</button>';
+function inp(id, o) { o = o || {}; fields.push(id);
+  const cap = o.cap ? '<button type="button" class="cap" data-cap="' + o.cap + '" data-f="' + id + '" title="Traer el dato desde el simulador" aria-label="Traer el dato desde el simulador">⤓</button>' : '';
+  return '<span class="fld"><input type="text" inputmode="' + (o.num ? 'decimal' : 'text') + '" data-f="' + id + '" autocomplete="off"' + (o.ph ? ' placeholder="' + o.ph + '"' : '') + ' aria-label="' + esc(o.al || id) + '">' + cap + '</span>'; }
+function Q(id, items) { return '<ol class="qs">' + items.map((q, i) => { const f = id + '-' + (i + 1); fields.push(f); return '<li><div class="qt">' + q + '</div><textarea rows="2" data-f="' + f + '" aria-label="Respuesta pregunta ' + (i + 1) + '"></textarea></li>'; }).join('') + '</ol>'; }
+function T(head, rows) { return '<div class="tablewrap"><table class="wst"><thead><tr>' + head.map(h => '<th>' + h + '</th>').join('') + '</tr></thead><tbody>' + rows.map(r => '<tr>' + r.map(c => '<td>' + c + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>'; }
+function CHK(id, items) { return '<ul class="chk">' + items.map((t, i) => { const f = id + '-' + (i + 1); fields.push(f); return '<li><label><input type="checkbox" data-f="' + f + '"> <span>' + t + '</span></label></li>'; }).join('') + '</ul>'; }
+const SEC = (title, body, open) => '<details class="wsec"' + (open ? ' open' : '') + '><summary>' + title + '</summary><div class="wsin">' + body + '</div></details>';
+
+/* ---- contenido ---- */
+const parts = [];
+parts.push('<div class="wshead">' +
+  '<label>Nombre ' + inp('nombre', { al: 'Nombre' }) + '</label><label>Curso ' + inp('curso', { al: 'Curso' }) + '</label><label>Fecha ' + inp('fecha', { al: 'Fecha' }) + '</label></div>');
+parts.push(SEC('Inicio: ¿qué sabes ya?', P('Escribe lo que piensas antes de usar el simulador; no importa si te equivocas. Después compararás tus ideas con lo que veas.') +
+  Q('ini', ['Si mezclas agua a 20 °C con agua a 80 °C en cantidades iguales, ¿a cuántos grados crees que quedará?', '¿Calor y temperatura son lo mismo? Explica con tus palabras.', 'Una cuchara de metal y una de madera están hace horas en la misma pieza. La de metal se siente más fría al tocarla. ¿Está realmente más fría? ¿Por qué se siente así?', '¿De qué formas crees que el calor puede llegar de un lugar a otro? Escribe ejemplos de tu casa.']), true));
+parts.push(SEC('Actividad 1: metal caliente en agua fría',
+  P('Cuando un cuerpo caliente toca uno frío, el caliente se enfría y el frío se calienta hasta que ambos quedan a la misma temperatura.') + EXP('metal-agua', 'Metal caliente en agua fría') +
+  OL(['A es aluminio (0,5 kg a 90 °C) y B es agua (1 kg a 20 °C).', 'Escribe tu predicción abajo, anótala también en el cuadro <b>Tu predicción</b> del panel y pulsa <b>Fijar</b>.', 'Pulsa <b>Iniciar</b> y espera a que se detenga. Luego usa ⤓ para traer los datos.']) +
+  T(['Medida', 'Valor'], [['Temperatura de equilibrio que predije (°C)', inp('a1-pred', { num: 1 })], ['Temperatura de equilibrio en el simulador (°C)', inp('a1-teq', { num: 1, cap: 'TA' })], ['Tiempo que tardó', inp('a1-t', { cap: 't' })], ['Energía que cedió A y ganó B (kJ)', inp('a1-q', { num: 1, cap: 'Q' })]]) +
+  P('<span class="muted">Si tu predicción queda a menos de 2 °C del resultado, ganas 5 Felipesos.</span>') +
+  Q('a1', ['¿La temperatura final quedó más cerca de la de A o de la de B? ¿Por qué crees que pasó?', 'En el gráfico de potencia, ¿qué le pasó a la potencia mientras las temperaturas se acercaban?', 'Mira el balance de energía: ¿qué relación hay entre la energía que cedió A y la que ganó B?', 'Pulsa Reiniciar, activa Ver partículas e inicia otra vez. ¿Qué pasa con el movimiento de las partículas de A?', 'Desafío: cambia la masa de A a 2 kg y repite. ¿La temperatura final sube o baja? Explica.'])));
+parts.push(SEC('Actividad 2: misma masa, distinto material',
+  P('Dos cuerpos con la misma masa no cambian su temperatura igual, porque cada material necesita una cantidad distinta de energía para calentarse: eso es el <b>calor específico</b> (energía que necesita 1 kg para subir 1 °C; en el simulador, columna <i>c</i> de la tabla Resumen numérico).') + EXP('agua-hierro', 'Misma masa, distinto material') +
+  OL(['A es agua (0,5 kg a 80 °C) y B es hierro (0,5 kg a 20 °C).', 'Predice: ¿cerca de 80 °C, cerca de 20 °C o justo al medio (50 °C)? Anótalo y pulsa Fijar.', 'Pulsa Iniciar y completa la tabla cuando se detenga.']) +
+  T(['Cuerpo', 'Inicial (°C)', 'Final (°C)', 'Cambio (°C)'], [['A (agua)', '80', inp('a2-tfa', { num: 1, cap: 'TA' }), inp('a2-da', { num: 1, cap: 'dA' })], ['B (hierro)', '20', inp('a2-tfb', { num: 1, cap: 'TB' }), inp('a2-db', { num: 1, cap: 'dB' })]]) +
+  '<p>Mi predicción fue ' + inp('a2-pred', { num: 1, al: 'Mi predicción' }) + ' °C. El simulador dio ' + inp('a2-sim', { num: 1, cap: 'TA', al: 'Resultado del simulador' }) + ' °C.</p>' +
+  Q('a2', ['¿La temperatura final quedó en el punto medio (50 °C)? Si no, ¿cuál de los dos cuerpos cambió menos su temperatura?', 'Compara el cambio de temperatura del agua con el del hierro. ¿Cuál material cuesta más calentar o enfriar?', 'Según el gráfico de balance, ¿la energía que perdió A fue igual a la que ganó B?', 'Explica con tus palabras por qué el agua sirve para guardar calor (por ejemplo en una bolsa de agua caliente).', 'Desafío: cambia el material de B a plomo y predice la nueva temperatura final. Luego compruébala.'])));
+parts.push(SEC('Actividad 3: los tres caminos del calor',
+  P('El calor viaja de tres formas: por <b>conducción</b> (contacto), por <b>convección</b> (corrientes de líquido o gas) y por <b>radiación</b> (ondas que no necesitan contacto).') +
+  H('Parte A: conducción') + EXP('metal-agua', 'Metal caliente en agua fría') +
+  P('Con <b>Conducción</b> marcada en Transferencia de calor y sin pulsar Iniciar, cambia la <b>Barra</b> a cada material y trae la potencia (W) con ⤓.') +
+  T(['Material de la barra', 'Potencia al inicio (W)', '¿Conduce bien o mal?'], ['Cobre', 'Acero', 'Vidrio', 'Madera'].map((m, i) => [m, inp('a3-p' + i, { num: 1, cap: 'P' }), inp('a3-c' + i)])) +
+  H('Parte B: convección') + EXP('conveccion', 'Convección en agua') + P('Pulsa Iniciar y observa las tuberías y las bolitas de color.') +
+  Q('a3b', ['En la tubería de arriba, ¿hacia dónde se mueve el fluido: desde el cuerpo caliente hacia el frío o al revés?', '¿De qué color son las partículas cerca de A y cerca de B? ¿Qué te dice eso de su temperatura?']) +
+  H('Parte C: radiación') + EXP('radiacion', 'Radiación sin contacto') + P('Pulsa Iniciar y observa el espacio entre A y B.') +
+  Q('a3c', ['¿Hay algo que toque a A y a B? ¿Qué viaja entre los dos cuerpos?', '¿Qué ejemplo de tu vida diaria funciona de esta forma?']) +
+  H('Resumen') +
+  T(['Mecanismo', '¿Necesita contacto o un medio material?', '¿Qué viste en el simulador?', 'Ejemplo de la vida diaria'], ['Conducción', 'Convección', 'Radiación'].map((m, i) => [m, inp('a3r-' + i + 'a'), inp('a3r-' + i + 'b'), inp('a3r-' + i + 'c')])) +
+  Q('a3d', ['Desafío: en cualquier experimento marca <b>Con pérdidas al ambiente (20 °C)</b> y pulsa Iniciar. ¿A qué temperatura terminan los dos cuerpos ahora y por qué?'])));
+parts.push(SEC('Actividad 4: hielo y calor latente',
+  P('Mientras el hielo se derrite recibe calor pero su temperatura no sube, porque esa energía se usa para cambiar de estado: se llama <b>calor latente</b>.') + EXP('hielo-tibia', 'Hielo en agua tibia') +
+  OL(['A es hielo (0,3 kg a −10 °C) y B es agua (1 kg a 40 °C). Predice la temperatura final y si se derretirá todo el hielo.', 'Pulsa Iniciar. Cuando A diga <i>hielo + agua</i>, pulsa Pausar, trae los datos con ⤓ y luego Continuar.']) +
+  T(['Momento', 'Temperatura de A (°C)', 'Estado de A'], [['Al inicio', inp('a4-t0', { num: 1, cap: 'TA' }), inp('a4-s0', { cap: 'stA' })], ['Mientras se derrite (en pausa)', inp('a4-t1', { num: 1, cap: 'TA' }), inp('a4-s1', { cap: 'stA' })], ['Al final', inp('a4-t2', { num: 1, cap: 'TA' }), inp('a4-s2', { cap: 'stA' })]]) +
+  Q('a4', ['En el gráfico de temperatura, ¿cómo se ve la línea de A mientras el hielo se derrite?', 'Durante ese tramo entra energía a A, pero su temperatura no sube. ¿Qué crees que hace esa energía?', 'Carga <i>Hielo que no alcanza a derretirse</i>. ¿A qué temperatura terminan A y B y qué queda en A? Explica por qué.', 'Desafío: carga <i>Vapor sobre hielo</i>. El vapor se condensa, ¿gana o cede energía al pasar a líquido? ¿A qué temperatura termina todo?']) +
+  '<div class="btnrow">' + EXP('hielo-queda', 'Hielo que no alcanza') + EXP('vapor-hielo', 'Vapor sobre hielo') + '</div>'));
+const stg = ['Calentar el hielo', 'Fusión (hielo → agua)', 'Calentar el agua líquida', 'Ebullición (agua → vapor)', 'Calentar el vapor'];
+parts.push(SEC('Actividad 5: la curva de calentamiento',
+  EXP('curva', 'Calentar hielo hasta vapor') + P('Se calienta 0,2 kg de agua a −20 °C con un calentador de 1000 W. Pulsa <b>Iniciar</b>, observa el gráfico y luego trae las etapas.') +
+  '<button type="button" class="btn small" id="wsStages">⤓ Traer etapas desde el simulador</button>' +
+  T(['Etapa', 'Energía (kJ)', '% del total', '¿Cambia la temperatura?'], stg.map((n, i) => [n, inp('a5-k' + i, { num: 1 }), inp('a5-p' + i, { num: 1 }), inp('a5-c' + i)])) +
+  Q('a5', ['¿En qué temperaturas se detiene la subida del gráfico?', '¿Qué etapa necesita más energía?', '¿Cuántos segundos tarda la fusión con 1000 W? Pista: 1000 W es 1 kJ por segundo.', 'Si subes la potencia, ¿qué cambia: la rapidez o las temperaturas de las mesetas? Pruébalo.'])));
+parts.push(SEC('Cierre',
+  T(['Pregunta del Inicio', 'Lo que pensaba antes', 'Lo que pienso ahora'], [1, 2, 3, 4].map(i => [i, inp('c-a' + i), inp('c-b' + i)])) +
+  H('Explica con tus palabras') + Q('cie', ['¿Qué es el equilibrio térmico?', '¿Por qué la temperatura se detiene en 0 °C mientras el hielo se derrite?']) +
+  H('Autoevaluación') + CHK('auto', ['Puedo explicar qué es el equilibrio térmico.', 'Sé que el calor pasa del cuerpo más caliente al más frío.', 'Puedo nombrar los tres caminos del calor.', 'Entiendo por qué materiales distintos cambian distinto de temperatura.', 'Sé qué es el calor latente.']) +
+  '<div class="wsfel">Felipesos ganados en este dispositivo: <b id="wsFel">0</b> de 29</div>'));
+parts.push(SEC('Glosario',
+  '<dl class="gl">' + [['Calor', 'Energía que pasa de un cuerpo más caliente a uno más frío.'], ['Temperatura', 'Medida de qué tan calientes o frías están las partículas de un cuerpo.'], ['Equilibrio térmico', 'Los cuerpos llegan a la misma temperatura y el calor deja de pasar.'], ['Conducción', 'Calor que viaja por contacto, a través de un sólido.'], ['Convección', 'Calor que viaja en líquidos y gases: el fluido caliente sube y el frío baja.'], ['Radiación', 'Calor que viaja como ondas, sin contacto.'], ['Calor específico', 'Energía que necesita 1 kg de un material para subir 1 °C.'], ['Calor latente', 'Energía que se usa para cambiar de estado sin cambiar la temperatura.'], ['Cambio de estado', 'Paso de sólido, líquido o gas a otro.'], ['Sistema aislado', 'Conjunto de cuerpos que no intercambia energía con el exterior.']].map(x => '<dt>' + x[0] + '</dt><dd>' + x[1] + '</dd>').join('') + '</dl>'));
+root.innerHTML = parts.join('');
+
+/* ---- estado: cargar, guardar, avance ---- */
+const all = () => Array.from(root.querySelectorAll('[data-f]')).filter(e => e.tagName !== 'BUTTON');
+const prog = document.getElementById('wsProg'), progT = document.getElementById('wsProgT');
+function grow(t) { if (t.tagName === 'TEXTAREA') { t.style.height = 'auto'; t.style.height = Math.max(t.scrollHeight + 2, 52) + 'px'; } }
+function setVal(el, v) { if (el.type === 'checkbox') el.checked = !!v; else { el.value = v || ''; grow(el); } }
+function update() {
+  const els = all(); let done = 0;
+  els.forEach(e => { if (e.type === 'checkbox' ? e.checked : (e.value || '').trim()) done++; });
+  const pct = els.length ? Math.round(done / els.length * 100) : 0;
+  prog.style.width = pct + '%'; progT.textContent = pct + ' % completado (' + done + ' de ' + els.length + ' campos)';
+}
+all().forEach(e => { const v = data[e.dataset.f]; if (v != null) setVal(e, v); });
+if (!data.fecha) { const d = new Date(); const f = root.querySelector('[data-f="fecha"]'); f.value = d.toLocaleDateString('es-CL'); data.fecha = f.value; }
+root.addEventListener('input', ev => { const e = ev.target; if (!e.dataset.f) return; data[e.dataset.f] = e.type === 'checkbox' ? e.checked : e.value; grow(e); save(); update(); });
+root.addEventListener('change', ev => { const e = ev.target; if (e.type === 'checkbox') { data[e.dataset.f] = e.checked; save(); update(); } });
+function put(f, v) { const el = root.querySelector('[data-f="' + f + '"]'); if (!el) return; el.value = v; data[f] = v; grow(el); save(); update(); }
+
+/* ---- traer datos del simulador ---- */
+const msg = t => { try { window.SIMAPI.toast(t); } catch (e) {} };
+root.addEventListener('click', ev => {
+  const x = ev.target.closest('button'); if (!x) return;
+  if (x.dataset.exp) { window.SIMAPI.startExp(x.dataset.exp); return; }
+  if (x.dataset.cap) {
+    const s = window.SIMAPI.snap(); if (!s) { msg('Aún no hay datos del simulador.'); return; }
+    const c = x.dataset.cap, v = { TA: nf(s.TA), TB: nf(s.TB), t: durS(s.t), Q: nf(s.Q), P: nf(s.P, s.P < 10 ? 2 : 1), dA: nf(s.TA - s.TA0), dB: nf(s.TB - s.TB0), stA: s.stA }[c];
+    put(x.dataset.f, v); return;
+  }
+  if (x.id === 'wsStages') {
+    const s = window.SIMAPI.snap();
+    if (!s || s.mode !== 'heat' || !s.stages || s.stages.length !== 5) { msg('Carga primero la curva <b>Calentar hielo hasta vapor</b> en el simulador.'); return; }
+    s.stages.forEach((g, i) => { put('a5-k' + i, nf(g.Q / 1000)); put('a5-p' + i, nf(g.Q / s.Qtot * 100, 0)); });
+  }
+});
+
+/* ---- barra de herramientas ---- */
+function felRefresh() { const f = document.getElementById('wsFel'); if (f) f.textContent = window.SIMAPI.felipesos(); }
+document.getElementById('worksheet').addEventListener('toggle', felRefresh);
+setInterval(felRefresh, 2000);
+document.getElementById('wsPrint').onclick = () => { document.getElementById('worksheet').open = true; root.querySelectorAll('details').forEach(d => d.open = true); root.querySelectorAll('textarea').forEach(grow); document.documentElement.classList.add('printws'); setTimeout(() => { window.print(); }, 60); };
+window.addEventListener('afterprint', () => document.documentElement.classList.remove('printws'));
+document.getElementById('wsTxt').onclick = () => {
+  const lines = ['Guía de trabajo · Simulador de equilibrio térmico', 'Nombre: ' + (data.nombre || ''), 'Curso: ' + (data.curso || ''), 'Fecha: ' + (data.fecha || ''), ''];
+  root.querySelectorAll('details.wsec').forEach(sec => {
+    lines.push('== ' + sec.querySelector('summary').textContent + ' ==');
+    sec.querySelectorAll('.qs > li').forEach(li => { lines.push(li.querySelector('.qt').textContent); lines.push('  → ' + (li.querySelector('textarea').value || '(sin respuesta)')); });
+    sec.querySelectorAll('table.wst tbody tr').forEach(tr => lines.push(Array.from(tr.children).map(td => { const i = td.querySelector('input'); return i ? (i.value || '—') : td.textContent; }).join(' | ')));
+    sec.querySelectorAll('.chk li').forEach(li => lines.push((li.querySelector('input').checked ? '[x] ' : '[ ] ') + li.textContent.trim()));
+    lines.push('');
+  });
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+  const viaLink = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Mi_guia_equilibrio_termico.txt'; document.body.appendChild(a); a.click(); a.remove(); };
+  if (window.claude && window.claude.use) {
+    window.claude.use('downloads').then(d => { if (d) d.save({ filename: 'Mi_guia_equilibrio_termico.txt', data: blob }).catch(() => {}); else viaLink(); }).catch(viaLink);
+  } else viaLink();
+};
+document.getElementById('wsClear').onclick = () => {
+  if (!confirm('¿Borrar todo lo que escribiste en la guía? No se puede deshacer.')) return;
+  data = {}; all().forEach(e => setVal(e, '')); try { localStorage.removeItem(KEY); } catch (e) {} update();
+};
+/* Resumen para el profe (Panel → Trabajos), si el estudiante entra con Google */
+window.AUTOGUARDADO_RESUMEN = function () {
+  const det = []; let hechos = 0, tot = 0;
+  const lab = el => { const li = el.closest('li'); if (li && li.querySelector('.qt')) return li.querySelector('.qt').textContent; const tr = el.closest('tr'); const sec = el.closest('details.wsec'); return (sec ? sec.querySelector('summary').textContent.split(':')[0] + ' · ' : '') + (tr ? tr.children[0].textContent : el.getAttribute('aria-label') || ''); };
+  all().forEach(e => {
+    tot++; const v = e.type === 'checkbox' ? (e.checked ? 'Sí' : '') : (e.value || '').trim();
+    if (v) { hechos++; if (e.type !== 'checkbox' && det.length < 80) det.push({ k: lab(e).slice(0, 200), v: v }); }
+  });
+  return { felipesos: window.SIMAPI.felipesos(), avance: tot ? Math.round(hechos / tot * 100) + ' % de la guía (' + hechos + ' de ' + tot + ')' : '', detalle: det };
+};
+document.getElementById('btnOpenGuide').onclick = () => { const w = document.getElementById('worksheet'); w.open = true; w.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+update(); felRefresh();
+})();
+
+</script>
+<script src="../firebase/autoguardado.js" data-clave="equilibrio-guia" data-titulo="Equilibrio térmico · Guía de trabajo" data-claves="guia-equilibrio-v1,felipesos-equilibrio-v1"></script>
 </body>
 </html>
