@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>U4 · Sesión 1 · Cuando la mano humana toca el ecosistema</title>
+<style>
+:root{
+  --bg:#f2f9f6; --paper:#ffffff; --ink:#15363c; --ink-soft:#4a666b; --line:#cfe3dd;
+  --green:#2e8b66; --green-l:#ddf2e8; --green-d:#1d6449;
+  --sky:#4fa9dc; --sky-l:#e2f2fb; --water:#1d6797; --water-l:#d6e9f5;
+  --warn:#b8741a; --warn-l:#fbefdc; --bad:#b03a2e; --bad-l:#f8e1de;
+  --bloom:#1d6797; /* Analizar */
+  --hud-h:58px; --nav-h:58px;
+  --r:14px; --shadow:0 4px 18px rgba(21,54,60,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:"Segoe UI",Calibri,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);overflow:hidden;line-height:1.45}
+button{font-family:inherit;cursor:pointer}
+
+/* ---------- HUD ---------- */
+#hud{position:fixed;top:0;left:0;right:0;height:var(--hud-h);display:flex;align-items:center;gap:14px;padding:0 18px;background:var(--paper);border-bottom:1px solid var(--line);z-index:20}
+#hud .unit{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hud .unit b{color:var(--ink)}
+.bloom{display:inline-flex;align-items:center;gap:6px;background:var(--bloom);color:#fff;border-radius:999px;padding:4px 12px;font-size:.75rem;font-weight:700;letter-spacing:.08em;white-space:nowrap}
+#hud .spacer{flex:1}
+#fp{display:flex;align-items:center;gap:10px;white-space:nowrap}
+#fp .coin{width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#f6d77a,#d9a52b);display:grid;place-items:center;font-weight:800;color:#6b4b06;font-size:.85rem;box-shadow:inset 0 -2px 0 rgba(0,0,0,.15)}
+#fp .val{font-weight:800;font-size:1.1rem;min-width:3.2ch;text-align:right}
+#fp .bar{width:120px;height:8px;border-radius:99px;background:var(--green-l);overflow:hidden}
+#fp .bar i{display:block;height:100%;width:0;background:var(--green);transition:width .5s}
+.hud-btn{border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:6px 10px;font-size:.8rem;color:var(--ink-soft)}
+.hud-btn:hover{background:var(--sky-l)}
+
+/* ---------- Slides ---------- */
+#deck{position:fixed;top:var(--hud-h);bottom:var(--nav-h);left:0;right:0}
+.slide{position:absolute;inset:0;padding:26px clamp(16px,4vw,56px);overflow-y:auto;opacity:0;visibility:hidden;transform:translateX(30px);transition:opacity .35s,transform .35s,visibility .35s}
+.slide.active{opacity:1;visibility:visible;transform:none}
+.slide.prev{transform:translateX(-30px)}
+.wrap{max-width:1180px;margin:0 auto}
+.kicker{font-size:.78rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--green)}
+h1{font-size:clamp(1.9rem,4.2vw,3.2rem);line-height:1.1;margin:.25em 0 .3em}
+h2{font-size:clamp(1.4rem,2.8vw,2.1rem);line-height:1.15;margin:.2em 0 .5em}
+h3{font-size:1.05rem;margin-bottom:.35em}
+p{margin-bottom:.6em}
+.lead{font-size:clamp(1.05rem,1.6vw,1.25rem);color:var(--ink-soft)}
+.small{font-size:.85rem;color:var(--ink-soft)}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow)}
+.card.green{background:var(--green-l);border-color:#b9e2cf}
+.card.sky{background:var(--sky-l);border-color:#bfe0f3}
+.card.water{background:var(--water-l);border-color:#b3d3e8}
+.card.warn{background:var(--warn-l);border-color:#f0d2a3}
+.tag{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:6px;background:var(--water);color:#fff;margin-bottom:6px}
+.tag.g{background:var(--green)} .tag.s{background:var(--sky)} .tag.w{background:var(--warn)}
+.num{font-size:2.4rem;font-weight:800;line-height:1;color:var(--water)}
+ul.clean{list-style:none}
+ul.clean li{padding:5px 0 5px 22px;position:relative}
+ul.clean li::before{content:"";position:absolute;left:4px;top:13px;width:8px;height:8px;border-radius:50%;background:var(--green)}
+.btn{border:none;border-radius:10px;padding:9px 16px;font-weight:700;font-size:.9rem;background:var(--water);color:#fff}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--water);border:1.5px solid var(--water)}
+.btn.green{background:var(--green)}
+.btn:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.mt{margin-top:16px}.mt2{margin-top:26px}
+
+/* misión */
+.mission{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px;padding:12px 16px;border:1.5px dashed var(--green);border-radius:12px;background:#f7fcfa}
+.mission .txt{flex:1;min-width:220px;font-size:.92rem}
+.mission .txt b{color:var(--green-d)}
+.mission .btn.done{background:var(--green-d)}
+
+/* tabla ficha */
+table.ficha{width:100%;border-collapse:collapse;font-size:.88rem;background:var(--paper);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+table.ficha th,table.ficha td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+table.ficha th{background:var(--water-l);width:22%;font-weight:700}
+
+/* ruta */
+.route{display:grid;grid-template-columns:20fr 45fr 25fr;gap:8px;margin:18px 0}
+.route div{border-radius:12px;padding:12px;color:#fff;min-height:110px}
+.route .r1{background:var(--sky)} .route .r2{background:var(--water)} .route .r3{background:var(--green)}
+.route b{display:block;font-size:1.05rem}
+.route small{display:block;opacity:.92;font-size:.82rem;margin-top:4px}
+
+/* timeline duo */
+.duo{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:center;margin:20px 0}
+.duo .y{font-size:clamp(2.6rem,7vw,5rem);font-weight:800;line-height:1;color:var(--water)}
+.duo .arrow{font-size:2.5rem;color:var(--ink-soft)}
+@media(max-width:640px){.duo{grid-template-columns:1fr}.duo .arrow{transform:rotate(90deg);justify-self:center}}
+
+/* reveal cards */
+.reveal{cursor:pointer;position:relative;min-height:120px}
+.reveal .back{display:none}
+.reveal.open .front{display:none}
+.reveal.open .back{display:block}
+.reveal .hint{position:absolute;bottom:8px;right:12px;font-size:.72rem;color:var(--ink-soft)}
+
+/* roles */
+.role .ico{font-size:1.8rem}
+.wwhr{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:14px}
+.wwhr div{background:var(--paper);border-left:5px solid var(--water);border-radius:8px;padding:10px 12px;box-shadow:var(--shadow);font-size:.9rem}
+.wwhr b{display:block;font-size:.72rem;letter-spacing:.1em;color:var(--water)}
+
+/* svg charts */
+.chart{width:100%;height:auto;background:var(--paper);border:1px solid var(--line);border-radius:var(--r)}
+
+/* calculator */
+.calc label{font-size:.82rem;font-weight:700;color:var(--ink-soft);display:block;margin-bottom:4px}
+.calc input{width:100%;padding:9px 10px;border:1.5px solid var(--line);border-radius:9px;font-size:1.05rem;font-family:inherit}
+.calc .out{font-size:2.2rem;font-weight:800;color:var(--water)}
+.verdict{margin-top:10px;padding:10px 12px;border-radius:10px;font-weight:600;display:none}
+.verdict.ok{display:block;background:var(--green-l);color:var(--green-d)}
+.verdict.no{display:block;background:var(--bad-l);color:var(--bad)}
+
+/* AER sorter */
+.aer-head{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.aer-head div{border-radius:10px;padding:10px;color:#fff;font-weight:700;text-align:center}
+.aer-head .a{background:var(--sky)} .aer-head .e{background:var(--water)} .aer-head .r{background:var(--green)}
+.stmt{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.stmt p{flex:1;min-width:240px;margin:0;font-size:.93rem}
+.stmt .opts{display:flex;gap:6px}
+.stmt .opts button{width:40px;height:36px;border-radius:8px;border:1.5px solid var(--line);background:var(--paper);font-weight:800;color:var(--ink-soft)}
+.stmt.right{border-color:var(--green);background:#f3fbf7}
+.stmt.wrong{border-color:var(--bad);background:#fdf3f2}
+.stmt .opts button.sel{color:#fff}
+.stmt .opts button.sel[data-v="A"]{background:var(--sky);border-color:var(--sky)}
+.stmt .opts button.sel[data-v="E"]{background:var(--water);border-color:var(--water)}
+.stmt .opts button.sel[data-v="R"]{background:var(--green);border-color:var(--green)}
+
+/* triple table */
+table.triple{width:100%;border-collapse:collapse;background:var(--paper);box-shadow:var(--shadow);border-radius:var(--r);overflow:hidden}
+table.triple th{padding:10px;color:#fff;font-size:1rem;width:33.3%}
+table.triple th:nth-child(1){background:var(--sky)} table.triple th:nth-child(2){background:var(--water)} table.triple th:nth-child(3){background:var(--green)}
+table.triple td{border:1px solid var(--line);padding:10px;height:64px;vertical-align:top;font-size:.95rem;outline:none}
+table.triple td:focus{background:#fffbea}
+table.triple td:empty::before{content:attr(data-ph);color:#a3b7b9;font-style:italic}
+
+/* pauta */
+table.pauta{width:100%;border-collapse:collapse;font-size:.88rem;background:var(--paper)}
+table.pauta th,table.pauta td{border:1px solid #9fb6b2;padding:7px 8px;text-align:left;vertical-align:top}
+table.pauta th{background:var(--water-l)}
+table.pauta td.c{text-align:center;width:9%}
+
+/* timer */
+#timer.off{display:none}
+#timer{position:fixed;right:16px;bottom:calc(var(--nav-h) + 12px);background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:8px 12px;display:flex;align-items:center;gap:8px;z-index:25}
+#timer .t{font-variant-numeric:tabular-nums;font-weight:800;font-size:1.25rem;min-width:4.2ch;text-align:center}
+#timer.run .t{color:var(--water)}
+#timer.end{background:var(--warn-l);border-color:var(--warn)}
+#timer button{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:4px 8px;font-size:.78rem}
+
+/* teacher notes */
+#notes{position:fixed;left:16px;bottom:calc(var(--nav-h) + 12px);max-width:min(520px,calc(100vw - 32px));max-height:40dvh;overflow:auto;background:#1b2f33;color:#e8f3f1;border-radius:12px;padding:12px 16px;font-size:.86rem;z-index:26;display:none;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+#notes.show{display:block}
+#notes b{color:#9fe0c4}
+
+/* ---------- NAV ---------- */
+#nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);display:flex;align-items:center;justify-content:center;gap:12px;background:var(--paper);border-top:1px solid var(--line);z-index:20;padding:0 10px}
+#nav .arr{width:42px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--paper);font-size:1.1rem;color:var(--ink)}
+#dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:70vw}
+#dots button{width:11px;height:11px;border-radius:50%;border:none;background:#c4d8d3;padding:0}
+#dots button.on{background:var(--water);transform:scale(1.3)}
+#counter{font-size:.8rem;color:var(--ink-soft);min-width:52px;text-align:center}
+
+/* portada */
+.cover{display:grid;grid-template-columns:1.3fr 1fr;gap:30px;align-items:center;min-height:calc(100dvh - var(--hud-h) - var(--nav-h) - 60px)}
+.cover .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.pill{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:.82rem}
+@media(max-width:820px){.cover{grid-template-columns:1fr}#fp .bar{display:none}#hud .unit{display:none}}
+
+/* ---------- PRINT ---------- */
+#printArea{display:none}
+@media print{
+  @page{size:A4 portrait;margin:12mm}
+  body{overflow:visible;background:#fff;color:#000}
+  #hud,#nav,#deck,#timer,#notes{display:none!important}
+  #printArea{display:block!important;font-family:Calibri,Arial,sans-serif;color:#000}
+  #printArea .half{page-break-inside:avoid;border-bottom:1px dashed #000;padding-bottom:8mm;margin-bottom:8mm}
+  #printArea .half:last-child{border-bottom:none}
+  #printArea h3{font-size:13pt;margin-bottom:2mm}
+  #printArea table.pauta th{background:#ddd!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #printArea table.pauta th,#printArea table.pauta td{border:1px solid #000;font-size:9.5pt;padding:4px 5px}
+  #printArea .line{border-bottom:1px solid #000;height:7mm}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= HUD ================= -->
+<header id="hud">
+  <span class="bloom" title="Nivel cognitivo de la sesión">◆ ANALIZAR</span>
+  <span class="unit"><b>Biología 1° Medio</b> · Unidad 4 · Sesión 1 · OA 8 · IE1</span>
+  <span class="spacer"></span>
+  <button class="hud-btn" id="btnNotes" title="Notas docentes (tecla N)">Notas docentes</button>
+  <div id="fp" title="Felipesos del curso en esta sesión">
+    <span class="coin">F$</span><span class="val" id="fpVal">0</span><span class="small">/ 100</span>
+    <span class="bar"><i id="fpBar"></i></span>
+  </div>
+</header>
+
+<main id="deck">
+
+<!-- 1 · PORTADA -->
+<section class="slide" data-title="Portada" data-notes="<b>Antes de empezar:</b> tríos heterogéneos ya conformados y sentados juntos. Set de fuentes impreso (Fichas A–D) y guía de trabajo, uno por trío. Reportaje cargado en el navegador.<br><br>No leas el título como anuncio: pregunta en voz alta <i>«¿Alguien ha ido a la playa en Quintero o Ventanas? ¿Qué se ve desde la arena?»</i>.">
+  <div class="wrap cover">
+    <div>
+      <div class="kicker">Unidad 4 · Impactos en ecosistemas y sustentabilidad</div>
+      <h1>Cuando la mano humana toca el ecosistema</h1>
+      <p class="lead">Quintero y Puchuncaví, a 60 km de nuestra sala. ¿Qué causó lo que pasó en sus últimos 30 años, qué efectos tuvo y qué se ha hecho para repararlo?</p>
+      <div class="meta">
+        <span class="pill">Sesión 1 de 6</span><span class="pill">OA 8 · IE1</span><span class="pill">Actitudinal OA D</span><span class="pill">90 minutos</span><span class="pill">Tríos con roles</span>
+      </div>
+    </div>
+    <div class="card water">
+      <span class="tag">Hoy vas a</span>
+      <ul class="clean">
+        <li>Analizar fuentes de distinto formato: testimonios, tablas y gráficos.</li>
+        <li>Revisar de dónde sale cada dato y si se puede confiar en él.</li>
+        <li>Construir <b>tres argumentos</b> con Afirmación–Evidencia–Razonamiento.</li>
+        <li>Defender el más sólido frente al curso.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 2 · FICHA DE PLANIFICACIÓN -->
+<section class="slide" data-title="Ficha de planificación" data-notes="Ficha para el docente y la evaluadora/or. Coincide con la Experiencia 1 del Portafolio (Módulo 1, Tarea 1) y con la fila Semana 1 de la planificación de la Unidad 4.">
+  <div class="wrap">
+    <div class="kicker">Ficha de planificación</div>
+    <h2>Sesión 1 · Experiencia 1 del Portafolio</h2>
+    <table class="ficha">
+      <tr><th>Objetivo de Aprendizaje</th><td><b>OA 8:</b> Explicar y evaluar los efectos de acciones humanas (conservación ambiental, cultivos, forestación y deforestación, entre otras) y de fenómenos naturales en relación con el equilibrio de los ecosistemas, la disponibilidad de recursos naturales renovables y no renovables, y las posibles medidas para un desarrollo sustentable.</td></tr>
+      <tr><th>Indicador de Evaluación</th><td><b>IE1:</b> Describen las implicancias sociales, económicas y ambientales de acciones humanas con efectos positivos y negativos en el equilibrio de ecosistemas, a nivel local y global.</td></tr>
+      <tr><th>Objetivo de la clase</th><td>Analizar las causas, los efectos y las posibles soluciones de la intervención humana en un ecosistema chileno (bahía de Quintero-Puchuncaví), manifestando pensamiento crítico al argumentar sobre la base de evidencias.</td></tr>
+      <tr><th>Actitud</th><td><b>OA D:</b> Manifestar pensamiento crítico y argumentar sobre la base de evidencias válidas y confiables.</td></tr>
+      <tr><th>Nivel Bloom</th><td><b>Analizar</b>: distinguir datos, fuentes y tipos de evidencia; relacionar causa, efecto y solución.</td></tr>
+      <tr><th>Secuencia (90 min)</th><td><b>Inicio (20’):</b> visionado del reportaje, impresiones y emociones, pregunta guía. <b>Desarrollo (45’):</b> roles en trío, análisis del set de fuentes, verificación de datos, construcción de tres argumentos AER. <b>Cierre (25’):</b> exposición del argumento más sólido, coevaluación conducida por el coordinador de auditoría, tabla triple entrada causa–efecto–solución.</td></tr>
+      <tr><th>Materiales</th><td>Reportaje audiovisual · Set de fuentes impresas (Fichas A–D) · Guía de trabajo · Pauta de coevaluación · Pizarra.</td></tr>
+      <tr><th>Evaluación formativa</th><td><b>AER:</b> cada trío entrega su guía con los tres argumentos, no solo el expuesto. Monitoreo por preguntas durante el trabajo (origen del dato, confiabilidad de la fuente). Coevaluación conducida por el coordinador de auditoría.</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- 3 · RUTA -->
+<section class="slide" data-title="Ruta de la clase" data-notes="Muestra la ruta 20 segundos. Lo importante: que sepan que al final <b>cada trío expone un solo argumento</b>, pero entrega los tres.">
+  <div class="wrap">
+    <div class="kicker">Ruta de la clase · 90 minutos</div>
+    <h2>Del reportaje al argumento</h2>
+    <div class="route">
+      <div class="r1"><b>Inicio · 20’</b><small>Reportaje<br>Lo que vimos y sentimos<br>Pregunta guía</small></div>
+      <div class="r2"><b>Desarrollo · 45’</b><small>Roles en el trío · Análisis de 4 fuentes · Verificación de datos · Tres argumentos AER</small></div>
+      <div class="r3"><b>Cierre · 25’</b><small>Exposición del más sólido · Coevaluación · Tabla causa–efecto–solución</small></div>
+    </div>
+    <div class="grid g3">
+      <div class="card sky"><span class="tag s">Producto del trío</span><p>Guía con <b>tres argumentos AER</b>: uno sobre una <b>causa</b>, uno sobre un <b>efecto</b> y uno sobre una <b>solución</b>.</p></div>
+      <div class="card water"><span class="tag">Se expone</span><p>Solo el argumento <b>más sólido</b>: un minuto por trío.</p></div>
+      <div class="card green"><span class="tag g">Felipesos</span><p>100 en juego para el curso. Se ganan cumpliendo cada misión de la clase.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · ACTIVACIÓN -->
+<section class="slide" data-title="Activación" data-notes="<b>3 minutos.</b> Pregunta abierta, sin corregir. Anota en la pizarra 2–3 hipótesis textuales de los estudiantes: se retoman en el cierre.<br><br>Dato para ti: la Fundición Ventanas fue creada por ENAMI en 1964 y pasó a Codelco en 2005; dejó de operar en mayo de 2023.">
+  <div class="wrap">
+    <div class="kicker">Inicio · Activación · 3’</div>
+    <h2>Dos años, una misma chimenea</h2>
+    <div class="duo">
+      <div class="card sky"><div class="y">1964</div><p>Se enciende la <b>Fundición Ventanas</b> (ENAMI), en la comuna de Puchuncaví. Procesa concentrado de cobre.</p></div>
+      <div class="arrow">→</div>
+      <div class="card green"><div class="y">2023</div><p>La fundición <b>apaga sus hornos</b> por decisión del Estado, después de casi seis décadas.</p></div>
+    </div>
+    <div class="card warn">
+      <h3>Pregunta para el curso</h3>
+      <p style="margin:0">¿Qué tiene que pasar para que una empresa del Estado decida cerrar una fundición que funcionó casi 60 años y daba trabajo a muchas familias de la zona?</p>
+    </div>
+    <div class="mission" data-mission="m1" data-pts="5"><span class="txt"><b>Misión 1 · +5 F$</b> Al menos tres tríos proponen una hipótesis en voz alta.</span><button class="btn green">Misión cumplida</button></div>
+  </div>
+</section>
+
+<!-- 5 · REPORTAJE -->
+<section class="slide" data-title="Reportaje" data-notes="<b>10 minutos.</b> Reportaje de 24 Horas «Quintero-Puchuncaví, otra vez en alerta sanitaria» (octubre de 2025). Si es largo, usa un fragmento de 6–7 minutos que incluya testimonios de vecinos.<br><br><b>Plan B sin internet:</b> lee en voz alta la Ficha D (cronología) mientras los tríos subrayan.">
+  <div class="wrap">
+    <div class="kicker">Inicio · Visionado · 10’</div>
+    <h2>Reportaje: «Quintero-Puchuncaví, otra vez en alerta sanitaria»</h2>
+    <div class="grid g2">
+      <div class="card water">
+        <span class="tag">Fuente audiovisual</span>
+        <p><b>24 Horas Reportajes</b> (TVN), octubre de 2025.</p>
+        <p class="small">El cierre de la Fundición Ventanas buscaba mejorar el aire de la llamada «zona de sacrificio», pero cerca de 20 grandes industrias siguen operando en la bahía.</p>
+        <div class="row mt">
+          <a class="btn" href="https://www.24horas.cl/informe-especial/24-horas-reportajes/quintero-puchuncavi-otra-vez-en-alerta-sanitaria" target="_blank" rel="noopener">Abrir reportaje ↗</a>
+        </div>
+        <p class="small mt">Si el enlace no abre, el docente usa la Ficha D como alternativa.</p>
+      </div>
+      <div class="card">
+        <span class="tag g">Mientras miras · cada integrante anota en su guía</span>
+        <div class="wwhr">
+          <div><b>UN DATO</b>Una cifra, fecha o lugar que aparezca.</div>
+          <div><b>UNA PERSONA</b>Alguien que habla: ¿quién es y qué pierde o gana?</div>
+          <div><b>UNA PREGUNTA</b>Algo que el reportaje no responde.</div>
+        </div>
+      </div>
+    </div>
+    <div class="mission" data-mission="m2" data-pts="10"><span class="txt"><b>Misión 2 · +10 F$</b> Cada trío tiene registrado un dato, una persona y una pregunta.</span><button class="btn green">Misión cumplida</button></div>
+  </div>
+</section>
+
+<!-- 6 · CONVERSACIÓN -->
+<section class="slide" data-title="Impresiones" data-notes="<b>5 minutos.</b> Primero emociones, sin juzgar (rabia, pena, indiferencia, sorpresa). Luego el giro: <i>«Lo que sentimos es real, pero no basta para convencer a alguien que piensa distinto. ¿Qué necesitaríamos?»</i>. La respuesta que buscas: datos, fuentes y una explicación.">
+  <div class="wrap">
+    <div class="kicker">Inicio · Conversación · 5’</div>
+    <h2>¿Qué vimos? ¿Qué sentimos?</h2>
+    <div class="grid g3">
+      <div class="card reveal sky" data-r>
+        <div class="front"><span class="tag s">1</span><h3>Una imagen</h3><p>¿Qué imagen del reportaje se te quedó grabada?</p></div>
+        <div class="back"><span class="tag s">1</span><p>Las imágenes generan emoción. La emoción nos hace poner atención, pero no prueba nada por sí sola.</p></div>
+        <span class="hint">clic para continuar</span>
+      </div>
+      <div class="card reveal water" data-r>
+        <div class="front"><span class="tag">2</span><h3>Una emoción</h3><p>¿Qué sentiste? Rabia, pena, sorpresa, indiferencia… todas valen.</p></div>
+        <div class="back"><span class="tag">2</span><p>Si sentiste rabia: ¿contra quién? Esa respuesta ya es una <b>hipótesis sobre la causa</b>.</p></div>
+        <span class="hint">clic para continuar</span>
+      </div>
+      <div class="card reveal green" data-r>
+        <div class="front"><span class="tag g">3</span><h3>Un problema</h3><p>Si tuvieras que convencer a alguien que vive en Santiago y nunca ha ido a Quintero, ¿bastaría con contarle lo que sentiste?</p></div>
+        <div class="back"><span class="tag g">3</span><p>No. Necesitas <b>evidencia</b> (datos con fuente) y un <b>razonamiento</b> que los conecte. Eso haremos hoy.</p></div>
+        <span class="hint">clic para continuar</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 · PREGUNTA GUÍA -->
+<section class="slide" data-title="Pregunta guía" data-notes="<b>2 minutos.</b> Escribe la pregunta guía en la pizarra y déjala visible toda la clase. Dibuja al lado la tabla vacía de tres columnas (causa / efecto / solución): se llena en el cierre.">
+  <div class="wrap">
+    <div class="kicker">Pregunta guía de la sesión</div>
+    <h1 style="max-width:980px">¿Qué causó los cambios en Quintero y Puchuncaví en los últimos 30 años, qué efectos tuvieron y qué soluciones se han intentado?</h1>
+    <div class="grid g3 mt2">
+      <div class="card sky"><span class="tag s">Causa</span><p>¿Qué acción humana (o qué decisión) produjo el cambio?</p></div>
+      <div class="card water"><span class="tag">Efecto</span><p>¿Qué cambió en el aire, el suelo, el mar, la salud o la economía? ¿Para quién?</p></div>
+      <div class="card green"><span class="tag g">Solución</span><p>¿Qué se ha hecho? ¿Funcionó? ¿Hubo acciones humanas con efectos <b>positivos</b>?</p></div>
+    </div>
+    <p class="lead mt">Objetivo: <b>analizar</b> causas, efectos y soluciones de la intervención humana en un ecosistema chileno, argumentando con evidencia.</p>
+  </div>
+</section>
+
+<!-- 8 · ROLES -->
+<section class="slide" data-title="Roles del trío" data-notes="<b>5 minutos.</b> Los roles se mantienen en toda la unidad (sesiones 2 y 5 repiten la estructura). Pide que cada estudiante escriba su rol en la guía. Si un trío queda de dos, el coordinador de argumentos asume también la auditoría.">
+  <div class="wrap">
+    <div class="kicker">Desarrollo · Organización · 5’</div>
+    <h2>Tres roles, una misma guía</h2>
+    <div class="grid g3">
+      <div class="card role sky"><div class="ico">🔍</div><h3>Coordinador/a de auditoría</h3><p>Controla el tiempo, revisa que cada argumento tenga sus tres partes y <b>conduce la coevaluación</b> del trío que expone.</p></div>
+      <div class="card role water"><div class="ico">📑</div><h3>Investigador/a</h3><p>Busca el dato en las fichas y <b>verifica la fuente</b>: quién lo publica, cuándo, si es medición, estimación o testimonio.</p></div>
+      <div class="card role green"><div class="ico">🗣️</div><h3>Coordinador/a de argumentos</h3><p>Redacta los tres argumentos AER en la guía y <b>expone el más sólido</b> frente al curso.</p></div>
+    </div>
+    <div class="wwhr">
+      <div><b>QUIÉN</b>Tríos heterogéneos ya formados.</div>
+      <div><b>QUÉ</b>Asignar los roles y escribir los nombres en la guía.</div>
+      <div><b>CUÁNTO</b>2 minutos.</div>
+      <div><b>REGISTRO</b>Recuadro «Roles» de la guía.</div>
+    </div>
+    <div class="mission" data-mission="m3" data-pts="5"><span class="txt"><b>Misión 3 · +5 F$</b> Todos los tríos tienen sus tres roles escritos en la guía.</span><button class="btn green">Misión cumplida</button><button class="btn ghost" data-timer="2">⏱ 2 min</button></div>
+  </div>
+</section>
+
+<!-- 9 · SET DE FUENTES -->
+<section class="slide" data-title="Set de fuentes" data-notes="<b>20 minutos.</b> Monitorea pasando por los tríos con preguntas, no con respuestas:<br>• <i>«¿De dónde sale ese dato?»</i><br>• <i>«¿Es una medición, una estimación o una opinión?»</i><br>• <i>«¿Quién publica esa cifra y qué gana o pierde con ella?»</i><br>• <i>«Esta ficha y esta otra dicen cosas distintas, ¿a cuál le creen y por qué?»</i><br><br>Ojo con que nadie se quede solo en la Ficha A (testimonios): es la más fácil de leer y la más débil como evidencia cuantitativa.">
+  <div class="wrap">
+    <div class="kicker">Desarrollo · Análisis de fuentes · 20’</div>
+    <h2>Cuatro fuentes, cuatro formatos</h2>
+    <div class="grid g4">
+      <div class="card sky"><span class="tag s">Ficha A</span><h3>Testimonios</h3><p class="small">Cinco voces de la bahía: apoderada, pescador, extrabajador, estudiante e investigadora.</p></div>
+      <div class="card water"><span class="tag">Ficha B</span><h3>Tabla de contaminantes</h3><p class="small">Mediciones de SO₂, plomo y arsénico comparadas con normas y valores de referencia.</p></div>
+      <div class="card water"><span class="tag">Ficha C</span><h3>Gráficos de episodios</h3><p class="small">Personas afectadas por episodios de intoxicación (2011–2023) y peak de SO₂ de 2022.</p></div>
+      <div class="card green"><span class="tag g">Ficha D</span><h3>Cronología</h3><p class="small">De la termoeléctrica de 1958 al cierre de la fundición en 2023.</p></div>
+    </div>
+    <div class="card mt">
+      <h3>Para cada ficha, el trío responde en la guía:</h3>
+      <div class="wwhr">
+        <div><b>¿QUÉ DICE?</b>El dato o la idea principal, en una línea.</div>
+        <div><b>¿QUIÉN LO DICE?</b>Persona, institución o medio, y fecha.</div>
+        <div><b>¿QUÉ TIPO ES?</b>Medición · estimación · testimonio · opinión.</div>
+        <div><b>¿CONFIAMOS?</b>Sí / con reservas / no, y por qué.</div>
+      </div>
+    </div>
+    <div class="mission" data-mission="m4" data-pts="20"><span class="txt"><b>Misión 4 · +20 F$</b> Todos los tríos completaron la tabla de análisis de las cuatro fichas.</span><button class="btn green">Misión cumplida</button><button class="btn ghost" data-timer="20">⏱ 20 min</button></div>
+  </div>
+</section>
+
+<!-- 10 · LUPA 1: CIFRAS 2018 -->
+<section class="slide" data-title="Lupa 1: ¿cuántos en 2018?" data-notes="Usa esta lámina a mitad del análisis (minuto 8–10), cuando los investigadores lleguen a la Ficha C. No hay una única respuesta «correcta»; lo valioso es que distingan <b>qué se contó</b> (intoxicados confirmados, consultas de urgencia, atenciones totales) y <b>en qué período</b>.<br><br>Respuesta esperada: la cifra de la Seremi de Salud es la más trazable para un corte de fecha; la de Terram cubre un período más largo (agosto–octubre). La de un diario extranjero, años después y sin fuente, es la menos confiable.">
+  <div class="wrap">
+    <div class="kicker">Desarrollo · La lupa del investigador · 1</div>
+    <h2>¿Cuántas personas se intoxicaron en 2018?</h2>
+    <p class="lead">Cuatro fuentes, cuatro cifras distintas sobre la misma crisis (agosto–octubre de 2018). Haz clic en cada una para ver quién la publica.</p>
+    <div class="grid g4" id="lupa1">
+      <div class="card reveal" data-r><div class="front"><div class="num">300+</div><p class="small">«más de 300 personas enfermaron»</p></div><div class="back"><span class="tag w">Enciclopedia en línea</span><p class="small">Wikipedia en inglés, artículo «Pollution in Quintero and Puchuncaví». Texto editable por cualquier persona, sin indicar el corte de fecha.</p></div><span class="hint">¿quién lo dice?</span></div>
+      <div class="card reveal" data-r><div class="front"><div class="num">~600</div><p class="small">«unas 600 personas acudieron a centros médicos»</p></div><div class="back"><span class="tag w">Diario extranjero</span><p class="small">Diario de Cuyo (Argentina), 8 de junio de 2022: lo menciona como antecedente, cuatro años después, sin citar fuente.</p></div><span class="hint">¿quién lo dice?</span></div>
+      <div class="card reveal" data-r><div class="front"><div class="num">973</div><p class="small">intoxicados · 1.208 consultas de urgencia</p></div><div class="back"><span class="tag">Autoridad sanitaria</span><p class="small">Seremi de Salud de Valparaíso, citada por La Tercera el 28 de septiembre de 2018. Corte: un mes después del primer evento (21 de agosto).</p></div><span class="hint">¿quién lo dice?</span></div>
+      <div class="card reveal" data-r><div class="front"><div class="num">1.600+</div><p class="small">atenciones en urgencias</p></div><div class="back"><span class="tag g">Fundación ambiental</span><p class="small">Fundación Terram, columna en El Mostrador (20 de agosto de 2020). Suma atenciones de agosto a octubre de 2018.</p></div><span class="hint">¿quién lo dice?</span></div>
+    </div>
+    <div class="card warn mt">
+      <h3>Discutan en el trío (el investigador registra):</h3>
+      <p style="margin:0">¿Son contradictorias o están contando cosas distintas? Si tuvieran que usar <b>una</b> en su argumento, ¿cuál elegirían y por qué?</p>
+    </div>
+    <div class="mission" data-mission="m5" data-pts="10"><span class="txt"><b>Misión 5 · +10 F$</b> Un investigador explica al curso por qué las cifras no coinciden.</span><button class="btn green">Misión cumplida</button></div>
+  </div>
+</section>
+
+<!-- 11 · LUPA 2: NORMA -->
+<section class="slide" data-title="Lupa 2: ¿cuántas veces la norma?" data-notes="La norma horaria vigente de SO₂ (D.S. 104/2018 del MMA) es <b>350 µg/m³N</b>; el nivel de emergencia es <b>500 µg/m³N</b> en 1 hora. El peak de junio de 2022 fue <b>1.327 µg/m³</b> (SMA, citado en prensa). 1.327 / 350 = <b>3,8 veces</b>. El Diario de Cuyo publicó «cinco veces la norma»: es un error del medio.<br><br>Dato extra: el MMA sometió a consulta pública en 2025 una norma más exigente (262 µg/m³N en 1 hora). Con esa norma sí serían ~5 veces: abre la discusión sobre <b>con qué norma se compara</b>.">
+  <div class="wrap">
+    <div class="kicker">Desarrollo · La lupa del investigador · 2</div>
+    <h2>«Cinco veces la norma»: ¿es cierto?</h2>
+    <p class="lead">Un diario publicó en junio de 2022 que el peak de dióxido de azufre (SO₂) en Quintero fue «cinco veces la norma horaria». Verifícalo con la calculadora.</p>
+    <div class="grid g2" id="calcBox">
+      <div class="card calc">
+        <div class="grid g2" style="gap:10px">
+          <div><label for="cVal">Valor medido (µg/m³)</label><input id="cVal" type="number" value="1327"></div>
+          <div><label for="cNorm">Valor de referencia (µg/m³)</label><input id="cNorm" type="number" value="350"></div>
+        </div>
+        <div class="row mt">
+          <button class="btn ghost" data-norm="350">Norma horaria Chile (350)</button>
+          <button class="btn ghost" data-norm="500">Nivel de emergencia (500)</button>
+        </div>
+        <p class="mt small">El valor medido equivale a:</p>
+        <div class="row"><button class="btn green" id="cGo">Calcular</button><div class="out" id="cOut">¿?</div></div>
+        <div class="row mt">
+          <span class="small">¿«Cinco veces la norma» es correcto?</span>
+          <button class="btn" data-ans="si">Sí</button><button class="btn" data-ans="no">No</button>
+        </div>
+        <div class="verdict" id="cVerdict"></div>
+      </div>
+      <div>
+        <svg class="chart" id="so2chart" viewBox="0 0 520 300" role="img" aria-label="Comparación del peak de SO2 con la norma horaria y el nivel de emergencia">
+          <text x="20" y="28" font-size="14" font-weight="700" fill="#15363c">SO₂ en 1 hora, Quintero, junio de 2022 (µg/m³)</text>
+        </svg>
+        <p class="small mt">Fuentes: D.S. 104/2018 del Ministerio del Medio Ambiente (norma y nivel de emergencia); Superintendencia del Medio Ambiente, citada por El Dínamo (7 jun 2022) y Diario de Cuyo (8 jun 2022).</p>
+      </div>
+    </div>
+    <div class="mission" data-mission="m6" data-pts="10"><span class="txt"><b>Misión 6 · +10 F$</b> El curso detecta el error del titular y lo corrige con el cálculo.</span><button class="btn green">Misión cumplida</button></div>
+  </div>
+</section>
+
+<!-- 12 · AER -->
+<section class="slide" data-title="Cómo se arma un argumento" data-notes="<b>5 minutos.</b> Hazlo con todo el curso, a mano alzada. Los ejemplos son de la Ficha B (suelos), para que no copien un argumento ya hecho sobre el aire o la salud de 2018.<br><br>Error típico: confundir el razonamiento con repetir la evidencia en otras palabras. El razonamiento explica el <b>mecanismo</b>: por qué ese dato prueba esa afirmación. Conecta con la Unidad 3: los metales no se degradan, se acumulan.">
+  <div class="wrap">
+    <div class="kicker">Desarrollo · Modelo AER · 5’</div>
+    <h2>¿Afirmación, Evidencia o Razonamiento?</h2>
+    <div class="aer-head"><div class="a">A · Afirmación<br><small style="font-weight:400">lo que sostengo</small></div><div class="e">E · Evidencia<br><small style="font-weight:400">el dato, con su fuente</small></div><div class="r">R · Razonamiento<br><small style="font-weight:400">por qué el dato prueba lo que digo</small></div></div>
+    <div id="aerSort">
+      <div class="stmt" data-k="A"><p>Los suelos cercanos al complejo industrial tienen metales que pueden dañar la salud de niñas y niños pequeños.</p><div class="opts"><button data-v="A">A</button><button data-v="E">E</button><button data-v="R">R</button></div></div>
+      <div class="stmt" data-k="E"><p>19 de 245 muestras de suelo superaron 80 mg/kg de plomo, el valor de referencia para exposición infantil (estudio Fondecyt, 2020).</p><div class="opts"><button data-v="A">A</button><button data-v="E">E</button><button data-v="R">R</button></div></div>
+      <div class="stmt" data-k="R"><p>Los niños de 1 a 5 años juegan en el suelo y se llevan las manos a la boca; si el suelo tiene plomo, lo ingieren con el polvo y su exposición es mayor que la de un adulto.</p><div class="opts"><button data-v="A">A</button><button data-v="E">E</button><button data-v="R">R</button></div></div>
+      <div class="stmt" data-k="E"><p>En el 27% del área estudiada, el riesgo de cáncer por arsénico en niños de 1 a 5 años superó el umbral de referencia.</p><div class="opts"><button data-v="A">A</button><button data-v="E">E</button><button data-v="R">R</button></div></div>
+      <div class="stmt" data-k="R"><p>La fundición emitió partículas con metales durante décadas; los metales no se degradan, así que se fueron acumulando en el suelo aunque la fundición ya cerró.</p><div class="opts"><button data-v="A">A</button><button data-v="E">E</button><button data-v="R">R</button></div></div>
+      <div class="stmt" data-k="A"><p>Recuperar los suelos con plantas que fijan los metales es una solución más realista que retirar toda la tierra contaminada.</p><div class="opts"><button data-v="A">A</button><button data-v="E">E</button><button data-v="R">R</button></div></div>
+    </div>
+    <div class="row"><button class="btn" id="aerCheck">Revisar</button><button class="btn ghost" id="aerReset">Reiniciar</button><span class="small" id="aerScore"></span></div>
+  </div>
+</section>
+
+<!-- 13 · TRES ARGUMENTOS -->
+<section class="slide" data-title="Tres argumentos" data-notes="<b>13 minutos.</b> Monitoreo: pide a cada trío que te lea en voz baja <b>solo el razonamiento</b> de un argumento. Si suena a la evidencia repetida, pregunta «¿y por qué eso prueba lo que dicen?».<br><br>Para la solución, empuja a que consideren al menos una acción humana con efecto <b>positivo</b> (IE1): cierre de la fundición, Plan de Descontaminación 2019, fallo de la Corte Suprema, fitoestabilización de suelos.">
+  <div class="wrap">
+    <div class="kicker">Desarrollo · Construcción · 13’</div>
+    <h2>Tres argumentos: causa, efecto, solución</h2>
+    <div class="grid g3">
+      <div class="card sky"><span class="tag s">Argumento 1 · Causa</span><p>Una acción humana que explique lo ocurrido en la bahía.</p><p class="small">Pista: fichas B y D.</p></div>
+      <div class="card water"><span class="tag">Argumento 2 · Efecto</span><p>Un efecto social, económico o ambiental. ¿Sobre quién recae?</p><p class="small">Pista: fichas A, B y C.</p></div>
+      <div class="card green"><span class="tag g">Argumento 3 · Solución</span><p>Una medida que se intentó y su resultado. ¿Fue una acción humana positiva?</p><p class="small">Pista: fichas A y D.</p></div>
+    </div>
+    <div class="card warn mt">
+      <h3>¿Cuál es el más sólido? Elíjanlo con estos tres criterios</h3>
+      <ul class="clean">
+        <li>Su evidencia es una <b>medición o cifra con fuente</b>, no solo un testimonio.</li>
+        <li>La fuente es <b>trazable</b>: se sabe quién la publicó y cuándo.</li>
+        <li>El razonamiento explica un <b>mecanismo</b> y no repite el dato.</li>
+      </ul>
+    </div>
+    <div class="wwhr">
+      <div><b>QUIÉN</b>Coordinador de argumentos redacta; el investigador aporta los datos.</div>
+      <div><b>QUÉ</b>Tres argumentos AER completos + marcar el más sólido.</div>
+      <div><b>CUÁNTO</b>13 minutos.</div>
+      <div><b>REGISTRO</b>Parte 2 y 3 de la guía.</div>
+    </div>
+    <div class="mission" data-mission="m7" data-pts="20"><span class="txt"><b>Misión 7 · +20 F$</b> Todos los tríos tienen sus tres argumentos completos y el más sólido marcado.</span><button class="btn green">Misión cumplida</button><button class="btn ghost" data-timer="13">⏱ 13 min</button></div>
+  </div>
+</section>
+
+<!-- 14 · EXPOSICIÓN + COEVALUACIÓN -->
+<section class="slide" data-title="Exposición y coevaluación" data-notes="<b>15 minutos.</b> Rotación: el trío 1 evalúa al 2, el 2 al 3… y el último al 1. El coordinador de auditoría conduce la discusión de su trío y marca la pauta; no decide solo.<br><br>Mientras exponen, anota en la pizarra (en la tabla de tres columnas) la afirmación de cada trío en su columna. Así la tabla del plenario se arma sola.<br><br>Imprime la pauta desde el botón (salen dos pautas por hoja).">
+  <div class="wrap">
+    <div class="kicker">Cierre · Exposición y coevaluación · 15’</div>
+    <h2>Un minuto, el argumento más sólido</h2>
+    <div class="grid g2">
+      <div class="card water">
+        <span class="tag">Expone</span>
+        <p>El <b>coordinador/a de argumentos</b> lee su afirmación, su evidencia (con la fuente) y su razonamiento. <b>1 minuto</b>.</p>
+        <span class="tag g">Evalúa</span>
+        <p>El trío siguiente, conducido por su <b>coordinador/a de auditoría</b>, completa la pauta y entrega una fortaleza y una sugerencia.</p>
+        <div class="card mt" style="background:#fff"><h3>Rotación</h3><p class="small" style="margin:0">Trío 1 evalúa al 2 · trío 2 evalúa al 3 · … · el último evalúa al 1.<br>Mientras exponen, el docente anota cada afirmación en la tabla causa–efecto–solución de la pizarra.</p></div>
+      </div>
+      <div class="card">
+        <h3>Pauta de coevaluación</h3>
+        <table class="pauta">
+          <tr><th>Criterio</th><th>2</th><th>1</th><th>0</th></tr>
+          <tr><td>La <b>afirmación</b> responde a la pregunta guía (causa, efecto o solución) y es precisa.</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td></tr>
+          <tr><td>La <b>evidencia</b> es un dato concreto y dice de qué fuente viene.</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td></tr>
+          <tr><td>El <b>razonamiento</b> explica por qué el dato apoya la afirmación (no lo repite).</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td></tr>
+          <tr><td>El trío evaluó la <b>confiabilidad</b> de su fuente.</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td></tr>
+        </table>
+        <p class="small mt">2 = logrado · 1 = parcial · 0 = ausente</p>
+        <button class="btn mt" id="btnPrint">🖨 Imprimir pautas (2 por hoja)</button>
+      </div>
+    </div>
+    <div class="mission" data-mission="m8" data-pts="15"><span class="txt"><b>Misión 8 · +15 F$</b> Todos los tríos expusieron y fueron coevaluados con la pauta.</span><button class="btn green">Misión cumplida</button><button class="btn ghost" data-timer="1">⏱ 1 min</button></div>
+  </div>
+</section>
+
+<!-- 15 · TABLA TRIPLE ENTRADA -->
+<section class="slide" data-title="Tabla causa–efecto–solución" data-notes="<b>7 minutos.</b> Escribe aquí (o en la pizarra) lo que el curso dicte, partiendo por las afirmaciones expuestas. Las celdas se pueden editar con un clic y quedan guardadas en este computador.<br><br>Cierra preguntando: <i>«¿Hay alguna solución de la tabla que ataque directamente una causa?»</i>. Si la respuesta es el cierre de la fundición, pregunta qué pasa con las otras ~20 industrias que siguen operando.">
+  <div class="wrap">
+    <div class="kicker">Cierre · Plenario · 7’</div>
+    <h2>Lo que el curso construyó</h2>
+    <table class="triple" id="triple">
+      <tr><th>Causa</th><th>Efecto</th><th>Solución intentada</th></tr>
+      <tr><td contenteditable="true" data-ph="ej.: emisiones de la fundición…"></td><td contenteditable="true" data-ph="ej.: intoxicaciones en escuelas…"></td><td contenteditable="true" data-ph="ej.: cierre en 2023…"></td></tr>
+      <tr><td contenteditable="true" data-ph=""></td><td contenteditable="true" data-ph=""></td><td contenteditable="true" data-ph=""></td></tr>
+      <tr><td contenteditable="true" data-ph=""></td><td contenteditable="true" data-ph=""></td><td contenteditable="true" data-ph=""></td></tr>
+      <tr><td contenteditable="true" data-ph=""></td><td contenteditable="true" data-ph=""></td><td contenteditable="true" data-ph=""></td></tr>
+    </table>
+    <div class="row mt"><button class="btn ghost" id="tripleClear">Vaciar tabla</button></div>
+    <div class="mission" data-mission="m9" data-pts="5"><span class="txt"><b>Misión 9 · +5 F$</b> La tabla tiene al menos una causa, un efecto y una solución conectados.</span><button class="btn green">Misión cumplida</button></div>
+  </div>
+</section>
+
+<!-- 16 · CIERRE -->
+<section class="slide" data-title="Cierre" data-notes="<b>3 minutos.</b> Retoma las hipótesis de la activación anotadas en la pizarra: ¿cuáles se sostienen con evidencia y cuáles no?<br><br><b>Recuerda retirar las guías de todos los tríos</b> (con los tres argumentos) y las pautas de coevaluación: son el registro de la evaluación formativa.<br><br>Puente a la Sesión 2: el agua que consume la inteligencia artificial.">
+  <div class="wrap">
+    <div class="kicker">Cierre · 3’</div>
+    <h2>Lo que nos llevamos</h2>
+    <div class="grid g3">
+      <div class="card sky"><span class="tag s">Sobre la bahía</span><p>Una misma acción humana, la industrialización de la bahía, trajo <b>empleo y energía</b> y también <b>daño al aire, al suelo, al mar y a la salud</b>. Las soluciones también son acciones humanas.</p></div>
+      <div class="card water"><span class="tag">Sobre la evidencia</span><p>Un dato sin fuente no sirve. Dos fuentes pueden dar cifras distintas porque <b>cuentan cosas distintas</b>. Y hasta un diario puede equivocarse en un cálculo.</p></div>
+      <div class="card green"><span class="tag g">Sobre argumentar</span><p>Una emoción mueve, pero un argumento <b>convence</b> cuando su evidencia es trazable y su razonamiento explica el mecanismo.</p></div>
+    </div>
+    <div class="card warn mt">
+      <span class="tag w">Próxima sesión</span>
+      <p style="margin:0">Cada vez que le preguntas algo a una inteligencia artificial, un centro de datos usa agua para enfriar sus servidores. ¿Cuánta? ¿Y quién nos da ese dato?</p>
+    </div>
+    <div class="card mt" style="text-align:center">
+      <p class="small">Felipesos ganados por el curso en esta sesión</p>
+      <div class="num" id="fpFinal">0</div>
+      <p class="small">de 100</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ================= TIMER / NOTES / NAV ================= -->
+<div id="timer" class="off"><span class="t" id="tVal">--:--</span><button id="tToggle">▶</button><button id="tReset">↺</button><button id="tClose" title="Ocultar">✕</button></div>
+<div id="notes"></div>
+<nav id="nav">
+  <button class="arr" id="prev" aria-label="Anterior">←</button>
+  <div id="dots"></div>
+  <span id="counter"></span>
+  <button class="arr" id="next" aria-label="Siguiente">→</button>
+  <button class="hud-btn" id="resetFp" title="Reiniciar Felipesos de la sesión">↺ F$</button>
+</nav>
+
+<!-- ================= PRINT AREA (pautas) ================= -->
+<div id="printArea"></div>
+
+<script>
+(function(){
+  /* ---------- storage seguro ---------- */
+  var KEY='u4s1_quintero_';
+  function sget(k,d){try{var v=localStorage.getItem(KEY+k);return v===null?d:JSON.parse(v);}catch(e){return d;}}
+  function sset(k,v){try{localStorage.setItem(KEY+k,JSON.stringify(v));}catch(e){}}
+
+  /* ---------- navegación ---------- */
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var dots=document.getElementById('dots');
+  var cur=Math.min(sget('slide',0),slides.length-1);
+  slides.forEach(function(s,i){
+    var b=document.createElement('button');
+    b.title=(i+1)+'. '+(s.dataset.title||'');
+    b.setAttribute('aria-label','Ir a lámina '+(i+1));
+    b.addEventListener('click',function(){go(i);});
+    dots.appendChild(b);
+  });
+  var notes=document.getElementById('notes');
+  function go(i){
+    if(i<0||i>=slides.length)return;
+    slides.forEach(function(s,j){s.classList.toggle('active',j===i);s.classList.toggle('prev',j<i);});
+    [].forEach.call(dots.children,function(d,j){d.classList.toggle('on',j===i);});
+    document.getElementById('counter').textContent=(i+1)+' / '+slides.length;
+    notes.innerHTML='<b>Nota docente · '+(i+1)+'. '+(slides[i].dataset.title||'')+'</b><br>'+(slides[i].dataset.notes||'Sin notas para esta lámina.');
+    slides[i].scrollTop=0;
+    cur=i; sset('slide',i);
+  }
+  document.getElementById('prev').addEventListener('click',function(){go(cur-1);});
+  document.getElementById('next').addEventListener('click',function(){go(cur+1);});
+  document.addEventListener('keydown',function(e){
+    var t=e.target;
+    if(t.isContentEditable||t.tagName==='INPUT'||t.tagName==='TEXTAREA')return;
+    if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){e.preventDefault();go(cur+1);}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(cur-1);}
+    else if(e.key==='Home'){go(0);} else if(e.key==='End'){go(slides.length-1);}
+    else if(e.key==='n'||e.key==='N'){notes.classList.toggle('show');}
+  });
+  var tx=null,ty=null;
+  document.getElementById('deck').addEventListener('touchstart',function(e){tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+  document.getElementById('deck').addEventListener('touchend',function(e){
+    if(tx===null)return;var dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;
+    if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){go(cur+(dx<0?1:-1));}tx=null;
+  },{passive:true});
+  document.getElementById('btnNotes').addEventListener('click',function(){notes.classList.toggle('show');});
+
+  /* ---------- Felipesos ---------- */
+  var done=sget('missions',{});
+  function total(){var t=0;[].forEach.call(document.querySelectorAll('.mission'),function(m){if(done[m.dataset.mission])t+=+m.dataset.pts;});return t;}
+  function paintFp(){
+    var t=total();
+    document.getElementById('fpVal').textContent=t;
+    document.getElementById('fpBar').style.width=t+'%';
+    document.getElementById('fpFinal').textContent=t;
+    [].forEach.call(document.querySelectorAll('.mission'),function(m){
+      var b=m.querySelector('.btn.green');var ok=!!done[m.dataset.mission];
+      b.classList.toggle('done',ok);b.textContent=ok?'✓ Cumplida (deshacer)':'Misión cumplida';
+    });
+  }
+  [].forEach.call(document.querySelectorAll('.mission'),function(m){
+    m.querySelector('.btn.green').addEventListener('click',function(){
+      done[m.dataset.mission]=!done[m.dataset.mission];sset('missions',done);paintFp();
+    });
+  });
+  document.getElementById('resetFp').addEventListener('click',function(){done={};sset('missions',done);paintFp();});
+
+  /* ---------- reveal cards (scoped por tarjeta) ---------- */
+  [].forEach.call(document.querySelectorAll('[data-r]'),function(c){c.addEventListener('click',function(){c.classList.toggle('open');});});
+
+  /* ---------- temporizador ---------- */
+  var tEl=document.getElementById('timer'),tVal=document.getElementById('tVal'),tTog=document.getElementById('tToggle');
+  var remain=0,base=0,iv=null;
+  function fmt(s){s=Math.max(0,Math.round(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+  function paintT(){tVal.textContent=base?fmt(remain):'--:--';}
+  function stopT(){clearInterval(iv);iv=null;tEl.classList.remove('run');tTog.textContent='▶';}
+  function startT(){if(!base)return;if(remain<=0)remain=base;tEl.classList.remove('end');tEl.classList.add('run');tTog.textContent='❚❚';var last=Date.now();
+    iv=setInterval(function(){var n=Date.now();remain-=(n-last)/1000;last=n;if(remain<=0){remain=0;stopT();tEl.classList.add('end');}paintT();},250);}
+  tTog.addEventListener('click',function(){iv?stopT():startT();});
+  document.getElementById('tClose').addEventListener('click',function(){stopT();tEl.classList.add('off');});
+  document.getElementById('tReset').addEventListener('click',function(){stopT();remain=base;tEl.classList.remove('end');paintT();});
+  [].forEach.call(document.querySelectorAll('[data-timer]'),function(b){b.addEventListener('click',function(){stopT();tEl.classList.remove('off');base=remain=(+b.dataset.timer)*60;paintT();startT();});});
+
+  /* ---------- Lupa 2: calculadora (scoped a #calcBox) ---------- */
+  var box=document.getElementById('calcBox');
+  var cVal=box.querySelector('#cVal'),cNorm=box.querySelector('#cNorm'),cOut=box.querySelector('#cOut'),cVer=box.querySelector('#cVerdict');
+  function calc(){var v=parseFloat(cVal.value),n=parseFloat(cNorm.value);
+    cOut.textContent=(v>0&&n>0)?(v/n).toLocaleString('es-CL',{maximumFractionDigits:1,minimumFractionDigits:1})+' veces':'—';}
+  var shown=false;box.querySelector('#cGo').addEventListener('click',function(){shown=true;calc();});
+  cVal.addEventListener('input',function(){if(shown)calc();});cNorm.addEventListener('input',function(){if(shown)calc();});
+  [].forEach.call(box.querySelectorAll('[data-norm]'),function(b){b.addEventListener('click',function(){cNorm.value=b.dataset.norm;if(shown)calc();});});
+  [].forEach.call(box.querySelectorAll('[data-ans]'),function(b){b.addEventListener('click',function(){
+    if(b.dataset.ans==='no'){cVer.className='verdict ok';cVer.textContent='Correcto. Con la norma horaria chilena (350 µg/m³N) el peak fue 3,8 veces la norma, no cinco. Igual superó el nivel de emergencia (500): fue 2,7 veces ese umbral.';}
+    else{cVer.className='verdict no';cVer.textContent='Revisa el cálculo: 1.327 ÷ 350 = 3,8. Un titular puede exagerar o usar otra referencia; por eso se verifica.';}
+  });});
+
+  /* gráfico SO2 */
+  (function(){
+    var svg=document.getElementById('so2chart'),NS='http://www.w3.org/2000/svg';
+    var data=[{l:'Norma horaria',v:350,c:'#4fa9dc'},{l:'Nivel de emergencia',v:500,c:'#b8741a'},{l:'Peak medido',v:1327,c:'#b03a2e'}];
+    var x0=150,w=330,max=1400;
+    function el(t,a,txt){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);if(txt!==undefined)e.textContent=txt;svg.appendChild(e);return e;}
+    [0,350,700,1050,1400].forEach(function(g){var x=x0+w*g/max;el('line',{x1:x,y1:50,x2:x,y2:250,stroke:'#e1ece9'});el('text',{x:x,y:270,'font-size':11,'text-anchor':'middle',fill:'#4a666b'},g.toLocaleString('es-CL'));});
+    data.forEach(function(d,i){var y=62+i*62;
+      el('text',{x:x0-10,y:y+24,'font-size':13,'text-anchor':'end',fill:'#15363c'},d.l);
+      el('rect',{x:x0,y:y,width:w*d.v/max,height:36,rx:6,fill:d.c});
+      el('text',{x:x0+w*d.v/max+(d.v>1200?-8:8),y:y+24,'font-size':13,'font-weight':700,'text-anchor':d.v>1200?'end':'start',fill:d.v>1200?'#fff':'#15363c'},d.v.toLocaleString('es-CL'));
+    });
+  })();
+
+  /* ---------- AER sorter (scoped a #aerSort) ---------- */
+  var sort=document.getElementById('aerSort');
+  [].forEach.call(sort.querySelectorAll('.stmt'),function(s){
+    [].forEach.call(s.querySelectorAll('.opts button'),function(b){b.addEventListener('click',function(){
+      [].forEach.call(s.querySelectorAll('.opts button'),function(x){x.classList.remove('sel');});
+      b.classList.add('sel');s.classList.remove('right','wrong');
+    });});
+  });
+  document.getElementById('aerCheck').addEventListener('click',function(){
+    var ok=0,n=0;[].forEach.call(sort.querySelectorAll('.stmt'),function(s){var sel=s.querySelector('.sel');n++;
+      s.classList.remove('right','wrong');if(!sel)return;if(sel.dataset.v===s.dataset.k){ok++;s.classList.add('right');}else s.classList.add('wrong');});
+    document.getElementById('aerScore').textContent=ok+' de '+n+' correctas'+(ok===n?' · ¡Ahora arma los tuyos!':'');
+  });
+  document.getElementById('aerReset').addEventListener('click',function(){
+    [].forEach.call(sort.querySelectorAll('.stmt'),function(s){s.classList.remove('right','wrong');[].forEach.call(s.querySelectorAll('.sel'),function(x){x.classList.remove('sel');});});
+    document.getElementById('aerScore').textContent='';
+  });
+
+  /* ---------- tabla triple (scoped a #triple) ---------- */
+  var cells=[].slice.call(document.querySelectorAll('#triple td'));
+  var saved=sget('triple',[]);
+  cells.forEach(function(c,i){if(saved[i])c.textContent=saved[i];c.addEventListener('input',function(){sset('triple',cells.map(function(x){return x.textContent;}));});});
+  document.getElementById('tripleClear').addEventListener('click',function(){cells.forEach(function(c){c.textContent='';});sset('triple',[]);});
+
+  /* ---------- impresión de pautas ---------- */
+  function pauta(){
+    return '<div class="half"><h3>Pauta de coevaluación · Biología 1° Medio · U4 Sesión 1</h3>'+
+    '<p style="font-size:10pt;margin:2mm 0">Trío evaluador N° ____ &nbsp; Coordinador/a de auditoría: ______________________ &nbsp; Trío evaluado N° ____</p>'+
+    '<table class="pauta"><tr><th>Criterio</th><th>2 Logrado</th><th>1 Parcial</th><th>0 Ausente</th></tr>'+
+    '<tr><td>La afirmación responde a la pregunta guía (causa, efecto o solución) y es precisa.</td><td></td><td></td><td></td></tr>'+
+    '<tr><td>La evidencia es un dato concreto y dice de qué fuente viene.</td><td></td><td></td><td></td></tr>'+
+    '<tr><td>El razonamiento explica por qué el dato apoya la afirmación (no lo repite).</td><td></td><td></td><td></td></tr>'+
+    '<tr><td>El trío evaluó la confiabilidad de su fuente.</td><td></td><td></td><td></td></tr>'+
+    '<tr><td><b>Total</b> (máximo 8)</td><td colspan="3"></td></tr></table>'+
+    '<p style="font-size:10pt;margin-top:3mm">Una fortaleza del argumento:</p><div class="line"></div>'+
+    '<p style="font-size:10pt;margin-top:3mm">Una sugerencia para hacerlo más sólido:</p><div class="line"></div></div>';
+  }
+  document.getElementById('printArea').innerHTML=pauta()+pauta();
+  document.getElementById('btnPrint').addEventListener('click',function(){window.print();});
+
+  paintFp();paintT();go(cur);
+})();
+</script>
+</body>
+</html>
