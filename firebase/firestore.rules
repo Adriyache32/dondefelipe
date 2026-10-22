@@ -288,7 +288,7 @@ service cloud.firestore {
       return d.cuenta == miCuentaBanco() && d.cuenta != ''
         && opsDespues(d.cuenta) == opsAntes(d.cuenta) + 1
         && id == 'op-' + d.cuenta + '-' + string(opsDespues(d.cuenta))
-        && d.keys().hasOnly(['cuenta', 'numero', 'nombre', 'curso', 'monto', 'motivo', 'tipo', 'saldoDespues', 'profe', 'fecha', 'ticker', 'acciones', 'precio', 'gatito', 'tiro', 'item', 'canje'])
+        && d.keys().hasOnly(['cuenta', 'numero', 'nombre', 'curso', 'monto', 'motivo', 'tipo', 'saldoDespues', 'profe', 'fecha', 'ticker', 'acciones', 'precio', 'gatito', 'oferta', 'tiro', 'item', 'canje'])
         && d.profe == '' && d.fecha == request.time
         && texto(d.numero, 20) && texto(d.nombre, 160) && texto(d.curso, 40) && texto(d.motivo, 200)
         && d.monto is int
@@ -374,12 +374,58 @@ service cloud.firestore {
     }
     function rutaGatitos(uid) { return /databases/$(database)/documents/gatitos/$(uid); }
     function gatitosAntes(uid) { return exists(rutaGatitos(uid)) ? get(rutaGatitos(uid)).data.ids : []; }
-    // El movimiento de compra cobra exactamente el precio, por un gatito que aún no tenía y que queda en su colección.
+    // ═════ Mercado de gatitos ═════
+    // Por ahora solo el profe publica ofertas (gatito, precio, cantidad, plazo). Se compra siempre una oferta:
+    // el movimiento cobra exactamente su precio, la oferta descuenta 1 de su stock y el gatito entra a la colección.
+    // precioGatito() queda como precio de referencia (lo usa la ruleta cuando sale un gatito repetido).
+    function rutaOferta(o) { return /databases/$(database)/documents/gatitos_ofertas/$(o); }
+    function ofertaVigente(o) {
+      return o.activa == true
+        && (o.stock == -1 || o.stock > 0)
+        && (!('hasta' in o) || o.hasta == null || request.time < o.hasta);
+    }
+    // Lo único que cambia en la oferta al comprar: stock − 1 (si es limitado) y vendidos + 1.
+    function ofertaDescontada(antes, despues) {
+      return despues.vendidos == antes.get('vendidos', 0) + 1
+        && despues.stock == (antes.stock == -1 ? -1 : antes.stock - 1);
+    }
     function opGatito(d) {
-      return d.gatito is string && precioGatito(d.gatito) > 0
-        && d.monto == 0 - precioGatito(d.gatito)
+      let o = get(rutaOferta(d.oferta)).data;
+      return d.oferta is string && d.gatito is string
+        && ofertaVigente(o) && o.gatito == d.gatito
+        && d.precio == o.precio && d.monto == 0 - o.precio
+        && ofertaDescontada(o, getAfter(rutaOferta(d.oferta)).data)
         && !(d.gatito in gatitosAntes(request.auth.uid))
         && getAfter(rutaGatitos(request.auth.uid)).data.ids.hasAll([d.gatito]);
+    }
+    match /gatitos_ofertas/{oid} {
+      allow read: if true;
+      allow write: if esProfe();
+      // Al comprar, el estudiante solo descuenta stock y suma una venta, junto con su movimiento de compra.
+      allow update: if esColegio()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock', 'vendidos'])
+        && ofertaDescontada(resource.data, request.resource.data)
+        && compraDeOferta(oid);
+    }
+    function compraDeOferta(oid) {
+      let c = miCuentaBanco();
+      return c != '' && opsDespues(c) == opsAntes(c) + 1
+        && getAfter(rutaOp(c, opsDespues(c))).data.tipo == 'gatito-compra'
+        && getAfter(rutaOp(c, opsDespues(c))).data.oferta == oid;
+    }
+    // Vitrina de ventas recientes (pública para quienes tienen cuenta): una por compra, con el mismo id del movimiento.
+    match /gatitos_ventas/{vid} {
+      allow read: if conCuenta();
+      allow delete: if esProfe();
+      allow create: if esColegio() && miCuentaBanco() != ''
+        && opsDespues(miCuentaBanco()) == opsAntes(miCuentaBanco()) + 1
+        && vid == 'op-' + miCuentaBanco() + '-' + string(opsDespues(miCuentaBanco()))
+        && request.resource.data.keys().hasOnly(['gatito', 'oferta', 'precio', 'nombre', 'fecha'])
+        && texto(request.resource.data.nombre, 40)
+        && request.resource.data.fecha == request.time
+        && request.resource.data.gatito == getAfter(rutaOp(miCuentaBanco(), opsDespues(miCuentaBanco()))).data.gatito
+        && request.resource.data.oferta == getAfter(rutaOp(miCuentaBanco(), opsDespues(miCuentaBanco()))).data.oferta
+        && request.resource.data.precio == getAfter(rutaOp(miCuentaBanco(), opsDespues(miCuentaBanco()))).data.precio;
     }
     // La colección solo crece con una compra pagada (o un gatito ganado en la ruleta) en la misma escritura.
     function compraDeGatito(uid) {

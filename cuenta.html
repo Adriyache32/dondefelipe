@@ -306,7 +306,7 @@ async function cargarGatitos(u) {
     const col = s.exists() ? s.data() : { ids: [] }, ids = col.ids || [];
     const mios = G.filter(g => ids.includes(g.id)), fav = G.find(g => g.id === col.favorito) || mios[mios.length - 1];
     if (!mios.length) {
-      $('gCont').innerHTML = `<div class="gvacio"><img src="gatitos/img/caja.webp" alt=""><div>Aún no tienes gatitos. Con tus Hipopesos puedes comprarlos en la <a href="gatitos.html">tienda de gatitos</a>: desde ${new Intl.NumberFormat('es-CL').format(Math.min(...G.map(g => g.precio)))} ₣.</div></div>`;
+      $('gCont').innerHTML = `<div class="gvacio"><img src="gatitos/img/caja.webp" alt=""><div>Aún no tienes gatitos. Con tus Hipopesos puedes comprar los que publica el profe en el <a href="gatitos.html">mercado de gatitos</a>.</div></div>`;
       return;
     }
     const valor = mios.reduce((t, g) => t + g.precio, 0);
@@ -316,7 +316,7 @@ async function cargarGatitos(u) {
       <p class="sub">Colección: ${mios.length} de ${G.length} · valor ${new Intl.NumberFormat('es-CL').format(valor)} ₣</p>
       <div class="ggrid">${G.map(g => { const t = ids.includes(g.id), r = R[g.rareza] || {};
         return `<div class="gmini ${t ? '' : 'falta'}" style="--rc:${r.color || '#888'}" title="${t ? esc(g.nombre) : '???'}"><img src="gatitos/img/${esc(g.id)}.webp" alt="${t ? esc(g.nombre) : 'Gatito por descubrir'}" loading="lazy"><span>${t ? esc(g.nombre) : '???'}</span></div>`; }).join('')}</div>
-      <p class="muted" style="font-size:14px;margin-top:12px"><a href="gatitos.html">Ir a la tienda de gatitos</a> · ahí eliges cuál aparece como favorito (⭐).</p>`;
+      <p class="muted" style="font-size:14px;margin-top:12px"><a href="gatitos.html">Ir al mercado de gatitos</a> · en «Mi colección» eliges cuál aparece como favorito (⭐).</p>`;
   } catch (e) { $('gCont').innerHTML = `<div class="vacio">No se pudieron cargar tus gatitos: ${esc(e.message)}</div>`; }
 }
 
