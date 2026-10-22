@@ -145,6 +145,19 @@ html.printws #worksheet>summary,html.printws .wsbar,html.printws .cap,html.print
 html.printws #worksheet{border:0;padding:0;display:block}html.printws .wsec{break-inside:auto}html.printws body{background:#fff;color:#000}
 html.printws .wsin input[type=text],html.printws .wsin textarea{border:1px solid #888;background:#fff;color:#000}html.printws .wsin textarea{overflow:visible}
 html.printws .wsec>summary{border-bottom:2px solid #D4891A}html.printws table.wst{break-inside:avoid}}
+@media (max-width:640px){
+.viewport{height:390px}.chip{font-size:10.5px;padding:3px 6px;border-radius:6px}
+.transport{padding:10px}.speed{flex:1 1 100%}.speed input[type=range]{flex:1 1 90px;min-width:70px}
+.wsin{padding:2px 8px 10px}.qs{padding-left:18px}
+.wsbtns .btn{flex:1 1 auto}
+table.wst,table.wst tbody,table.wst tr,table.wst td{display:block;width:100%}
+table.wst thead{display:none}
+table.wst tr{border:1px solid var(--line);border-radius:8px;margin:8px 0;padding:6px 8px;background:var(--surface)}
+table.wst td{border:0;padding:3px 0;display:flex;align-items:center;gap:8px;white-space:normal}
+table.wst td[data-label]::before{content:attr(data-label);flex:0 0 36%;font-size:12px;color:var(--muted);line-height:1.2}
+table.wst td:first-child{font-weight:700;display:block}table.wst td:first-child::before{content:none}
+table.wst td .fld{flex:1;min-width:0}
+}
 .guidegrid{align-items:start;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 @media (max-width:1000px){.guidegrid{grid-template-columns:minmax(0,1fr)}}
 .stagehead{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--amber);font-weight:700;margin-bottom:4px}
@@ -168,6 +181,7 @@ html.printws .wsec>summary{border-bottom:2px solid #D4891A}html.printws table.ws
 .toast b{color:#F3B14B}
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
 </style>
+<style>@media(max-width:760px){body{padding-top:48px}}</style>
 </head>
 <body>
 
@@ -1015,7 +1029,7 @@ function init3D() {
   const cam = { theta: 0, phi: 1.1, r: 10, rT: 10, target: new T3.Vector3(0, 0.95, 0), user: false };
   function fit() {
     const w = vp.clientWidth, h = vp.clientHeight, asp = w / h, hw = mode === 'eq' ? 4.7 : 2.3, vh = 2.1, t = Math.tan(19 * Math.PI / 180);
-    return clamp(Math.max(hw / (t * asp), vh / t) * 1.04, 6, 26);
+    return clamp(Math.max(hw / (t * asp), vh / t) * (asp < 1.2 ? 1.16 : 1.04), 6, 26);
   }
   function place() {
     const sp = Math.sin(cam.phi);
@@ -1206,7 +1220,7 @@ function init3D() {
       if (s.mode === 'eq') {
         const arrow = mag < 0.02 ? '' : (P > 0 ? 'A → B' : 'B → A');
         setH(chips[2], mag < 0.02 ? '<span class="muted">sin flujo neto</span>' : arrow + ' · <b>' + nf(mag, mag < 10 ? 2 : 1) + ' W</b>');
-        putChip(chips[2], 0, 1.75, 0);
+        if (vp.clientWidth < 560 && s.mode === 'eq') chips[2].style.transform = 'translate(' + (vp.clientWidth / 2).toFixed(0) + 'px,100px) translate(-50%,-100%)'; else putChip(chips[2], 0, 1.75, 0);
       }
       // HUD
       setH($('#hud'), s.mode === 'eq'
@@ -1404,6 +1418,7 @@ parts.push(SEC('Cierre',
 parts.push(SEC('Glosario',
   '<dl class="gl">' + [['Calor', 'Energía que pasa de un cuerpo más caliente a uno más frío.'], ['Temperatura', 'Medida de qué tan calientes o frías están las partículas de un cuerpo.'], ['Equilibrio térmico', 'Los cuerpos llegan a la misma temperatura y el calor deja de pasar.'], ['Conducción', 'Calor que viaja por contacto, a través de un sólido.'], ['Convección', 'Calor que viaja en líquidos y gases: el fluido caliente sube y el frío baja.'], ['Radiación', 'Calor que viaja como ondas, sin contacto.'], ['Calor específico', 'Energía que necesita 1 kg de un material para subir 1 °C.'], ['Calor latente', 'Energía que se usa para cambiar de estado sin cambiar la temperatura.'], ['Cambio de estado', 'Paso de sólido, líquido o gas a otro.'], ['Sistema aislado', 'Conjunto de cuerpos que no intercambia energía con el exterior.']].map(x => '<dt>' + x[0] + '</dt><dd>' + x[1] + '</dd>').join('') + '</dl>'));
 root.innerHTML = parts.join('');
+root.querySelectorAll('table.wst').forEach(t => { const hs = Array.from(t.querySelectorAll('th')).map(h => h.textContent); t.querySelectorAll('tbody tr').forEach(tr => Array.from(tr.children).forEach((td, i) => td.setAttribute('data-label', hs[i] || ''))); });
 
 /* ---- estado: cargar, guardar, avance ---- */
 const all = () => Array.from(root.querySelectorAll('[data-f]')).filter(e => e.tagName !== 'BUTTON');
