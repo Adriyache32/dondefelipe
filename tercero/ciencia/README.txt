@@ -1,8 +1,32 @@
-Mercado de Villa Verde · v18
+Mercado de Villa Verde · v19
 ============================
 Abrir index.html en un navegador (Chrome, Edge, Firefox o Safari recientes).
 Si el navegador bloquea imágenes al abrir el archivo directamente, usar un servidor local
 (por ejemplo: python -m http.server) o subirlo a un hosting estático.
+
+
+Novedades v19 (Centro Eureka, huerto optimizado, mundo ampliado al oeste)
+- El mundo se amplía 1.400 px hacia el oeste (ahora 4.900×2.500): Distrito Eureka con calles, faroles,
+  plaza del Reloj de Cronos, jardín de pruebas y bosque al sur del río. Los árboles originales conservan
+  sus identificadores, así que las partidas guardadas y los pueblos en línea siguen funcionando.
+- Centro Eureka (casa grande con cúpula de observatorio): el oráculo Cronos propone una investigación
+  científica del día (el estudiante puede aceptarla o elegir otra). Seis investigaciones:
+  Proteínas y clima, Leche caja vs retornable, Materiales de envase, Origen y temporada,
+  Experimento en el huerto y ¿Cuándo se paga un reutilizable?
+  Pestañas: Oráculo, Guía (método científico paso a paso), Cuaderno (hipótesis, variables, tabla de datos,
+  análisis y conclusión; se guarda en el navegador) y Rúbrica.
+- Botón "Guía PDF": descarga una guía personalizada (nombre, curso, fecha, respuestas del cuaderno),
+  con las preguntas de la interrogación breve de cierre y la rúbrica de 6 criterios (24 puntos,
+  exigencia 60%) con escala de notas. jsPDF se carga desde assets/jspdf.umd.min.js (o CDN de respaldo);
+  si no carga, se abre una versión imprimible.
+- Para el profesor: agregar ?mision=N (1 a 6) fija la misma investigación para todo el curso;
+  agregar ?profe muestra la pestaña "Pauta docente" con respuestas esperadas y su PDF.
+  Ejemplo: medieval.html?mision=5&profe
+- Huerto: 8 parcelas (4×2). Acciones rápidas al pararse frente a cada parcela (E): sembrar, regar,
+  cosechar o limpiar. Botones Cosechar todo, Sembrar en vacías, Abonar todo y Limpiar marchitas.
+  Al cosechar, 50% de probabilidad de guardar un sobre de semillas. Nueva pestaña "Bitácora" con cada
+  cosecha (abonada, % del tiempo regada, minutos reales, porciones) y promedios por condición, para
+  experimentos controlados. Partidas nuevas parten con 4 semillas de lechuga.
 
 Novedades respecto de v17
 - Mundo 2400×1760 con cámara que sigue al personaje, minimapa y orden de profundidad (el personaje pasa detrás de árboles y casas).
