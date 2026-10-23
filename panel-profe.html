@@ -525,9 +525,18 @@ function solicitudes(pend) {
   const pe = (pend ? pedPend : pedHist).map(p => Object.assign({ clase: p.tipo }, p));
   return tr.concat(pe).sort((a, b) => pend ? ms(a.creada) - ms(b.creada) : ms(b.resuelta || b.creada) - ms(a.resuelta || a.creada));
 }
+// Si pagó menos que el catálogo, explica por qué (descuento de gatito héroe) o avisa si no corresponde.
+function notaPrecio(t) {
+  const c = COMPRAS.find(x => x.nombre === t.item); if (!c || t.precio >= c.precio) return '';
+  const col = colecciones.find(x => x.uid === t.uid), d = window.descuentoAcademico ? descuentoAcademico(col ? col.ids : []) : 0;
+  const ok = c.academico && d && t.precio === precioConDescuento(c.precio, d);
+  const heroe = col ? (col.ids || []).map(id => (window.GATITOS || []).find(g => g.id === id)).filter(g => g && g.descuentoAcademico).map(g => g.nombre).join(', ') : '';
+  return ok ? ` <span class="pill" title="Precio de catálogo $${fmt(c.precio)}">🎓 −${Math.round(d * 100)}% (${esc(heroe)})</span>`
+    : ` <span class="pill" style="background:#5c2228;color:#ffb3ad" title="Precio de catálogo $${fmt(c.precio)}">⚠ pagó menos que el catálogo ($${fmt(c.precio)})</span>`;
+}
 function descSol(t) {
   if (t.clase === 'transferencia') return `<b>$${fmt(t.monto)}</b> · N° ${esc(t.deNumero)} ${esc(t.deNombre)} → N° ${esc(t.aNumero)} ${esc(t.aNombre)}`;
-  if (t.clase === 'beneficio') return `<b>${esc(t.ico || '')} ${esc(t.item)}</b> · $${fmt(t.precio)} · lo compra N° ${esc(t.compradorNumero)} ${esc(t.compradorNombre)}`;
+  if (t.clase === 'beneficio') return `<b>${esc(t.ico || '')} ${esc(t.item)}</b> · $${fmt(t.precio)}${notaPrecio(t)} · lo compra N° ${esc(t.compradorNumero)} ${esc(t.compradorNombre)}`;
   return `<b>${esc(t.ico || '')} ${esc(t.item)}</b> · $${fmt(t.precio)} · ${esc(t.vendedorNombre)} se lo vende a N° ${esc(t.compradorNumero)} ${esc(t.compradorNombre)}`;
 }
 function pintarTransferencias() {

@@ -358,7 +358,7 @@ function poderHtml(g) {
 }
 function pintarPoderes() {
   const el = $('poderes'); if (!el) return;
-  if (!usuario || esProfe || !cuenta) { el.innerHTML = `<div style="grid-column:1/-1"><h2 class="h2s">⚡ Poderes de tus gatitos</h2><p class="intro" style="margin:0">Cada gatito da décimas formativas por día (común y poco común: 1 · raro y épico: 2 · legendario y mítico: 3; máximo ${PODER_MAX_DIA} por día). Ava y Calha traen un premio único de 5 formativas y 2 sumativas; el Gato Nietzsche da 5 formativas y 2 sumativas cada mes. Los más valiosos dan además poderes especiales en clases.</p></div>`; return; }
+  if (!usuario || esProfe || !cuenta) { el.innerHTML = `<div style="grid-column:1/-1"><h2 class="h2s">⚡ Poderes de tus gatitos</h2><p class="intro" style="margin:0">Cada gatito da décimas formativas por día (común y poco común: 1 · raro y épico: 2 · legendario y mítico: 3; máximo ${PODER_MAX_DIA} por día). Ava y Calha traen un premio único de 5 formativas y 2 sumativas; el Gato Nietzsche da 5 formativas y 2 sumativas cada mes; los héroes (Rayo, Sombra y Luna) dan 30% de descuento en compras académicas. Los más valiosos dan además poderes especiales en clases.</p></div>`; return; }
   const ids = coleccion.ids || [], pd = poderDelDia(ids), n = pd.formativas, txt = textoPoderDia(pd);
   const especiales = []; ids.forEach(id => { const g = gato(id); (g && g.poderes || []).forEach(p => especiales.push([p, g.nombre])); });
   const yaHoy = poderHoy && poderHoy.dia === diaHoy();
@@ -459,6 +459,7 @@ function cartaOferta(o) {
   else accion = `<button class="btn ${alcanza ? 'p' : ''}" data-comprar="${esc(o.id)}"${alcanza ? '' : ' disabled title="No te alcanza todavía"'}>${alcanza ? 'Comprar' : 'Te falta ' + fmt(o.precio - (cuenta.saldo || 0)).replace(' ₣', '')}</button>`;
   const chips = [];
   if (rebaja) chips.push(`<span class="chip hot">−${rebaja}%</span>`);
+  if (g.exclusivo) chips.push('<span class="chip hot">⚡ Edición limitada</span>');
   if (g.anim) chips.push('<span class="chip ok">✨ Animado</span>');
   if (o.stock > 0) chips.push(`<span class="chip lim">${o.stock <= 3 ? '¡Últimas ' + o.stock + '!' : 'Quedan ' + o.stock}</span>`);
   const t = quedaTiempo(o); if (t && t !== 'terminó') chips.push(`<span class="chip lim">⏳ ${t}</span>`);
@@ -713,7 +714,8 @@ async function publicar() {
   catch (e) { msgProfe('No se pudo publicar: ' + esc(e.message), 'err'); }
 }
 async function publicarCatalogo() {
-  const activos = new Set(ofertas.filter(vigente).map(o => o.gatito)), faltan = G.filter(g => !activos.has(g.id));
+  // Los héroes (exclusivo) no se publican en bloque: el profe los saca de vez en cuando, con pocas unidades.
+  const activos = new Set(ofertas.filter(vigente).map(o => o.gatito)), faltan = G.filter(g => !activos.has(g.id) && !g.exclusivo);
   if (!faltan.length) return msgProfe('Todos los gatitos ya tienen una oferta activa.', 'ok');
   if (!confirm(`Publicar ${faltan.length} ofertas sin límite, al precio de referencia de cada gatito?`)) return;
   const { F, db } = await DF.listo();
@@ -750,10 +752,15 @@ function botonPedir(clave, precio, extra) {
   const alcanza = (cuenta.saldo || 0) >= precio;
   return `<button class="btn ${alcanza ? 'p' : ''}" ${extra}${alcanza ? '' : ' disabled title="No te alcanza todavía"'}>${alcanza ? 'Comprar' : 'Te falta ' + fmt(precio - (cuenta.saldo || 0)).replace(' ₣', '')}</button>`;
 }
+// Precio de un beneficio para esta persona: las compras académicas tienen descuento si tiene un gatito héroe.
+function precioBenef(b) { return b.academico ? precioConDescuento(b.precio, descuentoAcademico(coleccion.ids || [])) : b.precio; }
 function pintarBeneficios() {
-  $('gBenef').innerHTML = BENEF.map((b, i) => `<article class="item"><div class="ico">${esc(b.ico)}</div><h3>${esc(b.nombre)}</h3>
+  const d = descuentoAcademico(coleccion.ids || []);
+  $('gBenef').innerHTML = BENEF.map((b, i) => { const p = precioBenef(b), rebaja = p < b.precio;
+    return `<article class="item${rebaja ? ' destacada' : ''}"><div class="ico">${esc(b.ico)}</div><h3>${esc(b.nombre)}</h3>
+    ${rebaja ? `<div class="chips"><span class="chip ok">🎓 −${Math.round(d * 100)}% por tu gatito héroe</span></div>` : b.academico ? '<div class="chips"><span class="chip">🎓 Académica</span></div>' : ''}
     <p>${esc(b.desc ? b.desc + ' ' : '')}Queda «por usar» hasta que el profe lo aplique.</p>
-    <div class="pie"><span class="precio">${fmt(b.precio)}</span>${botonPedir('b:' + b.nombre, b.precio, `data-pedir-b="${i}"`)}</div></article>`).join('')
+    <div class="pie"><span class="precios">${rebaja ? `<s>${fmt(b.precio)}</s>` : ''}<span class="precio">${fmt(p)}</span></span>${botonPedir('b:' + b.nombre, p, `data-pedir-b="${i}"`)}</div></article>`; }).join('')
     || '<p class="intro">No hay beneficios en el catálogo.</p>';
 }
 function pintarEstudiantes() {
@@ -905,7 +912,7 @@ async function retirarMio(fila) {
 }
 document.addEventListener('click', ev => {
   const b = ev.target.closest('[data-pedir-b],[data-pedir-r],[data-publicar],[data-retirar],[data-cancelar-p]'); if (!b || b.disabled) return;
-  if (b.dataset.pedirB) { const x = BENEF[+b.dataset.pedirB]; pedir({ tipo: 'beneficio', item: x.nombre, ico: x.ico, precio: x.precio }); }
+  if (b.dataset.pedirB) { const x = BENEF[+b.dataset.pedirB]; pedir({ tipo: 'beneficio', item: x.nombre, ico: x.ico, precio: precioBenef(x) }); }
   else if (b.dataset.pedirR) { const x = publicaciones.find(p => p.id === b.dataset.pedirR); if (!x) return;
     if (x.gatito && estadoGato(x.gatito)) return aviso(estadoGato(x.gatito) === 'tengo' ? 'Ya tienes ese gatito.' : TXT_ESTADO[estadoGato(x.gatito)] + '.', 'err');
     const d = { tipo: 'reventa', publicacion: x.id, vendedor: x.vendedor, vendedorNombre: x.vendedorNombre, item: x.item, ico: x.ico || '🎟️', precio: x.precio };
