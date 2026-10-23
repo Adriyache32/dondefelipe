@@ -271,6 +271,7 @@ h1 span{color:var(--acid)}
 <div class="velo" id="velo" hidden><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
 
 <script src="gatitos/catalogo.js"></script>
+<script src="gatitos/anim.js"></script>
 <script src="banco-felipeso/catalogo.js"></script>
 <script src="firebase/df.js"></script>
 <script>
@@ -340,6 +341,7 @@ function cartaOferta(o) {
   else accion = `<button class="btn ${alcanza ? 'p' : ''}" data-comprar="${esc(o.id)}"${alcanza ? '' : ' disabled title="No te alcanza todavía"'}>${alcanza ? 'Comprar' : 'Te falta ' + fmt(o.precio - (cuenta.saldo || 0)).replace(' ₣', '')}</button>`;
   const chips = [];
   if (rebaja) chips.push(`<span class="chip hot">−${rebaja}%</span>`);
+  if (g.anim) chips.push('<span class="chip ok">✨ Animado</span>');
   if (o.stock > 0) chips.push(`<span class="chip lim">${o.stock <= 3 ? '¡Últimas ' + o.stock + '!' : 'Quedan ' + o.stock}</span>`);
   const t = quedaTiempo(o); if (t && t !== 'terminó') chips.push(`<span class="chip lim">⏳ ${t}</span>`);
   if (o.vendidos) chips.push(`<span class="chip">${o.vendidos} vendido${o.vendidos === 1 ? '' : 's'}</span>`);
