@@ -28,6 +28,8 @@
     t = String(t || '');
     if (/https?:|www\.|@/i.test(t)) return 'No pongas enlaces, correos ni usuarios de redes sociales.';
     if (/[0-9]{7,}/.test(t.replace(/[\s.\-]/g, ''))) return 'No pongas números de teléfono ni otros datos personales.';
+    if (/\b(insta(gram)?|ig|tik ?tok|whats ?app|wsp|wasap|snap(chat)?|discord|facebook|fb|twitter|telegram)\b/i.test(t)) return 'No pongas tus redes sociales: el perfil es solo para gustos breves.';
+    if (/\b(rut|run|contrase[ñn]a|clave|mi direcci[oó]n|vivo en|mi casa queda|calle|pasaje|depto|departamento n)\b/i.test(t)) return 'No pongas datos personales (dirección, RUT, claves).';
     if (t.split(/\s+/).some(function (w) { return MALAS.indexOf(normal(w)) >= 0; })) return 'Hay una palabra que no se puede publicar.';
     return '';
   }
