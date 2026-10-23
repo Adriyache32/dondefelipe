@@ -83,8 +83,8 @@ header .esp{flex:1}
 .hbtn:hover{background:rgba(255,255,255,.22)}
 
 .app{max-width:1200px;margin:0 auto;padding:0 16px 28px;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
-@media (max-width:920px){.app{grid-template-columns:1fr}}
-.tablero{position:relative;width:100%;max-width:min(100%,calc(100vh - 110px));margin:0 auto;aspect-ratio:1;border-radius:18px;border:8px solid var(--madera);
+@media (max-width:920px){.app{grid-template-columns:minmax(0,1fr)}}
+.tablero{position:relative;width:100%;max-width:min(100%,calc(100vh - 110px),calc(100dvh - 110px));margin:0 auto;aspect-ratio:1;border-radius:18px;border:8px solid var(--madera);
   box-shadow:0 0 0 2px #8a6440,0 18px 40px rgba(0,0,0,.45);background:#f4ecd6;overflow:hidden}
 .tablero svg{display:block;width:100%;height:100%}
 .celda{stroke:#b9ab8a;stroke-width:1}
@@ -103,7 +103,8 @@ header .esp{flex:1}
 .base-activa{animation:base 1.6s ease-in-out infinite}
 @keyframes base{50%{opacity:.55}}
 
-.panel{display:grid;gap:14px}
+.panel{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;min-width:0}
+.app>section{min-width:0}
 .tarjeta{background:var(--papel);border-radius:var(--r);padding:16px;box-shadow:0 10px 26px rgba(0,0,0,.3);border-top:6px solid var(--musgo)}
 .tarjeta h2{font:800 1.1rem 'Baloo 2',sans-serif;margin-bottom:8px;color:var(--bosque)}
 .turno{display:flex;align-items:center;gap:12px}
@@ -135,7 +136,7 @@ header .esp{flex:1}
 .bitacora{max-height:230px;overflow:auto;display:grid;gap:6px;font-size:.85rem;padding-right:4px}
 .bitacora p{background:#fff;border-radius:10px;padding:7px 10px;line-height:1.35;border-left:4px solid var(--c,var(--musgo))}
 
-.velo{position:fixed;inset:0;z-index:50;background:rgba(9,25,16,.72);backdrop-filter:blur(3px);display:grid;place-items:center;padding:16px;overflow:auto}
+.velo{position:fixed;inset:0;z-index:50;background:rgba(9,25,16,.72);backdrop-filter:blur(3px);display:grid;grid-template-columns:minmax(0,1fr);place-items:center;padding:16px;overflow:auto;overscroll-behavior:contain}
 .velo[hidden]{display:none}
 .ventana{width:min(680px,100%);background:var(--papel);border-radius:20px;box-shadow:0 30px 70px rgba(0,0,0,.5);overflow:hidden;animation:entra .28s cubic-bezier(.3,1.4,.5,1)}
 @keyframes entra{from{transform:translateY(18px) scale(.96);opacity:0}}
@@ -204,8 +205,41 @@ header .esp{flex:1}
   .cfg-eq>div:last-child{grid-column:2}
   .opcs{grid-template-columns:1fr}
   .v-cuerpo{padding:14px}
-  .tablero{border-width:5px}
+  .tablero{border-width:5px;border-radius:14px}
+  /* celular: cabecera compacta para que el tablero y el botón Lanzar quepan en la pantalla */
+  .guirnalda{height:30px;background-size:auto 30px}
+  header{padding:6px 12px 8px;gap:6px 8px}
+  .logo{font-size:1.45rem}
+  .lema,.volantin{display:none}
+  header .esp{flex:1 0 0}
+  .cuenta{font-size:.78rem}
+  .hbtn{padding:5px 10px;font-size:.76rem}
+  .app{padding:0 10px 20px;gap:10px}
+  .tarjeta{padding:12px}
+  .turno .av{width:46px;height:46px;font-size:1.6rem;border-width:3px}
+  .turno b{font-size:1.1rem}
+  .dado-zona{margin-top:8px;gap:10px}
+  .dado{width:62px;height:62px;font-size:3rem;border-radius:13px}
+  .btn.grande{padding:13px;font-size:1.05rem}
+  .v-cab{padding:12px 14px}
+  .v-cab h3{font-size:1.2rem}
 }
+/* celular acostado: tablero a la izquierda, del alto de la pantalla; panel a la derecha */
+@media (orientation:landscape) and (max-height:520px){
+  .guirnalda,.lema,.volantin{display:none}
+  header{padding:6px 12px;gap:6px 8px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  header>*{flex:none}
+  .logo{font-size:1.3rem}
+  .hbtn{padding:4px 10px;font-size:.74rem}
+  .app{grid-template-columns:auto minmax(0,1fr);padding:0 10px 14px;gap:10px}
+  .tablero{width:calc(100dvh - 58px);max-width:none;border-width:5px;border-radius:12px}
+  .panel{max-height:calc(100dvh - 58px);overflow:auto}
+  .tarjeta{padding:10px}
+  .dado{width:56px;height:56px;font-size:2.7rem}
+  .turno .av{width:42px;height:42px;font-size:1.4rem}
+}
+/* en pantallas táctiles no hay teclado: se oculta la ayuda de teclas */
+@media (pointer:coarse){.nota-teclas{display:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
 </style>
 </head>
@@ -232,7 +266,7 @@ header .esp{flex:1}
       <div class="msg" id="msg" aria-live="polite"></div>
       <div class="nota" id="sala-info"></div>
       <button class="btn sec chico" id="b-congelar" hidden style="margin-top:8px">⏸ Congelar partida</button>
-      <div class="nota">Espacio: lanzar · Toca la ficha que quieres mover · 1–4 eligen ficha</div>
+      <div class="nota nota-teclas">Espacio: lanzar · Toca la ficha que quieres mover · 1–4 eligen ficha</div>
     </div>
     <div class="tarjeta" id="chat"><h2>💬 Chat</h2>
       <div class="chat-lista" id="chat-lista" aria-live="polite"><div class="vacio">Aquí aparecen los mensajes de la partida.</div></div>
@@ -424,14 +458,15 @@ function ventana(html,{cerrable=false}={}){
 }
 function cerrar(){$('velo').hidden=true;$('ventana').innerHTML='';}
 function cab(ic,t,sub){return `<div class="v-cab"><div class="ic">${ic}</div><div><small>${sub||''}</small><h3>${t}</h3></div></div>`;}
-const REGLAS_HTML=()=>`<ul class="reglas">
-  <li>Cada equipo tiene sus fichas en su base. Para sacar una ficha necesitas un <b>6</b>${CONF.reglas.salida==='1y6'?' o un <b>1</b>':''}.</li>
+// Las reglas de la partida en curso (en línea, las de la sala); si no hay partida, las de la configuración.
+const REGLAS_HTML=()=>{const RG=(est&&est.reglas)||CONF.reglas,PAES=MODO==='linea'&&SALA?!!SALA.paes:!!CONF.paes;return `<ul class="reglas">
+  <li>Cada equipo tiene sus fichas en su base. Para sacar una ficha necesitas un <b>6</b>${RG.salida==='1y6'?' o un <b>1</b>':''}.</li>
   <li>Las fichas recorren la pista en el sentido de las agujas del reloj y entran por su <b>pasillo de color</b> hasta el centro. A la meta se llega con el <b>número exacto</b>.</li>
-  <li>Si caes donde hay una ficha rival, la <b>capturas</b> y vuelve a su base${CONF.reglas.capturaExtra?' (y lanzas otra vez)':''}. En las casillas de salida y en las <b>estrellas</b> ★ nadie puede ser capturado.</li>
-  <li>Con un <b>6</b> vuelves a lanzar${CONF.reglas.tresSeis?'; con tres 6 seguidos pierdes el turno':''}.${CONF.reglas.metaExtra?' Llevar una ficha a la meta también da otro lanzamiento.':''}</li>
-  ${CONF.reglas.barreras?'<li><b>Barreras</b>: dos fichas del mismo equipo juntas no dejan pasar a los rivales.</li>':''}
-  ${CONF.paes?'<li><b>Desafío PAES</b>: para capturar debes responder bien una pregunta. Si fallas, tu ficha avanza igual, pero no captura.</li>':''}
-  <li>Gana quien lleva primero ${CONF.reglas.fichas===2?'sus 2 fichas':'sus 4 fichas'} al centro.</li></ul>`;
+  <li>Si caes donde hay una ficha rival, la <b>capturas</b> y vuelve a su base${RG.capturaExtra?' (y lanzas otra vez)':''}. En las casillas de salida y en las <b>estrellas</b> ★ nadie puede ser capturado.</li>
+  <li>Con un <b>6</b> vuelves a lanzar${RG.tresSeis?'; con tres 6 seguidos pierdes el turno':''}.${RG.metaExtra?' Llevar una ficha a la meta también da otro lanzamiento.':''}</li>
+  ${RG.barreras?'<li><b>Barreras</b>: dos fichas del mismo equipo juntas no dejan pasar a los rivales.</li>':''}
+  ${PAES?'<li><b>Desafío PAES</b>: para capturar debes responder bien una pregunta. Si fallas, tu ficha avanza igual, pero no captura.</li>':''}
+  <li>Gana quien lleva primero ${RG.fichas===2?'sus 2 fichas':'sus 4 fichas'} al centro.</li></ul>`;};
 
 /* ═════════════ cuenta del sitio ═════════════ */
 let ONLINE=false,USR=null;
@@ -468,7 +503,7 @@ let CONF={jug:[{tipo:'humano',nombre:''},{tipo:'cpu',nombre:''},{tipo:'humano',n
 try{const g=JSON.parse(localStorage.getItem('ludo_conf')||'null');if(g&&g.jug&&g.reglas)CONF=Object.assign(CONF,g,{reglas:Object.assign({},L.REGLAS_BASE,g.reglas)});}catch(e){}
 let BANCO=[],mazo=[];
 async function cargarBanco(){
-  for(const r of ['api/preguntas','preguntas.json','../ruta-paes/preguntas.json']){
+  for(const r of ['preguntas.json','api/preguntas','../ruta-paes/preguntas.json']){   // primero el archivo (en el sitio la API no existe)
     try{const res=await fetch(r,{cache:'no-store'});if(!res.ok)continue;const d=await res.json();
       if(Array.isArray(d)&&d.length)return d.filter(p=>p&&Array.isArray(p.alternativas)&&p.alternativas.length===4&&p.correcta>=0&&p.correcta<4);}catch(e){}
   }
@@ -1106,8 +1141,10 @@ const TAPAR=['weon','won','wn','hueon','huevon','aweonao','aweonado','ctm','csm'
 const TAPAR_INICIO=['weo','aweo','hueo','huev','conche','conchet','chuchet','culia','maric','putit','mierd','imbec','estupi'];
 function normal(w){return w.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[0@4]/g,m=>({'0':'o','@':'a','4':'a'}[m])).replace(/[1!]/g,'i').replace(/3/g,'e').replace(/[^a-zñ]/g,'').replace(/(.)\1+/g,'$1');}
 function limpiarTexto(t){
-  return String(t||'').replace(/\s+/g,' ').trim().slice(0,120).split(' ').map(w=>{const n=normal(w);
-    return n&&(TAPAR.indexOf(n)>=0||TAPAR_INICIO.some(p=>n.indexOf(p)===0))?'*'.repeat(Math.min(6,Math.max(3,w.length))):w;}).join(' ');
+  // se tapa solo la palabra: la puntuación pegada («weon,» «¡wn!») se conserva
+  return String(t||'').replace(/\s+/g,' ').trim().slice(0,120).split(' ').map(w=>{
+    const m=w.match(/^([^\p{L}\p{N}@]*)(.*?)([^\p{L}\p{N}@]*)$/u)||['',  '',w,''],n=normal(m[2]);
+    return n&&(TAPAR.indexOf(n)>=0||TAPAR_INICIO.some(p=>n.indexOf(p)===0))?m[1]+'*'.repeat(Math.min(6,Math.max(3,m[2].length)))+m[3]:w;}).join(' ');
 }
 let CHAT=[],chatUnsub=null,chatVistos=new Set(),chatPrimera=true,envios=[];
 function colorEq(eq){return eq>=0&&TEMA[eq]?(TEMA[eq].color==='#eef2f7'?'#5b6b7c':TEMA[eq].color):'#5f8f3e';}
