@@ -549,7 +549,9 @@ function pintarPoderes() {
   const G = window.GATITOS || [], q = ($('podBuscar').value || '').trim().toLowerCase();
   const filas = colecciones.map(c => {
     const pod = []; (c.ids || []).forEach(id => { const g = G.find(x => x.id === id); (g && g.poderes || []).forEach(p => pod.push([p, g.nombre])); });
-    return { nombre: c.nombre || '—', dec: window.decimasDeGatitos ? decimasDeGatitos(c.ids) : 0, pod };
+    const pd = window.poderDelDia ? poderDelDia(c.ids) : { formativas: 0, sumativas: 0 };
+    if (pd.sumativas) pod.unshift(['📚 ' + pd.sumativas + ' décimas sumativas por día', (c.ids || []).filter(id => (window.GATITOS_ESPECIALES || {})[id]).map(id => (G.find(x => x.id === id) || {}).nombre).join(' y ')]);
+    return { nombre: c.nombre || '—', dec: pd.formativas, pod };
   }).filter(f => f.pod.length).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   $('nPod').textContent = filas.length;
   const l = q ? filas.filter(f => (f.nombre + ' ' + f.pod.map(p => p.join(' ')).join(' ')).toLowerCase().includes(q)) : filas;

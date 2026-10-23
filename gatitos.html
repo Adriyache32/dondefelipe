@@ -352,42 +352,42 @@ function estadoGato(id) {
 }
 const TXT_ESTADO = { venta: '🔒 Lo tienes a la venta', camino: '⏳ Ya lo compraste · por llegar' };
 function poderHtml(g) {
-  const d = (window.PODER_DECIMAS || {})[g.rareza] || 0;
-  const l = [d ? `+${textoDecimas(d)} por día` : ''].concat(g.poderes || []).filter(Boolean);
+  const p = poderGato(g);
+  const l = [p.formativas ? `+${textoPoderDia(p)} por día` : ''].concat(g.poderes || []).filter(Boolean);
   return l.length ? `<div class="poder"><b>⚡ Poder</b>${l.map(x => `<span>${esc(x)}</span>`).join('')}</div>` : '';
 }
 function pintarPoderes() {
   const el = $('poderes'); if (!el) return;
-  if (!usuario || esProfe || !cuenta) { el.innerHTML = `<div style="grid-column:1/-1"><h2 class="h2s">⚡ Poderes de tus gatitos</h2><p class="intro" style="margin:0">Cada gatito da décimas formativas por día (común y poco común: 1 · raro y épico: 2 · legendario y mítico: 3; máximo ${PODER_MAX_DIA} por día) y los más valiosos, poderes especiales en clases.</p></div>`; return; }
-  const ids = coleccion.ids || [], n = decimasDeGatitos(ids);
+  if (!usuario || esProfe || !cuenta) { el.innerHTML = `<div style="grid-column:1/-1"><h2 class="h2s">⚡ Poderes de tus gatitos</h2><p class="intro" style="margin:0">Cada gatito da décimas formativas por día (común y poco común: 1 · raro y épico: 2 · legendario y mítico: 3; máximo ${PODER_MAX_DIA} por día). Ava y Calha dan 5 formativas y 2 sumativas por día. Los más valiosos dan además poderes especiales en clases.</p></div>`; return; }
+  const ids = coleccion.ids || [], pd = poderDelDia(ids), n = pd.formativas, txt = textoPoderDia(pd);
   const especiales = []; ids.forEach(id => { const g = gato(id); (g && g.poderes || []).forEach(p => especiales.push([p, g.nombre])); });
   const yaHoy = poderHoy && poderHoy.dia === diaHoy();
   const boton = !n ? '<button class="btn" disabled>Sin gatitos</button>'
     : yaHoy ? `<button class="btn" disabled>✓ Reclamado hoy</button>`
     : poderHoy === null ? '<button class="btn" disabled>…</button>'
-    : `<button class="btn p" data-a="reclamar"${reclamando ? ' disabled' : ''}><i class="fa-solid fa-bolt"></i> Reclamar ${esc(textoDecimas(n))}</button>`;
+    : `<button class="btn p" data-a="reclamar"${reclamando ? ' disabled' : ''}><i class="fa-solid fa-bolt"></i> Reclamar ${pd.sumativas ? 'mis décimas' : esc(txt)}</button>`;
   el.innerHTML = `<div class="dec">${n}<small>décima${n === 1 ? '' : 's'} hoy</small></div>
     <div><h2 class="h2s">⚡ Poderes de tus gatitos</h2>
-      <p class="intro" style="margin:0">${n ? `Hoy tus gatitos te dan <b>${esc(textoDecimas(n))}</b> (máximo ${PODER_MAX_DIA} por día). Al reclamarlas quedan «por usar» en tu cuenta y el profe las aplica a una evaluación formativa. Si no las reclamas, ese día se pierden.` : 'Consigue un gatito para empezar a ganar décimas formativas cada día.'}</p>
+      <p class="intro" style="margin:0">${n ? `Hoy tus gatitos te dan <b>${esc(txt)}</b>${pd.sumativas ? '' : ` (máximo ${PODER_MAX_DIA} por día)`}. Al reclamarlas quedan «por usar» en tu cuenta y el profe las aplica a ${pd.sumativas ? 'tus evaluaciones (formativas y sumativas)' : 'una evaluación formativa'}. Si no las reclamas, ese día se pierden.` : 'Consigue un gatito para empezar a ganar décimas formativas cada día.'}</p>
       ${especiales.length ? `<ul>${especiales.map(([p, nom]) => `<li>${esc(p)} <small>· ${esc(nom)}</small></li>`).join('')}</ul><p class="intro" style="margin:6px 0 0;font-size:13px">Los poderes especiales se usan cuando la clase lo permite y siempre con la autorización del profe.</p>` : ''}</div>
     ${boton}`;
 }
 async function reclamarPoderes() {
   if (reclamando || !cuenta || !cuentaId) return;
-  const n = decimasDeGatitos(coleccion.ids || []); if (!n) return;
+  const pd = poderDelDia(coleccion.ids || []), n = pd.formativas, txt = textoPoderDia(pd); if (!n) return;
   reclamando = true; pintarPoderes();
-  const { F, db } = await DF.listo(), dia = diaHoy(), item = 'Gatitos: ' + textoDecimas(n);
+  const { F, db } = await DF.listo(), dia = diaHoy(), item = 'Gatitos: ' + txt;
   try {
     await F.runTransaction(db, async tx => {
       const rc = F.doc(db, 'banco_cuentas', cuentaId), rp = F.doc(db, 'gatitos_poderes', cuentaId + '__' + dia);
       const [sc, sp] = await Promise.all([tx.get(rc), tx.get(rp)]);
       if (sp.exists()) throw new Error('ya las reclamaste hoy');
       if (!sc.exists()) throw new Error('no se encontró tu cuenta del banco');
-      movPropio(F, db, tx, sc.data(), 0, 'Poder de tus gatitos: ' + textoDecimas(n), 'poder-gatito', { item, canje: 'pendiente' });
-      tx.set(rp, { cuenta: cuentaId, uid: usuario.uid, dia, decimas: n, fecha: F.serverTimestamp() });
+      movPropio(F, db, tx, sc.data(), 0, 'Poder de tus gatitos: ' + txt, 'poder-gatito', { item, canje: 'pendiente' });
+      tx.set(rp, Object.assign({ cuenta: cuentaId, uid: usuario.uid, dia, decimas: n, fecha: F.serverTimestamp() }, pd.sumativas ? { sumativas: pd.sumativas } : {}));
     });
     poderHoy = { dia, decimas: n };
-    aviso(`✓ Reclamaste ${esc(textoDecimas(n))}: quedan «por usar» en tu cuenta.`, 'ok'); confeti(60);
+    aviso(`✓ Reclamaste ${esc(txt)}: quedan «por usar» en tu cuenta.`, 'ok'); confeti(60);
   } catch (e) { aviso('No se pudieron reclamar: ' + esc(/permission/i.test(e.message) ? 'el banco lo rechazó (¿el profe publicó las reglas nuevas?)' : e.message), 'err'); }
   reclamando = false; pintar();
 }
@@ -513,7 +513,7 @@ function estadoBase() {
     case 'beneficios': return { estado: 'carro', html: 'Elige un beneficio: pagas ahora y el profe lo autoriza.' };
     case 'estudiantes': { const n = publicaciones.filter(x => x.estado === 'venta').length;
       return n ? { estado: 'caja', html: `Tus compañeros venden <b>${n}</b> cosa${n === 1 ? '' : 's'}. ¡Mira!` } : { estado: 'duerme', html: 'Zzz… nadie está vendiendo por ahora.' }; }
-    case 'coleccion': if (cuenta && poderHoy === false && decimasDeGatitos(coleccion.ids || [])) return { estado: 'saluda', html: `¡Tus gatitos te dan <b>${textoDecimas(decimasDeGatitos(coleccion.ids || []))}</b> hoy! Reclámalas.` };
+    case 'coleccion': if (cuenta && poderHoy === false && decimasDeGatitos(coleccion.ids || [])) return { estado: 'saluda', html: `¡Tus gatitos te dan <b>${textoPoderDia(poderDelDia(coleccion.ids || []))}</b> hoy! Reclámalas.` };
       return tengo ? { estado: 'juega', html: `Llevas <b>${tengo} de ${G.length}</b> gatitos. ¡Sigue juntando!` } : { estado: 'duda', html: 'Tu álbum está vacío. ¿Cuál será tu primer gatito?' };
     case 'mio': return { estado: 'caja', html: 'Al publicar, tu objeto queda congelado hasta que alguien lo compre.' };
     case 'profe': return { estado: 'saluda', html: `Hola, profe. Hay <b>${vig.length}</b> oferta${vig.length === 1 ? '' : 's'} activa${vig.length === 1 ? '' : 's'}.` };
