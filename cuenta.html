@@ -87,6 +87,23 @@ label.ap input{width:18px;height:18px;margin-top:3px;accent-color:var(--acid)}
 .can.ok{background:rgba(204,255,0,.12);color:var(--acid)}
 .can.no{background:rgba(255,122,112,.14);color:var(--neg)}
 .can.anul{background:rgba(255,255,255,.08);color:var(--mute);text-decoration:line-through}
+/* resumen del perfil */
+.resumen{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+.resumen a{display:block;background:var(--slab2);border:1px solid var(--line);border-radius:14px;padding:10px 12px;text-decoration:none;color:var(--ink)}
+.resumen a:hover{border-color:var(--acid)}
+.resumen small{display:block;font:700 11px var(--ff);letter-spacing:1.5px;text-transform:uppercase;color:var(--mute)}
+.resumen b{font:900 28px/1.1 var(--ff-d);color:var(--acid)}
+.resumen b.neg{color:var(--neg)}
+.atajos{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.atajos .btn{padding:7px 13px;font-size:13px}
+.porusar{background:rgba(233,185,73,.07);border:1px solid rgba(233,185,73,.3);border-radius:14px;padding:4px 14px;margin-top:6px}
+.gpod{margin:12px 0 0;padding:12px 14px;border-radius:14px;background:var(--slab2);border:1px solid var(--line)}
+.gpod ul{margin:6px 0 0;padding-left:18px}
+.gpod li small{color:var(--mute)}
+.gmini.congelado{border-style:dashed;border-color:var(--brass)}
+.gmini.congelado img{filter:grayscale(.6) opacity(.75)}
+.gmini em{display:block;font-style:normal;font-size:10px;color:var(--brass);font-weight:700}
+@media (max-width:560px){.resumen{grid-template-columns:repeat(2,1fr)}.gfav img{height:90px}.gfav b{font-size:26px}}
 footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:var(--mute);font-size:14px}
 </style>
 </head>
@@ -107,8 +124,33 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:v
     </div>
     <div id="dentro" class="oculto">
       <div class="quien"><div class="av" id="av"></div><div><b id="nombre"></b><span id="correo"></span></div><span class="sp"></span><button class="btn" id="btnSalir"><i class="fa-solid fa-right-from-bracket"></i> Salir</button></div>
+      <div class="resumen" id="resumen">
+        <a href="#banco"><small>Saldo</small><b id="rSaldo">—</b></a>
+        <a href="#gatitosSec"><small>Gatitos</small><b id="rGatos">—</b></a>
+        <a href="#banco"><small>Por usar</small><b id="rUsar">—</b></a>
+        <a href="gatitos.html#coleccion"><small>Décimas hoy</small><b id="rDec">—</b></a>
+      </div>
+      <div class="atajos">
+        <a class="btn" href="gatitos.html"><i class="fa-solid fa-store"></i> Mercado</a>
+        <a class="btn" href="banco-felipeso/bolsa.html"><i class="fa-solid fa-chart-line"></i> Bolsa</a>
+        <a class="btn" href="ruleta.html"><i class="fa-solid fa-dharmachakra"></i> Ruleta</a>
+        <a class="btn" href="banco-felipeso/bases.html"><i class="fa-solid fa-scroll"></i> Bases</a>
+      </div>
     </div>
     <p id="cargando" class="muted" style="margin:0">Cargando…</p>
+  </section>
+
+  <!-- Banco -->
+  <section class="card oculto" id="banco">
+    <h2><i class="fa-solid fa-piggy-bank"></i> Mi banco de Hipopesos</h2>
+    <div id="bCont"><div class="vacio">Cargando…</div></div>
+    <div id="tCont"></div>
+  </section>
+
+  <!-- Mis datos -->
+  <section class="card oculto" id="gatitosSec">
+    <h2><i class="fa-solid fa-cat"></i> Mis gatitos</h2>
+    <div id="gCont"><div class="vacio">Cargando…</div></div>
   </section>
 
   <!-- Perfil -->
@@ -138,19 +180,6 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:v
     <p class="sub">Simuladores</p><div class="lista" id="lSims"></div>
   </section>
 
-  <!-- Banco -->
-  <section class="card oculto" id="banco">
-    <h2><i class="fa-solid fa-piggy-bank"></i> Mi banco de Hipopesos</h2>
-    <div id="bCont"><div class="vacio">Cargando…</div></div>
-    <div id="tCont"></div>
-  </section>
-
-  <!-- Mis datos -->
-  <section class="card oculto" id="gatitosSec">
-    <h2><i class="fa-solid fa-cat"></i> Mis gatitos</h2>
-    <div id="gCont"><div class="vacio">Cargando…</div></div>
-  </section>
-
   <section class="card oculto" id="datos">
     <h2><i class="fa-solid fa-database"></i> Mis datos</h2>
     <p>Puedes descargar todo lo que el sitio tiene guardado sobre ti, o borrarlo para siempre.</p>
@@ -171,7 +200,7 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:v
       <tr><td>Edad</td><td>La escribes tú la primera vez. Si tienes menos de 14 años, te pedimos confirmar que tu apoderado/a está de acuerdo.</td></tr>
       <tr><td>Grupo</td><td>Estudiante, docente o público general (ver más abajo).</td></tr>
       <tr><td>Tu progreso</td><td>Puntajes de juegos, resultados de simuladores y avance en los planes de estudio.</td></tr>
-      <tr><td>Banco de Hipopesos</td><td>Si el profe conecta tu cuenta del banco con tu correo, aquí ves tu saldo, tus compras y si ya las usaste. Los movimientos los registra el profe.</td></tr>
+      <tr><td>Banco de Hipopesos</td><td>Si tu cuenta del banco está conectada con tu correo: tu saldo, tus movimientos, lo que compras o vendes en el Mercado, tus transferencias y tus gatitos. Todo lo que mueve dinero entre personas lo autoriza el profe.</td></tr>
       <tr><td>Visitas</td><td>Un contador de cuántas veces se abre cada página. <b>No</b> guarda quién eres.</td></tr>
     </table>
     <p>No guardamos tu contraseña (la maneja Google), ni tu ubicación, ni datos de salud, ni fotos.</p>
@@ -248,7 +277,6 @@ DF.listo().then(() => {
     $('av').innerHTML = u.photoURL ? `<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer">` : esc((u.displayName || u.email || '?').charAt(0).toUpperCase());
     cargarPerfil(); cargarProgreso();
     DF.asegurarCuentaBanco().then(cargarBanco, cargarBanco);
-    cargarGatitos(u);
   });
 }).catch(e => {
   ver('cargando', false);
@@ -307,28 +335,50 @@ function cargarProgreso() {
   }).catch(e => { ['lProg', 'lJuegos', 'lSims'].forEach(id => $(id).innerHTML = `<div class="vacio">No se pudo cargar: ${esc(e.message)}</div>`); });
 }
 
-async function cargarGatitos(u) {
-  const G = window.GATITOS || [], R = window.RAREZAS || {};
+const diaHoy = () => Math.floor((Date.now() - 14400000) / 86400000);   // igual que en las reglas
+// Colección, gatitos congelados (a la venta), por llegar (comprados a un compañero) y poderes.
+async function cargarGatitos(u, banco) {
+  const G = window.GATITOS || [], R = window.RAREZAS || {}, cid = banco ? banco.cuenta.id : '';
   try {
     const { F, db } = await DF.listo();
-    const s = await F.getDoc(F.doc(db, 'gatitos', u.uid));
+    const [s, pubs, peds, pod] = await Promise.all([
+      F.getDoc(F.doc(db, 'gatitos', u.uid)),
+      F.getDocs(F.query(F.collection(db, 'mercado_items'), F.where('uid', '==', u.uid))).catch(() => null),
+      cid ? F.getDocs(F.query(F.collection(db, 'mercado_pedidos'), F.where('comprador', '==', cid))).catch(() => null) : null,
+      cid ? F.getDoc(F.doc(db, 'gatitos_poderes', cid + '__' + diaHoy())).catch(() => null) : null
+    ]);
     const col = s.exists() ? s.data() : { ids: [] }, ids = col.ids || [];
-    const mios = G.filter(g => ids.includes(g.id)), fav = G.find(g => g.id === col.favorito) || mios[mios.length - 1];
-    if (!mios.length) {
-      $('gCont').innerHTML = `<div class="gvacio"><img src="gatitos/img/caja.webp" alt=""><div>Aún no tienes gatitos. Con tus Hipopesos puedes comprar los que publica el profe en el <a href="gatitos.html">mercado de gatitos</a>.</div></div>`;
+    const venta = pubs ? pubs.docs.map(d => d.data()).filter(x => x.tipo === 'gatito' && (x.estado === 'venta' || x.estado === 'reservado')).map(x => x.gatito) : [];
+    const camino = peds ? peds.docs.map(d => d.data()).filter(p => p.estado === 'pendiente' && p.gatito).map(p => p.gatito) : [];
+    // Si algún id no está en el catálogo (catálogo viejo en caché), igual se muestra.
+    const cat = G.concat(ids.filter(id => !G.some(g => g.id === id)).map(id => ({ id, nombre: id, rareza: 'comun', precio: 0 })));
+    const mios = cat.filter(g => ids.includes(g.id)), fav = cat.find(g => g.id === col.favorito && ids.includes(g.id)) || mios[mios.length - 1];
+    const dec = window.decimasDeGatitos ? decimasDeGatitos(ids) : 0, yaHoy = pod && pod.exists();
+    $('rGatos').textContent = `${mios.length}/${G.length}`;
+    $('rDec').textContent = !cid ? '—' : !dec ? '0' : yaHoy ? '✓ ' + dec : dec;
+    $('rDec').parentNode.title = !dec ? 'Consigue un gatito para ganar décimas' : yaHoy ? 'Ya las reclamaste hoy' : 'Reclámalas en el Mercado → Mi colección';
+    if (!mios.length && !venta.length && !camino.length) {
+      $('gCont').innerHTML = `<div class="gvacio"><img src="mercado/sprites/gato-duda.webp" alt=""><div>Aún no tienes gatitos. Con tus Hipopesos puedes comprarlos en el <a href="gatitos.html">Mercado</a>. Cada gatito da décimas formativas cada día y los más valiosos, poderes especiales.</div></div>`;
       return;
     }
-    const valor = mios.reduce((t, g) => t + g.precio, 0);
+    const valor = mios.reduce((t, g) => t + (g.precio || 0), 0);
+    const especiales = []; mios.forEach(g => (g.poderes || []).forEach(p => especiales.push([p, g.nombre])));
+    const mini = g => { const t = ids.includes(g.id), v = !t && venta.includes(g.id), c = !t && !v && camino.includes(g.id), r = R[g.rareza] || {};
+      const vis = t || v || c;
+      return `<div class="gmini ${t ? '' : v || c ? 'congelado' : 'falta'}" style="--rc:${r.color || '#888'}" title="${vis ? esc(g.nombre) : '???'}"><img src="gatitos/img/${esc(g.id)}.webp" alt="${vis ? esc(g.nombre) : 'Gatito por descubrir'}" loading="lazy"><span>${vis ? esc(g.nombre) : '???'}</span>${v ? '<em>🔒 a la venta</em>' : c ? '<em>⏳ por llegar</em>' : ''}</div>`; };
     $('gCont').innerHTML = `
-      <div class="gfav" style="--rc:${(R[fav.rareza] || {}).color || '#ccff00'}"><img src="gatitos/img/${esc(fav.id)}.webp" alt="">
-        <div><small>Mi gatito favorito</small><b>${esc(fav.nombre)}</b><span>${esc((R[fav.rareza] || {}).nombre || '')}</span></div></div>
-      <p class="sub">Colección: ${mios.length} de ${G.length} · valor ${new Intl.NumberFormat('es-CL').format(valor)} ₣</p>
-      <div class="ggrid">${G.map(g => { const t = ids.includes(g.id), r = R[g.rareza] || {};
-        return `<div class="gmini ${t ? '' : 'falta'}" style="--rc:${r.color || '#888'}" title="${t ? esc(g.nombre) : '???'}"><img src="gatitos/img/${esc(g.id)}.webp" alt="${t ? esc(g.nombre) : 'Gatito por descubrir'}" loading="lazy"><span>${t ? esc(g.nombre) : '???'}</span></div>`; }).join('')}</div>
-      <p class="muted" style="font-size:14px;margin-top:12px"><a href="gatitos.html">Ir al mercado de gatitos</a> · en «Mi colección» eliges cuál aparece como favorito (⭐).</p>`;
+      ${fav ? `<div class="gfav" style="--rc:${(R[fav.rareza] || {}).color || '#ccff00'}"><img src="gatitos/img/${esc(fav.id)}.webp" alt="">
+        <div><small>Mi gatito favorito</small><b>${esc(fav.nombre)}</b><span>${esc((R[fav.rareza] || {}).nombre || '')}</span></div></div>` : ''}
+      <p class="sub">Colección: ${mios.length} de ${G.length} · valor ${fmt(valor)} ₣${venta.length ? ` · ${venta.length} a la venta` : ''}${camino.length ? ` · ${camino.length} por llegar` : ''}</p>
+      <div class="ggrid">${cat.map(mini).join('')}</div>
+      <div class="gpod"><b>⚡ Poderes</b>
+        <div class="muted" style="font-size:14px">${dec ? `Tus gatitos te dan <b style="color:var(--acid)">${esc(textoDecimas(dec))}</b> por día. ${yaHoy ? '✓ Ya las reclamaste hoy.' : '<a href="gatitos.html#coleccion">Reclámalas hoy en el Mercado</a> (si no, se pierden).'}` : 'Tus gatitos aún no dan décimas.'}</div>
+        ${especiales.length ? `<ul>${especiales.map(([p, n]) => `<li>${esc(p)} <small>· ${esc(n)}</small></li>`).join('')}</ul>` : ''}
+      </div>
+      ${venta.length || camino.length ? '<p class="muted" style="font-size:13px;margin:8px 0 0">🔒 <b>A la venta</b>: salió de tu colección y está congelado en tu publicación; si la retiras, vuelve. ⏳ <b>Por llegar</b>: ya lo pagaste a un compañero; aparece cuando el profe lo autorice.</p>' : ''}
+      <p class="muted" style="font-size:14px;margin-top:12px"><a href="gatitos.html">Ir al Mercado</a> · en «Mi colección» eliges cuál aparece como favorito (⭐).</p>`;
   } catch (e) { $('gCont').innerHTML = `<div class="vacio">No se pudieron cargar tus gatitos: ${esc(e.message)}</div>`; }
 }
-
 
 /* ── Transferencias: el estudiante las pide; el profe las autoriza en su panel ── */
 const TR_ESTADO = { pendiente: '<span class="can pend">Retenida · por autorizar</span>', aprobada: '<span class="can ok">Autorizada</span>',
@@ -419,23 +469,33 @@ document.addEventListener('click', async ev => {
 
 function cargarBanco() {
   DF.miBanco().then(b => {
+    cargarGatitos(DF.usuario(), b);
     if (!b) {
+      $('rSaldo').textContent = '—'; $('rUsar').textContent = '—';
       $('tCont').innerHTML = '';
       $('bCont').innerHTML = '<div class="vacio">Tu cuenta del banco todavía no está conectada con este correo. Pídele al profe que la vincule y aquí verás tu saldo y tus compras.</div>';
       return;
     }
-    const c = b.cuenta, compras = b.movs.filter(m => m.tipo === 'compra');
+    // Todo lo que deja algo para usar: compras, regalos del profe, premios de la ruleta y décimas de los gatitos.
+    const c = b.cuenta, compras = b.movs.filter(m => m.item || m.canje);
+    const porUsar = compras.filter(m => m.canje === 'pendiente'), resto = compras.filter(m => m.canje !== 'pendiente');
+    const origen = m => m.tipo === 'poder-gatito' ? '⚡ ' : m.tipo === 'ruleta' ? '🎡 ' : m.monto === 0 && m.tipo === 'compra' ? '🎁 ' : '';
+    $('rSaldo').textContent = fmt(c.saldo); $('rSaldo').classList.toggle('neg', (c.saldo || 0) < 0);
+    $('rUsar').textContent = porUsar.length;
     const estado = m => m.canje === 'usada' ? `<span class="can usada">Usada</span>${m.canjeNota ? ' <small class="muted">' + esc(m.canjeNota) + '</small>' : ''}`
       : m.canje === 'anulada' ? '<span class="can anul">Anulada</span>' : m.canje === 'retenida' ? '<span class="can pend">Retenida · esperando al profe</span>' : m.canje === 'en-venta' ? '<span class="can pend">En venta (congelada)</span>' : m.canje === 'entregada' ? '<span class="can usada">Entregada</span>' : m.canje === 'traspasada' ? `<span class="can anul">Vendida</span> <small class="muted">${esc(m.canjeNota || '')}</small>` : '<span class="can pend">Por usar</span>';
     $('bCont').innerHTML = `
       <div class="saldo"><b class="${(c.saldo || 0) < 0 ? 'neg' : ''}">${fmt(c.saldo)} ₣</b><span class="muted">Cuenta N° ${esc(c.numero)}${c.curso ? ' · ' + esc(c.curso) : ''}</span></div>
-      <p class="sub">Mis compras</p>
-      <div class="lista">${compras.length ? compras.map(m => `<div class="it"><b>${esc(m.item || m.motivo)}</b>${estado(m)}<small>${fecha(m.fecha)}</small></div>`).join('') : '<div class="vacio">Aún no compras nada.</div>'}</div>
+      <p class="sub">Por usar (${porUsar.length})</p>
+      ${porUsar.length ? `<div class="lista porusar">${porUsar.map(m => `<div class="it"><b>${origen(m)}${esc(m.item || m.motivo)}</b>${estado(m)}<small>${fecha(m.fecha)}</small></div>`).join('')}</div>
+        <p class="muted" style="font-size:13px;margin:6px 0 0">Pídele al profe que lo aplique cuando lo necesites. ⚡ décimas de tus gatitos · 🎡 premio de la ruleta · 🎁 regalo del profe.</p>` : '<div class="vacio">No tienes nada por usar.</div>'}
+      <p class="sub">Historial de compras</p>
+      <div class="lista">${resto.length ? resto.slice(0, 20).map(m => `<div class="it"><b>${origen(m)}${esc(m.item || m.motivo)}</b>${estado(m)}<small>${fecha(m.fecha)}</small></div>`).join('') : '<div class="vacio">Aún no hay compras anteriores.</div>'}</div>
       <p class="sub">Últimos movimientos</p>
-      <div class="lista">${b.movs.slice(0, 15).map(m => `<div class="it"><b>${esc(m.motivo)}</b><span class="v" style="color:${m.monto < 0 ? 'var(--neg)' : 'var(--acid)'}">${m.monto < 0 ? '−' : '+'}${fmt(Math.abs(m.monto))}</span><small>${fecha(m.fecha)}</small></div>`).join('') || '<div class="vacio">Sin movimientos.</div>'}</div>
+      <div class="lista">${b.movs.slice(0, 15).map(m => `<div class="it"><b>${esc(m.motivo)}</b><span class="v" style="color:${m.monto < 0 ? 'var(--neg)' : m.monto === 0 ? 'var(--mute)' : 'var(--acid)'}">${m.monto === 0 ? 'sin costo' : (m.monto < 0 ? '−' : '+') + fmt(Math.abs(m.monto))}</span><small>${fecha(m.fecha)}</small></div>`).join('') || '<div class="vacio">Sin movimientos.</div>'}</div>
       <p class="muted" style="font-size:14px;margin-top:12px"><a href="banco-felipeso/bases.html">Bases de los Hipopesos</a>: qué se puede comprar y cómo se gana.</p>`;
     cargarTransferencias(Object.assign({ id: b.cuenta.id }, c));
-  }).catch(e => { $('bCont').innerHTML = `<div class="vacio">No se pudo cargar tu banco: ${esc(e.message)}</div>`; });
+  }).catch(e => { $('bCont').innerHTML = `<div class="vacio">No se pudo cargar tu banco: ${esc(e.message)}</div>`; cargarGatitos(DF.usuario(), null); });
 }
 
 $('btnDescargar').onclick = () => {
