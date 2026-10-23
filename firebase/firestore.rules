@@ -288,15 +288,19 @@ service cloud.firestore {
       return d.cuenta == miCuentaBanco() && d.cuenta != ''
         && opsDespues(d.cuenta) == opsAntes(d.cuenta) + 1
         && id == 'op-' + d.cuenta + '-' + string(opsDespues(d.cuenta))
-        && d.keys().hasOnly(['cuenta', 'numero', 'nombre', 'curso', 'monto', 'motivo', 'tipo', 'saldoDespues', 'profe', 'fecha', 'ticker', 'acciones', 'precio', 'gatito', 'oferta', 'tiro', 'item', 'canje'])
+        && d.keys().hasOnly(['cuenta', 'numero', 'nombre', 'curso', 'monto', 'motivo', 'tipo', 'saldoDespues', 'profe', 'fecha', 'ticker', 'acciones', 'precio', 'gatito', 'oferta', 'tiro', 'item', 'canje', 'transferencia', 'pedido'])
         && d.profe == '' && d.fecha == request.time
         && texto(d.numero, 20) && texto(d.nombre, 160) && texto(d.curso, 40) && texto(d.motivo, 200)
         && d.monto is int
         && d.saldoDespues == getAfter(rutaCuenta(d.cuenta)).data.saldo
         // Solo la ruleta puede dejar un beneficio por canjear (así nadie cuela canjes falsos al panel).
-        && (d.tipo == 'ruleta' || !d.keys().hasAny(['tiro', 'item', 'canje']))
+        // Una compra del Mercado entra «retenida» (congelada) y solo el profe la deja «por usar».
+        && (d.tipo == 'ruleta' || (d.tipo == 'compra' && d.get('canje', '') == 'retenida' && !d.keys().hasAny(['tiro']))
+            || !d.keys().hasAny(['tiro', 'item', 'canje']))
         && ((d.tipo in ['bolsa-compra', 'bolsa-venta'] && opBolsa(d)) || (d.tipo == 'bono-ingreso' && opBono(d))
-            || (d.tipo == 'gatito-compra' && opGatito(d)) || (d.tipo == 'ruleta' && opRuleta(d)));
+            || (d.tipo == 'gatito-compra' && opGatito(d)) || (d.tipo == 'ruleta' && opRuleta(d))
+            || (d.tipo == 'transferencia-envio' && opEnvio(id, d)) || (d.tipo == 'compra' && opPedido(id, d))
+            || (d.tipo == 'devolucion' && opDevolucion(d)));
     }
 
     // ═════ Ruleta de Hipopesos ═════
@@ -374,60 +378,129 @@ service cloud.firestore {
     }
     function rutaGatitos(uid) { return /databases/$(database)/documents/gatitos/$(uid); }
     function gatitosAntes(uid) { return exists(rutaGatitos(uid)) ? get(rutaGatitos(uid)).data.ids : []; }
-    // ═════ Transferencias entre cuentas ═════
-    // El estudiante solo PIDE la transferencia (no se mueve dinero). El profe la autoriza en el panel:
-    // ahí se descuenta, se abona y se registran los dos movimientos (el profe ya puede escribir en el banco).
+    // ═════ Transferencias y Mercado entre estudiantes, con CUSTODIA ═════
+    // Al pedir, el dinero sale de inmediato de la cuenta (y el objeto, al publicarlo) y queda congelado.
+    // El profe autoriza (llega a destino) o rechaza (vuelve). Quien pidió puede cancelar mientras espera.
+    function rutaTr(t) { return /databases/$(database)/documents/banco_transferencias/$(t); }
+    function rutaPedido(p) { return /databases/$(database)/documents/mercado_pedidos/$(p); }
+    function rutaItem(i) { return /databases/$(database)/documents/mercado_items/$(i); }
+    function opActual(c) { return getAfter(rutaOp(c, opsDespues(c))).data; }
+    function idOpActual(c) { return 'op-' + c + '-' + string(opsDespues(c)); }
+
+    // Movimiento que retiene el dinero de una transferencia pedida.
+    function opEnvio(id, d) {
+      let t = getAfter(rutaTr(d.transferencia)).data;
+      return d.transferencia is string && !exists(rutaTr(d.transferencia))
+        && t.de == d.cuenta && t.estado == 'pendiente' && t.mov == id
+        && d.monto == 0 - t.monto;
+    }
+    // Movimiento que retiene el pago de un pedido del Mercado (la compra queda «retenida»).
+    function opPedido(id, d) {
+      let p = getAfter(rutaPedido(d.pedido)).data;
+      return d.pedido is string && !exists(rutaPedido(d.pedido))
+        && p.comprador == d.cuenta && p.estado == 'pendiente' && p.mov == id
+        && d.monto == 0 - p.precio && d.item == p.item
+        && d.get('gatito', '') == p.get('gatito', '');
+    }
+    // Devolución al cancelar: exactamente lo retenido, una sola vez (pendiente → cancelada).
+    function opDevolucion(d) {
+      return (d.keys().hasAll(['transferencia'])
+          && get(rutaTr(d.transferencia)).data.estado == 'pendiente'
+          && getAfter(rutaTr(d.transferencia)).data.estado == 'cancelada'
+          && get(rutaTr(d.transferencia)).data.de == d.cuenta
+          && d.monto == get(rutaTr(d.transferencia)).data.monto)
+        || (d.keys().hasAll(['pedido'])
+          && get(rutaPedido(d.pedido)).data.estado == 'pendiente'
+          && getAfter(rutaPedido(d.pedido)).data.estado == 'cancelada'
+          && get(rutaPedido(d.pedido)).data.comprador == d.cuenta
+          && d.monto == get(rutaPedido(d.pedido)).data.precio);
+    }
+
     match /banco_transferencias/{tid} {
       allow read: if esProfe()
         || (miCuentaBanco() != '' && (resource.data.de == miCuentaBanco() || resource.data.a == miCuentaBanco()));
       allow create: if esColegio() && miCuentaBanco() != ''
-        && request.resource.data.keys().hasOnly(['de', 'a', 'monto', 'motivo', 'estado', 'uid', 'deNombre', 'deNumero', 'aNombre', 'aNumero', 'creada'])
+        && request.resource.data.keys().hasOnly(['de', 'a', 'monto', 'motivo', 'estado', 'uid', 'deNombre', 'deNumero', 'aNombre', 'aNumero', 'creada', 'mov'])
         && request.resource.data.de == miCuentaBanco()
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.a is string && request.resource.data.a != request.resource.data.de
         && exists(rutaCuenta(request.resource.data.a))
         && request.resource.data.monto is int && request.resource.data.monto >= 100
-        && request.resource.data.monto <= get(rutaCuenta(request.resource.data.de)).data.saldo
         && texto(request.resource.data.motivo, 120)
         && texto(request.resource.data.deNombre, 160) && texto(request.resource.data.aNombre, 160)
         && texto(request.resource.data.deNumero, 20) && texto(request.resource.data.aNumero, 20)
         && request.resource.data.estado == 'pendiente'
-        && request.resource.data.creada == request.time;
-      // Quien la pidió puede cancelarla mientras siga pendiente.
+        && request.resource.data.creada == request.time
+        // el dinero se retiene en la misma escritura
+        && opsDespues(miCuentaBanco()) == opsAntes(miCuentaBanco()) + 1
+        && request.resource.data.mov == idOpActual(miCuentaBanco())
+        && opActual(miCuentaBanco()).tipo == 'transferencia-envio'
+        && opActual(miCuentaBanco()).transferencia == tid;
+      // Quien la pidió puede cancelarla mientras espera; el dinero le vuelve en la misma escritura.
       allow update: if conCuenta() && resource.data.uid == request.auth.uid && resource.data.estado == 'pendiente'
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'resuelta'])
         && request.resource.data.estado == 'cancelada'
-        && request.resource.data.resuelta == request.time;
+        && request.resource.data.resuelta == request.time
+        && opsDespues(miCuentaBanco()) == opsAntes(miCuentaBanco()) + 1
+        && opActual(miCuentaBanco()).tipo == 'devolucion'
+        && opActual(miCuentaBanco()).transferencia == tid;
       allow update, delete: if esProfe();
     }
 
-    // ═════ Mercado entre estudiantes y compras de beneficios ═════
-    // Publicar: el estudiante pone a la venta algo suyo (un beneficio sin usar o un gatito).
-    // Comprar: cualquier compra (beneficio del catálogo o algo de otro estudiante) queda como PEDIDO;
-    // el profe la autoriza en el panel y ahí recién se mueve el dinero y el objeto.
-    function movPropio(movId) {
-      let m = get(/databases/$(database)/documents/banco_movs/$(movId)).data;
-      return m.cuenta == miCuentaBanco() && m.get('canje', '') == 'pendiente' && m.get('item', '') != '';
-    }
-    function publicacionValida(d, iid) {
+    // Publicaciones entre estudiantes. Estados: venta → reservado (alguien la pidió) → vendido;
+    // o venta → retirado. El objeto está congelado mientras la publicación está en venta o reservada.
+    function datosPublicacion(d, iid) {
       return d.vendedor == miCuentaBanco() && miCuentaBanco() != '' && d.uid == request.auth.uid
-        && d.keys().hasOnly(['tipo', 'vendedor', 'vendedorNombre', 'uid', 'mov', 'gatito', 'item', 'ico', 'precio', 'estado', 'creada', 'actualizado'])
+        && d.keys().hasOnly(['tipo', 'vendedor', 'vendedorNombre', 'uid', 'mov', 'gatito', 'item', 'ico', 'precio', 'estado', 'reservadoPor', 'creada', 'actualizado'])
         && d.precio is int && d.precio >= 100 && d.precio <= 10000000
         && texto(d.vendedorNombre, 40) && texto(d.item, 120) && texto(d.ico, 8)
-        && d.estado in ['venta', 'retirado']
         && d.actualizado == request.time
-        && ((d.tipo == 'beneficio' && iid == 'b-' + d.mov && movPropio(d.mov)
-               && d.item == get(/databases/$(database)/documents/banco_movs/$(d.mov)).data.item)
-            || (d.tipo == 'gatito' && iid == 'g-' + request.auth.uid + '-' + d.gatito && d.gatito in gatitosAntes(request.auth.uid)));
+        && ((d.tipo == 'beneficio' && iid == 'b-' + d.mov
+               && d.item == get(/databases/$(database)/documents/banco_movs/$(d.mov)).data.item
+               && get(/databases/$(database)/documents/banco_movs/$(d.mov)).data.cuenta == miCuentaBanco())
+            || (d.tipo == 'gatito' && iid == 'g-' + request.auth.uid + '-' + d.gatito));
+    }
+    // Al publicar, el objeto sale de la cuenta en la misma escritura.
+    function objetoCongelado(d) {
+      return (d.tipo == 'beneficio'
+          && get(/databases/$(database)/documents/banco_movs/$(d.mov)).data.get('canje', '') == 'pendiente'
+          && getAfter(/databases/$(database)/documents/banco_movs/$(d.mov)).data.canje == 'en-venta')
+        || (d.tipo == 'gatito'
+          && d.gatito in gatitosAntes(request.auth.uid)
+          && !(d.gatito in getAfter(rutaGatitos(request.auth.uid)).data.ids));
+    }
+    // Al retirar, el objeto vuelve en la misma escritura.
+    function objetoDevuelto(d) {
+      return (d.tipo == 'beneficio' && getAfter(/databases/$(database)/documents/banco_movs/$(d.mov)).data.canje == 'pendiente')
+        || (d.tipo == 'gatito' && d.gatito in getAfter(rutaGatitos(request.auth.uid)).data.ids);
     }
     match /mercado_items/{iid} {
       allow read: if conCuenta();
-      allow create: if esColegio() && publicacionValida(request.resource.data, iid)
-        && request.resource.data.estado == 'venta' && request.resource.data.creada == request.time;
-      // El vendedor cambia el precio, la retira o la vuelve a publicar (si todavía le pertenece).
-      allow update: if esColegio() && resource.data.uid == request.auth.uid && resource.data.estado in ['venta', 'retirado', 'vendido']
+      allow create: if esColegio() && datosPublicacion(request.resource.data, iid)
+        && request.resource.data.estado == 'venta' && request.resource.data.creada == request.time
+        && objetoCongelado(request.resource.data);
+      allow update: if esColegio() && resource.data.uid == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['precio', 'estado', 'actualizado'])
-        && publicacionValida(request.resource.data, iid);
+        && datosPublicacion(request.resource.data, iid)
+        && (
+          // cambiar el precio mientras está en venta
+          (resource.data.estado == 'venta' && request.resource.data.estado == 'venta')
+          // retirarla: el objeto vuelve
+          || (resource.data.estado == 'venta' && request.resource.data.estado == 'retirado' && objetoDevuelto(resource.data))
+          // volver a publicar algo retirado o recomprado
+          || (resource.data.estado in ['retirado', 'vendido'] && request.resource.data.estado == 'venta' && objetoCongelado(request.resource.data)));
+      // Otro estudiante la reserva al pedirla (su pago queda retenido) o la libera al cancelar su pedido.
+      allow update: if esColegio() && miCuentaBanco() != '' && resource.data.vendedor != miCuentaBanco()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'reservadoPor', 'actualizado'])
+        && request.resource.data.actualizado == request.time
+        && ((resource.data.estado == 'venta' && request.resource.data.estado == 'reservado'
+              && getAfter(rutaPedido(request.resource.data.reservadoPor)).data.comprador == miCuentaBanco()
+              && getAfter(rutaPedido(request.resource.data.reservadoPor)).data.publicacion == iid
+              && getAfter(rutaPedido(request.resource.data.reservadoPor)).data.precio == resource.data.precio
+              && getAfter(rutaPedido(request.resource.data.reservadoPor)).data.estado == 'pendiente')
+            || (resource.data.estado == 'reservado' && request.resource.data.estado == 'venta'
+              && get(rutaPedido(resource.data.reservadoPor)).data.comprador == miCuentaBanco()
+              && getAfter(rutaPedido(resource.data.reservadoPor)).data.estado == 'cancelada'));
       allow update, delete: if esProfe();
     }
     match /mercado_pedidos/{pid} {
@@ -435,23 +508,32 @@ service cloud.firestore {
         || (miCuentaBanco() != '' && (resource.data.comprador == miCuentaBanco() || resource.data.get('vendedor', '') == miCuentaBanco()));
       allow create: if esColegio() && miCuentaBanco() != ''
         && request.resource.data.keys().hasOnly(['tipo', 'comprador', 'compradorNombre', 'compradorNumero', 'uid', 'item', 'ico', 'precio',
-             'publicacion', 'vendedor', 'vendedorNombre', 'gatito', 'estado', 'creada'])
+             'publicacion', 'vendedor', 'vendedorNombre', 'gatito', 'estado', 'creada', 'mov'])
         && request.resource.data.comprador == miCuentaBanco()
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.precio is int && request.resource.data.precio >= 100
-        && request.resource.data.precio <= get(rutaCuenta(miCuentaBanco())).data.saldo
         && texto(request.resource.data.compradorNombre, 160) && texto(request.resource.data.compradorNumero, 20)
         && texto(request.resource.data.item, 120) && texto(request.resource.data.ico, 8)
         && request.resource.data.estado == 'pendiente' && request.resource.data.creada == request.time
+        // el pago queda retenido en la misma escritura
+        && opsDespues(miCuentaBanco()) == opsAntes(miCuentaBanco()) + 1
+        && request.resource.data.mov == idOpActual(miCuentaBanco())
+        && opActual(miCuentaBanco()).tipo == 'compra' && opActual(miCuentaBanco()).pedido == pid
         && (request.resource.data.tipo == 'beneficio'
             || (request.resource.data.tipo == 'reventa'
-                && get(/databases/$(database)/documents/mercado_items/$(request.resource.data.publicacion)).data.estado == 'venta'
-                && get(/databases/$(database)/documents/mercado_items/$(request.resource.data.publicacion)).data.precio == request.resource.data.precio
-                && get(/databases/$(database)/documents/mercado_items/$(request.resource.data.publicacion)).data.vendedor == request.resource.data.vendedor
-                && request.resource.data.vendedor != miCuentaBanco()));
+                && request.resource.data.vendedor != miCuentaBanco()
+                && get(rutaItem(request.resource.data.publicacion)).data.estado == 'venta'
+                && get(rutaItem(request.resource.data.publicacion)).data.vendedor == request.resource.data.vendedor
+                && get(rutaItem(request.resource.data.publicacion)).data.precio == request.resource.data.precio
+                && getAfter(rutaItem(request.resource.data.publicacion)).data.estado == 'reservado'
+                && getAfter(rutaItem(request.resource.data.publicacion)).data.reservadoPor == pid));
+      // Cancelar mientras espera: el pago vuelve (movimiento «devolucion») y la publicación se libera.
       allow update: if conCuenta() && resource.data.uid == request.auth.uid && resource.data.estado == 'pendiente'
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'resuelta'])
-        && request.resource.data.estado == 'cancelada' && request.resource.data.resuelta == request.time;
+        && request.resource.data.estado == 'cancelada' && request.resource.data.resuelta == request.time
+        && opsDespues(miCuentaBanco()) == opsAntes(miCuentaBanco()) + 1
+        && opActual(miCuentaBanco()).tipo == 'devolucion' && opActual(miCuentaBanco()).pedido == pid
+        && (resource.data.tipo == 'beneficio' || getAfter(rutaItem(resource.data.publicacion)).data.estado == 'venta');
       allow update, delete: if esProfe();
     }
 
@@ -515,6 +597,23 @@ service cloud.firestore {
         && getAfter(rutaOp(c, opsDespues(c))).data.tipo in ['gatito-compra', 'ruleta']
         && request.resource.data.ids == gatitosAntes(uid).concat([getAfter(rutaOp(c, opsDespues(c))).data.gatito]);
     }
+    // Publicar un gatito lo saca de la colección (queda congelado en la publicación); retirarlo lo devuelve.
+    function gatitoACustodia(uid) {
+      return resource != null && request.resource.data.ids.size() == resource.data.ids.size() - 1
+        && resource.data.ids.removeAll(request.resource.data.ids).size() == 1
+        && gatitoPublicado(uid, resource.data.ids.removeAll(request.resource.data.ids)[0]);
+    }
+    function gatitoPublicado(uid, g) {
+      return getAfter(rutaItem('g-' + uid + '-' + g)).data.estado == 'venta'
+        && (!exists(rutaItem('g-' + uid + '-' + g)) || get(rutaItem('g-' + uid + '-' + g)).data.estado in ['retirado', 'vendido']);
+    }
+    function gatitoDeVuelta(uid) {
+      return resource != null && request.resource.data.ids.size() == resource.data.ids.size() + 1
+        && request.resource.data.ids.removeAll(resource.data.ids).size() == 1
+        && !(request.resource.data.ids.removeAll(resource.data.ids)[0] in resource.data.ids)
+        && get(rutaItem('g-' + uid + '-' + request.resource.data.ids.removeAll(resource.data.ids)[0])).data.estado == 'venta'
+        && getAfter(rutaItem('g-' + uid + '-' + request.resource.data.ids.removeAll(resource.data.ids)[0])).data.estado == 'retirado';
+    }
     // Colección de cada persona (todos los que tienen cuenta la pueden ver; solo crece comprando).
     match /gatitos/{uid} {
       allow read: if conCuenta();
@@ -523,10 +622,11 @@ service cloud.firestore {
         && request.resource.data.uid == uid
         && texto(request.resource.data.nombre, 80)
         && request.resource.data.ids is list && request.resource.data.ids.size() <= 40
-        && request.resource.data.favorito in request.resource.data.ids
+        && (request.resource.data.favorito in request.resource.data.ids
+            || (request.resource.data.ids.size() == 0 && request.resource.data.favorito == null))
         && request.resource.data.actualizado == request.time
         && ((resource != null && request.resource.data.ids == resource.data.ids)   // solo cambia el favorito
-            || compraDeGatito(uid));
+            || compraDeGatito(uid) || gatitoACustodia(uid) || gatitoDeVuelta(uid));
       // El profe traspasa gatitos al autorizar una venta entre estudiantes.
       allow create, update, delete: if esProfe();
     }
@@ -628,6 +728,18 @@ service cloud.firestore {
       allow create: if esColegio() && opValida(id, request.resource.data);
       allow update: if esProfe()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['canje', 'canjeNota', 'canjeFecha', 'canjeProfe']);
+      allow update: if esColegio() && miCuentaBanco() != '' && resource.data.cuenta == miCuentaBanco()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['canje'])
+        && (
+          // poner a la venta: el beneficio queda congelado mientras está publicado
+          (resource.data.get('canje', '') == 'pendiente' && request.resource.data.canje == 'en-venta'
+            && getAfter(rutaItem('b-' + id)).data.estado == 'venta')
+          // retirar la publicación: vuelve a estar por usar
+          || (resource.data.get('canje', '') == 'en-venta' && request.resource.data.canje == 'pendiente'
+            && get(rutaItem('b-' + id)).data.estado == 'venta' && getAfter(rutaItem('b-' + id)).data.estado == 'retirado')
+          // cancelar un pedido: la compra retenida se anula (el dinero vuelve con un movimiento «devolucion»)
+          || (resource.data.get('canje', '') == 'retenida' && request.resource.data.canje == 'anulada'
+            && getAfter(rutaPedido(resource.data.pedido)).data.estado == 'cancelada'));
       allow delete: if false;
     }
       // ═════ Bolsa de Comercio y bono diario ═════

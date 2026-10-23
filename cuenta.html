@@ -330,7 +330,7 @@ async function cargarGatitos(u) {
 
 
 /* ── Transferencias: el estudiante las pide; el profe las autoriza en su panel ── */
-const TR_ESTADO = { pendiente: '<span class="can pend">Por autorizar</span>', aprobada: '<span class="can ok">Autorizada</span>',
+const TR_ESTADO = { pendiente: '<span class="can pend">Retenida · por autorizar</span>', aprobada: '<span class="can ok">Autorizada</span>',
   rechazada: '<span class="can no">Rechazada</span>', cancelada: '<span class="can anul">Cancelada</span>' };
 let trMia = null, trCuentas = [];
 async function cargarTransferencias(c) {
@@ -351,7 +351,7 @@ async function cargarTransferencias(c) {
     const pendientes = lista.filter(t => t.sale && t.estado === 'pendiente').length;
     const cursos = [...new Set(trCuentas.map(x => x.curso || 'Sin curso'))];
     box.innerHTML = `<p class="sub">Transferir Hipopesos</p>
-      <p class="muted" style="font-size:14px;margin:0">Elige a quién y cuánto. El profe revisa y autoriza cada transferencia: hasta entonces no se mueve tu dinero.</p>
+      <p class="muted" style="font-size:14px;margin:0">Elige a quién y cuánto. El dinero sale de tu cuenta al pedirla y queda retenido hasta que el profe la autorice; si la rechaza o la cancelas, te vuelve.</p>
       <form class="tr-form" id="trForm" autocomplete="off">
         <select id="trA" class="ancho" required><option value="">¿A quién le transfieres?</option>${cursos.map(cu => `<optgroup label="${esc(cu)}">${trCuentas.filter(x => (x.curso || 'Sin curso') === cu)
           .map(x => `<option value="${esc(x.id)}">${esc(((x.nombre || '') + ' ' + (x.apellido || '')).trim())} · N° ${esc(x.numero || '')}</option>`).join('')}</optgroup>`).join('')}</select>
@@ -376,20 +376,43 @@ document.addEventListener('submit', async ev => {
   if (monto < 100) return msg('El monto mínimo es 100 ₣.', 'err');
   if (monto > (c.saldo || 0)) return msg(`No te alcanza: tienes ${fmt(c.saldo)} ₣.`, 'err');
   const nA = ((a.nombre || '') + ' ' + (a.apellido || '')).trim(), nD = ((c.nombre || '') + ' ' + (c.apellido || '')).trim();
-  if (!confirm(`¿Pedir transferencia de ${fmt(monto)} ₣ a ${nA} (N° ${a.numero || ''})?\nEl profe debe autorizarla.`)) return;
+  if (!confirm(`¿Transferir ${fmt(monto)} ₣ a ${nA} (N° ${a.numero || ''})?\nEl dinero sale ahora y queda retenido hasta que el profe autorice.`)) return;
   $('trBtn').disabled = true;
   try {
     const { F, db } = await DF.listo();
-    await F.addDoc(F.collection(db, 'banco_transferencias'), { de: c.id, a: a.id, monto, motivo, estado: 'pendiente', uid: DF.usuario().uid,
-      deNombre: nD.slice(0, 160), deNumero: String(c.numero || '').slice(0, 20), aNombre: nA.slice(0, 160), aNumero: String(a.numero || '').slice(0, 20), creada: F.serverTimestamp() });
-    await cargarTransferencias(c);
-    $('trMsg').innerHTML = '<div class="aviso ok" style="margin-top:4px">✓ Listo: tu transferencia quedó esperando la autorización del profe.</div>';
+    // Una sola escritura: el dinero sale de tu cuenta y queda retenido junto con la solicitud.
+    const rt = F.doc(F.collection(db, 'banco_transferencias')), tid = rt.id || rt.path.split('/').pop();
+    await F.runTransaction(db, async tx => {
+      const rc = F.doc(db, 'banco_cuentas', c.id), sc = await tx.get(rc);
+      const cu = sc.data(), saldo = (cu.saldo || 0) - monto, ops = (cu.ops || 0) + 1, movId = 'op-' + c.id + '-' + ops;
+      if (saldo < 0) throw new Error('no te alcanza');
+      tx.update(rc, { saldo, ops, actualizado: F.serverTimestamp() });
+      tx.set(F.doc(db, 'banco_movs', movId), { cuenta: c.id, numero: String(cu.numero || ''), nombre: nD, curso: cu.curso || '', monto: -monto,
+        motivo: `Transferencia a N° ${a.numero || ''} ${nA} (retenida hasta que el profe la autorice)`.slice(0, 200), tipo: 'transferencia-envio',
+        saldoDespues: saldo, profe: '', fecha: F.serverTimestamp(), transferencia: tid });
+      tx.set(rt, { de: c.id, a: a.id, monto, motivo, estado: 'pendiente', uid: DF.usuario().uid, mov: movId,
+        deNombre: nD.slice(0, 160), deNumero: String(c.numero || '').slice(0, 20), aNombre: nA.slice(0, 160), aNumero: String(a.numero || '').slice(0, 20), creada: F.serverTimestamp() });
+    });
+    cargarBanco();
+    setTimeout(() => { const m = $('trMsg'); if (m) m.innerHTML = '<div class="aviso ok" style="margin-top:4px">✓ Listo: el dinero salió de tu cuenta y queda retenido hasta que el profe autorice. Si la rechaza o la cancelas, te vuelve.</div>'; }, 400);
   } catch (e) { msg('No se pudo pedir la transferencia: ' + esc(/permission/i.test(e.message) ? 'el banco la rechazó (¿el profe publicó las reglas nuevas?)' : e.message), 'err'); $('trBtn').disabled = false; }
 });
 document.addEventListener('click', async ev => {
   const b = ev.target.closest('[data-cancelar]'); if (!b) return;
-  if (!confirm('¿Cancelar esta transferencia?')) return;
-  try { const { F, db } = await DF.listo(); await F.updateDoc(F.doc(db, 'banco_transferencias', b.dataset.cancelar), { estado: 'cancelada', resuelta: F.serverTimestamp() }); cargarTransferencias(trMia); }
+  if (!confirm('¿Cancelar esta transferencia? El dinero retenido vuelve a tu cuenta.')) return;
+  try {
+    const { F, db } = await DF.listo(), c = trMia, rt = F.doc(db, 'banco_transferencias', b.dataset.cancelar), rc = F.doc(db, 'banco_cuentas', c.id);
+    await F.runTransaction(db, async tx => {
+      const [st, sc] = await Promise.all([tx.get(rt), tx.get(rc)]);
+      if (!st.exists() || st.data().estado !== 'pendiente') throw new Error('ya no está pendiente');
+      const t = st.data(), cu = sc.data(), saldo = (cu.saldo || 0) + t.monto, ops = (cu.ops || 0) + 1;
+      tx.update(rt, { estado: 'cancelada', resuelta: F.serverTimestamp() });
+      tx.update(rc, { saldo, ops, actualizado: F.serverTimestamp() });
+      tx.set(F.doc(db, 'banco_movs', 'op-' + c.id + '-' + ops), { cuenta: c.id, numero: String(cu.numero || ''), nombre: ((cu.nombre || '') + ' ' + (cu.apellido || '')).trim(), curso: cu.curso || '',
+        monto: t.monto, motivo: `Devolución: cancelaste la transferencia a ${t.aNombre}`.slice(0, 200), tipo: 'devolucion', saldoDespues: saldo, profe: '', fecha: F.serverTimestamp(), transferencia: st.id || b.dataset.cancelar });
+    });
+    cargarBanco();
+  }
   catch (e) { alert('No se pudo cancelar: ' + e.message); }
 });
 
@@ -402,7 +425,7 @@ function cargarBanco() {
     }
     const c = b.cuenta, compras = b.movs.filter(m => m.tipo === 'compra');
     const estado = m => m.canje === 'usada' ? `<span class="can usada">Usada</span>${m.canjeNota ? ' <small class="muted">' + esc(m.canjeNota) + '</small>' : ''}`
-      : m.canje === 'anulada' ? '<span class="can anul">Anulada</span>' : m.canje === 'traspasada' ? `<span class="can anul">Vendida</span> <small class="muted">${esc(m.canjeNota || '')}</small>` : '<span class="can pend">Por usar</span>';
+      : m.canje === 'anulada' ? '<span class="can anul">Anulada</span>' : m.canje === 'retenida' ? '<span class="can pend">Retenida · esperando al profe</span>' : m.canje === 'en-venta' ? '<span class="can pend">En venta (congelada)</span>' : m.canje === 'entregada' ? '<span class="can usada">Entregada</span>' : m.canje === 'traspasada' ? `<span class="can anul">Vendida</span> <small class="muted">${esc(m.canjeNota || '')}</small>` : '<span class="can pend">Por usar</span>';
     $('bCont').innerHTML = `
       <div class="saldo"><b class="${(c.saldo || 0) < 0 ? 'neg' : ''}">${fmt(c.saldo)} ₣</b><span class="muted">Cuenta N° ${esc(c.numero)}${c.curso ? ' · ' + esc(c.curso) : ''}</span></div>
       <p class="sub">Mis compras</p>
