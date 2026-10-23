@@ -137,6 +137,37 @@ h1 span{color:var(--acid)}
 .lista-p .it .ico-m img{width:40px;height:40px;object-fit:contain}
 .lista-p input{width:120px;background:var(--slab2);color:var(--ink);border:1px solid var(--line2);border-radius:10px;padding:7px 10px;font:600 14px var(--ff)}
 .h2s{font:900 26px var(--ff-d);text-transform:uppercase;margin:0 0 4px}
+/* ── sprites del mercado ── */
+.cab .masc{margin-left:auto;display:flex;align-items:flex-end;gap:6px;min-width:0}
+.globo{position:relative;max-width:240px;background:var(--ink);color:#101014;border-radius:16px;padding:10px 13px;font:600 13.5px/1.35 var(--ff);margin-bottom:62px;box-shadow:0 8px 20px rgba(0,0,0,.35);animation:globo .35s cubic-bezier(.3,1.5,.5,1)}
+.globo:after{content:"";position:absolute;right:-8px;bottom:14px;border:8px solid transparent;border-left-color:var(--ink);border-right:0}
+.globo b{color:#101014}
+@keyframes globo{from{transform:scale(.6) translateY(10px);opacity:0}}
+.masc img{height:130px;filter:drop-shadow(0 10px 18px rgba(0,0,0,.5));transform-origin:50% 100%;animation:respira 3s ease-in-out infinite}
+.masc img.salto{animation:salto .6s cubic-bezier(.3,1.6,.5,1)}
+.masc.llora img{animation:tiembla .5s ease-in-out 2}
+.masc.duerme img{animation:respira 4.5s ease-in-out infinite}
+@keyframes respira{50%{transform:scale(1.03,.97)}}
+@keyframes salto{0%{transform:translateY(0) scale(1)}35%{transform:translateY(-22px) scale(.96,1.05)}70%{transform:translateY(0) scale(1.06,.94)}}
+@keyframes tiembla{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.calle{position:relative;margin-top:22px;height:178px;border-radius:18px 18px 0 0;overflow:hidden;background:radial-gradient(500px 160px at 50% 0,rgba(233,185,73,.16),transparent 70%),linear-gradient(#1b1626,#15121d)}
+.calle:after{content:"";position:absolute;left:0;right:0;bottom:0;height:24px;background:repeating-linear-gradient(90deg,#3d2c1b 0 46px,#352616 46px 92px);border-top:2px solid #5a4126}
+.puestos{position:absolute;inset:0 8px 18px;display:flex;justify-content:space-around;align-items:flex-end;gap:4px}
+.puesto{position:relative;flex:1;max-width:180px;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;background:none;border:0;padding:0;cursor:pointer;color:var(--mute)}
+.puesto img{max-height:120px;max-width:100%;object-fit:contain;filter:drop-shadow(0 8px 10px rgba(0,0,0,.45)) saturate(.75) brightness(.8);transition:transform .25s,filter .25s}
+.puesto:hover img{filter:drop-shadow(0 8px 10px rgba(0,0,0,.45));transform:translateY(-3px)}
+.puesto.on img{filter:drop-shadow(0 0 14px rgba(204,255,0,.35)) drop-shadow(0 8px 10px rgba(0,0,0,.45));transform:translateY(-6px) scale(1.06)}
+.puesto .rot{position:absolute;top:6px;font:800 13px var(--ff-d);letter-spacing:1px;text-transform:uppercase;background:rgba(0,0,0,.55);border-radius:999px;padding:2px 9px;white-space:nowrap;opacity:.8}
+.puesto.on .rot{background:var(--acid);color:#101400;opacity:1}
+.paseante{position:absolute;bottom:16px;left:0;height:66px;width:60px;z-index:3;pointer-events:none}
+.paseante img{position:absolute;bottom:0;left:0;height:66px;transform:scaleX(var(--dir,1));filter:drop-shadow(0 5px 6px rgba(0,0,0,.5))}
+.paseante .carga{position:absolute;width:30px;left:16px;bottom:52px;transform:none;animation:flota 1.2s ease-in-out infinite}
+@keyframes flota{50%{transform:translateY(-5px) rotate(8deg)}}
+.calle+.tabs{margin-top:0}
+.saldo .mon{height:34px;vertical-align:-4px;margin-right:6px;animation:gira 3.5s ease-in-out infinite}
+@keyframes gira{0%,75%,100%{transform:rotateY(0)}88%{transform:rotateY(180deg)}}
+.confeti.mon{width:26px;height:26px;border-radius:0;background:none !important}
+@media (max-width:560px){.cab .masc{margin-left:0;width:100%;justify-content:flex-end}.masc img{height:96px}.globo{margin-bottom:40px;font-size:12.5px}.calle{height:128px}.puesto img{max-height:82px}.puesto .rot{font-size:10.5px;padding:1px 6px}.puesto:not(.on) .rot{display:none}.paseante,.paseante img{height:48px}.paseante .carga{width:22px;bottom:38px;left:12px}}
 @media (max-width:560px){.form-of{grid-template-columns:1fr}.form-of .prev{height:100px}.tabs button{font-size:17px}}
 </style>
 </head>
@@ -146,7 +177,7 @@ h1 span{color:var(--acid)}
   <div class="cab">
     <div><p class="kick">Banco de Hipopesos</p><h1>Mercado <span>Hipopesos</span></h1>
       <p class="intro">Gatitos coleccionables, beneficios del catálogo y lo que venden tus compañeros, todo con tus Hipopesos (₣). Los gatitos del profe se compran al instante; en los beneficios y las compras entre estudiantes el pago queda retenido hasta que el profe autorice.</p></div>
-    <img class="gato-h" src="gatitos/img/caja.webp" alt="">
+    <div class="masc" id="masc" aria-live="polite"><div class="globo" id="globo">¡Bienvenido al mercado!</div><img id="mascImg" src="mercado/sprites/gato-saluda.webp" alt=""></div>
   </div>
 
   <div id="avisos"></div>
@@ -159,6 +190,7 @@ h1 span{color:var(--acid)}
     </div>
   </section>
 
+  <div class="calle" id="calle"><div class="puestos" id="puestos"></div><div class="paseante" id="paseante" aria-hidden="true"><img id="pasoImg" src="mercado/sprites/paso04.webp" alt=""><img class="carga" id="carga" src="mercado/sprites/moneda.webp" alt="" hidden></div></div>
   <nav class="tabs" id="tabs" aria-label="Secciones"></nav>
 
   <section id="vMercado">
@@ -254,8 +286,12 @@ let publicaciones = [], misPedidos = [], misVentas = [], misBenef = [];
 const BENEF = window.CATALOGO_BENEFICIOS || [];
 let ofertas = [], ventas = [], vista = 'mercado', filtro = 'todos', comprando = false, unsubs = [];
 
-function aviso(html, tipo) { $('avisos').innerHTML = html ? `<div class="aviso ${tipo || ''}">${html}</div>` : ''; }
-function confeti(n) { const cs = ['#ccff00', '#22e3ff', '#ff2e7e', '#e9b949', '#fff']; for (let i = 0; i < n; i++) { const d = document.createElement('div'); d.className = 'confeti'; d.style.left = Math.random() * 100 + 'vw'; d.style.background = cs[i % cs.length]; d.style.animationDuration = (1.8 + Math.random() * 1.8) + 's'; document.body.appendChild(d); setTimeout(() => d.remove(), 4000); } }
+function aviso(html, tipo) {
+  $('avisos').innerHTML = html ? `<div class="aviso ${tipo || ''}">${html}</div>` : '';
+  if (html && tipo === 'err') animo('llora', html, 6000);
+  else if (html && tipo === 'ok') animo(/retirad|cancelad/i.test(html) ? 'caja' : 'carro', html, 5000);
+}
+function confeti(n) { const cs = ['#ccff00', '#22e3ff', '#ff2e7e', '#e9b949', '#fff']; for (let i = 0; i < n; i++) { const d = document.createElement('div'); d.className = 'confeti'; if (i % 4 === 0) { d.classList.add('mon'); d.innerHTML = '<img src="mercado/sprites/moneda.webp" alt="" style="width:100%">'; } d.style.left = Math.random() * 100 + 'vw'; d.style.background = cs[i % cs.length]; d.style.animationDuration = (1.8 + Math.random() * 1.8) + 's'; document.body.appendChild(d); setTimeout(() => d.remove(), 4000); } }
 function quedaTiempo(o) {
   const h = ms(o.hasta); if (!h) return '';
   const d = h - Date.now(); if (d <= 0) return 'terminó';
@@ -273,12 +309,13 @@ function pintarTabs() {
   if (esProfe) t.push(['profe', '🧑‍🏫 Vender', ofertas.length]);
   $('tabs').innerHTML = t.map(([k, n, c]) => `<button data-v="${k}" class="${k === vista ? 'on' : ''}">${n}<span class="cuenta-n">${c}</span></button>`).join('');
   ['mercado', 'beneficios', 'estudiantes', 'mio', 'coleccion', 'profe'].forEach(k => $('v' + k[0].toUpperCase() + k.slice(1)).classList.toggle('oculto', k !== vista));
+  pintarCalle(t.map(x => x[0]));
 }
 function pintarEstado() {
   const tengo = new Set(coleccion.ids || []), total = G.length, n = G.filter(g => tengo.has(g.id)).length;
   $('progTxt').textContent = `Tu colección: ${n} de ${total} gatitos`;
   $('prog').style.width = (n / total * 100) + '%';
-  $('saldo').innerHTML = (cuenta ? fmt(cuenta.saldo) : '—') + '<small>' + (cuenta ? 'Tu saldo · cuenta N° ' + esc(cuenta.numero || '') : 'Tu saldo') + '</small>';
+  $('saldo').innerHTML = '<img class="mon" src="mercado/sprites/moneda.webp" alt="">' + (cuenta ? fmt(cuenta.saldo) : '—') + '<small>' + (cuenta ? 'Tu saldo · cuenta N° ' + esc(cuenta.numero || '') : 'Tu saldo') + '</small>';
   $('sesion').innerHTML = usuario ? `<span style="color:var(--mute);font-size:14px">${esc(DF.nombreCorto(usuario.displayName, usuario.email))}${esProfe ? ' · profe' : ''}</span> <button class="btn" data-a="salir">Salir</button>`
     : `<button class="btn p" data-a="entrar"><i class="fa-brands fa-google"></i> Entrar para comprar</button>`;
 }
@@ -330,7 +367,7 @@ function pintarMercado() {
     terminan: (a, b) => (ms(a.hasta) || 9e15) - (ms(b.hasta) || 9e15)
   }[ord];
   l.sort(cmp);
-  $('grid').innerHTML = l.map(cartaOferta).join('') || `<div class="vacio-merc" style="grid-column:1/-1"><img src="gatitos/img/dormilon.webp" alt=""><p>${ofertas.some(vigente) ? 'No hay ofertas con este filtro.' : 'El mercado está cerrado por ahora: el profe todavía no publica gatitos a la venta.'}</p></div>`;
+  $('grid').innerHTML = l.map(cartaOferta).join('') || `<div class="vacio-merc" style="grid-column:1/-1"><img src="mercado/sprites/gato-duerme.webp" alt=""><p>${ofertas.some(vigente) ? 'No hay ofertas con este filtro.' : 'El mercado está cerrado por ahora: el profe todavía no publica gatitos a la venta.'}</p></div>`;
 }
 function pintarAlbum() {
   const tengo = new Set(coleccion.ids || []);
@@ -363,7 +400,72 @@ function pintarProfe() {
   $('pVentas').innerHTML = ventas.slice(0, 30).map(v => `<tr><td>${new Date(ms(v.fecha)).toLocaleString('es-CL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</td><td>${esc(v.nombre)}</td><td>${esc((gato(v.gatito) || {}).nombre || v.gatito)}</td><td class="n">${fmt(v.precio)}</td></tr>`).join('')
     || '<tr><td colspan="4" style="color:var(--mute)">Todavía no hay ventas.</td></tr>';
 }
-function pintar() { pintarTabs(); pintarEstado(); pintarVentas(); pintarMercado(); pintarAlbum(); pintarProfe(); pintarBeneficios(); pintarEstudiantes(); pintarMio(); pintarPedidos(); }
+/* ═════════ sprites: calle, paseante y mascota ═════════ */
+const SP = n => 'mercado/sprites/' + n + '.webp';
+const PUESTOS = { mercado: ['tienda', 'Gatitos'], beneficios: ['puesto-frutas', 'Beneficios'], estudiantes: ['puesto-pescado', 'Compañeros'],
+  coleccion: ['puesto-pan', 'Colección'], mio: ['puesto-verduras', 'Vender'], profe: ['puesto-verduras', 'Vender'] };
+const CARGA = { mercado: 'moneda', beneficios: 'canasta', estudiantes: 'caja', coleccion: 'manzana', mio: 'bolsa', profe: 'bolsa' };
+const quieto = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let clavesCalle = '', paseo = { x: null, timer: null, fin: null };
+function pintarCalle(claves) {
+  const k = claves.join();
+  if (k !== clavesCalle) {
+    clavesCalle = k;
+    $('puestos').innerHTML = claves.map(c => `<button class="puesto" data-v="${c}" aria-label="${PUESTOS[c][1]}"><span class="rot">${PUESTOS[c][1]}</span><img src="${SP(PUESTOS[c][0])}" alt=""></button>`).join('');
+  }
+  $('puestos').querySelectorAll('.puesto').forEach(b => b.classList.toggle('on', b.dataset.v === vista));
+  requestAnimationFrame(() => caminarA(vista));
+}
+function caminarA(v) {
+  const b = $('puestos').querySelector(`[data-v="${v}"]`), pa = $('paseante'), calle = $('calle');
+  if (!b || !pa) return;
+  const destino = b.getBoundingClientRect().left - calle.getBoundingClientRect().left + b.offsetWidth / 2 - pa.offsetWidth / 2 + (b.offsetWidth > 120 ? 40 : 18);
+  const carga = $('carga'); carga.src = SP(CARGA[v] || 'moneda');
+  if (paseo.x === null || quieto) { paseo.x = destino; pa.style.transition = 'none'; pa.style.left = destino + 'px'; carga.hidden = false; return; }
+  const dx = destino - paseo.x; if (Math.abs(dx) < 4) return;
+  const dur = Math.min(2.2, Math.max(.5, Math.abs(dx) / 260));
+  pa.style.setProperty('--dir', dx < 0 ? -1 : 1); carga.hidden = true;
+  pa.style.transition = `left ${dur}s linear`; pa.style.left = destino + 'px'; paseo.x = destino;
+  const frames = ['paso04', 'paso05', 'paso03', 'paso05'], img = $('pasoImg'); let i = 0;
+  clearInterval(paseo.timer); clearTimeout(paseo.fin);
+  paseo.timer = setInterval(() => { img.src = SP(frames[i++ % frames.length]); pa.style.bottom = (i % 2 ? 19 : 16) + 'px'; }, 140);
+  paseo.fin = setTimeout(() => { clearInterval(paseo.timer); img.src = SP('paso04'); pa.style.bottom = '16px'; pa.style.setProperty('--dir', 1); carga.hidden = false; }, dur * 1000);
+}
+addEventListener('resize', () => { paseo.x = null; caminarA(vista); });
+[...'paso03 paso05 gato-llora gato-carro gato-caja gato-duerme gato-duda gato-juega'.split(' ')].forEach(n => { const im = new Image(); im.src = SP(n); });
+
+let animoTemp = null, animoHasta = 0, mascActual = '';
+function animo(estado, html, dur) { animoTemp = { estado, html: String(html).replace(/^✓\s*/, '') }; animoHasta = Date.now() + dur; ponerMascota(animoTemp, true); setTimeout(() => { if (Date.now() >= animoHasta) { animoTemp = null; pintarMascota(); } }, dur + 50); }
+function estadoBase() {
+  const nPend = misPedidos.filter(p => p.estado === 'pendiente').length;
+  const vig = ofertas.filter(vigente), tengo = (coleccion.ids || []).length;
+  if (!usuario) return { estado: 'duda', html: '¿Quieres comprar? <b>Entra con tu cuenta</b> para usar tus Hipopesos.' };
+  if (!cuenta && !esProfe) return { estado: 'duda', html: 'No encuentro tu cuenta del banco. Pídele al profe que la vincule.' };
+  if (nPend && vista !== 'profe') return { estado: 'caja', html: `Tienes <b>${nPend} pedido${nPend === 1 ? '' : 's'}</b> esperando al profe. Tu pago está guardado en la nube.` };
+  switch (vista) {
+    case 'beneficios': return { estado: 'carro', html: 'Elige un beneficio: pagas ahora y el profe lo autoriza.' };
+    case 'estudiantes': { const n = publicaciones.filter(x => x.estado === 'venta').length;
+      return n ? { estado: 'caja', html: `Tus compañeros venden <b>${n}</b> cosa${n === 1 ? '' : 's'}. ¡Mira!` } : { estado: 'duerme', html: 'Zzz… nadie está vendiendo por ahora.' }; }
+    case 'coleccion': return tengo ? { estado: 'juega', html: `Llevas <b>${tengo} de ${G.length}</b> gatitos. ¡Sigue juntando!` } : { estado: 'duda', html: 'Tu álbum está vacío. ¿Cuál será tu primer gatito?' };
+    case 'mio': return { estado: 'caja', html: 'Al publicar, tu objeto queda congelado hasta que alguien lo compre.' };
+    case 'profe': return { estado: 'saluda', html: `Hola, profe. Hay <b>${vig.length}</b> oferta${vig.length === 1 ? '' : 's'} activa${vig.length === 1 ? '' : 's'}.` };
+  }
+  if (!vig.length) return { estado: 'duerme', html: 'Zzz… el profe todavía no publica gatitos.' };
+  const barata = Math.min(...vig.filter(o => !(coleccion.ids || []).includes(o.gatito)).map(o => o.precio));
+  if (cuenta && isFinite(barata) && (cuenta.saldo || 0) < barata) return { estado: 'duda', html: `Te faltan <b>${fmt(barata - (cuenta.saldo || 0))}</b> para el gatito más barato. Gana en la <a href="banco-felipeso/bolsa.html">Bolsa</a>.` };
+  return { estado: 'saluda', html: `¡Bienvenido! Hay <b>${vig.length}</b> gatito${vig.length === 1 ? '' : 's'} a la venta.` };
+}
+function ponerMascota(e, saltar) {
+  const clave = e.estado + '|' + e.html; if (clave === mascActual && !saltar) return; mascActual = clave;
+  const img = $('mascImg'), m = $('masc');
+  if (!img.src.endsWith('gato-' + e.estado + '.webp')) img.src = SP('gato-' + e.estado);
+  m.className = 'masc ' + e.estado; $('globo').innerHTML = e.html;
+  const g = $('globo'); g.style.animation = 'none'; void g.offsetWidth; g.style.animation = '';
+  if (saltar || e.estado === 'saluda' || e.estado === 'carro') { img.classList.remove('salto'); void img.offsetWidth; img.classList.add('salto'); }
+}
+function pintarMascota() { if (animoTemp && Date.now() < animoHasta) return; ponerMascota(estadoBase()); }
+
+function pintar() { pintarTabs(); pintarMascota(); pintarEstado(); pintarVentas(); pintarMercado(); pintarAlbum(); pintarProfe(); pintarBeneficios(); pintarEstudiantes(); pintarMio(); pintarPedidos(); }
 
 /* ═════════ datos ═════════ */
 function quitarSubs() { unsubs.forEach(u => { try { u(); } catch (e) {} }); unsubs = []; }
@@ -452,8 +554,10 @@ async function confirmar(oid) {
     $('modal').innerHTML = `<img src="gatitos/img/${g.id}.webp" alt=""><h3>¡Es tuyo!</h3><p style="color:var(--mute)">${esc(g.nombre)} ya está en tu colección y en tu perfil.</p>
       <div class="fila"><button class="btn p" data-a="cerrar">¡Genial!</button></div>`;
     confeti(g.precio >= 400000 ? 180 : 90);
+    animo('carro', `¡<b>${esc(g.nombre)}</b> ya es tuyo!`, 7000);
   } catch (e) {
     const m = String(e.message || e);
+    animo('llora', 'Uy, no se pudo comprar.', 5000);
     $('mMsg').innerHTML = `<div class="aviso err">No se pudo comprar: ${esc(/permission/i.test(m) ? 'el banco rechazó la compra (¿el profe publicó las reglas nuevas?)' : m)}</div>`;
     if (b) b.disabled = false;
   }
@@ -536,7 +640,7 @@ function pintarEstudiantes() {
       ${r ? `<span class="rz" style="background:${r.color}">${esc(r.nombre)}</span>` : '<span class="chip">Beneficio sin usar</span>'}
       <h3>${esc(x.item)}</h3><p><i class="fa-solid fa-user"></i> Vende ${esc(x.vendedorNombre)}</p>
       <div class="pie"><span class="precio">${fmt(x.precio)}</span>${acc}</div></article>`;
-  }).join('') || '<div class="vacio-merc" style="grid-column:1/-1"><img src="gatitos/img/patitas.webp" alt=""><p>Nadie está vendiendo nada por ahora. ¿Tienes algo sin usar? Véndelo en «Vender lo mío».</p></div>';
+  }).join('') || '<div class="vacio-merc" style="grid-column:1/-1"><img src="mercado/sprites/gato-duerme.webp" alt=""><p>Nadie está vendiendo nada por ahora. ¿Tienes algo sin usar? Véndelo en «Vender lo mío».</p></div>';
 }
 function filaMia(x, pub) {
   const clave = x.tipo === 'gatito' ? 'g-' + usuario.uid + '-' + x.gatito : 'b-' + x.mov;
