@@ -145,7 +145,7 @@ h1 span{color:var(--acid)}
   <a class="crumb" href="index.html">← El Mundo de Felipe</a>
   <div class="cab">
     <div><p class="kick">Banco de Hipopesos</p><h1>Mercado <span>Hipopesos</span></h1>
-      <p class="intro">Gatitos coleccionables, beneficios del catálogo y lo que venden tus compañeros, todo con tus Hipopesos (₣). Los gatitos del profe se compran al instante; los beneficios y las compras entre estudiantes las autoriza el profe.</p></div>
+      <p class="intro">Gatitos coleccionables, beneficios del catálogo y lo que venden tus compañeros, todo con tus Hipopesos (₣). Los gatitos del profe se compran al instante; en los beneficios y las compras entre estudiantes el pago queda retenido hasta que el profe autorice.</p></div>
     <img class="gato-h" src="gatitos/img/caja.webp" alt="">
   </div>
 
@@ -177,20 +177,20 @@ h1 span{color:var(--acid)}
   </section>
 
   <section id="vBeneficios" class="oculto">
-    <p class="intro" style="margin-top:16px">Pides la compra y el profe la autoriza: recién ahí se descuenta de tu saldo y el beneficio queda «por usar» en tu cuenta.</p>
+    <p class="intro" style="margin-top:16px">Al comprar, el pago sale de tu cuenta y queda retenido. Cuando el profe autoriza, el beneficio queda «por usar» en tu cuenta; si rechaza o cancelas, el pago vuelve.</p>
     <div class="grid" id="gBenef"></div>
     <div class="card"><h2 class="h2s">Mis pedidos</h2><div class="lista-p" id="pedidos1"></div></div>
   </section>
 
   <section id="vEstudiantes" class="oculto">
-    <p class="intro" style="margin-top:16px">Lo que tus compañeros ponen a la venta: beneficios sin usar y gatitos. Pides la compra y el profe la autoriza; ahí se paga y se traspasa.</p>
+    <p class="intro" style="margin-top:16px">Lo que tus compañeros ponen a la venta: beneficios sin usar y gatitos. Al comprar, tu pago y el objeto quedan congelados; cuando el profe autoriza, el objeto llega a tu cuenta y el vendedor recibe el pago.</p>
     <div class="grid" id="gEst"></div>
     <div class="card"><h2 class="h2s">Mis pedidos</h2><div class="lista-p" id="pedidos2"></div></div>
   </section>
 
   <section id="vMio" class="oculto">
     <div class="card"><h2 class="h2s">Vender lo mío</h2>
-      <p class="intro" style="margin:0">Puedes vender tus beneficios sin usar y tus gatitos. Tú pones el precio; cuando alguien lo pide, el profe autoriza la venta y recibes los Hipopesos.</p>
+      <p class="intro" style="margin:0">Puedes vender tus beneficios sin usar y tus gatitos. Al publicarlo sale de tu cuenta y queda congelado; si nadie lo ha pedido, puedes retirarlo y recuperarlo. Cuando alguien lo compra y el profe autoriza, recibes los Hipopesos.</p>
       <div class="lista-p" id="mios"></div></div>
     <div class="card"><h2 class="h2s">Mis ventas</h2><div class="lista-p" id="misVentas"></div></div>
   </section>
@@ -509,16 +509,16 @@ async function accionProfe(oid, a) {
 
 
 /* ═════════ beneficios, entre estudiantes y vender lo mío ═════════ */
-const EST_P = { pendiente: '<span class="chip lim">Esperando al profe</span>', aprobada: '<span class="chip ok">Autorizada</span>', rechazada: '<span class="chip hot">Rechazada</span>', cancelada: '<span class="chip">Cancelada</span>' };
+const EST_P = { pendiente: '<span class="chip lim">Retenido · esperando al profe</span>', aprobada: '<span class="chip ok">Autorizada</span>', rechazada: '<span class="chip hot">Rechazada</span>', cancelada: '<span class="chip">Cancelada</span>' };
 const nombreCorto = () => DF.nombreCorto(usuario.displayName, usuario.email).slice(0, 40);
 const nombreCuenta = () => ((cuenta.nombre || '') + ' ' + (cuenta.apellido || '')).trim() || nombreCorto();
 const icoHtml = x => x.tipo === 'gatito' || x.gatito ? `<img src="gatitos/img/${esc(x.gatito)}.webp" alt="">` : esc(x.ico || '🎟️');
 function botonPedir(clave, precio, extra) {
   if (!usuario) return '<button class="btn" data-a="entrar">Entrar</button>';
   if (!cuenta) return '<button class="btn" disabled>Sin cuenta</button>';
-  if (misPedidos.some(p => p.estado === 'pendiente' && p._clave === clave)) return '<button class="btn" disabled>Pedido enviado</button>';
+  if (misPedidos.some(p => p.estado === 'pendiente' && p._clave === clave)) return '<button class="btn" disabled>Comprado · esperando al profe</button>';
   const alcanza = (cuenta.saldo || 0) >= precio;
-  return `<button class="btn ${alcanza ? 'p' : ''}" ${extra}${alcanza ? '' : ' disabled title="No te alcanza todavía"'}>${alcanza ? 'Pedir compra' : 'Te falta ' + fmt(precio - (cuenta.saldo || 0)).replace(' ₣', '')}</button>`;
+  return `<button class="btn ${alcanza ? 'p' : ''}" ${extra}${alcanza ? '' : ' disabled title="No te alcanza todavía"'}>${alcanza ? 'Comprar' : 'Te falta ' + fmt(precio - (cuenta.saldo || 0)).replace(' ₣', '')}</button>`;
 }
 function pintarBeneficios() {
   $('gBenef').innerHTML = BENEF.map((b, i) => `<article class="item"><div class="ico">${esc(b.ico)}</div><h3>${esc(b.nombre)}</h3>
@@ -540,17 +540,25 @@ function pintarEstudiantes() {
 }
 function filaMia(x, pub) {
   const clave = x.tipo === 'gatito' ? 'g-' + usuario.uid + '-' + x.gatito : 'b-' + x.mov;
-  const enVenta = pub && pub.estado === 'venta';
+  const est = pub ? pub.estado : '';
+  if (est === 'reservado') return `<div class="it"><span class="ico-m">${icoHtml(x)}</span><div class="t"><b>${esc(x.item)}</b>
+    <small>🔒 Reservado por un comprador a ${fmt(pub.precio)} · congelado hasta que el profe autorice</small></div><span class="chip lim">Esperando al profe</span></div>`;
+  const enVenta = est === 'venta';
   return `<div class="it" data-mia="${esc(clave)}"><span class="ico-m">${icoHtml(x)}</span><div class="t"><b>${esc(x.item)}</b>
-    <small>${x.tipo === 'gatito' ? 'Gatito de tu colección' : 'Beneficio sin usar'}${enVenta ? ' · <b style="color:var(--acid)">en venta a ' + fmt(pub.precio) + '</b>' : ''}</small></div>
+    <small>${x.tipo === 'gatito' ? 'Gatito' : 'Beneficio sin usar'}${enVenta ? ' · 🔒 <b style="color:var(--acid)">en venta a ' + fmt(pub.precio) + '</b> (congelado: no está en tu cuenta mientras se vende)' : ''}</small></div>
     <input type="number" min="100" step="500" placeholder="Precio ₣" value="${pub ? pub.precio : (x.ref || '')}" aria-label="Precio">
-    <button class="btn ${enVenta ? '' : 'p'}" data-publicar>${enVenta ? 'Cambiar precio' : 'Poner a la venta'}</button>${enVenta ? '<button class="btn" data-retirar>Retirar</button>' : ''}</div>`;
+    <button class="btn ${enVenta ? '' : 'p'}" data-publicar>${enVenta ? 'Cambiar precio' : 'Poner a la venta'}</button>${enVenta ? '<button class="btn" data-retirar>Retirar y recuperar</button>' : ''}</div>`;
 }
 function pintarMio() {
   if (!usuario || esProfe) return;
   const pubDe = id => publicaciones.find(p => p.id === id);
-  const items = misBenef.map(m => ({ tipo: 'beneficio', mov: m.id, item: m.item, ico: (BENEF.find(b => b.nombre === m.item) || {}).ico || '🎟️', ref: (BENEF.find(b => b.nombre === m.item) || {}).precio || '' }))
-    .concat((coleccion.ids || []).map(id => { const g = gato(id) || { nombre: id, precio: '' }; return { tipo: 'gatito', gatito: id, item: g.nombre, ico: '🐱', ref: g.precio }; }));
+  const ref = nombre => (BENEF.find(b => b.nombre === nombre) || {});
+  // en mi cuenta (se pueden publicar) + congelados en publicaciones mías en venta o reservadas
+  const congeladas = publicaciones.filter(p => p.uid === usuario.uid && (p.estado === 'venta' || p.estado === 'reservado'));
+  const items = misBenef.map(m => ({ tipo: 'beneficio', mov: m.id, item: m.item, ico: ref(m.item).ico || '🎟️', ref: ref(m.item).precio || '' }))
+    .concat((coleccion.ids || []).map(id => { const g = gato(id) || { nombre: id, precio: '' }; return { tipo: 'gatito', gatito: id, item: g.nombre, ico: '🐱', ref: g.precio }; }))
+    .filter(x => !congeladas.some(p => p.id === (x.tipo === 'gatito' ? 'g-' + usuario.uid + '-' + x.gatito : 'b-' + x.mov)))
+    .concat(congeladas.map(p => ({ tipo: p.tipo, mov: p.mov, gatito: p.gatito, item: p.item, ico: p.ico })));
   $('mios').innerHTML = !cuenta ? '<div class="vacio-merc">Necesitas tu cuenta del banco vinculada para vender.</div>'
     : items.map(x => filaMia(x, pubDe(x.tipo === 'gatito' ? 'g-' + usuario.uid + '-' + x.gatito : 'b-' + x.mov))).join('') || '<p class="intro">No tienes beneficios sin usar ni gatitos para vender.</p>';
   $('misVentas').innerHTML = misVentas.length ? misVentas.map(p => `<div class="it"><span class="ico-m">${icoHtml(p)}</span><div class="t"><b>${esc(p.item)}</b><small>${esc(p.compradorNombre)} lo pidió por ${fmt(p.precio)}${p.nota ? ' · ' + esc(p.nota) : ''}</small></div>${EST_P[p.estado] || ''}</div>`).join('')
@@ -558,40 +566,100 @@ function pintarMio() {
 }
 function pintarPedidos() {
   const h = misPedidos.length ? misPedidos.slice(0, 20).map(p => `<div class="it"><span class="ico-m">${icoHtml(p)}</span><div class="t"><b>${esc(p.item)}</b>
-    <small>${p.tipo === 'reventa' ? 'a ' + esc(p.vendedorNombre) + ' · ' : 'catálogo · '}${fmt(p.precio)}${p.nota ? ' · Profe: ' + esc(p.nota) : ''}</small></div>${EST_P[p.estado] || ''}
-    ${p.estado === 'pendiente' ? `<button class="btn sm" data-cancelar-p="${esc(p.id)}">Cancelar</button>` : ''}</div>`).join('')
+    <small>${p.tipo === 'reventa' ? 'a ' + esc(p.vendedorNombre) + ' · ' : 'catálogo · '}${fmt(p.precio)}${p.estado === 'pendiente' ? ' · 🔒 pagado y retenido' : ''}${p.nota ? ' · Profe: ' + esc(p.nota) : ''}</small></div>${EST_P[p.estado] || ''}
+    ${p.estado === 'pendiente' ? `<button class="btn sm" data-cancelar-p="${esc(p.id)}">Cancelar y recuperar</button>` : ''}</div>`).join('')
     : `<p class="intro">${usuario ? 'Aún no pides nada.' : 'Entra para ver tus pedidos.'}</p>`;
   $('pedidos1').innerHTML = h; $('pedidos2').innerHTML = h;
 }
-async function pedir(datos, clave) {
+// Movimiento propio del estudiante (mismo esquema que la bolsa: ops + 1 y op-<cuenta>-<ops>)
+function movPropio(F, db, tx, cu, monto, motivo, tipo, extra) {
+  const saldo = (cu.saldo || 0) + monto, ops = (cu.ops || 0) + 1, id = 'op-' + cuentaId + '-' + ops;
+  if (saldo < 0) throw new Error('no te alcanza');
+  tx.update(F.doc(db, 'banco_cuentas', cuentaId), { saldo, ops, actualizado: F.serverTimestamp() });
+  tx.set(F.doc(db, 'banco_movs', id), Object.assign({ cuenta: cuentaId, numero: String(cu.numero || ''), nombre: ((cu.nombre || '') + ' ' + (cu.apellido || '')).trim(), curso: cu.curso || '',
+    monto, motivo: String(motivo).slice(0, 200), tipo, saldoDespues: saldo, profe: '', fecha: F.serverTimestamp() }, extra || {}));
+  return id;
+}
+async function pedir(datos) {
   if (misPedidos.filter(p => p.estado === 'pendiente').length >= 5) return aviso('Tienes 5 pedidos esperando al profe: espera a que los revise.', 'err');
   if (datos.precio > (cuenta.saldo || 0)) return aviso('No te alcanza.', 'err');
-  if (!confirm(`¿Pedir la compra de «${datos.item}» por ${fmt(datos.precio)}?\nEl profe debe autorizarla; recién ahí se descuenta.`)) return;
+  if (!confirm(`¿Comprar «${datos.item}» por ${fmt(datos.precio)}?\nEl pago sale ahora y queda retenido hasta que el profe autorice. Si la rechaza o la cancelas, te vuelve.`)) return;
   const { F, db } = await DF.listo();
   try {
-    await F.addDoc(F.collection(db, 'mercado_pedidos'), Object.assign({ comprador: cuentaId, compradorNombre: nombreCuenta().slice(0, 160), compradorNumero: String(cuenta.numero || '').slice(0, 20),
-      uid: usuario.uid, estado: 'pendiente', creada: F.serverTimestamp() }, datos));
-    aviso('✓ Pedido enviado: el profe lo autoriza y recién ahí se descuenta de tu saldo.', 'ok');
-  } catch (e) { aviso('No se pudo pedir: ' + esc(/permission/i.test(e.message) ? 'el banco lo rechazó (¿el profe publicó las reglas nuevas?)' : e.message), 'err'); }
+    const rp = F.doc(F.collection(db, 'mercado_pedidos')), pid = rp.id || rp.path.split('/').pop();
+    await F.runTransaction(db, async tx => {
+      const rc = F.doc(db, 'banco_cuentas', cuentaId), lect = [tx.get(rc)];
+      if (datos.tipo === 'reventa') lect.push(tx.get(F.doc(db, 'mercado_items', datos.publicacion)));
+      const [sc, spub] = await Promise.all(lect);
+      if (spub && (!spub.exists() || spub.data().estado !== 'venta')) throw new Error('alguien lo pidió antes que tú');
+      if (spub && spub.data().precio !== datos.precio) throw new Error('el vendedor cambió el precio; revisa y vuelve a pedirlo');
+      const extra = { item: datos.item, canje: 'retenida', pedido: pid }; if (datos.gatito) extra.gatito = datos.gatito;
+      const movId = movPropio(F, db, tx, sc.data(), -datos.precio, `Mercado: ${datos.item} (pagado, esperando autorización)`, 'compra', extra);
+      tx.set(rp, Object.assign({ comprador: cuentaId, compradorNombre: nombreCuenta().slice(0, 160), compradorNumero: String(cuenta.numero || '').slice(0, 20),
+        uid: usuario.uid, estado: 'pendiente', creada: F.serverTimestamp(), mov: movId }, datos));
+      if (spub) tx.update(F.doc(db, 'mercado_items', datos.publicacion), { estado: 'reservado', reservadoPor: pid, actualizado: F.serverTimestamp() });
+    });
+    aviso('✓ Listo: pagaste y tu compra quedó retenida hasta que el profe la autorice.', 'ok');
+  } catch (e) { aviso('No se pudo comprar: ' + esc(/permission/i.test(e.message) ? 'el banco lo rechazó (¿el profe publicó las reglas nuevas?)' : e.message), 'err'); }
+}
+async function cancelarPedido(pid) {
+  if (!confirm('¿Cancelar este pedido? El pago retenido vuelve a tu cuenta.')) return;
+  const { F, db } = await DF.listo();
+  try {
+    await F.runTransaction(db, async tx => {
+      const rp = F.doc(db, 'mercado_pedidos', pid), rc = F.doc(db, 'banco_cuentas', cuentaId);
+      const [sp, sc] = await Promise.all([tx.get(rp), tx.get(rc)]);
+      if (!sp.exists() || sp.data().estado !== 'pendiente') throw new Error('ya no está pendiente');
+      const p = sp.data(), rm = F.doc(db, 'banco_movs', p.mov);
+      const rpub = p.tipo === 'reventa' ? F.doc(db, 'mercado_items', p.publicacion) : null, spub = rpub ? await tx.get(rpub) : null;
+      tx.update(rp, { estado: 'cancelada', resuelta: F.serverTimestamp() });
+      movPropio(F, db, tx, sc.data(), p.precio, `Devolución: cancelaste la compra de ${p.item}`, 'devolucion', { pedido: pid });
+      tx.update(rm, { canje: 'anulada' });
+      if (spub && spub.exists() && spub.data().estado === 'reservado' && spub.data().reservadoPor === pid) tx.update(rpub, { estado: 'venta', actualizado: F.serverTimestamp() });
+    });
+    aviso('Pedido cancelado: el pago volvió a tu cuenta.', 'ok');
+  } catch (e) { aviso('No se pudo cancelar: ' + esc(e.message), 'err'); }
 }
 async function publicarMio(fila) {
   const clave = fila.dataset.mia, precio = Math.round(+fila.querySelector('input').value || 0);
   if (precio < 100) return aviso('Pon un precio de al menos 100 ₣.', 'err');
   const { F, db } = await DF.listo(), ref = F.doc(db, 'mercado_items', clave), prev = publicaciones.find(p => p.id === clave);
+  const esG = clave.indexOf('g-') === 0, gid = esG ? clave.slice(('g-' + usuario.uid + '-').length) : null;
   try {
-    if (prev) await F.updateDoc(ref, { precio, estado: 'venta', actualizado: F.serverTimestamp() });
-    else {
-      const esG = clave.indexOf('g-') === 0, base = { tipo: esG ? 'gatito' : 'beneficio', vendedor: cuentaId, vendedorNombre: nombreCorto(), uid: usuario.uid, precio, estado: 'venta', creada: F.serverTimestamp(), actualizado: F.serverTimestamp() };
-      if (esG) { const gid = clave.slice(('g-' + usuario.uid + '-').length), g = gato(gid); Object.assign(base, { gatito: gid, item: g ? g.nombre : gid, ico: '🐱' }); }
-      else { const m = misBenef.find(x => 'b-' + x.id === clave); Object.assign(base, { mov: m.id, item: m.item, ico: (BENEF.find(b => b.nombre === m.item) || {}).ico || '🎟️' }); }
-      await F.setDoc(ref, base);
+    if (prev && prev.estado === 'venta') {   // solo cambia el precio (el objeto ya está congelado)
+      await F.updateDoc(ref, { precio, actualizado: F.serverTimestamp() });
+    } else {
+      if (!confirm(`¿Poner a la venta «${prev ? prev.item : esG ? (gato(gid) || {}).nombre : (misBenef.find(x => 'b-' + x.id === clave) || {}).item}» a ${fmt(precio)}?\nMientras esté publicado sale de tu cuenta (queda congelado). Puedes retirarlo y recuperarlo cuando quieras, salvo que alguien ya lo haya pedido.`)) return;
+      const b = F.writeBatch(db);
+      if (prev) b.update(ref, { precio, estado: 'venta', actualizado: F.serverTimestamp() });
+      else {
+        const base = { tipo: esG ? 'gatito' : 'beneficio', vendedor: cuentaId, vendedorNombre: nombreCorto(), uid: usuario.uid, precio, estado: 'venta', creada: F.serverTimestamp(), actualizado: F.serverTimestamp() };
+        if (esG) { const g = gato(gid); Object.assign(base, { gatito: gid, item: g ? g.nombre : gid, ico: '🐱' }); }
+        else { const m = misBenef.find(x => 'b-' + x.id === clave); Object.assign(base, { mov: m.id, item: m.item, ico: (BENEF.find(x => x.nombre === m.item) || {}).ico || '🎟️' }); }
+        b.set(ref, base);
+      }
+      // congelar el objeto: sale de la cuenta en la misma escritura
+      if (esG) {
+        const ids = (coleccion.ids || []).filter(x => x !== gid);
+        b.set(F.doc(db, 'gatitos', usuario.uid), { uid: usuario.uid, nombre: String(coleccion.nombre || nombreCorto()).slice(0, 80), ids,
+          favorito: ids.includes(coleccion.favorito) ? coleccion.favorito : (ids[0] || null), actualizado: F.serverTimestamp() });
+      } else b.update(F.doc(db, 'banco_movs', (prev && prev.mov) || clave.slice(2)), { canje: 'en-venta' });
+      await b.commit();
     }
     aviso(`✓ Publicado a ${fmt(precio)}. Aparece en «Entre estudiantes».`, 'ok');
   } catch (e) { aviso('No se pudo publicar: ' + esc(/permission/i.test(e.message) ? 'el banco lo rechazó (¿ya no lo tienes, o el profe no publicó las reglas nuevas?)' : e.message), 'err'); }
 }
 async function retirarMio(fila) {
-  const { F, db } = await DF.listo();
-  try { await F.updateDoc(F.doc(db, 'mercado_items', fila.dataset.mia), { estado: 'retirado', actualizado: F.serverTimestamp() }); aviso('Publicación retirada.', 'ok'); }
+  const clave = fila.dataset.mia, pub = publicaciones.find(p => p.id === clave); if (!pub) return;
+  if (pub.tipo === 'gatito' && (coleccion.ids || []).includes(pub.gatito)) return aviso('Ya tienes otro gatito igual en tu colección: no puedes recuperar este. Déjalo a la venta o pídele al profe que lo resuelva.', 'err');
+  const { F, db } = await DF.listo(), b = F.writeBatch(db);
+  b.update(F.doc(db, 'mercado_items', clave), { estado: 'retirado', actualizado: F.serverTimestamp() });
+  if (pub.tipo === 'gatito') {
+    const ids = (coleccion.ids || []).concat([pub.gatito]);
+    b.set(F.doc(db, 'gatitos', usuario.uid), { uid: usuario.uid, nombre: String(coleccion.nombre || nombreCorto()).slice(0, 80), ids,
+      favorito: ids.includes(coleccion.favorito) ? coleccion.favorito : pub.gatito, actualizado: F.serverTimestamp() });
+  } else b.update(F.doc(db, 'banco_movs', pub.mov), { canje: 'pendiente' });
+  try { await b.commit(); aviso('Publicación retirada: lo recuperaste.', 'ok'); }
   catch (e) { aviso('No se pudo retirar: ' + esc(e.message), 'err'); }
 }
 document.addEventListener('click', ev => {
@@ -602,8 +670,7 @@ document.addEventListener('click', ev => {
     if (x.gatito) d.gatito = x.gatito; pedir(d); }
   else if (b.hasAttribute('data-publicar')) publicarMio(b.closest('[data-mia]'));
   else if (b.hasAttribute('data-retirar')) retirarMio(b.closest('[data-mia]'));
-  else if (b.dataset.cancelarP) { if (!confirm('¿Cancelar este pedido?')) return;
-    DF.listo().then(({ F, db }) => F.updateDoc(F.doc(db, 'mercado_pedidos', b.dataset.cancelarP), { estado: 'cancelada', resuelta: F.serverTimestamp() })).catch(e => aviso(esc(e.message), 'err')); }
+  else if (b.dataset.cancelarP) cancelarPedido(b.dataset.cancelarP);
 });
 
 /* ═════════ eventos ═════════ */

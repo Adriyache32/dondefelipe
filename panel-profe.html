@@ -153,7 +153,7 @@ dialog.ancho{max-width:min(860px,calc(100vw - 32px))}
           </div>
           <div class="card porcanjear" style="margin-top:16px">
             <h3 style="margin:0 0 4px">Solicitudes por autorizar <span class="pill" id="nTr">0</span></h3>
-            <p class="muted" style="margin:0 0 8px;font-size:13px">💸 Transferencias, 🛍️ compras de beneficios en el Mercado y 🤝 compras entre estudiantes. Nada se mueve hasta que autorizas: ahí se cobra, se paga y se traspasa el beneficio o el gatito.</p>
+            <p class="muted" style="margin:0 0 8px;font-size:13px">💸 Transferencias, 🛍️ compras de beneficios en el Mercado y 🤝 compras entre estudiantes. Al pedir, el dinero (y lo que se vende) sale de la cuenta y queda congelado: autorizar lo entrega, rechazar lo devuelve.</p>
             <div class="lista-movs" id="listaTr"><div class="muted">—</div></div>
             <details style="margin-top:8px"><summary class="muted" style="cursor:pointer;font-size:13px">Últimas solicitudes resueltas</summary><div class="lista-movs" id="listaTrHist"></div></details>
           </div>
@@ -521,124 +521,133 @@ function pintarTransferencias() {
   $('nTr').textContent = pend.length;
   const saldoDe = id => { const c = cuentas.find(x => x.id === id); return c ? c.saldo || 0 : null; };
   $('listaTr').innerHTML = pend.length ? pend.map(t => {
-    const paga = t.clase === 'transferencia' ? t.de : t.comprador, monto = t.clase === 'transferencia' ? t.monto : t.precio;
-    const sd = saldoDe(paga), corto = sd != null && sd < monto;
+    const corto = false;
     const cat = t.clase === 'beneficio' ? COMPRAS.find(c => c.nombre === t.item) : null;
     const raro = t.clase === 'beneficio' && (!cat || cat.precio !== t.precio) ? ` ⚠ el catálogo dice ${cat ? '$' + fmt(cat.precio) : 'que no existe'}` : '';
     return `<div class="m"><div class="t">${ICO_SOL[t.clase]} ${descSol(t)}
-      <small>${t.motivo ? esc(t.motivo) + ' · ' : ''}pedida el ${fecha(t.creada)} · saldo de quien paga: ${sd == null ? '—' : '$' + fmt(sd)}${corto ? ' ⚠ no le alcanza' : ''}${raro}</small></div>
+      <small>${t.motivo ? esc(t.motivo) + ' · ' : ''}pedida el ${fecha(t.creada)} · 🔒 ${t.clase === 'reventa' ? 'pago y objeto congelados' : 'dinero retenido'}${raro}</small></div>
       <button class="btn sm p" data-sol-ok="${esc(t.clase)}:${esc(t.id)}"${corto ? ' disabled title="No le alcanza el saldo"' : ''}>Autorizar</button><button class="btn sm" data-sol-no="${esc(t.clase)}:${esc(t.id)}">Rechazar</button></div>`;
   }).join('') : '<div class="muted">No hay solicitudes pendientes.</div>';
   const hist = solicitudes(false).slice(0, 30);
   $('listaTrHist').innerHTML = hist.length ? hist.map(t => `<div class="m"><div class="t">${ICO_SOL[t.clase]} ${descSol(t)}
     <small>${esc(ESTADO_TR[t.estado] || t.estado)}${t.nota ? ' · ' + esc(t.nota) : ''} · ${fecha(t.resuelta || t.creada)}</small></div></div>`).join('') : '<div class="muted">Sin solicitudes resueltas.</div>';
 }
+// Todo lo que llega aquí ya tiene el dinero retenido (y el objeto congelado): autorizar lo entrega, rechazar lo devuelve.
+const nomC = c => `${c.nombre || ''} ${c.apellido || ''}`.trim();
+function movProfe(F, db, tx, cuentaId, c, monto, saldo, motivo, tipo, extra) {
+  tx.set(F.doc(F.collection(db, 'banco_movs')), Object.assign({ cuenta: cuentaId, numero: c.numero || '', nombre: nomC(c), curso: c.curso || '', monto,
+    motivo: String(motivo).slice(0, 200), tipo, saldoDespues: saldo, profe: (DF.usuario() || {}).email || '', fecha: F.serverTimestamp() }, extra || {}));
+}
 async function autorizarTransferencia(t) {
-  if (!confirm(`Autorizar transferencia de $${fmt(t.monto)}\nDe: N° ${t.deNumero} ${t.deNombre}\nA: N° ${t.aNumero} ${t.aNombre}${t.motivo ? '\nMotivo: ' + t.motivo : ''}`)) return;
+  if (!confirm(`Autorizar transferencia de $${fmt(t.monto)}\nDe: N° ${t.deNumero} ${t.deNombre}\nA: N° ${t.aNumero} ${t.aNombre}${t.motivo ? '\nMotivo: ' + t.motivo : ''}\n\n(El dinero ya está retenido: se entrega a quien recibe.)`)) return;
   const { F, db } = FB, profe = (DF.usuario() || {}).email || '';
   try {
     await F.runTransaction(db, async tx => {
-      const rt = F.doc(db, 'banco_transferencias', t.id), rd = F.doc(db, 'banco_cuentas', t.de), ra = F.doc(db, 'banco_cuentas', t.a);
-      const [st, sd, sa] = await Promise.all([tx.get(rt), tx.get(rd), tx.get(ra)]);
+      const rt = F.doc(db, 'banco_transferencias', t.id), ra = F.doc(db, 'banco_cuentas', t.a);
+      const [st, sa] = await Promise.all([tx.get(rt), tx.get(ra)]);
       if (!st.exists() || st.data().estado !== 'pendiente') throw new Error('la transferencia ya no está pendiente');
-      if (!sd.exists() || !sa.exists()) throw new Error('una de las cuentas ya no existe');
-      const d = sd.data(), a = sa.data(), m = st.data().monto;
-      if ((d.saldo || 0) < m) throw new Error(`a ${d.nombre || ''} ya no le alcanza (saldo $${fmt(d.saldo)})`);
-      const sD = (d.saldo || 0) - m, sA = (a.saldo || 0) + m, nD = `${d.nombre || ''} ${d.apellido || ''}`.trim(), nA = `${a.nombre || ''} ${a.apellido || ''}`.trim();
-      const mot = st.data().motivo ? ': ' + st.data().motivo : '';
-      tx.update(rd, { saldo: sD, actualizado: F.serverTimestamp() });
+      if (!sa.exists()) throw new Error('la cuenta de destino ya no existe');
+      const a = sa.data(), m = st.data().monto, sA = (a.saldo || 0) + m;
+      if (!st.data().mov) {   // solicitud anterior a la custodia: el dinero todavía está en la cuenta de origen
+        const rd = F.doc(db, 'banco_cuentas', t.de), sd = await tx.get(rd), d = sd.data();
+        if ((d.saldo || 0) < m) throw new Error(`a ${t.deNombre} ya no le alcanza`);
+        tx.update(rd, { saldo: d.saldo - m, actualizado: F.serverTimestamp() });
+        movProfe(F, db, tx, t.de, d, -m, d.saldo - m, `Transferencia a N° ${t.aNumero} ${t.aNombre}`, 'transferencia', { transferencia: t.id });
+      }
       tx.update(ra, { saldo: sA, actualizado: F.serverTimestamp() });
-      tx.set(F.doc(F.collection(db, 'banco_movs')), { cuenta: t.de, numero: d.numero || '', nombre: nD, curso: d.curso || '', monto: -m,
-        motivo: `Transferencia a N° ${a.numero || ''} ${nA}${mot}`.slice(0, 200), tipo: 'transferencia', transferencia: t.id, saldoDespues: sD, profe, fecha: F.serverTimestamp() });
-      tx.set(F.doc(F.collection(db, 'banco_movs')), { cuenta: t.a, numero: a.numero || '', nombre: nA, curso: a.curso || '', monto: m,
-        motivo: `Transferencia de N° ${d.numero || ''} ${nD}${mot}`.slice(0, 200), tipo: 'transferencia', transferencia: t.id, saldoDespues: sA, profe, fecha: F.serverTimestamp() });
+      movProfe(F, db, tx, t.a, a, m, sA, `Transferencia de N° ${t.deNumero} ${t.deNombre}${t.motivo ? ': ' + t.motivo : ''}`, 'transferencia', { transferencia: t.id });
       tx.update(rt, { estado: 'aprobada', resuelta: F.serverTimestamp(), profe });
     });
     toast('✓ Transferencia autorizada');
   } catch (e) { toast('No se pudo autorizar: ' + e.message); }
 }
+async function devolver(F, db, tx, cuentaId, monto, motivo, extra) {
+  const rc = F.doc(db, 'banco_cuentas', cuentaId), sc = await tx.get(rc);
+  if (!sc.exists()) throw new Error('la cuenta ya no existe');
+  const c = sc.data(), saldo = (c.saldo || 0) + monto;
+  return () => { tx.update(rc, { saldo, actualizado: F.serverTimestamp() }); movProfe(F, db, tx, cuentaId, c, monto, saldo, motivo, 'devolucion', extra); };
+}
 async function rechazarTransferencia(t) {
-  const nota = prompt(`¿Por qué rechazas la transferencia de $${fmt(t.monto)} de ${t.deNombre} a ${t.aNombre}? (opcional, lo verá el estudiante)`, '');
+  const nota = prompt(`¿Por qué rechazas la transferencia de $${fmt(t.monto)} de ${t.deNombre} a ${t.aNombre}? (opcional, lo verá el estudiante)\nEl dinero retenido vuelve a ${t.deNombre}.`, '');
   if (nota === null) return;
-  const { F, db } = FB;
-  try { await F.updateDoc(F.doc(db, 'banco_transferencias', t.id), { estado: 'rechazada', nota: nota.trim().slice(0, 160), resuelta: F.serverTimestamp(), profe: (DF.usuario() || {}).email || '' }); toast('Transferencia rechazada'); }
-  catch (e) { toast('Error: ' + e.message); }
+  const { F, db } = FB, profe = (DF.usuario() || {}).email || '';
+  try {
+    await F.runTransaction(db, async tx => {
+      const rt = F.doc(db, 'banco_transferencias', t.id), st = await tx.get(rt);
+      if (!st.exists() || st.data().estado !== 'pendiente') throw new Error('ya no está pendiente');
+      // (solicitudes anteriores a la custodia no retuvieron dinero: no hay nada que devolver)
+      if (st.data().mov) { const escribir = await devolver(F, db, tx, t.de, st.data().monto, `Devolución: el profe rechazó la transferencia a ${t.aNombre}`, { transferencia: t.id }); escribir(); }
+      tx.update(rt, { estado: 'rechazada', nota: nota.trim().slice(0, 160), resuelta: F.serverTimestamp(), profe });
+    });
+    toast('Transferencia rechazada: el dinero volvió');
+  } catch (e) { toast('Error: ' + e.message); }
 }
 async function autorizarPedido(p) {
   const { F, db } = FB, profe = (DF.usuario() || {}).email || '';
-  const nom = c => `${c.nombre || ''} ${c.apellido || ''}`.trim();
-  if (!confirm(p.tipo === 'beneficio' ? `Autorizar compra de "${p.item}" por $${fmt(p.precio)} para ${p.compradorNombre}?`
-    : `Autorizar que ${p.vendedorNombre} venda "${p.item}" a ${p.compradorNombre} por $${fmt(p.precio)}?`)) return;
+  if (!confirm(p.tipo === 'beneficio' ? `Autorizar compra de "${p.item}" por $${fmt(p.precio)} para ${p.compradorNombre}?\n(Ya está pagada: queda «por usar».)`
+    : `Autorizar que ${p.vendedorNombre} venda "${p.item}" a ${p.compradorNombre} por $${fmt(p.precio)}?\n(El pago y el objeto ya están congelados: se entregan.)`)) return;
   try {
     await F.runTransaction(db, async tx => {
-      const rp = F.doc(db, 'mercado_pedidos', p.id), rc = F.doc(db, 'banco_cuentas', p.comprador);
-      const lect = [tx.get(rp), tx.get(rc)];
-      let rv, rpub, rmov, rgv, rgc, vuid;
-      if (p.tipo === 'reventa') {
-        rpub = F.doc(db, 'mercado_items', p.publicacion); rv = F.doc(db, 'banco_cuentas', p.vendedor);
-        lect.push(tx.get(rpub), tx.get(rv));
-      }
-      const [sp, sc, spub, sv] = await Promise.all(lect);
+      if (!p.mov) throw new Error('es un pedido anterior a la custodia (no se pagó al pedir): recházalo y que lo vuelvan a pedir');
+      const rp = F.doc(db, 'mercado_pedidos', p.id), rmc = F.doc(db, 'banco_movs', p.mov);
+      const [sp, smc] = await Promise.all([tx.get(rp), tx.get(rmc)]);
       if (!sp.exists() || sp.data().estado !== 'pendiente') throw new Error('la solicitud ya no está pendiente');
-      if (!sc.exists()) throw new Error('la cuenta del comprador ya no existe');
-      const c = sc.data(), precio = sp.data().precio;
-      if ((c.saldo || 0) < precio) throw new Error(`a ${nom(c)} ya no le alcanza (saldo $${fmt(c.saldo)})`);
-      const sC = (c.saldo || 0) - precio;
+      if (!smc.exists() || smc.data().canje !== 'retenida') throw new Error('no se encontró el pago retenido');
       if (p.tipo === 'beneficio') {
-        tx.update(rc, { saldo: sC, actualizado: F.serverTimestamp() });
-        tx.set(F.doc(F.collection(db, 'banco_movs')), { cuenta: p.comprador, numero: c.numero || '', nombre: nom(c), curso: c.curso || '', monto: -precio,
-          motivo: 'Mercado: ' + p.item, tipo: 'compra', item: p.item, canje: 'pendiente', pedido: p.id, saldoDespues: sC, profe, fecha: F.serverTimestamp() });
+        tx.update(rmc, { canje: 'pendiente', canjeNota: 'Autorizada', canjeFecha: F.serverTimestamp(), canjeProfe: profe });
         tx.update(rp, { estado: 'aprobada', resuelta: F.serverTimestamp(), profe });
         return;
       }
-      // compra entre estudiantes
-      if (!spub || !spub.exists() || spub.data().estado !== 'venta') throw new Error('la publicación ya no está a la venta');
-      if (!sv || !sv.exists()) throw new Error('la cuenta del vendedor ya no existe');
-      const pub = spub.data(), v = sv.data(), sV = (v.saldo || 0) + precio;
-      if (pub.precio !== precio) throw new Error(`el vendedor cambió el precio a $${fmt(pub.precio)}; rechaza y que lo vuelvan a pedir`);
+      const rpub = F.doc(db, 'mercado_items', p.publicacion), rv = F.doc(db, 'banco_cuentas', p.vendedor);
+      const [spub, sv] = await Promise.all([tx.get(rpub), tx.get(rv)]);
+      if (!spub.exists() || spub.data().estado !== 'reservado' || spub.data().reservadoPor !== p.id) throw new Error('la publicación no está reservada para este pedido');
+      if (!sv.exists()) throw new Error('la cuenta del vendedor ya no existe');
+      const pub = spub.data(), v = sv.data(), sV = (v.saldo || 0) + p.precio;
+      let rmv = null, rgc = null, sgc = null;
       if (pub.tipo === 'beneficio') {
-        rmov = F.doc(db, 'banco_movs', pub.mov);
-        const sm = await tx.get(rmov);
-        if (!sm.exists() || sm.data().canje !== 'pendiente' || sm.data().cuenta !== p.vendedor) throw new Error('el vendedor ya no tiene ese beneficio sin usar');
+        rmv = F.doc(db, 'banco_movs', pub.mov);
+        const smv = await tx.get(rmv);
+        if (!smv.exists() || smv.data().canje !== 'en-venta') throw new Error('el beneficio del vendedor no está congelado');
       } else {
-        vuid = pub.uid;
-        rgv = F.doc(db, 'gatitos', vuid); rgc = F.doc(db, 'gatitos', p.uid); p._comprUid = p.uid;
-        var [sgv, sgc] = await Promise.all([tx.get(rgv), tx.get(rgc)]);
-        if (!sgv.exists() || !(sgv.data().ids || []).includes(pub.gatito)) throw new Error('el vendedor ya no tiene ese gatito');
-        if (sgc.exists() && (sgc.data().ids || []).includes(pub.gatito)) throw new Error(`${nom(c)} ya tiene ese gatito`);
+        rgc = F.doc(db, 'gatitos', p.uid); sgc = await tx.get(rgc);
+        if (sgc.exists() && (sgc.data().ids || []).includes(pub.gatito)) throw new Error(`${p.compradorNombre} ya tiene ese gatito: rechaza el pedido`);
       }
-      tx.update(rc, { saldo: sC, actualizado: F.serverTimestamp() });
+      // pago al vendedor
       tx.update(rv, { saldo: sV, actualizado: F.serverTimestamp() });
-      tx.set(F.doc(F.collection(db, 'banco_movs')), { cuenta: p.vendedor, numero: v.numero || '', nombre: nom(v), curso: v.curso || '', monto: precio,
-        motivo: `Mercado: vendió ${p.item} a ${nom(c)}`.slice(0, 200), tipo: 'reventa', pedido: p.id, saldoDespues: sV, profe, fecha: F.serverTimestamp() });
+      movProfe(F, db, tx, p.vendedor, v, p.precio, sV, `Mercado: vendió ${p.item} a ${p.compradorNombre}`, 'reventa', { pedido: p.id });
+      // entrega al comprador
       if (pub.tipo === 'beneficio') {
-        tx.update(rmov, { canje: 'traspasada', canjeNota: 'Vendido a ' + nom(c), canjeFecha: F.serverTimestamp(), canjeProfe: profe });
-        tx.set(F.doc(F.collection(db, 'banco_movs')), { cuenta: p.comprador, numero: c.numero || '', nombre: nom(c), curso: c.curso || '', monto: -precio,
-          motivo: `Mercado: ${p.item} (de ${nom(v)})`.slice(0, 200), tipo: 'compra', item: p.item, canje: 'pendiente', pedido: p.id, saldoDespues: sC, profe, fecha: F.serverTimestamp() });
+        tx.update(rmv, { canje: 'traspasada', canjeNota: 'Vendido a ' + p.compradorNombre, canjeFecha: F.serverTimestamp(), canjeProfe: profe });
+        tx.update(rmc, { canje: 'pendiente', canjeNota: 'Comprado a ' + p.vendedorNombre, canjeFecha: F.serverTimestamp(), canjeProfe: profe });
       } else {
-        const idsV = (sgv.data().ids || []).filter(x => x !== pub.gatito), favV = sgv.data().favorito;
-        tx.set(rgv, Object.assign({}, sgv.data(), { ids: idsV, favorito: idsV.includes(favV) ? favV : (idsV[0] || null), actualizado: F.serverTimestamp() }));
-        const prevC = sgc.exists() ? sgc.data() : { uid: p._comprUid, nombre: p.compradorNombre.slice(0, 80), ids: [], favorito: null };
-        const idsC = (prevC.ids || []).concat([pub.gatito]);
-        tx.set(rgc, { uid: p._comprUid, nombre: String(prevC.nombre || p.compradorNombre).slice(0, 80), ids: idsC, favorito: prevC.favorito && idsC.includes(prevC.favorito) ? prevC.favorito : pub.gatito, actualizado: F.serverTimestamp() });
-        tx.set(F.doc(F.collection(db, 'banco_movs')), { cuenta: p.comprador, numero: c.numero || '', nombre: nom(c), curso: c.curso || '', monto: -precio,
-          motivo: `Mercado: gatito ${p.item} (de ${nom(v)})`.slice(0, 200), tipo: 'gatito-reventa', gatito: pub.gatito, pedido: p.id, saldoDespues: sC, profe, fecha: F.serverTimestamp() });
+        const prev = sgc.exists() ? sgc.data() : { nombre: p.compradorNombre, ids: [], favorito: null }, ids = (prev.ids || []).concat([pub.gatito]);
+        tx.set(rgc, { uid: p.uid, nombre: String(prev.nombre || p.compradorNombre).slice(0, 80), ids, favorito: prev.favorito && ids.includes(prev.favorito) ? prev.favorito : pub.gatito, actualizado: F.serverTimestamp() });
+        tx.update(rmc, { canje: 'entregada', canjeNota: 'Gatito de ' + p.vendedorNombre, canjeFecha: F.serverTimestamp(), canjeProfe: profe });
       }
       tx.update(rpub, { estado: 'vendido', actualizado: F.serverTimestamp() });
       tx.update(rp, { estado: 'aprobada', resuelta: F.serverTimestamp(), profe });
     });
-    // los demás pedidos por la misma publicación quedan rechazados
-    if (p.tipo === 'reventa') for (const o of pedPend.filter(x => x.id !== p.id && x.publicacion === p.publicacion))
-      await F.updateDoc(F.doc(db, 'mercado_pedidos', o.id), { estado: 'rechazada', nota: 'Ya se vendió a otra persona', resuelta: F.serverTimestamp(), profe }).catch(() => {});
-    toast('✓ Compra autorizada');
+    toast('✓ Compra autorizada y entregada');
   } catch (e) { toast('No se pudo autorizar: ' + e.message); }
 }
 async function rechazarPedido(p) {
-  const nota = prompt(`¿Por qué rechazas la compra de "${p.item}" de ${p.compradorNombre}? (opcional, lo verá el estudiante)`, '');
+  const nota = prompt(`¿Por qué rechazas la compra de "${p.item}" de ${p.compradorNombre}? (opcional, lo verá el estudiante)\nEl pago retenido vuelve${p.tipo === 'reventa' ? ' y la publicación queda otra vez a la venta' : ''}.`, '');
   if (nota === null) return;
-  const { F, db } = FB;
-  try { await F.updateDoc(F.doc(db, 'mercado_pedidos', p.id), { estado: 'rechazada', nota: nota.trim().slice(0, 160), resuelta: F.serverTimestamp(), profe: (DF.usuario() || {}).email || '' }); toast('Solicitud rechazada'); }
-  catch (e) { toast('Error: ' + e.message); }
+  const { F, db } = FB, profe = (DF.usuario() || {}).email || '';
+  try {
+    await F.runTransaction(db, async tx => {
+      const rp = F.doc(db, 'mercado_pedidos', p.id), rmc = F.doc(db, 'banco_movs', p.mov || '__sin__');
+      const [sp, smc] = await Promise.all([tx.get(rp), tx.get(rmc)]);
+      if (!sp.exists() || sp.data().estado !== 'pendiente') throw new Error('ya no está pendiente');
+      let rpub = null, spub = null;
+      if (p.tipo === 'reventa') { rpub = F.doc(db, 'mercado_items', p.publicacion); spub = await tx.get(rpub); }
+      if (p.mov) { const escribir = await devolver(F, db, tx, p.comprador, sp.data().precio, `Devolución: el profe rechazó la compra de ${p.item}`, { pedido: p.id }); escribir(); }
+      if (smc.exists()) tx.update(rmc, { canje: 'anulada', canjeNota: 'Rechazada por el profe', canjeFecha: F.serverTimestamp(), canjeProfe: profe });
+      if (spub && spub.exists() && spub.data().estado === 'reservado' && spub.data().reservadoPor === p.id) tx.update(rpub, { estado: 'venta', actualizado: F.serverTimestamp() });
+      tx.update(rp, { estado: 'rechazada', nota: nota.trim().slice(0, 160), resuelta: F.serverTimestamp(), profe });
+    });
+    toast('Solicitud rechazada: el pago volvió');
+  } catch (e) { toast('Error: ' + e.message); }
 }
 $('listaTr').onclick = ev => {
   const b = ev.target.closest('[data-sol-ok],[data-sol-no]'); if (!b) return;
@@ -653,6 +662,9 @@ function estadoCanje(m) {
   if (m.tipo !== 'compra') return '';
   if (m.canje === 'usada') return `<span class="can usada">Usada</span> <small class="muted">${esc(m.canjeNota || '')}${m.canjeFecha ? ' · ' + fecha(m.canjeFecha) : ''}</small>`;
   if (m.canje === 'anulada') return '<span class="can anul">Anulada</span>';
+  if (m.canje === 'retenida') return '<span class="can pend">Retenida (esperando autorización)</span>';
+  if (m.canje === 'en-venta') return '<span class="can pend">En venta (congelada)</span>';
+  if (m.canje === 'entregada') return `<span class="can usada">Entregada</span> <small class="muted">${esc(m.canjeNota || '')}</small>`;
   if (m.canje === 'traspasada') return `<span class="can anul">Vendida</span> <small class="muted">${esc(m.canjeNota || '')}</small>`;
   return '<span class="can pend">Pendiente</span>';
 }
@@ -844,7 +856,7 @@ function pintarMovs() {
   $('listaMovs').innerHTML = movs.length ? movs.map(m => `
     <div class="m"><div class="t"><b class="${m.monto < 0 ? 'neg' : 'pos'}">${m.monto < 0 ? '−' : '+'}$${fmt(Math.abs(m.monto))}</b> ${esc(m.nombre)}
       <small>${esc(m.motivo)} · ${fecha(m.fecha)}</small></div>
-      ${m.tipo === 'reverso' || m.tipo === 'importacion' || /^bolsa-/.test(m.tipo || '') || ['transferencia', 'reventa', 'gatito-reventa'].includes(m.tipo) ? '' : `<button class="btn sm" data-rev="${esc(m.id)}" title="Crear el movimiento contrario">Revertir</button>`}</div>`).join('')
+      ${m.tipo === 'reverso' || m.tipo === 'importacion' || /^bolsa-/.test(m.tipo || '') || ['transferencia', 'transferencia-envio', 'devolucion', 'reventa', 'gatito-reventa'].includes(m.tipo) || m.pedido || m.transferencia ? '' : `<button class="btn sm" data-rev="${esc(m.id)}" title="Crear el movimiento contrario">Revertir</button>`}</div>`).join('')
     : '<div class="muted">Aún no hay movimientos.</div>';
 }
 $('listaMovs').onclick = async ev => {
