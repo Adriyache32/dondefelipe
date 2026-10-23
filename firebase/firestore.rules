@@ -162,6 +162,23 @@ service cloud.firestore {
       allow delete: if esMod() || esDueno();
     }
 
+    // ── Recomendación de películas (Cine): cada persona con cuenta recomienda hasta 3 ──
+    // id = <uid>__1, __2 o __3 (así nadie publica más de 3). Sin enlaces ni correos. No se editan: se borran y se vuelven a escribir.
+    match /peliculas_recomendaciones/{id} {
+      allow read: if esColegio();
+      allow create: if esColegio()
+        && id.matches(request.auth.uid + '__[1-3]')
+        && request.resource.data.keys().hasOnly(['uid', 'nombre', 'curso', 'titulo', 'porque', 'fecha'])
+        && request.resource.data.uid == request.auth.uid
+        && texto(request.resource.data.nombre, 80) && texto(request.resource.data.curso, 40)
+        && texto(request.resource.data.titulo, 80) && request.resource.data.titulo.size() >= 1
+        && texto(request.resource.data.porque, 400) && request.resource.data.porque.size() >= 10
+        && !request.resource.data.titulo.matches('(?s).*(https?:|www[.]|@).*')
+        && !request.resource.data.porque.matches('(?s).*(https?:|www[.]|@).*')
+        && request.resource.data.fecha == request.time;
+      allow delete: if esMod() || esDueno();
+    }
+
     // ── Preguntas de cada película (los moderadores las editan) ──
     // Si existe el documento, reemplaza la pregunta escrita en peliculas.html.
     // Borrarlo devuelve la pregunta original.
