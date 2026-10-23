@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#08080c">
-<title>Mercado de gatitos · El Mundo de Felipe</title>
+<title>Mercado Hipopesos · El Mundo de Felipe</title>
 <meta name="description" content="Compra con tus Hipopesos los gatitos que publica el profe y colecciónalos.">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -122,6 +122,21 @@ h1 span{color:var(--acid)}
 .kpis div{background:var(--slab2);border-radius:12px;padding:10px 14px}
 .kpis small{display:block;color:var(--mute);font:700 11px var(--ff);letter-spacing:1px;text-transform:uppercase}
 .kpis b{font:900 26px var(--ff-d);color:var(--acid)}
+/* beneficios y entre estudiantes */
+.item{position:relative;background:var(--slab);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.item .ico{font-size:52px;line-height:1;height:90px;display:grid;place-items:center;background:var(--slab2);border-radius:14px}
+.item .ico img{max-height:84px}
+.item h3{font:800 22px/1.05 var(--ff-d);text-transform:uppercase;margin:0}
+.item p{margin:0;color:var(--mute);font-size:13.5px;flex:1}
+.lista-p{display:flex;flex-direction:column;margin-top:8px}
+.lista-p .it{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.lista-p .it:first-child{border-top:0}
+.lista-p .it .t{flex:1;min-width:180px}
+.lista-p .it small{color:var(--mute);display:block}
+.lista-p .it .ico-m{font-size:26px;width:40px;text-align:center}
+.lista-p .it .ico-m img{width:40px;height:40px;object-fit:contain}
+.lista-p input{width:120px;background:var(--slab2);color:var(--ink);border:1px solid var(--line2);border-radius:10px;padding:7px 10px;font:600 14px var(--ff)}
+.h2s{font:900 26px var(--ff-d);text-transform:uppercase;margin:0 0 4px}
 @media (max-width:560px){.form-of{grid-template-columns:1fr}.form-of .prev{height:100px}.tabs button{font-size:17px}}
 </style>
 </head>
@@ -129,8 +144,8 @@ h1 span{color:var(--acid)}
 <div class="wrap">
   <a class="crumb" href="index.html">← El Mundo de Felipe</a>
   <div class="cab">
-    <div><p class="kick">Colección · Banco de Hipopesos</p><h1>Mercado de <span>gatitos</span></h1>
-      <p class="intro">Compra con tus Hipopesos (₣) los gatitos que publica el profe y colecciónalos todos. Hay ofertas por tiempo limitado y ediciones con pocas unidades: cuando se agotan, se agotan.</p></div>
+    <div><p class="kick">Banco de Hipopesos</p><h1>Mercado <span>Hipopesos</span></h1>
+      <p class="intro">Gatitos coleccionables, beneficios del catálogo y lo que venden tus compañeros, todo con tus Hipopesos (₣). Los gatitos del profe se compran al instante; los beneficios y las compras entre estudiantes las autoriza el profe.</p></div>
     <img class="gato-h" src="gatitos/img/caja.webp" alt="">
   </div>
 
@@ -159,6 +174,25 @@ h1 span{color:var(--acid)}
       </select>
     </div>
     <div class="grid" id="grid"></div>
+  </section>
+
+  <section id="vBeneficios" class="oculto">
+    <p class="intro" style="margin-top:16px">Pides la compra y el profe la autoriza: recién ahí se descuenta de tu saldo y el beneficio queda «por usar» en tu cuenta.</p>
+    <div class="grid" id="gBenef"></div>
+    <div class="card"><h2 class="h2s">Mis pedidos</h2><div class="lista-p" id="pedidos1"></div></div>
+  </section>
+
+  <section id="vEstudiantes" class="oculto">
+    <p class="intro" style="margin-top:16px">Lo que tus compañeros ponen a la venta: beneficios sin usar y gatitos. Pides la compra y el profe la autoriza; ahí se paga y se traspasa.</p>
+    <div class="grid" id="gEst"></div>
+    <div class="card"><h2 class="h2s">Mis pedidos</h2><div class="lista-p" id="pedidos2"></div></div>
+  </section>
+
+  <section id="vMio" class="oculto">
+    <div class="card"><h2 class="h2s">Vender lo mío</h2>
+      <p class="intro" style="margin:0">Puedes vender tus beneficios sin usar y tus gatitos. Tú pones el precio; cuando alguien lo pide, el profe autoriza la venta y recibes los Hipopesos.</p>
+      <div class="lista-p" id="mios"></div></div>
+    <div class="card"><h2 class="h2s">Mis ventas</h2><div class="lista-p" id="misVentas"></div></div>
   </section>
 
   <section id="vColeccion" class="oculto">
@@ -205,6 +239,7 @@ h1 span{color:var(--acid)}
 <div class="velo" id="velo" hidden><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
 
 <script src="gatitos/catalogo.js"></script>
+<script src="banco-felipeso/catalogo.js"></script>
 <script src="firebase/df.js"></script>
 <script>
 (function () {
@@ -215,6 +250,8 @@ const fmt = n => new Intl.NumberFormat('es-CL').format(Math.round(n || 0)) + ' �
 const R = window.RAREZAS, G = window.GATITOS, gato = id => G.find(g => g.id === id);
 const ms = t => (t && t.toMillis ? t.toMillis() : (t && t.toDate ? t.toDate().getTime() : (typeof t === 'number' ? t : 0)));
 let usuario = null, esProfe = false, cuentaId = null, cuenta = null, coleccion = { ids: [], favorito: null };
+let publicaciones = [], misPedidos = [], misVentas = [], misBenef = [];
+const BENEF = window.CATALOGO_BENEFICIOS || [];
 let ofertas = [], ventas = [], vista = 'mercado', filtro = 'todos', comprando = false, unsubs = [];
 
 function aviso(html, tipo) { $('avisos').innerHTML = html ? `<div class="aviso ${tipo || ''}">${html}</div>` : ''; }
@@ -229,10 +266,13 @@ const vigente = o => o.activa && (o.stock === -1 || o.stock > 0) && (!ms(o.hasta
 
 /* ═════════ pintar ═════════ */
 function pintarTabs() {
-  const t = [['mercado', '🛒 Mercado', ofertas.filter(vigente).length], ['coleccion', '🐾 Mi colección', (coleccion.ids || []).length]];
+  const t = [['mercado', '🐱 Gatitos', ofertas.filter(vigente).length], ['beneficios', '🎟️ Beneficios', BENEF.length],
+    ['estudiantes', '🤝 Entre estudiantes', publicaciones.filter(x => x.estado === 'venta').length],
+    ['coleccion', '🐾 Mi colección', (coleccion.ids || []).length]];
+  if (usuario && !esProfe) t.push(['mio', '📦 Vender lo mío', publicaciones.filter(x => x.estado === 'venta' && x.uid === usuario.uid).length]);
   if (esProfe) t.push(['profe', '🧑‍🏫 Vender', ofertas.length]);
   $('tabs').innerHTML = t.map(([k, n, c]) => `<button data-v="${k}" class="${k === vista ? 'on' : ''}">${n}<span class="cuenta-n">${c}</span></button>`).join('');
-  ['mercado', 'coleccion', 'profe'].forEach(k => $('v' + k[0].toUpperCase() + k.slice(1)).classList.toggle('oculto', k !== vista));
+  ['mercado', 'beneficios', 'estudiantes', 'mio', 'coleccion', 'profe'].forEach(k => $('v' + k[0].toUpperCase() + k.slice(1)).classList.toggle('oculto', k !== vista));
 }
 function pintarEstado() {
   const tengo = new Set(coleccion.ids || []), total = G.length, n = G.filter(g => tengo.has(g.id)).length;
@@ -323,7 +363,7 @@ function pintarProfe() {
   $('pVentas').innerHTML = ventas.slice(0, 30).map(v => `<tr><td>${new Date(ms(v.fecha)).toLocaleString('es-CL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</td><td>${esc(v.nombre)}</td><td>${esc((gato(v.gatito) || {}).nombre || v.gatito)}</td><td class="n">${fmt(v.precio)}</td></tr>`).join('')
     || '<tr><td colspan="4" style="color:var(--mute)">Todavía no hay ventas.</td></tr>';
 }
-function pintar() { pintarTabs(); pintarEstado(); pintarVentas(); pintarMercado(); pintarAlbum(); pintarProfe(); }
+function pintar() { pintarTabs(); pintarEstado(); pintarVentas(); pintarMercado(); pintarAlbum(); pintarProfe(); pintarBeneficios(); pintarEstudiantes(); pintarMio(); pintarPedidos(); }
 
 /* ═════════ datos ═════════ */
 function quitarSubs() { unsubs.forEach(u => { try { u(); } catch (e) {} }); unsubs = []; }
@@ -331,11 +371,13 @@ async function cargar() {
   const { F, db } = await DF.listo();
   quitarSubs();
   usuario = DF.usuario(); esProfe = !!(usuario && DF.esProfe(usuario)); cuentaId = null; cuenta = null; coleccion = { ids: [], favorito: null };
-  if (!esProfe && vista === 'profe') vista = 'mercado';
+  if ((!esProfe && vista === 'profe') || ((!usuario || esProfe) && vista === 'mio')) vista = 'mercado';
   aviso('');
   unsubs.push(F.onSnapshot(F.collection(db, 'gatitos_ofertas'), s => { ofertas = s.docs.map(d => Object.assign({ id: d.id }, d.data())); pintar(); },
     e => aviso('No se pudieron leer las ofertas: ' + esc(e.message), 'err')));
+  misPedidos = []; misVentas = []; misBenef = []; publicaciones = [];
   if (usuario) {
+    unsubs.push(F.onSnapshot(F.collection(db, 'mercado_items'), s => { publicaciones = s.docs.map(d => Object.assign({ id: d.id }, d.data())); pintar(); }, () => {}));
     unsubs.push(F.onSnapshot(F.query(F.collection(db, 'gatitos_ventas'), F.orderBy('fecha', 'desc'), F.limit(40)), s => { ventas = s.docs.map(d => d.data()); pintar(); }, () => {}));
     try {
       await DF.asegurarCuentaBanco().catch(() => null);
@@ -344,6 +386,13 @@ async function cargar() {
       if (v.exists()) {
         cuentaId = v.data().cuenta;
         unsubs.push(F.onSnapshot(F.doc(db, 'banco_cuentas', cuentaId), c => { cuenta = c.exists() ? c.data() : null; pintar(); }, () => {}));
+        const conClave = p => Object.assign(p, { _clave: p.tipo === 'beneficio' ? 'b:' + p.item : 'r:' + p.publicacion });
+        unsubs.push(F.onSnapshot(F.query(F.collection(db, 'mercado_pedidos'), F.where('comprador', '==', cuentaId)), s => {
+          misPedidos = s.docs.map(d => conClave(Object.assign({ id: d.id }, d.data()))).sort((a, b) => ms(b.creada) - ms(a.creada)); pintar(); }, () => {}));
+        unsubs.push(F.onSnapshot(F.query(F.collection(db, 'mercado_pedidos'), F.where('vendedor', '==', cuentaId)), s => {
+          misVentas = s.docs.map(d => Object.assign({ id: d.id }, d.data())).sort((a, b) => ms(b.creada) - ms(a.creada)); pintar(); }, () => {}));
+        unsubs.push(F.onSnapshot(F.query(F.collection(db, 'banco_movs'), F.where('cuenta', '==', cuentaId)), s => {
+          misBenef = s.docs.map(d => Object.assign({ id: d.id }, d.data())).filter(m => m.canje === 'pendiente' && m.item); pintar(); }, () => {}));
       } else if (!esProfe) aviso('Tu cuenta del banco todavía no está conectada con este correo. Pídele al profe que la vincule para poder comprar.');
     } catch (e) { aviso('No se pudo cargar tu cuenta: ' + esc(e.message), 'err'); }
   } else ventas = [];
@@ -457,6 +506,105 @@ async function accionProfe(oid, a) {
     if (cambio) await F.updateDoc(ref, Object.assign(cambio, { actualizado: F.serverTimestamp() }));
   } catch (e) { alert('No se pudo: ' + e.message); }
 }
+
+
+/* ═════════ beneficios, entre estudiantes y vender lo mío ═════════ */
+const EST_P = { pendiente: '<span class="chip lim">Esperando al profe</span>', aprobada: '<span class="chip ok">Autorizada</span>', rechazada: '<span class="chip hot">Rechazada</span>', cancelada: '<span class="chip">Cancelada</span>' };
+const nombreCorto = () => DF.nombreCorto(usuario.displayName, usuario.email).slice(0, 40);
+const nombreCuenta = () => ((cuenta.nombre || '') + ' ' + (cuenta.apellido || '')).trim() || nombreCorto();
+const icoHtml = x => x.tipo === 'gatito' || x.gatito ? `<img src="gatitos/img/${esc(x.gatito)}.webp" alt="">` : esc(x.ico || '🎟️');
+function botonPedir(clave, precio, extra) {
+  if (!usuario) return '<button class="btn" data-a="entrar">Entrar</button>';
+  if (!cuenta) return '<button class="btn" disabled>Sin cuenta</button>';
+  if (misPedidos.some(p => p.estado === 'pendiente' && p._clave === clave)) return '<button class="btn" disabled>Pedido enviado</button>';
+  const alcanza = (cuenta.saldo || 0) >= precio;
+  return `<button class="btn ${alcanza ? 'p' : ''}" ${extra}${alcanza ? '' : ' disabled title="No te alcanza todavía"'}>${alcanza ? 'Pedir compra' : 'Te falta ' + fmt(precio - (cuenta.saldo || 0)).replace(' ₣', '')}</button>`;
+}
+function pintarBeneficios() {
+  $('gBenef').innerHTML = BENEF.map((b, i) => `<article class="item"><div class="ico">${esc(b.ico)}</div><h3>${esc(b.nombre)}</h3>
+    <p>Beneficio del catálogo del banco. Queda «por usar» hasta que el profe lo aplique.</p>
+    <div class="pie"><span class="precio">${fmt(b.precio)}</span>${botonPedir('b:' + b.nombre, b.precio, `data-pedir-b="${i}"`)}</div></article>`).join('')
+    || '<p class="intro">No hay beneficios en el catálogo.</p>';
+}
+function pintarEstudiantes() {
+  const l = publicaciones.filter(x => x.estado === 'venta').sort((a, b) => ms(b.creada) - ms(a.creada));
+  $('gEst').innerHTML = l.map(x => {
+    const mio = usuario && x.uid === usuario.uid, g = x.gatito ? gato(x.gatito) : null, tengo = g && (coleccion.ids || []).includes(g.id);
+    const r = g ? R[g.rareza] : null;
+    let acc = mio ? '<span class="mio-tag">Es tu publicación</span>' : tengo ? '<span class="mio-tag"><i class="fa-solid fa-check"></i> Ya lo tienes</span>' : botonPedir('r:' + x.id, x.precio, `data-pedir-r="${esc(x.id)}"`);
+    return `<article class="item"${r ? ` style="--rc:${r.color}"` : ''}><div class="ico">${icoHtml(x)}</div>
+      ${r ? `<span class="rz" style="background:${r.color}">${esc(r.nombre)}</span>` : '<span class="chip">Beneficio sin usar</span>'}
+      <h3>${esc(x.item)}</h3><p><i class="fa-solid fa-user"></i> Vende ${esc(x.vendedorNombre)}</p>
+      <div class="pie"><span class="precio">${fmt(x.precio)}</span>${acc}</div></article>`;
+  }).join('') || '<div class="vacio-merc" style="grid-column:1/-1"><img src="gatitos/img/patitas.webp" alt=""><p>Nadie está vendiendo nada por ahora. ¿Tienes algo sin usar? Véndelo en «Vender lo mío».</p></div>';
+}
+function filaMia(x, pub) {
+  const clave = x.tipo === 'gatito' ? 'g-' + usuario.uid + '-' + x.gatito : 'b-' + x.mov;
+  const enVenta = pub && pub.estado === 'venta';
+  return `<div class="it" data-mia="${esc(clave)}"><span class="ico-m">${icoHtml(x)}</span><div class="t"><b>${esc(x.item)}</b>
+    <small>${x.tipo === 'gatito' ? 'Gatito de tu colección' : 'Beneficio sin usar'}${enVenta ? ' · <b style="color:var(--acid)">en venta a ' + fmt(pub.precio) + '</b>' : ''}</small></div>
+    <input type="number" min="100" step="500" placeholder="Precio ₣" value="${pub ? pub.precio : (x.ref || '')}" aria-label="Precio">
+    <button class="btn ${enVenta ? '' : 'p'}" data-publicar>${enVenta ? 'Cambiar precio' : 'Poner a la venta'}</button>${enVenta ? '<button class="btn" data-retirar>Retirar</button>' : ''}</div>`;
+}
+function pintarMio() {
+  if (!usuario || esProfe) return;
+  const pubDe = id => publicaciones.find(p => p.id === id);
+  const items = misBenef.map(m => ({ tipo: 'beneficio', mov: m.id, item: m.item, ico: (BENEF.find(b => b.nombre === m.item) || {}).ico || '🎟️', ref: (BENEF.find(b => b.nombre === m.item) || {}).precio || '' }))
+    .concat((coleccion.ids || []).map(id => { const g = gato(id) || { nombre: id, precio: '' }; return { tipo: 'gatito', gatito: id, item: g.nombre, ico: '🐱', ref: g.precio }; }));
+  $('mios').innerHTML = !cuenta ? '<div class="vacio-merc">Necesitas tu cuenta del banco vinculada para vender.</div>'
+    : items.map(x => filaMia(x, pubDe(x.tipo === 'gatito' ? 'g-' + usuario.uid + '-' + x.gatito : 'b-' + x.mov))).join('') || '<p class="intro">No tienes beneficios sin usar ni gatitos para vender.</p>';
+  $('misVentas').innerHTML = misVentas.length ? misVentas.map(p => `<div class="it"><span class="ico-m">${icoHtml(p)}</span><div class="t"><b>${esc(p.item)}</b><small>${esc(p.compradorNombre)} lo pidió por ${fmt(p.precio)}${p.nota ? ' · ' + esc(p.nota) : ''}</small></div>${EST_P[p.estado] || ''}</div>`).join('')
+    : '<p class="intro">Todavía nadie te ha comprado nada.</p>';
+}
+function pintarPedidos() {
+  const h = misPedidos.length ? misPedidos.slice(0, 20).map(p => `<div class="it"><span class="ico-m">${icoHtml(p)}</span><div class="t"><b>${esc(p.item)}</b>
+    <small>${p.tipo === 'reventa' ? 'a ' + esc(p.vendedorNombre) + ' · ' : 'catálogo · '}${fmt(p.precio)}${p.nota ? ' · Profe: ' + esc(p.nota) : ''}</small></div>${EST_P[p.estado] || ''}
+    ${p.estado === 'pendiente' ? `<button class="btn sm" data-cancelar-p="${esc(p.id)}">Cancelar</button>` : ''}</div>`).join('')
+    : `<p class="intro">${usuario ? 'Aún no pides nada.' : 'Entra para ver tus pedidos.'}</p>`;
+  $('pedidos1').innerHTML = h; $('pedidos2').innerHTML = h;
+}
+async function pedir(datos, clave) {
+  if (misPedidos.filter(p => p.estado === 'pendiente').length >= 5) return aviso('Tienes 5 pedidos esperando al profe: espera a que los revise.', 'err');
+  if (datos.precio > (cuenta.saldo || 0)) return aviso('No te alcanza.', 'err');
+  if (!confirm(`¿Pedir la compra de «${datos.item}» por ${fmt(datos.precio)}?\nEl profe debe autorizarla; recién ahí se descuenta.`)) return;
+  const { F, db } = await DF.listo();
+  try {
+    await F.addDoc(F.collection(db, 'mercado_pedidos'), Object.assign({ comprador: cuentaId, compradorNombre: nombreCuenta().slice(0, 160), compradorNumero: String(cuenta.numero || '').slice(0, 20),
+      uid: usuario.uid, estado: 'pendiente', creada: F.serverTimestamp() }, datos));
+    aviso('✓ Pedido enviado: el profe lo autoriza y recién ahí se descuenta de tu saldo.', 'ok');
+  } catch (e) { aviso('No se pudo pedir: ' + esc(/permission/i.test(e.message) ? 'el banco lo rechazó (¿el profe publicó las reglas nuevas?)' : e.message), 'err'); }
+}
+async function publicarMio(fila) {
+  const clave = fila.dataset.mia, precio = Math.round(+fila.querySelector('input').value || 0);
+  if (precio < 100) return aviso('Pon un precio de al menos 100 ₣.', 'err');
+  const { F, db } = await DF.listo(), ref = F.doc(db, 'mercado_items', clave), prev = publicaciones.find(p => p.id === clave);
+  try {
+    if (prev) await F.updateDoc(ref, { precio, estado: 'venta', actualizado: F.serverTimestamp() });
+    else {
+      const esG = clave.indexOf('g-') === 0, base = { tipo: esG ? 'gatito' : 'beneficio', vendedor: cuentaId, vendedorNombre: nombreCorto(), uid: usuario.uid, precio, estado: 'venta', creada: F.serverTimestamp(), actualizado: F.serverTimestamp() };
+      if (esG) { const gid = clave.slice(('g-' + usuario.uid + '-').length), g = gato(gid); Object.assign(base, { gatito: gid, item: g ? g.nombre : gid, ico: '🐱' }); }
+      else { const m = misBenef.find(x => 'b-' + x.id === clave); Object.assign(base, { mov: m.id, item: m.item, ico: (BENEF.find(b => b.nombre === m.item) || {}).ico || '🎟️' }); }
+      await F.setDoc(ref, base);
+    }
+    aviso(`✓ Publicado a ${fmt(precio)}. Aparece en «Entre estudiantes».`, 'ok');
+  } catch (e) { aviso('No se pudo publicar: ' + esc(/permission/i.test(e.message) ? 'el banco lo rechazó (¿ya no lo tienes, o el profe no publicó las reglas nuevas?)' : e.message), 'err'); }
+}
+async function retirarMio(fila) {
+  const { F, db } = await DF.listo();
+  try { await F.updateDoc(F.doc(db, 'mercado_items', fila.dataset.mia), { estado: 'retirado', actualizado: F.serverTimestamp() }); aviso('Publicación retirada.', 'ok'); }
+  catch (e) { aviso('No se pudo retirar: ' + esc(e.message), 'err'); }
+}
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-pedir-b],[data-pedir-r],[data-publicar],[data-retirar],[data-cancelar-p]'); if (!b || b.disabled) return;
+  if (b.dataset.pedirB) { const x = BENEF[+b.dataset.pedirB]; pedir({ tipo: 'beneficio', item: x.nombre, ico: x.ico, precio: x.precio }); }
+  else if (b.dataset.pedirR) { const x = publicaciones.find(p => p.id === b.dataset.pedirR); if (!x) return;
+    const d = { tipo: 'reventa', publicacion: x.id, vendedor: x.vendedor, vendedorNombre: x.vendedorNombre, item: x.item, ico: x.ico || '🎟️', precio: x.precio };
+    if (x.gatito) d.gatito = x.gatito; pedir(d); }
+  else if (b.hasAttribute('data-publicar')) publicarMio(b.closest('[data-mia]'));
+  else if (b.hasAttribute('data-retirar')) retirarMio(b.closest('[data-mia]'));
+  else if (b.dataset.cancelarP) { if (!confirm('¿Cancelar este pedido?')) return;
+    DF.listo().then(({ F, db }) => F.updateDoc(F.doc(db, 'mercado_pedidos', b.dataset.cancelarP), { estado: 'cancelada', resuelta: F.serverTimestamp() })).catch(e => aviso(esc(e.message), 'err')); }
+});
 
 /* ═════════ eventos ═════════ */
 document.addEventListener('click', e => {

@@ -401,6 +401,60 @@ service cloud.firestore {
       allow update, delete: if esProfe();
     }
 
+    // ═════ Mercado entre estudiantes y compras de beneficios ═════
+    // Publicar: el estudiante pone a la venta algo suyo (un beneficio sin usar o un gatito).
+    // Comprar: cualquier compra (beneficio del catálogo o algo de otro estudiante) queda como PEDIDO;
+    // el profe la autoriza en el panel y ahí recién se mueve el dinero y el objeto.
+    function movPropio(movId) {
+      let m = get(/databases/$(database)/documents/banco_movs/$(movId)).data;
+      return m.cuenta == miCuentaBanco() && m.get('canje', '') == 'pendiente' && m.get('item', '') != '';
+    }
+    function publicacionValida(d, iid) {
+      return d.vendedor == miCuentaBanco() && miCuentaBanco() != '' && d.uid == request.auth.uid
+        && d.keys().hasOnly(['tipo', 'vendedor', 'vendedorNombre', 'uid', 'mov', 'gatito', 'item', 'ico', 'precio', 'estado', 'creada', 'actualizado'])
+        && d.precio is int && d.precio >= 100 && d.precio <= 10000000
+        && texto(d.vendedorNombre, 40) && texto(d.item, 120) && texto(d.ico, 8)
+        && d.estado in ['venta', 'retirado']
+        && d.actualizado == request.time
+        && ((d.tipo == 'beneficio' && iid == 'b-' + d.mov && movPropio(d.mov)
+               && d.item == get(/databases/$(database)/documents/banco_movs/$(d.mov)).data.item)
+            || (d.tipo == 'gatito' && iid == 'g-' + request.auth.uid + '-' + d.gatito && d.gatito in gatitosAntes(request.auth.uid)));
+    }
+    match /mercado_items/{iid} {
+      allow read: if conCuenta();
+      allow create: if esColegio() && publicacionValida(request.resource.data, iid)
+        && request.resource.data.estado == 'venta' && request.resource.data.creada == request.time;
+      // El vendedor cambia el precio, la retira o la vuelve a publicar (si todavía le pertenece).
+      allow update: if esColegio() && resource.data.uid == request.auth.uid && resource.data.estado in ['venta', 'retirado', 'vendido']
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['precio', 'estado', 'actualizado'])
+        && publicacionValida(request.resource.data, iid);
+      allow update, delete: if esProfe();
+    }
+    match /mercado_pedidos/{pid} {
+      allow read: if esProfe()
+        || (miCuentaBanco() != '' && (resource.data.comprador == miCuentaBanco() || resource.data.get('vendedor', '') == miCuentaBanco()));
+      allow create: if esColegio() && miCuentaBanco() != ''
+        && request.resource.data.keys().hasOnly(['tipo', 'comprador', 'compradorNombre', 'compradorNumero', 'uid', 'item', 'ico', 'precio',
+             'publicacion', 'vendedor', 'vendedorNombre', 'gatito', 'estado', 'creada'])
+        && request.resource.data.comprador == miCuentaBanco()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.precio is int && request.resource.data.precio >= 100
+        && request.resource.data.precio <= get(rutaCuenta(miCuentaBanco())).data.saldo
+        && texto(request.resource.data.compradorNombre, 160) && texto(request.resource.data.compradorNumero, 20)
+        && texto(request.resource.data.item, 120) && texto(request.resource.data.ico, 8)
+        && request.resource.data.estado == 'pendiente' && request.resource.data.creada == request.time
+        && (request.resource.data.tipo == 'beneficio'
+            || (request.resource.data.tipo == 'reventa'
+                && get(/databases/$(database)/documents/mercado_items/$(request.resource.data.publicacion)).data.estado == 'venta'
+                && get(/databases/$(database)/documents/mercado_items/$(request.resource.data.publicacion)).data.precio == request.resource.data.precio
+                && get(/databases/$(database)/documents/mercado_items/$(request.resource.data.publicacion)).data.vendedor == request.resource.data.vendedor
+                && request.resource.data.vendedor != miCuentaBanco()));
+      allow update: if conCuenta() && resource.data.uid == request.auth.uid && resource.data.estado == 'pendiente'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'resuelta'])
+        && request.resource.data.estado == 'cancelada' && request.resource.data.resuelta == request.time;
+      allow update, delete: if esProfe();
+    }
+
     // ═════ Mercado de gatitos ═════
     // Por ahora solo el profe publica ofertas (gatito, precio, cantidad, plazo). Se compra siempre una oferta:
     // el movimiento cobra exactamente su precio, la oferta descuenta 1 de su stock y el gatito entra a la colección.
@@ -473,7 +527,8 @@ service cloud.firestore {
         && request.resource.data.actualizado == request.time
         && ((resource != null && request.resource.data.ids == resource.data.ids)   // solo cambia el favorito
             || compraDeGatito(uid));
-      allow delete: if esProfe();
+      // El profe traspasa gatitos al autorizar una venta entre estudiantes.
+      allow create, update, delete: if esProfe();
     }
     function opBolsa(d) {
       return d.ticker is string && exists(rutaEmpresa(d.ticker))
