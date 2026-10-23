@@ -163,6 +163,11 @@ dialog.ancho{max-width:min(860px,calc(100vw - 32px))}
             <input id="podBuscar" placeholder="Buscar estudiante o poder…" style="width:100%;margin-bottom:8px;background:var(--slab2);color:var(--ink);border:1px solid var(--line2);border-radius:10px;padding:8px 10px;font:inherit">
             <div class="lista-movs" id="listaPod"><div class="muted">—</div></div>
           </div>
+          <div class="card porcanjear" style="margin-top:16px">
+            <h3 style="margin:0 0 4px">🪪 Perfiles públicos <span class="pill" id="nPerf">0</span></h3>
+            <p class="muted" style="margin:0 0 8px;font-size:13px">Lo que los estudiantes muestran a la comunidad (descripción, películas y playlist). Si algo no corresponde, ocúltalo: deja de verse y el estudiante ve un aviso.</p>
+            <div class="lista-movs" id="listaPerf"><div class="muted">—</div></div>
+          </div>
         </div>
 
         <aside class="card mov">
@@ -426,6 +431,7 @@ function iniciarBanco() {
     pintarPendientes();
   }, e => console.info(e)));
   desuscribir.push(F.onSnapshot(F.collection(db, 'gatitos'), s => { colecciones = s.docs.map(d => d.data()); pintarPoderes(); }, () => {}));
+  desuscribir.push(F.onSnapshot(F.collection(db, 'perfiles_publicos'), s => { perfilesPub = s.docs.map(d => Object.assign({ id: d.id }, d.data())); pintarPerfilesPub(); }, () => {}));
   desuscribir.push(F.onSnapshot(F.query(F.collection(db, 'banco_transferencias'), F.where('estado', '==', 'pendiente')), s => {
     transPend = s.docs.map(d => Object.assign({ id: d.id }, d.data())).sort((a, b) => ms(a.creada) - ms(b.creada));
     pintarTransferencias();
@@ -559,6 +565,24 @@ function pintarPoderes() {
     : `<div class="muted">${filas.length ? 'Sin resultados.' : 'Nadie tiene todavía un gatito con poder especial (raro o superior).'}</div>`;
 }
 $('podBuscar').oninput = pintarPoderes;
+/* perfiles públicos (moderación) */
+let perfilesPub = [];
+function pintarPerfilesPub() {
+  const l = perfilesPub.filter(p => p.publico || p.oculto).sort((a, b) => (b.oculto ? 1 : 0) - (a.oculto ? 1 : 0) || String(a.nombre).localeCompare(String(b.nombre), 'es'));
+  $('nPerf').textContent = perfilesPub.filter(p => p.publico && !p.oculto).length;
+  $('listaPerf').innerHTML = l.length ? l.map(p => `<div class="m"><div class="t"><b>${esc(p.nombre)}</b> ${p.oculto ? '<span class="pill" style="background:#5c2228;color:#ffb3ad">oculto</span>' : ''}
+      <small>${esc(p.descripcion || '—')}${(p.peliculas || []).length ? '<br>🎬 ' + p.peliculas.map(esc).join(' · ') : ''}${p.spotifyId ? '<br>🎧 Spotify: ' + esc(p.spotifyTipo) : ''}</small></div>
+      <a class="btn sm" href="perfil.html?u=${encodeURIComponent(p.id)}" target="_blank" rel="noopener">Ver</a>
+      <button class="btn sm" data-perf="${esc(p.id)}">${p.oculto ? 'Mostrar' : 'Ocultar'}</button></div>`).join('')
+    : '<div class="muted">Nadie ha hecho público su perfil todavía.</div>';
+}
+$('listaPerf').onclick = async ev => {
+  const b = ev.target.closest('[data-perf]'); if (!b) return;
+  const p = perfilesPub.find(x => x.id === b.dataset.perf); if (!p) return;
+  if (!p.oculto && !confirm(`¿Ocultar el perfil de ${p.nombre}? Dejará de verse hasta que lo vuelvas a mostrar.`)) return;
+  try { await FB.F.updateDoc(FB.F.doc(FB.db, 'perfiles_publicos', p.id), { oculto: !p.oculto }); toast(p.oculto ? 'Perfil visible otra vez' : 'Perfil oculto'); }
+  catch (e) { toast('No se pudo: ' + e.message); }
+};
 
 function movProfe(F, db, tx, cuentaId, c, monto, saldo, motivo, tipo, extra) {
   tx.set(F.doc(F.collection(db, 'banco_movs')), Object.assign({ cuenta: cuentaId, numero: c.numero || '', nombre: nomC(c), curso: c.curso || '', monto,
