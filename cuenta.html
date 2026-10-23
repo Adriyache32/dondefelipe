@@ -336,6 +336,7 @@ function cargarProgreso() {
 }
 
 const diaHoy = () => Math.floor((Date.now() - 14400000) / 86400000);   // igual que en las reglas
+let podMes = null;
 // Colección, gatitos congelados (a la venta), por llegar (comprados a un compañero) y poderes.
 async function cargarGatitos(u, banco) {
   const G = window.GATITOS || [], R = window.RAREZAS || {}, cid = banco ? banco.cuenta.id : '';
@@ -345,8 +346,9 @@ async function cargarGatitos(u, banco) {
       F.getDoc(F.doc(db, 'gatitos', u.uid)),
       F.getDocs(F.query(F.collection(db, 'mercado_items'), F.where('uid', '==', u.uid))).catch(() => null),
       cid ? F.getDocs(F.query(F.collection(db, 'mercado_pedidos'), F.where('comprador', '==', cid))).catch(() => null) : null,
-      cid ? F.getDoc(F.doc(db, 'gatitos_poderes', cid + '__' + diaHoy())).catch(() => null) : null
-    ]);
+      cid ? F.getDoc(F.doc(db, 'gatitos_poderes', cid + '__' + diaHoy())).catch(() => null) : null,
+      cid ? F.getDoc(F.doc(db, 'gatitos_poderes_mes', cid + '__' + mesHoy())).catch(() => null) : null
+    ]).then(r => { podMes = r[4]; return r; });
     const col = s.exists() ? s.data() : { ids: [] }, ids = col.ids || [];
     const venta = pubs ? pubs.docs.map(d => d.data()).filter(x => x.tipo === 'gatito' && (x.estado === 'venta' || x.estado === 'reservado')).map(x => x.gatito) : [];
     const camino = peds ? peds.docs.map(d => d.data()).filter(p => p.estado === 'pendiente' && p.gatito).map(p => p.gatito) : [];
@@ -374,6 +376,7 @@ async function cargarGatitos(u, banco) {
       <div class="gpod"><b>⚡ Poderes</b>
         <div class="muted" style="font-size:14px">${dec ? `Tus gatitos te dan <b style="color:var(--acid)">${esc(textoPoderDia(pd))}</b> por día. ${yaHoy ? '✓ Ya las reclamaste hoy.' : '<a href="gatitos.html#coleccion">Reclámalas hoy en el Mercado</a> (si no, se pierden).'}` : 'Tus gatitos aún no dan décimas.'}</div>
         ${especiales.length ? `<ul>${especiales.map(([p, n]) => `<li>${esc(p)} <small>· ${esc(n)}</small></li>`).join('')}</ul>` : ''}
+        ${poderDelMes(ids).formativas ? `<div class="muted" style="font-size:14px;margin-top:6px">📜 Poder mensual: ${podMes && podMes.exists() ? '✓ ya lo reclamaste este mes.' : '<a href="gatitos.html#coleccion">reclámalo este mes en el Mercado</a>.'}</div>` : ''}
       </div>
       ${venta.length || camino.length ? '<p class="muted" style="font-size:13px;margin:8px 0 0">🔒 <b>A la venta</b>: salió de tu colección y está congelado en tu publicación; si la retiras, vuelve. ⏳ <b>Por llegar</b>: ya lo pagaste a un compañero; aparece cuando el profe lo autorice.</p>' : ''}
       <p class="muted" style="font-size:14px;margin-top:12px"><a href="gatitos.html">Ir al Mercado</a> · en «Mi colección» eliges cuál aparece como favorito (⭐).</p>`;
@@ -479,7 +482,7 @@ function cargarBanco() {
     // Todo lo que deja algo para usar: compras, regalos del profe, premios de la ruleta y décimas de los gatitos.
     const c = b.cuenta, compras = b.movs.filter(m => m.item || m.canje);
     const porUsar = compras.filter(m => m.canje === 'pendiente'), resto = compras.filter(m => m.canje !== 'pendiente');
-    const origen = m => m.tipo === 'poder-gatito' ? '⚡ ' : m.tipo === 'ruleta' ? '🎡 ' : m.monto === 0 && m.tipo === 'compra' ? '🎁 ' : '';
+    const origen = m => m.tipo === 'poder-gatito' ? '⚡ ' : m.tipo === 'poder-mensual' ? '📜 ' : m.tipo === 'ruleta' ? '🎡 ' : m.monto === 0 && m.tipo === 'compra' ? '🎁 ' : '';
     $('rSaldo').textContent = fmt(c.saldo); $('rSaldo').classList.toggle('neg', (c.saldo || 0) < 0);
     $('rUsar').textContent = porUsar.length;
     const estado = m => m.canje === 'usada' ? `<span class="can usada">Usada</span>${m.canjeNota ? ' <small class="muted">' + esc(m.canjeNota) + '</small>' : ''}`

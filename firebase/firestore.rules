@@ -296,12 +296,12 @@ service cloud.firestore {
         // Solo la ruleta puede dejar un beneficio por canjear (así nadie cuela canjes falsos al panel).
         // Una compra del Mercado entra «retenida» (congelada) y solo el profe la deja «por usar».
         && (d.tipo == 'ruleta' || (d.tipo == 'compra' && d.get('canje', '') == 'retenida' && !d.keys().hasAny(['tiro']))
-            || (d.tipo == 'poder-gatito' && !d.keys().hasAny(['tiro']))
+            || (d.tipo in ['poder-gatito', 'poder-mensual'] && !d.keys().hasAny(['tiro']))
             || !d.keys().hasAny(['tiro', 'item', 'canje']))
         && ((d.tipo in ['bolsa-compra', 'bolsa-venta'] && opBolsa(d)) || (d.tipo == 'bono-ingreso' && opBono(d))
             || (d.tipo == 'gatito-compra' && opGatito(d)) || (d.tipo == 'ruleta' && opRuleta(d))
             || (d.tipo == 'transferencia-envio' && opEnvio(id, d)) || (d.tipo == 'compra' && opPedido(id, d))
-            || (d.tipo == 'devolucion' && opDevolucion(d)) || (d.tipo == 'poder-gatito' && opPoder(d)));
+            || (d.tipo == 'devolucion' && opDevolucion(d)) || (d.tipo == 'poder-gatito' && opPoder(d)) || (d.tipo == 'poder-mensual' && opPoderMes(d)));
     }
 
     // ═════ Ruleta de Hipopesos ═════
@@ -404,6 +404,30 @@ service cloud.firestore {
         && !exists(rutaPoder(d.cuenta, diaHoy()))
         && getAfter(rutaPoder(d.cuenta, diaHoy())).data.decimas == n;
     }
+    // ── Poder mensual: Gato Nietzsche da 5 formativas y 2 sumativas una vez por mes (debe coincidir con gatitos/catalogo.js) ──
+    function mesHoy() { let t = request.time - duration.value(4, 'h'); return t.year() * 12 + t.month() - 1; }
+    function rutaPoderMes(c, m) { return /databases/$(database)/documents/gatitos_poderes_mes/$(c + '__' + string(m)); }
+    function opPoderMes(d) {
+      return 'nietzsche' in gatitosAntes(request.auth.uid)
+        && d.monto == 0 && d.canje == 'pendiente'
+        && d.item == 'Gato Nietzsche: 5 décimas formativas y 2 décimas sumativas del mes'
+        && !d.keys().hasAny(['gatito', 'oferta', 'precio', 'pedido', 'transferencia'])
+        && !exists(rutaPoderMes(d.cuenta, mesHoy()))
+        && getAfter(rutaPoderMes(d.cuenta, mesHoy())).data.mes == mesHoy();
+    }
+    match /gatitos_poderes_mes/{pid} {
+      allow read: if esProfe() || (miCuentaBanco() != '' && pid.split('__')[0] == miCuentaBanco());
+      allow write: if esProfe();
+      allow create: if esColegio()
+        && request.resource.data.cuenta == miCuentaBanco() && miCuentaBanco() != ''
+        && request.resource.data.keys().hasOnly(['cuenta', 'uid', 'mes', 'fecha'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.mes == mesHoy()
+        && pid == request.resource.data.cuenta + '__' + string(mesHoy())
+        && request.resource.data.fecha == request.time
+        && opsDespues(request.resource.data.cuenta) == opsAntes(request.resource.data.cuenta) + 1
+        && getAfter(rutaOp(request.resource.data.cuenta, opsDespues(request.resource.data.cuenta))).data.tipo == 'poder-mensual';
+    }
     // Una vez al día por cuenta, junto con su movimiento.
     match /gatitos_poderes/{pid} {
       allow read: if esProfe() || (miCuentaBanco() != '' && pid.split('__')[0] == miCuentaBanco())  // también si aún no existe;
@@ -500,7 +524,7 @@ service cloud.firestore {
         && ((d.tipo == 'beneficio' && iid == 'b-' + d.mov
                && d.item == get(/databases/$(database)/documents/banco_movs/$(d.mov)).data.item
                && get(/databases/$(database)/documents/banco_movs/$(d.mov)).data.cuenta == miCuentaBanco()
-               && get(/databases/$(database)/documents/banco_movs/$(d.mov)).data.tipo != 'poder-gatito')
+               && !(get(/databases/$(database)/documents/banco_movs/$(d.mov)).data.tipo in ['poder-gatito', 'poder-mensual']))
             || (d.tipo == 'gatito' && iid == 'g-' + request.auth.uid + '-' + d.gatito));
     }
     // Al publicar, el objeto sale de la cuenta en la misma escritura.

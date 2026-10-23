@@ -29,6 +29,7 @@ window.GATITOS = [
   { id: 'fantasma',    nombre: 'Gato Fantasma',        precio: 500000,  rareza: 'legendario', txt: 'Aparece en los pasillos cuando nadie mira.', poderes: ['📓 Uso del cuaderno 5 minutos en cada evaluación'] },
   { id: 'ava',         nombre: 'Ava',                  precio: 450000,  rareza: 'legendario', txt: 'Ava ♀. Gatita especial: 5 décimas formativas y 2 sumativas por día. Camina, corre, juega y duerme siesta.', anim: true, poderes: ['🚶 Permiso de paseo por el colegio en cada clase (cuando amerite)'] },
   { id: 'calha',       nombre: 'Calha',                precio: 450000,  rareza: 'legendario', txt: 'Calha ♀. Gatita especial y compañera de Ava: 5 décimas formativas y 2 sumativas por día.', anim: true, poderes: ['📓 Uso del cuaderno 5 minutos en cada evaluación'] },
+  { id: 'nietzsche',   nombre: 'Gato Nietzsche',       precio: 500000,  rareza: 'legendario', txt: 'Filósofo, explorador y pensador. Cada mes: 5 décimas formativas y 2 sumativas.', anim: true, diarias: 0, mensual: { formativas: 5, sumativas: 2 }, poderes: ['📜 5 décimas formativas y 2 sumativas cada mes'] },
   { id: 'cosmico',     nombre: 'Gato Cósmico',         precio: 750000,  rareza: 'mitico',     txt: 'Lleva una constelación en el pelaje. Vino del observatorio.', poderes: ['🚶 Paseo por el colegio en cada clase (cuando amerite)', '📓 Cuaderno 5 minutos en cada evaluación'] },
   { id: 'dorado',      nombre: 'Gato Dorado',          precio: 1000000, rareza: 'mitico',     txt: 'El más valioso del colegio. Muy pocos lo tendrán.', poderes: ['🚶 Paseo por el colegio en cada clase (cuando amerite)', '📓 Cuaderno 5 minutos en cada evaluación', '🎵 Elegir la música de la clase'] }
 ];
@@ -38,6 +39,7 @@ window.GATITOS = [
    común y poco común: 1 · raro y épico: 2 · legendario y mítico: 3. Máximo 3 décimas por día en total.
    Excepción (GATITOS_ESPECIALES): Ava y Calha dan 5 décimas formativas y 2 sumativas por día.
    Si tienes una de ellas (o las dos), ese día recibes 5 formativas + 2 sumativas (no se suman entre sí).
+   Gato Nietzsche (diarias: 0, mensual): no da décimas diarias; da 5 formativas y 2 sumativas una vez al mes.
    Además, raros, épicos, legendarios y míticos dan un poder permanente (campo «poderes»), que el profe
    respeta cuando la clase lo permite.
    ¡Ojo! Las décimas por rareza y el máximo también están en firebase/firestore.rules (decimasPoder). */
@@ -46,6 +48,7 @@ window.PODER_MAX_DIA = 3;
 window.GATITOS_ESPECIALES = { ava: { formativas: 5, sumativas: 2 }, calha: { formativas: 5, sumativas: 2 } };
 // Lo que da un gatito por día y lo que dan todos juntos hoy.
 window.poderGato = function (g) {
+  if (g.diarias === 0) return { formativas: 0, sumativas: 0 };
   var e = window.GATITOS_ESPECIALES[g.id];
   return e ? { formativas: e.formativas, sumativas: e.sumativas } : { formativas: window.PODER_DECIMAS[g.rareza] || 0, sumativas: 0 };
 };
@@ -54,10 +57,19 @@ window.poderDelDia = function (ids) {
   (ids || []).forEach(function (id) {
     var g = window.GATITOS.find(function (x) { return x.id === id; }); if (!g) return;
     var e = window.GATITOS_ESPECIALES[id];
+    if (g.diarias === 0) return;
     if (e) { f = Math.max(f, e.formativas); s = Math.max(s, e.sumativas); } else n += window.PODER_DECIMAS[g.rareza] || 0;
   });
   return { formativas: Math.max(f, Math.min(n, window.PODER_MAX_DIA)), sumativas: s };
 };
+// Poder mensual (Gato Nietzsche): se reclama una vez por mes calendario.
+window.poderDelMes = function (ids) {
+  var f = 0, s = 0;
+  (ids || []).forEach(function (id) { var g = window.GATITOS.find(function (x) { return x.id === id; }); if (g && g.mensual) { f = Math.max(f, g.mensual.formativas); s = Math.max(s, g.mensual.sumativas); } });
+  return { formativas: f, sumativas: s };
+};
+// Mes escolar (hora de Chile aproximada, UTC−4) como número: año × 12 + mes (0-11). Igual que mesHoy() en las reglas.
+window.mesHoy = function () { var d = new Date(Date.now() - 14400000); return d.getUTCFullYear() * 12 + d.getUTCMonth(); };
 window.textoPoderDia = function (p) {
   return window.textoDecimas(p.formativas) + (p.sumativas ? ' y ' + (p.sumativas === 1 ? '1 décima sumativa' : p.sumativas + ' décimas sumativas') : '');
 };
