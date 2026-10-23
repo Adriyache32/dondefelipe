@@ -152,10 +152,10 @@ dialog.ancho{max-width:min(860px,calc(100vw - 32px))}
             <div class="lista-movs" id="listaPend"><div class="muted">—</div></div>
           </div>
           <div class="card porcanjear" style="margin-top:16px">
-            <h3 style="margin:0 0 4px">Transferencias por autorizar <span class="pill" id="nTr">0</span></h3>
-            <p class="muted" style="margin:0 0 8px;font-size:13px">Los estudiantes piden transferir Hipopesos a otra cuenta desde Mi cuenta. Nada se mueve hasta que tú la autorizas: ahí se descuenta, se abona y quedan los dos movimientos.</p>
+            <h3 style="margin:0 0 4px">Solicitudes por autorizar <span class="pill" id="nTr">0</span></h3>
+            <p class="muted" style="margin:0 0 8px;font-size:13px">💸 Transferencias, 🛍️ compras de beneficios en el Mercado y 🤝 compras entre estudiantes. Nada se mueve hasta que autorizas: ahí se cobra, se paga y se traspasa el beneficio o el gatito.</p>
             <div class="lista-movs" id="listaTr"><div class="muted">—</div></div>
-            <details style="margin-top:8px"><summary class="muted" style="cursor:pointer;font-size:13px">Últimas transferencias resueltas</summary><div class="lista-movs" id="listaTrHist"></div></details>
+            <details style="margin-top:8px"><summary class="muted" style="cursor:pointer;font-size:13px">Últimas solicitudes resueltas</summary><div class="lista-movs" id="listaTrHist"></div></details>
           </div>
         </div>
 
@@ -321,20 +321,15 @@ dialog.ancho{max-width:min(860px,calc(100vw - 32px))}
   <div class="acc"><button class="btn" data-cerrar>Cancelar</button><button class="btn p" id="iImportar" disabled>Importar</button></div>
 </dialog>
 
+<script src="banco-felipeso/catalogo.js"></script>
+<script src="gatitos/catalogo.js"></script>
 <script src="firebase/df.js" data-sin-visita data-sin-aviso></script>
 <script>
 /* ═══════════════════════════════════════════════════════════════
    CATÁLOGO DEL BANCO — edita aquí precios y multas
    (mismos valores que la banda de precios del inicio)
    ═══════════════════════════════════════════════════════════════ */
-const COMPRAS = [
-  { ico: '📝', nombre: 'Borrar formativa',              precio: 300000 },
-  { ico: '🏫', nombre: 'Vuelta al colegio',             precio: 100000 },
-  { ico: '✂️', nombre: 'Eliminar puntos de una prueba', precio: 100000 },
-  { ico: '📱', nombre: 'Uso de celular libre',          precio: 150000 },
-  { ico: '🍪', nombre: 'Comer',                         precio: 50000 },
-  { ico: '🎧', nombre: 'Su playlist en clases',         precio: 50000 }
-];
+const COMPRAS = window.CATALOGO_BENEFICIOS || [];   // está en banco-felipeso/catalogo.js (lo comparte el Mercado)
 const GANANCIAS = [
   { ico: '✍️', nombre: 'Trabajo en clases',           monto: 40000 },
   { ico: '⭐', nombre: 'Trabajo destacado en clases', monto: 50000 }
@@ -426,6 +421,12 @@ function iniciarBanco() {
     transPend = s.docs.map(d => Object.assign({ id: d.id }, d.data())).sort((a, b) => ms(a.creada) - ms(b.creada));
     pintarTransferencias();
   }, e => console.info(e)));
+  desuscribir.push(F.onSnapshot(F.query(F.collection(db, 'mercado_pedidos'), F.where('estado', '==', 'pendiente')), s => {
+    pedPend = s.docs.map(d => Object.assign({ id: d.id }, d.data())); pintarTransferencias();
+  }, e => console.info(e)));
+  desuscribir.push(F.onSnapshot(F.query(F.collection(db, 'mercado_pedidos'), F.orderBy('creada', 'desc'), F.limit(30)), s => {
+    pedHist = s.docs.map(d => Object.assign({ id: d.id }, d.data())).filter(t => t.estado !== 'pendiente'); pintarTransferencias();
+  }, e => console.info(e)));
   desuscribir.push(F.onSnapshot(F.query(F.collection(db, 'banco_transferencias'), F.orderBy('creada', 'desc'), F.limit(30)), s => {
     transHist = s.docs.map(d => Object.assign({ id: d.id }, d.data())).filter(t => t.estado !== 'pendiente');
     pintarTransferencias();
@@ -502,18 +503,35 @@ $('listaPend').onclick = ev => {
 /* ── transferencias entre cuentas (las pide el estudiante, las autoriza el profe) ── */
 let transPend = [], transHist = [];
 const ESTADO_TR = { aprobada: 'Autorizada', rechazada: 'Rechazada', cancelada: 'Cancelada por el estudiante' };
+let pedPend = [], pedHist = [];
+const ICO_SOL = { transferencia: '💸', beneficio: '🛍️', reventa: '🤝' };
+function solicitudes(pend) {
+  const tr = (pend ? transPend : transHist).map(t => Object.assign({ clase: 'transferencia' }, t));
+  const pe = (pend ? pedPend : pedHist).map(p => Object.assign({ clase: p.tipo }, p));
+  return tr.concat(pe).sort((a, b) => pend ? ms(a.creada) - ms(b.creada) : ms(b.resuelta || b.creada) - ms(a.resuelta || a.creada));
+}
+function descSol(t) {
+  if (t.clase === 'transferencia') return `<b>$${fmt(t.monto)}</b> · N° ${esc(t.deNumero)} ${esc(t.deNombre)} → N° ${esc(t.aNumero)} ${esc(t.aNombre)}`;
+  if (t.clase === 'beneficio') return `<b>${esc(t.ico || '')} ${esc(t.item)}</b> · $${fmt(t.precio)} · lo compra N° ${esc(t.compradorNumero)} ${esc(t.compradorNombre)}`;
+  return `<b>${esc(t.ico || '')} ${esc(t.item)}</b> · $${fmt(t.precio)} · ${esc(t.vendedorNombre)} se lo vende a N° ${esc(t.compradorNumero)} ${esc(t.compradorNombre)}`;
+}
 function pintarTransferencias() {
   if (!$('listaTr')) return;
-  $('nTr').textContent = transPend.length;
+  const pend = solicitudes(true);
+  $('nTr').textContent = pend.length;
   const saldoDe = id => { const c = cuentas.find(x => x.id === id); return c ? c.saldo || 0 : null; };
-  $('listaTr').innerHTML = transPend.length ? transPend.map(t => {
-    const sd = saldoDe(t.de), corto = sd != null && sd < t.monto;
-    return `<div class="m"><div class="t"><b>$${fmt(t.monto)}</b> · N° ${esc(t.deNumero)} ${esc(t.deNombre)} → N° ${esc(t.aNumero)} ${esc(t.aNombre)}
-      <small>${t.motivo ? esc(t.motivo) + ' · ' : ''}pedida el ${fecha(t.creada)} · saldo actual de quien envía: ${sd == null ? '—' : '$' + fmt(sd)}${corto ? ' ⚠ no le alcanza' : ''}</small></div>
-      <button class="btn sm p" data-tr-ok="${esc(t.id)}"${corto ? ' disabled title="No le alcanza el saldo"' : ''}>Autorizar</button><button class="btn sm" data-tr-no="${esc(t.id)}">Rechazar</button></div>`;
-  }).join('') : '<div class="muted">No hay transferencias pendientes.</div>';
-  $('listaTrHist').innerHTML = transHist.length ? transHist.map(t => `<div class="m"><div class="t"><b>$${fmt(t.monto)}</b> · ${esc(t.deNombre)} → ${esc(t.aNombre)}
-    <small>${esc(ESTADO_TR[t.estado] || t.estado)}${t.nota ? ' · ' + esc(t.nota) : ''} · ${fecha(t.resuelta || t.creada)}</small></div></div>`).join('') : '<div class="muted">Sin transferencias resueltas.</div>';
+  $('listaTr').innerHTML = pend.length ? pend.map(t => {
+    const paga = t.clase === 'transferencia' ? t.de : t.comprador, monto = t.clase === 'transferencia' ? t.monto : t.precio;
+    const sd = saldoDe(paga), corto = sd != null && sd < monto;
+    const cat = t.clase === 'beneficio' ? COMPRAS.find(c => c.nombre === t.item) : null;
+    const raro = t.clase === 'beneficio' && (!cat || cat.precio !== t.precio) ? ` ⚠ el catálogo dice ${cat ? '$' + fmt(cat.precio) : 'que no existe'}` : '';
+    return `<div class="m"><div class="t">${ICO_SOL[t.clase]} ${descSol(t)}
+      <small>${t.motivo ? esc(t.motivo) + ' · ' : ''}pedida el ${fecha(t.creada)} · saldo de quien paga: ${sd == null ? '—' : '$' + fmt(sd)}${corto ? ' ⚠ no le alcanza' : ''}${raro}</small></div>
+      <button class="btn sm p" data-sol-ok="${esc(t.clase)}:${esc(t.id)}"${corto ? ' disabled title="No le alcanza el saldo"' : ''}>Autorizar</button><button class="btn sm" data-sol-no="${esc(t.clase)}:${esc(t.id)}">Rechazar</button></div>`;
+  }).join('') : '<div class="muted">No hay solicitudes pendientes.</div>';
+  const hist = solicitudes(false).slice(0, 30);
+  $('listaTrHist').innerHTML = hist.length ? hist.map(t => `<div class="m"><div class="t">${ICO_SOL[t.clase]} ${descSol(t)}
+    <small>${esc(ESTADO_TR[t.estado] || t.estado)}${t.nota ? ' · ' + esc(t.nota) : ''} · ${fecha(t.resuelta || t.creada)}</small></div></div>`).join('') : '<div class="muted">Sin solicitudes resueltas.</div>';
 }
 async function autorizarTransferencia(t) {
   if (!confirm(`Autorizar transferencia de $${fmt(t.monto)}\nDe: N° ${t.deNumero} ${t.deNombre}\nA: N° ${t.aNumero} ${t.aNombre}${t.motivo ? '\nMotivo: ' + t.motivo : ''}`)) return;
@@ -546,10 +564,87 @@ async function rechazarTransferencia(t) {
   try { await F.updateDoc(F.doc(db, 'banco_transferencias', t.id), { estado: 'rechazada', nota: nota.trim().slice(0, 160), resuelta: F.serverTimestamp(), profe: (DF.usuario() || {}).email || '' }); toast('Transferencia rechazada'); }
   catch (e) { toast('Error: ' + e.message); }
 }
+async function autorizarPedido(p) {
+  const { F, db } = FB, profe = (DF.usuario() || {}).email || '';
+  const nom = c => `${c.nombre || ''} ${c.apellido || ''}`.trim();
+  if (!confirm(p.tipo === 'beneficio' ? `Autorizar compra de "${p.item}" por $${fmt(p.precio)} para ${p.compradorNombre}?`
+    : `Autorizar que ${p.vendedorNombre} venda "${p.item}" a ${p.compradorNombre} por $${fmt(p.precio)}?`)) return;
+  try {
+    await F.runTransaction(db, async tx => {
+      const rp = F.doc(db, 'mercado_pedidos', p.id), rc = F.doc(db, 'banco_cuentas', p.comprador);
+      const lect = [tx.get(rp), tx.get(rc)];
+      let rv, rpub, rmov, rgv, rgc, vuid;
+      if (p.tipo === 'reventa') {
+        rpub = F.doc(db, 'mercado_items', p.publicacion); rv = F.doc(db, 'banco_cuentas', p.vendedor);
+        lect.push(tx.get(rpub), tx.get(rv));
+      }
+      const [sp, sc, spub, sv] = await Promise.all(lect);
+      if (!sp.exists() || sp.data().estado !== 'pendiente') throw new Error('la solicitud ya no está pendiente');
+      if (!sc.exists()) throw new Error('la cuenta del comprador ya no existe');
+      const c = sc.data(), precio = sp.data().precio;
+      if ((c.saldo || 0) < precio) throw new Error(`a ${nom(c)} ya no le alcanza (saldo $${fmt(c.saldo)})`);
+      const sC = (c.saldo || 0) - precio;
+      if (p.tipo === 'beneficio') {
+        tx.update(rc, { saldo: sC, actualizado: F.serverTimestamp() });
+        tx.set(F.doc(F.collection(db, 'banco_movs')), { cuenta: p.comprador, numero: c.numero || '', nombre: nom(c), curso: c.curso || '', monto: -precio,
+          motivo: 'Mercado: ' + p.item, tipo: 'compra', item: p.item, canje: 'pendiente', pedido: p.id, saldoDespues: sC, profe, fecha: F.serverTimestamp() });
+        tx.update(rp, { estado: 'aprobada', resuelta: F.serverTimestamp(), profe });
+        return;
+      }
+      // compra entre estudiantes
+      if (!spub || !spub.exists() || spub.data().estado !== 'venta') throw new Error('la publicación ya no está a la venta');
+      if (!sv || !sv.exists()) throw new Error('la cuenta del vendedor ya no existe');
+      const pub = spub.data(), v = sv.data(), sV = (v.saldo || 0) + precio;
+      if (pub.precio !== precio) throw new Error(`el vendedor cambió el precio a $${fmt(pub.precio)}; rechaza y que lo vuelvan a pedir`);
+      if (pub.tipo === 'beneficio') {
+        rmov = F.doc(db, 'banco_movs', pub.mov);
+        const sm = await tx.get(rmov);
+        if (!sm.exists() || sm.data().canje !== 'pendiente' || sm.data().cuenta !== p.vendedor) throw new Error('el vendedor ya no tiene ese beneficio sin usar');
+      } else {
+        vuid = pub.uid;
+        rgv = F.doc(db, 'gatitos', vuid); rgc = F.doc(db, 'gatitos', p.uid); p._comprUid = p.uid;
+        var [sgv, sgc] = await Promise.all([tx.get(rgv), tx.get(rgc)]);
+        if (!sgv.exists() || !(sgv.data().ids || []).includes(pub.gatito)) throw new Error('el vendedor ya no tiene ese gatito');
+        if (sgc.exists() && (sgc.data().ids || []).includes(pub.gatito)) throw new Error(`${nom(c)} ya tiene ese gatito`);
+      }
+      tx.update(rc, { saldo: sC, actualizado: F.serverTimestamp() });
+      tx.update(rv, { saldo: sV, actualizado: F.serverTimestamp() });
+      tx.set(F.doc(F.collection(db, 'banco_movs')), { cuenta: p.vendedor, numero: v.numero || '', nombre: nom(v), curso: v.curso || '', monto: precio,
+        motivo: `Mercado: vendió ${p.item} a ${nom(c)}`.slice(0, 200), tipo: 'reventa', pedido: p.id, saldoDespues: sV, profe, fecha: F.serverTimestamp() });
+      if (pub.tipo === 'beneficio') {
+        tx.update(rmov, { canje: 'traspasada', canjeNota: 'Vendido a ' + nom(c), canjeFecha: F.serverTimestamp(), canjeProfe: profe });
+        tx.set(F.doc(F.collection(db, 'banco_movs')), { cuenta: p.comprador, numero: c.numero || '', nombre: nom(c), curso: c.curso || '', monto: -precio,
+          motivo: `Mercado: ${p.item} (de ${nom(v)})`.slice(0, 200), tipo: 'compra', item: p.item, canje: 'pendiente', pedido: p.id, saldoDespues: sC, profe, fecha: F.serverTimestamp() });
+      } else {
+        const idsV = (sgv.data().ids || []).filter(x => x !== pub.gatito), favV = sgv.data().favorito;
+        tx.set(rgv, Object.assign({}, sgv.data(), { ids: idsV, favorito: idsV.includes(favV) ? favV : (idsV[0] || null), actualizado: F.serverTimestamp() }));
+        const prevC = sgc.exists() ? sgc.data() : { uid: p._comprUid, nombre: p.compradorNombre.slice(0, 80), ids: [], favorito: null };
+        const idsC = (prevC.ids || []).concat([pub.gatito]);
+        tx.set(rgc, { uid: p._comprUid, nombre: String(prevC.nombre || p.compradorNombre).slice(0, 80), ids: idsC, favorito: prevC.favorito && idsC.includes(prevC.favorito) ? prevC.favorito : pub.gatito, actualizado: F.serverTimestamp() });
+        tx.set(F.doc(F.collection(db, 'banco_movs')), { cuenta: p.comprador, numero: c.numero || '', nombre: nom(c), curso: c.curso || '', monto: -precio,
+          motivo: `Mercado: gatito ${p.item} (de ${nom(v)})`.slice(0, 200), tipo: 'gatito-reventa', gatito: pub.gatito, pedido: p.id, saldoDespues: sC, profe, fecha: F.serverTimestamp() });
+      }
+      tx.update(rpub, { estado: 'vendido', actualizado: F.serverTimestamp() });
+      tx.update(rp, { estado: 'aprobada', resuelta: F.serverTimestamp(), profe });
+    });
+    // los demás pedidos por la misma publicación quedan rechazados
+    if (p.tipo === 'reventa') for (const o of pedPend.filter(x => x.id !== p.id && x.publicacion === p.publicacion))
+      await F.updateDoc(F.doc(db, 'mercado_pedidos', o.id), { estado: 'rechazada', nota: 'Ya se vendió a otra persona', resuelta: F.serverTimestamp(), profe }).catch(() => {});
+    toast('✓ Compra autorizada');
+  } catch (e) { toast('No se pudo autorizar: ' + e.message); }
+}
+async function rechazarPedido(p) {
+  const nota = prompt(`¿Por qué rechazas la compra de "${p.item}" de ${p.compradorNombre}? (opcional, lo verá el estudiante)`, '');
+  if (nota === null) return;
+  const { F, db } = FB;
+  try { await F.updateDoc(F.doc(db, 'mercado_pedidos', p.id), { estado: 'rechazada', nota: nota.trim().slice(0, 160), resuelta: F.serverTimestamp(), profe: (DF.usuario() || {}).email || '' }); toast('Solicitud rechazada'); }
+  catch (e) { toast('Error: ' + e.message); }
+}
 $('listaTr').onclick = ev => {
-  const b = ev.target.closest('[data-tr-ok],[data-tr-no]'); if (!b) return;
-  const t = transPend.find(x => x.id === (b.dataset.trOk || b.dataset.trNo)); if (!t) return;
-  if (b.dataset.trOk) autorizarTransferencia(t); else rechazarTransferencia(t);
+  const b = ev.target.closest('[data-sol-ok],[data-sol-no]'); if (!b) return;
+  const [clase, id] = (b.dataset.solOk || b.dataset.solNo).split(':'), ok = !!b.dataset.solOk;
+  if (clase === 'transferencia') { const t = transPend.find(x => x.id === id); if (t) (ok ? autorizarTransferencia : rechazarTransferencia)(t); return; }
+  const p = pedPend.find(x => x.id === id); if (p) (ok ? autorizarPedido : rechazarPedido)(p);
 };
 
 /* historial de una cuenta */
@@ -558,6 +653,7 @@ function estadoCanje(m) {
   if (m.tipo !== 'compra') return '';
   if (m.canje === 'usada') return `<span class="can usada">Usada</span> <small class="muted">${esc(m.canjeNota || '')}${m.canjeFecha ? ' · ' + fecha(m.canjeFecha) : ''}</small>`;
   if (m.canje === 'anulada') return '<span class="can anul">Anulada</span>';
+  if (m.canje === 'traspasada') return `<span class="can anul">Vendida</span> <small class="muted">${esc(m.canjeNota || '')}</small>`;
   return '<span class="can pend">Pendiente</span>';
 }
 async function abrirHistorial(id) {
@@ -748,7 +844,7 @@ function pintarMovs() {
   $('listaMovs').innerHTML = movs.length ? movs.map(m => `
     <div class="m"><div class="t"><b class="${m.monto < 0 ? 'neg' : 'pos'}">${m.monto < 0 ? '−' : '+'}$${fmt(Math.abs(m.monto))}</b> ${esc(m.nombre)}
       <small>${esc(m.motivo)} · ${fecha(m.fecha)}</small></div>
-      ${m.tipo === 'reverso' || m.tipo === 'importacion' || /^bolsa-/.test(m.tipo || '') || m.tipo === 'transferencia' ? '' : `<button class="btn sm" data-rev="${esc(m.id)}" title="Crear el movimiento contrario">Revertir</button>`}</div>`).join('')
+      ${m.tipo === 'reverso' || m.tipo === 'importacion' || /^bolsa-/.test(m.tipo || '') || ['transferencia', 'reventa', 'gatito-reventa'].includes(m.tipo) ? '' : `<button class="btn sm" data-rev="${esc(m.id)}" title="Crear el movimiento contrario">Revertir</button>`}</div>`).join('')
     : '<div class="muted">Aún no hay movimientos.</div>';
 }
 $('listaMovs').onclick = async ev => {
