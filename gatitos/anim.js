@@ -9,9 +9,12 @@
   var ANIMADOS = {
     ava:       { dir: 'gatitos/anim/',           n: { caminar: 4, correr: 5, jugar: 4, sentarse: 3, dormir: 4 } },
     calha:     { dir: 'gatitos/anim/',           n: { caminar: 4, correr: 5, jugar: 4, sentarse: 3, dormir: 4 } },
-    nietzsche: { dir: 'gatitos/anim/nietzsche/', n: { caminar: 4, correr: 5, sentarse: 3, dormir: 3 } }
+    nietzsche: { dir: 'gatitos/anim/nietzsche/', n: { caminar: 4, correr: 5, sentarse: 3, dormir: 3 } },
+    rayo:      { dir: 'gatitos/anim/rayo/',      n: { sentarse: 3 } },
+    sombra:    { dir: 'gatitos/anim/sombra/',    n: { sentarse: 3, caminar: 4 } },
+    luna:      { dir: 'gatitos/anim/luna/',      n: { sentarse: 3, caminar: 4, correr: 4 } }
   };
-  var RUTINAS = [['caminar'], ['correr'], ['jugar'], ['sentarse', 'dormir'], ['caminar', 'sentarse']];
+  var RUTINAS = [['caminar'], ['correr'], ['jugar'], ['sentarse', 'dormir'], ['caminar', 'sentarse'], ['sentarse', 'sentarse']];
   var guion = document.currentScript && document.currentScript.src || '';
   var raiz = guion.replace(/gatitos\/anim\.js.*$/, '');
   var quieto = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;

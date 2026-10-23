@@ -7,7 +7,8 @@ window.RAREZAS = {
   raro:       { nombre: 'Raro',       color: '#22a7ff' },
   epico:      { nombre: 'Épico',      color: '#b26bff' },
   legendario: { nombre: 'Legendario', color: '#ff9f1c' },
-  mitico:     { nombre: 'Mítico',     color: '#ff2e7e' }
+  mitico:     { nombre: 'Mítico',     color: '#ff2e7e' },
+  heroe:      { nombre: 'Héroe',      color: '#ffd23f' }
 };
 window.GATITOS = [
   { id: 'naranjo',     nombre: 'Michi Naranjo',        precio: 10000,   rareza: 'comun',      txt: 'El clásico. Curioso, glotón y siempre al sol.' },
@@ -30,6 +31,11 @@ window.GATITOS = [
   { id: 'ava',         nombre: 'Ava',                  precio: 450000,  rareza: 'legendario', txt: 'Ava ♀. Gatita especial: trae un premio único de 5 décimas formativas y 2 sumativas. Camina, corre, juega y duerme siesta.', premio: { formativas: 5, sumativas: 2 }, anim: true, poderes: ['💎 Premio único: 5 décimas formativas y 2 sumativas', '🚶 Permiso de paseo por el colegio en cada clase (cuando amerite)'] },
   { id: 'calha',       nombre: 'Calha',                precio: 450000,  rareza: 'legendario', txt: 'Calha ♀. Gatita especial y compañera de Ava: trae un premio único de 5 décimas formativas y 2 sumativas.', premio: { formativas: 5, sumativas: 2 }, anim: true, poderes: ['💎 Premio único: 5 décimas formativas y 2 sumativas', '📓 Uso del cuaderno 5 minutos en cada evaluación'] },
   { id: 'nietzsche',   nombre: 'Gato Nietzsche',       precio: 500000,  rareza: 'legendario', txt: 'Filósofo, explorador y pensador. Cada mes: 5 décimas formativas y 2 sumativas.', anim: true, diarias: 0, mensual: { formativas: 5, sumativas: 2 }, poderes: ['📜 5 décimas formativas y 2 sumativas cada mes'] },
+  // Héroes: edición limitada (el profe los publica de vez en cuando, con pocas unidades; «Publicar todo el catálogo» no los incluye).
+  // Beneficio: 30% de descuento en las compras académicas del Mercado (ver «academico» en banco-felipeso/catalogo.js). No se suma entre ellos.
+  { id: 'rayo',        nombre: 'Rayo',                 precio: 600000,  rareza: 'heroe',      txt: 'Velocidad y valentía. Edición limitada.', anim: true, exclusivo: true, diarias: 0, descuentoAcademico: 0.3, poderes: ['🎓 30% de descuento en compras académicas (puntos, formativas, décimas)'] },
+  { id: 'sombra',      nombre: 'Sombra',               precio: 600000,  rareza: 'heroe',      txt: 'Sigilo y estrategia. Edición limitada.', anim: true, exclusivo: true, diarias: 0, descuentoAcademico: 0.3, poderes: ['🎓 30% de descuento en compras académicas (puntos, formativas, décimas)'] },
+  { id: 'luna',        nombre: 'Luna',                 precio: 600000,  rareza: 'heroe',      txt: 'Sabiduría y apoyo. Edición limitada.', anim: true, exclusivo: true, diarias: 0, descuentoAcademico: 0.3, poderes: ['🎓 30% de descuento en compras académicas (puntos, formativas, décimas)'] },
   { id: 'cosmico',     nombre: 'Gato Cósmico',         precio: 750000,  rareza: 'mitico',     txt: 'Lleva una constelación en el pelaje. Vino del observatorio.', poderes: ['🚶 Paseo por el colegio en cada clase (cuando amerite)', '📓 Cuaderno 5 minutos en cada evaluación'] },
   { id: 'dorado',      nombre: 'Gato Dorado',          precio: 1000000, rareza: 'mitico',     txt: 'El más valioso del colegio. Muy pocos lo tendrán.', poderes: ['🚶 Paseo por el colegio en cada clase (cuando amerite)', '📓 Cuaderno 5 minutos en cada evaluación', '🎵 Elegir la música de la clase'] }
 ];
@@ -43,7 +49,7 @@ window.GATITOS = [
    Además, raros, épicos, legendarios y míticos dan un poder permanente (campo «poderes»), que el profe
    respeta cuando la clase lo permite.
    ¡Ojo! Las décimas por rareza y el máximo también están en firebase/firestore.rules (decimasPoder). */
-window.PODER_DECIMAS = { comun: 1, pococomun: 1, raro: 2, epico: 2, legendario: 3, mitico: 3 };
+window.PODER_DECIMAS = { comun: 1, pococomun: 1, raro: 2, epico: 2, legendario: 3, mitico: 3, heroe: 0 };
 window.PODER_MAX_DIA = 3;
 window.GATITOS_ESPECIALES = {};   // (sin gatitos con décimas diarias especiales por ahora)
 // Lo que da un gatito por día y lo que dan todos juntos hoy.
@@ -70,6 +76,12 @@ window.poderDelMes = function (ids) {
 };
 // Mes escolar (hora de Chile aproximada, UTC−4) como número: año × 12 + mes (0-11). Igual que mesHoy() en las reglas.
 window.mesHoy = function () { var d = new Date(Date.now() - 14400000); return d.getUTCFullYear() * 12 + d.getUTCMonth(); };
+// Descuento de los gatitos héroe en compras académicas: el mayor que tengas (no se suman).
+window.descuentoAcademico = function (ids) {
+  var d = 0; (ids || []).forEach(function (id) { var g = window.GATITOS.find(function (x) { return x.id === id; }); if (g && g.descuentoAcademico > d) d = g.descuentoAcademico; });
+  return d;
+};
+window.precioConDescuento = function (precio, d) { return d ? Math.round(precio * (1 - d) / 100) * 100 : precio; };
 window.textoPremio = function (g) { return g.nombre + ': premio único de ' + window.textoPoderDia(g.premio); };
 window.textoPoderDia = function (p) {
   return window.textoDecimas(p.formativas) + (p.sumativas ? ' y ' + (p.sumativas === 1 ? '1 décima sumativa' : p.sumativas + ' décimas sumativas') : '');
