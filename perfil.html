@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perfiles · El Mundo de Felipe</title>
+<meta name="description" content="Perfiles públicos de El Mundo de Felipe: gatitos, películas favoritas y playlists.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#08080c;--slab:#111118;--slab2:#181822;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);
+--ink:#f2f1ec;--mute:#9b9aab;--acid:#ccff00;--cyan:#22e3ff;--pink:#ff2e7e;
+--ff-d:'Big Shoulders Display',Impact,'Arial Narrow',sans-serif;--ff:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(900px 420px at 85% -120px,rgba(255,46,126,.12),transparent),radial-gradient(700px 380px at 0% 0%,rgba(204,255,0,.06),transparent),var(--bg);color:var(--ink);font:16px/1.6 var(--ff)}
+a{color:var(--cyan)}
+.wrap{max-width:860px;margin:0 auto;padding:22px 16px 70px}
+.crumb{color:var(--mute);text-decoration:none;font-size:14px}.crumb:hover{color:var(--ink)}
+.kick{font:700 12px var(--ff);letter-spacing:4px;text-transform:uppercase;color:var(--pink);margin:30px 0 8px}
+h1{font:900 clamp(44px,10vw,80px)/.92 var(--ff-d);text-transform:uppercase;margin:0}
+h1 span{color:var(--acid)}
+.card{background:var(--slab);border:1px solid var(--line);border-radius:18px;padding:20px clamp(16px,3vw,26px);margin-top:16px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line2);background:var(--slab2);color:var(--ink);border-radius:999px;padding:9px 16px;font:600 14px var(--ff);text-decoration:none;cursor:pointer}
+.btn:hover{border-color:var(--acid)}
+.btn.p{background:var(--acid);color:#101400;border-color:var(--acid)}
+.muted{color:var(--mute)}
+.buscar{width:100%;background:var(--slab2);color:var(--ink);border:1px solid var(--line2);border-radius:12px;padding:10px 12px;font:15px var(--ff);margin-top:14px}
+.lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:14px}
+.item{display:flex;gap:12px;align-items:center;background:var(--slab);border:1px solid var(--line);border-radius:16px;padding:12px;text-decoration:none;color:var(--ink)}
+.item:hover{border-color:var(--acid)}
+.item img{width:58px;height:58px;object-fit:contain;flex:none}
+.item .ini{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:var(--cyan);color:#041014;font:900 26px var(--ff-d);flex:none}
+.item b{display:block;font:800 22px/1.05 var(--ff-d);text-transform:uppercase}
+.item small{color:var(--mute);font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.aviso{padding:12px 14px;border-radius:12px;background:#2a2410;color:#ffe9a6;border:1px solid #5a4a12;margin-top:16px}
+.oculto{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="crumb" href="index.html">← El Mundo de Felipe</a>
+  <p class="kick">Comunidad</p>
+  <h1 id="titulo">Perfiles <span>públicos</span></h1>
+  <div id="avisos"></div>
+
+  <section id="vLista" class="oculto">
+    <p class="muted" style="margin:12px 0 0">Perfiles que sus dueños decidieron mostrar. Para tener el tuyo, actívalo en <a href="cuenta.html#miPerfil">Mi cuenta</a>.</p>
+    <input class="buscar" id="buscar" placeholder="Buscar por nombre…" aria-label="Buscar perfil">
+    <div class="lista" id="lista"></div>
+  </section>
+
+  <section id="vUno" class="oculto">
+    <div class="card" id="perfil"></div>
+    <p style="margin-top:14px"><a class="btn" href="perfil.html">← Todos los perfiles</a> <a class="btn oculto" id="editar" href="cuenta.html#miPerfil">Editar mi perfil</a></p>
+  </section>
+</div>
+
+<script src="gatitos/catalogo.js"></script>
+<script src="gatitos/anim.js"></script>
+<script src="firebase/perfil-publico.js"></script>
+<script src="firebase/df.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id), esc = PerfilPublico.esc;
+  const aviso = (h, err) => { $('avisos').innerHTML = h ? `<div class="aviso">${h}</div>` : ''; };
+  const uid = new URLSearchParams(location.search).get('u');
+  let todos = [];
+
+  DF.listo().then(({ F, db }) => {
+    DF.alCambiarUsuario(async u => {
+      $('vLista').classList.add('oculto'); $('vUno').classList.add('oculto');
+      if (!u) { aviso('Los perfiles solo los ven las personas del colegio. <a href="#" id="entrar">Entra con tu cuenta</a> para verlos.'); const e = $('entrar'); if (e) e.onclick = ev => { ev.preventDefault(); DF.entrar().catch(() => {}); }; return; }
+      aviso('');
+      try {
+        if (uid) {
+          const [sp, sg] = await Promise.all([F.getDoc(F.doc(db, 'perfiles_publicos', uid)), F.getDoc(F.doc(db, 'gatitos', uid)).catch(() => null)]);
+          const p = sp.exists() ? sp.data() : null, mio = u.uid === uid;
+          if (!p || (!mio && (!p.publico || p.oculto))) { aviso('Este perfil no existe o no es público.'); return; }
+          if (mio && !p.publico) aviso('Así se vería tu perfil. Ahora está <b>privado</b>: actívalo en Mi cuenta para que lo vean.');
+          if (mio && p.oculto) aviso('El profe ocultó tu perfil. Revisa lo que escribiste y conversa con él.');
+          $('titulo').innerHTML = 'Perfil de <span>' + esc(p.nombre) + '</span>';
+          document.title = 'Perfil de ' + p.nombre + ' · El Mundo de Felipe';
+          $('perfil').innerHTML = PerfilPublico.tarjeta(p, sg && sg.exists() ? sg.data() : null);
+          $('editar').classList.toggle('oculto', !mio);
+          $('vUno').classList.remove('oculto');
+        } else {
+          const s = await F.getDocs(F.query(F.collection(db, 'perfiles_publicos'), F.where('publico', '==', true), F.where('oculto', '==', false)));
+          todos = s.docs.map(d => d.data()).sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es'));
+          const cols = {};
+          await Promise.all(todos.map(p => F.getDoc(F.doc(db, 'gatitos', p.uid)).then(g => { if (g.exists()) cols[p.uid] = g.data(); }).catch(() => {})));
+          todos.forEach(p => { p._col = cols[p.uid] || null; });
+          pintarLista();
+          $('vLista').classList.remove('oculto');
+        }
+      } catch (e) { aviso('No se pudo cargar: ' + esc(e.message)); }
+    });
+  }).catch(() => aviso('No se pudo conectar con el servicio de cuentas. Revisa tu conexión.'));
+
+  function pintarLista() {
+    const q = $('buscar').value.trim().toLowerCase(), G = window.GATITOS || [];
+    const l = todos.filter(p => !q || String(p.nombre).toLowerCase().includes(q));
+    $('lista').innerHTML = l.map(p => {
+      const c = p._col, fav = c && G.find(g => g.id === c.favorito && (c.ids || []).includes(g.id));
+      return `<a class="item" href="perfil.html?u=${encodeURIComponent(p.uid)}">${fav ? `<img src="gatitos/img/${esc(fav.id)}.webp" alt="">` : `<span class="ini">${esc(String(p.nombre).charAt(0))}</span>`}
+        <span><b>${esc(p.nombre)}</b><small>${esc(p.descripcion || ((c && c.ids || []).length + ' gatitos'))}</small></span></a>`;
+    }).join('') || `<p class="muted">${todos.length ? 'Nadie con ese nombre.' : 'Todavía nadie ha hecho público su perfil.'}</p>`;
+  }
+  $('buscar').addEventListener('input', pintarLista);
+})();
+</script>
+</body>
+</html>

@@ -104,6 +104,21 @@ label.ap input{width:18px;height:18px;margin-top:3px;accent-color:var(--acid)}
 .gmini.congelado img{filter:grayscale(.6) opacity(.75)}
 .gmini em{display:block;font-style:normal;font-size:10px;color:var(--brass);font-weight:700}
 @media (max-width:560px){.resumen{grid-template-columns:repeat(2,1fr)}.gfav img{height:90px}.gfav b{font-size:26px}}
+textarea,.pp-in{width:100%;background:var(--slab2);color:var(--ink);border:1px solid var(--line2);border-radius:10px;padding:9px 12px;font:15px/1.5 var(--ff);resize:vertical}
+.pp-pelis-in{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.pp-ayuda{margin:8px 0;font-size:14px;color:#d0d0da}
+.pp-ayuda summary{cursor:pointer;color:var(--cyan)}
+.pp-ayuda ol{margin:6px 0;padding-left:20px}
+.pp-ayuda code{font-size:12px;background:var(--slab2);padding:1px 5px;border-radius:5px;overflow-wrap:anywhere}
+#ppPrev iframe{margin-top:10px}
+.prod{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin-top:6px}
+.prod div{background:var(--slab2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:center}
+.prod .ic{font-size:26px;width:34px;text-align:center;flex:none}
+.prod .ic img{width:34px;height:34px;object-fit:contain}
+.prod b{display:block;font-size:14px;line-height:1.25}
+.prod small{color:var(--mute);font-size:12px}
+.prod .n{margin-left:auto;font:900 22px var(--ff-d);color:var(--acid)}
+.prod .cong{border-style:dashed;border-color:rgba(233,185,73,.5)}
 footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:var(--mute);font-size:14px}
 </style>
 </head>
@@ -140,6 +155,12 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:v
     <p id="cargando" class="muted" style="margin:0">Cargando…</p>
   </section>
 
+  <!-- Lo que tengo -->
+  <section class="card oculto" id="productos">
+    <h2><i class="fa-solid fa-bag-shopping"></i> Mis productos</h2>
+    <div id="prodCont"><div class="vacio">Cargando…</div></div>
+  </section>
+
   <!-- Banco -->
   <section class="card oculto" id="banco">
     <h2><i class="fa-solid fa-piggy-bank"></i> Mi banco de Hipopesos</h2>
@@ -151,6 +172,30 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:v
   <section class="card oculto" id="gatitosSec">
     <h2><i class="fa-solid fa-cat"></i> Mis gatitos</h2>
     <div id="gCont"><div class="vacio">Cargando…</div></div>
+  </section>
+
+  <!-- Perfil público -->
+  <section class="card oculto" id="miPerfil">
+    <h2><i class="fa-solid fa-address-card"></i> Mi perfil público</h2>
+    <p class="muted" style="margin-top:-4px;font-size:14px">Lo ven solo las personas del colegio con sesión iniciada, y solo si lo activas. Muestra tu nombre corto, tus gatitos, lo que escribas aquí y tu playlist. <b>No pongas</b> teléfono, dirección, correo ni usuarios de redes sociales. El profe puede ocultar un perfil si no corresponde.</p>
+    <label class="ap"><input type="checkbox" id="ppPublico"> <span><b>Mostrar mi perfil</b> a la comunidad del colegio</span></label>
+    <label class="f" for="ppDesc">Sobre mí</label>
+    <textarea id="ppDesc" maxlength="280" rows="3" placeholder="Ej.: Me gustan los dinosaurios, el básquetbol y la química. Coleccionista de gatitos legendarios."></textarea>
+    <div class="muted" style="font-size:12px;text-align:right" id="ppCuenta">0/280</div>
+    <label class="f">Películas favoritas <span class="muted">(hasta 5)</span></label>
+    <div class="pp-pelis-in"><input class="pp-in" id="ppP0" maxlength="60" placeholder="Película 1"><input class="pp-in" id="ppP1" maxlength="60" placeholder="Película 2"><input class="pp-in" id="ppP2" maxlength="60" placeholder="Película 3"><input class="pp-in" id="ppP3" maxlength="60" placeholder="Película 4"><input class="pp-in" id="ppP4" maxlength="60" placeholder="Película 5"></div>
+    <label class="f" for="ppSpot">Playlist de Spotify <span class="muted">(opcional)</span></label>
+    <input id="ppSpot" class="pp-in" placeholder="https://open.spotify.com/playlist/…" autocomplete="off">
+    <details class="pp-ayuda"><summary>¿Cómo copio el enlace de mi playlist?</summary>
+      <ol><li>En Spotify, abre la playlist (o el álbum).</li><li>Toca <b>⋯</b> (o el botón de compartir) → <b>Compartir</b> → <b>Copiar enlace</b>.</li><li>Pégalo aquí. Se ve así: <code>https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M?si=…</code></li></ol>
+      <p class="muted" style="font-size:13px;margin:4px 0 0">La playlist tiene que ser <b>pública</b> en Spotify. Si el enlace empieza con <code>spotify.link</code>, ábrelo en el navegador y copia la dirección <code>open.spotify.com</code> que aparece.</p></details>
+    <div id="ppPrev"></div>
+    <div id="ppMsg"></div>
+    <div class="fila" style="margin-top:12px">
+      <button class="btn p" id="ppGuardar"><i class="fa-solid fa-floppy-disk"></i> Guardar perfil</button>
+      <a class="btn" id="ppVer" href="perfil.html"><i class="fa-solid fa-eye"></i> Ver mi perfil</a>
+      <a class="btn" href="perfil.html"><i class="fa-solid fa-users"></i> Perfiles del colegio</a>
+    </div>
   </section>
 
   <!-- Perfil -->
@@ -201,6 +246,7 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:v
       <tr><td>Grupo</td><td>Estudiante, docente o público general (ver más abajo).</td></tr>
       <tr><td>Tu progreso</td><td>Puntajes de juegos, resultados de simuladores y avance en los planes de estudio.</td></tr>
       <tr><td>Banco de Hipopesos</td><td>Si tu cuenta del banco está conectada con tu correo: tu saldo, tus movimientos, lo que compras o vendes en el Mercado, tus transferencias y tus gatitos. Todo lo que mueve dinero entre personas lo autoriza el profe.</td></tr>
+      <tr><td>Perfil público</td><td>Opcional y apagado hasta que lo actives: tu nombre corto, tus gatitos, tu descripción, tus películas favoritas y tu playlist. Lo ven solo personas del colegio con sesión iniciada. Puedes ocultarlo o borrarlo cuando quieras, y el profe puede ocultarlo si no corresponde.</td></tr>
       <tr><td>Visitas</td><td>Un contador de cuántas veces se abre cada página. <b>No</b> guarda quién eres.</td></tr>
     </table>
     <p>No guardamos tu contraseña (la maneja Google), ni tu ubicación, ni datos de salud, ni fotos.</p>
@@ -242,6 +288,7 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:v
 
 <script src="gatitos/catalogo.js"></script>
 <script src="gatitos/anim.js"></script>
+<script src="firebase/perfil-publico.js"></script>
 <script src="firebase/df.js" data-sin-visita data-sin-aviso></script>
 <script>
 const $ = id => document.getElementById(id);
@@ -270,12 +317,12 @@ DF.listo().then(() => {
   DF.alCambiarUsuario(u => {
     ver('cargando', false);
     ver('fuera', !u); ver('dentro', !!u);
-    ['perfil', 'progreso', 'banco', 'gatitosSec', 'datos'].forEach(s => ver(s, !!u));
+    ['perfil', 'progreso', 'productos', 'banco', 'gatitosSec', 'miPerfil', 'datos'].forEach(s => ver(s, !!u));
     if (!u) return;
     $('nombre').textContent = u.displayName || 'Sin nombre';
     $('correo').textContent = u.email || '';
     $('av').innerHTML = u.photoURL ? `<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer">` : esc((u.displayName || u.email || '?').charAt(0).toUpperCase());
-    cargarPerfil(); cargarProgreso();
+    cargarPerfil(); cargarProgreso(); cargarPerfilPublico(u);
     DF.asegurarCuentaBanco().then(cargarBanco, cargarBanco);
   });
 }).catch(e => {
@@ -383,6 +430,48 @@ async function cargarGatitos(u, banco) {
   } catch (e) { $('gCont').innerHTML = `<div class="vacio">No se pudieron cargar tus gatitos: ${esc(e.message)}</div>`; }
 }
 
+/* ── Perfil público ── */
+let ppDoc = null;
+async function cargarPerfilPublico(u) {
+  $('ppVer').href = 'perfil.html?u=' + encodeURIComponent(u.uid);
+  try {
+    const { F, db } = await DF.listo(), s = await F.getDoc(F.doc(db, 'perfiles_publicos', u.uid));
+    ppDoc = s.exists() ? s.data() : null;
+  } catch (e) { ppDoc = null; }
+  const p = ppDoc || {};
+  $('ppPublico').checked = !!p.publico; $('ppDesc').value = p.descripcion || '';
+  for (let i = 0; i < 5; i++) $('ppP' + i).value = (p.peliculas || [])[i] || '';
+  $('ppSpot').value = p.spotifyId ? `https://open.spotify.com/${p.spotifyTipo}/${p.spotifyId}` : '';
+  if (p.oculto) $('ppMsg').innerHTML = '<div class="aviso err">El profe ocultó tu perfil: no lo ve nadie más. Revisa lo que escribiste y conversa con él.</div>';
+  ppPrevia();
+}
+function ppPrevia() {
+  $('ppCuenta').textContent = $('ppDesc').value.length + '/280';
+  const v = $('ppSpot').value.trim(), sp = PerfilPublico.spotifyDe(v);
+  $('ppPrev').innerHTML = !v ? '' : sp ? PerfilPublico.iframeSpotify(sp.tipo, sp.id, 152)
+    : `<div class="aviso err" style="margin-top:8px">${PerfilPublico.esEnlaceCorto(v) ? 'Ese es un enlace corto: ábrelo en el navegador y copia la dirección que empieza con <b>open.spotify.com</b>.' : 'No reconozco ese enlace. Debe ser el de una playlist o un álbum de Spotify (open.spotify.com/playlist/…).'}</div>`;
+}
+['ppDesc', 'ppSpot'].forEach(id => $(id).addEventListener('input', ppPrevia));
+$('ppGuardar').onclick = async () => {
+  const u = DF.usuario(); if (!u) return;
+  const msg = (t, tipo) => { $('ppMsg').innerHTML = `<div class="aviso ${tipo || ''}">${t}</div>`; };
+  const desc = $('ppDesc').value.trim().slice(0, 280), pelis = [0, 1, 2, 3, 4].map(i => $('ppP' + i).value.trim().slice(0, 60)).filter(Boolean);
+  const v = $('ppSpot').value.trim(), sp = v ? PerfilPublico.spotifyDe(v) : null;
+  if (v && !sp) return msg('Revisa el enlace de Spotify (o déjalo vacío).', 'err');
+  const malo = PerfilPublico.revisar(desc) || pelis.map(PerfilPublico.revisar).find(Boolean);
+  if (malo) return msg(malo, 'err');
+  $('ppGuardar').disabled = true;
+  try {
+    const { F, db } = await DF.listo();
+    const d = { uid: u.uid, nombre: DF.nombreCorto(u.displayName, u.email).slice(0, 40), publico: $('ppPublico').checked, descripcion: desc, peliculas: pelis,
+      spotifyTipo: sp ? sp.tipo : '', spotifyId: sp ? sp.id : '', oculto: !!(ppDoc && ppDoc.oculto), actualizado: F.serverTimestamp() };
+    await F.setDoc(F.doc(db, 'perfiles_publicos', u.uid), d);
+    ppDoc = d;
+    msg(d.publico ? `✓ Guardado. Tu perfil es público: <a href="perfil.html?u=${encodeURIComponent(u.uid)}">míralo aquí</a>.` : '✓ Guardado. Tu perfil está privado: solo tú lo ves.', 'ok');
+  } catch (e) { msg('No se pudo guardar: ' + esc(/permission/i.test(e.message) ? 'el sitio lo rechazó (revisa que no haya enlaces, @ ni números largos; o el profe aún no publica las reglas nuevas)' : e.message), 'err'); }
+  $('ppGuardar').disabled = false;
+};
+
 /* ── Transferencias: el estudiante las pide; el profe las autoriza en su panel ── */
 const TR_ESTADO = { pendiente: '<span class="can pend">Retenida · por autorizar</span>', aprobada: '<span class="can ok">Autorizada</span>',
   rechazada: '<span class="can no">Rechazada</span>', cancelada: '<span class="can anul">Cancelada</span>' };
@@ -470,11 +559,26 @@ document.addEventListener('click', async ev => {
   catch (e) { alert('No se pudo cancelar: ' + e.message); }
 });
 
+// Lo que la persona tiene: beneficios por usar (agrupados), los que esperan al profe y los que puso a la venta.
+function pintarProductos(compras) {
+  const CAT = window.CATALOGO_BENEFICIOS || [], grupos = {};
+  const ico = m => m.tipo === 'poder-gatito' ? '⚡' : m.tipo === 'poder-mensual' ? '📜' : m.tipo === 'premio-gatito' ? '💎' : m.tipo === 'ruleta' ? '🎡' : ((CAT.find(c => c.nombre === m.item) || {}).ico || '🎟️');
+  compras.filter(m => ['pendiente', 'retenida', 'en-venta'].includes(m.canje)).forEach(m => {
+    const k = m.canje + '|' + (m.item || m.motivo);
+    (grupos[k] = grupos[k] || { m, n: 0 }).n++;
+  });
+  const est = { pendiente: 'Por usar', retenida: 'Esperando al profe', 'en-venta': 'A la venta (congelado)' };
+  const l = Object.values(grupos).sort((a, b) => (a.m.canje === 'pendiente' ? 0 : 1) - (b.m.canje === 'pendiente' ? 0 : 1));
+  $('prodCont').innerHTML = (l.length ? `<div class="prod">${l.map(({ m, n }) => `<div class="${m.canje === 'pendiente' ? '' : 'cong'}"><span class="ic">${esc(ico(m))}</span><span><b>${esc(m.item || m.motivo)}</b><small>${est[m.canje]}</small></span>${n > 1 ? `<span class="n">×${n}</span>` : ''}</div>`).join('')}</div>`
+    : '<div class="vacio">No tienes productos por usar. Mira el <a href="gatitos.html#beneficios">Mercado</a>.</div>')
+    + '<p class="muted" style="font-size:13px;margin:10px 0 0">Para usar un producto, pídeselo al profe en clases. Tus gatitos están más abajo, en «Mis gatitos».</p>';
+}
 function cargarBanco() {
   DF.miBanco().then(b => {
     cargarGatitos(DF.usuario(), b);
     if (!b) {
       $('rSaldo').textContent = '—'; $('rUsar').textContent = '—';
+      $('prodCont').innerHTML = '<div class="vacio">Cuando tu cuenta del banco esté conectada, aquí verás lo que compras y ganas.</div>';
       $('tCont').innerHTML = '';
       $('bCont').innerHTML = '<div class="vacio">Tu cuenta del banco todavía no está conectada con este correo. Pídele al profe que la vincule y aquí verás tu saldo y tus compras.</div>';
       return;
@@ -485,6 +589,7 @@ function cargarBanco() {
     const origen = m => m.tipo === 'poder-gatito' ? '⚡ ' : m.tipo === 'poder-mensual' ? '📜 ' : m.tipo === 'premio-gatito' ? '💎 ' : m.tipo === 'ruleta' ? '🎡 ' : m.monto === 0 && m.tipo === 'compra' ? '🎁 ' : '';
     $('rSaldo').textContent = fmt(c.saldo); $('rSaldo').classList.toggle('neg', (c.saldo || 0) < 0);
     $('rUsar').textContent = porUsar.length;
+    pintarProductos(compras);
     const estado = m => m.canje === 'usada' ? `<span class="can usada">Usada</span>${m.canjeNota ? ' <small class="muted">' + esc(m.canjeNota) + '</small>' : ''}`
       : m.canje === 'anulada' ? '<span class="can anul">Anulada</span>' : m.canje === 'retenida' ? '<span class="can pend">Retenida · esperando al profe</span>' : m.canje === 'en-venta' ? '<span class="can pend">En venta (congelada)</span>' : m.canje === 'entregada' ? '<span class="can usada">Entregada</span>' : m.canje === 'traspasada' ? `<span class="can anul">Vendida</span> <small class="muted">${esc(m.canjeNota || '')}</small>` : '<span class="can pend">Por usar</span>';
     $('bCont').innerHTML = `

@@ -367,10 +367,12 @@
         leerPerfil(),
         mios('puntajes'), mios('resultados'),
         F.getDocs(F.collection(fb.db, 'progreso', uid, 'items')),
-        miBanco().catch(function () { return null; })
+        miBanco().catch(function () { return null; }),
+        F.getDoc(F.doc(fb.db, 'perfiles_publicos', uid)).catch(function () { return null; })
       ]).then(function (r) {
         var lista = function (s) { return s.docs.map(function (d) { return Object.assign({ _id: d.id }, d.data()); }); };
-        return { perfil: r[0], puntajes: lista(r[1]), resultados: lista(r[2]), progreso: lista(r[3]), banco: r[4] };
+        return { perfil: r[0], puntajes: lista(r[1]), resultados: lista(r[2]), progreso: lista(r[3]), banco: r[4],
+          perfilPublico: r[5] && r[5].exists() ? r[5].data() : null };
       });
     });
   }
@@ -385,6 +387,7 @@
         d.resultados.forEach(function (p) { borrar.push(F.deleteDoc(F.doc(db, 'resultados', p._id))); });
         d.progreso.forEach(function (p) { borrar.push(F.deleteDoc(F.doc(db, 'progreso', uid, 'items', p._id))); });
         Object.keys(juegos).forEach(function (j) { borrar.push(F.deleteDoc(F.doc(db, 'rankings', j, 'mejores', uid))); });
+        if (d.perfilPublico) borrar.push(F.deleteDoc(F.doc(db, 'perfiles_publicos', uid)));
         borrar.push(F.deleteDoc(F.doc(db, 'alumnos', uid)));
         return Promise.all(borrar);
       }).then(function () {

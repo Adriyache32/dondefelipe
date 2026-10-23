@@ -367,6 +367,30 @@ service cloud.firestore {
         && opsDespues(c) == opsAntes(c) + 1
         && getAfter(rutaOp(c, opsDespues(c))).data.tipo == 'ruleta';
     }
+    // ═════ Perfil público (opcional) ═════
+    // Lo ven solo las personas del colegio con sesión, y solo si la persona lo hizo público y el profe no lo ocultó.
+    // Sin enlaces, correos (@) ni números largos en la descripción, para que nadie publique su teléfono o sus redes.
+    function peliValida(l, i) { return l.size() <= i || texto(l[i], 60); }
+    function perfilValido(d, uid) {
+      return d.keys().hasOnly(['uid', 'nombre', 'publico', 'descripcion', 'peliculas', 'spotifyTipo', 'spotifyId', 'oculto', 'actualizado'])
+        && d.uid == uid && texto(d.nombre, 40) && d.nombre.size() > 0
+        && (request.auth.token.get('name', '') == '' || d.nombre.split(' ')[0] == request.auth.token.name.split(' ')[0])
+        && d.publico is bool
+        && texto(d.descripcion, 280) && !d.descripcion.matches('(?s).*(https?:|www[.]|@|[0-9]{7,}).*')
+        && d.peliculas is list && d.peliculas.size() <= 5
+        && peliValida(d.peliculas, 0) && peliValida(d.peliculas, 1) && peliValida(d.peliculas, 2) && peliValida(d.peliculas, 3) && peliValida(d.peliculas, 4)
+        && ((d.spotifyTipo == '' && d.spotifyId == '') || (d.spotifyTipo in ['playlist', 'album'] && d.spotifyId.matches('^[A-Za-z0-9]{22}$')))
+        && d.oculto == (resource == null ? false : resource.data.oculto)
+        && d.actualizado == request.time;
+    }
+    match /perfiles_publicos/{uid} {
+      allow read: if soyYo(uid) || esProfe() || (esColegio() && resource.data.publico == true && resource.data.oculto == false);
+      allow create, update: if esColegio() && soyYo(uid) && perfilValido(request.resource.data, uid);
+      allow delete: if soyYo(uid);
+      // El profe puede ocultar o volver a mostrar un perfil (moderación).
+      allow update, delete: if esProfe();
+    }
+
     // ═════ Tienda de gatitos ═════
     // Precios oficiales (deben coincidir con gatitos/catalogo.js). Para cambiar un precio, cámbialo aquí y allá.
     function precioGatito(g) {
