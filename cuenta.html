@@ -79,6 +79,13 @@ label.ap input{width:18px;height:18px;margin-top:3px;accent-color:var(--acid)}
 .can{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
 .can.pend{background:rgba(233,185,73,.15);color:#f3c766}
 .can.usada{background:rgba(204,255,0,.12);color:var(--acid)}
+.tr-form{display:grid;grid-template-columns:1fr 140px;gap:10px;margin-top:8px}
+.tr-form select,.tr-form input{width:100%;background:var(--slab2);color:var(--ink);border:1px solid var(--line2);border-radius:10px;padding:9px 12px;font:15px var(--ff)}
+.tr-form .ancho{grid-column:1/-1}
+.tr-form .fila{grid-column:1/-1}
+@media (max-width:560px){.tr-form{grid-template-columns:1fr}}
+.can.ok{background:rgba(204,255,0,.12);color:var(--acid)}
+.can.no{background:rgba(255,122,112,.14);color:var(--neg)}
 .can.anul{background:rgba(255,255,255,.08);color:var(--mute);text-decoration:line-through}
 footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:var(--mute);font-size:14px}
 </style>
@@ -135,6 +142,7 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:v
   <section class="card oculto" id="banco">
     <h2><i class="fa-solid fa-piggy-bank"></i> Mi banco de Hipopesos</h2>
     <div id="bCont"><div class="vacio">Cargando…</div></div>
+    <div id="tCont"></div>
   </section>
 
   <!-- Mis datos -->
@@ -320,9 +328,75 @@ async function cargarGatitos(u) {
   } catch (e) { $('gCont').innerHTML = `<div class="vacio">No se pudieron cargar tus gatitos: ${esc(e.message)}</div>`; }
 }
 
+
+/* ── Transferencias: el estudiante las pide; el profe las autoriza en su panel ── */
+const TR_ESTADO = { pendiente: '<span class="can pend">Por autorizar</span>', aprobada: '<span class="can ok">Autorizada</span>',
+  rechazada: '<span class="can no">Rechazada</span>', cancelada: '<span class="can anul">Cancelada</span>' };
+let trMia = null, trCuentas = [];
+async function cargarTransferencias(c) {
+  trMia = c;
+  const box = $('tCont');
+  try {
+    const { F, db } = await DF.listo();
+    const [cs, env, rec] = await Promise.all([
+      trCuentas.length ? null : F.getDocs(F.collection(db, 'banco_cuentas')),
+      F.getDocs(F.query(F.collection(db, 'banco_transferencias'), F.where('de', '==', c.id))),
+      F.getDocs(F.query(F.collection(db, 'banco_transferencias'), F.where('a', '==', c.id)))
+    ]);
+    if (cs) trCuentas = cs.docs.map(d => Object.assign({ id: d.id }, d.data())).filter(x => x.id !== c.id && x.estado !== 'Cerrada')
+      .sort((a, b) => String(a.curso || '').localeCompare(String(b.curso || ''), 'es') || String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es'));
+    const ms = t => (t && t.toDate ? t.toDate().getTime() : 0);
+    const lista = env.docs.map(d => Object.assign({ id: d.id, sale: true }, d.data())).concat(rec.docs.map(d => Object.assign({ id: d.id, sale: false }, d.data())))
+      .sort((a, b) => ms(b.creada) - ms(a.creada));
+    const pendientes = lista.filter(t => t.sale && t.estado === 'pendiente').length;
+    const cursos = [...new Set(trCuentas.map(x => x.curso || 'Sin curso'))];
+    box.innerHTML = `<p class="sub">Transferir Hipopesos</p>
+      <p class="muted" style="font-size:14px;margin:0">Elige a quién y cuánto. El profe revisa y autoriza cada transferencia: hasta entonces no se mueve tu dinero.</p>
+      <form class="tr-form" id="trForm" autocomplete="off">
+        <select id="trA" class="ancho" required><option value="">¿A quién le transfieres?</option>${cursos.map(cu => `<optgroup label="${esc(cu)}">${trCuentas.filter(x => (x.curso || 'Sin curso') === cu)
+          .map(x => `<option value="${esc(x.id)}">${esc(((x.nombre || '') + ' ' + (x.apellido || '')).trim())} · N° ${esc(x.numero || '')}</option>`).join('')}</optgroup>`).join('')}</select>
+        <input id="trMotivo" maxlength="120" placeholder="Motivo (ej.: te devuelvo lo de la formativa)">
+        <input id="trMonto" type="number" min="100" step="100" placeholder="Monto ₣" required>
+        <div class="fila"><button class="btn p" id="trBtn"${pendientes >= 3 ? ' disabled' : ''}><i class="fa-solid fa-paper-plane"></i> Pedir transferencia</button>
+          <span class="muted" style="font-size:13px">${pendientes >= 3 ? 'Tienes 3 transferencias esperando al profe: espera a que las revise.' : 'Saldo disponible: ' + fmt(c.saldo) + ' ₣'}</span></div>
+        <div class="ancho" id="trMsg"></div>
+      </form>
+      <p class="sub">Mis transferencias</p>
+      <div class="lista">${lista.length ? lista.slice(0, 15).map(t => `<div class="it"><b>${t.sale ? 'A ' + esc(t.aNombre) : 'De ' + esc(t.deNombre)}${t.motivo ? ' <small>· ' + esc(t.motivo) + '</small>' : ''}${t.nota ? '<br><small>Profe: ' + esc(t.nota) + '</small>' : ''}</b>
+        ${TR_ESTADO[t.estado] || ''}<span class="v" style="color:${t.sale ? 'var(--neg)' : 'var(--acid)'}">${t.sale ? '−' : '+'}${fmt(t.monto)}</span>
+        ${t.sale && t.estado === 'pendiente' ? `<button class="btn" style="padding:4px 10px;font-size:12px" data-cancelar="${esc(t.id)}">Cancelar</button>` : `<small>${fecha(t.creada)}</small>`}</div>`).join('') : '<div class="vacio">Aún no hay transferencias.</div>'}</div>`;
+  } catch (e) { box.innerHTML = `<div class="vacio">No se pudieron cargar las transferencias: ${esc(e.message)}</div>`; }
+}
+document.addEventListener('submit', async ev => {
+  if (ev.target.id !== 'trForm') return;
+  ev.preventDefault();
+  const c = trMia, a = trCuentas.find(x => x.id === $('trA').value), monto = Math.round(+$('trMonto').value || 0), motivo = $('trMotivo').value.trim().slice(0, 120);
+  const msg = (t, tipo) => { $('trMsg').innerHTML = `<div class="aviso ${tipo || ''}" style="margin-top:4px">${t}</div>`; };
+  if (!a) return msg('Elige a quién le transfieres.', 'err');
+  if (monto < 100) return msg('El monto mínimo es 100 ₣.', 'err');
+  if (monto > (c.saldo || 0)) return msg(`No te alcanza: tienes ${fmt(c.saldo)} ₣.`, 'err');
+  const nA = ((a.nombre || '') + ' ' + (a.apellido || '')).trim(), nD = ((c.nombre || '') + ' ' + (c.apellido || '')).trim();
+  if (!confirm(`¿Pedir transferencia de ${fmt(monto)} ₣ a ${nA} (N° ${a.numero || ''})?\nEl profe debe autorizarla.`)) return;
+  $('trBtn').disabled = true;
+  try {
+    const { F, db } = await DF.listo();
+    await F.addDoc(F.collection(db, 'banco_transferencias'), { de: c.id, a: a.id, monto, motivo, estado: 'pendiente', uid: DF.usuario().uid,
+      deNombre: nD.slice(0, 160), deNumero: String(c.numero || '').slice(0, 20), aNombre: nA.slice(0, 160), aNumero: String(a.numero || '').slice(0, 20), creada: F.serverTimestamp() });
+    await cargarTransferencias(c);
+    $('trMsg').innerHTML = '<div class="aviso ok" style="margin-top:4px">✓ Listo: tu transferencia quedó esperando la autorización del profe.</div>';
+  } catch (e) { msg('No se pudo pedir la transferencia: ' + esc(/permission/i.test(e.message) ? 'el banco la rechazó (¿el profe publicó las reglas nuevas?)' : e.message), 'err'); $('trBtn').disabled = false; }
+});
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('[data-cancelar]'); if (!b) return;
+  if (!confirm('¿Cancelar esta transferencia?')) return;
+  try { const { F, db } = await DF.listo(); await F.updateDoc(F.doc(db, 'banco_transferencias', b.dataset.cancelar), { estado: 'cancelada', resuelta: F.serverTimestamp() }); cargarTransferencias(trMia); }
+  catch (e) { alert('No se pudo cancelar: ' + e.message); }
+});
+
 function cargarBanco() {
   DF.miBanco().then(b => {
     if (!b) {
+      $('tCont').innerHTML = '';
       $('bCont').innerHTML = '<div class="vacio">Tu cuenta del banco todavía no está conectada con este correo. Pídele al profe que la vincule y aquí verás tu saldo y tus compras.</div>';
       return;
     }
@@ -336,6 +410,7 @@ function cargarBanco() {
       <p class="sub">Últimos movimientos</p>
       <div class="lista">${b.movs.slice(0, 15).map(m => `<div class="it"><b>${esc(m.motivo)}</b><span class="v" style="color:${m.monto < 0 ? 'var(--neg)' : 'var(--acid)'}">${m.monto < 0 ? '−' : '+'}${fmt(Math.abs(m.monto))}</span><small>${fecha(m.fecha)}</small></div>`).join('') || '<div class="vacio">Sin movimientos.</div>'}</div>
       <p class="muted" style="font-size:14px;margin-top:12px"><a href="banco-felipeso/bases.html">Bases de los Hipopesos</a>: qué se puede comprar y cómo se gana.</p>`;
+    cargarTransferencias(Object.assign({ id: b.cuenta.id }, c));
   }).catch(e => { $('bCont').innerHTML = `<div class="vacio">No se pudo cargar tu banco: ${esc(e.message)}</div>`; });
 }
 

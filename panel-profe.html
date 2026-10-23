@@ -151,6 +151,12 @@ dialog.ancho{max-width:min(860px,calc(100vw - 32px))}
             <p class="muted" style="margin:0 0 8px;font-size:13px">Lo que los estudiantes compraron y todavía no usan. Al aplicarlo (por ejemplo, borrar la formativa), márcalo como usado y anota dónde.</p>
             <div class="lista-movs" id="listaPend"><div class="muted">—</div></div>
           </div>
+          <div class="card porcanjear" style="margin-top:16px">
+            <h3 style="margin:0 0 4px">Transferencias por autorizar <span class="pill" id="nTr">0</span></h3>
+            <p class="muted" style="margin:0 0 8px;font-size:13px">Los estudiantes piden transferir Hipopesos a otra cuenta desde Mi cuenta. Nada se mueve hasta que tú la autorizas: ahí se descuenta, se abona y quedan los dos movimientos.</p>
+            <div class="lista-movs" id="listaTr"><div class="muted">—</div></div>
+            <details style="margin-top:8px"><summary class="muted" style="cursor:pointer;font-size:13px">Últimas transferencias resueltas</summary><div class="lista-movs" id="listaTrHist"></div></details>
+          </div>
         </div>
 
         <aside class="card mov">
@@ -398,7 +404,7 @@ function iniciarBanco() {
     cuentas = s.docs.map(d => Object.assign({ id: d.id }, d.data()));
     cuentas.sort((a, b) => String(a.curso || '').localeCompare(String(b.curso || ''), 'es') || String(a.apellido || '').localeCompare(String(b.apellido || ''), 'es'));
     for (const id of [...seleccion]) if (!cuentas.find(c => c.id === id)) seleccion.delete(id);
-    llenarCursos(); pintarCuentas();
+    llenarCursos(); pintarCuentas(); pintarTransferencias();
     aviso(cuentas.length ? '' : 'El banco en Firebase está vacío. Usa <b>Importar desde la hoja de Google</b> para traer las cuentas actuales. Mientras esté vacío, la página pública del banco sigue leyendo la hoja.');
   }, e => aviso('No se pudieron leer las cuentas: ' + esc(e.message), true)));
   desuscribir.push(F.onSnapshot(F.query(F.collection(db, 'banco_movs'), F.orderBy('fecha', 'desc'), F.limit(40)), s => {
@@ -415,6 +421,14 @@ function iniciarBanco() {
     pendientes = s.docs.map(d => Object.assign({ id: d.id }, d.data()));
     pendientes.sort((a, b) => (ms(a.fecha) - ms(b.fecha)));
     pintarPendientes();
+  }, e => console.info(e)));
+  desuscribir.push(F.onSnapshot(F.query(F.collection(db, 'banco_transferencias'), F.where('estado', '==', 'pendiente')), s => {
+    transPend = s.docs.map(d => Object.assign({ id: d.id }, d.data())).sort((a, b) => ms(a.creada) - ms(b.creada));
+    pintarTransferencias();
+  }, e => console.info(e)));
+  desuscribir.push(F.onSnapshot(F.query(F.collection(db, 'banco_transferencias'), F.orderBy('creada', 'desc'), F.limit(30)), s => {
+    transHist = s.docs.map(d => Object.assign({ id: d.id }, d.data())).filter(t => t.estado !== 'pendiente');
+    pintarTransferencias();
   }, e => console.info(e)));
 }
 const ms = ts => (ts && ts.toDate ? ts.toDate().getTime() : 0);
@@ -482,6 +496,60 @@ async function marcarUsada(id, item, nombre) {
 $('listaPend').onclick = ev => {
   const id = ev.target.dataset && ev.target.dataset.usar; if (!id) return;
   const m = pendientes.find(x => x.id === id); if (m) marcarUsada(id, m.item || m.motivo, m.nombre);
+};
+
+
+/* ── transferencias entre cuentas (las pide el estudiante, las autoriza el profe) ── */
+let transPend = [], transHist = [];
+const ESTADO_TR = { aprobada: 'Autorizada', rechazada: 'Rechazada', cancelada: 'Cancelada por el estudiante' };
+function pintarTransferencias() {
+  if (!$('listaTr')) return;
+  $('nTr').textContent = transPend.length;
+  const saldoDe = id => { const c = cuentas.find(x => x.id === id); return c ? c.saldo || 0 : null; };
+  $('listaTr').innerHTML = transPend.length ? transPend.map(t => {
+    const sd = saldoDe(t.de), corto = sd != null && sd < t.monto;
+    return `<div class="m"><div class="t"><b>$${fmt(t.monto)}</b> · N° ${esc(t.deNumero)} ${esc(t.deNombre)} → N° ${esc(t.aNumero)} ${esc(t.aNombre)}
+      <small>${t.motivo ? esc(t.motivo) + ' · ' : ''}pedida el ${fecha(t.creada)} · saldo actual de quien envía: ${sd == null ? '—' : '$' + fmt(sd)}${corto ? ' ⚠ no le alcanza' : ''}</small></div>
+      <button class="btn sm p" data-tr-ok="${esc(t.id)}"${corto ? ' disabled title="No le alcanza el saldo"' : ''}>Autorizar</button><button class="btn sm" data-tr-no="${esc(t.id)}">Rechazar</button></div>`;
+  }).join('') : '<div class="muted">No hay transferencias pendientes.</div>';
+  $('listaTrHist').innerHTML = transHist.length ? transHist.map(t => `<div class="m"><div class="t"><b>$${fmt(t.monto)}</b> · ${esc(t.deNombre)} → ${esc(t.aNombre)}
+    <small>${esc(ESTADO_TR[t.estado] || t.estado)}${t.nota ? ' · ' + esc(t.nota) : ''} · ${fecha(t.resuelta || t.creada)}</small></div></div>`).join('') : '<div class="muted">Sin transferencias resueltas.</div>';
+}
+async function autorizarTransferencia(t) {
+  if (!confirm(`Autorizar transferencia de $${fmt(t.monto)}\nDe: N° ${t.deNumero} ${t.deNombre}\nA: N° ${t.aNumero} ${t.aNombre}${t.motivo ? '\nMotivo: ' + t.motivo : ''}`)) return;
+  const { F, db } = FB, profe = (DF.usuario() || {}).email || '';
+  try {
+    await F.runTransaction(db, async tx => {
+      const rt = F.doc(db, 'banco_transferencias', t.id), rd = F.doc(db, 'banco_cuentas', t.de), ra = F.doc(db, 'banco_cuentas', t.a);
+      const [st, sd, sa] = await Promise.all([tx.get(rt), tx.get(rd), tx.get(ra)]);
+      if (!st.exists() || st.data().estado !== 'pendiente') throw new Error('la transferencia ya no está pendiente');
+      if (!sd.exists() || !sa.exists()) throw new Error('una de las cuentas ya no existe');
+      const d = sd.data(), a = sa.data(), m = st.data().monto;
+      if ((d.saldo || 0) < m) throw new Error(`a ${d.nombre || ''} ya no le alcanza (saldo $${fmt(d.saldo)})`);
+      const sD = (d.saldo || 0) - m, sA = (a.saldo || 0) + m, nD = `${d.nombre || ''} ${d.apellido || ''}`.trim(), nA = `${a.nombre || ''} ${a.apellido || ''}`.trim();
+      const mot = st.data().motivo ? ': ' + st.data().motivo : '';
+      tx.update(rd, { saldo: sD, actualizado: F.serverTimestamp() });
+      tx.update(ra, { saldo: sA, actualizado: F.serverTimestamp() });
+      tx.set(F.doc(F.collection(db, 'banco_movs')), { cuenta: t.de, numero: d.numero || '', nombre: nD, curso: d.curso || '', monto: -m,
+        motivo: `Transferencia a N° ${a.numero || ''} ${nA}${mot}`.slice(0, 200), tipo: 'transferencia', transferencia: t.id, saldoDespues: sD, profe, fecha: F.serverTimestamp() });
+      tx.set(F.doc(F.collection(db, 'banco_movs')), { cuenta: t.a, numero: a.numero || '', nombre: nA, curso: a.curso || '', monto: m,
+        motivo: `Transferencia de N° ${d.numero || ''} ${nD}${mot}`.slice(0, 200), tipo: 'transferencia', transferencia: t.id, saldoDespues: sA, profe, fecha: F.serverTimestamp() });
+      tx.update(rt, { estado: 'aprobada', resuelta: F.serverTimestamp(), profe });
+    });
+    toast('✓ Transferencia autorizada');
+  } catch (e) { toast('No se pudo autorizar: ' + e.message); }
+}
+async function rechazarTransferencia(t) {
+  const nota = prompt(`¿Por qué rechazas la transferencia de $${fmt(t.monto)} de ${t.deNombre} a ${t.aNombre}? (opcional, lo verá el estudiante)`, '');
+  if (nota === null) return;
+  const { F, db } = FB;
+  try { await F.updateDoc(F.doc(db, 'banco_transferencias', t.id), { estado: 'rechazada', nota: nota.trim().slice(0, 160), resuelta: F.serverTimestamp(), profe: (DF.usuario() || {}).email || '' }); toast('Transferencia rechazada'); }
+  catch (e) { toast('Error: ' + e.message); }
+}
+$('listaTr').onclick = ev => {
+  const b = ev.target.closest('[data-tr-ok],[data-tr-no]'); if (!b) return;
+  const t = transPend.find(x => x.id === (b.dataset.trOk || b.dataset.trNo)); if (!t) return;
+  if (b.dataset.trOk) autorizarTransferencia(t); else rechazarTransferencia(t);
 };
 
 /* historial de una cuenta */
@@ -680,7 +748,7 @@ function pintarMovs() {
   $('listaMovs').innerHTML = movs.length ? movs.map(m => `
     <div class="m"><div class="t"><b class="${m.monto < 0 ? 'neg' : 'pos'}">${m.monto < 0 ? '−' : '+'}$${fmt(Math.abs(m.monto))}</b> ${esc(m.nombre)}
       <small>${esc(m.motivo)} · ${fecha(m.fecha)}</small></div>
-      ${m.tipo === 'reverso' || m.tipo === 'importacion' || /^bolsa-/.test(m.tipo || '') ? '' : `<button class="btn sm" data-rev="${esc(m.id)}" title="Crear el movimiento contrario">Revertir</button>`}</div>`).join('')
+      ${m.tipo === 'reverso' || m.tipo === 'importacion' || /^bolsa-/.test(m.tipo || '') || m.tipo === 'transferencia' ? '' : `<button class="btn sm" data-rev="${esc(m.id)}" title="Crear el movimiento contrario">Revertir</button>`}</div>`).join('')
     : '<div class="muted">Aún no hay movimientos.</div>';
 }
 $('listaMovs').onclick = async ev => {

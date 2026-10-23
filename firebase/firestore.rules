@@ -374,6 +374,33 @@ service cloud.firestore {
     }
     function rutaGatitos(uid) { return /databases/$(database)/documents/gatitos/$(uid); }
     function gatitosAntes(uid) { return exists(rutaGatitos(uid)) ? get(rutaGatitos(uid)).data.ids : []; }
+    // ═════ Transferencias entre cuentas ═════
+    // El estudiante solo PIDE la transferencia (no se mueve dinero). El profe la autoriza en el panel:
+    // ahí se descuenta, se abona y se registran los dos movimientos (el profe ya puede escribir en el banco).
+    match /banco_transferencias/{tid} {
+      allow read: if esProfe()
+        || (miCuentaBanco() != '' && (resource.data.de == miCuentaBanco() || resource.data.a == miCuentaBanco()));
+      allow create: if esColegio() && miCuentaBanco() != ''
+        && request.resource.data.keys().hasOnly(['de', 'a', 'monto', 'motivo', 'estado', 'uid', 'deNombre', 'deNumero', 'aNombre', 'aNumero', 'creada'])
+        && request.resource.data.de == miCuentaBanco()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.a is string && request.resource.data.a != request.resource.data.de
+        && exists(rutaCuenta(request.resource.data.a))
+        && request.resource.data.monto is int && request.resource.data.monto >= 100
+        && request.resource.data.monto <= get(rutaCuenta(request.resource.data.de)).data.saldo
+        && texto(request.resource.data.motivo, 120)
+        && texto(request.resource.data.deNombre, 160) && texto(request.resource.data.aNombre, 160)
+        && texto(request.resource.data.deNumero, 20) && texto(request.resource.data.aNumero, 20)
+        && request.resource.data.estado == 'pendiente'
+        && request.resource.data.creada == request.time;
+      // Quien la pidió puede cancelarla mientras siga pendiente.
+      allow update: if conCuenta() && resource.data.uid == request.auth.uid && resource.data.estado == 'pendiente'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'resuelta'])
+        && request.resource.data.estado == 'cancelada'
+        && request.resource.data.resuelta == request.time;
+      allow update, delete: if esProfe();
+    }
+
     // ═════ Mercado de gatitos ═════
     // Por ahora solo el profe publica ofertas (gatito, precio, cantidad, plazo). Se compra siempre una oferta:
     // el movimiento cobra exactamente su precio, la oferta descuenta 1 de su stock y el gatito entra a la colección.
