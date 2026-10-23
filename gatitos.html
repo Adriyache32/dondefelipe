@@ -171,6 +171,7 @@ h1 span{color:var(--acid)}
 .poder{display:flex;flex-direction:column;gap:3px;font-size:12.5px;line-height:1.3;color:var(--ink);background:color-mix(in srgb,var(--rc) 14%,var(--slab2));border-radius:10px;padding:7px 9px}
 .poder b{font:800 11px var(--ff);letter-spacing:1px;text-transform:uppercase;color:var(--acid)}
 .gato.bloq .poder{opacity:.75}
+.cinta-est{position:absolute;top:10px;left:10px;z-index:1;font:800 11px var(--ff);background:var(--brass);color:#1a1204;border-radius:999px;padding:3px 9px}
 .poderes{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}
 .poderes .dec{font:900 52px/1 var(--ff-d);color:var(--acid);text-align:center}
 .poderes .dec small{display:block;font:700 11px var(--ff);letter-spacing:1.5px;text-transform:uppercase;color:var(--mute)}
@@ -296,7 +297,9 @@ let usuario = null, esProfe = false, cuentaId = null, cuenta = null, coleccion =
 let publicaciones = [], misPedidos = [], misVentas = [], misBenef = [], poderHoy = null, reclamando = false;
 const diaHoy = () => Math.floor((Date.now() - 14400000) / 86400000);   // igual que diaHoy() en las reglas
 const BENEF = window.CATALOGO_BENEFICIOS || [];
-let ofertas = [], ventas = [], vista = 'mercado', filtro = 'todos', comprando = false, unsubs = [];
+// gatitos.html#coleccion (o #beneficios, #estudiantes, #mio) abre esa pestaña.
+const VISTA_INICIAL = (location.hash || '').slice(1);
+let ofertas = [], ventas = [], vista = ['beneficios', 'estudiantes', 'coleccion', 'mio'].includes(VISTA_INICIAL) ? VISTA_INICIAL : 'mercado', filtro = 'todos', comprando = false, unsubs = [];
 
 function aviso(html, tipo) {
   $('avisos').innerHTML = html ? `<div class="aviso ${tipo || ''}">${html}</div>` : '';
@@ -325,7 +328,8 @@ function pintarTabs() {
 }
 function pintarEstado() {
   const tengo = new Set(coleccion.ids || []), total = G.length, n = G.filter(g => tengo.has(g.id)).length;
-  $('progTxt').textContent = `Tu colección: ${n} de ${total} gatitos`;
+  const extra = G.filter(g => !tengo.has(g.id) && estadoGato(g.id)).length;
+  $('progTxt').textContent = `Tu colección: ${n} de ${total} gatitos` + (extra ? ` (+${extra} en venta o por llegar)` : '');
   $('prog').style.width = (n / total * 100) + '%';
   $('saldo').innerHTML = '<img class="mon" src="mercado/sprites/moneda.webp" alt="">' + (cuenta ? fmt(cuenta.saldo) : '—') + '<small>' + (cuenta ? 'Tu saldo · cuenta N° ' + esc(cuenta.numero || '') : 'Tu saldo') + '</small>';
   $('sesion').innerHTML = usuario ? `<span style="color:var(--mute);font-size:14px">${esc(DF.nombreCorto(usuario.displayName, usuario.email))}${esProfe ? ' · profe' : ''}</span> <button class="btn" data-a="salir">Salir</button>`
@@ -339,6 +343,14 @@ function pintarVentas() {
   $('ventas').innerHTML = ventas.slice(0, 12).map(v => { const g = gato(v.gatito) || { nombre: v.gatito };
     return `<span class="venta"><img src="gatitos/img/${esc(v.gatito)}.webp" alt=""><span><b>${esc(v.nombre)}</b> compró ${esc(g.nombre)}</span></span>`; }).join('');
 }
+// Dónde está un gatito para esta persona: en su colección, congelado en su publicación o comprado a un compañero (por llegar).
+function estadoGato(id) {
+  if ((coleccion.ids || []).includes(id)) return 'tengo';
+  if (usuario && publicaciones.some(x => x.uid === usuario.uid && x.tipo === 'gatito' && x.gatito === id && (x.estado === 'venta' || x.estado === 'reservado'))) return 'venta';
+  if (misPedidos.some(p => p.estado === 'pendiente' && p.gatito === id)) return 'camino';
+  return null;
+}
+const TXT_ESTADO = { venta: '🔒 Lo tienes a la venta', camino: '⏳ Ya lo compraste · por llegar' };
 function poderHtml(g) {
   const d = (window.PODER_DECIMAS || {})[g.rareza] || 0;
   const l = [d ? `+${textoDecimas(d)} por día` : ''].concat(g.poderes || []).filter(Boolean);
@@ -381,11 +393,12 @@ async function reclamarPoderes() {
 }
 function cartaOferta(o) {
   const g = gato(o.gatito); if (!g) return '';
-  const r = R[g.rareza], tengo = (coleccion.ids || []).includes(g.id), agotada = !vigente(o);
+  const r = R[g.rareza], est = estadoGato(g.id), tengo = est === 'tengo', agotada = !vigente(o);
   const rebaja = o.precio < g.precio ? Math.round((1 - o.precio / g.precio) * 100) : 0;
   const alcanza = cuenta && (cuenta.saldo || 0) >= o.precio;
   let accion;
   if (tengo) accion = `<span class="mio-tag"><i class="fa-solid fa-check"></i> Ya lo tienes</span>`;
+  else if (est) accion = `<span class="mio-tag">${TXT_ESTADO[est]}</span>`;
   else if (agotada) accion = `<button class="btn" disabled>${o.stock === 0 ? 'Agotado' : 'No disponible'}</button>`;
   else if (!usuario) accion = `<button class="btn" data-a="entrar">Entrar</button>`;
   else if (!cuenta) accion = `<button class="btn" disabled>Sin cuenta</button>`;
@@ -426,12 +439,12 @@ function pintarMercado() {
 function pintarAlbum() {
   const tengo = new Set(coleccion.ids || []);
   $('album').innerHTML = G.map(g => {
-    const r = R[g.rareza], mio = tengo.has(g.id), enVenta = ofertas.some(o => o.gatito === g.id && vigente(o));
-    return `<article class="gato ${mio ? 'mio' : 'bloq'} ${g.rareza}" style="--rc:${r.color}">
+    const r = R[g.rareza], mio = tengo.has(g.id), est = mio ? 'tengo' : estadoGato(g.id), enVenta = ofertas.some(o => o.gatito === g.id && vigente(o));
+    return `<article class="gato ${mio || est ? 'mio' : 'bloq'} ${g.rareza}" style="--rc:${r.color}">${est && !mio ? `<span class="cinta-est">${TXT_ESTADO[est]}</span>` : ''}
       ${mio ? `<button class="fav ${coleccion.favorito === g.id ? 'on' : ''}" data-fav="${g.id}" title="Mostrar en mi perfil"><i class="fa-solid fa-star"></i></button>` : ''}
       <div class="img"><img src="gatitos/img/${g.id}.webp" alt="${mio ? esc(g.nombre) : 'Gatito por conseguir'}" loading="lazy"></div>
       <span class="rz">${esc(r.nombre)}</span><h3>${esc(g.nombre)}</h3><p>${esc(g.txt)}</p>${poderHtml(g)}
-      <div class="pie">${mio ? '<span class="mio-tag"><i class="fa-solid fa-check"></i> Es tuyo</span>' : enVenta ? '<button class="btn" data-ir="' + g.id + '">Ver en el mercado</button>' : '<span style="color:var(--mute);font-size:13px">No está a la venta ahora</span>'}</div>
+      <div class="pie">${mio ? '<span class="mio-tag"><i class="fa-solid fa-check"></i> Es tuyo</span>' : est ? `<button class="btn sm" data-v="${est === 'venta' ? 'mio' : 'estudiantes'}">${est === 'venta' ? 'Ver mi publicación' : 'Ver mi pedido'}</button>` : enVenta ? '<button class="btn" data-ir="' + g.id + '">Ver en el mercado</button>' : '<span style="color:var(--mute);font-size:13px">No está a la venta ahora</span>'}</div>
     </article>`;
   }).join('');
 }
@@ -539,7 +552,8 @@ async function cargar() {
     try {
       await DF.asegurarCuentaBanco().catch(() => null);
       const v = await F.getDoc(F.doc(db, 'banco_vinculos', usuario.email.toLowerCase()));
-      unsubs.push(F.onSnapshot(F.doc(db, 'gatitos', usuario.uid), g => { coleccion = g.exists() ? g.data() : { ids: [], favorito: null }; pintar(); }, () => {}));
+      unsubs.push(F.onSnapshot(F.doc(db, 'gatitos', usuario.uid), g => { coleccion = g.exists() ? g.data() : { ids: [], favorito: null }; pintar(); },
+        e => aviso('No se pudo leer tu colección de gatitos (' + esc(e.message) + '). Recarga la página; si sigue, avísale al profe.', 'err')));
       if (v.exists()) {
         cuentaId = v.data().cuenta;
         unsubs.push(F.onSnapshot(F.doc(db, 'banco_cuentas', cuentaId), c => { cuenta = c.exists() ? c.data() : null; pintar(); }, () => {}));
@@ -569,6 +583,7 @@ async function comprar(oid) {
     if (!g) throw new Error('gatito desconocido');
     if (!vigente(o)) throw new Error(o.stock === 0 ? 'se agotó justo ahora' : 'la oferta ya no está disponible');
     if (ids.includes(g.id)) throw new Error('ya tienes este gatito');
+    if (estadoGato(g.id)) throw new Error(estadoGato(g.id) === 'venta' ? 'tienes este gatito a la venta: retíralo para recuperarlo' : 'ya compraste este gatito a un compañero: espera a que el profe lo autorice');
     const saldo = (c.saldo || 0) - o.precio, ops = (c.ops || 0) + 1, opId = 'op-' + cuentaId + '-' + ops;
     if (saldo < 0) throw new Error('no te alcanza: cuesta ' + fmt(o.precio) + ' y tienes ' + fmt(c.saldo));
     tx.update(rc, { saldo, ops, actualizado: F.serverTimestamp() });
@@ -587,8 +602,7 @@ async function comprar(oid) {
 }
 async function elegirFavorito(id) {
   const { F, db } = await DF.listo();
-  await F.setDoc(F.doc(db, 'gatitos', usuario.uid), { uid: usuario.uid, nombre: DF.nombreCorto(usuario.displayName, usuario.email).slice(0, 80),
-    ids: coleccion.ids, favorito: id, actualizado: F.serverTimestamp() });
+  await F.updateDoc(F.doc(db, 'gatitos', usuario.uid), { favorito: id, actualizado: F.serverTimestamp() });
 }
 
 /* ═════════ ventana de compra ═════════ */
@@ -689,9 +703,9 @@ function pintarBeneficios() {
 function pintarEstudiantes() {
   const l = publicaciones.filter(x => x.estado === 'venta').sort((a, b) => ms(b.creada) - ms(a.creada));
   $('gEst').innerHTML = l.map(x => {
-    const mio = usuario && x.uid === usuario.uid, g = x.gatito ? gato(x.gatito) : null, tengo = g && (coleccion.ids || []).includes(g.id);
+    const mio = usuario && x.uid === usuario.uid, g = x.gatito ? gato(x.gatito) : null, est = g && !mio ? estadoGato(g.id) : null;
     const r = g ? R[g.rareza] : null;
-    let acc = mio ? '<span class="mio-tag">Es tu publicación</span>' : tengo ? '<span class="mio-tag"><i class="fa-solid fa-check"></i> Ya lo tienes</span>' : botonPedir('r:' + x.id, x.precio, `data-pedir-r="${esc(x.id)}"`);
+    let acc = mio ? '<span class="mio-tag">Es tu publicación</span>' : est === 'tengo' ? '<span class="mio-tag"><i class="fa-solid fa-check"></i> Ya lo tienes</span>' : est ? `<span class="mio-tag">${TXT_ESTADO[est]}</span>` : botonPedir('r:' + x.id, x.precio, `data-pedir-r="${esc(x.id)}"`);
     return `<article class="item"${r ? ` style="--rc:${r.color}"` : ''}><div class="ico">${icoHtml(x)}</div>
       ${r ? `<span class="rz" style="background:${r.color}">${esc(r.nombre)}</span>` : '<span class="chip">Beneficio sin usar</span>'}
       <h3>${esc(x.item)}</h3><p><i class="fa-solid fa-user"></i> Vende ${esc(x.vendedorNombre)}</p>
@@ -790,7 +804,10 @@ async function publicarMio(fila) {
       await F.updateDoc(ref, { precio, actualizado: F.serverTimestamp() });
     } else {
       if (!confirm(`¿Poner a la venta «${prev ? prev.item : esG ? (gato(gid) || {}).nombre : (misBenef.find(x => 'b-' + x.id === clave) || {}).item}» a ${fmt(precio)}?\nMientras esté publicado sale de tu cuenta (queda congelado). Puedes retirarlo y recuperarlo cuando quieras, salvo que alguien ya lo haya pedido.`)) return;
-      const b = F.writeBatch(db);
+      await F.runTransaction(db, async b => {
+      const rgc = F.doc(db, 'gatitos', usuario.uid), sgc = esG ? await b.get(rgc) : null;
+      const col = sgc && sgc.exists() ? sgc.data() : coleccion;
+      if (esG && !(col.ids || []).includes(gid)) throw new Error('ese gatito ya no está en tu colección');
       if (prev) b.update(ref, { precio, estado: 'venta', actualizado: F.serverTimestamp() });
       else {
         const base = { tipo: esG ? 'gatito' : 'beneficio', vendedor: cuentaId, vendedorNombre: nombreCorto(), uid: usuario.uid, precio, estado: 'venta', creada: F.serverTimestamp(), actualizado: F.serverTimestamp() };
@@ -800,11 +817,11 @@ async function publicarMio(fila) {
       }
       // congelar el objeto: sale de la cuenta en la misma escritura
       if (esG) {
-        const ids = (coleccion.ids || []).filter(x => x !== gid);
-        b.set(F.doc(db, 'gatitos', usuario.uid), { uid: usuario.uid, nombre: String(coleccion.nombre || nombreCorto()).slice(0, 80), ids,
-          favorito: ids.includes(coleccion.favorito) ? coleccion.favorito : (ids[0] || null), actualizado: F.serverTimestamp() });
+        const ids = (col.ids || []).filter(x => x !== gid);
+        b.set(rgc, { uid: usuario.uid, nombre: String(col.nombre || nombreCorto()).slice(0, 80), ids,
+          favorito: ids.includes(col.favorito) ? col.favorito : (ids[0] || null), actualizado: F.serverTimestamp() });
       } else b.update(F.doc(db, 'banco_movs', (prev && prev.mov) || clave.slice(2)), { canje: 'en-venta' });
-      await b.commit();
+      });
     }
     aviso(`✓ Publicado a ${fmt(precio)}. Aparece en «Entre estudiantes».`, 'ok');
   } catch (e) { aviso('No se pudo publicar: ' + esc(/permission/i.test(e.message) ? 'el banco lo rechazó (¿ya no lo tienes, o el profe no publicó las reglas nuevas?)' : e.message), 'err'); }
@@ -812,20 +829,29 @@ async function publicarMio(fila) {
 async function retirarMio(fila) {
   const clave = fila.dataset.mia, pub = publicaciones.find(p => p.id === clave); if (!pub) return;
   if (pub.tipo === 'gatito' && (coleccion.ids || []).includes(pub.gatito)) return aviso('Ya tienes otro gatito igual en tu colección: no puedes recuperar este. Déjalo a la venta o pídele al profe que lo resuelva.', 'err');
-  const { F, db } = await DF.listo(), b = F.writeBatch(db);
-  b.update(F.doc(db, 'mercado_items', clave), { estado: 'retirado', actualizado: F.serverTimestamp() });
-  if (pub.tipo === 'gatito') {
-    const ids = (coleccion.ids || []).concat([pub.gatito]);
-    b.set(F.doc(db, 'gatitos', usuario.uid), { uid: usuario.uid, nombre: String(coleccion.nombre || nombreCorto()).slice(0, 80), ids,
-      favorito: ids.includes(coleccion.favorito) ? coleccion.favorito : pub.gatito, actualizado: F.serverTimestamp() });
-  } else b.update(F.doc(db, 'banco_movs', pub.mov), { canje: 'pendiente' });
-  try { await b.commit(); aviso('Publicación retirada: lo recuperaste.', 'ok'); }
+  const { F, db } = await DF.listo();
+  try {
+    await F.runTransaction(db, async b => {
+      const ri = F.doc(db, 'mercado_items', clave), rgc = F.doc(db, 'gatitos', usuario.uid);
+      const [si, sgc] = await Promise.all([b.get(ri), pub.tipo === 'gatito' ? b.get(rgc) : null]);
+      if (!si.exists() || si.data().estado !== 'venta') throw new Error(si.exists() && si.data().estado === 'reservado' ? 'alguien ya lo pidió: espera a que el profe resuelva' : 'la publicación ya no está a la venta');
+      b.update(ri, { estado: 'retirado', actualizado: F.serverTimestamp() });
+      if (pub.tipo === 'gatito') {
+        const col = sgc && sgc.exists() ? sgc.data() : { ids: [], favorito: null };
+        if ((col.ids || []).includes(pub.gatito)) throw new Error('ya tienes otro gatito igual en tu colección');
+        const ids = (col.ids || []).concat([pub.gatito]);
+        b.set(rgc, { uid: usuario.uid, nombre: String(col.nombre || nombreCorto()).slice(0, 80), ids,
+          favorito: ids.includes(col.favorito) ? col.favorito : pub.gatito, actualizado: F.serverTimestamp() });
+      } else b.update(F.doc(db, 'banco_movs', pub.mov), { canje: 'pendiente' });
+    });
+    aviso('Publicación retirada: lo recuperaste.', 'ok'); }
   catch (e) { aviso('No se pudo retirar: ' + esc(e.message), 'err'); }
 }
 document.addEventListener('click', ev => {
   const b = ev.target.closest('[data-pedir-b],[data-pedir-r],[data-publicar],[data-retirar],[data-cancelar-p]'); if (!b || b.disabled) return;
   if (b.dataset.pedirB) { const x = BENEF[+b.dataset.pedirB]; pedir({ tipo: 'beneficio', item: x.nombre, ico: x.ico, precio: x.precio }); }
   else if (b.dataset.pedirR) { const x = publicaciones.find(p => p.id === b.dataset.pedirR); if (!x) return;
+    if (x.gatito && estadoGato(x.gatito)) return aviso(estadoGato(x.gatito) === 'tengo' ? 'Ya tienes ese gatito.' : TXT_ESTADO[estadoGato(x.gatito)] + '.', 'err');
     const d = { tipo: 'reventa', publicacion: x.id, vendedor: x.vendedor, vendedorNombre: x.vendedorNombre, item: x.item, ico: x.ico || '🎟️', precio: x.precio };
     if (x.gatito) d.gatito = x.gatito; pedir(d); }
   else if (b.hasAttribute('data-publicar')) publicarMio(b.closest('[data-mia]'));
