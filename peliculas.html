@@ -110,6 +110,29 @@ h1{font:900 clamp(2.2rem,6vw,3.8rem)/.95 var(--ff-display);letter-spacing:-.5px;
   .cuerpo{padding:1.1rem 1rem}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+/* recomendaciones */
+.recos{margin-top:46px;padding-top:26px;border-top:1px solid var(--line);scroll-margin-top:80px}
+.recos-t{font:900 clamp(1.8rem,5vw,2.6rem)/1 var(--ff-display);text-transform:uppercase;letter-spacing:-.3px}
+.reco-form{background:var(--slab);border:1px solid var(--line-2);border-radius:var(--r-md);padding:16px;margin-top:16px;display:grid;gap:10px}
+.reco-form input,.reco-form textarea{width:100%;background:var(--slab-2);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:.7rem .9rem;font-size:.95rem;line-height:1.5}
+.reco-form input{font-weight:700}
+.reco-form textarea{min-height:90px;resize:vertical}
+.reco-form input:focus,.reco-form textarea:focus{outline:2px solid var(--acid);outline-offset:1px}
+.reco-form .fila{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.reco-form .cont{margin-left:auto;color:var(--mute);font-size:.78rem}
+.recos-orden{display:flex;gap:8px;margin:18px 0 0;flex-wrap:wrap}
+.recos-orden button{background:transparent;border:1px solid var(--line-2);color:var(--mute);border-radius:999px;padding:5px 12px;font-size:.78rem;font-weight:700;cursor:pointer}
+.recos-orden button.on{color:var(--void);background:var(--acid);border-color:var(--acid)}
+.recos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:12px}
+.reco{position:relative;background:linear-gradient(160deg,color-mix(in srgb,var(--nc) 14%,var(--slab)),var(--slab) 60%);border:1px solid var(--line-2);border-top:3px solid var(--nc,var(--acid));border-radius:var(--r-md);padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.reco h3{font:800 1.35rem/1.1 var(--ff-display);text-transform:uppercase;letter-spacing:.3px;overflow-wrap:anywhere}
+.reco h3:before{content:'🎬 '}
+.reco p{font-size:.92rem;line-height:1.55;white-space:pre-wrap;word-break:break-word;flex:1}
+.reco .quien{font-size:.76rem;color:var(--mute);display:flex;gap:6px;flex-wrap:wrap;align-items:baseline}
+.reco .quien b{color:var(--nc,var(--acid))}
+.reco .quien .del{margin-left:auto}
+.reco .mas{font-size:.72rem;background:rgba(255,255,255,.06);border-radius:999px;padding:1px 8px;color:var(--bone)}
+.recos-vacio{color:var(--mute);font-size:.9rem;margin-top:12px}
 </style>
 <link rel="stylesheet" href="assets/mc-sutil.css">
 </head>
@@ -131,6 +154,14 @@ h1{font:900 clamp(2.2rem,6vw,3.8rem)/.95 var(--ff-display);letter-spacing:-.5px;
   <section class="mod" id="modpanel" hidden aria-label="Moderación"></section>
   <div class="tabs" id="tabs" role="tablist" aria-label="Cursos"></div>
   <div class="lista" id="lista"></div>
+
+  <section class="recos" id="recomendaciones" aria-labelledby="recos-t">
+    <h2 class="recos-t" id="recos-t">🍿 Recomendación de películas</h2>
+    <p class="intro" style="margin-top:6px">¿Qué película vale la pena? Escribe el título y cuéntanos <b>por qué hay que verla</b>, sin contar el final. Cada persona puede tener hasta 3 recomendaciones.</p>
+    <div id="recoForm"></div>
+    <div class="recos-orden" id="recoOrden"></div>
+    <div class="recos-grid" id="recoLista"></div>
+  </section>
 </div></main>
 <div class="pie">El Mundo de Felipe · Cine</div>
 
@@ -363,6 +394,65 @@ function borrar(id,cid){
     .then(function(){return cargarCom(id)}).then(pintaLista).catch(function(e){alert('No se pudo borrar: '+(e.message||e))});
 }
 
+/* ═════════ recomendaciones de películas ═════════ */
+var RECOS=[],recoOrden='nuevas',recoMsg='';
+function cargarRecos(){
+  if(!usuario){RECOS=[];pintaRecos();return Promise.resolve()}
+  return dfListo().then(function(fb){return fb.F.getDocs(fb.F.collection(fb.db,'peliculas_recomendaciones'))})
+    .then(function(s){RECOS=s.docs.map(function(d){return Object.assign({_id:d.id},d.data())});pintaRecos()})
+    .catch(function(e){RECOS=[];recoMsg='<span class="err">No se pudieron cargar las recomendaciones ('+esc(e.message||e)+').</span>';pintaRecos()});
+}
+function claveTitulo(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9ñ]+/g,' ').trim()}
+function pintaRecos(){
+  var f=$('recoForm'),l=$('recoLista');if(!f)return;
+  if(!DFok){f.innerHTML='<p class="recos-vacio">Las recomendaciones no están disponibles ahora.</p>';l.innerHTML='';$('recoOrden').innerHTML='';return}
+  if(!usuario){f.innerHTML='<div class="reco-form"><p>Para ver y escribir recomendaciones, <button class="lnk" data-a="entrar" style="font-size:inherit">entra con tu cuenta</button>.</p></div>';l.innerHTML='';$('recoOrden').innerHTML='';return}
+  var mias=RECOS.filter(function(r){return r.uid===usuario.uid}),libres=3-mias.length;
+  var tTit=($('reco-tit')||{}).value||'',tPor=($('reco-por')||{}).value||'';
+  f.innerHTML='<div class="reco-form">'+(libres>0
+    ?'<input id="reco-tit" maxlength="80" placeholder="Título de la película (ej.: Coco, Interestelar)" aria-label="Título de la película">'+
+     '<textarea id="reco-por" maxlength="400" placeholder="¿Por qué hay que verla? Qué te hizo sentir, a quién se la recomendarías… sin spoilers." aria-label="Por qué hay que verla"></textarea>'+
+     '<div class="fila"><button class="btn" data-a="recoEnviar">Recomendar</button><span class="nota">Te quedan '+libres+' de 3</span><span class="cont" id="reco-n">'+tPor.length+' / 400</span></div>'
+    :'<p>Ya tienes 3 recomendaciones. Borra una de las tuyas para agregar otra.</p>')+
+    '<div id="reco-msg" role="status">'+recoMsg+'</div></div>';
+  if($('reco-tit')){$('reco-tit').value=tTit;$('reco-por').value=tPor}
+  // cuántas personas recomiendan el mismo título
+  var cuenta={};RECOS.forEach(function(r){var k=claveTitulo(r.titulo);cuenta[k]=(cuenta[k]||0)+1});
+  $('recoOrden').innerHTML=RECOS.length>1?['nuevas','populares','az'].map(function(k){return '<button class="'+(k===recoOrden?'on':'')+'" data-a="recoOrden" data-k="'+k+'">'+{nuevas:'Más nuevas',populares:'Más recomendadas',az:'A–Z'}[k]+'</button>'}).join(''):'';
+  var ms=function(r){return r.fecha&&r.fecha.toMillis?r.fecha.toMillis():Date.now()};
+  var lista=RECOS.slice().sort(recoOrden==='az'?function(a,b){return claveTitulo(a.titulo).localeCompare(claveTitulo(b.titulo),'es')}
+    :recoOrden==='populares'?function(a,b){return cuenta[claveTitulo(b.titulo)]-cuenta[claveTitulo(a.titulo)]||ms(b)-ms(a)}:function(a,b){return ms(b)-ms(a)});
+  l.innerHTML=lista.length?lista.map(function(r){
+    var n=cuenta[claveTitulo(r.titulo)],puede=r.uid===usuario.uid||esMod;
+    return '<article class="reco" style="--nc:'+colorDe(r.uid||r.nombre||'')+'"><h3>'+esc(r.titulo)+'</h3><p>'+esc(r.porque)+'</p>'+
+      '<div class="quien"><b>'+esc(r.nombre)+'</b>'+(r.curso?'<span>· '+esc(r.curso)+'</span>':'')+'<span>· '+fechaTxt(r.fecha)+'</span>'+
+      (n>1?'<span class="mas">'+n+' la recomiendan</span>':'')+
+      (puede?'<button class="lnk del" data-a="recoBorrar" data-id="'+esc(r._id)+'">borrar</button>':'')+'</div></article>';
+  }).join(''):'<p class="recos-vacio">Todavía no hay recomendaciones. ¡Sé la primera persona en recomendar una película!</p>';
+}
+function enviarReco(){
+  var tit=limpiar($('reco-tit').value).replace(/\s+/g,' ').slice(0,80),por=limpiar($('reco-por').value).slice(0,400);
+  var msg=function(h){recoMsg=h;var m=$('reco-msg');if(m)m.innerHTML=h};
+  if(!tit)return msg('<span class="err">Escribe el título de la película.</span>');
+  if(por.length<10)return msg('<span class="err">Cuenta un poco más por qué hay que verla (al menos 10 letras).</span>');
+  if(/\[(enlace|correo|número)\]|@/.test(tit+por))return msg('<span class="err">Sin enlaces, correos ni números de teléfono.</span>');
+  var usados=RECOS.filter(function(r){return r.uid===usuario.uid}).map(function(r){return r._id});
+  var slot=[1,2,3].map(function(n){return usuario.uid+'__'+n}).filter(function(id){return usados.indexOf(id)<0})[0];
+  if(!slot)return msg('<span class="err">Ya tienes 3 recomendaciones.</span>');
+  var b=document.querySelector('[data-a=recoEnviar]');if(b)b.disabled=true;
+  dfListo().then(function(fb){var F=fb.F;
+    return F.setDoc(F.doc(fb.db,'peliculas_recomendaciones',slot),{uid:usuario.uid,nombre:DF.nombreCorto(usuario.displayName,usuario.email).slice(0,80),
+      curso:String((perfil&&perfil.curso)||'').slice(0,40),titulo:tit,porque:por,fecha:F.serverTimestamp()});
+  }).then(function(){$('reco-tit').value='';$('reco-por').value='';recoMsg='<span class="ok">✓ ¡Gracias por tu recomendación!</span>';return cargarRecos()})
+  .catch(function(e){if(b)b.disabled=false;msg('<span class="err">No se pudo publicar ('+esc(e.message||e)+').</span>')});
+}
+function borrarReco(id){
+  var r=RECOS.filter(function(x){return x._id===id})[0];if(!r)return;
+  if(!confirm(r.uid===usuario.uid?'¿Borrar tu recomendación de «'+r.titulo+'»?':'¿Borrar la recomendación de '+r.nombre+'? (moderación)'))return;
+  dfListo().then(function(fb){return fb.F.deleteDoc(fb.F.doc(fb.db,'peliculas_recomendaciones',id))})
+    .then(function(){recoMsg='';return cargarRecos()}).catch(function(e){alert('No se pudo borrar: '+(e.message||e))});
+}
+
 /* ═════════ eventos ═════════ */
 document.addEventListener('click',function(ev){
   var t=ev.target.closest('[data-a],.tab');if(!t)return;
@@ -380,14 +470,18 @@ document.addEventListener('click',function(ev){
   else if(a==='restaurapreg')restaurarPreg(id);
   else if(a==='agregamod')agregarMod();
   else if(a==='quitamod')quitarMod(t.dataset.mail);
+  else if(a==='recoEnviar')enviarReco();
+  else if(a==='recoBorrar')borrarReco(id);
+  else if(a==='recoOrden'){recoOrden=t.dataset.k;pintaRecos()}
 });
 document.addEventListener('input',function(ev){
   var t=ev.target;if(t.tagName==='TEXTAREA'&&t.dataset.id){var c=$('n-'+t.dataset.id);if(c)c.textContent=t.value.length+' / 500'}
+  if(t.id==='reco-por'){var rn=$('reco-n');if(rn)rn.textContent=t.value.length+' / 400'}
 });
 
 /* ═════════ arranque ═════════ */
 (function(){var h=(location.hash||'').slice(1),p=PELIS.filter(function(x){return x.id===h})[0];if(p){cursoAct=p.curso;abiertos[p.id]=true}})();
-pintaTabs();pintaLista();pintaYo();
+pintaTabs();pintaLista();pintaYo();pintaRecos();
 if(window.DF){
   dfListo().then(function(){
     DFok=true;
@@ -395,13 +489,15 @@ if(window.DF){
     DF.alCambiarUsuario(function(u){
       usuario=u;esProfe=!!(u&&DF.esProfe());esMod=false;perfil=null;COM={};MODS=[];editando={};
       pintaYo();pintaMods();
+      RECOS=[];recoMsg='';pintaRecos();
       if(!u){pintaLista();return}
       revisarMod(u).then(function(m){esMod=m;pintaYo();return cargarMods()}).then(pintaMods)
         .then(function(){return DF.perfil()}).then(function(pf){perfil=pf},function(){})
-        .then(function(){return cargarCurso()});
+        .then(function(){return Promise.all([cargarCurso(),cargarRecos()])})
+        .then(function(){if(location.hash==='#recomendaciones'){var r=$('recomendaciones');if(r)r.scrollIntoView()}});
     });
     pintaLista();
-  },function(){DFok=false;pintaYo();pintaLista()});
+  },function(){DFok=false;pintaYo();pintaLista();pintaRecos()});
 }
 })();
 </script>
