@@ -381,20 +381,25 @@ service cloud.firestore {
     function gatitosAntes(uid) { return exists(rutaGatitos(uid)) ? get(rutaGatitos(uid)).data.ids : []; }
     // ═════ Poderes de los gatitos: décimas formativas por día ═════
     // común/poco común: 1 · raro/épico: 2 · legendario/mítico: 3 · máximo 3 por día.
-    // Debe coincidir con gatitos/catalogo.js (PODER_DECIMAS y PODER_MAX_DIA).
+    // Ava o Calha: 5 formativas y 2 sumativas por día (no se suman entre ellas).
+    // Debe coincidir con gatitos/catalogo.js (PODER_DECIMAS, PODER_MAX_DIA y GATITOS_ESPECIALES).
     function rutaPoder(c, d) { return /databases/$(database)/documents/gatitos_poderes/$(c + '__' + string(d)); }
     function decimasPoder(uid) {
       let s = gatitosAntes(uid).toSet();
       let n = s.intersection(['naranjo', 'gris', 'dormilon', 'patitas', 'aseo', 'blanconegro', 'tricolor', 'comelon'].toSet()).size()
         + 2 * s.intersection(['siames', 'negro', 'estirado', 'jugueton', 'caja', 'tronco', 'barril'].toSet()).size()
         + 3 * s.intersection(['muro', 'fantasma', 'ava', 'calha', 'cosmico', 'dorado'].toSet()).size();
-      return n > 3 ? 3 : n;
+      return s.hasAny(['ava', 'calha']) ? 5 : (n > 3 ? 3 : n);
     }
-    function textoDecimas(n) { return n == 1 ? 'Gatitos: 1 décima formativa' : 'Gatitos: ' + string(n) + ' décimas formativas'; }
+    function sumativasPoder(uid) { return gatitosAntes(uid).toSet().hasAny(['ava', 'calha']) ? 2 : 0; }
+    function textoDecimas(n, m) {
+      return (n == 1 ? 'Gatitos: 1 décima formativa' : 'Gatitos: ' + string(n) + ' décimas formativas')
+        + (m == 0 ? '' : (m == 1 ? ' y 1 décima sumativa' : ' y ' + string(m) + ' décimas sumativas'));
+    }
     // El movimiento no mueve dinero: deja las décimas «por usar» (el profe las aplica en el panel).
     function opPoder(d) {
       let n = decimasPoder(request.auth.uid);
-      return n > 0 && d.monto == 0 && d.canje == 'pendiente' && d.item == textoDecimas(n)
+      return n > 0 && d.monto == 0 && d.canje == 'pendiente' && d.item == textoDecimas(n, sumativasPoder(request.auth.uid))
         && !d.keys().hasAny(['gatito', 'oferta', 'precio', 'pedido', 'transferencia'])
         && !exists(rutaPoder(d.cuenta, diaHoy()))
         && getAfter(rutaPoder(d.cuenta, diaHoy())).data.decimas == n;
@@ -405,7 +410,8 @@ service cloud.firestore {
       allow write: if esProfe();
       allow create: if esColegio()
         && request.resource.data.cuenta == miCuentaBanco() && miCuentaBanco() != ''
-        && request.resource.data.keys().hasOnly(['cuenta', 'uid', 'dia', 'decimas', 'fecha'])
+        && request.resource.data.keys().hasOnly(['cuenta', 'uid', 'dia', 'decimas', 'sumativas', 'fecha'])
+        && request.resource.data.get('sumativas', 0) == sumativasPoder(request.auth.uid)
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.dia == diaHoy()
         && pid == request.resource.data.cuenta + '__' + string(diaHoy())
