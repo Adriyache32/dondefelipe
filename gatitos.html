@@ -294,7 +294,7 @@ const fmt = n => new Intl.NumberFormat('es-CL').format(Math.round(n || 0)) + ' �
 const R = window.RAREZAS, G = window.GATITOS, gato = id => G.find(g => g.id === id);
 const ms = t => (t && t.toMillis ? t.toMillis() : (t && t.toDate ? t.toDate().getTime() : (typeof t === 'number' ? t : 0)));
 let usuario = null, esProfe = false, cuentaId = null, cuenta = null, coleccion = { ids: [], favorito: null };
-let publicaciones = [], misPedidos = [], misVentas = [], misBenef = [], poderHoy = null, poderMes = null, reclamando = false;
+let publicaciones = [], misPedidos = [], misVentas = [], misBenef = [], poderHoy = null, poderMes = null, premios = {}, reclamando = false;
 const diaHoy = () => Math.floor((Date.now() - 14400000) / 86400000);   // igual que diaHoy() en las reglas
 const BENEF = window.CATALOGO_BENEFICIOS || [];
 // gatitos.html#coleccion (o #beneficios, #estudiantes, #mio) abre esa pestaña.
@@ -358,7 +358,7 @@ function poderHtml(g) {
 }
 function pintarPoderes() {
   const el = $('poderes'); if (!el) return;
-  if (!usuario || esProfe || !cuenta) { el.innerHTML = `<div style="grid-column:1/-1"><h2 class="h2s">⚡ Poderes de tus gatitos</h2><p class="intro" style="margin:0">Cada gatito da décimas formativas por día (común y poco común: 1 · raro y épico: 2 · legendario y mítico: 3; máximo ${PODER_MAX_DIA} por día). Ava y Calha dan 5 formativas y 2 sumativas por día; el Gato Nietzsche, 5 formativas y 2 sumativas cada mes. Los más valiosos dan además poderes especiales en clases.</p></div>`; return; }
+  if (!usuario || esProfe || !cuenta) { el.innerHTML = `<div style="grid-column:1/-1"><h2 class="h2s">⚡ Poderes de tus gatitos</h2><p class="intro" style="margin:0">Cada gatito da décimas formativas por día (común y poco común: 1 · raro y épico: 2 · legendario y mítico: 3; máximo ${PODER_MAX_DIA} por día). Ava y Calha traen un premio único de 5 formativas y 2 sumativas; el Gato Nietzsche da 5 formativas y 2 sumativas cada mes. Los más valiosos dan además poderes especiales en clases.</p></div>`; return; }
   const ids = coleccion.ids || [], pd = poderDelDia(ids), n = pd.formativas, txt = textoPoderDia(pd);
   const especiales = []; ids.forEach(id => { const g = gato(id); (g && g.poderes || []).forEach(p => especiales.push([p, g.nombre])); });
   const yaHoy = poderHoy && poderHoy.dia === diaHoy();
@@ -369,11 +369,38 @@ function pintarPoderes() {
   el.innerHTML = `<div class="dec">${n}<small>décima${n === 1 ? '' : 's'} hoy</small></div>
     <div><h2 class="h2s">⚡ Poderes de tus gatitos</h2>
       <p class="intro" style="margin:0">${n ? `Hoy tus gatitos te dan <b>${esc(txt)}</b>${pd.sumativas ? '' : ` (máximo ${PODER_MAX_DIA} por día)`}. Al reclamarlas quedan «por usar» en tu cuenta y el profe las aplica a ${pd.sumativas ? 'tus evaluaciones (formativas y sumativas)' : 'una evaluación formativa'}. Si no las reclamas, ese día se pierden.` : ids.length ? 'Tus gatitos no dan décimas diarias.' : 'Consigue un gatito para empezar a ganar décimas formativas cada día.'}</p>
-      ${bloqueMes()}
+      ${bloquePremios()}${bloqueMes()}
       ${especiales.length ? `<ul>${especiales.map(([p, nom]) => `<li>${esc(p)} <small>· ${esc(nom)}</small></li>`).join('')}</ul><p class="intro" style="margin:6px 0 0;font-size:13px">Los poderes especiales se usan cuando la clase lo permite y siempre con la autorización del profe.</p>` : ''}</div>
     ${boton}`;
 }
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+// Premio único de Ava y Calha: una sola vez por cuenta y por gatita.
+function bloquePremios() {
+  return (coleccion.ids || []).map(gato).filter(g => g && g.premio).map(g => {
+    const ya = premios[g.id] === true, sabe = g.id in premios;
+    return `<div class="aviso ${ya ? 'ok' : ''}" style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:200px">💎 <b>${esc(g.nombre)}</b>: premio único de ${esc(textoPoderDia(g.premio))}.${ya ? ' Ya lo reclamaste.' : ' Puedes reclamarlo una sola vez.'}</span>
+      ${ya || !sabe ? '' : `<button class="btn p" data-a="reclamarPremio" data-g="${g.id}"${reclamando ? ' disabled' : ''}><i class="fa-solid fa-gem"></i> Reclamar premio</button>`}</div>`;
+  }).join('');
+}
+async function reclamarPremio(gid) {
+  const g = gato(gid); if (reclamando || !cuenta || !cuentaId || !g || !g.premio || !(coleccion.ids || []).includes(gid)) return;
+  if (!confirm(`¿Reclamar ahora el premio único de ${g.nombre}?\n${textoPoderDia(g.premio)}. Quedan «por usar» en tu cuenta. Solo se puede reclamar una vez.`)) return;
+  reclamando = true; pintarPoderes();
+  const { F, db } = await DF.listo(), item = textoPremio(g);
+  try {
+    await F.runTransaction(db, async tx => {
+      const rc = F.doc(db, 'banco_cuentas', cuentaId), rp = F.doc(db, 'gatitos_premios', cuentaId + '__' + gid);
+      const [sc, sp] = await Promise.all([tx.get(rc), tx.get(rp)]);
+      if (sp.exists()) throw new Error('ya reclamaste este premio');
+      if (!sc.exists()) throw new Error('no se encontró tu cuenta del banco');
+      movPropio(F, db, tx, sc.data(), 0, 'Premio único de ' + g.nombre, 'premio-gatito', { item, canje: 'pendiente', gatito: gid });
+      tx.set(rp, { cuenta: cuentaId, uid: usuario.uid, gatito: gid, fecha: F.serverTimestamp() });
+    });
+    premios[gid] = true;
+    aviso(`✓ Reclamaste el premio de ${esc(g.nombre)}: ${esc(textoPoderDia(g.premio))} «por usar» en tu cuenta.`, 'ok'); confeti(120);
+  } catch (e) { aviso('No se pudo reclamar: ' + esc(/permission/i.test(e.message) ? 'el banco lo rechazó (¿el profe publicó las reglas nuevas?)' : e.message), 'err'); }
+  reclamando = false; pintar();
+}
 function bloqueMes() {
   const pm = poderDelMes(coleccion.ids || []); if (!pm.formativas) return '';
   const ya = poderMes && poderMes.mes === mesHoy(), mes = MESES[mesHoy() % 12];
@@ -572,7 +599,7 @@ async function cargar() {
   aviso('');
   unsubs.push(F.onSnapshot(F.collection(db, 'gatitos_ofertas'), s => { ofertas = s.docs.map(d => Object.assign({ id: d.id }, d.data())); pintar(); },
     e => aviso('No se pudieron leer las ofertas: ' + esc(e.message), 'err')));
-  misPedidos = []; misVentas = []; misBenef = []; publicaciones = []; poderHoy = null; poderMes = null;
+  misPedidos = []; misVentas = []; misBenef = []; publicaciones = []; poderHoy = null; poderMes = null; premios = {};
   if (usuario) {
     unsubs.push(F.onSnapshot(F.collection(db, 'mercado_items'), s => { publicaciones = s.docs.map(d => Object.assign({ id: d.id }, d.data())); pintar(); }, () => {}));
     unsubs.push(F.onSnapshot(F.query(F.collection(db, 'gatitos_ventas'), F.orderBy('fecha', 'desc'), F.limit(40)), s => { ventas = s.docs.map(d => d.data()); pintar(); }, () => {}));
@@ -590,9 +617,10 @@ async function cargar() {
         unsubs.push(F.onSnapshot(F.query(F.collection(db, 'mercado_pedidos'), F.where('vendedor', '==', cuentaId)), s => {
           misVentas = s.docs.map(d => Object.assign({ id: d.id }, d.data())).sort((a, b) => ms(b.creada) - ms(a.creada)); pintar(); }, () => {}));
         unsubs.push(F.onSnapshot(F.query(F.collection(db, 'banco_movs'), F.where('cuenta', '==', cuentaId)), s => {
-          misBenef = s.docs.map(d => Object.assign({ id: d.id }, d.data())).filter(m => m.canje === 'pendiente' && m.item && m.tipo !== 'poder-gatito' && m.tipo !== 'poder-mensual'); pintar(); }, () => {}));
+          misBenef = s.docs.map(d => Object.assign({ id: d.id }, d.data())).filter(m => m.canje === 'pendiente' && m.item && m.tipo !== 'poder-gatito' && m.tipo !== 'poder-mensual' && m.tipo !== 'premio-gatito'); pintar(); }, () => {}));
         unsubs.push(F.onSnapshot(F.doc(db, 'gatitos_poderes', cuentaId + '__' + diaHoy()), d => { poderHoy = d.exists() ? d.data() : false; pintar(); }, () => { poderHoy = null; }));
         unsubs.push(F.onSnapshot(F.doc(db, 'gatitos_poderes_mes', cuentaId + '__' + mesHoy()), d => { poderMes = d.exists() ? d.data() : false; pintar(); }, () => { poderMes = null; }));
+        G.filter(g => g.premio).forEach(g => unsubs.push(F.onSnapshot(F.doc(db, 'gatitos_premios', cuentaId + '__' + g.id), d => { premios[g.id] = d.exists(); pintar(); }, () => { delete premios[g.id]; })));
       } else if (!esProfe) aviso('Tu cuenta del banco todavía no está conectada con este correo. Pídele al profe que la vincule para poder comprar.');
     } catch (e) { aviso('No se pudo cargar tu cuenta: ' + esc(e.message), 'err'); }
   } else ventas = [];
@@ -902,6 +930,7 @@ document.addEventListener('click', e => {
   else if (a === 'cerrar') $('velo').hidden = true;
   else if (a === 'reclamar') reclamarPoderes();
   else if (a === 'reclamarMes') reclamarMes();
+  else if (a === 'reclamarPremio') reclamarPremio(t.dataset.g);
   else if (a === 'confirmar') confirmar(t.dataset.id);
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') $('velo').hidden = true; });
