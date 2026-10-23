@@ -482,7 +482,7 @@ function cargarBanco() {
     // Todo lo que deja algo para usar: compras, regalos del profe, premios de la ruleta y décimas de los gatitos.
     const c = b.cuenta, compras = b.movs.filter(m => m.item || m.canje);
     const porUsar = compras.filter(m => m.canje === 'pendiente'), resto = compras.filter(m => m.canje !== 'pendiente');
-    const origen = m => m.tipo === 'poder-gatito' ? '⚡ ' : m.tipo === 'poder-mensual' ? '📜 ' : m.tipo === 'ruleta' ? '🎡 ' : m.monto === 0 && m.tipo === 'compra' ? '🎁 ' : '';
+    const origen = m => m.tipo === 'poder-gatito' ? '⚡ ' : m.tipo === 'poder-mensual' ? '📜 ' : m.tipo === 'premio-gatito' ? '💎 ' : m.tipo === 'ruleta' ? '🎡 ' : m.monto === 0 && m.tipo === 'compra' ? '🎁 ' : '';
     $('rSaldo').textContent = fmt(c.saldo); $('rSaldo').classList.toggle('neg', (c.saldo || 0) < 0);
     $('rUsar').textContent = porUsar.length;
     const estado = m => m.canje === 'usada' ? `<span class="can usada">Usada</span>${m.canjeNota ? ' <small class="muted">' + esc(m.canjeNota) + '</small>' : ''}`

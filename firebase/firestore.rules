@@ -296,12 +296,12 @@ service cloud.firestore {
         // Solo la ruleta puede dejar un beneficio por canjear (así nadie cuela canjes falsos al panel).
         // Una compra del Mercado entra «retenida» (congelada) y solo el profe la deja «por usar».
         && (d.tipo == 'ruleta' || (d.tipo == 'compra' && d.get('canje', '') == 'retenida' && !d.keys().hasAny(['tiro']))
-            || (d.tipo in ['poder-gatito', 'poder-mensual'] && !d.keys().hasAny(['tiro']))
+            || (d.tipo in ['poder-gatito', 'poder-mensual', 'premio-gatito'] && !d.keys().hasAny(['tiro']))
             || !d.keys().hasAny(['tiro', 'item', 'canje']))
         && ((d.tipo in ['bolsa-compra', 'bolsa-venta'] && opBolsa(d)) || (d.tipo == 'bono-ingreso' && opBono(d))
             || (d.tipo == 'gatito-compra' && opGatito(d)) || (d.tipo == 'ruleta' && opRuleta(d))
             || (d.tipo == 'transferencia-envio' && opEnvio(id, d)) || (d.tipo == 'compra' && opPedido(id, d))
-            || (d.tipo == 'devolucion' && opDevolucion(d)) || (d.tipo == 'poder-gatito' && opPoder(d)) || (d.tipo == 'poder-mensual' && opPoderMes(d)));
+            || (d.tipo == 'devolucion' && opDevolucion(d)) || (d.tipo == 'poder-gatito' && opPoder(d)) || (d.tipo == 'poder-mensual' && opPoderMes(d)) || (d.tipo == 'premio-gatito' && opPremio(d)));
     }
 
     // ═════ Ruleta de Hipopesos ═════
@@ -381,17 +381,16 @@ service cloud.firestore {
     function gatitosAntes(uid) { return exists(rutaGatitos(uid)) ? get(rutaGatitos(uid)).data.ids : []; }
     // ═════ Poderes de los gatitos: décimas formativas por día ═════
     // común/poco común: 1 · raro/épico: 2 · legendario/mítico: 3 · máximo 3 por día.
-    // Ava o Calha: 5 formativas y 2 sumativas por día (no se suman entre ellas).
-    // Debe coincidir con gatitos/catalogo.js (PODER_DECIMAS, PODER_MAX_DIA y GATITOS_ESPECIALES).
+    // Debe coincidir con gatitos/catalogo.js (PODER_DECIMAS y PODER_MAX_DIA).
     function rutaPoder(c, d) { return /databases/$(database)/documents/gatitos_poderes/$(c + '__' + string(d)); }
     function decimasPoder(uid) {
       let s = gatitosAntes(uid).toSet();
       let n = s.intersection(['naranjo', 'gris', 'dormilon', 'patitas', 'aseo', 'blanconegro', 'tricolor', 'comelon'].toSet()).size()
         + 2 * s.intersection(['siames', 'negro', 'estirado', 'jugueton', 'caja', 'tronco', 'barril'].toSet()).size()
         + 3 * s.intersection(['muro', 'fantasma', 'ava', 'calha', 'cosmico', 'dorado'].toSet()).size();
-      return s.hasAny(['ava', 'calha']) ? 5 : (n > 3 ? 3 : n);
+      return n > 3 ? 3 : n;
     }
-    function sumativasPoder(uid) { return gatitosAntes(uid).toSet().hasAny(['ava', 'calha']) ? 2 : 0; }
+    function sumativasPoder(uid) { return 0; }   // (ningún gatito da sumativas diarias por ahora)
     function textoDecimas(n, m) {
       return (n == 1 ? 'Gatitos: 1 décima formativa' : 'Gatitos: ' + string(n) + ' décimas formativas')
         + (m == 0 ? '' : (m == 1 ? ' y 1 décima sumativa' : ' y ' + string(m) + ' décimas sumativas'));
@@ -403,6 +402,29 @@ service cloud.firestore {
         && !d.keys().hasAny(['gatito', 'oferta', 'precio', 'pedido', 'transferencia'])
         && !exists(rutaPoder(d.cuenta, diaHoy()))
         && getAfter(rutaPoder(d.cuenta, diaHoy())).data.decimas == n;
+    }
+    // ── Premio único: Ava y Calha dan 5 formativas y 2 sumativas una sola vez por cuenta y por gatita ──
+    function rutaPremio(c, g) { return /databases/$(database)/documents/gatitos_premios/$(c + '__' + g); }
+    function textoPremio(g) { return (g == 'ava' ? 'Ava' : 'Calha') + ': premio único de 5 décimas formativas y 2 décimas sumativas'; }
+    function opPremio(d) {
+      return d.gatito is string && d.gatito in ['ava', 'calha'] && d.gatito in gatitosAntes(request.auth.uid)
+        && d.monto == 0 && d.canje == 'pendiente' && d.item == textoPremio(d.gatito)
+        && !d.keys().hasAny(['oferta', 'precio', 'pedido', 'transferencia'])
+        && !exists(rutaPremio(d.cuenta, d.gatito)) && existsAfter(rutaPremio(d.cuenta, d.gatito));
+    }
+    match /gatitos_premios/{pid} {
+      allow read: if esProfe() || (miCuentaBanco() != '' && pid.split('__')[0] == miCuentaBanco());
+      allow write: if esProfe();
+      allow create: if esColegio()
+        && request.resource.data.cuenta == miCuentaBanco() && miCuentaBanco() != ''
+        && request.resource.data.keys().hasOnly(['cuenta', 'uid', 'gatito', 'fecha'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.gatito in ['ava', 'calha']
+        && request.resource.data.gatito in gatitosAntes(request.auth.uid)
+        && pid == request.resource.data.cuenta + '__' + request.resource.data.gatito
+        && request.resource.data.fecha == request.time
+        && opsDespues(request.resource.data.cuenta) == opsAntes(request.resource.data.cuenta) + 1
+        && getAfter(rutaOp(request.resource.data.cuenta, opsDespues(request.resource.data.cuenta))).data.tipo == 'premio-gatito';
     }
     // ── Poder mensual: Gato Nietzsche da 5 formativas y 2 sumativas una vez por mes (debe coincidir con gatitos/catalogo.js) ──
     function mesHoy() { let t = request.time - duration.value(4, 'h'); return t.year() * 12 + t.month() - 1; }
@@ -524,7 +546,7 @@ service cloud.firestore {
         && ((d.tipo == 'beneficio' && iid == 'b-' + d.mov
                && d.item == get(/databases/$(database)/documents/banco_movs/$(d.mov)).data.item
                && get(/databases/$(database)/documents/banco_movs/$(d.mov)).data.cuenta == miCuentaBanco()
-               && !(get(/databases/$(database)/documents/banco_movs/$(d.mov)).data.tipo in ['poder-gatito', 'poder-mensual']))
+               && !(get(/databases/$(database)/documents/banco_movs/$(d.mov)).data.tipo in ['poder-gatito', 'poder-mensual', 'premio-gatito']))
             || (d.tipo == 'gatito' && iid == 'g-' + request.auth.uid + '-' + d.gatito));
     }
     // Al publicar, el objeto sale de la cuenta en la misma escritura.

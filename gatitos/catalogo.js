@@ -27,8 +27,8 @@ window.GATITOS = [
   { id: 'barril',      nombre: 'Gato del Barril',      precio: 250000,  rareza: 'epico',      txt: 'Viajó de polizón en un barril desde Valparaíso.', poderes: ['🎤 Elegir el orden de su disertación'] },
   { id: 'muro',        nombre: 'Explorador del Muro',  precio: 400000,  rareza: 'legendario', txt: 'Ha recorrido todos los techos de Villa Alemana.', poderes: ['🚶 Permiso de paseo por el colegio en cada clase (cuando amerite)'] },
   { id: 'fantasma',    nombre: 'Gato Fantasma',        precio: 500000,  rareza: 'legendario', txt: 'Aparece en los pasillos cuando nadie mira.', poderes: ['📓 Uso del cuaderno 5 minutos en cada evaluación'] },
-  { id: 'ava',         nombre: 'Ava',                  precio: 450000,  rareza: 'legendario', txt: 'Ava ♀. Gatita especial: 5 décimas formativas y 2 sumativas por día. Camina, corre, juega y duerme siesta.', anim: true, poderes: ['🚶 Permiso de paseo por el colegio en cada clase (cuando amerite)'] },
-  { id: 'calha',       nombre: 'Calha',                precio: 450000,  rareza: 'legendario', txt: 'Calha ♀. Gatita especial y compañera de Ava: 5 décimas formativas y 2 sumativas por día.', anim: true, poderes: ['📓 Uso del cuaderno 5 minutos en cada evaluación'] },
+  { id: 'ava',         nombre: 'Ava',                  precio: 450000,  rareza: 'legendario', txt: 'Ava ♀. Gatita especial: trae un premio único de 5 décimas formativas y 2 sumativas. Camina, corre, juega y duerme siesta.', premio: { formativas: 5, sumativas: 2 }, anim: true, poderes: ['💎 Premio único: 5 décimas formativas y 2 sumativas', '🚶 Permiso de paseo por el colegio en cada clase (cuando amerite)'] },
+  { id: 'calha',       nombre: 'Calha',                precio: 450000,  rareza: 'legendario', txt: 'Calha ♀. Gatita especial y compañera de Ava: trae un premio único de 5 décimas formativas y 2 sumativas.', premio: { formativas: 5, sumativas: 2 }, anim: true, poderes: ['💎 Premio único: 5 décimas formativas y 2 sumativas', '📓 Uso del cuaderno 5 minutos en cada evaluación'] },
   { id: 'nietzsche',   nombre: 'Gato Nietzsche',       precio: 500000,  rareza: 'legendario', txt: 'Filósofo, explorador y pensador. Cada mes: 5 décimas formativas y 2 sumativas.', anim: true, diarias: 0, mensual: { formativas: 5, sumativas: 2 }, poderes: ['📜 5 décimas formativas y 2 sumativas cada mes'] },
   { id: 'cosmico',     nombre: 'Gato Cósmico',         precio: 750000,  rareza: 'mitico',     txt: 'Lleva una constelación en el pelaje. Vino del observatorio.', poderes: ['🚶 Paseo por el colegio en cada clase (cuando amerite)', '📓 Cuaderno 5 minutos en cada evaluación'] },
   { id: 'dorado',      nombre: 'Gato Dorado',          precio: 1000000, rareza: 'mitico',     txt: 'El más valioso del colegio. Muy pocos lo tendrán.', poderes: ['🚶 Paseo por el colegio en cada clase (cuando amerite)', '📓 Cuaderno 5 minutos en cada evaluación', '🎵 Elegir la música de la clase'] }
@@ -37,15 +37,15 @@ window.GATITOS = [
 /* ═════ Poderes de los gatitos ═════
    Cada gatito que tienes da décimas formativas por día (se reclaman en el Mercado, pestaña Mi colección):
    común y poco común: 1 · raro y épico: 2 · legendario y mítico: 3. Máximo 3 décimas por día en total.
-   Excepción (GATITOS_ESPECIALES): Ava y Calha dan 5 décimas formativas y 2 sumativas por día.
-   Si tienes una de ellas (o las dos), ese día recibes 5 formativas + 2 sumativas (no se suman entre sí).
+   Premio único (campo «premio»): Ava y Calha dan, además, 5 décimas formativas y 2 sumativas UNA sola vez
+   por cuenta y por gatita (se reclama en Mi colección).
    Gato Nietzsche (diarias: 0, mensual): no da décimas diarias; da 5 formativas y 2 sumativas una vez al mes.
    Además, raros, épicos, legendarios y míticos dan un poder permanente (campo «poderes»), que el profe
    respeta cuando la clase lo permite.
    ¡Ojo! Las décimas por rareza y el máximo también están en firebase/firestore.rules (decimasPoder). */
 window.PODER_DECIMAS = { comun: 1, pococomun: 1, raro: 2, epico: 2, legendario: 3, mitico: 3 };
 window.PODER_MAX_DIA = 3;
-window.GATITOS_ESPECIALES = { ava: { formativas: 5, sumativas: 2 }, calha: { formativas: 5, sumativas: 2 } };
+window.GATITOS_ESPECIALES = {};   // (sin gatitos con décimas diarias especiales por ahora)
 // Lo que da un gatito por día y lo que dan todos juntos hoy.
 window.poderGato = function (g) {
   if (g.diarias === 0) return { formativas: 0, sumativas: 0 };
@@ -70,6 +70,7 @@ window.poderDelMes = function (ids) {
 };
 // Mes escolar (hora de Chile aproximada, UTC−4) como número: año × 12 + mes (0-11). Igual que mesHoy() en las reglas.
 window.mesHoy = function () { var d = new Date(Date.now() - 14400000); return d.getUTCFullYear() * 12 + d.getUTCMonth(); };
+window.textoPremio = function (g) { return g.nombre + ': premio único de ' + window.textoPoderDia(g.premio); };
 window.textoPoderDia = function (p) {
   return window.textoDecimas(p.formativas) + (p.sumativas ? ' y ' + (p.sumativas === 1 ? '1 décima sumativa' : p.sumativas + ' décimas sumativas') : '');
 };
