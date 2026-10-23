@@ -94,6 +94,7 @@ table.gat .rz{display:inline-block;font-size:.68rem;font-weight:800;letter-spaci
 <div class="it gain"><div class="e">🐱</div><h3>Común y poco común</h3><p>Cada uno da 1 décima formativa por día.</p><span class="pr">+1 décima/día</span></div>
 <div class="it gain"><div class="e">🐈</div><h3>Raro y épico</h3><p>Cada uno da 2 décimas formativas por día y un poder especial.</p><span class="pr">+2 décimas/día</span><br><span class="tag t-o">Poder cuando la ocasión lo amerite</span></div>
 <div class="it gain"><div class="e">👑</div><h3>Legendario y mítico</h3><p>Cada uno da 3 décimas formativas por día y un poder mayor.</p><span class="pr">+3 décimas/día</span><br><span class="tag t-o">Poder cuando la ocasión lo amerite</span></div>
+<div class="it gain"><div class="e">📜</div><h3>Gato Nietzsche</h3><p>Filósofo y legendario. No da décimas diarias: da 5 décimas formativas y 2 décimas sumativas <b>una vez al mes</b>. Se reclaman en el Mercado (Mi colección) y, si no las reclamas en el mes, se pierden.</p><span class="pr">+5 formativas + 2 sumativas/mes</span><br><span class="tag t-n">Una vez por mes</span></div>
 <div class="it gain"><div class="e">💎</div><h3>Ava y Calha</h3><p>Las gatitas especiales: 5 décimas formativas y 2 décimas sumativas por día, además de su poder mayor. Si tienes las dos, recibes lo mismo (no se suman entre ellas).</p><span class="pr">+5 formativas + 2 sumativas/día</span><br><span class="tag t-o">Poder cuando la ocasión lo amerite</span></div>
 </div>
 <div class="note"><b>⚡ Máximo 3 décimas formativas por día</b>, sumando todos tus gatitos (con Ava o Calha: 5 formativas y 2 sumativas). Se reclaman una vez al día en el Mercado (pestaña <a href="../gatitos.html#coleccion" style="color:var(--cyan)">Mi colección</a>): si no las reclamas, ese día se pierden. Quedan «por usar» y el profesor las aplica a una evaluación formativa. Las décimas no se pueden vender. Los poderes especiales duran mientras tengas el gatito (si lo vendes, pasan al comprador) y se usan solo cuando la clase lo permite, con autorización del profesor.</div>
@@ -145,7 +146,7 @@ table.gat .rz{display:inline-block;font-size:.68rem;font-weight:800;letter-spaci
     var r = R[g.rareza] || {};
     return '<tr><td><img src="../gatitos/img/' + esc(g.id) + '.webp" alt="" loading="lazy">' + esc(g.nombre) + '</td>' +
       '<td><span class="rz" style="background:' + (r.color || '#888') + '">' + esc(r.nombre || g.rareza) + '</span></td>' +
-      '<td class="ref">$' + $(g.precio) + '</td><td>' + (function (p) { return p.formativas + ' formativa' + (p.formativas === 1 ? '' : 's') + (p.sumativas ? '<br><b style="color:var(--acid)">+ ' + p.sumativas + ' sumativas</b>' : ''); })(window.poderGato(g)) + '</td><td>' + ((g.poderes || []).map(esc).join('<br>') || '<small>—</small>') + '</td></tr>';
+      '<td class="ref">$' + $(g.precio) + '</td><td>' + (g.mensual ? '<b style="color:var(--acid)">' + g.mensual.formativas + ' formativas + ' + g.mensual.sumativas + ' sumativas al mes</b>' : '') + (g.mensual ? '' : (function (p) { return p.formativas + ' formativa' + (p.formativas === 1 ? '' : 's') + (p.sumativas ? '<br><b style="color:var(--acid)">+ ' + p.sumativas + ' sumativas</b>' : ''); })(window.poderGato(g))) + '</td><td>' + ((g.poderes || []).map(esc).join('<br>') || '<small>—</small>') + '</td></tr>';
   }).join('');
 })();
 </script>

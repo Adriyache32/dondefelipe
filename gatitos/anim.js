@@ -4,39 +4,41 @@
    Para agregar otro gatito animado: pon su id en ANIMADOS y usa los mismos cuadros o agrega otros. */
 (function () {
   'use strict';
-  var ANIMADOS = { ava: 1, calha: 1 };
-  var A = {
-    caminar:  { n: 4, ms: 130, vueltas: 4 },
-    correr:   { n: 5, ms: 85,  vueltas: 4 },
-    jugar:    { n: 4, ms: 260, vueltas: 2 },
-    sentarse: { n: 3, ms: 320, vueltas: 1 },
-    dormir:   { n: 4, ms: 650, vueltas: 1 }
+  // Cada gatito animado: carpeta de sus cuadros y cuántos cuadros tiene cada acción.
+  var VEL = { caminar: [130, 4], correr: [85, 4], jugar: [260, 2], sentarse: [320, 1], dormir: [650, 1] };   // ms por cuadro, vueltas
+  var ANIMADOS = {
+    ava:       { dir: 'gatitos/anim/',           n: { caminar: 4, correr: 5, jugar: 4, sentarse: 3, dormir: 4 } },
+    calha:     { dir: 'gatitos/anim/',           n: { caminar: 4, correr: 5, jugar: 4, sentarse: 3, dormir: 4 } },
+    nietzsche: { dir: 'gatitos/anim/nietzsche/', n: { caminar: 4, correr: 5, sentarse: 3, dormir: 3 } }
   };
   var RUTINAS = [['caminar'], ['correr'], ['jugar'], ['sentarse', 'dormir'], ['caminar', 'sentarse']];
   var guion = document.currentScript && document.currentScript.src || '';
   var raiz = guion.replace(/gatitos\/anim\.js.*$/, '');
   var quieto = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var precargado = false;
+  var precargado = {};
 
   function idDe(img) {
     var m = (img.dataset.gatoBase || img.getAttribute('src') || '').match(/gatitos\/img\/([a-z0-9_-]+)\.webp/);
     return m && ANIMADOS[m[1]] ? m[1] : null;
   }
-  function precargar() {
-    if (precargado) return; precargado = true;
-    Object.keys(A).forEach(function (a) { for (var i = 1; i <= A[a].n; i++) { var im = new Image(); im.src = raiz + 'gatitos/anim/' + a + '-' + i + '.webp'; } });
+  function precargar(id) {
+    if (precargado[id]) return; precargado[id] = true;
+    var g = ANIMADOS[id];
+    Object.keys(g.n).forEach(function (a) { for (var i = 1; i <= g.n[a]; i++) { var im = new Image(); im.src = raiz + g.dir + a + '-' + i + '.webp'; } });
   }
   function jugar(img, rutina) {
-    if (!img || img._anim || !idDe(img)) return;
-    precargar();
-    rutina = rutina || RUTINAS[Math.floor(Math.random() * RUTINAS.length)];
+    var id = img && idDe(img);
+    if (!img || img._anim || !id) return;
+    var g = ANIMADOS[id]; precargar(id);
+    var posibles = RUTINAS.filter(function (r) { return r.every(function (a) { return g.n[a]; }); });
+    if (!rutina || !rutina.every(function (a) { return g.n[a]; })) rutina = posibles[Math.floor(Math.random() * posibles.length)];
     if (!img.dataset.gatoBase) img.dataset.gatoBase = img.getAttribute('src');
     var pasos = [];
-    rutina.forEach(function (a) { var d = A[a]; for (var v = 0; v < d.vueltas; v++) for (var i = 1; i <= d.n; i++) pasos.push([a + '-' + i, d.ms]); });
+    rutina.forEach(function (a) { var v0 = VEL[a]; for (var v = 0; v < v0[1]; v++) for (var i = 1; i <= g.n[a]; i++) pasos.push([a + '-' + i, v0[0]]); });
     img._anim = true; var k = 0;
     (function sig() {
       if (k >= pasos.length || !img.isConnected) { img.src = img.dataset.gatoBase; img._anim = false; return; }
-      img.src = raiz + 'gatitos/anim/' + pasos[k][0] + '.webp';
+      img.src = raiz + g.dir + pasos[k][0] + '.webp';
       setTimeout(sig, pasos[k++][1]);
     })();
   }
