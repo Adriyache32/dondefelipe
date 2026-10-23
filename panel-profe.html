@@ -169,6 +169,7 @@ dialog.ancho{max-width:min(860px,calc(100vw - 32px))}
           <h4>Compras</h4>
           <div class="chips" id="chipsCompras"></div>
           <label class="lluvia"><input type="checkbox" id="lluvia"> 🌧️ Día de lluvia (compras al 50%)</label>
+          <label class="lluvia" style="color:var(--acid)" title="Solo administrador: entrega el beneficio sin cobrar"><input type="checkbox" id="regalo"> 🎁 Regalar (entregar sin descontar)</label>
 
           <h4>Multas</h4>
           <div class="chips" id="chipsMultas"></div>
@@ -790,16 +791,18 @@ $('tCuentas').onclick = ev => {
 
 /* catálogo */
 function pintarCatalogo() {
-  const ll = $('lluvia').checked;
-  $('chipsCompras').innerHTML = COMPRAS.map((c, i) => `<button class="chip" data-compra="${i}"><b>${c.ico} ${esc(c.nombre)}</b><span>−$${fmt(ll ? c.precio / 2 : c.precio)}</span></button>`).join('');
+  const ll = $('lluvia').checked, rg = $('regalo').checked;
+  $('chipsCompras').innerHTML = COMPRAS.map((c, i) => `<button class="chip${rg ? ' gana' : ''}" data-compra="${i}"><b>${c.ico} ${esc(c.nombre)}</b><span>${rg ? '🎁 Gratis' : '−$' + fmt(ll ? c.precio / 2 : c.precio)}</span></button>`).join('');
   $('chipsGanancias').innerHTML = GANANCIAS.map((g, i) => `<button class="chip gana" data-gana="${i}"><b>${g.ico} ${esc(g.nombre)}</b><span>+$${fmt(g.monto)}</span></button>`).join('');
   $('chipsMultas').innerHTML = MULTAS.map((m, i) => `<button class="chip multa" data-multa="${i}"><b>${m.ico} ${esc(m.nombre)}</b><span>−$${fmt(m.monto)}</span></button>`).join('');
 }
-$('lluvia').onchange = pintarCatalogo;
+$('lluvia').onchange = () => { if ($('lluvia').checked) $('regalo').checked = false; pintarCatalogo(); };
+$('regalo').onchange = () => { if ($('regalo').checked) $('lluvia').checked = false; pintarCatalogo(); };
 pintarCatalogo();
 $('chipsCompras').onclick = ev => {
   const b = ev.target.closest('[data-compra]'); if (!b) return;
   const c = COMPRAS[+b.dataset.compra], ll = $('lluvia').checked;
+  if ($('regalo').checked) return aplicar(0, 'Regalo del profe: ' + c.nombre, 'compra', c.nombre);
   aplicar(-(ll ? c.precio / 2 : c.precio), 'Compra: ' + c.nombre + (ll ? ' (día de lluvia 50%)' : ''), 'compra', c.nombre);
 };
 $('chipsGanancias').onclick = ev => {
@@ -824,7 +827,9 @@ async function aplicar(monto, motivo, tipo, item) {
   const ids = [...seleccion];
   if (!ids.length) { toast('Primero selecciona cuentas en la tabla'); return false; }
   const lista = ids.map(id => cuentas.find(c => c.id === id)).filter(Boolean);
-  let txt = `${monto > 0 ? 'Abonar' : 'Cobrar'} $${fmt(Math.abs(monto))} a ${lista.length} cuenta${lista.length > 1 ? 's' : ''}\nMotivo: ${motivo}`;
+  let txt = monto === 0 && tipo === 'compra'
+    ? `Regalar «${item}» (sin descontar) a ${lista.length} cuenta${lista.length > 1 ? 's' : ''}.\nQueda «por usar» en su cuenta.`
+    : `${monto > 0 ? 'Abonar' : 'Cobrar'} $${fmt(Math.abs(monto))} a ${lista.length} cuenta${lista.length > 1 ? 's' : ''}\nMotivo: ${motivo}`;
   if (tipo === 'compra') {
     const cortos = lista.filter(c => (c.saldo || 0) + monto < 0);
     if (cortos.length) txt += `\n\n⚠ Quedan en negativo: ${cortos.map(c => c.nombre + ' ' + (c.apellido || '')).join(', ')}`;
@@ -857,7 +862,7 @@ function pintarMovs() {
   $('listaMovs').innerHTML = movs.length ? movs.map(m => `
     <div class="m"><div class="t"><b class="${m.monto < 0 ? 'neg' : 'pos'}">${m.monto < 0 ? '−' : '+'}$${fmt(Math.abs(m.monto))}</b> ${esc(m.nombre)}
       <small>${esc(m.motivo)} · ${fecha(m.fecha)}</small></div>
-      ${m.tipo === 'reverso' || m.tipo === 'importacion' || /^bolsa-/.test(m.tipo || '') || ['transferencia', 'transferencia-envio', 'devolucion', 'reventa', 'gatito-reventa'].includes(m.tipo) || m.pedido || m.transferencia ? '' : `<button class="btn sm" data-rev="${esc(m.id)}" title="Crear el movimiento contrario">Revertir</button>`}</div>`).join('')
+      ${m.monto === 0 || m.tipo === 'reverso' || m.tipo === 'importacion' || /^bolsa-/.test(m.tipo || '') || ['transferencia', 'transferencia-envio', 'devolucion', 'reventa', 'gatito-reventa'].includes(m.tipo) || m.pedido || m.transferencia ? '' : `<button class="btn sm" data-rev="${esc(m.id)}" title="Crear el movimiento contrario">Revertir</button>`}</div>`).join('')
     : '<div class="muted">Aún no hay movimientos.</div>';
 }
 $('listaMovs').onclick = async ev => {
