@@ -157,6 +157,12 @@ dialog.ancho{max-width:min(860px,calc(100vw - 32px))}
             <div class="lista-movs" id="listaTr"><div class="muted">—</div></div>
             <details style="margin-top:8px"><summary class="muted" style="cursor:pointer;font-size:13px">Últimas solicitudes resueltas</summary><div class="lista-movs" id="listaTrHist"></div></details>
           </div>
+          <div class="card porcanjear" style="margin-top:16px">
+            <h3 style="margin:0 0 4px">⚡ Poderes de los gatitos <span class="pill" id="nPod">0</span></h3>
+            <p class="muted" style="margin:0 0 8px;font-size:13px">Poderes especiales permanentes de cada estudiante según sus gatitos (se usan cuando la clase lo permite). Las décimas diarias que reclaman aparecen en «Compras por canjear».</p>
+            <input id="podBuscar" placeholder="Buscar estudiante o poder…" style="width:100%;margin-bottom:8px;background:var(--slab2);color:var(--ink);border:1px solid var(--line2);border-radius:10px;padding:8px 10px;font:inherit">
+            <div class="lista-movs" id="listaPod"><div class="muted">—</div></div>
+          </div>
         </div>
 
         <aside class="card mov">
@@ -419,6 +425,7 @@ function iniciarBanco() {
     pendientes.sort((a, b) => (ms(a.fecha) - ms(b.fecha)));
     pintarPendientes();
   }, e => console.info(e)));
+  desuscribir.push(F.onSnapshot(F.collection(db, 'gatitos'), s => { colecciones = s.docs.map(d => d.data()); pintarPoderes(); }, () => {}));
   desuscribir.push(F.onSnapshot(F.query(F.collection(db, 'banco_transferencias'), F.where('estado', '==', 'pendiente')), s => {
     transPend = s.docs.map(d => Object.assign({ id: d.id }, d.data())).sort((a, b) => ms(a.creada) - ms(b.creada));
     pintarTransferencias();
@@ -536,6 +543,22 @@ function pintarTransferencias() {
 }
 // Todo lo que llega aquí ya tiene el dinero retenido (y el objeto congelado): autorizar lo entrega, rechazar lo devuelve.
 const nomC = c => `${c.nombre || ''} ${c.apellido || ''}`.trim();
+/* poderes de los gatitos */
+let colecciones = [];
+function pintarPoderes() {
+  const G = window.GATITOS || [], q = ($('podBuscar').value || '').trim().toLowerCase();
+  const filas = colecciones.map(c => {
+    const pod = []; (c.ids || []).forEach(id => { const g = G.find(x => x.id === id); (g && g.poderes || []).forEach(p => pod.push([p, g.nombre])); });
+    return { nombre: c.nombre || '—', dec: window.decimasDeGatitos ? decimasDeGatitos(c.ids) : 0, pod };
+  }).filter(f => f.pod.length).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  $('nPod').textContent = filas.length;
+  const l = q ? filas.filter(f => (f.nombre + ' ' + f.pod.map(p => p.join(' ')).join(' ')).toLowerCase().includes(q)) : filas;
+  $('listaPod').innerHTML = l.length ? l.map(f => `<div class="m"><div class="t"><b>${esc(f.nombre)}</b> <span class="pill">${f.dec} déc./día</span>
+    <small>${f.pod.map(([p, n]) => `${esc(p)} <span class="muted">(${esc(n)})</span>`).join('<br>')}</small></div></div>`).join('')
+    : `<div class="muted">${filas.length ? 'Sin resultados.' : 'Nadie tiene todavía un gatito con poder especial (raro o superior).'}</div>`;
+}
+$('podBuscar').oninput = pintarPoderes;
+
 function movProfe(F, db, tx, cuentaId, c, monto, saldo, motivo, tipo, extra) {
   tx.set(F.doc(F.collection(db, 'banco_movs')), Object.assign({ cuenta: cuentaId, numero: c.numero || '', nombre: nomC(c), curso: c.curso || '', monto,
     motivo: String(motivo).slice(0, 200), tipo, saldoDespues: saldo, profe: (DF.usuario() || {}).email || '', fecha: F.serverTimestamp() }, extra || {}));

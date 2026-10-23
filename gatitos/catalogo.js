@@ -18,17 +18,31 @@ window.GATITOS = [
   { id: 'blanconegro', nombre: 'Esmoquin',             precio: 30000,   rareza: 'pococomun',  txt: 'Blanco y negro, listo para la gala de fin de año.' },
   { id: 'tricolor',    nombre: 'Tricolor',             precio: 35000,   rareza: 'pococomun',  txt: 'Tres colores, cero dudas sobre quién manda.' },
   { id: 'comelon',     nombre: 'Comelón',              precio: 40000,   rareza: 'pococomun',  txt: 'Su plato nunca está lo bastante lleno.' },
-  { id: 'siames',      nombre: 'Siamés',               precio: 60000,   rareza: 'raro',       txt: 'Ojos de cielo y opiniones muy firmes.' },
-  { id: 'negro',       nombre: 'Medianoche',           precio: 70000,   rareza: 'raro',       txt: 'Trae buena suerte a quien lo cuida.' },
-  { id: 'estirado',    nombre: 'Estiramiento',         precio: 80000,   rareza: 'raro',       txt: 'Experto en elongación antes de Educación Física.' },
-  { id: 'jugueton',    nombre: 'Juguetón',             precio: 100000,  rareza: 'raro',       txt: 'Un ovillo de lana y es feliz toda la tarde.' },
-  { id: 'caja',        nombre: 'Gato en Caja',         precio: 150000,  rareza: 'epico',      txt: '¿Está dormido o despierto? Abre la caja y descúbrelo.' },
-  { id: 'tronco',      nombre: 'Guardián del Bosque',  precio: 200000,  rareza: 'epico',      txt: 'Vigila el bosque nativo desde su tronco de coihue.' },
-  { id: 'barril',      nombre: 'Gato del Barril',      precio: 250000,  rareza: 'epico',      txt: 'Viajó de polizón en un barril desde Valparaíso.' },
-  { id: 'muro',        nombre: 'Explorador del Muro',  precio: 400000,  rareza: 'legendario', txt: 'Ha recorrido todos los techos de Villa Alemana.' },
-  { id: 'fantasma',    nombre: 'Gato Fantasma',        precio: 500000,  rareza: 'legendario', txt: 'Aparece en los pasillos cuando nadie mira.' },
-  { id: 'ava',         nombre: 'Ava',                  precio: 450000,  rareza: 'legendario', txt: 'Ava ♀. Pelaje largo y mirada tranquila. Camina, corre, juega y duerme siesta.', anim: true },
-  { id: 'calha',       nombre: 'Calha',                precio: 450000,  rareza: 'legendario', txt: 'Calha ♀. La compañera de Ava: elegante, atenta y siempre lista para jugar.', anim: true },
-  { id: 'cosmico',     nombre: 'Gato Cósmico',         precio: 750000,  rareza: 'mitico',     txt: 'Lleva una constelación en el pelaje. Vino del observatorio.' },
-  { id: 'dorado',      nombre: 'Gato Dorado',          precio: 1000000, rareza: 'mitico',     txt: 'El más valioso del colegio. Muy pocos lo tendrán.' }
+  { id: 'siames',      nombre: 'Siamés',               precio: 60000,   rareza: 'raro',       txt: 'Ojos de cielo y opiniones muy firmes.', poderes: ['🔁 Cambio de puesto (cuando amerite)'] },
+  { id: 'negro',       nombre: 'Medianoche',           precio: 70000,   rareza: 'raro',       txt: 'Trae buena suerte a quien lo cuida.', poderes: ['🎵 Elegir la música de la clase (cuando amerite)'] },
+  { id: 'estirado',    nombre: 'Estiramiento',         precio: 80000,   rareza: 'raro',       txt: 'Experto en elongación antes de Educación Física.', poderes: ['🧘 Pausa activa de 2 minutos en clase'] },
+  { id: 'jugueton',    nombre: 'Juguetón',             precio: 100000,  rareza: 'raro',       txt: 'Un ovillo de lana y es feliz toda la tarde.', poderes: ['🤝 Elegir compañero/a en trabajos en pareja'] },
+  { id: 'caja',        nombre: 'Gato en Caja',         precio: 150000,  rareza: 'epico',      txt: '¿Está dormido o despierto? Abre la caja y descúbrelo.', poderes: ['📦 Elegir su grupo de trabajo'] },
+  { id: 'tronco',      nombre: 'Guardián del Bosque',  precio: 200000,  rareza: 'epico',      txt: 'Vigila el bosque nativo desde su tronco de coihue.', poderes: ['🔔 Salir primero al recreo'] },
+  { id: 'barril',      nombre: 'Gato del Barril',      precio: 250000,  rareza: 'epico',      txt: 'Viajó de polizón en un barril desde Valparaíso.', poderes: ['🎤 Elegir el orden de su disertación'] },
+  { id: 'muro',        nombre: 'Explorador del Muro',  precio: 400000,  rareza: 'legendario', txt: 'Ha recorrido todos los techos de Villa Alemana.', poderes: ['🚶 Permiso de paseo por el colegio en cada clase (cuando amerite)'] },
+  { id: 'fantasma',    nombre: 'Gato Fantasma',        precio: 500000,  rareza: 'legendario', txt: 'Aparece en los pasillos cuando nadie mira.', poderes: ['📓 Uso del cuaderno 5 minutos en cada evaluación'] },
+  { id: 'ava',         nombre: 'Ava',                  precio: 450000,  rareza: 'legendario', txt: 'Ava ♀. Pelaje largo y mirada tranquila. Camina, corre, juega y duerme siesta.', anim: true, poderes: ['🚶 Permiso de paseo por el colegio en cada clase (cuando amerite)'] },
+  { id: 'calha',       nombre: 'Calha',                precio: 450000,  rareza: 'legendario', txt: 'Calha ♀. La compañera de Ava: elegante, atenta y siempre lista para jugar.', anim: true, poderes: ['📓 Uso del cuaderno 5 minutos en cada evaluación'] },
+  { id: 'cosmico',     nombre: 'Gato Cósmico',         precio: 750000,  rareza: 'mitico',     txt: 'Lleva una constelación en el pelaje. Vino del observatorio.', poderes: ['🚶 Paseo por el colegio en cada clase (cuando amerite)', '📓 Cuaderno 5 minutos en cada evaluación'] },
+  { id: 'dorado',      nombre: 'Gato Dorado',          precio: 1000000, rareza: 'mitico',     txt: 'El más valioso del colegio. Muy pocos lo tendrán.', poderes: ['🚶 Paseo por el colegio en cada clase (cuando amerite)', '📓 Cuaderno 5 minutos en cada evaluación', '🎵 Elegir la música de la clase'] }
 ];
+
+/* ═════ Poderes de los gatitos ═════
+   Cada gatito que tienes da décimas formativas por día (se reclaman en el Mercado, pestaña Mi colección):
+   común y poco común: 1 · raro y épico: 2 · legendario y mítico: 3. Máximo 3 décimas por día en total.
+   Además, raros, épicos, legendarios y míticos dan un poder permanente (campo «poderes»), que el profe
+   respeta cuando la clase lo permite.
+   ¡Ojo! Las décimas por rareza y el máximo también están en firebase/firestore.rules (decimasPoder). */
+window.PODER_DECIMAS = { comun: 1, pococomun: 1, raro: 2, epico: 2, legendario: 3, mitico: 3 };
+window.PODER_MAX_DIA = 3;
+window.decimasDeGatitos = function (ids) {
+  var n = 0; (ids || []).forEach(function (id) { var g = window.GATITOS.find(function (x) { return x.id === id; }); if (g) n += window.PODER_DECIMAS[g.rareza] || 0; });
+  return Math.min(n, window.PODER_MAX_DIA);
+};
+window.textoDecimas = function (n) { return n === 1 ? '1 décima formativa' : n + ' décimas formativas'; };
