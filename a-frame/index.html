@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>El mundo de Felipe</title>
+<title>Mundos 3D · El Mundo de Felipe</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -26,7 +26,6 @@
     background:
       radial-gradient(120% 80% at 50% -10%, #2a4a3e 0%, transparent 55%),
       linear-gradient(180deg, #0e1a1e 0%, #14282a 40%, #1a3128 75%, #22331f 100%);
-    background-attachment:fixed;
     overflow-x:hidden;
   }
 
@@ -118,6 +117,14 @@
   .falta h2{font-size:17px;}
   .falta code{background:rgba(242,236,224,.12);padding:1px 6px;border-radius:4px;font-size:12px;}
 
+  .volver-sitio{display:inline-block;margin-top:22px;color:var(--brote);text-decoration:none;font-size:14px;opacity:.85}
+  .volver-sitio:hover{opacity:1}
+  .grupo{font-family:"Fraunces",serif;font-weight:600;font-size:15px;letter-spacing:3px;text-transform:uppercase;color:var(--brote);margin:46px 0 0;opacity:.9}
+  .rejilla{margin-top:16px !important}
+  .cuenta{margin:16px auto 0;font-size:14px;color:var(--niebla);opacity:.9}
+  .cuenta button{background:var(--dorado);color:#1a1204;border:0;border-radius:999px;padding:6px 14px;font:600 13px "Inter",sans-serif;cursor:pointer}
+  .ayuda{margin:44px auto 0;max-width:62ch;text-align:center;font-size:13.5px;color:var(--niebla);opacity:.75}
+  header{padding:30px 0 10px !important}
   /* entrada escalonada */
   a.mundo{opacity:0;transform:translateY(16px);animation:surge .6s ease forwards;}
   @keyframes surge{to{opacity:1;transform:none;}}
@@ -130,87 +137,45 @@
 </head>
 <body>
 <div class="lienzo">
+  <a class="volver-sitio" href="../index.html">← El Mundo de Felipe</a>
   <header>
-    <div class="marca">Ecosistemas para explorar</div>
-    <h1>El mundo<br>de <em>Felipe</em></h1>
-    <p class="intro">Territorios en tres dimensiones para recorrer con el curso —de la costa rocosa al bosque nativo, de la cordillera a los planetas Mercurio y Venus, y del interior de una célula. Cada mundo se abre por separado.</p>
+    <div class="marca">Mundos 3D para explorar</div>
+    <h1>Los mundos<br>de <em>Felipe</em></h1>
+    <p class="intro">Territorios en tres dimensiones para recorrer con el curso: de la costa rocosa al bosque nativo y la cordillera, del interior de una célula a los planetas Mercurio y Venus.</p>
+    <p class="cuenta" id="cuenta"></p>
     <div class="horizonte"></div>
   </header>
-
-  <div class="rejilla" id="rejilla"></div>
+  <div id="rejilla"></div>
+  <p class="ayuda">💡 Funciona en computador, celular y tablet. Con el celular de lado se ve mejor. Las respuestas que escribas en los mundos quedan guardadas para el profe.</p>
 </div>
 
+<script src="mundos/catalogo.js"></script>
+<script src="../firebase/df.js" data-sin-aviso></script>
 <script>
-/* =============================================================================
-   Al agregar un mundo, escribe su nombre acá. Igual al archivo: 'costa' → mundos/costa.js
-   ============================================================================= */
-var CATALOGO = ['costa', 'bosque', 'andes', 'villa-alemana', 'mercurio', 'venus', 'celula'];
-
-/* Identidad visual de cada bioma: color de banda y glifo */
-var BIOMA = {
-  'costa':         { color:'#2f89a8', glifo:'\uD83C\uDF0A' },
-  'bosque':        { color:'#4a7c53', glifo:'\uD83C\uDF3F' },
-  'andes':         { color:'#8a94a6', glifo:'\uD83C\uDFD4\uFE0F' },
-  'villa-alemana': { color:'#c98a3c', glifo:'\uD83C\uDFD8\uFE0F' },
-  'mercurio':      { color:'#b07850', glifo:'\uD83E\uDE90' },
-  'venus':         { color:'#cf7f34', glifo:'\uD83C\uDF0B' },
-  'celula':        { color:'#5a9ec4', glifo:'\uD83E\uDDEC' }
-};
-
-/* Maniquí para que los archivos de mundo no fallen al registrarse acá */
-var nada = function () {};
-var maniqui = { forma: nada, animar: nada, ficha: nada, iniciar: nada,
-                formas: {}, grupos: {}, clima: { viento: 1 }, version: 0 };
-window.MUNDO = window.MUNDO || (typeof Proxy !== 'undefined'
-  ? new Proxy(maniqui, { get: function (t, k) { return (k in t) ? t[k] : nada; } })
-  : maniqui);
-window.MUNDOS = window.MUNDOS || {};
-
-var rejilla = document.getElementById('rejilla');
-var pendientes = CATALOGO.length;
-
-function cargar(id, rutas, i) {
-  if (i >= rutas.length) { listo(); return; }
-  var s = document.createElement('script');
-  s.src = rutas[i];
-  s.onload = listo;
-  s.onerror = function () { cargar(id, rutas, i + 1); };
-  document.head.appendChild(s);
-}
-
-function listo() {
-  if (--pendientes > 0) return;
-  CATALOGO.forEach(function (id, n) {
-    var M = window.MUNDOS[id];
-    var bio = BIOMA[id] || { color: '#4a7c53', glifo: '\uD83C\uDF10' };
-    var a = document.createElement('a');
-    a.href = 'mundo.html#' + id;
-    a.style.setProperty('--bioma', bio.color);
-    a.style.animationDelay = (n * 0.08) + 's';
-    if (!M) {
-      a.className = 'mundo falta';
-      a.innerHTML =
-        '<span class="glifo">\u26A0\uFE0F</span>' +
-        '<div class="meta">No encontrado</div>' +
-        '<h2>' + id + '</h2>' +
-        '<p>Falta <code>mundos/' + id + '.js</code>, o la clave interna no es ' +
-        '<code>MUNDOS[\'' + id + '\']</code>.</p>';
-    } else {
-      a.className = 'mundo';
-      a.innerHTML =
-        '<span class="glifo">' + bio.glifo + '</span>' +
-        '<div class="meta">' + (M.materia || 'Mundo 3D') + '</div>' +
-        '<h2>' + (M.titulo || id) + '</h2>' +
-        '<p>' + (M.resumen || '') + '</p>' +
-        '<span class="ir">Entrar al mundo \u2192</span>';
-    }
-    rejilla.appendChild(a);
+(function () {
+  'use strict';
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var html = '', n = 0;
+  (window.CATALOGO_MUNDOS || []).forEach(function (g) {
+    html += '<h2 class="grupo">' + esc(g.grupo) + '</h2><div class="rejilla">';
+    g.mundos.forEach(function (m) {
+      html += '<a class="mundo" href="mundo.html#' + encodeURIComponent(m.id) + '" style="--bioma:' + m.color + ';animation-delay:' + (n++ * 0.06) + 's">' +
+        '<span class="glifo">' + m.glifo + '</span><div class="meta">' + esc(m.materia) + '</div>' +
+        '<h2>' + esc(m.titulo) + '</h2><p>' + esc(m.resumen) + '</p><span class="ir">Entrar al mundo →</span></a>';
+    });
+    html += '</div>';
   });
-}
-
-CATALOGO.forEach(function (id) {
-  cargar(id, ['mundos/' + id + '.js', id + '.js'], 0);
-});
+  document.getElementById('rejilla').innerHTML = html;
+  // Cuenta del sitio: con sesión, las respuestas se guardan en la cuenta (el profe las ve en su panel)
+  if (window.DF && DF.listo) DF.listo().then(function () {
+    DF.alCambiarUsuario(function (u) {
+      document.getElementById('cuenta').innerHTML = u
+        ? '✓ Entraste como <b>' + esc(DF.nombreCorto(u.displayName, u.email)) + '</b>: tus respuestas se guardan en tu cuenta.'
+        : '<button id="entrar">Entrar con mi cuenta</button> para que tus respuestas queden guardadas con tu nombre.';
+      var b = document.getElementById('entrar'); if (b) b.onclick = function () { DF.entrar().catch(function () {}); };
+    });
+  }).catch(function () {});
+})();
 </script>
 </body>
 </html>

@@ -31,6 +31,8 @@ window.addEventListener('error', function (e) {
 
 <style>
   :root{ --acento:#1c5f78; --tinta:#12211f; --papel:#f2ece0; }
+  /* el botón de pantalla completa / VR de A-Frame tapaba «Todos los mundos»: abajo a la derecha */
+  .a-enter-vr,.a-enter-ar{top:auto !important;bottom:calc(18px + env(safe-area-inset-bottom,0)) !important;right:18px !important}
   html,body{margin:0;height:100%;overflow:hidden;
     font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;}
 
@@ -318,6 +320,7 @@ window.addEventListener('error', function (e) {
      comprueba si existe window.Registro para mostrar el cuadro de respuesta
      dentro de cada ficha. Si se quita esta línea, las fichas siguen
      funcionando pero sin formulario. -->
+<script src="../firebase/df.js" data-sin-aviso></script>
 <script src="registro.js"></script>
 <script src="mundo.js"></script>
 </head>
@@ -365,7 +368,8 @@ window.addEventListener('error', function (e) {
   </div>
 </div>
 
-<a-scene id="escena" renderer="colorManagement:true; antialias:false"></a-scene>
+<!-- maxCanvas: en pantallas de alta densidad (celulares) limita los píxeles que se dibujan; se ve igual y anda mucho más fluido -->
+<a-scene id="escena" renderer="colorManagement:true; antialias:false; maxCanvasWidth:1600; maxCanvasHeight:1600; powerPreference:high-performance"></a-scene>
 
 <script>
 /* Carga el mundo indicado en la dirección: mundo.html?m=costa
@@ -374,7 +378,9 @@ window.addEventListener('error', function (e) {
 (function () {
   // Acepta mundo.html#costa y también mundo.html?m=costa
   var id = (location.hash || '').replace('#', '').trim() ||
-           new URLSearchParams(location.search).get('m') || 'costa';
+           new URLSearchParams(location.search).get('m') || '';
+  // Sin mundo indicado: a la galería (antes abría siempre la costa)
+  if (!id) { location.replace('index.html'); return; }
   window.addEventListener('hashchange', function () { location.reload(); });
   var rutas = ['mundos/' + id + '.js', id + '.js'];
   var intento = 0;
