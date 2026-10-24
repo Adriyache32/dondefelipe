@@ -7,8 +7,11 @@
      ...
      Registro.enviar({ actividad: 'Cráteres', pregunta: '¿Por qué...?', respuesta: texto });
 
-   Si el alumno aún no se identificó, enviar() le pide nombre y curso una vez y
-   luego manda. Si no hay red, guarda en cola y reintenta solo.
+   Con sesión en El Mundo de Felipe (cuenta Google del sitio), la respuesta se
+   guarda en la cuenta: el profe la ve en su panel (pestaña Simuladores) y no se
+   pregunta nombre ni curso.
+   Sin sesión, enviar() pide nombre y curso una vez y manda a la planilla del
+   curso (Apps Script). Si no hay red, guarda en cola y reintenta solo.
    ============================================================================= */
 (function (global) {
   'use strict';
@@ -120,8 +123,24 @@
     });
   };
 
-  // Envía una respuesta. Identifica al alumno si hace falta. Da feedback visual.
+  // ¿Hay sesión del sitio? (df.js cargado y con usuario)
+  function cuentaSitio() { try { return global.DF && global.DF.usuario && global.DF.usuario(); } catch (e) { return null; } }
+  function idMundo() { return (location.hash || '').replace('#', '').replace(/[^a-z0-9_-]/gi, '').toLowerCase() || 'mundo'; }
+
+  // Envía una respuesta. Con cuenta del sitio la guarda ahí; si no, identifica al alumno y va a la planilla.
   Registro.enviar = function (datos) {
+    if (cuentaSitio()) {
+      return global.DF.guardarResultado(('mundo-' + idMundo()).slice(0, 40), {
+        mundo: String(datos.origen || document.title).slice(0, 120),
+        actividad: String(datos.actividad || '').slice(0, 200),
+        pregunta: String(datos.pregunta || '').slice(0, 600),
+        respuesta: String(datos.respuesta || '').slice(0, 2000)
+      }).then(function () { aviso('Respuesta guardada en tu cuenta \u2713', true); return true; })
+        .catch(function () { return enviarPlanilla(datos); });
+    }
+    return enviarPlanilla(datos);
+  };
+  function enviarPlanilla(datos) {
     return Registro.identificar().then(function (a) {
       var fila = armarFila(datos, a);
       return mandar(fila).then(function () {
@@ -133,7 +152,7 @@
         return false;
       });
     });
-  };
+  }
 
   /* ---------- feedback ---------- */
   function aviso(txt, ok) {

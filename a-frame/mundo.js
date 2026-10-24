@@ -58,7 +58,8 @@ var CACHE_TEX = {};
 function lienzoAltura(estilo, tam) {
   var c = document.createElement('canvas');
   c.width = c.height = tam;
-  var g = c.getContext('2d');
+  // willReadFrequently: el lienzo vive en memoria normal y leer sus píxeles (normal map) es instantáneo
+  var g = c.getContext('2d', { willReadFrequently: true });
   g.fillStyle = '#808080';
   g.fillRect(0, 0, tam, tam);
 
@@ -136,7 +137,7 @@ function lienzoAltura(estilo, tam) {
 function lienzoOlas(tam) {
   var c = document.createElement('canvas');
   c.width = c.height = tam;
-  var g = c.getContext('2d');
+  var g = c.getContext('2d', { willReadFrequently: true });
   var img = g.createImageData(tam, tam);
   for (var y = 0; y < tam; y++) {
     for (var x = 0; x < tam; x++) {
@@ -153,27 +154,25 @@ function lienzoOlas(tam) {
   return c;
 }
 
+// Normal map a partir del mapa de altura (diferencias centrales, con borde que se repite).
+// Versión rápida: lee el canal rojo una sola vez a un arreglo y recorre por filas sin funciones
+// internas ni módulos por píxel (antes tardaba varios segundos por textura en equipos lentos).
 function normalDesde(altura, fuerza) {
-  var tam = altura.width;
+  var tam = altura.width, n = tam * tam;
   var src = altura.getContext('2d').getImageData(0, 0, tam, tam).data;
+  var h = new Float32Array(n), k = fuerza / 255;
+  for (var p = 0, q = 0; p < n; p++, q += 4) h[p] = src[q] * k;
   var out = document.createElement('canvas');
   out.width = out.height = tam;
   var ctx = out.getContext('2d');
-  var img = ctx.createImageData(tam, tam);
-  function h(x, y) {
-    x = (x + tam) % tam; y = (y + tam) % tam;
-    return src[(y * tam + x) * 4] / 255;
-  }
+  var img = ctx.createImageData(tam, tam), d = img.data;
   for (var y = 0; y < tam; y++) {
+    var fila = y * tam, arriba = ((y || tam) - 1) * tam, abajo = (y + 1 === tam ? 0 : y + 1) * tam;
     for (var x = 0; x < tam; x++) {
-      var nx = (h(x - 1, y) - h(x + 1, y)) * fuerza;
-      var ny = (h(x, y - 1) - h(x, y + 1)) * fuerza;
-      var l = Math.sqrt(nx * nx + ny * ny + 1) || 1;
-      var i = (y * tam + x) * 4;
-      img.data[i]     = (nx / l * 0.5 + 0.5) * 255;
-      img.data[i + 1] = (ny / l * 0.5 + 0.5) * 255;
-      img.data[i + 2] = (1 / l * 0.5 + 0.5) * 255;
-      img.data[i + 3] = 255;
+      var xi = x ? x - 1 : tam - 1, xd = x + 1 === tam ? 0 : x + 1;
+      var nx = h[fila + xi] - h[fila + xd], ny = h[arriba + x] - h[abajo + x];
+      var l = 127.5 / Math.sqrt(nx * nx + ny * ny + 1), i = (fila + x) << 2;
+      d[i] = nx * l + 127.5; d[i + 1] = ny * l + 127.5; d[i + 2] = l + 127.5; d[i + 3] = 255;
     }
   }
   ctx.putImageData(img, 0, 0);
@@ -201,10 +200,25 @@ function aTextura(canvas, reps, esColor) {
   return t;
 }
 
+// El relieve (altura + normal) depende solo del estilo: se calcula una vez y se reutiliza
+// para todos los colores y repeticiones. Las texturas THREE comparten la misma imagen (clone),
+// así la GPU la recibe una sola vez.
+var CACHE_RELIEVE = {}, CACHE_IMG = {};
+function relieve(estilo) {
+  if (CACHE_RELIEVE[estilo]) return CACHE_RELIEVE[estilo];
+  var altura = lienzoAltura(estilo, TAM_TEX);
+  var fuerza = { arena: 3.5, baldosa: 7, asfalto: 4, pasto: 4, nieve: 2.5 }[estilo] || 7;
+  return (CACHE_RELIEVE[estilo] = { altura: altura, normal: aTextura(normalDesde(altura, fuerza), 1, false), rug: aTextura(altura, 1, false) });
+}
+function conRepeticion(t, reps) { var c = t.clone(); c.repeat.set(reps, reps); c.needsUpdate = true; return c; }
 function superficie(base, estilo, reps) {
   var clave = base + '|' + estilo + '|' + reps;
   if (CACHE_TEX[clave]) return CACHE_TEX[clave];
-  var altura = lienzoAltura(estilo, TAM_TEX);
+  var rel = relieve(estilo), altura = rel.altura;
+  if (CACHE_IMG[base + '|' + estilo]) {
+    var im = CACHE_IMG[base + '|' + estilo];
+    return (CACHE_TEX[clave] = { mapa: conRepeticion(im, reps), normal: conRepeticion(rel.normal, reps), rugosidad: conRepeticion(rel.rug, reps) });
+  }
   var col = document.createElement('canvas');
   col.width = col.height = TAM_TEX;
   var g = col.getContext('2d');
@@ -219,11 +233,11 @@ function superficie(base, estilo, reps) {
   g.drawImage(altura, 0, 0);
   g.globalAlpha = 1;
   g.globalCompositeOperation = 'source-over';
-  var fuerza = { arena: 3.5, baldosa: 7, asfalto: 4, pasto: 4, nieve: 2.5 }[estilo] || 7;
+  CACHE_IMG[base + '|' + estilo] = aTextura(col, 1, true);
   var res = {
-    mapa: aTextura(col, reps, true),
-    normal: aTextura(normalDesde(altura, fuerza), reps, false),
-    rugosidad: aTextura(altura, reps, false)   // lo alto brilla distinto que lo hundido
+    mapa: conRepeticion(CACHE_IMG[base + '|' + estilo], reps),
+    normal: conRepeticion(rel.normal, reps),
+    rugosidad: conRepeticion(rel.rug, reps)   // lo alto brilla distinto que lo hundido
   };
   CACHE_TEX[clave] = res;
   return res;
@@ -486,7 +500,7 @@ MUNDO.animar = function (fn) { MUNDO.animaciones.push(fn); };
    cuando el observador entra en el radio. Lo declara el mundo con "puerta". */
 MUNDO.puerta = function (def) { MUNDO.puertas.push(def); };
 
-var tViento = 0, ultimoV = performance.now(), _mv = new THREE.Matrix4();
+var tViento = 0, ultimoV = performance.now(), _mv = new THREE.Matrix4(), tSinViento = 0;
 function soplar(ahora) {
   requestAnimationFrame(soplar);
   var dt = Math.min(60, ahora - ultimoV);
@@ -520,6 +534,11 @@ function soplar(ahora) {
     }
   }
   if (!vivos.length || !MUNDO.clima.viento) return;
+  // El viento se recalcula a ~30 cuadros por segundo: el ojo no nota la diferencia y en equipos
+  // modestos libera la mitad del trabajo (se recalculan las matrices de toda la vegetación).
+  tSinViento += dt;
+  if (tSinViento < 33) return;
+  tSinViento = 0;
   for (var k = 0; k < vivos.length; k++) {
     var datos = vivos[k].datos, malla = vivos[k].malla;
     for (var i = 0; i < datos.length; i++) {
@@ -1057,6 +1076,7 @@ AFRAME.registerComponent('nivel', {
   }
 });
 
+var TEX_OLAS = null;
 AFRAME.registerComponent('oleaje', {
   schema: { vel: { default: 0.02 }, relieve: { default: 0.55 } },
   init: function () { this.listo = false; },
@@ -1066,7 +1086,9 @@ AFRAME.registerComponent('oleaje', {
       var m = this.el.getObject3D('mesh');
       if (!m || !m.material) return;
       this.mat = m.material;
-      this.mat.normalMap = aTextura(normalDesde(lienzoOlas(TAM_TEX), 4), 9, false);
+      // un solo mapa de olas para toda el agua del mundo (cada superficie lo clona: comparte la imagen)
+      if (!TEX_OLAS) TEX_OLAS = aTextura(normalDesde(lienzoOlas(MOVIL_TEX ? 256 : 512), 4), 9, false);
+      this.mat.normalMap = TEX_OLAS.clone(); this.mat.normalMap.needsUpdate = true;
       this.mat.normalScale.set(this.data.relieve, this.data.relieve);
       this.mat.needsUpdate = true;
       this.listo = true;
