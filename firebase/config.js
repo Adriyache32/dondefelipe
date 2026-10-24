@@ -15,7 +15,9 @@ window.DF_CONFIG = {
     projectId: "dondefelipe",
     storageBucket: "dondefelipe.firebasestorage.app",
     messagingSenderId: "776627150771",
-    appId: "1:776627150771:web:49286717524247e033b5c6"
+    appId: "1:776627150771:web:49286717524247e033b5c6",
+    // Realtime Database (multijugador de los mundos 3D). Si la consola muestra otra dirección, cámbiala aquí.
+    databaseURL: "https://dondefelipe-default-rtdb.firebaseio.com"
   },
 
   // Dominio de las cuentas Google del colegio, por ejemplo "sanagustin.cl".

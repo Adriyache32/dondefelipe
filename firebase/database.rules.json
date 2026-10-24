@@ -1,0 +1,37 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "mundos3d": {
+      "salas": {
+        "$mundo": {
+          "$sala": {
+            ".read": "auth != null && auth.token.email_verified == true && $mundo.matches(/^[a-z0-9-]{1,30}$/) && $sala.matches(/^[a-z0-9-]{1,20}$/)",
+            "jugadores": {
+              "$uid": {
+                ".write": "auth != null && auth.token.email_verified == true && auth.uid == $uid && (!newData.exists() || data.exists() || root.child('mundos3d/salas/' + $mundo + '/' + $sala + '/jugadores').numChildren() < 12)",
+                ".validate": "newData.hasChildren(['n', 'x', 'y', 'z', 'r', 't'])",
+                "n": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+                "c": { ".validate": "newData.isString() && newData.val().matches(/^#[0-9a-fA-F]{6}$/)" },
+                "g": { ".validate": "newData.isString() && newData.val().matches(/^[a-z0-9-]{0,24}$/)" },
+                "x": { ".validate": "newData.isNumber() && newData.val() > -5000 && newData.val() < 5000" },
+                "y": { ".validate": "newData.isNumber() && newData.val() > -5000 && newData.val() < 5000" },
+                "z": { ".validate": "newData.isNumber() && newData.val() > -5000 && newData.val() < 5000" },
+                "r": { ".validate": "newData.isNumber() && newData.val() > -100 && newData.val() < 100" },
+                "t": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+                "e": { ".validate": "newData.isString() && newData.val().length <= 40" },
+                "et": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+                "p": { ".validate": "newData.isBoolean() && (newData.val() == false || auth.token.email == 'fjimenez321@gmail.com')" },
+                "$otro": { ".validate": false }
+              }
+            },
+            "estado": {
+              ".write": "auth != null && auth.token.email == 'fjimenez321@gmail.com'",
+              "$k": { ".validate": "newData.isString() && newData.val().length <= 200 || newData.isNumber() || newData.isBoolean()" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
