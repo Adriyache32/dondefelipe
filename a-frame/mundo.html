@@ -314,6 +314,48 @@ window.addEventListener('error', function (e) {
     background:#5ad8a0;color:#123;border-radius:8px;font-size:11px;font-weight:700;padding:0 5px;margin-left:2px;}
 
   @media (prefers-reduced-motion: reduce){ #ficha{transition:none;} }
+
+  /* lecturas vacías: no dejar «pastillas» sin texto */
+  #nivel-lectura:empty, #grav-lectura:empty, #clima-real-lectura:empty{display:none;}
+  #menu-btn, #pad{display:none;}
+
+  /* ===================== CELULAR =====================
+     Pantalla limpia: arriba solo ☰, el título y volver. Todas las opciones
+     van en un panel desplegable (☰). Abajo a la izquierda, un pad pequeño
+     de iconos para moverse. La clase body.movil la pone el script de abajo. */
+  body.movil #barra{flex-wrap:nowrap;gap:8px;padding:calc(8px + env(safe-area-inset-top,0)) 10px 8px;}
+  body.movil #titulo{font-size:11.5px;padding:6px 10px;min-width:0;flex:1 1 auto;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  body.movil #nivel-lectura, body.movil #grav-lectura, body.movil #clima-real-lectura,
+  body.movil #ctrl-btn, body.movil #ctrl-pos, body.movil #ctrl-menu{display:none !important;}
+  body.movil #volver{margin-left:0;flex:none;font-size:0;padding:7px 10px;}
+  body.movil #volver::before{content:'\2715';font-size:14px;line-height:1;}
+  body.movil #menu-btn{display:block;pointer-events:auto;flex:none;font-size:18px;line-height:1;padding:7px 11px;border-radius:10px;}
+  body.movil.menu-abierto #menu-btn{background:rgba(45,130,168,.62);}
+
+  body.movil #controles, body.movil #controles.pos-izq, body.movil #controles.pos-der,
+  body.movil #controles.pos-arriba, body.movil #controles.pos-abajo{
+    display:none;position:fixed;left:8px;right:8px;top:calc(54px + env(safe-area-inset-top,0));bottom:auto;
+    max-width:none;width:auto;max-height:calc(100vh - 150px);overflow-y:auto;
+    flex-direction:row;flex-wrap:wrap;gap:6px;padding:10px;justify-content:stretch;align-items:stretch;
+    background:rgba(14,24,24,.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    border:1px solid rgba(242,236,224,.16);border-radius:14px;box-shadow:0 14px 40px rgba(0,0,0,.45);z-index:35;}
+  body.movil.menu-abierto #controles{display:flex !important;}
+  body.movil #controles > *{flex:1 1 calc(50% - 6px);min-width:0;opacity:1 !important;
+    font-size:13px !important;padding:10px 10px !important;margin:0 !important;text-align:left;}
+
+  body.movil #pad{display:flex;position:fixed;z-index:12;left:10px;bottom:calc(12px + env(safe-area-inset-bottom,0));gap:8px;}
+  body.movil #pad button{width:48px;height:48px;padding:0;border-radius:50%;font-size:18px;line-height:1;
+    display:grid;place-items:center;opacity:.78;}
+  body.movil #pad button:active{opacity:1;}
+  body.movil #salud{left:10px;bottom:calc(70px + env(safe-area-inset-bottom,0));width:150px;}
+  body.movil #pista{bottom:calc(72px + env(safe-area-inset-bottom,0));font-size:11.5px;white-space:normal;
+    text-align:center;width:max-content;max-width:calc(100vw - 40px);}
+  body.movil #mezcla-panel, body.movil #atm-panel, body.movil #lab-panel, body.movil #mj-panel, body.movil #ficha{
+    top:calc(54px + env(safe-area-inset-top,0)) !important;right:8px !important;left:8px !important;
+    width:auto !important;max-height:calc(100vh - 140px);overflow-y:auto;}
+  body.movil .a-enter-vr, body.movil .a-enter-ar{top:auto !important;bottom:calc(14px + env(safe-area-inset-bottom,0)) !important;right:10px !important;}
+  body.movil #dialogo{bottom:calc(72px + env(safe-area-inset-bottom,0)) !important;}
 </style>
 
 <!-- Recolector de respuestas: debe ir ANTES de mundo.js, porque el motor
@@ -328,6 +370,7 @@ window.addEventListener('error', function (e) {
 <body>
 
 <div id="barra">
+  <button id="menu-btn" aria-label="Abrir opciones" aria-expanded="false">&#9776;</button>
   <h1 id="titulo">Cargando…</h1>
   <span id="nivel-lectura"></span>
   <span id="grav-lectura" style="font-variant-numeric:tabular-nums;font-size:13px;opacity:.85"></span>
@@ -352,6 +395,7 @@ window.addEventListener('error', function (e) {
 
 <div id="pista">Toca el suelo para desplazarte hasta ahí</div>
 <div id="controles"></div>
+<div id="pad" aria-label="Moverse"></div>
 <input type="file" id="archivo-guardado" accept="application/json,.json" style="display:none">
 
 <!-- barra de salud (solo visible si el mundo tiene peligros) -->
@@ -401,10 +445,7 @@ window.addEventListener('error', function (e) {
         var escena = document.getElementById('escena');
         var arrancar = function () {
           MUNDO.iniciar(window.MUNDOS[id]);
-          if (MUNDO.informe) {
-            document.getElementById('nivel-lectura').textContent =
-              document.getElementById('nivel-lectura').textContent || MUNDO.informe;
-          }
+          // (MUNDO.informe con llamadas de dibujo queda solo para la consola: no se muestra)
         };
         if (escena.hasLoaded) { arrancar(); }
         else { escena.addEventListener('loaded', arrancar); }
@@ -512,6 +553,66 @@ if (document.readyState === 'loading') {
 } else {
   iniciarControles();
 }
+</script>
+
+<script>
+/* CELULAR: menú desplegable (☰) con todas las opciones y pad de iconos para
+   moverse. Se decide por tamaño de pantalla y se reacomoda si cambia
+   (girar el teléfono). En computador todo queda como antes. */
+(function () {
+  var mq = window.matchMedia('(max-width: 760px), (pointer: coarse) and (max-height: 560px)');
+  var cont = document.getElementById('controles'), pad = document.getElementById('pad');
+  var mbtn = document.getElementById('menu-btn');
+  var ICONOS = { 'btn-golpe': '🪨' };
+  function esPad(b) { return b.classList && (b.classList.contains('mover') || b.id === 'btn-golpe'); }
+  function icono(b) {
+    if (!b.dataset.txt) b.dataset.txt = b.textContent;
+    var t = b.dataset.txt.trim();
+    return ICONOS[b.id] || t.split(' ')[0];
+  }
+  function abrir(v) {
+    document.body.classList.toggle('menu-abierto', v);
+    mbtn.setAttribute('aria-expanded', v ? 'true' : 'false');
+  }
+  var ocupado = false;
+  function reacomodar() {
+    if (ocupado) return; ocupado = true;
+    var movil = mq.matches;
+    document.body.classList.toggle('movil', movil);
+    var mj = document.getElementById('mj-btn'), barra = document.getElementById('barra');
+    if (movil) {
+      Array.prototype.slice.call(cont.children).forEach(function (b) {
+        if (esPad(b)) { b.title = b.dataset.txt || b.textContent; b.textContent = icono(b); b.setAttribute('aria-label', b.dataset.txt.trim()); pad.appendChild(b); }
+      });
+      // orden del pad: atrás, caminar, saltar, golpear
+      var orden = function (b) { var t = b.dataset.txt || ''; return /Atr/.test(t) ? 0 : /Caminar/.test(t) ? 1 : /Saltar/.test(t) ? 2 : 3; };
+      Array.prototype.slice.call(pad.children).sort(function (a, b) { return orden(a) - orden(b); }).forEach(function (b) { pad.appendChild(b); });
+      if (mj && mj.parentNode !== cont) cont.insertBefore(mj, cont.firstChild);
+    } else {
+      Array.prototype.slice.call(pad.children).forEach(function (b) { if (b.dataset.txt) b.textContent = b.dataset.txt; cont.appendChild(b); });
+      if (mj && mj.parentNode === cont) barra.insertBefore(mj, document.getElementById('volver'));
+      abrir(false);
+    }
+    ocupado = false;
+  }
+  mbtn.addEventListener('click', function (e) { e.stopPropagation(); abrir(!document.body.classList.contains('menu-abierto')); });
+  // al elegir algo del menú, se cierra (para ver el panel que abre o la escena)
+  cont.addEventListener('click', function (e) {
+    if (!document.body.classList.contains('movil')) return;
+    var b = e.target.closest('button'); if (b && !b.disabled) setTimeout(function () { abrir(false); }, 120);
+  });
+  cont.addEventListener('change', function () { if (document.body.classList.contains('movil')) abrir(false); });
+  // tocar la escena también lo cierra
+  document.addEventListener('pointerdown', function (e) {
+    if (!document.body.classList.contains('menu-abierto')) return;
+    if (cont.contains(e.target) || mbtn.contains(e.target)) return;
+    abrir(false);
+  }, true);
+  new MutationObserver(function () { if (mq.matches) reacomodar(); }).observe(cont, { childList: true });
+  new MutationObserver(function () { if (mq.matches) reacomodar(); }).observe(document.getElementById('barra'), { childList: true });
+  if (mq.addEventListener) mq.addEventListener('change', reacomodar); else if (mq.addListener) mq.addListener(reacomodar);
+  reacomodar();
+})();
 </script>
 
 </body>

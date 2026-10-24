@@ -2476,11 +2476,11 @@ function estilosDialogo() {
   var st = document.createElement('style');
   st.id = 'estilo-dialogo';
   st.textContent =
-    '#dialogo{position:fixed;z-index:11;left:50%;bottom:74px;transform:translateX(-50%) translateY(140%);' +
+    '#dialogo{position:fixed;z-index:11;left:50%;bottom:74px;transform:translateX(-50%) translateY(calc(100% + 120px));visibility:hidden;' +
       'width:min(560px,calc(100vw - 24px));background:#f2ece0;color:#12211f;border-radius:3px;' +
       'border-left:5px solid #6b4a1f;padding:14px 16px 12px;box-shadow:0 10px 34px rgba(0,0,0,.4);' +
-      'transition:transform .3s cubic-bezier(.2,.7,.3,1);}' +
-    '#dialogo.visible{transform:translateX(-50%);}' +
+      'transition:transform .3s cubic-bezier(.2,.7,.3,1),visibility .3s;}' +
+    '#dialogo.visible{transform:translateX(-50%);visibility:visible;}' +
     '#dialogo .quien{font-size:11px;letter-spacing:1.3px;text-transform:uppercase;color:#6b4a1f;' +
       'font-weight:700;margin-bottom:5px;}' +
     '#dialogo .dice{margin:0 0 12px;font-size:14.5px;line-height:1.55;}' +
