@@ -463,10 +463,10 @@ window.MUNDOS.bosque = {
   // MODELOS .glb INSTANCIADOS (modelos.js): uno cargado, cientos dibujados.
   // Partes por nombre del .glb: el viento y el tinte se aplican a cada una.
   modelos: {
-    quillay: { url: 'modelos/quillay.glb', escala: [1.75, 2.45],
+    quillay: { url: 'modelos/quillay.glb', lejos: 'modelos/quillay-lejos.glb', escala: [1.75, 2.45],
                viento: { Follaje: 0.012, Ramas: 0.005 }, tinte: { Follaje: 0.12, Tronco: 0.06 },
                colores: { Follaje: '#6f8256', Ramas: '#5a4632', Tronco: '#4d3b2a' } },
-    peumo:   { url: 'modelos/peumo.glb', escala: [1.4, 1.95],
+    peumo:   { url: 'modelos/peumo.glb', lejos: 'modelos/peumo-lejos.glb', escala: [1.4, 1.95],
                viento: { Follaje: 0.010, Ramas: 0.004 }, tinte: { Follaje: 0.10, Tronco: 0.06 },
                colores: { Follaje: '#3f5c34', Ramas: '#54402c', Tronco: '#463527' } }
   },
