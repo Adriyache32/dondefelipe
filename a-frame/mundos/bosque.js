@@ -465,7 +465,10 @@ window.MUNDOS.bosque = {
   modelos: {
     quillay: { url: 'modelos/quillay.glb', escala: [1.75, 2.45],
                viento: { Follaje: 0.012, Ramas: 0.005 }, tinte: { Follaje: 0.12, Tronco: 0.06 },
-               colores: { Follaje: '#6f8256', Ramas: '#5a4632', Tronco: '#4d3b2a' } }
+               colores: { Follaje: '#6f8256', Ramas: '#5a4632', Tronco: '#4d3b2a' } },
+    peumo:   { url: 'modelos/peumo.glb', escala: [1.4, 1.95],
+               viento: { Follaje: 0.010, Ramas: 0.004 }, tinte: { Follaje: 0.10, Tronco: 0.06 },
+               colores: { Follaje: '#3f5c34', Ramas: '#54402c', Tronco: '#463527' } }
   },
 
   ancho: 150,
@@ -537,6 +540,7 @@ window.MUNDOS.bosque = {
         { forma: 'belloto', n: 26, color: '#35603a', nombre: 'Belloto del norte', choca: { r: 0.4, alto: 7 } },
         { forma: 'boldo',   n: 24, color: '#4f6f42', nombre: 'Boldo', choca: { r: 0.32, alto: 4 } },
         { forma: 'maiten',  n: 14, color: '#456b3e', nombre: 'Maitén', choca: { r: 0.3, alto: 6 } },
+        { modelo: 'peumo', forma: 'peumo', n: 16, alto: 6.8, choca: { r: 0.36, alto: 5 } },   // el peumo es típico de quebradas húmedas
         { forma: 'maqui',   n: 30, color: '#3c5c38', nombre: 'Maqui' },
         { forma: 'helecho', n: 110, color: '#315a2c' },
         { forma: 'costra',  n: 40, color: '#4a5c3a', nombre: 'Musgo' },
@@ -554,7 +558,7 @@ window.MUNDOS.bosque = {
       especies: [
         { forma: 'litreN',    n: 38, color: '#5c7040', nombre: 'Litre', choca: { r: 0.3, alto: 3.5 } },
         { modelo: 'quillay', forma: 'quillay', n: 30, nombre: 'Quillay', alto: 7.6, choca: { r: 0.4, alto: 5 } },   // modelo .glb instanciado
-        { forma: 'peumo',     n: 24, color: '#3f5c34', nombre: 'Peumo', choca: { r: 0.3, alto: 5 } },
+        { modelo: 'peumo', forma: 'peumo', n: 24, nombre: 'Peumo', alto: 6.8, choca: { r: 0.36, alto: 5 } },   // modelo .glb instanciado
         { forma: 'columna',   n: 30, color: '#55703f', nombre: 'Quisco', choca: { r: 0.3, alto: 3.5 } },
         { forma: 'roseta',    n: 26, color: '#7d8b6a', nombre: 'Chagual' },
         { forma: 'colliguay', n: 30, color: '#7b8a52', nombre: 'Colliguay' },
