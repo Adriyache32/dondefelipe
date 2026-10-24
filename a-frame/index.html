@@ -141,7 +141,7 @@
   <header>
     <div class="marca">Mundos 3D para explorar</div>
     <h1>Los mundos<br>de <em>Felipe</em></h1>
-    <p class="intro">Territorios en tres dimensiones para recorrer con el curso: de la costa rocosa al bosque nativo y la cordillera, del interior de una célula a los planetas Mercurio y Venus.</p>
+    <p class="intro">Territorios en tres dimensiones para recorrer con el curso: el bosque nativo de la Región de Valparaíso y la superficie de Mercurio. Entra con tu cuenta y explóralos junto a tus compañeros.</p>
     <p class="cuenta" id="cuenta"></p>
     <div class="horizonte"></div>
   </header>
@@ -157,8 +157,10 @@
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var html = '', n = 0;
   (window.CATALOGO_MUNDOS || []).forEach(function (g) {
+    var visibles = g.mundos.filter(function (m) { return !m.oculto; });   // los guardados no se muestran
+    if (!visibles.length) return;
     html += '<h2 class="grupo">' + esc(g.grupo) + '</h2><div class="rejilla">';
-    g.mundos.forEach(function (m) {
+    visibles.forEach(function (m) {
       html += '<a class="mundo" href="mundo.html#' + encodeURIComponent(m.id) + '" style="--bioma:' + m.color + ';animation-delay:' + (n++ * 0.06) + 's">' +
         '<span class="glifo">' + m.glifo + '</span><div class="meta">' + esc(m.materia) + '</div>' +
         '<h2>' + esc(m.titulo) + '</h2><p>' + esc(m.resumen) + '</p><span class="ir">Entrar al mundo →</span></a>';
