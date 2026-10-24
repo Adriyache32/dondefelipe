@@ -1580,7 +1580,7 @@ MUNDO.animar(function (t, dt) {
 var AUDIO = { ctx: null, listo: false, master: null, fuentes: [], cola: [], buses: {} };
 
 // Volúmenes por categoría (0..1). Ajustables desde el panel de mezcla.
-MUNDO.mezcla = { ambiente: 0.5, naturaleza: 0.95, fauna: 1.0, efectos: 0.8 };
+MUNDO.mezcla = { ambiente: 0.5, naturaleza: 0.95, fauna: 1.0, efectos: 0.8, musica: 0.55 };
 
 // Encola una tarea de audio; se ejecuta ya si está listo, o al desbloquear.
 function alAudio(fn) {
@@ -1598,7 +1598,7 @@ function iniAudio() {
     AUDIO.master.gain.value = 0.7;
     AUDIO.master.connect(AUDIO.ctx.destination);
     // buses de categoría, cada uno con su ganancia
-    ['ambiente', 'naturaleza', 'fauna', 'efectos'].forEach(function (cat) {
+    ['ambiente', 'naturaleza', 'fauna', 'efectos', 'musica'].forEach(function (cat) {
       var g = AUDIO.ctx.createGain();
       g.gain.value = MUNDO.mezcla[cat];
       g.connect(AUDIO.master);
@@ -1901,6 +1901,7 @@ function crearPanelMezcla() {
     { id: 'fauna',      nombre: 'Fauna',       desc: 'Aves y animales' },
     { id: 'efectos',    nombre: 'Efectos',     desc: 'Teletransporte, fichas' }
   ];
+  if (MUNDO._musica) CATS.push({ id: 'musica', nombre: 'Música', desc: '♪ ' + MUNDO._musica.titulo() });
   var p = document.createElement('div');
   p.id = 'mezcla-panel';
   var html = '<div class="mz-cab"><b>Mezcla de sonido</b>' +
@@ -1912,6 +1913,7 @@ function crearPanelMezcla() {
       '<input type="range" min="0" max="100" value="' + v + '" data-cat="' + c.id + '">' +
       '<span class="mz-val" data-val="' + c.id + '">' + v + '</span></div>';
   });
+  if (MUNDO._musica) html += '<button id="mz-sig" class="mz-mute">⏭ Siguiente canción</button>';
   html += '<button id="mz-mute" class="mz-mute">Silenciar todo</button>';
   p.innerHTML = html;
   document.body.appendChild(p);
@@ -1925,6 +1927,13 @@ function crearPanelMezcla() {
     };
   });
   document.getElementById('mz-cerrar').onclick = function () { p.remove(); };
+  var sig = document.getElementById('mz-sig');
+  if (sig) sig.onclick = function () {
+    MUNDO._musica.siguiente();
+    var et = p.querySelector('[data-cat="musica"]');
+    var sm = et && et.closest('.mz-fila').querySelector('small');
+    if (sm) sm.textContent = '♪ ' + MUNDO._musica.titulo();
+  };
   var muted = false;
   document.getElementById('mz-mute').onclick = function () {
     muted = !muted;
@@ -1934,6 +1943,41 @@ function crearPanelMezcla() {
   };
 }
 
+
+/* ---------------------------------------------------------------- música
+   Banda sonora del mundo: M.musica = [{ titulo, src }]. Las pistas se tocan
+   en orden y en bucle, por streaming (<audio>, no se descargan enteras) y
+   pasan por el bus "musica" del panel de mezcla. Arranca con el primer gesto
+   (los navegadores no dejan sonar audio antes) y se pausa si la pestaña se oculta. */
+MUNDO.musica = function (lista) {
+  if (!lista || !lista.length) return;
+  if (MUNDO._musica) MUNDO._musica.parar();
+  var i = 0, el = new Audio(), conectado = false, activo = true;
+  el.preload = 'none';
+  var cargar = function () { el.src = lista[i].src; };
+  var tocar = function () { if (!activo || document.hidden) return; var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); };
+  el.addEventListener('ended', function () { i = (i + 1) % lista.length; cargar(); tocar(); });
+  el.addEventListener('error', function () {   // si una pista falla, pasar a la otra (sin bucle infinito)
+    if (lista.length > 1 && !el._fallo) { el._fallo = true; i = (i + 1) % lista.length; cargar(); tocar(); }
+  });
+  el.addEventListener('playing', function () { el._fallo = false; });
+  var oculta = function () { if (document.hidden) el.pause(); else tocar(); };
+  document.addEventListener('visibilitychange', oculta);
+  cargar();
+  alAudio(function () {
+    if (!conectado && AUDIO.ctx && AUDIO.buses.musica) {
+      try { AUDIO.ctx.createMediaElementSource(el).connect(AUDIO.buses.musica); conectado = true; }
+      catch (e) { el.volume = MUNDO.mezcla.musica; }   // sin WebAudio: volumen directo
+    }
+    tocar();
+  });
+  MUNDO._musica = {
+    el: el,
+    titulo: function () { return lista[i].titulo; },
+    siguiente: function () { i = (i + 1) % lista.length; cargar(); tocar(); },
+    parar: function () { activo = false; el.pause(); document.removeEventListener('visibilitychange', oculta); }
+  };
+};
 
 /* ---------------------------------------------------------------- atmósferas
    Cambia el ambiente visual del mundo en vivo: color de cielo, niebla y tinte.
@@ -2905,6 +2949,8 @@ function arranque(M) {
   MUNDO.puertas = [];
   (M.puertas || []).forEach(function (pu) { MUNDO.puerta(pu); });
 
+  if (M.musica) MUNDO.musica(M.musica);
+
   // acciones propias del mundo (se suman a las del motor)
   if (M.acciones) { for (var ak in M.acciones) MUNDO.acciones[ak] = M.acciones[ak]; }
   MUNDO.oxigenoOn = false;
@@ -3167,8 +3213,8 @@ function construirUI(M) {
     }
   }
 
-  // botón de sonido: abre el panel de mezcla
-  if (M.sonido) {
+  // botón de sonido: abre el panel de mezcla (también si el mundo tiene música)
+  if (M.sonido || M.musica) {
     var bmute = nuevo('button', { id: 'btn-mute' });
     bmute.textContent = '\uD83D\uDD0A Sonido';
     bmute.onclick = function () { crearPanelMezcla(); };
