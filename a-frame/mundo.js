@@ -773,13 +773,15 @@ AFRAME.registerComponent('mando', {
       cam.getWorldDirection(dir); dir.y = 0; dir.normalize();
       var lado = new THREE.Vector3(-dir.z, 0, dir.x);   // perpendicular
       var fv = MUNDO.factorVel(p.x, p.z);
-      var vel = 4.2 * fv * dt / 1000;
-      p.addScaledVector(dir, -ejeY * vel);
-      p.addScaledVector(lado, ejeX * vel);
-      var lim = MUNDO.limites;
-      p.x = THREE.MathUtils.clamp(p.x, -lim.x, lim.x);
-      p.z = THREE.MathUtils.clamp(p.z, lim.zMin, lim.zMax);
-      MUNDO.resolver(p);
+      var vel = 4.2 * fv * dt / 1000, lim = MUNDO.limites;
+      var np = Math.min(20, Math.max(1, Math.ceil(vel / 0.15)));   // pasos cortos: no atravesar muros
+      for (var k = 0; k < np; k++) {
+        p.addScaledVector(dir, -ejeY * vel / np);
+        p.addScaledVector(lado, ejeX * vel / np);
+        p.x = THREE.MathUtils.clamp(p.x, -lim.x, lim.x);
+        p.z = THREE.MathUtils.clamp(p.z, lim.zMin, lim.zMax);
+        MUNDO.resolver(p);
+      }
     }
 
     // stick derecho: girar la cámara (yaw y pitch)
@@ -868,10 +870,16 @@ AFRAME.registerComponent('caminar', {
     // sonido de pasos: un tic cada ~420 ms de caminata (más lento si va lento)
     this.pasoAcum += dt * fv;
     if (this.pasoAcum > 420 && MUNDO.sonido) { this.pasoAcum = 0; MUNDO.sonido('paso'); }
-    p.addScaledVector(this.d, mover * this.data.vel * fv * dt / 1000);
-    p.x = THREE.MathUtils.clamp(p.x, -lim.x, lim.x);
-    p.z = THREE.MathUtils.clamp(p.z, lim.zMin, lim.zMax);
-    MUNDO.resolver(p);
+    // En pasos de máx. 15 cm: en equipos lentos (pocos cuadros por segundo) un
+    // solo salto largo atravesaba muros delgados como los de la cabaña.
+    var total = mover * this.data.vel * fv * dt / 1000;
+    var pasos = Math.min(20, Math.max(1, Math.ceil(Math.abs(total) / 0.15)));
+    for (var k = 0; k < pasos; k++) {
+      p.addScaledVector(this.d, total / pasos);
+      p.x = THREE.MathUtils.clamp(p.x, -lim.x, lim.x);
+      p.z = THREE.MathUtils.clamp(p.z, lim.zMin, lim.zMax);
+      MUNDO.resolver(p);
+    }
   },
 
   // Teletransporte: apunta con la mirada al suelo, marca el punto y salta
@@ -2779,9 +2787,9 @@ function arranque(M) {
         var b = [bx, f.y, azar(z1 + 0.5, z0 - 0.5)];
         giroActual = 0;
         if (defModelo) {
-          var esc = defModelo.escala || [1, 1];
+          var esc = defModelo.escala || [1, 1], anc = defModelo.ancho || [0.9, 1.1];
           (pendModelos[sp.modelo] = pendModelos[sp.modelo] || []).push({
-            x: b[0], y: b[1], z: b[2], giro: azar(0, 360), escala: azar(esc[0], esc[1]), ancho: azar(0.9, 1.1) });
+            x: b[0], y: b[1], z: b[2], giro: azar(0, 360), escala: azar(esc[0], esc[1]), ancho: azar(anc[0], anc[1]) });
         } else fn(H, sp.color, b);
         if (sp.choca) {
           chocaCilindro(b[0], b[2], sp.choca.r || 0.3,
@@ -2814,14 +2822,19 @@ function arranque(M) {
 
   marcar('colocando los objetos');
   // Objetos con posición propia: faroles, bancas, edificios…
-  (legado ? (M.objetos || []) : []).forEach(function (ob) {
-    marcar('objeto: ' + ob.forma);
-    var fn = MUNDO.formas[ob.forma];
-    if (!fn) { console.warn('Forma desconocida: ' + ob.forma); return; }
+  (M.objetos || []).forEach(function (ob) {
+    // objeto con modelo .glb (casa, cabaña…): se instancia con modelos.js; sin legado, solo estos
+    var defOb = ob.modelo && M.modelos && M.modelos[ob.modelo] && MUNDO.modelos ? M.modelos[ob.modelo] : null;
+    if (!legado && !defOb) return;
+    marcar('objeto: ' + (ob.modelo || ob.forma));
+    var fn = defOb ? null : MUNDO.formas[ob.forma];
+    if (!fn && !defOb) { console.warn('Forma desconocida: ' + ob.forma); return; }
     giroActual = ob.giro || 0;
     escalaActual = ob.esc || [1, 1, 1];
     grupoActual = ob.grupo || null;
-    fn(H, ob.color, ob.pos, ob);
+    if (defOb) (pendModelos[ob.modelo] = pendModelos[ob.modelo] || []).push({
+      x: ob.pos[0], y: ob.pos[1], z: ob.pos[2], giro: ob.giro || 0, escala: ob.escala || 1, ancho: 1 });
+    else fn(H, ob.color, ob.pos, ob);
     giroActual = 0;
     escalaActual = [1, 1, 1];
     grupoActual = null;
@@ -2921,6 +2934,8 @@ function arranque(M) {
         width: pz.ancho, depth: pz.largo, height: esp,
         position: ob.pos[0] + ' ' + (ob.pos[1] + pz.alto - esp / 2) + ' ' + ob.pos[2],
         rotation: '0 ' + (ob.giro || 0) + ' 0',
+        // oculto: solo para pisar (el modelo .glb ya dibuja su propio piso)
+        visible: pz.oculto ? 'false' : 'true',
         material: 'color:' + (pz.color || '#b9b3a6') + '; roughness:0.9'
       }));
     }

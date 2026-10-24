@@ -463,12 +463,18 @@ window.MUNDOS.bosque = {
   // MODELOS .glb INSTANCIADOS (modelos.js): uno cargado, cientos dibujados.
   // Partes por nombre del .glb: el viento y el tinte se aplican a cada una.
   modelos: {
-    quillay: { url: 'modelos/quillay.glb', lejos: 'modelos/quillay-lejos.glb', escala: [1.75, 2.45],
-               viento: { Follaje: 0.012, Ramas: 0.005 }, tinte: { Follaje: 0.12, Tronco: 0.06 },
-               colores: { Follaje: '#6f8256', Ramas: '#5a4632', Tronco: '#4d3b2a' } },
-    peumo:   { url: 'modelos/peumo.glb', lejos: 'modelos/peumo-lejos.glb', escala: [1.4, 1.95],
-               viento: { Follaje: 0.010, Ramas: 0.004 }, tinte: { Follaje: 0.10, Tronco: 0.06 },
-               colores: { Follaje: '#3f5c34', Ramas: '#54402c', Tronco: '#463527' } }
+    // Quillay: copa alta, abierta y más angosta; verde amarillento claro y corteza gris.
+    quillay: { url: 'modelos/quillay.glb', lejos: 'modelos/quillay-lejos.glb',
+               escala: [1.9, 2.6], ancho: [0.74, 0.92],
+               viento: { Follaje: 0.012, Ramas: 0.005 }, tinte: { Follaje: 0.16, Tronco: 0.08 },
+               colores: { Follaje: '#8f9c5c', Ramas: '#6f6355', Tronco: '#70675c' } },
+    // Peumo: copa baja, ancha y densa; verde muy oscuro y brillante, corteza parda rojiza.
+    peumo:   { url: 'modelos/peumo.glb', lejos: 'modelos/peumo-lejos.glb',
+               escala: [1.25, 1.65], ancho: [1.18, 1.42],
+               viento: { Follaje: 0.008, Ramas: 0.003 }, tinte: { Follaje: 0.06, Tronco: 0.06 },
+               colores: { Follaje: '#2b4a2c', Ramas: '#523426', Tronco: '#4c3023' } },
+    // Cabaña ingresable: piezas fundidas en 2 mallas (Cuerpo y Vidrio) con modelos/optimizar.mjs
+    cabana:  { url: 'modelos/cabana.glb', lejos: 'modelos/cabana-lejos.glb' }
   },
 
   ancho: 150,
@@ -630,6 +636,19 @@ window.MUNDOS.bosque = {
   ],
 
   objetos: [
+    // CABAÑA (modelo .glb): se puede entrar por la puerta; muros y muebles con colisión.
+    // La puerta del modelo mira a -z: con giro 160 queda hacia el sendero.
+    { modelo: 'cabana', pos: [-2, 0, -40], giro: 160, nombre: 'Cabaña', alto: 4.8,
+      piso: { ancho: 5.5, largo: 6.5, alto: 0.28, oculto: true },
+      choca: [
+        { dx: -2.52, dz: 0, ancho: 0.16, largo: 6.2, alto: 2.9 },     // muro izquierdo
+        { dx: 2.52, dz: 0, ancho: 0.16, largo: 6.2, alto: 2.9 },      // muro derecho
+        { dx: 0, dz: 3.02, ancho: 5.2, largo: 0.16, alto: 2.9 },      // muro del fondo (ventana)
+        { dx: -1.59, dz: -3.02, ancho: 2.02, largo: 0.16, alto: 2.9 }, // frente, a cada lado de la puerta
+        { dx: 1.59, dz: -3.02, ancho: 2.02, largo: 0.16, alto: 2.9 },
+        { dx: -1.35, dz: 1.45, ancho: 1.35, largo: 2.0, alto: 0.85 },  // cama
+        { dx: 1.35, dz: 0.65, ancho: 1.0, largo: 0.75, alto: 1.1 }     // mesa
+      ] },
     // ---------- ESTACIONES DE LA GUÍA ----------
     { forma: 'estacion', color: '#2f6b45', pos: [4, 0, 58], giroCartel: -20,
       nombre: 'Estación 1', ficha: 'e1', altoFicha: 3.6 },
