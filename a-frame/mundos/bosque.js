@@ -501,8 +501,8 @@ window.MUNDOS.bosque = {
       vida: ['Sigue las estaciones numeradas', 'Fíjate en cuánta luz hay en cada tramo', 'Cada color de recuadro es un tipo de tarea distinta'],
       especies: [
         { forma: 'helecho', n: 26, color: '#3f6b34' },
-        { forma: 'boldo', n: 10, color: '#6f8a5c', nombre: 'Boldo', choca: { r: 0.3, alto: 4 } },
-        { forma: 'molle', n: 12, color: '#5f7d4c', nombre: 'Molle', choca: { r: 0.28, alto: 4 } },
+        // pendiente de modelo .glb: { forma: 'boldo', n: 10, color: '#6f8a5c', nombre: 'Boldo', choca: { r: 0.3, alto: 4 } },
+        // pendiente de modelo .glb: { forma: 'molle', n: 12, color: '#5f7d4c', nombre: 'Molle', choca: { r: 0.28, alto: 4 } },
         { forma: 'hierba', n: 200, color: '#6f8a4e', nombre: 'Hierba del sotobosque' },
         { forma: 'herbacea', n: 40, color: '#d8746a', nombre: 'Añañuca' }
       ]
@@ -514,8 +514,8 @@ window.MUNDOS.bosque = {
       vida: ['Palma chilena (<i>Jubaea chilensis</i>), emblema regional', 'Casi no hay renovales: faltan palmas jóvenes', 'Bajo las palmas crecen espino y colliguay'],
       reto: 'Cuenta cuántas palmas grandes ves y cuántas pequeñas. ¿Qué le pasará a este palmar en cien años si la proporción no cambia?',
       especies: [
-        { forma: 'palma',     n: 26, color: '#5f7a44', nombre: 'Palma chilena', choca: { r: 0.5, alto: 12 } },
-        { forma: 'espino',    n: 22, color: '#818c5e', nombre: 'Espino', choca: { r: 0.24, alto: 3.5 } },
+        // pendiente de modelo .glb: { forma: 'palma',     n: 26, color: '#5f7a44', nombre: 'Palma chilena', choca: { r: 0.5, alto: 12 } },
+        // pendiente de modelo .glb: { forma: 'espino',    n: 22, color: '#818c5e', nombre: 'Espino', choca: { r: 0.24, alto: 3.5 } },
         { forma: 'colliguay', n: 34, color: '#6b7f4a', nombre: 'Colliguay' },
         { forma: 'pasto',     n: 130, color: '#a09257', nombre: 'Pasto seco' },
         { forma: 'hierba',    n: 170, color: '#9a9459', nombre: 'Hierba seca' },
@@ -529,9 +529,9 @@ window.MUNDOS.bosque = {
       vida: ['Belloto del norte, especie amenazada de quebradas húmedas', 'Boldo (<i>Peumus boldus</i>), aromático y medicinal', 'Maitén de copa llorona en el borde del agua', 'Helechos y musgos: solo viven donde hay humedad constante'],
       reto: 'Mira el mismo cerro hacia los dos lados. ¿Por qué una ladera tiene bosque denso y la otra matorral? La respuesta no es el suelo ni la lluvia: es cuántas horas de sol recibe cada una.',
       especies: [
-        { forma: 'belloto', n: 26, color: '#35603a', nombre: 'Belloto del norte', choca: { r: 0.4, alto: 7 } },
-        { forma: 'boldo',   n: 24, color: '#4f6f42', nombre: 'Boldo', choca: { r: 0.32, alto: 4 } },
-        { forma: 'maiten',  n: 14, color: '#456b3e', nombre: 'Maitén', choca: { r: 0.3, alto: 6 } },
+        // pendiente de modelo .glb: { forma: 'belloto', n: 26, color: '#35603a', nombre: 'Belloto del norte', choca: { r: 0.4, alto: 7 } },
+        // pendiente de modelo .glb: { forma: 'boldo',   n: 24, color: '#4f6f42', nombre: 'Boldo', choca: { r: 0.32, alto: 4 } },
+        // pendiente de modelo .glb: { forma: 'maiten',  n: 14, color: '#456b3e', nombre: 'Maitén', choca: { r: 0.3, alto: 6 } },
         { forma: 'maqui',   n: 30, color: '#3c5c38', nombre: 'Maqui' },
         { forma: 'helecho', n: 110, color: '#315a2c' },
         { forma: 'costra',  n: 40, color: '#4a5c3a', nombre: 'Musgo' },
@@ -547,15 +547,15 @@ window.MUNDOS.bosque = {
       vida: ['Litre (<i>Lithraea caustica</i>), de hoja dura y resinosa', 'Quillay (<i>Quillaja saponaria</i>), de corteza con saponina', 'Peumo (<i>Cryptocarya alba</i>), de fruto rojo comestible', 'Quisco y chagual: suculentas que almacenan agua', 'Árboles secos en pie: la marca del estrés hídrico'],
       reto: 'Toca (con cuidado) una hoja de litre y una de belloto. ¿Por qué la de la solana es gruesa y dura, y la de la quebrada delgada y blanda?',
       especies: [
-        { forma: 'litreN',    n: 38, color: '#5c7040', nombre: 'Litre', choca: { r: 0.3, alto: 3.5 } },
+        // pendiente de modelo .glb: { forma: 'litreN',    n: 38, color: '#5c7040', nombre: 'Litre', choca: { r: 0.3, alto: 3.5 } },
         { modelo: 'quillay', forma: 'quillay', n: 30, nombre: 'Quillay', alto: 7.6, choca: { r: 0.4, alto: 5 } },   // modelo .glb instanciado
-        { forma: 'peumo',     n: 24, color: '#3f5c34', nombre: 'Peumo', choca: { r: 0.3, alto: 5 } },
+        // pendiente de modelo .glb: { forma: 'peumo',     n: 24, color: '#3f5c34', nombre: 'Peumo', choca: { r: 0.3, alto: 5 } },
         { forma: 'columna',   n: 30, color: '#55703f', nombre: 'Quisco', choca: { r: 0.3, alto: 3.5 } },
         { forma: 'roseta',    n: 26, color: '#7d8b6a', nombre: 'Chagual' },
         { forma: 'colliguay', n: 30, color: '#7b8a52', nombre: 'Colliguay' },
         { forma: 'hierba',    n: 150, color: '#a89a5c', nombre: 'Hierba seca' },
         { forma: 'herbacea',  n: 22,  color: '#d89a3c', nombre: 'Flor de verano' },
-        { forma: 'seco',      n: 26, color: '#9a8f7a', nombre: 'Árbol seco', choca: { r: 0.2, alto: 3 } }
+        // pendiente de modelo .glb: { forma: 'seco',      n: 26, color: '#9a8f7a', nombre: 'Árbol seco', choca: { r: 0.2, alto: 3 } }
       ]
     },
     {
@@ -565,7 +565,7 @@ window.MUNDOS.bosque = {
       vida: ['Zorro chilla (<i>Lycalopex griseus</i>), carnívoro del matorral', 'Degú (<i>Octodon degus</i>), roedor endémico y social', 'Lagartijas que regulan su temperatura al sol', 'Espino y colliguay como refugio y alimento'],
       reto: 'El degú come plantas y el zorro come degús. Dibuja la cadena y agrega una flecha más: ¿qué pasa si se quema el matorral?',
       especies: [
-        { forma: 'espino',    n: 30, color: '#818c5e', nombre: 'Espino', choca: { r: 0.24, alto: 3.5 } },
+        // pendiente de modelo .glb: { forma: 'espino',    n: 30, color: '#818c5e', nombre: 'Espino', choca: { r: 0.24, alto: 3.5 } },
         { forma: 'colliguay', n: 40, color: '#7b8a52', nombre: 'Colliguay' },
         { forma: 'maqui',     n: 18, color: '#41613a', nombre: 'Maqui' },
         { forma: 'degu',      n: 16, color: '#9a8258', nombre: 'Degú' },
@@ -581,11 +581,11 @@ window.MUNDOS.bosque = {
       texto: 'Al borde del bosque vive gente que depende de él: agua de vertiente, leña, recolección de frutos y hierbas, apicultura. El cambio climático no es solo un problema de los árboles: cuando la vertiente baja su caudal o el bosque retrocede, son estas familias las que lo sienten primero. El refugio grande es el punto de encuentro de la comunidad.',
       vida: ['Pozos y vertientes que dependen de la recarga del bosque', 'Recolección de boldo, peumo, maqui y miel', 'La sequía obliga a comprar agua en camiones aljibe', 'El refugio se usa para reuniones y para brigadas de incendio'],
       especies: [
-        { forma: 'seco',   n: 12, color: '#9a8f7a' },
-        { forma: 'litreN', n: 10, color: '#5c7040' },
+        // pendiente de modelo .glb: { forma: 'seco',   n: 12, color: '#9a8f7a' },
+        // pendiente de modelo .glb: { forma: 'litreN', n: 10, color: '#5c7040' },
         { forma: 'hierba', n: 160, color: '#8a9455', nombre: 'Pastizal' },
         { forma: 'herbacea', n: 26, color: '#d8746a', nombre: 'Añañuca' },
-        { forma: 'maiten', n: 6,  color: '#4d7043', nombre: 'Maitén', choca: { r: 0.3, alto: 6 } }
+        // pendiente de modelo .glb: { forma: 'maiten', n: 6,  color: '#4d7043', nombre: 'Maitén', choca: { r: 0.3, alto: 6 } }
       ]
     }
   ],
