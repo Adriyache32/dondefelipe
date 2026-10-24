@@ -115,6 +115,7 @@
   var _cam = new THREE.Vector3(), tAcum = 0;
   function actualizar(t, dt) {
     uTiempo.value = t / 1000;
+    if (puertas.length) animarPuertas(dt || 16);
     tAcum += dt || 16;
     if (tAcum < 250) return;   // la distancia se revisa 4 veces por segundo, no en cada cuadro
     tAcum = 0;
@@ -157,6 +158,87 @@
     }
   }
   if (MUNDO.animar) MUNDO.animar(actualizar);
+
+  /* ------------------------------------------------------------ física de construcciones
+     def.fisica: JSON que genera modelos/optimizar.mjs con, en coordenadas del modelo:
+       cajas   [{dx,dz,ancho,largo,base,alto}]  → colisiones (muros, muebles)
+       suelos  [{dx,dz,ancho,largo,alto}]       → superficies pisables (invisibles)
+       puertas [{x0,x1,z,base,alto,grosor}]     → puerta doble que se abre al acercarse
+     Se aplica a CADA copia con su posición, giro y escala. */
+  var puertas = [], _cam2 = new THREE.Vector3();
+  function mundoDe(e, dx, dz) {
+    var g = (e.giro || 0) * Math.PI / 180, co = Math.cos(g), si = Math.sin(g), s = e.escala || 1;
+    return [e.x + (dx * co + dz * si) * s, e.z + (-dx * si + dz * co) * s];
+  }
+  function aplicarFisica(id, lista, def, raiz) {
+    return fetch(def.fisica).then(function (r) { if (!r.ok) throw new Error('sin física: ' + def.fisica); return r.json(); }).then(function (F) {
+      var terreno = document.getElementById('terreno') || document.querySelector('a-scene');
+      var hojas = [];   // { e, puerta, lado }
+      lista.forEach(function (e) {
+        var s = e.escala || 1;
+        (F.cajas || []).forEach(function (c) {
+          var w = mundoDe(e, c.dx, c.dz);
+          MUNDO.chocaCaja(w[0], w[1], c.ancho * s, c.largo * s, e.y + (c.base || 0) * s, e.y + c.alto * s, e.giro || 0);
+        });
+        (F.suelos || []).forEach(function (c) {
+          var w = mundoDe(e, c.dx, c.dz), b = document.createElement('a-box');
+          b.setAttribute('class', 'suelo'); b.setAttribute('visible', 'false');
+          b.setAttribute('width', c.ancho * s); b.setAttribute('depth', c.largo * s); b.setAttribute('height', 0.3);
+          b.setAttribute('position', w[0] + ' ' + (e.y + c.alto * s - 0.15) + ' ' + w[1]);
+          b.setAttribute('rotation', '0 ' + (e.giro || 0) + ' 0');
+          terreno.appendChild(b);
+        });
+        (F.puertas || []).forEach(function (pu) {
+          var cx = (pu.x0 + pu.x1) / 2, w = mundoDe(e, cx, pu.z);
+          var choque = MUNDO.chocaCaja(w[0], w[1], (pu.x1 - pu.x0) * s, 0.3 * s, e.y + pu.base * s, e.y + (pu.base + pu.alto) * s, e.giro || 0);
+          var p = { e: e, def: pu, x: w[0], z: w[1], ang: 0, meta: 0, choque: choque, y1: choque.y1, i: puertas.length };
+          puertas.push(p); hojas.push(p);
+        });
+      });
+      if (!hojas.length) return;
+      // dos hojas por puerta, en DOS mallas instanciadas para todas las copias (2 llamadas de dibujo)
+      var pu0 = F.puertas[0], ancho = (pu0.x1 - pu0.x0) / 2 - 0.02, alto = pu0.alto - 0.04, gr = pu0.grosor || 0.08;
+      var mat = new THREE.MeshStandardMaterial({ color: def.colorPuerta || '#7a4e2e', roughness: 0.8 });
+      var geoI = new THREE.BoxGeometry(ancho, alto, gr); geoI.translate(ancho / 2, alto / 2, 0);    // bisagra a la izquierda
+      var geoD = new THREE.BoxGeometry(ancho, alto, gr); geoD.translate(-ancho / 2, alto / 2, 0);   // bisagra a la derecha
+      var mi = new THREE.InstancedMesh(geoI, mat, hojas.length), md = new THREE.InstancedMesh(geoD, mat, hojas.length);
+      mi.name = id + ':puertaI'; md.name = id + ':puertaD';
+      mi.instanceMatrix.setUsage(THREE.DynamicDrawUsage); md.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      raiz.add(mi); raiz.add(md);
+      hojas.forEach(function (p, k) { p.mi = mi; p.md = md; p.k = k; ponerHojas(p); });
+      mi.computeBoundingSphere(); md.computeBoundingSphere();
+      mi.boundingSphere.radius += 3; md.boundingSphere.radius += 3;
+      MUNDO.refrescarSuelos();
+    }).catch(function (e) { console.warn(e.message); });
+  }
+  var _mb = new THREE.Matrix4(), _mh = new THREE.Matrix4(), _mr = new THREE.Matrix4();
+  function ponerHojas(p) {
+    var e = p.e, s = e.escala || 1, pu = p.def;
+    _p.set(e.x, e.y, e.z); _q.setFromAxisAngle(_ejeY, (e.giro || 0) * Math.PI / 180); _s.set(s, s, s);
+    _mb.compose(_p, _q, _s);
+    // hoja izquierda: bisagra en x0, abre hacia adentro (+z del modelo) → giro negativo
+    _mh.makeTranslation(pu.x0 + 0.01, pu.base, pu.z); _mr.makeRotationY(-p.ang);
+    p.mi.setMatrixAt(p.k, _m.multiplyMatrices(_mb, _mh).multiply(_mr));
+    _mh.makeTranslation(pu.x1 - 0.01, pu.base, pu.z); _mr.makeRotationY(p.ang);
+    p.md.setMatrixAt(p.k, _m.multiplyMatrices(_mb, _mh).multiply(_mr));
+    p.mi.instanceMatrix.needsUpdate = true; p.md.instanceMatrix.needsUpdate = true;
+  }
+  var ABIERTA = 1.75, RADIO = 3.4;   // ~100°, y a cuántos metros se abre
+  function animarPuertas(dt) {
+    var cam = document.querySelector('a-scene') && document.querySelector('a-scene').camera;
+    if (!cam) return;
+    cam.getWorldPosition(_cam2);
+    for (var i = 0; i < puertas.length; i++) {
+      var p = puertas[i]; if (!p.mi) continue;
+      var dx = _cam2.x - p.x, dz = _cam2.z - p.z, cerca = dx * dx + dz * dz < RADIO * RADIO * (p.e.escala || 1);
+      p.meta = cerca ? ABIERTA : 0;
+      if (Math.abs(p.ang - p.meta) < 0.001) continue;
+      var paso = dt / 1000 * 2.4;
+      p.ang += Math.max(-paso, Math.min(paso, p.meta - p.ang));
+      p.choque.y1 = p.ang > 0.5 ? -1e9 : p.y1;   // abierta: se puede pasar; cerrada: bloquea
+      ponerHojas(p);
+    }
+  }
 
   /* ------------------------------------------------------------ instanciar
      lista: [{ x, y, z, giro (°), escala }]. def: la entrada de M.modelos. */
@@ -225,6 +307,7 @@
         celdas.push(celda);
       });
       (padre || document.querySelector('a-scene').object3D).add(raiz);
+      if (def.fisica) aplicarFisica(id, lista, def, raiz);
       stats.modelos++; stats.ejemplares += lista.length;
       tAcum = 1e9;   // repartir cerca/lejos en el próximo cuadro
       return raiz;

@@ -571,6 +571,14 @@ var RADIO_CUERPO = 0.34;
 var ALTO_CUERPO = 1.65;
 var _choqueSector = null;   // si no es null, las colisiones nuevas se etiquetan con este sector
 MUNDO.choques = CHOQUES;
+// API para modelos.js: colisiones y suelos creados después de construir el mundo
+MUNDO.chocaCaja = function () { chocaCaja.apply(null, arguments); return CHOQUES[CHOQUES.length - 1]; };
+MUNDO.chocaCilindro = function () { chocaCilindro.apply(null, arguments); return CHOQUES[CHOQUES.length - 1]; };
+MUNDO.refrescarSuelos = function () {   // los componentes que siguen el suelo vuelven a buscar las superficies
+  document.querySelectorAll('[piso-adherido],[gravedad]').forEach(function (e) {
+    ['piso-adherido', 'gravedad'].forEach(function (c) { if (e.components[c]) e.components[c].mallas = []; });
+  });
+};
 MUNDO.fisica = true;
 MUNDO.gravedad = 9.81;   // m/s²  (Tierra por defecto)
 MUNDO.saltoV = 5.2;      // velocidad inicial de salto en m/s (Tierra)
