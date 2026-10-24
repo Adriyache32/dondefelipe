@@ -708,6 +708,12 @@ window.MUNDOS.mercurio = {
   materia: 'Física · Astronomía · Sistema Solar',
   resumen: 'El planeta más cercano al Sol, con un jardín terrestre bajo una cúpula de vidrio. Afuera, vacío y regolito; adentro, aire y fotosíntesis.',
 
+  // BANDA SONORA (se toca en orden y en bucle; volumen en el panel de sonido)
+  musica: [
+    { titulo: 'Watching the Twin Suns Rise', src: 'mundos/audio/mercurio-twin-suns.mp3' },
+    { titulo: 'The Glass Tide', src: 'mundos/audio/mercurio-glass-tide.mp3' }
+  ],
+
   // Cielo negro: Mercurio casi no tiene atmósfera
   cielo: '#050608',
   luz: { cielo: '#141820', suelo: '#2e2820', ambiente: 0.22,
