@@ -25,7 +25,7 @@ window.CATALOGO_MUNDOS = [
       resumen: 'Se entra por la membrana, se cruza un poro nuclear y se ve el ADN replicarse y transcribirse; después se sigue al ARNm hasta el ribosoma.' }
   ] },
   { grupo: 'Sistema Solar', mundos: [
-    { id: 'mercurio', glifo: '🪐', color: '#b07850', titulo: 'Mercurio · la superficie', materia: 'Física · Astronomía',
+    { id: 'mercurio', oculto: true, glifo: '🪐', color: '#b07850', titulo: 'Mercurio · la superficie', materia: 'Física · Astronomía',
       resumen: 'El planeta más cercano al Sol, con un jardín terrestre bajo una cúpula de vidrio. Afuera, vacío y regolito; adentro, aire y fotosíntesis.' },
     { id: 'venus', oculto: true,    glifo: '🌋', color: '#cf7f34', titulo: 'Venus · el planeta invernadero', materia: 'Física · Química · Geología',
       resumen: 'Superficie volcánica bajo una atmósfera densa de CO₂: por qué Venus es el planeta más caliente del Sistema Solar.' }

@@ -2728,6 +2728,7 @@ function arranque(M) {
 
   marcar('construyendo las franjas');
   _sembrarRng();   // reparto determinista según MUNDO.semilla
+  var pendModelos = {};   // modelo → ejemplares, para instanciarlos juntos (modelos.js)
   M.franjas.forEach(function (f) {
     marcar('franja: ' + f.id);
     var z0 = f.z[0], z1 = f.z[1];
@@ -2756,10 +2757,12 @@ function arranque(M) {
     terreno.appendChild(terraza);
 
     (f.especies || []).forEach(function (sp) {
-      marcar('franja ' + f.id + ', especie: ' + sp.forma);
-      var fn = MUNDO.formas[sp.forma];
-      if (!fn) { console.warn('Forma desconocida: ' + sp.forma); return; }
-      var cant = Math.max(3, Math.round(sp.n * carga));
+      marcar('franja ' + f.id + ', especie: ' + (sp.modelo || sp.forma));
+      // especie con modelo .glb instanciado (modelos.js): se juntan los ejemplares y se dibujan al final
+      var defModelo = sp.modelo && M.modelos && M.modelos[sp.modelo] && MUNDO.modelos ? M.modelos[sp.modelo] : null;
+      var fn = defModelo ? null : MUNDO.formas[sp.forma];
+      if (!fn && !defModelo) { console.warn('Forma desconocida: ' + (sp.modelo || sp.forma)); return; }
+      var cant = Math.max(3, Math.round(sp.n * carga * (defModelo && MUNDO.calidad ? MUNDO.calidad.densidad : 1)));
       var hueco = sp.hueco != null ? sp.hueco : (f.hueco || 0);
       for (var i = 0; i < cant; i++) {
         var bx = azar(-anchoVida / 2, anchoVida / 2);
@@ -2767,7 +2770,11 @@ function arranque(M) {
         if (hueco) bx = (bx < 0 ? -1 : 1) * (hueco + Math.abs(bx) * (anchoVida / 2 - hueco) / (anchoVida / 2));
         var b = [bx, f.y, azar(z1 + 0.5, z0 - 0.5)];
         giroActual = 0;
-        fn(H, sp.color, b);
+        if (defModelo) {
+          var esc = defModelo.escala || [1, 1];
+          (pendModelos[sp.modelo] = pendModelos[sp.modelo] || []).push({
+            x: b[0], y: b[1], z: b[2], giro: azar(0, 360), escala: azar(esc[0], esc[1]), ancho: azar(0.9, 1.1) });
+        } else fn(H, sp.color, b);
         if (sp.choca) {
           chocaCilindro(b[0], b[2], sp.choca.r || 0.3,
                         b[1], b[1] + (sp.choca.alto || 3));
@@ -3075,6 +3082,11 @@ function arranque(M) {
   } else {
     terreno.addEventListener('loaded', function () { volcarLotes(terreno.object3D); });
   }
+  // modelos .glb instanciados (árboles, rocas…): se cargan en paralelo y aparecen al estar listos
+  Object.keys(pendModelos).forEach(function (id) {
+    MUNDO.modelos.instanciar(id, pendModelos[id], M.modelos[id], terreno.object3D)
+      .catch(function (e) { console.warn('modelo ' + id + ':', e.message); });
+  });
   // enlazar las hojas de puerta a sus definiciones
   MUNDO.puertas.forEach(function (pu) {
     if (pu._id && pu._lado) {
@@ -3219,6 +3231,18 @@ function construirUI(M) {
     bmute.textContent = '\uD83D\uDD0A Sonido';
     bmute.onclick = function () { crearPanelMezcla(); };
     ctrl.appendChild(bmute);
+  }
+
+  // calidad gráfica (modelos.js): densidad de vegetación y distancia de dibujo
+  if (MUNDO.niveles && M.modelos) {
+    var scal = nuevo('select', { id: 'calidad', title: 'Calidad gráfica: baja para equipos lentos' });
+    Object.keys(MUNDO.niveles).forEach(function (k) {
+      var o = nuevo('option', { value: k }); o.textContent = '\u2699\uFE0F Calidad ' + k;
+      if (k === MUNDO.calidad.nivel) o.selected = true;
+      scal.appendChild(o);
+    });
+    scal.onchange = function () { MUNDO.setCalidad(scal.value); };
+    ctrl.appendChild(scal);
   }
 
   var bn = nuevo('button', { id: 'nombres', 'aria-pressed': 'true' });
