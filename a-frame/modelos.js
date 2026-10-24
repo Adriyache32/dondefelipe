@@ -1,0 +1,190 @@
+/* =============================================================================
+   MODELOS 3D INSTANCIADOS (motor v11)
+   -----------------------------------------------------------------------------
+   Un modelo .glb (árbol, roca, arbusto…) se carga UNA vez y se dibuja cientos
+   de veces con InstancedMesh: una llamada de dibujo por parte del modelo y por
+   celda del mapa, sin importar cuántos ejemplares haya.
+
+   Cómo lo usa un mundo:
+     modelos: {
+       quillay: { url: 'modelos/quillay.glb', escala: [1.7, 2.4],
+                  viento: { Follaje: 0.05, Ramas: 0.015 },   // vaivén por parte (en la GPU)
+                  tinte:  { Follaje: 0.10 } }                // variación de color por ejemplar
+     },
+     ... especies: [{ modelo: 'quillay', n: 30, choca: { r: 0.35, alto: 5 } }]
+
+   Diseño (pensado para crecer):
+   - Celdas: los ejemplares se agrupan por celdas de CELDA metros. Cada celda es
+     una malla instanciada con su propia esfera envolvente → la cámara descarta
+     sola lo que no ve (frustum culling) y lo lejano se apaga por distancia.
+   - Viento en la GPU: el vaivén lo calcula el shader con la altura del vértice;
+     la CPU no toca las matrices en cada cuadro (el motor antiguo sí lo hacía).
+   - Calidad: MUNDO.calidad (baja / media / alta) regula densidad y distancia de
+     dibujo; se elige en el menú y se guarda en el navegador.
+   - Partes por nombre: cada malla del .glb (Tronco, Ramas, Follaje) es una parte;
+     el viento y el tinte se aplican por nombre, así un mismo sistema sirve para
+     cualquier modelo que exportes con nombres claros.
+   ============================================================================= */
+(function () {
+  'use strict';
+  if (!window.MUNDO) window.MUNDO = {};
+
+  /* ------------------------------------------------------------ calidad */
+  var NIVELES = {
+    baja:  { densidad: 0.55, distancia: 70,  nombre: 'Baja (equipos lentos)' },
+    media: { densidad: 1,    distancia: 120, nombre: 'Media' },
+    alta:  { densidad: 1.5,  distancia: 220, nombre: 'Alta (equipos potentes)' }
+  };
+  function nivelInicial() {
+    try { var g = localStorage.getItem('mundo_calidad'); if (NIVELES[g]) return g; } catch (e) {}
+    var movil = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+    return movil ? 'baja' : 'media';
+  }
+  var nivel = nivelInicial();
+  MUNDO.calidad = Object.assign({ nivel: nivel }, NIVELES[nivel]);
+  MUNDO.niveles = NIVELES;
+  MUNDO.setCalidad = function (n) {
+    if (!NIVELES[n]) return;
+    try { localStorage.setItem('mundo_calidad', n); } catch (e) {}
+    location.reload();   // la densidad cambia lo que se siembra: se reconstruye el mundo
+  };
+
+  /* ------------------------------------------------------------ carga */
+  var CACHE = {};
+  // Carga un .glb con el GLTFLoader que trae A-Frame (vía una entidad oculta) y
+  // devuelve sus partes: [{ nombre, geometria, material }], en coordenadas del modelo.
+  function cargar(url) {
+    if (CACHE[url]) return CACHE[url];
+    CACHE[url] = new Promise(function (ok, mal) {
+      var escena = document.querySelector('a-scene');
+      var e = document.createElement('a-entity');
+      e.setAttribute('visible', false);
+      e.setAttribute('position', '0 -999 0');
+      var fin = function () { if (e.parentNode) e.parentNode.removeChild(e); };
+      e.addEventListener('model-loaded', function () {
+        var raiz = e.getObject3D('mesh'), partes = [];
+        raiz.updateMatrixWorld(true);
+        var inv = new THREE.Matrix4().copy(raiz.matrixWorld).invert();
+        raiz.traverse(function (o) {
+          if (!o.isMesh) return;
+          var g = o.geometry.clone();
+          // la transformación del nodo dentro del .glb queda horneada en la geometría
+          g.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld));
+          if (!g.attributes.normal) g.computeVertexNormals();
+          partes.push({ nombre: o.name || (o.parent && o.parent.name) || 'parte', geometria: g, material: o.material });
+        });
+        fin();
+        partes.length ? ok(partes) : mal(new Error('El modelo no tiene mallas: ' + url));
+      });
+      e.addEventListener('model-error', function (ev) { fin(); mal(new Error('No se pudo cargar ' + url)); });
+      e.setAttribute('gltf-model', 'url(' + url + ')');
+      escena.appendChild(e);
+    });
+    return CACHE[url];
+  }
+
+  /* ------------------------------------------------------------ viento (GPU) */
+  var uTiempo = { value: 0 };
+  function conViento(material, fuerza) {
+    var m = material.clone();
+    m.onBeforeCompile = function (sh) {
+      sh.uniforms.uTiempo = uTiempo;
+      sh.vertexShader = 'uniform float uTiempo;\n' + sh.vertexShader.replace('#include <begin_vertex>',
+        '#include <begin_vertex>\n' +
+        '#ifdef USE_INSTANCING\n' +
+        '  vec3 base_ = vec3(instanceMatrix[3][0], instanceMatrix[3][1], instanceMatrix[3][2]);\n' +
+        '#else\n  vec3 base_ = vec3(0.0);\n#endif\n' +
+        // más vaivén arriba que abajo; fase distinta por ejemplar; dos ondas para que no sea mecánico
+        '  float h_ = max(position.y, 0.0);\n' +
+        '  float f_ = ' + fuerza.toFixed(4) + ' * h_ * h_;\n' +
+        '  transformed.x += f_ * (sin(uTiempo * 1.3 + base_.x * 0.31 + base_.z * 0.17) + 0.35 * sin(uTiempo * 3.1 + base_.z * 0.9));\n' +
+        '  transformed.z += f_ * 0.6 * sin(uTiempo * 1.1 + base_.z * 0.27 + base_.x * 0.13);');
+    };
+    m.customProgramCacheKey = function () { return 'viento' + fuerza; };
+    return m;
+  }
+
+  /* ------------------------------------------------------------ celdas y distancia */
+  var CELDA = 64;   // metros por celda (por modelo se puede cambiar con def.celda)
+  var celdas = [];   // { x, z, mallas: [] }
+  var _cam = new THREE.Vector3(), tAcum = 0;
+  function actualizar(t, dt) {
+    uTiempo.value = t / 1000;
+    tAcum += dt || 16;
+    if (tAcum < 250) return;   // la distancia se revisa 4 veces por segundo, no en cada cuadro
+    tAcum = 0;
+    var cam = document.querySelector('a-scene') && document.querySelector('a-scene').camera;
+    if (!cam) return;
+    cam.getWorldPosition(_cam);
+    var d2 = MUNDO.calidad.distancia * MUNDO.calidad.distancia;
+    for (var i = 0; i < celdas.length; i++) {
+      var c = celdas[i], dx = c.x - _cam.x, dz = c.z - _cam.z;
+      var ver = dx * dx + dz * dz < d2 + c.r * c.r;
+      if (ver !== c.ver) { c.ver = ver; for (var k = 0; k < c.mallas.length; k++) c.mallas[k].visible = ver; }
+    }
+  }
+  if (MUNDO.animar) MUNDO.animar(actualizar);
+
+  /* ------------------------------------------------------------ instanciar
+     lista: [{ x, y, z, giro (°), escala }]. def: la entrada de M.modelos. */
+  var _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _p = new THREE.Vector3(),
+      _s = new THREE.Vector3(), _ejeY = new THREE.Vector3(0, 1, 0), _c = new THREE.Color();
+  var stats = { modelos: 0, ejemplares: 0, mallas: 0 };
+  MUNDO.modelosStats = stats;
+
+  function instanciar(id, lista, def, padre) {
+    def = def || {};
+    return cargar(def.url).then(function (partes) {
+      // agrupar por celda
+      var grupos = {}, celdaM = def.celda || CELDA;
+      lista.forEach(function (e) {
+        var k = Math.floor(e.x / celdaM) + ',' + Math.floor(e.z / celdaM);
+        (grupos[k] = grupos[k] || []).push(e);
+      });
+      // materiales por parte (compartidos entre celdas)
+      var mats = partes.map(function (p) {
+        var f = def.viento && def.viento[p.nombre];
+        var m = f ? conViento(p.material, f) : p.material.clone();
+        // color por parte (sRGB, como en el resto del mundo): ajusta el modelo a la paleta del bioma
+        if (def.colores && def.colores[p.nombre]) m.color = new THREE.Color(def.colores[p.nombre]);
+        return m;
+      });
+      var raiz = new THREE.Group(); raiz.name = 'modelo-' + id;
+      Object.keys(grupos).forEach(function (k) {
+        var es = grupos[k], cx = 0, cz = 0, celda = { mallas: [], ver: true, r: celdaM };
+        es.forEach(function (e) { cx += e.x; cz += e.z; });
+        celda.x = cx / es.length; celda.z = cz / es.length;
+        partes.forEach(function (p, ip) {
+          var malla = new THREE.InstancedMesh(p.geometria, mats[ip], es.length);
+          var tinte = def.tinte && def.tinte[p.nombre];
+          es.forEach(function (e, i) {
+            var s = e.escala || 1;
+            _p.set(e.x, e.y, e.z); _q.setFromAxisAngle(_ejeY, (e.giro || 0) * Math.PI / 180);
+            _s.set(s * (e.ancho || 1), s, s * (e.ancho || 1));
+            malla.setMatrixAt(i, _m.compose(_p, _q, _s));
+            if (tinte) {
+              // variación determinista por posición: claro/oscuro y un poco hacia amarillo o azul
+              var r1 = Math.sin(e.x * 12.9898 + e.z * 78.233) * 43758.5453; r1 -= Math.floor(r1);
+              var r2 = Math.sin(e.x * 39.346 + e.z * 11.135) * 24634.6345; r2 -= Math.floor(r2);
+              _c.setRGB(1, 1, 1).offsetHSL((r2 - 0.5) * tinte * 0.5, 0, (r1 - 0.5) * tinte * 2);
+              malla.setColorAt(i, _c);
+            }
+          });
+          malla.instanceMatrix.needsUpdate = true;
+          if (malla.instanceColor) malla.instanceColor.needsUpdate = true;
+          malla.computeBoundingSphere();          // incluye todas las instancias de la celda
+          if (malla.boundingSphere) malla.boundingSphere.radius += 2;   // margen por el viento
+          malla.frustumCulled = true;
+          malla.name = id + ':' + p.nombre + '@' + k;
+          raiz.add(malla); celda.mallas.push(malla); stats.mallas++;
+        });
+        celdas.push(celda);
+      });
+      (padre || document.querySelector('a-scene').object3D).add(raiz);
+      stats.modelos++; stats.ejemplares += lista.length;
+      return raiz;
+    });
+  }
+
+  MUNDO.modelos = { cargar: cargar, instanciar: instanciar, CELDA: CELDA };
+})();

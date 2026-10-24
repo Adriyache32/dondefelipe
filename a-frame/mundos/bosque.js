@@ -455,6 +455,14 @@ window.MUNDOS.bosque = {
     ]
   },
 
+  // MODELOS .glb INSTANCIADOS (modelos.js): uno cargado, cientos dibujados.
+  // Partes por nombre del .glb: el viento y el tinte se aplican a cada una.
+  modelos: {
+    quillay: { url: 'modelos/quillay.glb', escala: [1.75, 2.45],
+               viento: { Follaje: 0.012, Ramas: 0.005 }, tinte: { Follaje: 0.12, Tronco: 0.06 },
+               colores: { Follaje: '#6f8256', Ramas: '#5a4632', Tronco: '#4d3b2a' } }
+  },
+
   ancho: 150,
   anchoVida: 116,
   inicio: '0 1.7 64',
@@ -540,7 +548,7 @@ window.MUNDOS.bosque = {
       reto: 'Toca (con cuidado) una hoja de litre y una de belloto. ¿Por qué la de la solana es gruesa y dura, y la de la quebrada delgada y blanda?',
       especies: [
         { forma: 'litreN',    n: 38, color: '#5c7040', nombre: 'Litre', choca: { r: 0.3, alto: 3.5 } },
-        { forma: 'quillay',   n: 30, color: '#6f8256', nombre: 'Quillay', choca: { r: 0.34, alto: 5 } },
+        { modelo: 'quillay', forma: 'quillay', n: 30, nombre: 'Quillay', alto: 7.6, choca: { r: 0.4, alto: 5 } },   // modelo .glb instanciado
         { forma: 'peumo',     n: 24, color: '#3f5c34', nombre: 'Peumo', choca: { r: 0.3, alto: 5 } },
         { forma: 'columna',   n: 30, color: '#55703f', nombre: 'Quisco', choca: { r: 0.3, alto: 3.5 } },
         { forma: 'roseta',    n: 26, color: '#7d8b6a', nombre: 'Chagual' },
