@@ -121,6 +121,23 @@
     _fb.catch(function (e) { console.info('[DF] ' + e.message); });
     return _fb;
   }
+  /* ---------- tiempo real (Realtime Database del mismo proyecto) ----------
+     Para lo que cambia muchas veces por segundo (posiciones en los mundos 3D).
+     Firestore cobra por operación; Realtime Database cobra por datos y avisa
+     cuando alguien se desconecta. Se carga solo en las páginas que lo piden. */
+  var _rt = null;
+  function tiempoReal() {
+    if (_rt) return _rt;
+    _rt = listo().then(function (fb) {
+      var CDN = cfg().cdn || ('https://www.gstatic.com/firebasejs/' + VER + '/');
+      return import(CDN + 'firebase-database.js').then(function (R) {
+        var C = cfg().firebase, url = C.databaseURL || ('https://' + C.projectId + '-default-rtdb.firebaseio.com');
+        return { R: R, rtdb: R.getDatabase(fb.app, url), fb: fb };
+      });
+    });
+    _rt.catch(function (e) { _rt = null; console.info('[DF] tiempo real: ' + e.message); });
+    return _rt;
+  }
   function horasSesion() { var h = cfg().cerrarSesionTrasHoras; return h === 0 ? 0 : (+h || 3); }
   function sesionVencida() {
     var h = horasSesion(); if (!h) return false;
@@ -606,6 +623,7 @@
   window.DF = {
     version: VER,
     listo: listo,
+    tiempoReal: tiempoReal,
     configurado: function () { return listo().then(function () { return true; }, function () { return false; }); },
     usuario: function () { return usuario; },
     alCambiarUsuario: function (cb) { oyentes.push(cb); if (_fb) _fb.then(function () { cb(usuario); }, function () {}); },
