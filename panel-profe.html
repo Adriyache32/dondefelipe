@@ -146,6 +146,11 @@ dialog.ancho{max-width:min(860px,calc(100vw - 32px))}
               <div class="muted" style="font-size:13px" id="autoTxt">Cargando…</div></div>
             <button class="btn sm" id="btnAuto">…</button>
           </div>
+          <div class="card" style="margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+            <div style="flex:1;min-width:240px"><b>Revisar operaciones de los estudiantes</b>
+              <div class="muted" style="font-size:13px" id="opsTxt">Si a alguien no le funciona el bono diario, la bolsa, la ruleta o los gatitos («Missing or insufficient permissions»), su contador de operaciones puede estar desfasado (pasa si se reimportan cuentas). Esto lo revisa y lo arregla para todas las cuentas.</div></div>
+            <button class="btn sm" id="btnOps">🔧 Revisar y reparar</button>
+          </div>
           <div class="card porcanjear" style="margin-top:16px">
             <h3 style="margin:0 0 4px">Compras por canjear <span class="pill" id="nPend">0</span></h3>
             <p class="muted" style="margin:0 0 8px;font-size:13px">Lo que los estudiantes compraron y todavía no usan. Al aplicarlo (por ejemplo, borrar la formativa), márcalo como usado y anota dónde.</p>
@@ -964,6 +969,31 @@ function abrirCuenta(c) {
   FB.F.getDocs(FB.F.collection(FB.db, 'alumnos')).then(s => { $('listaCorreos').innerHTML = s.docs.map(d => `<option value="${esc(d.data().email)}">${esc(d.data().nombre)}</option>`).join(''); }).catch(() => {});
   $('dCuenta').showModal();
 }
+// Contador de operaciones: cada operación del estudiante se guarda como banco_movs/op-<cuenta>-<n>
+// y la cuenta lleva ops = último n. Si ops queda atrás (p. ej. al reimportar cuentas, que lo borraba),
+// la siguiente operación choca con un movimiento existente y las reglas la rechazan.
+$('btnOps').onclick = async () => {
+  const { F, db } = FB, btn = $('btnOps');
+  btn.disabled = true; $('opsTxt').textContent = 'Revisando movimientos…';
+  try {
+    const s = await F.getDocs(F.collection(db, 'banco_movs')), max = {};
+    s.docs.forEach(d => {
+      const c = d.data().cuenta; if (!c) return;
+      const pre = 'op-' + c + '-';
+      if (d.id.startsWith(pre)) { const n = parseInt(d.id.slice(pre.length), 10); if (n > (max[c] || 0)) max[c] = n; }
+    });
+    const malas = cuentas.filter(c => max[c.id] && max[c.id] > (c.ops || 0));
+    for (let i = 0; i < malas.length; i += 400) {
+      const b = F.writeBatch(db);
+      malas.slice(i, i + 400).forEach(c => b.update(F.doc(db, 'banco_cuentas', c.id), { ops: max[c.id] }));
+      await b.commit();
+    }
+    $('opsTxt').innerHTML = malas.length
+      ? `✓ Reparadas <b>${malas.length}</b> cuenta${malas.length === 1 ? '' : 's'}: ${esc(malas.slice(0, 12).map(c => `N° ${c.numero} ${c.nombre || ''}`).join(', '))}${malas.length > 12 ? '…' : ''}. Ya pueden volver a cobrar el bono (que recarguen la página).`
+      : `✓ Revisé ${s.size} movimientos: todos los contadores están bien. Si el bono sigue fallando, pídele al estudiante una captura del mensaje completo.`;
+  } catch (e) { $('opsTxt').textContent = 'No se pudo revisar: ' + e.message; }
+  btn.disabled = false;
+};
 $('btnNueva').onclick = () => abrirCuenta(null);
 $('cGuardar').onclick = async () => {
   const { F, db } = FB;
@@ -1050,7 +1080,8 @@ $('iImportar').onclick = async () => {
     for (let i = 0; i < lista.length; i += 150) {           // hasta 3 escrituras por cuenta, máx. 500 por lote
       const b = F.writeBatch(db);
       lista.slice(i, i + 150).forEach(c => {
-        b.set(F.doc(db, 'banco_cuentas', c.id), { numero: c.numero, apellido: c.apellido, nombre: c.nombre, curso: c.curso, saldo: c.saldo, estado: c.estado, extra: c.extra, creada: F.serverTimestamp(), actualizado: F.serverTimestamp() });
+        const previa = cuentas.find(x => x.id === c.id);   // al reemplazar, conservar el contador de operaciones
+        b.set(F.doc(db, 'banco_cuentas', c.id), Object.assign({ numero: c.numero, apellido: c.apellido, nombre: c.nombre, curso: c.curso, saldo: c.saldo, estado: c.estado, extra: c.extra, creada: F.serverTimestamp(), actualizado: F.serverTimestamp() }, previa && previa.ops ? { ops: previa.ops } : {}));
         b.set(F.doc(F.collection(db, 'banco_movs')), { cuenta: c.id, numero: c.numero, nombre: `${c.nombre} ${c.apellido}`.trim(), curso: c.curso, monto: c.saldo, motivo: 'Saldo importado desde la hoja de Google', tipo: 'importacion', saldoDespues: c.saldo, profe, fecha: F.serverTimestamp() });
         if (c.correo) b.set(F.doc(db, 'banco_vinculos', c.correo), { cuenta: c.id, numero: c.numero, nombre: `${c.nombre} ${c.apellido}`.trim(), actualizado: F.serverTimestamp() });
       });

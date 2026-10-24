@@ -125,6 +125,28 @@
      Para lo que cambia muchas veces por segundo (posiciones en los mundos 3D).
      Firestore cobra por operación; Realtime Database cobra por datos y avisa
      cuando alguien se desconecta. Se carga solo en las páginas que lo piden. */
+  /* Reloj del servidor. Las reglas cuentan el día con la hora de Google
+     (request.time), no con la del computador. Si el reloj del equipo está mal
+     (pasa en salas de computación), el bono diario y los poderes de los gatitos
+     se rechazaban con «Missing or insufficient permissions». DF.ahora() corrige
+     el desfase usando la cabecera Date de la respuesta del propio sitio. */
+  var _desfase = 0, _reloj = null;
+  function reloj() {
+    if (_reloj) return _reloj;
+    var t0 = Date.now();
+    _reloj = fetch(location.href.split('#')[0], { method: 'HEAD', cache: 'no-store' }).then(function (r) {
+      var d = Date.parse(r.headers.get('date') || '') + (parseInt(r.headers.get('age') || '0', 10) || 0) * 1000;   // Age: si viene de caché
+      if (!isNaN(d)) {
+        var t1 = Date.now(), dif = d + 500 - (t0 + t1) / 2;   // la cabecera trunca al segundo
+        if (Math.abs(dif) > 120000) _desfase = dif;           // solo si el reloj está claramente mal (> 2 min)
+      }
+      return _desfase;
+    }).catch(function () { return 0; });
+    return _reloj;
+  }
+  function ahora() { return Date.now() + _desfase; }
+  reloj();
+
   var _rt = null;
   function tiempoReal() {
     if (_rt) return _rt;
@@ -624,6 +646,9 @@
     version: VER,
     listo: listo,
     tiempoReal: tiempoReal,
+    reloj: reloj,
+    ahora: ahora,
+    desfase: function () { return _desfase; },
     configurado: function () { return listo().then(function () { return true; }, function () { return false; }); },
     usuario: function () { return usuario; },
     alCambiarUsuario: function (cb) { oyentes.push(cb); if (_fb) _fb.then(function () { cb(usuario); }, function () {}); },

@@ -333,7 +333,8 @@ footer a { color:var(--ink-2); }
   var fmt = function (n) { return '$' + Math.round(n || 0).toLocaleString('es-CL'); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var pct = function (x) { return (x > 0 ? '+' : '') + (x * 100).toFixed(1).replace('.', ',') + ' %'; };
-  var diaHoy = function () { return Math.floor((Date.now() - 14400000) / 86400000); };
+  // día según la hora del servidor (DF.ahora corrige relojes mal puestos): igual que diaHoy() en las reglas
+  var diaHoy = function () { return Math.floor(((window.DF && DF.ahora ? DF.ahora() : Date.now()) - 14400000) / 86400000); };
   function toast(m) { var t = $('toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(function () { t.classList.remove('on'); }, 3200); }
 
   var FB = null, usuario = null, esProfe = false;
@@ -525,7 +526,16 @@ footer a { color:var(--ink-2); }
     }).then(function (r) {
       if (r) toast((r.bono > BONO_DIA ? '🔥 ¡Racha de ' + r.racha + ' días! ' : '¡Bono diario! ') + '+' + fmt(r.bono));
     }).catch(function (e) {
-      var el = $('estBono'); if (el) el.textContent = 'No se pudo cobrar el bono de hoy (' + e.message + '). Intenta recargar la página.';
+      var el = $('estBono'), base = 'No se pudo cobrar el bono de hoy. ';
+      if (el) el.textContent = base + 'Revisando el motivo…';
+      // Diagnóstico: ¿el siguiente número de operación ya está usado? (contador desfasado)
+      var sig = 'op-' + cuentaId + '-' + (((cuenta && cuenta.ops) || 0) + 1);
+      F.getDoc(F.doc(db, 'banco_movs', sig)).then(function (s) { return s.exists(); }, function () { return false; }).then(function (choca) {
+        if (!el) return;
+        el.textContent = choca
+          ? base + 'Tu contador de operaciones quedó desfasado. Avísale al profe: en el panel, «Revisar operaciones» lo arregla en un clic.'
+          : base + '(' + e.message + '). Intenta recargar la página; si sigue, avísale al profe con una captura.';
+      });
     }).then(function () { cobrando = false; });
   }
 
@@ -647,6 +657,9 @@ footer a { color:var(--ink-2); }
       }).then(function (v) {
         if (!v.exists()) { aviso = 'Tu correo aún no está vinculado a una cuenta del Banco de Hipopesos. Pídele al profe que te la asigne y vuelve a entrar.'; pintar(); return; }
         cuentaId = v.data().cuenta;
+        return DF.reloj();
+      }).then(function () {
+        if (!cuentaId) return;
         var dia = diaHoy();
         subs.push(F.onSnapshot(F.doc(db, 'banco_cuentas', cuentaId), function (s) {
           cuenta = s.exists() ? s.data() : null;
