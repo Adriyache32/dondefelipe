@@ -32,18 +32,23 @@ node lod.mjs quillay.glb quillay-lejos.glb Follaje=0.12 Ramas=0.4 Tronco=1
 
 ## Construcciones (casas, cabañas): `optimizar.mjs`
 
-Un modelo hecho de muchas piezas sueltas (la cabaña trae 44) se dibujaría con una
-llamada por pieza. `optimizar.mjs` las funde por material en **2 mallas**: `Cuerpo`
-(colores por vértice) y `Vidrio` (transparente), y con `--lejos` genera además una
-versión sin interior ni molduras.
-
 ```
-node optimizar.mjs cabana_original.glb cabana.glb --lejos cabana-lejos.glb
+node optimizar.mjs cabana_original.glb cabana.glb --lejos cabana-lejos.glb --plano 2 --alto 1.3
 ```
 
-| Modelo | Original | Optimizado | Lejos |
+- **Funde** las piezas sueltas (la cabaña trae 44) en 2 mallas: `Cuerpo` y `Vidrio`.
+- **Agranda** la construcción (`--plano` largo y ancho, `--alto` altura) sin agrandar los
+  muebles: solo los reubica, así conservan su tamaño humano.
+- **Quita la puerta fija** del modelo: el motor pone una puerta doble que se abre al acercarse.
+- **Cierra el techo** con una cumbrera y corrige las aguas invertidas del original.
+- **Escribe la física** en `cabana.choca.json`: muros y muebles (colisión), pisos (pisables)
+  y el vano de la puerta. El motor la aplica a cada copia con su giro y escala.
+
+| Cabaña | Piezas | Triángulos | Tamaño |
 |---|---|---|---|
-| Cabaña | 44 piezas | 2 mallas · 506 triángulos | 2 mallas · 182 triángulos |
+| Original | 44 | 640 | 5,5 × 6,5 m |
+| `cabana.glb` | 2 mallas | 494 | 11 × 13 m |
+| `cabana-lejos.glb` | 2 mallas | 182 | sin interior |
 
-Corrección aplicada al original: las aguas del techo venían invertidas (en «V»);
-el script las refleja. Colisiones y piso de la cabaña se declaran en `bosque.js`.
+En el mundo: `cabana: { url, lejos, fisica: 'modelos/cabana.choca.json', tinte: { Cuerpo: 0.22 } }`
+y cada copia es un objeto `{ modelo: 'cabana', pos, giro }`.

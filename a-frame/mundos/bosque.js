@@ -473,8 +473,10 @@ window.MUNDOS.bosque = {
                escala: [1.25, 1.65], ancho: [1.18, 1.42],
                viento: { Follaje: 0.008, Ramas: 0.003 }, tinte: { Follaje: 0.06, Tronco: 0.06 },
                colores: { Follaje: '#2b4a2c', Ramas: '#523426', Tronco: '#4c3023' } },
-    // Cabaña ingresable: piezas fundidas en 2 mallas (Cuerpo y Vidrio) con modelos/optimizar.mjs
-    cabana:  { url: 'modelos/cabana.glb', lejos: 'modelos/cabana-lejos.glb' }
+    // Cabaña ingresable (el doble de grande que el original): piezas fundidas en 2 mallas con
+    // modelos/optimizar.mjs, que también genera su física (muros, muebles, pisos y puerta).
+    cabana:  { url: 'modelos/cabana.glb', lejos: 'modelos/cabana-lejos.glb', fisica: 'modelos/cabana.choca.json',
+               tinte: { Cuerpo: 0.22 }, colorPuerta: '#7a4e2e', celda: 120 }
   },
 
   ancho: 150,
@@ -636,19 +638,13 @@ window.MUNDOS.bosque = {
   ],
 
   objetos: [
-    // CABAÑA (modelo .glb): se puede entrar por la puerta; muros y muebles con colisión.
-    // La puerta del modelo mira a -z: con giro 160 queda hacia el sendero.
-    { modelo: 'cabana', pos: [-2, 0, -40], giro: 160, nombre: 'Cabaña', alto: 4.8,
-      piso: { ancho: 5.5, largo: 6.5, alto: 0.28, oculto: true },
-      choca: [
-        { dx: -2.52, dz: 0, ancho: 0.16, largo: 6.2, alto: 2.9 },     // muro izquierdo
-        { dx: 2.52, dz: 0, ancho: 0.16, largo: 6.2, alto: 2.9 },      // muro derecho
-        { dx: 0, dz: 3.02, ancho: 5.2, largo: 0.16, alto: 2.9 },      // muro del fondo (ventana)
-        { dx: -1.59, dz: -3.02, ancho: 2.02, largo: 0.16, alto: 2.9 }, // frente, a cada lado de la puerta
-        { dx: 1.59, dz: -3.02, ancho: 2.02, largo: 0.16, alto: 2.9 },
-        { dx: -1.35, dz: 1.45, ancho: 1.35, largo: 2.0, alto: 0.85 },  // cama
-        { dx: 1.35, dz: 0.65, ancho: 1.0, largo: 0.75, alto: 1.1 }     // mesa
-      ] },
+    // CABAÑAS (modelo .glb instanciado): misma malla, cada una con su giro y su tono.
+    // La física (muros, muebles, piso y puerta que se abre) viene de cabana.choca.json.
+    { modelo: 'cabana', pos: [-2, 0, -42], giro: 165, nombre: 'Cabañas de la comunidad', alto: 7.5 },
+    { modelo: 'cabana', pos: [-26, 0, -46], giro: 125 },
+    { modelo: 'cabana', pos: [22, 0, -48], giro: 205 },
+    { modelo: 'cabana', pos: [42, 0, -40], giro: 240 },
+    { modelo: 'cabana', pos: [-48, 0, -50], giro: 100 },
     // ---------- ESTACIONES DE LA GUÍA ----------
     { forma: 'estacion', color: '#2f6b45', pos: [4, 0, 58], giroCartel: -20,
       nombre: 'Estación 1', ficha: 'e1', altoFicha: 3.6 },
