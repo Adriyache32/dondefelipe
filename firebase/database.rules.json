@@ -9,7 +9,7 @@
             ".read": "auth != null && auth.token.email_verified == true && $mundo.matches(/^[a-z0-9-]{1,30}$/) && $sala.matches(/^[a-z0-9-]{1,20}$/)",
             "jugadores": {
               "$uid": {
-                ".write": "auth != null && auth.token.email_verified == true && auth.uid == $uid && (!newData.exists() || data.exists() || root.child('mundos3d/salas/' + $mundo + '/' + $sala + '/jugadores').numChildren() < 12)",
+                ".write": "auth != null && auth.token.email_verified == true && auth.uid == $uid",
                 ".validate": "newData.hasChildren(['n', 'x', 'y', 'z', 'r', 't'])",
                 "n": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
                 "c": { ".validate": "newData.isString() && newData.val().matches(/^#[0-9a-fA-F]{6}$/)" },

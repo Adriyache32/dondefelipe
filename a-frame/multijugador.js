@@ -10,7 +10,7 @@
    - Cada uno escribe solo su avatar (reglas en firebase/database.rules.json).
    - Al cerrar la pestaña o perder internet, el servidor borra el avatar solo.
    - Se envían como máximo 4 avisos por segundo y solo si te moviste
-     (más uno cada 10 s para decir «sigo aquí»). Máximo 12 por sala.
+     (más uno cada 10 s para decir «sigo aquí»). Máximo 12 por sala (lo revisa este archivo).
    ============================================================================= */
 (function () {
   'use strict';
@@ -119,6 +119,12 @@
         pintarSiAbierto(); estadoBoton();
       }));
       var refJug = R.ref(rt.rtdb, base + '/jugadores');
+      // Máximo 12 por sala (las reglas de Realtime Database no pueden contar, así que se revisa aquí)
+      R.get(refJug).then(function (sn) {
+        var v = sn.val() || {}, ahora = Date.now();
+        var activos = Object.keys(v).filter(function (k) { return k !== u.uid && v[k] && ahora - (v[k].t || 0) < OLVIDO_MS; });
+        if (activos.length >= 12) { salir(); pintar('<p class="err">La sala «' + esc(nombreSala) + '» está llena (12). Prueben con otro código de sala.</p>'); }
+      }).catch(function () {});
       desuscribir.push(R.onChildAdded(refJug, recibir));
       desuscribir.push(R.onChildChanged(refJug, recibir));
       desuscribir.push(R.onChildRemoved(refJug, function (s) { quitar(s.key); }));
