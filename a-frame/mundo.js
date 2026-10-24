@@ -2594,8 +2594,15 @@ function arranque(M) {
     type: 'directional', color: luz.sol || '#fff0d4',
     intensity: luz.intensidad || 0.7, position: luz.posicion || '-18 22 14' }));
 
+  /* MODO LEGADO: un mundo puede apagar todo lo hecho con el sistema antiguo
+     (formas procedurales) con legado:false y quedarse solo con modelos .glb.
+     Para comparar en pruebas: agregar ?legado=1 a la dirección lo vuelve a
+     encender todo (mundo.html?legado=1#bosque). */
+  var legado = M.legado !== false || /[?&]legado=1/.test(location.search);
+  MUNDO.legado = legado;
+
   // Luces locales del mundo: fogatas, lámparas, interiores.
-  (M.luces || []).forEach(function (lz) {
+  (legado ? (M.luces || []) : []).forEach(function (lz) {
     escena.appendChild(nuevo('a-light', {
       type: lz.tipo || 'point', color: lz.color || '#ffd9a0',
       intensity: lz.intensidad != null ? lz.intensidad : 0.6,
@@ -2757,6 +2764,7 @@ function arranque(M) {
     terreno.appendChild(terraza);
 
     (f.especies || []).forEach(function (sp) {
+      if (!legado && !sp.modelo) return;   // sistema antiguo apagado
       marcar('franja ' + f.id + ', especie: ' + (sp.modelo || sp.forma));
       // especie con modelo .glb instanciado (modelos.js): se juntan los ejemplares y se dibujan al final
       var defModelo = sp.modelo && M.modelos && M.modelos[sp.modelo] && MUNDO.modelos ? M.modelos[sp.modelo] : null;
@@ -2806,7 +2814,7 @@ function arranque(M) {
 
   marcar('colocando los objetos');
   // Objetos con posición propia: faroles, bancas, edificios…
-  (M.objetos || []).forEach(function (ob) {
+  (legado ? (M.objetos || []) : []).forEach(function (ob) {
     marcar('objeto: ' + ob.forma);
     var fn = MUNDO.formas[ob.forma];
     if (!fn) { console.warn('Forma desconocida: ' + ob.forma); return; }
@@ -2962,7 +2970,7 @@ function arranque(M) {
   if (M.acciones) { for (var ak in M.acciones) MUNDO.acciones[ak] = M.acciones[ak]; }
   MUNDO.oxigenoOn = false;
 
-  if (M.aves) {
+  if (M.aves && legado) {
     poblarAves(escena, M.aves);
   }
 
