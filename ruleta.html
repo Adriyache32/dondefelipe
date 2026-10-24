@@ -119,6 +119,9 @@ h1 span{color:var(--acid)}
   <p class="intro">Cada tiro cuesta <b id="costoTxt">5.000 ₣</b>. Puedes ganar o perder hasta 50.000 ₣, llevarte un beneficio para canjear con el profe o un gatito gratis para tu colección.</p>
 
   <div id="avisos"></div>
+  <div class="aviso" id="suspendida" style="border-color:#e9b949;background:rgba(233,185,73,.12);color:#ffe6a8;margin:10px 0">
+    <b>⛔ La ruleta está suspendida.</b> Encontramos una falla de seguridad: el resultado de cada tiro se podía saber antes de girar.
+    Volverá cuando esté corregida. Tu saldo y tus premios anteriores no cambian.</div>
 
   <section class="card">
     <div class="estado">
@@ -302,6 +305,7 @@ async function tirar() {
 }
 
 /* ── Interfaz ── */
+var SUSPENDIDA = true;   // suspendida por seguridad: ver ruletaActiva() en firebase/firestore.rules
 function aviso(html, tipo) { $('avisos').innerHTML = html ? `<div class="aviso ${tipo || ''}">${html}</div>` : ''; }
 function pintar() {
   $('costoTxt').textContent = fmt(RULETA.costo);
@@ -311,6 +315,7 @@ function pintar() {
     ? `<span>${esc(usuario.email)}</span><button class="btn" type="button" data-a="salir">Salir</button>`
     : `<button class="btn p" type="button" data-a="entrar">Entrar con Google</button>`;
   const hub = $('hub');
+  if (SUSPENDIDA) { hub.disabled = true; hub.innerHTML = 'Suspendida'; hub.setAttribute('aria-label', 'Ruleta suspendida'); return; }
   if (girando) return;
   const puede = cuenta && (cuenta.saldo || 0) >= RULETA.costo;
   hub.disabled = !!usuario && !puede;
@@ -402,6 +407,7 @@ function precalentar() {
 }
 
 async function alPulsar() {
+  if (SUSPENDIDA) { aviso('La ruleta está suspendida mientras se corrige una falla de seguridad.', 'err'); return; }
   if (girando) return;
   if (!usuario) { entrar(); return; }
   if (!cuenta || !perfilOk) return;

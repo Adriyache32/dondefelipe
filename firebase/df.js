@@ -269,12 +269,51 @@
     document.querySelectorAll('[data-solo-estudiante]').forEach(function (el) { el.hidden = g !== 'estudiante'; });
   }
 
-  /* ---------- puntajes de juegos ---------- */
-  function guardarPuntaje(juego, puntaje, extra) {
+  /* ---------- puntajes de juegos ----------
+     Anti-trampa (ver «Puntajes y rankings» en firestore.rules): las reglas solo aceptan lo
+     ganado desde el récord anterior si cabe en RITMO (puntos por minuto) × minutos desde que
+     se abrió el juego, medidos con la hora del servidor. Por eso cada página de juego anota
+     su inicio de partida (partidas/<uid>__<juego>) apenas hay sesión. Si alguien entra con
+     su cuenta recién al final, el puntaje se guarda tras esperar el tiempo que falte.
+     Mantener RITMOS igual que reglaJuego() en las reglas. */
+  var RITMOS = { 'odisea': 4000, 'operacion-barrera': 2500, 'segunda-barrera': 2500, 'ruta-paes': 600, 'energia-pista': 300, 'ludo-chileno': 600 };
+  var JUEGO_PAGINA = [[/\/odisea\//, 'odisea'], [/operacionbarrera\.html/, 'operacion-barrera'], [/segundabarrera\.html/, 'segunda-barrera'],
+                      [/ruta-paes/, 'ruta-paes'], [/pista-energia/, 'energia-pista'], [/ludo-chileno/, 'ludo-chileno']];
+  var partidas = {};   // juego → { t: hora local del inicio, p: promesa de la escritura }
+  function iniciarPartida(juego) {
+    juego = idSeguro(juego);
+    if (partidas[juego] && partidas[juego].uid === (usuario && usuario.uid)) return partidas[juego].p;
+    if (!usuario) return Promise.resolve(null);
+    var reg = { t: Date.now(), uid: usuario.uid };
+    reg.p = listo().then(function (fb) {
+      return fb.F.setDoc(fb.F.doc(fb.db, 'partidas', usuario.uid + '__' + juego), { inicio: fb.F.serverTimestamp() });
+    }).catch(function () { delete partidas[juego]; });
+    partidas[juego] = reg;
+    return reg.p;
+  }
+  function juegoDeEstaPagina() {
+    for (var i = 0; i < JUEGO_PAGINA.length; i++) if (JUEGO_PAGINA[i][0].test(location.pathname)) return JUEGO_PAGINA[i][1];
+    return '';
+  }
+  oyentes.push(function (u) { var j = juegoDeEstaPagina(); if (u && j) iniciarPartida(j); });
+
+  function guardarPuntaje(juego, puntaje, extra, alEsperar) {
     juego = idSeguro(juego);
     puntaje = Math.max(0, Math.round(Number(puntaje) || 0));
     return listo().then(function (fb) {
       if (!usuario) throw new Error('Primero entra con tu cuenta.');
+      if (!RITMOS[juego]) throw new Error('Este juego no tiene ranking.');
+      // ¿cuánto falta de tiempo de juego para que las reglas acepten este puntaje?
+      return Promise.all([iniciarPartida(juego), fb.F.getDoc(fb.F.doc(fb.db, 'rankings', juego, 'mejores', usuario.uid)).catch(function () { return null; })])
+        .then(function (r) {
+          var antes = r[1] && r[1].exists() ? (r[1].data().puntaje || 0) : 0;
+          var falta = Math.max(0, (puntaje - antes) / RITMOS[juego] * 60000 - (Date.now() - partidas[juego].t)) ;
+          if (falta <= 0) return;
+          falta += 3000;   // margen por la diferencia de relojes
+          if (alEsperar) try { alEsperar(falta); } catch (e) {}
+          return new Promise(function (ok) { setTimeout(ok, falta); });
+        });
+    }).then(function () { return listo(); }).then(function (fb) {
       return leerPerfil().then(function (pf) {
         var F = fb.F, base = {
           juego: juego, uid: usuario.uid,
@@ -427,6 +466,7 @@
         d.progreso.forEach(function (p) { borrar.push(F.deleteDoc(F.doc(db, 'progreso', uid, 'items', p._id))); });
         Object.keys(juegos).forEach(function (j) { borrar.push(F.deleteDoc(F.doc(db, 'rankings', j, 'mejores', uid))); });
         if (d.perfilPublico) borrar.push(F.deleteDoc(F.doc(db, 'perfiles_publicos', uid)));
+        Object.keys(RITMOS).forEach(function (j) { borrar.push(F.deleteDoc(F.doc(db, 'partidas', uid + '__' + j)).catch(function () {})); });
         borrar.push(F.deleteDoc(F.doc(db, 'alumnos', uid)));
         return Promise.all(borrar);
       }).then(function () {
@@ -609,7 +649,10 @@
       function pasoPerfil(err) { pinta(htmlPerfil(err), true); engancharPerfil(t); }
       function guardar() {
         pinta('<h4>' + titulo + '</h4><p>Guardando…</p>', true);
-        var pr = esPuntaje ? guardarPuntaje(op.juego, op.puntaje, op.extra) : guardarResultado(op.sim, op.datos);
+        var pr = esPuntaje ? guardarPuntaje(op.juego, op.puntaje, op.extra, function (ms) {
+              pinta('<h4>' + titulo + '</h4><p>Comprobando el tiempo de juego… tu puntaje se guardará en unos <b>' + Math.ceil(ms / 1000) +
+                ' s</b>. No cierres esta página.</p>', true);
+            }) : guardarResultado(op.sim, op.datos);
         return pr.then(function (r) {
           var msg = esPuntaje
             ? (r.record ? '<p class="ok">✓ ¡Nuevo récord personal guardado!</p>' : '<p class="ok">✓ Puntaje guardado.</p><p>Tu mejor marca sigue siendo <b class="n">' + esc(r.mejor) + ' pts</b>.</p>')
@@ -646,6 +689,7 @@
     version: VER,
     listo: listo,
     tiempoReal: tiempoReal,
+    iniciarPartida: iniciarPartida,
     reloj: reloj,
     ahora: ahora,
     desfase: function () { return _desfase; },
