@@ -75,7 +75,7 @@ window.poderDelMes = function (ids) {
   return { formativas: f, sumativas: s };
 };
 // Mes escolar (hora de Chile aproximada, UTC−4) como número: año × 12 + mes (0-11). Igual que mesHoy() en las reglas.
-window.mesHoy = function () { var d = new Date(Date.now() - 14400000); return d.getUTCFullYear() * 12 + d.getUTCMonth(); };
+window.mesHoy = function () { var d = new Date((window.DF && DF.ahora ? DF.ahora() : Date.now()) - 14400000); return d.getUTCFullYear() * 12 + d.getUTCMonth(); };
 // Descuento de los gatitos héroe en compras académicas: el mayor que tengas (no se suman).
 window.descuentoAcademico = function (ids) {
   var d = 0; (ids || []).forEach(function (id) { var g = window.GATITOS.find(function (x) { return x.id === id; }); if (g && g.descuentoAcademico > d) d = g.descuentoAcademico; });

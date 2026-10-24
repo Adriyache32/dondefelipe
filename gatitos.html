@@ -295,7 +295,7 @@ const R = window.RAREZAS, G = window.GATITOS, gato = id => G.find(g => g.id === 
 const ms = t => (t && t.toMillis ? t.toMillis() : (t && t.toDate ? t.toDate().getTime() : (typeof t === 'number' ? t : 0)));
 let usuario = null, esProfe = false, cuentaId = null, cuenta = null, coleccion = { ids: [], favorito: null };
 let publicaciones = [], misPedidos = [], misVentas = [], misBenef = [], poderHoy = null, poderMes = null, premios = {}, reclamando = false;
-const diaHoy = () => Math.floor((Date.now() - 14400000) / 86400000);   // igual que diaHoy() en las reglas
+const diaHoy = () => Math.floor(((window.DF && DF.ahora ? DF.ahora() : Date.now()) - 14400000) / 86400000);   // igual que diaHoy() en las reglas
 const BENEF = window.CATALOGO_BENEFICIOS || [];
 // gatitos.html#coleccion (o #beneficios, #estudiantes, #mio) abre esa pestaña.
 const VISTA_INICIAL = (location.hash || '').slice(1);
@@ -411,6 +411,7 @@ async function reclamarMes() {
   if (reclamando || !cuenta || !cuentaId) return;
   const pm = poderDelMes(coleccion.ids || []); if (!pm.formativas) return;
   reclamando = true; pintarPoderes();
+  await DF.reloj();
   const { F, db } = await DF.listo(), mes = mesHoy(), item = 'Gato Nietzsche: ' + textoPoderDia(pm) + ' del mes';
   try {
     await F.runTransaction(db, async tx => {
@@ -430,6 +431,7 @@ async function reclamarPoderes() {
   if (reclamando || !cuenta || !cuentaId) return;
   const pd = poderDelDia(coleccion.ids || []), n = pd.formativas, txt = textoPoderDia(pd); if (!n) return;
   reclamando = true; pintarPoderes();
+  await DF.reloj();
   const { F, db } = await DF.listo(), dia = diaHoy(), item = 'Gatitos: ' + txt;
   try {
     await F.runTransaction(db, async tx => {
