@@ -30,6 +30,9 @@ select{background:var(--slab2);color:var(--ink);border:1px solid var(--line);bor
 .fila .pts{font-weight:800;font-size:18px;font-variant-numeric:tabular-nums;color:var(--lime)}
 .vacio{color:var(--ink2);padding:24px;text-align:center;border:1px dashed var(--line);border-radius:14px}
 .nota{color:var(--ink2);font-size:13px;margin-top:22px}
+.mod{display:flex;gap:6px;margin-left:8px}.mod button{background:transparent;border:1px solid var(--line);color:var(--ink2);border-radius:8px;padding:4px 8px;font:12px system-ui;cursor:pointer}.mod button:hover{border-color:var(--rosa);color:var(--ink)}
+.fila.conmod{grid-template-columns:44px minmax(0,1fr) auto auto}
+#bloq{margin-top:18px}
 </style>
 </head>
 <body>
@@ -43,6 +46,8 @@ select{background:var(--slab2);color:var(--ink);border:1px solid var(--line);bor
     <a class="jugar" id="jugar" href="#">Jugar →</a>
   </div>
   <div class="lista" id="lista"><div class="vacio">Cargando…</div></div>
+  <div id="bloq"></div>
+  <p class="nota">🛡️ Los puntajes se revisan con la hora del servidor: una marca imposible para el tiempo jugado no entra al ranking.</p>
   <p class="nota">Para aparecer aquí, termina una partida y elige <b>Entrar con Google</b> con tu cuenta del colegio. Solo se muestra tu nombre y la inicial de tu apellido.</p>
 </div>
 
@@ -61,7 +66,8 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = n => new Intl.NumberFormat('es-CL').format(Math.round(n || 0));
 let actual = (location.hash.slice(1) in JUEGOS) ? location.hash.slice(1) : Object.keys(JUEGOS)[0];
-let datos = [];
+let datos = [], profe = false;
+DF.alCambiarUsuario(u => { profe = !!(u && DF.esProfe(u)); pintar(); pintarBloqueos(); });
 
 $('tabs').innerHTML = Object.entries(JUEGOS).map(([id, j]) => `<button data-j="${id}">${esc(j.nombre)}</button>`).join('');
 $('tabs').onclick = ev => { const j = ev.target.dataset.j; if (j) { actual = j; history.replaceState(null, '', '#' + j); cargar(); } };
@@ -86,12 +92,37 @@ function pintar() {
   const c = $('curso').value;
   const l = datos.filter(x => !c || x.curso === c).slice(0, 30);
   $('lista').innerHTML = l.length ? l.map((x, i) => `
-    <div class="fila${i < 3 ? ' p' + (i + 1) : ''}">
+    <div class="fila${i < 3 ? ' p' + (i + 1) : ''}${profe ? ' conmod' : ''}">
       <div class="pos">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</div>
       <div><div class="nom">${esc(x.nombre)}</div>${x.curso ? `<span class="cur">${esc(x.curso)}</span>` : ''}</div>
       <div class="pts">${fmt(x.puntaje)}</div>
+      ${profe ? `<div class="mod"><button data-borrar="${esc(x.uid)}" title="Borrar esta marca">🗑</button><button data-bloquear="${esc(x.uid)}" data-nombre="${esc(x.nombre)}" title="Borrar y bloquear en todos los rankings">⛔</button></div>` : ''}
     </div>`).join('') : '<div class="vacio">Aún no hay puntajes. ¡Sé el primero!</div>';
 }
+// Moderación (solo el profe): borrar una marca o bloquear a alguien en todos los rankings.
+$('lista').onclick = async ev => {
+  const b = ev.target.closest('button'); if (!b || !profe) return;
+  const uid = b.dataset.borrar || b.dataset.bloquear; if (!uid) return;
+  const bloquear = !!b.dataset.bloquear;
+  if (!confirm(bloquear ? `¿Bloquear a ${b.dataset.nombre} en todos los rankings? Se borra esta marca y no podrá subir nuevas.` : '¿Borrar esta marca?')) return;
+  try {
+    const { F, db } = await DF.listo();
+    if (bloquear) await F.setDoc(F.doc(db, 'rankings_bloqueo', uid), { nombre: b.dataset.nombre || '', juego: actual, fecha: F.serverTimestamp() });
+    await F.deleteDoc(F.doc(db, 'rankings', actual, 'mejores', uid));
+    cargar(); pintarBloqueos();
+  } catch (e) { alert('No se pudo: ' + e.message); }
+};
+async function pintarBloqueos() {
+  if (!profe) { $('bloq').innerHTML = ''; return; }
+  try {
+    const { F, db } = await DF.listo(), s = await F.getDocs(F.collection(db, 'rankings_bloqueo'));
+    $('bloq').innerHTML = s.size ? '<p class="nota"><b>Bloqueados</b> (solo lo ves tú): ' + s.docs.map(d => `${esc(d.data().nombre || d.id)} <button class="mod" style="display:inline" data-desbloquear="${esc(d.id)}">desbloquear</button>`).join(' · ') + '</p>' : '';
+  } catch (e) { $('bloq').innerHTML = ''; }
+}
+$('bloq').onclick = async ev => {
+  const id = ev.target.dataset && ev.target.dataset.desbloquear; if (!id) return;
+  const { F, db } = await DF.listo(); await F.deleteDoc(F.doc(db, 'rankings_bloqueo', id)); pintarBloqueos();
+};
 cargar();
 </script>
 </body>

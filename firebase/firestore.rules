@@ -86,6 +86,53 @@ service cloud.firestore {
       allow delete: if soyYo(uid) || esProfe();
     }
 
+    // ═════ Puntajes y rankings: anti-trampa ═════
+    // El juego corre en el navegador, así que un puntaje enviado no se puede creer a ciegas.
+    // Sin servidor propio, estas reglas lo acotan con la HORA DEL SERVIDOR:
+    //   · solo juegos de la lista, con un tope por juego;
+    //   · lo ganado desde el récord anterior no puede superar «ritmo × minutos jugando»
+    //     (la partida empieza cuando la página del juego escribe partidas/<uid>__<juego>);
+    //   · el nombre debe ser el de la cuenta de Google; máx. un récord cada 20 s;
+    //   · el profe puede bloquear a alguien (rankings_bloqueo/<uid>) y borrar marcas.
+    // Valores propuestos: si un puntaje legítimo es rechazado, sube el tope o el ritmo aquí
+    // y en RITMOS de firebase/df.js.
+    function reglaJuego(j) {
+      return j == 'odisea'            ? { 'tope': 100000, 'ritmo': 4000 }
+        : (j == 'operacion-barrera'   ? { 'tope': 20000,  'ritmo': 2500 }
+        : (j == 'segunda-barrera'     ? { 'tope': 20000,  'ritmo': 2500 }
+        : (j == 'ruta-paes'           ? { 'tope': 5000,   'ritmo': 600 }
+        : (j == 'energia-pista'       ? { 'tope': 3000,   'ritmo': 300 }
+        : (j == 'ludo-chileno'        ? { 'tope': 3000,   'ritmo': 600 }
+        : { 'tope': 0, 'ritmo': 0 })))));
+    }
+    function rutaPartida(j) { return /databases/$(database)/documents/partidas/$(request.auth.uid + '__' + j); }
+    function rutaMejor(j) { return /databases/$(database)/documents/rankings/$(j)/mejores/$(request.auth.uid); }
+    function minutosJugando(j) {
+      return exists(rutaPartida(j)) ? (request.time.toMillis() - get(rutaPartida(j)).data.inicio.toMillis()) / 60000.0 : 0.0;
+    }
+    function bloqueado() { return exists(/databases/$(database)/documents/rankings_bloqueo/$(request.auth.uid)); }
+    function nombreDeCuenta(n) {
+      return request.auth.token.get('name', '') == '' || n.split(' ')[0] == request.auth.token.name.split(' ')[0];
+    }
+    function puntajeCreible(j, antes, p) {
+      return p is int && p >= 0 && p <= reglaJuego(j).tope && !bloqueado()
+        && (p <= antes || p - antes <= reglaJuego(j).ritmo * minutosJugando(j));
+    }
+    function antesRanking(j) { return exists(rutaMejor(j)) ? get(rutaMejor(j)).data.puntaje : 0; }
+
+    // Inicio de partida: lo escribe la página del juego al abrirse (hora del servidor).
+    match /partidas/{pid} {
+      allow read: if request.auth != null && pid.matches(request.auth.uid + '__[a-z0-9_-]{1,40}');
+      allow create, update: if esColegio() && pid.matches(request.auth.uid + '__[a-z0-9_-]{1,40}')
+        && request.resource.data.keys().hasOnly(['inicio'])
+        && request.resource.data.inicio == request.time;
+      allow delete: if request.auth != null && pid.matches(request.auth.uid + '__[a-z0-9_-]{1,40}');
+    }
+    // Bloqueos de ranking: solo el profe.
+    match /rankings_bloqueo/{uid} {
+      allow read, write: if esProfe();
+    }
+
     // ── Cada partida jugada (historial; solo lo ve el profe) ──
     match /puntajes/{id} {
       allow read: if esProfe() || (request.auth != null && resource.data.uid == request.auth.uid);
@@ -94,10 +141,9 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.email == request.auth.token.email
         && idJuego(request.resource.data.juego)
-        && texto(request.resource.data.nombre, 80)
+        && texto(request.resource.data.nombre, 80) && nombreDeCuenta(request.resource.data.nombre)
         && texto(request.resource.data.curso, 40)
-        && request.resource.data.puntaje is int
-        && request.resource.data.puntaje >= 0 && request.resource.data.puntaje <= 10000000
+        && puntajeCreible(request.resource.data.juego, antesRanking(request.resource.data.juego), request.resource.data.puntaje)
         && request.resource.data.extra is map && request.resource.data.extra.size() <= 20
         && request.resource.data.fecha == request.time;
       allow delete: if esProfe() || esDueno();
@@ -110,21 +156,21 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['juego', 'uid', 'nombre', 'curso', 'puntaje', 'fecha'])
         && request.resource.data.juego == juego
         && request.resource.data.uid == uid
-        && texto(request.resource.data.nombre, 80)
+        && texto(request.resource.data.nombre, 80) && nombreDeCuenta(request.resource.data.nombre)
         && texto(request.resource.data.curso, 40)
-        && request.resource.data.puntaje is int
-        && request.resource.data.puntaje >= 0 && request.resource.data.puntaje <= 10000000
+        && puntajeCreible(juego, 0, request.resource.data.puntaje)
         && request.resource.data.fecha == request.time;
-      // Solo se puede subir el récord, nunca bajarlo.
+      // Solo se puede subir el récord, nunca bajarlo, y no más de una vez cada 20 s.
       allow update: if esColegio() && soyYo(uid)
         && request.resource.data.keys().hasOnly(['juego', 'uid', 'nombre', 'curso', 'puntaje', 'fecha'])
         && request.resource.data.juego == juego
         && request.resource.data.uid == uid
-        && texto(request.resource.data.nombre, 80)
+        && texto(request.resource.data.nombre, 80) && nombreDeCuenta(request.resource.data.nombre)
         && texto(request.resource.data.curso, 40)
         && request.resource.data.puntaje is int
         && request.resource.data.puntaje > resource.data.puntaje
-        && request.resource.data.puntaje <= 10000000
+        && puntajeCreible(juego, resource.data.puntaje, request.resource.data.puntaje)
+        && request.time > resource.data.fecha + duration.value(20, 's')
         && request.resource.data.fecha == request.time;
       allow delete: if esProfe() || soyYo(uid);
     }
@@ -328,6 +374,10 @@ service cloud.firestore {
     //   1er carácter del hash  →  0-2: +10.000 · 3-4: +20.000 · 5: +50.000
     //                             6-8: −10.000 · 9-a: −20.000 · b: −50.000
     //                             c-d: beneficio canjeable · e-f: gatito gratis
+    // SUSPENDIDA (oct 2026): la sal es pública y el resultado de cada tiro se puede calcular
+    // ANTES de girar (sha256 de datos conocidos), así que se puede jugar solo cuando conviene.
+    // Para reabrirla hace falta azar secreto (servidor) — ver panel/README. Mientras: false.
+    function ruletaActiva() { return false; }
     function costoRuleta() { return 5000; }
     function salRuleta() { return 'dondefelipe-ruleta-v1'; }
     function rutaRuleta(c) { return /databases/$(database)/documents/ruleta/$(c); }
@@ -361,7 +411,7 @@ service cloud.firestore {
       // Si ya tenía ese gatito, recibe su precio en Hipopesos.
       let premio = esGatito ? (yaTiene ? precioGatito(g) : 0) : dineroRuleta(h);
       let neto = premio - costoRuleta();
-      return saldo >= costoRuleta()
+      return ruletaActiva() && saldo >= costoRuleta()
         && d.tiro == n
         && getAfter(rutaRuleta(c)).data.n == n
         // Un castigo nunca deja el saldo bajo 0: queda en 0.
@@ -377,7 +427,7 @@ service cloud.firestore {
     match /ruleta/{c} {
       allow read: if esProfe() || (c == miCuentaBanco() && c != '');
       allow write: if esProfe();
-      allow create, update: if esColegio() && c == miCuentaBanco() && c != ''
+      allow create, update: if ruletaActiva() && esColegio() && c == miCuentaBanco() && c != ''
         && request.resource.data.keys().hasOnly(['n', 'actualizado'])
         && request.resource.data.n == tirosAntes(c) + 1
         && request.resource.data.actualizado == request.time
