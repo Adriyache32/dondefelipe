@@ -152,6 +152,12 @@ footer{margin-top:56px;color:var(--muted);font-size:14px;font-family:var(--mono)
 .trio{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:14px}
 .trio>*{min-width:0}
 .mini{font-size:15px}
+
+.vfrow{border-top:1px solid var(--line);padding:10px 0;display:grid;gap:8px}.vfrow:first-child{border-top:0}
+.vfrow p{margin:0;font-size:16px}.vfb{display:flex;gap:8px}.vfb button{border:2px solid var(--ink);background:var(--surface);border-radius:3px;padding:6px 16px;font-weight:600}
+.vfrow.ok .vfx{background:var(--ok-soft);border-left:4px solid var(--ok)}.vfrow.no .vfx{background:var(--bad-soft);border-left:4px solid var(--bad)}
+.vfx:empty{display:none}.vfx{padding:8px 12px;font-size:15px;border-radius:0 3px 3px 0}
+.calc input::placeholder{color:var(--muted);opacity:.6}
 </style>
 <style>
 :root{color-scheme:light}
@@ -381,10 +387,46 @@ body{padding:0}
       <li>Si duplican la masa del péndulo, ¿cambia la rapidez en el punto más bajo? Predigan y comprueben.</li>
     </ul>
   </div>
+  <div class="card" style="margin-top:16px" id="prac">
+    <div class="q qh"><span>Experiencias prácticas: midan en la sala</span><span class="sp sp-tape" style="--h:52px"></span></div>
+    <p class="mini" style="margin-top:6px">Tres mediciones cortas con materiales que hay a mano. Anoten sus propios datos: los resultados se guardan y suman Felipesos al tener datos coherentes.</p>
+    <div class="trio" style="margin-top:12px">
+      <div class="calc">
+        <div class="q" style="font-size:20px">A · Rebote de una pelota</div>
+        <p class="mini"><b>Materiales:</b> pelota (de goma, tenis o básquetbol), huincha o regla grande. Suelta sin impulso y mide la altura del primer rebote.</p>
+        <div class="row"><label for="a_m">m pelota (kg)<input type="number" id="a_m" data-save inputmode="decimal" placeholder="0,06" min="0" step="0.01"></label><label for="a_h0">h inicial (m)<input type="number" id="a_h0" data-save inputmode="decimal" placeholder="1,5" min="0" step="0.05"></label></div>
+        <div class="row"><label for="a_h1">h del rebote (m)<input type="number" id="a_h1" data-save inputmode="decimal" placeholder="1,0" min="0" step="0.05"></label><span></span></div>
+        <div class="res" id="a_out" style="font-size:16px">Completa los tres datos.</div>
+      </div>
+      <div class="calc">
+        <div class="q" style="font-size:20px">B · Elástico o resorte</div>
+        <p class="mini"><b>Materiales:</b> elástico grueso o resorte, bolsa con masa conocida (por ejemplo, 500 g de arroz), huincha. Cuelga la masa y mide cuánto se estira en equilibrio.</p>
+        <div class="row"><label for="b_m">m colgada (kg)<input type="number" id="b_m" data-save inputmode="decimal" placeholder="0,5" min="0" step="0.05"></label><label for="b_x">x estirado (m)<input type="number" id="b_x" data-save inputmode="decimal" placeholder="0,08" min="0" step="0.01"></label></div>
+        <div class="res" id="b_out" style="font-size:16px">Completa los dos datos.</div>
+      </div>
+      <div class="calc">
+        <div class="q" style="font-size:20px">C · Subir una escalera</div>
+        <p class="mini"><b>Materiales:</b> una escala o graderías, cronómetro del celular, huincha. Un integrante sube a paso normal; midan la altura vertical y el tiempo.</p>
+        <div class="row"><label for="c2_m">m persona (kg)<input type="number" id="c2_m" data-save inputmode="decimal" placeholder="55" min="0" step="1"></label><label for="c2_h">h vertical (m)<input type="number" id="c2_h" data-save inputmode="decimal" placeholder="3" min="0" step="0.1"></label></div>
+        <div class="row"><label for="c2_t">t (s)<input type="number" id="c2_t" data-save inputmode="decimal" placeholder="4" min="0" step="0.1"></label><span></span></div>
+        <div class="res" id="c2_out" style="font-size:16px">Completa los tres datos.</div>
+      </div>
+    </div>
+    <ul class="qs" style="margin-top:14px">
+      <li><b>A.</b> Si el rebote llega más bajo que la altura inicial, ¿qué pasó con esa diferencia de energía? Nómbrenla con dos formas de energía.</li>
+      <li><b>A.</b> Predigan antes de medir: ¿rebotará más alto una pelota más pesada del mismo material? Comprueben y expliquen con la fórmula.</li>
+      <li><b>B.</b> Comparen la energía potencial gravitatoria que perdió la masa al estirar el elástico (m·g·x) con la que guardó el elástico (½·k·x²). ¿Coinciden? ¿Dónde está la diferencia?</li>
+      <li><b>C.</b> La potencia es energía por unidad de tiempo. ¿Cuántas ampolletas de 100 W equivale al esfuerzo de quien subió? ¿Cambia si sube más rápido? ¿Y la energía?</li>
+      <li>Para su informe: ¿qué variable controlaron en cada experiencia y cuál dejarían fija si la repiten?</li>
+    </ul>
+  </div>
 </div></div><button class="ovlabel" type="button" data-go="3" aria-label="Ir a Laboratorio"><span class="sp sp-pendulum" style="--h:calc(var(--vw)*.1)"></span><small>Fase 3</small><b>Laboratorio</b><span>conservación y transferencia</span></button></div><div class="frame" data-i="4"><div class="fbg a"></div><span class="sp sp-bulb deco" style="left:2%;top:20%;--h:90px;animation-delay:-1s"></span><span class="sp sp-scroll deco" style="left:3%;top:62%;--h:84px;animation-delay:-3s"></span><span class="sp sp-rocket deco" style="right:2%;top:24%;--h:100px;animation-delay:-2s"></span><span class="sp sp-globe deco" style="right:3%;top:64%;--h:86px;animation-delay:-4s"></span><div class="fscroll" id="fs4"><div class="panel">
   <div class="sec-head"><span class="sp sp-bulb" style="--h:64px"></span><h2>Reto: transforma la energía</h2><span class="tag">Fase 4 · juego</span></div>
-  <p class="lead">Ocho preguntas, una sola oportunidad por pregunta. Discutan en el grupo y respondan juntos.</p>
+  <p class="lead">Catorce preguntas, una sola oportunidad por pregunta. Discutan en el grupo y respondan juntos.</p>
   <div class="card"><div class="qbox" id="quiz"></div></div>
+  <div class="q" style="margin:22px 0 8px">¿Verdadero o falso?</div>
+  <p class="lead" style="margin-bottom:12px">Ocho ideas que suelen confundirse. Decidan, justifiquen en el grupo y luego toquen.</p>
+  <div class="card" id="vfbox"></div>
   <div class="q" style="margin:22px 0 8px">Arma la cadena</div>
   <p class="lead" style="margin-bottom:12px">Toquen los pasos en el orden en que ocurren. Si se equivocan, el paso se marca y pueden intentar de nuevo.</p>
   <div class="grid2">
@@ -426,15 +468,17 @@ body{padding:0}
 <script>
 (function(){
   var CUR='Felipesos', CLAVE='newton';
-  var R={calc3:3,sim_cons:8,sim_diss:8,sim_v:5,sim_spring:6,qz0:2,qz1:2,qz2:2,qz3:2,qz4:2,qz5:2,qz6:2,qz7:2,qz_streak:5,chain1:5,chain2:5};
-  var LV=[[0,'Aprendiz','ruler'],[15,'Maestro de obra','tape'],[30,'Técnico','caliper'],[48,'Ingeniero','bulb']];
+  var R={calc3:3,sim_cons:8,sim_diss:8,sim_v:5,sim_spring:6,qz0:2,qz1:2,qz2:2,qz3:2,qz4:2,qz5:2,qz6:2,qz7:2,qz8:2,qz9:2,qz10:2,qz11:2,qz12:2,qz13:2,vf0:1,vf1:1,vf2:1,vf3:1,vf4:1,vf5:1,vf6:1,vf7:1,prac_a:4,prac_b:4,prac_c:4,qz_streak:5,chain1:5,chain2:5};
+  var LV=[[0,'Aprendiz','ruler'],[20,'Maestro de obra','tape'],[45,'Técnico','caliper'],[75,'Ingeniero','bulb']];
   var AUTO=[
     {id:'calc3',sp:'ruler',t:'Prueba las tres calculadoras (Ec, Eg y Ee) de la fase 2',r:'+3'},
     {id:'sim_cons',sp:'pendulum',t:'Péndulo sin roce: observa 6 s con la mecánica total constante',r:'+8'},
     {id:'sim_diss',sp:'fireball',t:'Péndulo con roce: deja que se disipe la mitad de la energía inicial',r:'+8'},
     {id:'sim_v',sp:'stopwatch',t:'Logra que el péndulo pase a 3 m/s o más',r:'+5'},
     {id:'sim_spring',sp:'spring',t:'Resorte vertical: suéltalo y logra 6 J de energía cinética (sin roce hay que bajar bastante)',r:'+6'},
-    {id:'qz',sp:'scroll',t:'Responde bien las 8 preguntas del reto, a la primera',r:'+2 por pregunta, +5 por racha de 5'},
+    {id:'qz',sp:'scroll',t:'Responde bien las 14 preguntas del reto, a la primera',r:'+2 por pregunta, +5 por racha de 5'},
+    {id:'vf',sp:'booknewton',t:'Acierta las 8 afirmaciones de verdadero o falso',r:'+1 cada una'},
+    {id:'prac',sp:'tape',t:'Mide las 3 experiencias prácticas de la sala',r:'+4 cada una'},
     {id:'chain',sp:'bulb',t:'Arma las dos cadenas de energía',r:'+5 cada una'}
   ];
   var TEA=[];
@@ -481,13 +525,13 @@ body{padding:0}
   }
   function render(){
     var t=total(),li=level(t),next=LV[li+1],pct=next?Math.round((t-LV[li][0])/(next[0]-LV[li][0])*100):100;
-    var nc=0;for(var i=0;i<8;i++)if(earned['qz'+i])nc++;var nch=(earned.chain1?1:0)+(earned.chain2?1:0);
+    var nc=0;for(var i=0;i<14;i++)if(earned['qz'+i])nc++;var nvf=0;for(var j=0;j<8;j++)if(earned['vf'+j])nvf++;var npr=(earned.prac_a?1:0)+(earned.prac_b?1:0)+(earned.prac_c?1:0);var nch=(earned.chain1?1:0)+(earned.chain2?1:0);
     var h='<div class="bk-head"><button type="button" class="bk-x" id="bankx" aria-label="Cerrar el Banco">×</button><div class="bk-top">'+sp('chest',72)+'<div><div class="eyebrow" style="color:inherit;opacity:.75">Banco del Taller</div><h2 id="bankt">'+t+' <small>'+CUR+'</small></h2></div></div>'+
       '<div class="bk-lv">'+sp(LV[li][2],34)+'<div><b>'+LV[li][1]+'</b><small>'+(next?('faltan '+(next[0]-t)+' para '+next[1]):'nivel máximo')+'</small></div></div><div class="bk-bar"><i style="width:'+pct+'%"></i></div></div>';
     h+='<div class="bk-body"><div class="field"><label for="b_team" style="font-size:16px">Equipo</label><input type="text" id="b_team" placeholder="Nombre del equipo" value="'+esc(team())+'"></div>';
     h+='<h3 class="bk-h">Misiones automáticas</h3><ul class="bk-list">';
     AUTO.forEach(function(m){
-      var done=m.id==='qz'?(nc===8):m.id==='chain'?(nch===2):!!earned[m.id],pr=m.id==='qz'?' <em>'+nc+'/8</em>':m.id==='chain'?' <em>'+nch+'/2</em>':'';
+      var done=m.id==='qz'?(nc===14):m.id==='vf'?(nvf===8):m.id==='prac'?(npr===3):m.id==='chain'?(nch===2):!!earned[m.id],pr=m.id==='qz'?' <em>'+nc+'/14</em>':m.id==='vf'?' <em>'+nvf+'/8</em>':m.id==='prac'?' <em>'+npr+'/3</em>':m.id==='chain'?' <em>'+nch+'/2</em>':'';
       h+='<li class="'+(done?'done':'')+'">'+sp(m.sp,38)+'<div><b>'+m.t+'</b><small>'+m.r+pr+'</small></div><span class="st">'+(done?'✓':'')+'</span></li>';
     });
     h+='</ul>';
@@ -538,7 +582,7 @@ body{padding:0}
   document.addEventListener('keydown',function(e){
     if(document.body.classList.contains('bank-open')&&e.key==='Escape'){close();e.stopImmediatePropagation();e.preventDefault()}
   },true);
-  window.Bank={award:award,earned:function(){return earned}};
+  window.Bank={award:award,earned:function(){return earned},total:total,level:function(){return LV[level(total())][1]},max:maxTotal};
   refreshHud();
 })();
 </script>
@@ -638,14 +682,20 @@ body{padding:0}
    ['Una mochila de 5 kg sube de 2 m a 6 m de altura. ¿Cuánto aumenta su energía potencial gravitatoria?',['50 J','300 J','200 J','20 J'],2,'ΔE_g = m·g·Δh = 5·10·4 = 200 J. Lo que importa es el cambio de altura, no la altura final.'],
    ['Un péndulo sin roce pasa por su punto más bajo. ¿Qué es correcto?',['La E_c es máxima, la E_g es mínima y la E_m es la misma que en cualquier otro punto','La E_c es cero y la E_g es máxima','La energía mecánica es máxima solo en ese punto','La energía mecánica total es cero'],0,'Abajo toda la energía es cinética. La suma se conserva en todo el recorrido.'],
    ['Un objeto cae libremente desde 20 m, sin aire. ¿Con qué rapidez llega al suelo?',['10 m/s','14 m/s','40 m/s','20 m/s'],3,'m·g·h = ½·m·v² → v = √(2·g·h) = √400 = 20 m/s.'],
-   ['Una caja se desliza por el piso y se detiene por el roce. ¿Qué es correcto?',['La energía total se conservó y la mecánica también','La energía mecánica disminuyó, pero la energía total se conservó (aumentó la térmica)','La energía total disminuyó','No hubo transformación de energía'],1,'El trabajo del roce transforma E_c en energía térmica. La total se conserva; la mecánica no.']
+   ['Una caja se desliza por el piso y se detiene por el roce. ¿Qué es correcto?',['La energía total se conservó y la mecánica también','La energía mecánica disminuyó, pero la energía total se conservó (aumentó la térmica)','La energía total disminuyó','No hubo transformación de energía'],1,'El trabajo del roce transforma E_c en energía térmica. La total se conserva; la mecánica no.'],
+   ['Un libro de 2 kg está sobre una mesa de 1 m de altura. ¿Qué afirmación es correcta?',['Su E_g es siempre 20 J, sin importar el nivel de referencia','Su E_g es 0 J respecto de la mesa y 20 J respecto del suelo','No tiene E_g porque está en reposo','Su E_g es 2 J respecto del suelo'],1,'La E_g depende del nivel de referencia que se elige. Lo que tiene sentido físico son los cambios de E_g.'],
+   ['Dos pelotas, una de 1 kg y otra de 3 kg, se sueltan desde la misma altura sin aire. ¿Cuál llega al suelo con mayor rapidez?',['La de 3 kg, porque tiene más energía','La de 1 kg, porque es más liviana','Llegan con la misma rapidez','Depende del color de la pelota'],2,'m·g·h = ½·m·v²: la masa se simplifica y v = √(2·g·h) es igual para ambas. La de 3 kg llega con más E_c, pero no con más rapidez.'],
+   ['Si comprimes un resorte al doble de distancia, ¿qué ocurre?',['La fuerza se duplica y la E_e se cuadruplica','La fuerza se cuadruplica y la E_e se duplica','Ambas se duplican','Ambas se cuadruplican'],0,'F = k·x se duplica con x. E_e = ½·k·x² se cuadruplica.'],
+   ['Un carro de montaña rusa sin roce parte del reposo a 25 m de altura. ¿Con qué rapidez pasa por un punto a 5 m de altura?',['10 m/s','15 m/s','20 m/s','25 m/s'],2,'Baja 20 m: ½·v² = g·Δh = 10·20 → v = √400 = 20 m/s.'],
+   ['¿Cuál de estos casos es una transferencia de energía y no una transformación?',['Una ampolleta que convierte energía eléctrica en luz','El calor que pasa de una taza caliente a tu mano','Un clavadista que cambia E_g por E_c al caer','Un panel solar que entrega energía eléctrica'],1,'En la taza y la mano la energía térmica pasa de un cuerpo a otro sin cambiar de tipo. En los otros casos cambia de forma.'],
+   ['Una pelota cae desde 2,0 m y rebota hasta 1,5 m. ¿Qué porcentaje de su energía mecánica se disipó en el rebote?',['25 %','75 %','50 %','1,5 %'],0,'La energía es proporcional a la altura: queda 1,5/2,0 = 75 %. Se disipó 25 %, como calor y sonido.']
   ];
   var qi=0,right=0,streak=0,qdone=false,qgot=0;
   var LET=['A','B','C','D'];
   function sub(t){return t.replace(/E_([cgem])/g,'E<sub>$1</sub>')}
   function qRender(){
     var box=$('quiz');
-    if(qi>=QZ.length){box.innerHTML='<div class="qtext">Resultado: '+qgot+' de '+QZ.length+' a la primera</div><p>'+(qgot>=7?'Dominan los principios.':qgot>=5?'Van bien. Repasen las que fallaron.':'Vuelvan al laboratorio y a la fase 2, y prueben otra vez.')+'</p><div class="sbtns"><button class="btn" type="button" id="q_again">Jugar de nuevo</button></div><p class="note">Los Felipesos de cada pregunta se ganan solo la primera vez.</p>';return}
+    if(qi>=QZ.length){box.innerHTML='<div class="qtext">Resultado: '+qgot+' de '+QZ.length+' a la primera</div><p>'+(qgot>=QZ.length*.85?'Dominan los principios.':qgot>=QZ.length*.6?'Van bien. Repasen las que fallaron.':'Vuelvan al laboratorio y a la fase 2, y prueben otra vez.')+'</p><div class="sbtns"><button class="btn" type="button" id="q_again">Jugar de nuevo</button></div><p class="note">Los Felipesos de cada pregunta se ganan solo la primera vez.</p>';return}
     var q=QZ[qi];qdone=false;
     box.innerHTML='<div class="qmeta"><span>Pregunta '+(qi+1)+' de '+QZ.length+'</span><span>Racha: '+streak+' · Aciertos: '+qgot+'</span></div><div class="qtext">'+sub(q[0])+'</div><div class="qopts">'+q[1].map(function(o,i){return '<button type="button" data-o="'+i+'"><b>'+LET[i]+'</b><span>'+sub(o)+'</span></button>'}).join('')+'</div><div id="q_fb"></div>';
   }
@@ -681,6 +731,42 @@ body{padding:0}
     });
     render();
   });
+  /* verdadero o falso */
+  var VF=[
+   ['La energía mecánica de un objeto que cae con roce se conserva.',false,'No: parte pasa a térmica. La energía total sí se conserva, pero la mecánica disminuye.'],
+   ['Un objeto en reposo no tiene energía mecánica.',false,'Puede tener E_g (un libro sobre una repisa) o E_e (un resorte comprimido). Solo su E_c es cero.'],
+   ['La energía potencial gravitatoria depende del nivel de referencia elegido.',true,'Sí. Lo que no depende de él es la variación de E_g, y eso es lo que importa.'],
+   ['Si duplicas la masa de un péndulo sin roce, pasa más rápido por el punto más bajo.',false,'No: la masa se simplifica en la conservación. v = √(2·g·h) no depende de m.'],
+   ['La energía cinética puede ser negativa.',false,'E_c = ½·m·v² nunca es negativa. Lo que puede ser negativo es el trabajo de una fuerza, como el del roce.'],
+   ['Un resorte comprimido y otro estirado en la misma distancia guardan igual energía elástica.',true,'Sí, porque x está al cuadrado: solo importa cuánto se deforma, no hacia dónde.'],
+   ['El trabajo del roce transforma energía mecánica en energía térmica.',true,'Sí. Por eso las manos se calientan al frotarlas y los frenos se calientan al frenar.'],
+   ['Si la rapidez de un objeto se triplica, su energía cinética también se triplica.',false,'Se multiplica por 9, porque v está al cuadrado.']
+  ];
+  var vfBox=$('vfbox'),vfDone={},vfOk=0;
+  vfBox.innerHTML=VF.map(function(v,i){return '<div class="vfrow" data-i="'+i+'"><p>'+(i+1)+'. '+sub(v[0])+'</p><div class="vfb"><button type="button" data-v="1">Verdadero</button><button type="button" data-v="0">Falso</button></div><div class="vfx"></div></div>'}).join('')+'<p class="note" id="vfsum"></p>';
+  vfBox.addEventListener('click',function(e){
+    var b=e.target.closest('[data-v]');if(!b)return;var row=b.closest('.vfrow'),i=+row.dataset.i;if(i in vfDone)return;
+    var ok=(b.dataset.v==='1')===VF[i][1];vfDone[i]=ok;if(ok){vfOk++;B('vf'+i,'V o F '+(i+1)+' correcta')}
+    row.classList.add(ok?'ok':'no');row.querySelectorAll('button').forEach(function(x){x.disabled=true});
+    row.querySelector('.vfx').innerHTML='<b>'+(ok?'Correcto. ':'No. ')+'</b>'+(VF[i][1]?'Es verdadero. ':'Es falso. ')+sub(VF[i][2]);
+    $('vfsum').textContent=Object.keys(vfDone).length+' de '+VF.length+' respondidas · '+vfOk+' a la primera';
+  });
+  /* experiencias prácticas */
+  function pn(id){var v=parseFloat(String($(id).value).replace(',','.'));return isNaN(v)?0:v}
+  function prac(){
+    var m=pn('a_m'),h0=pn('a_h0'),h1=pn('a_h1'),o=$('a_out');
+    if(m>0&&h0>0&&h1>0&&h1<=h0*1.02){var E0=m*g*h0,E1=m*g*h1;o.innerHTML='E<sub>g</sub> inicial = '+nf(E0,3)+' J<br>E<sub>g</sub> tras el rebote = '+nf(E1,3)+' J<br>Se conservó el '+nf(h1/h0*100,0)+' % y se disipó '+nf(E0-E1,3)+' J';B('prac_a','Experiencia A: rebote medido')}
+    else if(h1>h0*1.02&&h0>0){o.textContent='El rebote no puede superar la altura inicial. Revisa la medición.'}
+    else o.textContent='Completa los tres datos.';
+    var mb=pn('b_m'),xb=pn('b_x'),ob=$('b_out');
+    if(mb>0&&xb>0){var k=mb*g/xb;ob.innerHTML='k = m·g/x = '+nf(k,1)+' N/m<br>E<sub>e</sub> = ½·k·x² = '+nf(0.5*k*xb*xb,3)+' J<br>E<sub>g</sub> perdida = m·g·x = '+nf(mb*g*xb,3)+' J<br>Diferencia = '+nf(0.5*mb*g*xb,3)+' J';B('prac_b','Experiencia B: constante k medida')}
+    else ob.textContent='Completa los dos datos.';
+    var mc=pn('c2_m'),hc=pn('c2_h'),tc=pn('c2_t'),oc=$('c2_out');
+    if(mc>0&&hc>0&&tc>0){var Ec_=mc*g*hc,P_=Ec_/tc;oc.innerHTML='E<sub>g</sub> ganada = '+nf(Ec_,0)+' J<br>Potencia = '+nf(P_,0)+' W<br>Equivale a '+nf(P_/100,1)+' ampolletas de 100 W';B('prac_c','Experiencia C: potencia medida')}
+    else oc.textContent='Completa los tres datos.';
+  }
+  ['a_m','a_h0','a_h1','b_m','b_x','c2_m','c2_h','c2_t'].forEach(function(id){$(id).addEventListener('input',prac)});
+  prac();
   /* semáforo */
   var opts=[['Rojo','Aún mezclo transformar, transferir y disipar'],['Amarillo','Calculo E_c, E_g y E_e con ayuda'],['Verde','Puedo explicar la conservación y sus límites']];
   var sem=$('sem'),cur=store.get('ener_sem');
@@ -760,3 +846,26 @@ body{padding:0}
   apply(false);
 })();
 </script>
+<script src="../../firebase/df.js" data-sin-aviso></script>
+<script>
+/* Lo que el profe ve en el Panel → Trabajos */
+window.AUTOGUARDADO_RESUMEN = function () {
+  var B = window.Bank, e = B ? B.earned() : {}, det = [];
+  function n(p, c) { var k = 0; for (var i = 0; i < c; i++) if (e[p + i]) k++; return k; }
+  var team = ''; try { team = localStorage.getItem('ener_team') || ''; } catch (x) {}
+  if (team) det.push({ k: 'Equipo', v: team });
+  det.push({ k: 'Reto: preguntas correctas a la primera', v: n('qz', 14) + ' de 14' });
+  det.push({ k: 'Verdadero o falso', v: n('vf', 8) + ' de 8' });
+  det.push({ k: 'Cadenas de energía', v: (e.chain1 ? 1 : 0) + (e.chain2 ? 1 : 0) + ' de 2' });
+  [['prac_a', 'Práctica A · rebote'], ['prac_b', 'Práctica B · elástico'], ['prac_c', 'Práctica C · escalera']].forEach(function (p) {
+    var f = { prac_a: ['a_m', 'a_h0', 'a_h1'], prac_b: ['b_m', 'b_x'], prac_c: ['c2_m', 'c2_h', 'c2_t'] }[p[0]];
+    var vals = f.map(function (id) { var el = document.getElementById(id); return el && el.value ? el.value : '—'; }).join(' · ');
+    det.push({ k: p[1], v: (e[p[0]] ? '✓ ' : '') + vals });
+  });
+  ['sim_cons', 'sim_diss', 'sim_v', 'sim_spring', 'calc3'].forEach(function (k) { det.push({ k: 'Misión ' + k, v: e[k] ? '✓ hecha' : '—' }); });
+  var fc = document.getElementById('f_close'); if (fc && fc.value.trim()) det.push({ k: 'Pregunta de cierre', v: fc.value.trim() });
+  var hechas = Object.keys(e).filter(function (k) { return e[k]; }).length;
+  return { felipesos: B ? B.total() : 0, avance: hechas + ' de 33', detalle: det };
+};
+</script>
+<script src="../../firebase/autoguardado.js" data-clave="energia-mecanica" data-titulo="Repaso · Energía mecánica (4° Medio Física)" data-claves="ener_*"></script>
