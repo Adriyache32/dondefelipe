@@ -117,7 +117,7 @@ h1 span{color:var(--acid)}
   <a class="crumb" href="index.html">← El Mundo de Felipe</a>
   <p class="kick">Juego · Banco de Hipopesos</p>
   <h1>Ruleta de <span>Hipopesos</span></h1>
-  <p class="intro">Cada tiro cuesta <b id="costoTxt">5.000 ₣</b>. Puedes ganar o perder hasta 50.000 ₣, llevarte un beneficio para canjear con el profe o un gatito gratis para tu colección.</p>
+  <p class="intro">Cada tiro cuesta <b id="costoTxt">30.000 ₣</b>. Puedes ganar o perder hasta 300.000 ₣, llevarte un beneficio para canjear con el profe o un gatito gratis para tu colección.</p>
 
   <div id="avisos"></div>
 
@@ -149,7 +149,7 @@ h1 span{color:var(--acid)}
         <h2>Probabilidades</h2>
         <table class="prob" id="prob"></table>
         <p class="nota">La ruleta tiene 16 casillas iguales y cada una sale con la misma probabilidad (1 de 16). Si un castigo es mayor que tu saldo, quedas en 0. Si ganas un gatito que ya tenías, recibes su precio en Hipopesos.</p>
-        <p class="nota">🔒 <b>Juego limpio:</b> al girar se retienen hasta 55.000 ₣ y el servidor anota su hora exacta; el resultado sale de esa hora, así que nadie puede saberlo antes. Lo retenido vuelve con tu premio en el mismo giro. Máximo 10 tiros por día.</p>
+        <p class="nota">🔒 <b>Juego limpio:</b> al girar se retienen hasta 330.000 ₣ y el servidor anota su hora exacta; el resultado sale de esa hora, así que nadie puede saberlo antes. Lo retenido vuelve con tu premio en el mismo giro. Máximo 10 tiros por día.</p>
       </section>
       <section class="card">
         <h2>Tus últimos tiros</h2>
@@ -170,18 +170,18 @@ h1 span{color:var(--acid)}
 'use strict';
 /* ═══════════════════════════════════════════════════════════════
    RULETA v2 — debe coincidir con firebase/firestore.rules (sección "Ruleta de Hipopesos").
-   Cada tiro tiene dos pasos: (1) apostar: se retiene min(saldo, 55.000) y el servidor anota
+   Cada tiro tiene dos pasos: (1) apostar: se retiene min(saldo, 330.000) y el servidor anota
    su hora exacta (ms); (2) resolver: resultado = sha256(sal | cuenta | n° | ms). Como esa
    hora nadie la conoce antes de apostar, el resultado no se puede adivinar de antemano.
    El navegador solo lo calcula para mostrarlo; las reglas lo recalculan y exigen.
    ═══════════════════════════════════════════════════════════════ */
 const RULETA = {
-  costo: 5000,
-  retenerMax: 55000,
+  costo: 30000,
+  retenerMax: 330000,
   porDia: 10,
   sal: 'dondefelipe-ruleta-v2',
-  dinero: c => '012'.includes(c) ? 10000 : '34'.includes(c) ? 20000 : c === '5' ? 50000
-             : '678'.includes(c) ? -10000 : '9a'.includes(c) ? -20000 : c === 'b' ? -50000 : 0,
+  dinero: c => '012'.includes(c) ? 60000 : '34'.includes(c) ? 120000 : c === '5' ? 300000
+             : '678'.includes(c) ? -60000 : '9a'.includes(c) ? -120000 : c === 'b' ? -300000 : 0,
   beneficio: c => c === 'c' ? 'Ruleta: pase de tarea' : 'Ruleta: 5 minutos extra en una prueba',
   gatito: c2 => '0123'.includes(c2) ? 'naranjo' : '4567'.includes(c2) ? 'gris' : '89ab'.includes(c2) ? 'dormilon' : 'patitas',
 };
@@ -191,8 +191,8 @@ const CASILLA = c => {
   if ('cd'.includes(c)) return { tipo: 'beneficio', emoji: '🎟️', txt: c === 'c' ? 'Pase tarea' : '+5 min', color: '#1f9fd0' };
   if ('ef'.includes(c)) return { tipo: 'gatito', emoji: '🐱', txt: 'Gatito', color: '#ff2e7e' };
   const t = (d > 0 ? '+' : '−') + new Intl.NumberFormat('es-CL').format(Math.abs(d));
-  const colores = { 10000: '#2fae6a', 20000: '#139a8f', 50000: '#d9a520', '-10000': '#e5483f', '-20000': '#a8327a', '-50000': '#6b1a28' };
-  const emojis  = { 10000: '💰', 20000: '💵', 50000: '💎', '-10000': '💸', '-20000': '🔥', '-50000': '💀' };
+  const colores = { 60000: '#2fae6a', 120000: '#139a8f', 300000: '#d9a520', '-60000': '#e5483f', '-120000': '#a8327a', '-300000': '#6b1a28' };
+  const emojis  = { 60000: '💰', 120000: '💵', 300000: '💎', '-60000': '💸', '-120000': '🔥', '-300000': '💀' };
   return { tipo: d > 0 ? 'premio' : 'castigo', emoji: emojis[d], txt: t, color: colores[d], dinero: d };
 };
 // Orden de las 16 casillas alrededor de la rueda (intercaladas para que se vea pareja).
@@ -285,7 +285,7 @@ async function cargarHistorial() {
   } catch (e) { ul.innerHTML = '<li class="vacio">No se pudo cargar el historial.</li>'; }
 }
 
-// PASO 1 · apostar: retiene min(saldo, 55.000), sube el n° de tiro y deja que el SERVIDOR
+// PASO 1 · apostar: retiene min(saldo, 330.000), sube el n° de tiro y deja que el SERVIDOR
 // anote su hora exacta (tFecha). Hasta este momento nadie puede saber el resultado.
 async function apostar() {
   const { F, db } = await DF.listo(); await (DF.reloj ? DF.reloj() : null);
@@ -501,7 +501,7 @@ function mostrar(r) {
   ($('modal').querySelector('[data-a="otra"]') || $('modal').querySelector('[data-a="cerrar"]')).focus({ preventScroll: true });
   $('anuncio').textContent = badge + ': ' + titulo;
   if (r.tipo === 'castigo') { sonCastigo(); const s = $('stage'); s.classList.remove('shake'); void s.offsetWidth; s.classList.add('shake'); }
-  else { sonPremio(); if (!reducido) confeti(r.premio >= 50000 || r.tipo === 'gatito' ? 180 : 100); }
+  else { sonPremio(); if (!reducido) confeti(r.premio >= 300000 || r.tipo === 'gatito' ? 180 : 100); }
 }
 function cerrar() { $('velo').classList.remove('on'); $('hub').focus({ preventScroll: true }); }
 

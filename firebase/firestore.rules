@@ -370,30 +370,30 @@ service cloud.firestore {
     // ═════ Ruleta de Hipopesos (v2: azar con la hora del servidor) ═════
     // La v1 se suspendió: el resultado salía de datos conocidos (sal | cuenta | n° de tiro) y se
     // podía calcular ANTES de girar. Ahora cada tiro tiene DOS pasos:
-    //  1) APOSTAR (movimiento 'ruleta-apuesta'): se retiene min(saldo, 55.000) y ruleta/<cuenta>
+    //  1) APOSTAR (movimiento 'ruleta-apuesta'): se retiene min(saldo, 330.000) y ruleta/<cuenta>
     //     anota la hora EXACTA del servidor (ms) en tFecha. Nadie la conoce antes de escribir.
     //  2) RESOLVER (movimiento 'ruleta'): resultado = sha256(sal | cuenta | n° | ms de tFecha);
     //     se devuelve max(0, retenido + premio − costo). Abandonar un tiro malo no sirve:
     //     lo retenido queda retenido hasta resolverlo (la página lo resuelve sola al volver).
     // Máximo tirosPorDia() tiros por día. Mismo cálculo en ruleta.html (objeto RULETA).
-    //   1er carácter del hash  →  0-2: +10.000 · 3-4: +20.000 · 5: +50.000
-    //                             6-8: −10.000 · 9-a: −20.000 · b: −50.000
+    //   1er carácter del hash  →  0-2: +60.000 · 3-4: +120.000 · 5: +300.000
+    //                             6-8: −60.000 · 9-a: −120.000 · b: −300.000
     //                             c-d: beneficio canjeable · e-f: gatito gratis
     function ruletaActiva() { return true; }
-    function costoRuleta() { return 5000; }
-    function maxRetener() { return 55000; }   // costo + el peor castigo
+    function costoRuleta() { return 30000; }
+    function maxRetener() { return 330000; }   // costo + el peor castigo
     function tirosPorDia() { return 10; }
     function salRuleta() { return 'dondefelipe-ruleta-v2'; }
     function rutaRuleta(c) { return /databases/$(database)/documents/ruleta/$(c); }
     function ruletaDe(c) { return exists(rutaRuleta(c)) ? get(rutaRuleta(c)).data : { 'n': 0 }; }
     function hashTiro(c, n, ms) { return hashing.sha256(salRuleta() + '|' + c + '|' + string(n) + '|' + string(ms)).toHexString().lower(); }
     function dineroRuleta(h) {
-      return h.matches('^[0-2].*') ? 10000
-        : (h.matches('^[34].*') ? 20000
-        : (h.matches('^5.*') ? 50000
-        : (h.matches('^[6-8].*') ? -10000
-        : (h.matches('^[9a].*') ? -20000
-        : (h.matches('^b.*') ? -50000 : 0)))));
+      return h.matches('^[0-2].*') ? 60000
+        : (h.matches('^[34].*') ? 120000
+        : (h.matches('^5.*') ? 300000
+        : (h.matches('^[6-8].*') ? -60000
+        : (h.matches('^[9a].*') ? -120000
+        : (h.matches('^b.*') ? -300000 : 0)))));
     }
     // Beneficios (el texto queda tal cual en "Compras por canjear" del panel).
     function beneficioRuleta(h) { return h.matches('^c.*') ? 'Ruleta: pase de tarea' : 'Ruleta: 5 minutos extra en una prueba'; }
