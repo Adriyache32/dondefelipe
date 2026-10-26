@@ -356,8 +356,9 @@ async function resolver() {
 }
 async function tirar() {
   try { await apostar(); }
-  catch (e) { if (e.message !== 'PENDIENTE') throw e; }   // había uno sin resolver: se resuelve ese
-  return resolver();
+  catch (e) { if (e.message !== 'PENDIENTE') { e.paso = 'apostar'; throw e; } }   // había uno sin resolver: se resuelve ese
+  try { return await resolver(); }
+  catch (e) { e.paso = 'resolver'; throw e; }
 }
 
 /* ── Interfaz ── */
@@ -436,8 +437,8 @@ function animarHasta(indice) {
   const offset = arcoG * (.15 + Math.random() * .7);        // solo estética: dónde cae dentro de la casilla
   const deseado = (360 - (indice * arcoG + offset)) % 360;
   const actual = ((angulo % 360) + 360) % 360;
-  const inicio = angulo, destino = angulo + (reducido ? 1 : 6) * 360 + ((deseado - actual + 360) % 360);
-  const dur = reducido ? 1200 : 5600;
+  const inicio = angulo, destino = angulo + (reducido ? 2 : 6) * 360 + ((deseado - actual + 360) % 360);
+  const dur = reducido ? 2800 : 5600;   // con «reducir movimiento» gira menos, pero se alcanza a ver
   let ultima = casillaEn(inicio);
   return new Promise(ok => {
     const t0 = performance.now();
@@ -484,15 +485,31 @@ async function alPulsar() {
     cargarHistorial();
   } catch (e) {
     precalentando = false;
-    const m = String(e.message || e);
-    aviso('No se pudo girar: ' + esc(/permission/i.test(m) ? 'el banco rechazó el tiro (¿el profe publicó las reglas nuevas?)' : m), 'err');
-    cargar();   // vuelve a leer saldo y estado (por si quedó un tiro pendiente)
+    await cargar();   // vuelve a leer saldo y estado (por si quedó un tiro pendiente)
+    mostrarError(e);  // después de cargar(), que limpia los avisos
   }
   girando = false;
   document.body.classList.remove('girando');
   pintar();
 }
 
+// Un error no puede pasar inadvertido: se muestra en la ventana, junto a la rueda.
+function mostrarError(e) {
+  const m = String(e.message || e), permiso = /permission|insufficient/i.test(m);
+  let titulo = 'No se pudo girar', texto = esc(m);
+  if (permiso && e.paso === 'resolver') {
+    titulo = 'El banco no aceptó el resultado';
+    texto = 'Las reglas publicadas en Firebase no calzan con esta ruleta (32 casillas). <b>Lo apostado no se perdió</b>: queda retenido y vuelve con el resultado apenas el profe publique las reglas nuevas y toques <b>Terminar</b>.';
+  } else if (permiso) {
+    titulo = 'El banco no aceptó la apuesta';
+    texto = 'No se movió nada de tu saldo. Puede que hayas llegado al límite de ' + RULETA.porDia + ' tiros de hoy, o que el profe aún no publique las reglas nuevas de la ruleta.';
+  } else if (/hoy/.test(m)) { titulo = 'Límite de hoy'; }
+  $('modal').style.setProperty('--c', 'var(--neg)');
+  $('modal').innerHTML = `<span class="emo">⚠️</span><span class="badge">Aviso</span><h3 id="mTitulo">${esc(titulo)}</h3><p>${texto}</p>
+    <p class="nota" style="font-size:12px;opacity:.7">Detalle técnico: ${esc(m)}${e.paso ? ' · paso: ' + e.paso : ''}</p>
+    <div style="display:flex;gap:8px;justify-content:center"><button class="btn" type="button" data-a="cerrar">Cerrar</button></div>`;
+  $('velo').classList.add('on');
+}
 function mostrar(r) {
   const cas = CASILLA(r.c);
   const col = r.tipo === 'castigo' ? 'var(--neg)' : r.tipo === 'nada' ? '#8a90a0' : r.tipo === 'beneficio' ? '#22a7ff' : r.tipo === 'gatito' ? 'var(--pink)' : 'var(--acid)';
