@@ -109,6 +109,7 @@ h1 span{color:var(--acid)}
 @keyframes float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-8px) rotate(4deg)}}
 @keyframes shake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-8px) rotate(-1deg)}40%,60%{transform:translateX(8px) rotate(1deg)}}
 @media (prefers-reduced-motion:reduce){*,*::before{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+  .comprobante{margin:6px 0 12px;font-size:12.5px;text-align:left;opacity:.9}.comprobante summary{cursor:pointer;font-weight:600}.comprobante code{font-size:12px;word-break:break-all}
 </style>
 </head>
 <body>
@@ -119,9 +120,6 @@ h1 span{color:var(--acid)}
   <p class="intro">Cada tiro cuesta <b id="costoTxt">5.000 ₣</b>. Puedes ganar o perder hasta 50.000 ₣, llevarte un beneficio para canjear con el profe o un gatito gratis para tu colección.</p>
 
   <div id="avisos"></div>
-  <div class="aviso" id="suspendida" style="border-color:#e9b949;background:rgba(233,185,73,.12);color:#ffe6a8;margin:10px 0">
-    <b>⛔ La ruleta está suspendida.</b> Encontramos una falla de seguridad: el resultado de cada tiro se podía saber antes de girar.
-    Volverá cuando esté corregida. Tu saldo y tus premios anteriores no cambian.</div>
 
   <section class="card">
     <div class="estado">
@@ -151,6 +149,7 @@ h1 span{color:var(--acid)}
         <h2>Probabilidades</h2>
         <table class="prob" id="prob"></table>
         <p class="nota">La ruleta tiene 16 casillas iguales y cada una sale con la misma probabilidad (1 de 16). Si un castigo es mayor que tu saldo, quedas en 0. Si ganas un gatito que ya tenías, recibes su precio en Hipopesos.</p>
+        <p class="nota">🔒 <b>Juego limpio:</b> al girar se retienen hasta 55.000 ₣ y el servidor anota su hora exacta; el resultado sale de esa hora, así que nadie puede saberlo antes. Lo retenido vuelve con tu premio en el mismo giro. Máximo 10 tiros por día.</p>
       </section>
       <section class="card">
         <h2>Tus últimos tiros</h2>
@@ -170,13 +169,17 @@ h1 span{color:var(--acid)}
 <script>
 'use strict';
 /* ═══════════════════════════════════════════════════════════════
-   RULETA — debe coincidir con firebase/firestore.rules (sección "Ruleta de Hipopesos").
-   El resultado de cada tiro sale de sha256(sal | cuenta | n° de tiro): el navegador
-   solo lo calcula para mostrarlo; las reglas lo recalculan y rechazan cualquier otro.
+   RULETA v2 — debe coincidir con firebase/firestore.rules (sección "Ruleta de Hipopesos").
+   Cada tiro tiene dos pasos: (1) apostar: se retiene min(saldo, 55.000) y el servidor anota
+   su hora exacta (ms); (2) resolver: resultado = sha256(sal | cuenta | n° | ms). Como esa
+   hora nadie la conoce antes de apostar, el resultado no se puede adivinar de antemano.
+   El navegador solo lo calcula para mostrarlo; las reglas lo recalculan y exigen.
    ═══════════════════════════════════════════════════════════════ */
 const RULETA = {
   costo: 5000,
-  sal: 'dondefelipe-ruleta-v1',
+  retenerMax: 55000,
+  porDia: 10,
+  sal: 'dondefelipe-ruleta-v2',
   dinero: c => '012'.includes(c) ? 10000 : '34'.includes(c) ? 20000 : c === '5' ? 50000
              : '678'.includes(c) ? -10000 : '9a'.includes(c) ? -20000 : c === 'b' ? -50000 : 0,
   beneficio: c => c === 'c' ? 'Ruleta: pase de tarea' : 'Ruleta: 5 minutos extra en una prueba',
@@ -202,21 +205,23 @@ const precioGatito = id => (window.GATITOS || []).find(g => g.id === id)?.precio
 const nombreGatito = id => (window.GATITOS || []).find(g => g.id === id)?.nombre || id;
 const reducido = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-let usuario = null, cuentaId = null, cuenta = null, tiros = 0, perfilOk = false;
+let usuario = null, cuentaId = null, cuenta = null, tiros = 0, perfilOk = false, estado = null;
+const diaHoy = () => Math.floor(((DF.ahora ? DF.ahora() : Date.now()) - 14400000) / 86400000);   // igual que en las reglas
+const hoyJugados = () => estado && estado.dia === diaHoy() ? (estado.hoy || 0) : 0;
 let girando = false, angulo = 0, sonido = true, audio = null;
 
 async function sha256hex(s) {
   const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
   return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
 }
-function resultadoDe(h, saldoAntes, tengo) {
+function resultadoDe(h, retenido, tengo) {
   const c = h[0], cas = CASILLA(c);
   const g = RULETA.gatito(h[1]);
   const yaTenia = cas.tipo === 'gatito' && tengo.includes(g);
   const premio = cas.tipo === 'gatito' ? (yaTenia ? precioGatito(g) : 0) : RULETA.dinero(c);
-  const neto = premio - RULETA.costo;
-  const monto = saldoAntes + neto < 0 ? -saldoAntes : neto;
-  return { c, tipo: cas.tipo, premio, monto, alCero: saldoAntes + neto < 0,
+  const pagoBruto = retenido + premio - RULETA.costo, pago = Math.max(0, pagoBruto);
+  // monto: lo que se devuelve al resolver; neto: el efecto real del tiro sobre el saldo
+  return { c, h, tipo: cas.tipo, premio, monto: pago, neto: pago - retenido, alCero: pagoBruto < 0,
            gatito: cas.tipo === 'gatito' ? g : null, yaTenia,
            beneficio: cas.tipo === 'beneficio' ? RULETA.beneficio(c) : null };
 }
@@ -224,7 +229,8 @@ function motivoDe(r, n) {
   const base = 'Ruleta (tiro ' + n + '): ';
   if (r.tipo === 'beneficio') return base + r.beneficio.replace(/^Ruleta: /, '');
   if (r.tipo === 'gatito') return base + (r.yaTenia ? 'gatito repetido, recibe ' + fmt(r.premio) : 'gatito gratis (' + nombreGatito(r.gatito) + ')');
-  return base + (r.premio > 0 ? 'gana ' : 'pierde ') + fmt(Math.abs(r.premio)) + (r.alCero ? ', saldo queda en 0' : '');
+  return base + (r.premio > 0 ? 'gana ' : 'pierde ') + fmt(Math.abs(r.premio)) + (r.alCero ? ', saldo queda en 0' : '')
+    + ' · neto ' + (r.neto >= 0 ? '+' : '−') + fmt(Math.abs(r.neto));
 }
 
 /* ── Datos ── */
@@ -244,7 +250,8 @@ async function cargar() {
           cuentaId = v.data().cuenta;
           const [c, r] = await Promise.all([F.getDoc(F.doc(db, 'banco_cuentas', cuentaId)), F.getDoc(F.doc(db, 'ruleta', cuentaId))]);
           if (c.exists()) cuenta = c.data();
-          tiros = r.exists() ? (r.data().n || 0) : 0;
+          estado = r.exists() ? r.data() : null;
+          tiros = estado ? (estado.n || 0) : 0;
         }
         if (!cuenta) aviso('Tu cuenta del banco todavía no está conectada con este correo. Pídele al profe que la vincule para poder jugar.');
         else if ((cuenta.saldo || 0) < RULETA.costo) aviso('Necesitas al menos ' + fmt(RULETA.costo) + ' para girar. Revisa el bono diario en la <a href="banco-felipeso/bolsa.html">Bolsa</a>.');
@@ -253,73 +260,108 @@ async function cargar() {
   } catch (e) { aviso('No se pudo cargar tu cuenta: ' + esc(e.message), 'err'); }
   pintar();
   cargarHistorial();
+  if (estado && estado.pendiente && cuenta) {
+    aviso('Tenías un tiro sin terminar (lo retenido sigue guardado). Toca <b>Terminar</b> para ver su resultado.');
+  }
 }
 async function cargarHistorial() {
   const ul = $('hist');
   if (!cuentaId) { ul.innerHTML = '<li class="vacio">' + (usuario ? 'Sin cuenta del banco vinculada.' : 'Entra con tu cuenta para ver tus tiros.') + '</li>'; return; }
   try {
     const { F, db } = await DF.listo();
-    const s = await F.getDocs(F.query(F.collection(db, 'banco_movs'), F.where('cuenta', '==', cuentaId), F.where('tipo', '==', 'ruleta')));
-    const movs = s.docs.map(d => d.data()).sort((a, b) => (b.tiro || 0) - (a.tiro || 0)).slice(0, 8);
-    ul.innerHTML = movs.length ? movs.map(m => {
-      const col = m.canje ? '#1f9fd0' : m.gatito ? '#ff2e7e' : m.monto >= 0 ? 'var(--pos)' : 'var(--neg)';
-      const txt = esc(String(m.motivo || '').replace(/^Ruleta \(tiro \d+\): /, ''));
-      return `<li style="--c:${col}"><span>#${m.tiro} · ${txt}</span><b style="color:${m.monto >= 0 ? 'var(--pos)' : 'var(--neg)'}">${m.monto >= 0 ? '+' : '−'}${fmt(Math.abs(m.monto))}</b></li>`;
-    }).join('') : '<li class="vacio">Todavía no has girado.</li>';
+    const s = await F.getDocs(F.query(F.collection(db, 'banco_movs'), F.where('cuenta', '==', cuentaId), F.where('tipo', 'in', ['ruleta', 'ruleta-apuesta'])));
+    const ap = {}, res = [];
+    s.docs.forEach(d => { const m = d.data(); if (m.tipo === 'ruleta-apuesta') ap[m.tiro] = m.monto; else res.push(m); });
+    const movs = res.sort((a, b) => (b.tiro || 0) - (a.tiro || 0)).slice(0, 8);
+    let neto = 0; res.forEach(m => { neto += m.monto + (ap[m.tiro] != null ? ap[m.tiro] : -RULETA.costo); });
+    ul.innerHTML = (movs.length ? `<li class="vacio" style="--c:transparent">Balance de tus ${res.length} tiros: <b style="color:${neto >= 0 ? 'var(--pos)' : 'var(--neg)'}">${neto >= 0 ? '+' : '−'}${fmt(Math.abs(neto))}</b></li>` : '') +
+      (movs.length ? movs.map(m => {
+        // tiros v2: efecto real = devuelto − retenido; tiros antiguos (v1): el monto ya era el neto
+        const efecto = ap[m.tiro] != null ? m.monto + ap[m.tiro] : m.monto;
+        const col = m.canje ? '#1f9fd0' : m.gatito ? '#ff2e7e' : efecto >= 0 ? 'var(--pos)' : 'var(--neg)';
+        const txt = esc(String(m.motivo || '').replace(/^Ruleta \(tiro \d+\): /, '').replace(/ · neto .*$/, ''));
+        return `<li style="--c:${col}"><span>#${m.tiro} · ${txt}</span><b style="color:${efecto >= 0 ? 'var(--pos)' : 'var(--neg)'}">${efecto >= 0 ? '+' : '−'}${fmt(Math.abs(efecto))}</b></li>`;
+      }).join('') : '<li class="vacio">Todavía no has girado.</li>');
   } catch (e) { ul.innerHTML = '<li class="vacio">No se pudo cargar el historial.</li>'; }
 }
 
-// Una sola transacción: cobra el tiro, aplica el resultado, registra el movimiento,
-// sube el contador de tiros y, si toca, agrega el gatito a la colección.
-async function tirar() {
+// PASO 1 · apostar: retiene min(saldo, 55.000), sube el n° de tiro y deja que el SERVIDOR
+// anote su hora exacta (tFecha). Hasta este momento nadie puede saber el resultado.
+async function apostar() {
+  const { F, db } = await DF.listo(); await (DF.reloj ? DF.reloj() : null);
+  const rc = F.doc(db, 'banco_cuentas', cuentaId), rr = F.doc(db, 'ruleta', cuentaId);
+  await F.runTransaction(db, async tx => {
+    const [sc, sr] = await Promise.all([tx.get(rc), tx.get(rr)]);
+    if (!sc.exists()) throw new Error('no se encontró tu cuenta del banco');
+    const c = sc.data(), saldoAntes = c.saldo || 0, r = sr.exists() ? sr.data() : {};
+    if (r.pendiente) throw new Error('PENDIENTE');
+    if (saldoAntes < RULETA.costo) throw new Error('cada tiro cuesta ' + fmt(RULETA.costo) + ' y tienes ' + fmt(saldoAntes));
+    const dia = diaHoy(), hoy = r.dia === dia ? (r.hoy || 0) + 1 : 1;
+    if (hoy > RULETA.porDia) throw new Error('ya jugaste los ' + RULETA.porDia + ' tiros de hoy. Vuelve mañana');
+    const n = (r.n || 0) + 1, ret = Math.min(saldoAntes, RULETA.retenerMax), saldo = saldoAntes - ret, ops = (c.ops || 0) + 1;
+    tx.update(rc, { saldo, ops, actualizado: F.serverTimestamp() });
+    tx.set(F.doc(db, 'banco_movs', 'op-' + cuentaId + '-' + ops), {
+      cuenta: cuentaId, numero: String(c.numero || ''), nombre: ((c.nombre || '') + ' ' + (c.apellido || '')).trim(), curso: c.curso || '',
+      monto: -ret, motivo: ('Ruleta (tiro ' + n + '): apuesta retenida mientras gira').slice(0, 200), tipo: 'ruleta-apuesta',
+      saldoDespues: saldo, profe: '', fecha: F.serverTimestamp(), tiro: n });
+    tx.set(rr, { n, pendiente: true, tFecha: F.serverTimestamp(), retenido: ret, dia, hoy, actualizado: F.serverTimestamp() });
+  });
+}
+// PASO 2 · resolver: con la hora que anotó el servidor se calcula el resultado y se paga.
+async function resolver() {
   const { F, db } = await DF.listo();
   const rc = F.doc(db, 'banco_cuentas', cuentaId), rr = F.doc(db, 'ruleta', cuentaId), rg = F.doc(db, 'gatitos', usuario.uid);
   return F.runTransaction(db, async tx => {
     const [sc, sr, sg] = await Promise.all([tx.get(rc), tx.get(rr), tx.get(rg)]);
-    if (!sc.exists()) throw new Error('no se encontró tu cuenta del banco');
-    const c = sc.data(), saldoAntes = c.saldo || 0;
-    if (saldoAntes < RULETA.costo) throw new Error('cada tiro cuesta ' + fmt(RULETA.costo) + ' y tienes ' + fmt(saldoAntes));
-    const n = (sr.exists() ? (sr.data().n || 0) : 0) + 1;
-    const prev = sg.exists() ? sg.data() : { ids: [], favorito: null };
-    const ids = prev.ids || [];
-    const r = resultadoDe(await sha256hex(RULETA.sal + '|' + cuentaId + '|' + n), saldoAntes, ids);
-    const saldo = saldoAntes + r.monto, ops = (c.ops || 0) + 1;
+    const r = sr.exists() ? sr.data() : null;
+    if (!r || !r.pendiente || !r.tFecha) throw new Error('no hay un tiro pendiente');
+    const c = sc.data(), prev = sg.exists() ? sg.data() : { ids: [], favorito: null }, ids = prev.ids || [];
+    const ms = r.tFecha.toMillis(), n = r.n;
+    const res = resultadoDe(await sha256hex(RULETA.sal + '|' + cuentaId + '|' + n + '|' + ms), r.retenido || 0, ids);
+    const saldo = (c.saldo || 0) + res.monto, ops = (c.ops || 0) + 1;
     tx.update(rc, { saldo, ops, actualizado: F.serverTimestamp() });
     const mov = {
       cuenta: cuentaId, numero: String(c.numero || ''), nombre: ((c.nombre || '') + ' ' + (c.apellido || '')).trim(), curso: c.curso || '',
-      monto: r.monto, motivo: motivoDe(r, n).slice(0, 200), tipo: 'ruleta', saldoDespues: saldo, profe: '',
+      monto: res.monto, motivo: motivoDe(res, n).slice(0, 200), tipo: 'ruleta', saldoDespues: saldo, profe: '',
       fecha: F.serverTimestamp(), tiro: n
     };
-    if (r.beneficio) { mov.item = r.beneficio; mov.canje = 'pendiente'; }
-    const gatoNuevo = r.tipo === 'gatito' && !r.yaTenia;
-    if (gatoNuevo) mov.gatito = r.gatito;
+    if (res.beneficio) { mov.item = res.beneficio; mov.canje = 'pendiente'; }
+    const gatoNuevo = res.tipo === 'gatito' && !res.yaTenia;
+    if (gatoNuevo) mov.gatito = res.gatito;
     tx.set(F.doc(db, 'banco_movs', 'op-' + cuentaId + '-' + ops), mov);
-    tx.set(rr, { n, actualizado: F.serverTimestamp() });
+    tx.update(rr, { pendiente: false, actualizado: F.serverTimestamp() });
     if (gatoNuevo) {
-      const nuevos = ids.concat([r.gatito]);
+      const nuevos = ids.concat([res.gatito]);
       tx.set(rg, { uid: usuario.uid, nombre: DF.nombreCorto(usuario.displayName, usuario.email).slice(0, 80), ids: nuevos,
-        favorito: prev.favorito && nuevos.includes(prev.favorito) ? prev.favorito : r.gatito, actualizado: F.serverTimestamp() });
+        favorito: prev.favorito && nuevos.includes(prev.favorito) ? prev.favorito : res.gatito, actualizado: F.serverTimestamp() });
     }
-    return Object.assign(r, { saldo, n });
+    return Object.assign(res, { saldo, n, ms, hoy: r.hoy || 0, dia: r.dia });
   });
+}
+async function tirar() {
+  try { await apostar(); }
+  catch (e) { if (e.message !== 'PENDIENTE') throw e; }   // había uno sin resolver: se resuelve ese
+  return resolver();
 }
 
 /* ── Interfaz ── */
-var SUSPENDIDA = true;   // suspendida por seguridad: ver ruletaActiva() en firebase/firestore.rules
+var SUSPENDIDA = false;   // para suspenderla: true aquí y ruletaActiva() = false en las reglas
 function aviso(html, tipo) { $('avisos').innerHTML = html ? `<div class="aviso ${tipo || ''}">${html}</div>` : ''; }
 function pintar() {
   $('costoTxt').textContent = fmt(RULETA.costo);
   $('saldo').innerHTML = (cuenta ? fmt(cuenta.saldo) : '—') + '<small>Tu saldo</small>';
-  $('tiros').innerHTML = (cuenta ? tiros : '—') + '<small>Tiros jugados</small>';
+  $('tiros').innerHTML = (cuenta ? hoyJugados() + '/' + RULETA.porDia : '—') + '<small>Tiros de hoy · ' + tiros + ' en total</small>';
   $('sesion').innerHTML = usuario
     ? `<span>${esc(usuario.email)}</span><button class="btn" type="button" data-a="salir">Salir</button>`
     : `<button class="btn p" type="button" data-a="entrar">Entrar con Google</button>`;
   const hub = $('hub');
   if (SUSPENDIDA) { hub.disabled = true; hub.innerHTML = 'Suspendida'; hub.setAttribute('aria-label', 'Ruleta suspendida'); return; }
   if (girando) return;
-  const puede = cuenta && (cuenta.saldo || 0) >= RULETA.costo;
+  const pendiente = estado && estado.pendiente, agotado = hoyJugados() >= RULETA.porDia && !pendiente;
+  const puede = cuenta && (pendiente || ((cuenta.saldo || 0) >= RULETA.costo && !agotado));
   hub.disabled = !!usuario && !puede;
-  hub.innerHTML = !usuario ? 'Entrar' : puede ? `Girar<small>${fmt(RULETA.costo)}</small>` : 'Girar';
+  hub.innerHTML = !usuario ? 'Entrar' : pendiente ? 'Terminar<small>tiro pendiente</small>' : agotado ? 'Mañana<small>' + RULETA.porDia + ' de ' + RULETA.porDia + '</small>'
+    : puede ? `Girar<small>${fmt(RULETA.costo)}</small>` : 'Girar';
   hub.setAttribute('aria-label', !usuario ? 'Entrar con Google para jugar' : 'Girar la ruleta por ' + fmt(RULETA.costo));
 }
 function pintarProbabilidades() {
@@ -420,12 +462,14 @@ async function alPulsar() {
     precalentando = false;
     await animarHasta(ORDEN.indexOf(r.c));
     cuenta.saldo = r.saldo; tiros = r.n;
+    estado = Object.assign({}, estado, { n: r.n, pendiente: false, dia: r.dia, hoy: r.hoy });
     mostrar(r);
     cargarHistorial();
   } catch (e) {
     precalentando = false;
     const m = String(e.message || e);
     aviso('No se pudo girar: ' + esc(/permission/i.test(m) ? 'el banco rechazó el tiro (¿el profe publicó las reglas nuevas?)' : m), 'err');
+    cargar();   // vuelve a leer saldo y estado (por si quedó un tiro pendiente)
   }
   girando = false;
   document.body.classList.remove('girando');
@@ -436,8 +480,8 @@ function mostrar(r) {
   const cas = CASILLA(r.c);
   const col = r.tipo === 'castigo' ? 'var(--neg)' : r.tipo === 'beneficio' ? '#22a7ff' : r.tipo === 'gatito' ? 'var(--pink)' : 'var(--acid)';
   let cabeza = `<span class="emo">${cas.emoji}</span>`, badge, titulo, texto;
-  if (r.tipo === 'premio') { badge = '¡Premio!'; titulo = '+' + fmt(r.premio); texto = `Ganaste ${fmt(r.premio)} y el tiro costó ${fmt(RULETA.costo)}.`; }
-  else if (r.tipo === 'castigo') { badge = 'Castigo'; titulo = '−' + fmt(-r.premio); texto = r.alCero ? 'El castigo era mayor que tu saldo: quedaste en 0.' : `Pierdes ${fmt(-r.premio)} más el tiro (${fmt(RULETA.costo)}).`; }
+  if (r.tipo === 'premio') { badge = '¡Premio!'; titulo = '+' + fmt(r.premio); texto = `Ganaste ${fmt(r.premio)} y el tiro costó ${fmt(RULETA.costo)}: tu saldo sube ${fmt(r.neto)}.`; }
+  else if (r.tipo === 'castigo') { badge = 'Castigo'; titulo = '−' + fmt(-r.premio); texto = r.alCero ? 'El castigo era mayor que tu saldo: quedaste en 0.' : `Pierdes ${fmt(-r.premio)} más el tiro (${fmt(RULETA.costo)}): en total ${fmt(-r.neto)}.`; }
   else if (r.tipo === 'beneficio') { badge = 'Beneficio'; titulo = r.beneficio.replace(/^Ruleta: /, ''); texto = 'Quedó guardado como pendiente. Pídele al profe que te lo canjee.'; }
   else {
     cabeza = `<img src="gatitos/img/${esc(r.gatito)}.webp" alt="">`;
@@ -447,8 +491,12 @@ function mostrar(r) {
   $('modal').style.setProperty('--c', col);
   $('modal').innerHTML = `${cabeza}<span class="badge">${badge}</span><h3 id="mTitulo">${esc(titulo)}</h3><p>${texto}</p>
     <p class="saldo">Tu saldo: ${fmt(r.saldo)}</p>
+    <details class="comprobante"><summary>🔒 Comprobante del tiro #${r.n}</summary>
+      <p>Hora del servidor al apostar: <b>${new Date(r.ms).toLocaleTimeString('es-CL')}.${String(r.ms % 1000).padStart(3, '0')}</b> (${r.ms} ms)<br>
+      Código: <code>${esc(r.h.slice(0, 16))}…</code> → casilla «${esc(r.h[0])}»</p>
+      <p>El resultado es sha256 de tu cuenta, el n° de tiro y esa hora exacta, que nadie conoce antes de apostar: ni tú, ni el profe, ni la página. Por eso no se puede adivinar ni elegir.</p></details>
     <div style="display:flex;gap:8px;justify-content:center"><button class="btn" type="button" data-a="cerrar">Cerrar</button>
-    ${r.saldo >= RULETA.costo ? '<button class="btn p" type="button" data-a="otra">Girar otra vez</button>' : ''}</div>`;
+    ${r.saldo >= RULETA.costo && hoyJugados() < RULETA.porDia ? '<button class="btn p" type="button" data-a="otra">Girar otra vez</button>' : ''}</div>`;
   $('velo').classList.add('on');
   ($('modal').querySelector('[data-a="otra"]') || $('modal').querySelector('[data-a="cerrar"]')).focus({ preventScroll: true });
   $('anuncio').textContent = badge + ': ' + titulo;

@@ -358,31 +358,35 @@ service cloud.firestore {
         && d.saldoDespues == getAfter(rutaCuenta(d.cuenta)).data.saldo
         // Solo la ruleta puede dejar un beneficio por canjear (así nadie cuela canjes falsos al panel).
         // Una compra del Mercado entra «retenida» (congelada) y solo el profe la deja «por usar».
-        && (d.tipo == 'ruleta' || (d.tipo == 'compra' && d.get('canje', '') == 'retenida' && !d.keys().hasAny(['tiro']))
+        && (d.tipo in ['ruleta', 'ruleta-apuesta'] || (d.tipo == 'compra' && d.get('canje', '') == 'retenida' && !d.keys().hasAny(['tiro']))
             || (d.tipo in ['poder-gatito', 'poder-mensual', 'premio-gatito'] && !d.keys().hasAny(['tiro']))
             || !d.keys().hasAny(['tiro', 'item', 'canje']))
         && ((d.tipo in ['bolsa-compra', 'bolsa-venta'] && opBolsa(d)) || (d.tipo == 'bono-ingreso' && opBono(d))
-            || (d.tipo == 'gatito-compra' && opGatito(d)) || (d.tipo == 'ruleta' && opRuleta(d))
+            || (d.tipo == 'gatito-compra' && opGatito(d)) || (d.tipo == 'ruleta' && opRuleta(d)) || (d.tipo == 'ruleta-apuesta' && opApuesta(d))
             || (d.tipo == 'transferencia-envio' && opEnvio(id, d)) || (d.tipo == 'compra' && opPedido(id, d))
             || (d.tipo == 'devolucion' && opDevolucion(d)) || (d.tipo == 'poder-gatito' && opPoder(d)) || (d.tipo == 'poder-mensual' && opPoderMes(d)) || (d.tipo == 'premio-gatito' && opPremio(d)));
     }
 
-    // ═════ Ruleta de Hipopesos ═════
-    // Cada tiro cuesta costoRuleta(). El resultado NO lo elige el navegador: sale del hash
-    // sha256(sal | cuenta | número de tiro), y estas reglas lo recalculan y lo exigen.
-    // Mismo cálculo en ruleta.html (objeto RULETA): si cambias algo aquí, cámbialo allá.
+    // ═════ Ruleta de Hipopesos (v2: azar con la hora del servidor) ═════
+    // La v1 se suspendió: el resultado salía de datos conocidos (sal | cuenta | n° de tiro) y se
+    // podía calcular ANTES de girar. Ahora cada tiro tiene DOS pasos:
+    //  1) APOSTAR (movimiento 'ruleta-apuesta'): se retiene min(saldo, 55.000) y ruleta/<cuenta>
+    //     anota la hora EXACTA del servidor (ms) en tFecha. Nadie la conoce antes de escribir.
+    //  2) RESOLVER (movimiento 'ruleta'): resultado = sha256(sal | cuenta | n° | ms de tFecha);
+    //     se devuelve max(0, retenido + premio − costo). Abandonar un tiro malo no sirve:
+    //     lo retenido queda retenido hasta resolverlo (la página lo resuelve sola al volver).
+    // Máximo tirosPorDia() tiros por día. Mismo cálculo en ruleta.html (objeto RULETA).
     //   1er carácter del hash  →  0-2: +10.000 · 3-4: +20.000 · 5: +50.000
     //                             6-8: −10.000 · 9-a: −20.000 · b: −50.000
     //                             c-d: beneficio canjeable · e-f: gatito gratis
-    // SUSPENDIDA (oct 2026): la sal es pública y el resultado de cada tiro se puede calcular
-    // ANTES de girar (sha256 de datos conocidos), así que se puede jugar solo cuando conviene.
-    // Para reabrirla hace falta azar secreto (servidor) — ver panel/README. Mientras: false.
-    function ruletaActiva() { return false; }
+    function ruletaActiva() { return true; }
     function costoRuleta() { return 5000; }
-    function salRuleta() { return 'dondefelipe-ruleta-v1'; }
+    function maxRetener() { return 55000; }   // costo + el peor castigo
+    function tirosPorDia() { return 10; }
+    function salRuleta() { return 'dondefelipe-ruleta-v2'; }
     function rutaRuleta(c) { return /databases/$(database)/documents/ruleta/$(c); }
-    function tirosAntes(c) { return exists(rutaRuleta(c)) ? get(rutaRuleta(c)).data.n : 0; }
-    function hashTiro(c, n) { return hashing.sha256(salRuleta() + '|' + c + '|' + string(n)).toHexString().lower(); }
+    function ruletaDe(c) { return exists(rutaRuleta(c)) ? get(rutaRuleta(c)).data : { 'n': 0 }; }
+    function hashTiro(c, n, ms) { return hashing.sha256(salRuleta() + '|' + c + '|' + string(n) + '|' + string(ms)).toHexString().lower(); }
     function dineroRuleta(h) {
       return h.matches('^[0-2].*') ? 10000
         : (h.matches('^[34].*') ? 20000
@@ -399,23 +403,35 @@ service cloud.firestore {
         : (h.matches('^.[4-7].*') ? 'gris'
         : (h.matches('^.[89ab].*') ? 'dormilon' : 'patitas'));
     }
+    // Paso 1: apostar.
+    function opApuesta(d) {
+      let c = d.cuenta;
+      let r = ruletaDe(c);
+      let saldo = get(rutaCuenta(c)).data.saldo;
+      let ret = saldo < maxRetener() ? saldo : maxRetener();
+      return ruletaActiva() && saldo >= costoRuleta()
+        && r.get('pendiente', false) == false
+        && d.tiro == r.get('n', 0) + 1
+        && d.monto == 0 - ret
+        && !d.keys().hasAny(['item', 'canje', 'gatito'])
+        && getAfter(rutaRuleta(c)).data.retenido == ret;
+    }
+    // Paso 2: resolver el tiro pendiente.
     function opRuleta(d) {
       let c = d.cuenta;
-      let n = tirosAntes(c) + 1;
-      let h = hashTiro(c, n);
-      let saldo = get(rutaCuenta(c)).data.saldo;
+      let r = get(rutaRuleta(c)).data;
+      let h = hashTiro(c, r.n, r.tFecha.toMillis());
       let esBenef = h.matches('^[cd].*');
       let esGatito = h.matches('^[ef].*');
       let g = gatitoRuleta(h);
       let yaTiene = g in gatitosAntes(request.auth.uid);
       // Si ya tenía ese gatito, recibe su precio en Hipopesos.
       let premio = esGatito ? (yaTiene ? precioGatito(g) : 0) : dineroRuleta(h);
-      let neto = premio - costoRuleta();
-      return ruletaActiva() && saldo >= costoRuleta()
-        && d.tiro == n
-        && getAfter(rutaRuleta(c)).data.n == n
-        // Un castigo nunca deja el saldo bajo 0: queda en 0.
-        && d.monto == (saldo + neto < 0 ? 0 - saldo : neto)
+      let pago = r.retenido + premio - costoRuleta();
+      return r.get('pendiente', false) == true
+        && d.tiro == r.n
+        // Un castigo nunca deja el saldo bajo 0: se pierde a lo más lo retenido.
+        && d.monto == (pago < 0 ? 0 : pago)
         && (esBenef
               ? (d.item == beneficioRuleta(h) && d.canje == 'pendiente')
               : !d.keys().hasAny(['item', 'canje']))
@@ -423,16 +439,29 @@ service cloud.firestore {
               ? (d.gatito == g && getAfter(rutaGatitos(request.auth.uid)).data.ids.hasAll([g]))
               : !d.keys().hasAny(['gatito']));
     }
-    // Contador de tiros de cada cuenta: solo sube de a 1 y junto con un movimiento de ruleta.
+    // Estado de la ruleta de cada cuenta: n° de tiros, tiro pendiente, hora del servidor y tiros de hoy.
     match /ruleta/{c} {
       allow read: if esProfe() || (c == miCuentaBanco() && c != '');
       allow write: if esProfe();
-      allow create, update: if ruletaActiva() && esColegio() && c == miCuentaBanco() && c != ''
-        && request.resource.data.keys().hasOnly(['n', 'actualizado'])
-        && request.resource.data.n == tirosAntes(c) + 1
+      allow create, update: if esColegio() && c == miCuentaBanco() && c != ''
+        && request.resource.data.keys().hasOnly(['n', 'actualizado', 'pendiente', 'tFecha', 'retenido', 'dia', 'hoy'])
         && request.resource.data.actualizado == request.time
         && opsDespues(c) == opsAntes(c) + 1
-        && getAfter(rutaOp(c, opsDespues(c))).data.tipo == 'ruleta';
+        && (
+          // apostar: nuevo tiro pendiente con la hora del servidor
+          (getAfter(rutaOp(c, opsDespues(c))).data.tipo == 'ruleta-apuesta'
+            && request.resource.data.n == ruletaDe(c).get('n', 0) + 1
+            && request.resource.data.pendiente == true
+            && request.resource.data.tFecha == request.time
+            && request.resource.data.retenido is int
+            && request.resource.data.dia == diaHoy()
+            && request.resource.data.hoy == (ruletaDe(c).get('dia', 0) == diaHoy() ? ruletaDe(c).get('hoy', 0) + 1 : 1)
+            && request.resource.data.hoy <= tirosPorDia())
+          // resolver: solo se cierra el pendiente (nada más cambia)
+          || (getAfter(rutaOp(c, opsDespues(c))).data.tipo == 'ruleta' && resource != null
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pendiente', 'actualizado'])
+            && request.resource.data.pendiente == false)
+        );
     }
     // ═════ Perfil público (opcional) ═════
     // Lo ven solo las personas del colegio con sesión, y solo si la persona lo hizo público y el profe no lo ocultó.
