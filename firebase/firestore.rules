@@ -376,9 +376,6 @@ service cloud.firestore {
     //     se devuelve max(0, retenido + premio − costo). Abandonar un tiro malo no sirve:
     //     lo retenido queda retenido hasta resolverlo (la página lo resuelve sola al volver).
     // Máximo tirosPorDia() tiros por día. Mismo cálculo en ruleta.html (objeto RULETA).
-    //   1er carácter del hash  →  0-2: +60.000 · 3-4: +120.000 · 5: +300.000
-    //                             6-8: −60.000 · 9-a: −120.000 · b: −300.000
-    //                             c-d: beneficio canjeable · e-f: gatito gratis
     function ruletaActiva() { return true; }
     function costoRuleta() { return 30000; }
     function maxRetener() { return 330000; }   // costo + el peor castigo
@@ -387,21 +384,30 @@ service cloud.firestore {
     function rutaRuleta(c) { return /databases/$(database)/documents/ruleta/$(c); }
     function ruletaDe(c) { return exists(rutaRuleta(c)) ? get(rutaRuleta(c)).data : { 'n': 0 }; }
     function hashTiro(c, n, ms) { return hashing.sha256(salRuleta() + '|' + c + '|' + string(n) + '|' + string(ms)).toHexString().lower(); }
-    function dineroRuleta(h) {
-      return h.matches('^[0-2].*') ? 60000
-        : (h.matches('^[34].*') ? 120000
-        : (h.matches('^5.*') ? 300000
-        : (h.matches('^[6-8].*') ? -60000
-        : (h.matches('^[9a].*') ? -120000
-        : (h.matches('^b.*') ? -300000 : 0)))));
+    // LAS 32 CASILLAS en el orden de la rueda (igual que TABLA en ruleta.html), todas con
+    // probabilidad 1/32. Casilla = (1er carácter del hash impar ? 16 : 0) + valor del 2° carácter.
+    //   t 'd': dinero v · t 'b': beneficio canjeable (texto v) · t 'g': gatito gratis (3er carácter)
+    function tablaRuleta() {
+      return [
+        {'t':'d','v':500000}, {'t':'d','v':-60000}, {'t':'d','v':60000}, {'t':'b','v':'Ruleta: pase de tarea'},
+        {'t':'d','v':-120000}, {'t':'d','v':90000}, {'t':'d','v':-30000}, {'t':'g','v':0},
+        {'t':'d','v':200000}, {'t':'d','v':-90000}, {'t':'d','v':30000}, {'t':'d','v':-200000},
+        {'t':'d','v':60000}, {'t':'b','v':'Ruleta: 5 minutos extra en una prueba'}, {'t':'d','v':-60000}, {'t':'d','v':120000},
+        {'t':'d','v':-300000}, {'t':'d','v':60000}, {'t':'d','v':-30000}, {'t':'b','v':'Ruleta: cambio de puesto por una clase'},
+        {'t':'d','v':90000}, {'t':'d','v':-120000}, {'t':'d','v':30000}, {'t':'g','v':0},
+        {'t':'d','v':-90000}, {'t':'d','v':200000}, {'t':'d','v':-60000}, {'t':'b','v':'Ruleta: elegir la música de una clase'},
+        {'t':'d','v':120000}, {'t':'d','v':-200000}, {'t':'d','v':300000}, {'t':'d','v':0}
+      ];
     }
-    // Beneficios (el texto queda tal cual en "Compras por canjear" del panel).
-    function beneficioRuleta(h) { return h.matches('^c.*') ? 'Ruleta: pase de tarea' : 'Ruleta: 5 minutos extra en una prueba'; }
-    // Gatito gratis: uno de los comunes, según el 2° carácter del hash.
+    function hexv(ch) {
+      return {'0':0,'1':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'a':10,'b':11,'c':12,'d':13,'e':14,'f':15}[ch];
+    }
+    function casillaRuleta(h) { return tablaRuleta()[(h[0:1] in ['1','3','5','7','9','b','d','f'] ? 16 : 0) + hexv(h[1:2])]; }
+    // Gatito gratis: uno de los comunes, según el 3er carácter del hash.
     function gatitoRuleta(h) {
-      return h.matches('^.[0-3].*') ? 'naranjo'
-        : (h.matches('^.[4-7].*') ? 'gris'
-        : (h.matches('^.[89ab].*') ? 'dormilon' : 'patitas'));
+      return h.matches('^..[0-3].*') ? 'naranjo'
+        : (h.matches('^..[4-7].*') ? 'gris'
+        : (h.matches('^..[89ab].*') ? 'dormilon' : 'patitas'));
     }
     // Paso 1: apostar.
     function opApuesta(d) {
@@ -421,19 +427,20 @@ service cloud.firestore {
       let c = d.cuenta;
       let r = get(rutaRuleta(c)).data;
       let h = hashTiro(c, r.n, r.tFecha.toMillis());
-      let esBenef = h.matches('^[cd].*');
-      let esGatito = h.matches('^[ef].*');
+      let k = casillaRuleta(h);
+      let esBenef = k.t == 'b';
+      let esGatito = k.t == 'g';
       let g = gatitoRuleta(h);
       let yaTiene = g in gatitosAntes(request.auth.uid);
       // Si ya tenía ese gatito, recibe su precio en Hipopesos.
-      let premio = esGatito ? (yaTiene ? precioGatito(g) : 0) : dineroRuleta(h);
+      let premio = esGatito ? (yaTiene ? precioGatito(g) : 0) : (esBenef ? 0 : k.v);
       let pago = r.retenido + premio - costoRuleta();
       return r.get('pendiente', false) == true
         && d.tiro == r.n
         // Un castigo nunca deja el saldo bajo 0: se pierde a lo más lo retenido.
         && d.monto == (pago < 0 ? 0 : pago)
         && (esBenef
-              ? (d.item == beneficioRuleta(h) && d.canje == 'pendiente')
+              ? (d.item == k.v && d.canje == 'pendiente')
               : !d.keys().hasAny(['item', 'canje']))
         && ((esGatito && !yaTiene)
               ? (d.gatito == g && getAfter(rutaGatitos(request.auth.uid)).data.ids.hasAll([g]))
