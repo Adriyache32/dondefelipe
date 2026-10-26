@@ -117,7 +117,7 @@ h1 span{color:var(--acid)}
   <a class="crumb" href="index.html">← El Mundo de Felipe</a>
   <p class="kick">Juego · Banco de Hipopesos</p>
   <h1>Ruleta de <span>Hipopesos</span></h1>
-  <p class="intro">Cada tiro cuesta <b id="costoTxt">30.000 ₣</b>. Puedes ganar o perder hasta 300.000 ₣, llevarte un beneficio para canjear con el profe o un gatito gratis para tu colección.</p>
+  <p class="intro">Cada tiro cuesta <b id="costoTxt">30.000 ₣</b>. Hay 32 casillas: premios de hasta 500.000 ₣, castigos de hasta 300.000 ₣, cuatro beneficios para canjear con el profe o un gatito gratis para tu colección.</p>
 
   <div id="avisos"></div>
 
@@ -148,7 +148,7 @@ h1 span{color:var(--acid)}
       <section class="card">
         <h2>Probabilidades</h2>
         <table class="prob" id="prob"></table>
-        <p class="nota">La ruleta tiene 16 casillas iguales y cada una sale con la misma probabilidad (1 de 16). Si un castigo es mayor que tu saldo, quedas en 0. Si ganas un gatito que ya tenías, recibes su precio en Hipopesos.</p>
+        <p class="nota">La ruleta tiene 32 casillas iguales y cada una sale con la misma probabilidad (1 de 32). Si un castigo es mayor que tu saldo, quedas en 0. Si ganas un gatito que ya tenías, recibes su precio en Hipopesos.</p>
         <p class="nota">🔒 <b>Juego limpio:</b> al girar se retienen hasta 330.000 ₣ y el servidor anota su hora exacta; el resultado sale de esa hora, así que nadie puede saberlo antes. Lo retenido vuelve con tu premio en el mismo giro. Máximo 10 tiros por día.</p>
       </section>
       <section class="card">
@@ -180,23 +180,36 @@ const RULETA = {
   retenerMax: 330000,
   porDia: 10,
   sal: 'dondefelipe-ruleta-v2',
-  dinero: c => '012'.includes(c) ? 60000 : '34'.includes(c) ? 120000 : c === '5' ? 300000
-             : '678'.includes(c) ? -60000 : '9a'.includes(c) ? -120000 : c === 'b' ? -300000 : 0,
-  beneficio: c => c === 'c' ? 'Ruleta: pase de tarea' : 'Ruleta: 5 minutos extra en una prueba',
-  gatito: c2 => '0123'.includes(c2) ? 'naranjo' : '4567'.includes(c2) ? 'gris' : '89ab'.includes(c2) ? 'dormilon' : 'patitas',
+  // Gatito gratis: uno de los comunes, según el 3er carácter del hash.
+  gatito: c3 => '0123'.includes(c3) ? 'naranjo' : '4567'.includes(c3) ? 'gris' : '89ab'.includes(c3) ? 'dormilon' : 'patitas',
 };
-// Cómo se ve cada casilla (una por carácter hexadecimal).
-const CASILLA = c => {
-  const d = RULETA.dinero(c);
-  if ('cd'.includes(c)) return { tipo: 'beneficio', emoji: '🎟️', txt: c === 'c' ? 'Pase tarea' : '+5 min', color: '#1f9fd0' };
-  if ('ef'.includes(c)) return { tipo: 'gatito', emoji: '🐱', txt: 'Gatito', color: '#ff2e7e' };
-  const t = (d > 0 ? '+' : '−') + new Intl.NumberFormat('es-CL').format(Math.abs(d));
-  const colores = { 60000: '#2fae6a', 120000: '#139a8f', 300000: '#d9a520', '-60000': '#e5483f', '-120000': '#a8327a', '-300000': '#6b1a28' };
-  const emojis  = { 60000: '💰', 120000: '💵', 300000: '💎', '-60000': '💸', '-120000': '🔥', '-300000': '💀' };
-  return { tipo: d > 0 ? 'premio' : 'castigo', emoji: emojis[d], txt: t, color: colores[d], dinero: d };
+// LAS 32 CASILLAS, en el orden en que aparecen en la rueda (igual que tablaRuleta() en las reglas).
+// d: dinero · b: beneficio canjeable · g: gatito gratis. Todas tienen la misma probabilidad (1 de 32).
+const TABLA = [
+  ['d', 500000], ['d', -60000], ['d', 60000], ['b', 'Ruleta: pase de tarea'], ['d', -120000], ['d', 90000], ['d', -30000], ['g'],
+  ['d', 200000], ['d', -90000], ['d', 30000], ['d', -200000], ['d', 60000], ['b', 'Ruleta: 5 minutos extra en una prueba'], ['d', -60000], ['d', 120000],
+  ['d', -300000], ['d', 60000], ['d', -30000], ['b', 'Ruleta: cambio de puesto por una clase'], ['d', 90000], ['d', -120000], ['d', 30000], ['g'],
+  ['d', -90000], ['d', 200000], ['d', -60000], ['b', 'Ruleta: elegir la música de una clase'], ['d', 120000], ['d', -200000], ['d', 300000], ['d', 0]
+];
+// Casilla que sale: (1er carácter impar ? 16 : 0) + valor del 2° carácter → 0..31, uniforme.
+const casillaDeHash = h => (parseInt(h[0], 16) % 2 ? 16 : 0) + parseInt(h[1], 16);
+const BENEF_CORTO = { 'Ruleta: pase de tarea': 'Pase tarea', 'Ruleta: 5 minutos extra en una prueba': '+5 min', 'Ruleta: cambio de puesto por una clase': 'Puesto', 'Ruleta: elegir la música de una clase': 'Tu música' };
+const BENEF_EMO = { 'Ruleta: pase de tarea': '🎟️', 'Ruleta: 5 minutos extra en una prueba': '⏱️', 'Ruleta: cambio de puesto por una clase': '🪑', 'Ruleta: elegir la música de una clase': '🎵' };
+// Cómo se ve cada casilla.
+const ESTILO = {
+  500000: ['#f5c400', '👑'], 300000: ['#d9a520', '💎'], 200000: ['#1aa37a', '🤑'], 120000: ['#139a8f', '💵'], 90000: ['#25a35c', '💰'], 60000: ['#2fae6a', '🪙'], 30000: ['#5aa83a', '🔄'],
+  0: ['#5b6170', '😐'],
+  '-30000': ['#e0763f', '💸'], '-60000': ['#e5483f', '📉'], '-90000': ['#c93a5c', '🧾'], '-120000': ['#a8327a', '🔥'], '-200000': ['#7d2350', '⚠️'], '-300000': ['#6b1a28', '💀']
 };
-// Orden de las 16 casillas alrededor de la rueda (intercaladas para que se vea pareja).
-const ORDEN = ['5','6','0','9','c','3','7','e','b','1','a','4','8','d','2','f'];
+const corto = d => d === 0 ? 'Nada' : d === 30000 ? 'Gratis' : (d > 0 ? '+' : '−') + (Math.abs(d) / 1000) + 'K';
+const CASILLA = i => {
+  const t = TABLA[i];
+  if (t[0] === 'b') return { tipo: 'beneficio', emoji: BENEF_EMO[t[1]], txt: BENEF_CORTO[t[1]], color: '#1f9fd0', beneficio: t[1] };
+  if (t[0] === 'g') return { tipo: 'gatito', emoji: '🐱', txt: 'Gatito', color: '#ff2e7e' };
+  const d = t[1], e = ESTILO[d];
+  return { tipo: d > 0 ? 'premio' : d < 0 ? 'castigo' : 'nada', emoji: e[1], txt: corto(d), color: e[0], dinero: d };
+};
+const ORDEN = TABLA.map((_, i) => i);
 
 const $ = id => document.getElementById(id);
 const fmt = n => new Intl.NumberFormat('es-CL').format(Math.round(n || 0)) + ' ₣';
@@ -215,20 +228,21 @@ async function sha256hex(s) {
   return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
 }
 function resultadoDe(h, retenido, tengo) {
-  const c = h[0], cas = CASILLA(c);
-  const g = RULETA.gatito(h[1]);
+  const c = casillaDeHash(h), cas = CASILLA(c);
+  const g = RULETA.gatito(h[2]);
   const yaTenia = cas.tipo === 'gatito' && tengo.includes(g);
-  const premio = cas.tipo === 'gatito' ? (yaTenia ? precioGatito(g) : 0) : RULETA.dinero(c);
+  const premio = cas.tipo === 'gatito' ? (yaTenia ? precioGatito(g) : 0) : (cas.dinero || 0);
   const pagoBruto = retenido + premio - RULETA.costo, pago = Math.max(0, pagoBruto);
   // monto: lo que se devuelve al resolver; neto: el efecto real del tiro sobre el saldo
   return { c, h, tipo: cas.tipo, premio, monto: pago, neto: pago - retenido, alCero: pagoBruto < 0,
            gatito: cas.tipo === 'gatito' ? g : null, yaTenia,
-           beneficio: cas.tipo === 'beneficio' ? RULETA.beneficio(c) : null };
+           beneficio: cas.tipo === 'beneficio' ? cas.beneficio : null };
 }
 function motivoDe(r, n) {
   const base = 'Ruleta (tiro ' + n + '): ';
   if (r.tipo === 'beneficio') return base + r.beneficio.replace(/^Ruleta: /, '');
   if (r.tipo === 'gatito') return base + (r.yaTenia ? 'gatito repetido, recibe ' + fmt(r.premio) : 'gatito gratis (' + nombreGatito(r.gatito) + ')');
+  if (r.tipo === 'nada') return base + 'casilla vacía · neto −' + fmt(RULETA.costo);
   return base + (r.premio > 0 ? 'gana ' : 'pierde ') + fmt(Math.abs(r.premio)) + (r.alCero ? ', saldo queda en 0' : '')
     + ' · neto ' + (r.neto >= 0 ? '+' : '−') + fmt(Math.abs(r.neto));
 }
@@ -366,13 +380,14 @@ function pintar() {
 }
 function pintarProbabilidades() {
   const filas = {};
-  ORDEN.forEach(c => { const k = CASILLA(c); const key = k.txt.startsWith('Pase') || k.txt === '+5 min' ? k.txt : k.txt; (filas[key] ||= { ...k, n: 0 }).n++; });
+  ORDEN.forEach(c => { const k = CASILLA(c); (filas[k.txt] ||= { ...k, n: 0 }).n++; });
   const peso = f => f.dinero ?? (f.tipo === 'beneficio' ? -1e9 : -2e9);
   const orden = Object.values(filas).sort((a, b) => peso(b) - peso(a));
   $('prob').innerHTML = orden.map(f => {
-    const nombre = f.tipo === 'beneficio' ? 'Beneficio: ' + (f.txt === '+5 min' ? '5 min extra en prueba' : 'pase de tarea')
-                 : f.tipo === 'gatito' ? 'Gatito gratis (común)' : f.txt + ' ₣';
-    return `<tr><td><i style="--c:${f.color}"></i>${f.emoji} ${esc(nombre)}</td><td>${f.n}/16 · ${(f.n / 16 * 100).toLocaleString('es-CL', { maximumFractionDigits: 1 })}%</td></tr>`;
+    const nombre = f.tipo === 'beneficio' ? 'Beneficio: ' + f.beneficio.replace(/^Ruleta: /, '')
+                 : f.tipo === 'gatito' ? 'Gatito gratis (común)' : f.tipo === 'nada' ? 'Nada (solo pierdes el tiro)'
+                 : f.dinero === 30000 ? 'Tiro gratis (+30.000 ₣)' : (f.dinero > 0 ? '+' : '−') + fmt(Math.abs(f.dinero));
+    return `<tr><td><i style="--c:${f.color}"></i>${f.emoji} ${esc(nombre)}</td><td>${f.n}/32 · ${(f.n / 32 * 100).toLocaleString('es-CL', { maximumFractionDigits: 1 })}%</td></tr>`;
   }).join('');
 }
 
@@ -478,10 +493,11 @@ async function alPulsar() {
 
 function mostrar(r) {
   const cas = CASILLA(r.c);
-  const col = r.tipo === 'castigo' ? 'var(--neg)' : r.tipo === 'beneficio' ? '#22a7ff' : r.tipo === 'gatito' ? 'var(--pink)' : 'var(--acid)';
+  const col = r.tipo === 'castigo' ? 'var(--neg)' : r.tipo === 'nada' ? '#8a90a0' : r.tipo === 'beneficio' ? '#22a7ff' : r.tipo === 'gatito' ? 'var(--pink)' : 'var(--acid)';
   let cabeza = `<span class="emo">${cas.emoji}</span>`, badge, titulo, texto;
   if (r.tipo === 'premio') { badge = '¡Premio!'; titulo = '+' + fmt(r.premio); texto = `Ganaste ${fmt(r.premio)} y el tiro costó ${fmt(RULETA.costo)}: tu saldo sube ${fmt(r.neto)}.`; }
   else if (r.tipo === 'castigo') { badge = 'Castigo'; titulo = '−' + fmt(-r.premio); texto = r.alCero ? 'El castigo era mayor que tu saldo: quedaste en 0.' : `Pierdes ${fmt(-r.premio)} más el tiro (${fmt(RULETA.costo)}): en total ${fmt(-r.neto)}.`; }
+  else if (r.tipo === 'nada') { badge = 'Nada'; titulo = 'Casilla vacía'; texto = `No ganas ni pierdes nada más: solo el tiro (${fmt(RULETA.costo)}).`; }
   else if (r.tipo === 'beneficio') { badge = 'Beneficio'; titulo = r.beneficio.replace(/^Ruleta: /, ''); texto = 'Quedó guardado como pendiente. Pídele al profe que te lo canjee.'; }
   else {
     cabeza = `<img src="gatitos/img/${esc(r.gatito)}.webp" alt="">`;
@@ -501,6 +517,7 @@ function mostrar(r) {
   ($('modal').querySelector('[data-a="otra"]') || $('modal').querySelector('[data-a="cerrar"]')).focus({ preventScroll: true });
   $('anuncio').textContent = badge + ': ' + titulo;
   if (r.tipo === 'castigo') { sonCastigo(); const s = $('stage'); s.classList.remove('shake'); void s.offsetWidth; s.classList.add('shake'); }
+  else if (r.tipo === 'nada') { beep(300, .25, 'triangle', .12); }
   else { sonPremio(); if (!reducido) confeti(r.premio >= 300000 || r.tipo === 'gatito' ? 180 : 100); }
 }
 function cerrar() { $('velo').classList.remove('on'); $('hub').focus({ preventScroll: true }); }
