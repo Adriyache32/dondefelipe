@@ -330,7 +330,9 @@ async function resolver() {
     const r = sr.exists() ? sr.data() : null;
     if (!r || !r.pendiente || !r.tFecha) throw new Error('no hay un tiro pendiente');
     const c = sc.data(), prev = sg.exists() ? sg.data() : { ids: [], favorito: null }, ids = prev.ids || [];
-    const ms = r.tFecha.toMillis(), n = r.n;
+    // Firestore guarda microsegundos: toMillis() del navegador puede traer decimales
+    // (…567.891). Las reglas usan milisegundos enteros, así que se trunca igual que allá.
+    const ms = Math.floor(r.tFecha.toMillis()), n = r.n;
     const res = resultadoDe(await sha256hex(RULETA.sal + '|' + cuentaId + '|' + n + '|' + ms), r.retenido || 0, ids);
     const saldo = (c.saldo || 0) + res.monto, ops = (c.ops || 0) + 1;
     tx.update(rc, { saldo, ops, actualizado: F.serverTimestamp() });
