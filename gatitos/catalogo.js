@@ -37,6 +37,8 @@ window.GATITOS = [
   { id: 'sombra',      nombre: 'Sombra',               precio: 600000,  rareza: 'heroe',      txt: 'Sigilo y estrategia. Edición limitada.', anim: true, exclusivo: true, diarias: 0, descuentoAcademico: 0.3, poderes: ['🎓 30% de descuento en compras académicas (puntos, formativas, décimas)'] },
   { id: 'luna',        nombre: 'Luna',                 precio: 600000,  rareza: 'heroe',      txt: 'Sabiduría y apoyo. Edición limitada.', anim: true, exclusivo: true, diarias: 0, descuentoAcademico: 0.3, poderes: ['🎓 30% de descuento en compras académicas (puntos, formativas, décimas)'] },
   { id: 'cosmico',     nombre: 'Gato Cósmico',         precio: 750000,  rareza: 'mitico',     txt: 'Lleva una constelación en el pelaje. Vino del observatorio.', poderes: ['🚶 Paseo por el colegio en cada clase (cuando amerite)', '📓 Cuaderno 5 minutos en cada evaluación'] },
+  // Edición limitada de 2 unidades («stock»): al publicar el catálogo, su oferta sale con ese stock.
+  { id: 'cesar',       nombre: 'Gato del tío César',   precio: 1000000, rareza: 'mitico',     txt: 'Huaso de chupalla y poncho, el gatito del tío César: baila cueca, toca guitarra y duerme siesta. Edición limitada: solo 2. Cada mes: 5 décimas formativas y 2 sumativas.', anim: true, stock: 2, diarias: 0, mensual: { formativas: 5, sumativas: 2 }, poderes: ['📜 5 décimas formativas y 2 sumativas cada mes'] },
   { id: 'dorado',      nombre: 'Gato Dorado',          precio: 1000000, rareza: 'mitico',     txt: 'El más valioso del colegio. Muy pocos lo tendrán.', poderes: ['🚶 Paseo por el colegio en cada clase (cuando amerite)', '📓 Cuaderno 5 minutos en cada evaluación', '🎵 Elegir la música de la clase'] }
 ];
 
@@ -45,7 +47,8 @@ window.GATITOS = [
    común y poco común: 1 · raro y épico: 2 · legendario y mítico: 3. Máximo 3 décimas por día en total.
    Premio único (campo «premio»): Ava y Calha dan, además, 5 décimas formativas y 2 sumativas UNA sola vez
    por cuenta y por gatita (se reclama en Mi colección).
-   Gato Nietzsche (diarias: 0, mensual): no da décimas diarias; da 5 formativas y 2 sumativas una vez al mes.
+   Gato Nietzsche y Gato del tío César (diarias: 0, mensual): no dan décimas diarias; cada uno da 5 formativas
+   y 2 sumativas una vez al mes.
    Además, raros, épicos, legendarios y míticos dan un poder permanente (campo «poderes»), que el profe
    respeta cuando la clase lo permite.
    ¡Ojo! Las décimas por rareza y el máximo también están en firebase/firestore.rules (decimasPoder). */
@@ -68,7 +71,14 @@ window.poderDelDia = function (ids) {
   });
   return { formativas: Math.max(f, Math.min(n, window.PODER_MAX_DIA)), sumativas: s };
 };
-// Poder mensual (Gato Nietzsche): se reclama una vez por mes calendario.
+// Poder mensual (Gato Nietzsche, Gato del tío César): CADA gatito con «mensual» se reclama una vez
+// por mes calendario (si tienes los dos, reclamas los dos). Igual que opPoderMes() en las reglas.
+window.mensualesDe = function (ids) {
+  return window.GATITOS.filter(function (g) { return g.mensual && (ids || []).indexOf(g.id) >= 0; });
+};
+// Documento que marca el reclamo del mes (el de Nietzsche conserva el formato antiguo).
+window.idPoderMes = function (cuenta, mes, gid) { return gid === 'nietzsche' ? cuenta + '__' + mes : cuenta + '__' + mes + '__' + gid; };
+window.textoMensual = function (g) { return g.nombre + ': ' + window.textoPoderDia(g.mensual) + ' del mes'; };
 window.poderDelMes = function (ids) {
   var f = 0, s = 0;
   (ids || []).forEach(function (id) { var g = window.GATITOS.find(function (x) { return x.id === id; }); if (g && g.mensual) { f = Math.max(f, g.mensual.formativas); s = Math.max(s, g.mensual.sumativas); } });
