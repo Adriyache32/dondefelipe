@@ -2,12 +2,14 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+    <script src="utils/device-capabilities.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mi cuenta · El Mundo de Felipe</title>
 <meta name="description" content="Entra con Google para guardar tu progreso en El Mundo de Felipe. Qué datos se guardan y cómo borrarlos.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="utils/device-adaptive.css">
 <style>
 :root{--bg:#08080c;--slab:#111118;--slab2:#181822;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);
 --ink:#f2f1ec;--mute:#9b9aab;--acid:#ccff00;--cyan:#22e3ff;--pink:#ff2e7e;--brass:#e9b949;--neg:#ff7a70;
@@ -394,19 +396,26 @@ function cargarProgreso() {
 }
 
 const diaHoy = () => Math.floor((Date.now() - 14400000) / 86400000);   // igual que en las reglas
-let podMes = null;
+let podMes = {};
 // Colección, gatitos congelados (a la venta), por llegar (comprados a un compañero) y poderes.
 async function cargarGatitos(u, banco) {
   const G = window.GATITOS || [], R = window.RAREZAS || {}, cid = banco ? banco.cuenta.id : '';
   try {
     const { F, db } = await DF.listo();
-    const [s, pubs, peds, pod] = await Promise.all([
+    const [s, pubs, peds, pod, , movs] = await Promise.all([
       F.getDoc(F.doc(db, 'gatitos', u.uid)),
       F.getDocs(F.query(F.collection(db, 'mercado_items'), F.where('uid', '==', u.uid))).catch(() => null),
       cid ? F.getDocs(F.query(F.collection(db, 'mercado_pedidos'), F.where('comprador', '==', cid))).catch(() => null) : null,
       cid ? F.getDoc(F.doc(db, 'gatitos_poderes', cid + '__' + diaHoy())).catch(() => null) : null,
-      cid ? F.getDoc(F.doc(db, 'gatitos_poderes_mes', cid + '__' + mesHoy())).catch(() => null) : null
-    ]).then(r => { podMes = r[4]; return r; });
+      cid ? Promise.all((window.GATITOS || []).filter(g => g.mensual).map(g => F.getDoc(F.doc(db, 'gatitos_poderes_mes', idPoderMes(cid, mesHoy(), g.id)))
+        .then(d => [g.id, d.exists()], () => [g.id, false]))) : [],
+      cid ? F.getDocs(F.query(F.collection(db, 'banco_movs'), F.where('cuenta', '==', cid))).catch(() => null) : null
+    ]).then(r => { podMes = {}; (r[4] || []).forEach(([k, v]) => { podMes[k] = v; }); return r; });
+    // Fecha de adquisición: compra en el mercado o premio de la ruleta, y compras a un compañero autorizadas
+    const adq = {}, msF = t => t && t.toMillis ? t.toMillis() : 0;
+    if (movs) movs.docs.forEach(d => { const m = d.data(); if (m.gatito && (m.tipo === 'gatito-compra' || m.tipo === 'ruleta')) adq[m.gatito] = Math.max(adq[m.gatito] || 0, msF(m.fecha)); });
+    if (peds) peds.docs.forEach(d => { const p = d.data(); if (p.gatito && p.estado === 'aprobada') adq[p.gatito] = Math.max(adq[p.gatito] || 0, msF(p.resuelta) || msF(p.creada)); });
+    const fechaAdq = id => adq[id] ? new Date(adq[id]).toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
     const col = s.exists() ? s.data() : { ids: [] }, ids = col.ids || [];
     const venta = pubs ? pubs.docs.map(d => d.data()).filter(x => x.tipo === 'gatito' && (x.estado === 'venta' || x.estado === 'reservado')).map(x => x.gatito) : [];
     const camino = peds ? peds.docs.map(d => d.data()).filter(p => p.estado === 'pendiente' && p.gatito).map(p => p.gatito) : [];
@@ -425,7 +434,7 @@ async function cargarGatitos(u, banco) {
     const especiales = []; mios.forEach(g => (g.poderes || []).forEach(p => especiales.push([p, g.nombre])));
     const mini = g => { const t = ids.includes(g.id), v = !t && venta.includes(g.id), c = !t && !v && camino.includes(g.id), r = R[g.rareza] || {};
       const vis = t || v || c;
-      return `<div class="gmini ${t ? '' : v || c ? 'congelado' : 'falta'}" style="--rc:${r.color || '#888'}" title="${vis ? esc(g.nombre) : '???'}"><img src="gatitos/img/${esc(g.id)}.webp" alt="${vis ? esc(g.nombre) : 'Gatito por descubrir'}" loading="lazy"><span>${vis ? esc(g.nombre) : '???'}</span>${v ? '<em>🔒 a la venta</em>' : c ? '<em>⏳ por llegar</em>' : ''}</div>`; };
+      return `<div class="gmini ${t ? '' : v || c ? 'congelado' : 'falta'}" style="--rc:${r.color || '#888'}" title="${vis ? esc(g.nombre) : '???'}"><img src="gatitos/img/${esc(g.id)}.webp" alt="${vis ? esc(g.nombre) : 'Gatito por descubrir'}" loading="lazy"><span>${vis ? esc(g.nombre) : '???'}</span>${v ? '<em>🔒 a la venta</em>' : c ? '<em>⏳ por llegar</em>' : t && fechaAdq(g.id) ? `<em>📅 ${fechaAdq(g.id)}</em>` : ''}</div>`; };
     $('gCont').innerHTML = `
       ${fav ? `<div class="gfav" style="--rc:${(R[fav.rareza] || {}).color || '#ccff00'}"><img src="gatitos/img/${esc(fav.id)}.webp" alt="">
         <div><small>Mi gatito favorito</small><b>${esc(fav.nombre)}</b><span>${esc((R[fav.rareza] || {}).nombre || '')}</span></div></div>` : ''}
@@ -434,7 +443,7 @@ async function cargarGatitos(u, banco) {
       <div class="gpod"><b>⚡ Poderes</b>
         <div class="muted" style="font-size:14px">${dec ? `Tus gatitos te dan <b style="color:var(--acid)">${esc(textoPoderDia(pd))}</b> por día. ${yaHoy ? '✓ Ya las reclamaste hoy.' : '<a href="gatitos.html#coleccion">Reclámalas hoy en el Mercado</a> (si no, se pierden).'}` : 'Tus gatitos aún no dan décimas.'}</div>
         ${especiales.length ? `<ul>${especiales.map(([p, n]) => `<li>${esc(p)} <small>· ${esc(n)}</small></li>`).join('')}</ul>` : ''}
-        ${poderDelMes(ids).formativas ? `<div class="muted" style="font-size:14px;margin-top:6px">📜 Poder mensual: ${podMes && podMes.exists() ? '✓ ya lo reclamaste este mes.' : '<a href="gatitos.html#coleccion">reclámalo este mes en el Mercado</a>.'}</div>` : ''}
+        ${mensualesDe(ids).map(g => `<div class="muted" style="font-size:14px;margin-top:6px">📜 Poder mensual de ${esc(g.nombre)}: ${podMes[g.id] ? '✓ ya lo reclamaste este mes.' : '<a href="gatitos.html#coleccion">reclámalo este mes en el Mercado</a>.'}</div>`).join('')}
       </div>
       ${venta.length || camino.length ? '<p class="muted" style="font-size:13px;margin:8px 0 0">🔒 <b>A la venta</b>: salió de tu colección y está congelado en tu publicación; si la retiras, vuelve. ⏳ <b>Por llegar</b>: ya lo pagaste a un compañero; aparece cuando el profe lo autorice.</p>' : ''}
       <p class="muted" style="font-size:14px;margin-top:12px"><a href="gatitos.html">Ir al Mercado</a> · en «Mi colección» eliges cuál aparece como favorito (⭐).</p>`;
@@ -551,6 +560,15 @@ document.addEventListener('submit', async ev => {
     setTimeout(() => { const m = $('trMsg'); if (m) m.innerHTML = '<div class="aviso ok" style="margin-top:4px">✓ Listo: el dinero salió de tu cuenta y queda retenido hasta que el profe autorice. Si la rechaza o la cancelas, te vuelve.</div>'; }, 400);
   } catch (e) { msg('No se pudo pedir la transferencia: ' + esc(/permission/i.test(e.message) ? 'el banco la rechazó (¿el profe publicó las reglas nuevas?)' : e.message), 'err'); $('trBtn').disabled = false; }
 });
+// Disertación de la ruleta: el estudiante puede cambiar el tema mientras no la haga.
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('[data-tema]'); if (!b) return;
+  const t = prompt('Tema de tu disertación (3 a 120 letras):', b.dataset.actual || '');
+  if (t === null) return;
+  if (t.trim().length < 3) { alert('El tema debe tener al menos 3 letras.'); return; }
+  try { const { F, db } = await DF.listo(); await F.updateDoc(F.doc(db, 'banco_movs', b.dataset.tema), { tema: t.trim().slice(0, 120) }); cargarBanco(); }
+  catch (e) { alert('No se pudo cambiar el tema: ' + e.message); }
+});
 document.addEventListener('click', async ev => {
   const b = ev.target.closest('[data-cancelar]'); if (!b) return;
   if (!confirm('¿Cancelar esta transferencia? El dinero retenido vuelve a tu cuenta.')) return;
@@ -573,7 +591,7 @@ document.addEventListener('click', async ev => {
 // Lo que la persona tiene: beneficios por usar (agrupados), los que esperan al profe y los que puso a la venta.
 function pintarProductos(compras) {
   const CAT = window.CATALOGO_BENEFICIOS || [], grupos = {};
-  const ico = m => m.tipo === 'poder-gatito' ? '⚡' : m.tipo === 'poder-mensual' ? '📜' : m.tipo === 'premio-gatito' ? '💎' : m.tipo === 'ruleta' ? '🎡' : ((CAT.find(c => c.nombre === m.item) || {}).ico || '🎟️');
+  const ico = m => m.item === 'Ruleta: disertación' ? '🎤' : m.tipo === 'poder-gatito' ? '⚡' : m.tipo === 'poder-mensual' ? '📜' : m.tipo === 'premio-gatito' ? '💎' : m.tipo === 'ruleta' ? '🎡' : ((CAT.find(c => c.nombre === m.item) || {}).ico || '🎟️');
   compras.filter(m => ['pendiente', 'retenida', 'en-venta'].includes(m.canje)).forEach(m => {
     const k = m.canje + '|' + (m.item || m.motivo);
     (grupos[k] = grupos[k] || { m, n: 0 }).n++;
@@ -597,12 +615,12 @@ function cargarBanco() {
     // Todo lo que deja algo para usar: compras, regalos del profe, premios de la ruleta y décimas de los gatitos.
     const c = b.cuenta, compras = b.movs.filter(m => m.item || m.canje);
     const porUsar = compras.filter(m => m.canje === 'pendiente'), resto = compras.filter(m => m.canje !== 'pendiente');
-    const origen = m => m.tipo === 'poder-gatito' ? '⚡ ' : m.tipo === 'poder-mensual' ? '📜 ' : m.tipo === 'premio-gatito' ? '💎 ' : m.tipo === 'ruleta' ? '🎡 ' : m.monto === 0 && m.tipo === 'compra' ? '🎁 ' : '';
+    const origen = m => m.item === 'Ruleta: disertación' ? '🎤 ' : m.tipo === 'poder-gatito' ? '⚡ ' : m.tipo === 'poder-mensual' ? '📜 ' : m.tipo === 'premio-gatito' ? '💎 ' : m.tipo === 'ruleta' ? '🎡 ' : m.monto === 0 && m.tipo === 'compra' ? '🎁 ' : '';
     $('rSaldo').textContent = fmt(c.saldo); $('rSaldo').classList.toggle('neg', (c.saldo || 0) < 0);
     $('rUsar').textContent = porUsar.length;
     pintarProductos(compras);
     const estado = m => m.canje === 'usada' ? `<span class="can usada">Usada</span>${m.canjeNota ? ' <small class="muted">' + esc(m.canjeNota) + '</small>' : ''}`
-      : m.canje === 'anulada' ? '<span class="can anul">Anulada</span>' : m.canje === 'retenida' ? '<span class="can pend">Retenida · esperando al profe</span>' : m.canje === 'en-venta' ? '<span class="can pend">En venta (congelada)</span>' : m.canje === 'entregada' ? '<span class="can usada">Entregada</span>' : m.canje === 'traspasada' ? `<span class="can anul">Vendida</span> <small class="muted">${esc(m.canjeNota || '')}</small>` : '<span class="can pend">Por usar</span>';
+      : m.canje === 'anulada' ? '<span class="can anul">Anulada</span>' : m.canje === 'perdida' ? '<span class="can anul">Perdida en la ruleta</span>' : m.item === 'Ruleta: disertación' && m.canje === 'pendiente' ? `<span class="can pend">Por hacer · tema: ${esc(m.tema || '—')}</span> <button class="btn" style="padding:4px 10px;font-size:12px" type="button" data-tema="${esc(m._id)}" data-actual="${esc(m.tema || '')}">Cambiar tema</button>` : m.canje === 'retenida' ? '<span class="can pend">Retenida · esperando al profe</span>' : m.canje === 'en-venta' ? '<span class="can pend">En venta (congelada)</span>' : m.canje === 'entregada' ? '<span class="can usada">Entregada</span>' : m.canje === 'traspasada' ? `<span class="can anul">Vendida</span> <small class="muted">${esc(m.canjeNota || '')}</small>` : '<span class="can pend">Por usar</span>';
     $('bCont').innerHTML = `
       <div class="saldo"><b class="${(c.saldo || 0) < 0 ? 'neg' : ''}">${fmt(c.saldo)} ₣</b><span class="muted">Cuenta N° ${esc(c.numero)}${c.curso ? ' · ' + esc(c.curso) : ''}</span></div>
       <p class="sub">Por usar (${porUsar.length})</p>

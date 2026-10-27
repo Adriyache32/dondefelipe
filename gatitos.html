@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+    <script src="utils/device-capabilities.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#08080c">
 <title>Mercado Hipopesos · El Mundo de Felipe</title>
@@ -10,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="utils/device-adaptive.css">
 <style>
 :root{--bg:#08080c;--slab:#111118;--slab2:#181822;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);
 --ink:#f2f1ec;--mute:#9b9aab;--acid:#ccff00;--cyan:#22e3ff;--pink:#ff2e7e;--brass:#e9b949;--neg:#ff7a70;
@@ -179,6 +181,7 @@ h1 span{color:var(--acid)}
 .poderes ul small{color:var(--mute)}
 @media (max-width:560px){.poderes{grid-template-columns:auto 1fr}.poderes .btn{grid-column:1/-1;justify-content:center}.gato .poder{font-size:11.5px}}
 @media (max-width:560px){.form-of{grid-template-columns:1fr}.form-of .prev{height:100px}.tabs button{font-size:17px}}
+.gato .adq{font-size:12.5px;color:var(--mute);margin:6px 0 2px}
 </style>
 </head>
 <body>
@@ -239,7 +242,8 @@ h1 span{color:var(--acid)}
 
   <section id="vColeccion" class="oculto">
     <div class="card poderes" id="poderes"></div>
-    <p class="intro" style="margin-top:16px">Tus gatitos aparecen en color; los que te faltan, en sombra. Toca la ⭐ para elegir cuál se muestra en tu perfil.</p>
+    <p class="intro" style="margin-top:16px">Tus gatitos aparecen en color; los que te faltan, en sombra. Toca la ⭐ para elegir cuál se muestra en tu perfil.
+      <label style="display:inline-flex;gap:6px;align-items:center;margin-left:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="verFechas"> 📅 Mostrar fecha de adquisición</label></p>
     <div class="grid" id="album"></div>
   </section>
 
@@ -294,7 +298,8 @@ const fmt = n => new Intl.NumberFormat('es-CL').format(Math.round(n || 0)) + ' �
 const R = window.RAREZAS, G = window.GATITOS, gato = id => G.find(g => g.id === id);
 const ms = t => (t && t.toMillis ? t.toMillis() : (t && t.toDate ? t.toDate().getTime() : (typeof t === 'number' ? t : 0)));
 let usuario = null, esProfe = false, cuentaId = null, cuenta = null, coleccion = { ids: [], favorito: null };
-let publicaciones = [], misPedidos = [], misVentas = [], misBenef = [], poderHoy = null, poderMes = null, premios = {}, reclamando = false;
+let publicaciones = [], misPedidos = [], misVentas = [], misBenef = [], poderHoy = null, poderMes = {}, premios = {}, reclamando = false;
+let adquiridos = {};   // gatito → fecha (ms) en que llegó a tu colección (de tus movimientos y pedidos)
 const diaHoy = () => Math.floor(((window.DF && DF.ahora ? DF.ahora() : Date.now()) - 14400000) / 86400000);   // igual que diaHoy() en las reglas
 const BENEF = window.CATALOGO_BENEFICIOS || [];
 // gatitos.html#coleccion (o #beneficios, #estudiantes, #mio) abre esa pestaña.
@@ -358,7 +363,7 @@ function poderHtml(g) {
 }
 function pintarPoderes() {
   const el = $('poderes'); if (!el) return;
-  if (!usuario || esProfe || !cuenta) { el.innerHTML = `<div style="grid-column:1/-1"><h2 class="h2s">⚡ Poderes de tus gatitos</h2><p class="intro" style="margin:0">Cada gatito da décimas formativas por día (común y poco común: 1 · raro y épico: 2 · legendario y mítico: 3; máximo ${PODER_MAX_DIA} por día). Ava y Calha traen un premio único de 5 formativas y 2 sumativas; el Gato Nietzsche da 5 formativas y 2 sumativas cada mes; los héroes (Rayo, Sombra y Luna) dan 30% de descuento en compras académicas. Los más valiosos dan además poderes especiales en clases.</p></div>`; return; }
+  if (!usuario || esProfe || !cuenta) { el.innerHTML = `<div style="grid-column:1/-1"><h2 class="h2s">⚡ Poderes de tus gatitos</h2><p class="intro" style="margin:0">Cada gatito da décimas formativas por día (común y poco común: 1 · raro y épico: 2 · legendario y mítico: 3; máximo ${PODER_MAX_DIA} por día). Ava y Calha traen un premio único de 5 formativas y 2 sumativas; el Gato Nietzsche, el Gato del tío César y Gruñona dan, cada uno, 5 formativas y 2 sumativas cada mes; los héroes (Rayo, Sombra y Luna) dan 30% de descuento en compras académicas. Los más valiosos dan además poderes especiales en clases.</p></div>`; return; }
   const ids = coleccion.ids || [], pd = poderDelDia(ids), n = pd.formativas, txt = textoPoderDia(pd);
   const especiales = []; ids.forEach(id => { const g = gato(id); (g && g.poderes || []).forEach(p => especiales.push([p, g.nombre])); });
   const yaHoy = poderHoy && poderHoy.dia === diaHoy();
@@ -402,28 +407,32 @@ async function reclamarPremio(gid) {
   reclamando = false; pintar();
 }
 function bloqueMes() {
-  const pm = poderDelMes(coleccion.ids || []); if (!pm.formativas) return '';
-  const ya = poderMes && poderMes.mes === mesHoy(), mes = MESES[mesHoy() % 12];
-  return `<div class="aviso ${ya ? 'ok' : ''}" style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:200px">📜 <b>Gato Nietzsche</b>: ${esc(textoPoderDia(pm))} cada mes.${ya ? ` Ya las reclamaste en ${mes}.` : ` Las de ${mes} están disponibles.`}</span>
-    ${ya ? '' : poderMes === null ? '' : `<button class="btn p" data-a="reclamarMes"${reclamando ? ' disabled' : ''}><i class="fa-solid fa-scroll"></i> Reclamar las de ${mes}</button>`}</div>`;
+  const mes = MESES[mesHoy() % 12];
+  return mensualesDe(coleccion.ids || []).map(g => {
+    const est = poderMes[g.id], ya = est && est.mes === mesHoy();
+    return `<div class="aviso ${ya ? 'ok' : ''}" style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:200px">📜 <b>${esc(g.nombre)}</b>: ${esc(textoPoderDia(g.mensual))} cada mes.${ya ? ` Ya las reclamaste en ${mes}.` : ` Las de ${mes} están disponibles.`}</span>
+    ${ya || est === undefined || est === null ? '' : `<button class="btn p" data-a="reclamarMes" data-g="${esc(g.id)}"${reclamando ? ' disabled' : ''}><i class="fa-solid fa-scroll"></i> Reclamar las de ${mes}</button>`}</div>`;
+  }).join('');
 }
-async function reclamarMes() {
+async function reclamarMes(gid) {
   if (reclamando || !cuenta || !cuentaId) return;
-  const pm = poderDelMes(coleccion.ids || []); if (!pm.formativas) return;
+  const g = mensualesDe(coleccion.ids || []).find(x => x.id === gid); if (!g) return;
   reclamando = true; pintarPoderes();
   await DF.reloj();
-  const { F, db } = await DF.listo(), mes = mesHoy(), item = 'Gato Nietzsche: ' + textoPoderDia(pm) + ' del mes';
+  const { F, db } = await DF.listo(), mes = mesHoy(), item = textoMensual(g);
   try {
     await F.runTransaction(db, async tx => {
-      const rc = F.doc(db, 'banco_cuentas', cuentaId), rp = F.doc(db, 'gatitos_poderes_mes', cuentaId + '__' + mes);
+      const rc = F.doc(db, 'banco_cuentas', cuentaId), rp = F.doc(db, 'gatitos_poderes_mes', idPoderMes(cuentaId, mes, g.id));
       const [sc, sp] = await Promise.all([tx.get(rc), tx.get(rp)]);
       if (sp.exists()) throw new Error('ya las reclamaste este mes');
       if (!sc.exists()) throw new Error('no se encontró tu cuenta del banco');
-      movPropio(F, db, tx, sc.data(), 0, 'Poder mensual del Gato Nietzsche (' + MESES[mes % 12] + ')', 'poder-mensual', { item, canje: 'pendiente' });
-      tx.set(rp, { cuenta: cuentaId, uid: usuario.uid, mes, fecha: F.serverTimestamp() });
+      // Nietzsche sin campo «gatito» (formato antiguo); los demás lo llevan
+      const extra = g.id === 'nietzsche' ? {} : { gatito: g.id };
+      movPropio(F, db, tx, sc.data(), 0, 'Poder mensual: ' + g.nombre + ' (' + MESES[mes % 12] + ')', 'poder-mensual', Object.assign({ item, canje: 'pendiente' }, extra));
+      tx.set(rp, Object.assign({ cuenta: cuentaId, uid: usuario.uid, mes, fecha: F.serverTimestamp() }, extra));
     });
-    poderMes = { mes };
-    aviso(`✓ Reclamaste ${esc(textoPoderDia(pm))} de ${MESES[mes % 12]}: quedan «por usar» en tu cuenta.`, 'ok'); confeti(80);
+    poderMes[g.id] = { mes };
+    aviso(`✓ Reclamaste ${esc(textoPoderDia(g.mensual))} de ${MESES[mes % 12]} (${esc(g.nombre)}): quedan «por usar» en tu cuenta.`, 'ok'); confeti(80);
   } catch (e) { aviso('No se pudieron reclamar: ' + esc(/permission/i.test(e.message) ? 'el banco lo rechazó (¿el profe publicó las reglas nuevas?)' : e.message), 'err'); }
   reclamando = false; pintar();
 }
@@ -493,7 +502,12 @@ function pintarMercado() {
   l.sort(cmp);
   $('grid').innerHTML = l.map(cartaOferta).join('') || `<div class="vacio-merc" style="grid-column:1/-1"><img src="mercado/sprites/gato-duerme.webp" alt=""><p>${ofertas.some(vigente) ? 'No hay ofertas con este filtro.' : 'El mercado está cerrado por ahora: el profe todavía no publica gatitos a la venta.'}</p></div>`;
 }
+// Fecha de adquisición en «Mi colección»: se puede mostrar u ocultar (se recuerda en este navegador).
+let verFechas = true; try { verFechas = localStorage.getItem('gatitos_ver_fechas') !== '0'; } catch (e) {}
+const fechaLarga = t => new Date(t).toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
 function pintarAlbum() {
+  const vf = $('verFechas'); if (vf && !vf._ok) { vf._ok = true; vf.checked = verFechas;
+    vf.onchange = () => { verFechas = vf.checked; try { localStorage.setItem('gatitos_ver_fechas', verFechas ? '1' : '0'); } catch (e) {} pintarAlbum(); }; }
   const tengo = new Set(coleccion.ids || []);
   $('album').innerHTML = G.map(g => {
     const r = R[g.rareza], mio = tengo.has(g.id), est = mio ? 'tengo' : estadoGato(g.id), enVenta = ofertas.some(o => o.gatito === g.id && vigente(o));
@@ -501,6 +515,7 @@ function pintarAlbum() {
       ${mio ? `<button class="fav ${coleccion.favorito === g.id ? 'on' : ''}" data-fav="${g.id}" title="Mostrar en mi perfil"><i class="fa-solid fa-star"></i></button>` : ''}
       <div class="img"><img src="gatitos/img/${g.id}.webp" alt="${mio ? esc(g.nombre) : 'Gatito por conseguir'}" loading="lazy"></div>
       <span class="rz">${esc(r.nombre)}</span><h3>${esc(g.nombre)}</h3><p>${esc(g.txt)}</p>${poderHtml(g)}
+      ${mio && verFechas ? `<div class="adq">📅 ${adquiridos[g.id] ? 'Adquirido el ' + fechaLarga(adquiridos[g.id]) : 'Fecha de adquisición no registrada'}</div>` : ''}
       <div class="pie">${mio ? '<span class="mio-tag"><i class="fa-solid fa-check"></i> Es tuyo</span>' : est ? `<button class="btn sm" data-v="${est === 'venta' ? 'mio' : 'estudiantes'}">${est === 'venta' ? 'Ver mi publicación' : 'Ver mi pedido'}</button>` : enVenta ? '<button class="btn" data-ir="' + g.id + '">Ver en el mercado</button>' : '<span style="color:var(--mute);font-size:13px">No está a la venta ahora</span>'}</div>
     </article>`;
   }).join('');
@@ -602,7 +617,7 @@ async function cargar() {
   aviso('');
   unsubs.push(F.onSnapshot(F.collection(db, 'gatitos_ofertas'), s => { ofertas = s.docs.map(d => Object.assign({ id: d.id }, d.data())); pintar(); },
     e => aviso('No se pudieron leer las ofertas: ' + esc(e.message), 'err')));
-  misPedidos = []; misVentas = []; misBenef = []; publicaciones = []; poderHoy = null; poderMes = null; premios = {};
+  misPedidos = []; misVentas = []; misBenef = []; publicaciones = []; poderHoy = null; poderMes = {}; premios = {}; adquiridos = {};
   if (usuario) {
     unsubs.push(F.onSnapshot(F.collection(db, 'mercado_items'), s => { publicaciones = s.docs.map(d => Object.assign({ id: d.id }, d.data())); pintar(); }, () => {}));
     unsubs.push(F.onSnapshot(F.query(F.collection(db, 'gatitos_ventas'), F.orderBy('fecha', 'desc'), F.limit(40)), s => { ventas = s.docs.map(d => d.data()); pintar(); }, () => {}));
@@ -616,13 +631,21 @@ async function cargar() {
         unsubs.push(F.onSnapshot(F.doc(db, 'banco_cuentas', cuentaId), c => { cuenta = c.exists() ? c.data() : null; pintar(); }, () => {}));
         const conClave = p => Object.assign(p, { _clave: p.tipo === 'beneficio' ? 'b:' + p.item : 'r:' + p.publicacion });
         unsubs.push(F.onSnapshot(F.query(F.collection(db, 'mercado_pedidos'), F.where('comprador', '==', cuentaId)), s => {
-          misPedidos = s.docs.map(d => conClave(Object.assign({ id: d.id }, d.data()))).sort((a, b) => ms(b.creada) - ms(a.creada)); pintar(); }, () => {}));
+          misPedidos = s.docs.map(d => conClave(Object.assign({ id: d.id }, d.data()))).sort((a, b) => ms(b.creada) - ms(a.creada));
+          // gatitos comprados a un compañero: llegan cuando el profe autoriza
+          misPedidos.forEach(p => { if (p.gatito && p.estado === 'aprobada') adquiridos[p.gatito] = Math.max(adquiridos[p.gatito] || 0, ms(p.resuelta) || ms(p.creada)); });
+          pintar(); }, () => {}));
         unsubs.push(F.onSnapshot(F.query(F.collection(db, 'mercado_pedidos'), F.where('vendedor', '==', cuentaId)), s => {
           misVentas = s.docs.map(d => Object.assign({ id: d.id }, d.data())).sort((a, b) => ms(b.creada) - ms(a.creada)); pintar(); }, () => {}));
         unsubs.push(F.onSnapshot(F.query(F.collection(db, 'banco_movs'), F.where('cuenta', '==', cuentaId)), s => {
-          misBenef = s.docs.map(d => Object.assign({ id: d.id }, d.data())).filter(m => m.canje === 'pendiente' && m.item && m.tipo !== 'poder-gatito' && m.tipo !== 'poder-mensual' && m.tipo !== 'premio-gatito'); pintar(); }, () => {}));
+          const todos = s.docs.map(d => Object.assign({ id: d.id }, d.data()));
+          misBenef = todos.filter(m => m.canje === 'pendiente' && m.item && m.item !== 'Ruleta: disertación' && m.tipo !== 'poder-gatito' && m.tipo !== 'poder-mensual' && m.tipo !== 'premio-gatito');
+          // fecha de adquisición: compra en el mercado o premio de la ruleta (la más reciente, por si lo vendió y lo volvió a comprar)
+          todos.forEach(m => { if (m.gatito && (m.tipo === 'gatito-compra' || m.tipo === 'ruleta')) adquiridos[m.gatito] = Math.max(adquiridos[m.gatito] || 0, ms(m.fecha)); });
+          pintar(); }, () => {}));
         unsubs.push(F.onSnapshot(F.doc(db, 'gatitos_poderes', cuentaId + '__' + diaHoy()), d => { poderHoy = d.exists() ? d.data() : false; pintar(); }, () => { poderHoy = null; }));
-        unsubs.push(F.onSnapshot(F.doc(db, 'gatitos_poderes_mes', cuentaId + '__' + mesHoy()), d => { poderMes = d.exists() ? d.data() : false; pintar(); }, () => { poderMes = null; }));
+        G.filter(g => g.mensual).forEach(g => unsubs.push(F.onSnapshot(F.doc(db, 'gatitos_poderes_mes', idPoderMes(cuentaId, mesHoy(), g.id)),
+          d => { poderMes[g.id] = d.exists() ? d.data() : false; pintar(); }, () => { poderMes[g.id] = null; })));
         G.filter(g => g.premio).forEach(g => unsubs.push(F.onSnapshot(F.doc(db, 'gatitos_premios', cuentaId + '__' + g.id), d => { premios[g.id] = d.exists(); pintar(); }, () => { delete premios[g.id]; })));
       } else if (!esProfe) aviso('Tu cuenta del banco todavía no está conectada con este correo. Pídele al profe que la vincule para poder comprar.');
     } catch (e) { aviso('No se pudo cargar tu cuenta: ' + esc(e.message), 'err'); }
@@ -719,10 +742,10 @@ async function publicarCatalogo() {
   // Los héroes (exclusivo) no se publican en bloque: el profe los saca de vez en cuando, con pocas unidades.
   const activos = new Set(ofertas.filter(vigente).map(o => o.gatito)), faltan = G.filter(g => !activos.has(g.id) && !g.exclusivo);
   if (!faltan.length) return msgProfe('Todos los gatitos ya tienen una oferta activa.', 'ok');
-  if (!confirm(`Publicar ${faltan.length} ofertas sin límite, al precio de referencia de cada gatito?`)) return;
+  if (!confirm(`Publicar ${faltan.length} ofertas al precio de referencia de cada gatito?\n(Sin límite de unidades, salvo las ediciones limitadas: ${faltan.filter(g => g.stock > 0).map(g => g.nombre + ' × ' + g.stock).join(', ') || 'ninguna'}.)`)) return;
   const { F, db } = await DF.listo();
   try {
-    await Promise.all(faltan.map(g => F.addDoc(F.collection(db, 'gatitos_ofertas'), { gatito: g.id, precio: g.precio, stock: -1, vendidos: 0, activa: true, destacada: false, nota: '',
+    await Promise.all(faltan.map(g => F.addDoc(F.collection(db, 'gatitos_ofertas'), { gatito: g.id, precio: g.precio, stock: g.stock > 0 ? g.stock : -1, vendidos: 0, activa: true, destacada: false, nota: '',
       vendedor: usuario.uid, vendedorNombre: 'Profe ' + String(usuario.displayName || 'Felipe').split(/\s+/)[0], creada: F.serverTimestamp(), actualizado: F.serverTimestamp() })));
     msgProfe(`✓ ${faltan.length} ofertas publicadas.`, 'ok');
   } catch (e) { msgProfe('No se pudo publicar: ' + esc(e.message), 'err'); }
@@ -938,7 +961,7 @@ document.addEventListener('click', e => {
   else if (a === 'salir') DF.salir();
   else if (a === 'cerrar') $('velo').hidden = true;
   else if (a === 'reclamar') reclamarPoderes();
-  else if (a === 'reclamarMes') reclamarMes();
+  else if (a === 'reclamarMes') reclamarMes(t.dataset.g);
   else if (a === 'reclamarPremio') reclamarPremio(t.dataset.g);
   else if (a === 'confirmar') confirmar(t.dataset.id);
 });

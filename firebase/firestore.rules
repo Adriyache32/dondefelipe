@@ -351,88 +351,178 @@ service cloud.firestore {
       return d.cuenta == miCuentaBanco() && d.cuenta != ''
         && opsDespues(d.cuenta) == opsAntes(d.cuenta) + 1
         && id == 'op-' + d.cuenta + '-' + string(opsDespues(d.cuenta))
-        && d.keys().hasOnly(['cuenta', 'numero', 'nombre', 'curso', 'monto', 'motivo', 'tipo', 'saldoDespues', 'profe', 'fecha', 'ticker', 'acciones', 'precio', 'gatito', 'oferta', 'tiro', 'item', 'canje', 'transferencia', 'pedido'])
+        && d.keys().hasOnly(['cuenta', 'numero', 'nombre', 'curso', 'monto', 'motivo', 'tipo', 'saldoDespues', 'profe', 'fecha', 'ticker', 'acciones', 'precio', 'gatito', 'oferta', 'tiro', 'item', 'canje', 'transferencia', 'pedido', 'tema', 'escapa', 'pierde'])
+        && (d.tipo == 'ruleta' || !d.keys().hasAny(['tema', 'escapa', 'pierde']))
         && d.profe == '' && d.fecha == request.time
         && texto(d.numero, 20) && texto(d.nombre, 160) && texto(d.curso, 40) && texto(d.motivo, 200)
         && d.monto is int
         && d.saldoDespues == getAfter(rutaCuenta(d.cuenta)).data.saldo
         // Solo la ruleta puede dejar un beneficio por canjear (así nadie cuela canjes falsos al panel).
         // Una compra del Mercado entra «retenida» (congelada) y solo el profe la deja «por usar».
-        && (d.tipo == 'ruleta' || (d.tipo == 'compra' && d.get('canje', '') == 'retenida' && !d.keys().hasAny(['tiro']))
+        && (d.tipo in ['ruleta', 'ruleta-apuesta'] || (d.tipo == 'compra' && d.get('canje', '') == 'retenida' && !d.keys().hasAny(['tiro']))
             || (d.tipo in ['poder-gatito', 'poder-mensual', 'premio-gatito'] && !d.keys().hasAny(['tiro']))
             || !d.keys().hasAny(['tiro', 'item', 'canje']))
         && ((d.tipo in ['bolsa-compra', 'bolsa-venta'] && opBolsa(d)) || (d.tipo == 'bono-ingreso' && opBono(d))
-            || (d.tipo == 'gatito-compra' && opGatito(d)) || (d.tipo == 'ruleta' && opRuleta(d))
+            || (d.tipo == 'gatito-compra' && opGatito(d)) || (d.tipo == 'ruleta' && opRuleta(d)) || (d.tipo == 'ruleta-apuesta' && opApuesta(d))
             || (d.tipo == 'transferencia-envio' && opEnvio(id, d)) || (d.tipo == 'compra' && opPedido(id, d))
             || (d.tipo == 'devolucion' && opDevolucion(d)) || (d.tipo == 'poder-gatito' && opPoder(d)) || (d.tipo == 'poder-mensual' && opPoderMes(d)) || (d.tipo == 'premio-gatito' && opPremio(d)));
     }
 
-    // ═════ Ruleta de Hipopesos ═════
-    // Cada tiro cuesta costoRuleta(). El resultado NO lo elige el navegador: sale del hash
-    // sha256(sal | cuenta | número de tiro), y estas reglas lo recalculan y lo exigen.
-    // Mismo cálculo en ruleta.html (objeto RULETA): si cambias algo aquí, cámbialo allá.
-    //   1er carácter del hash  →  0-2: +10.000 · 3-4: +20.000 · 5: +50.000
-    //                             6-8: −10.000 · 9-a: −20.000 · b: −50.000
-    //                             c-d: beneficio canjeable · e-f: gatito gratis
-    // SUSPENDIDA (oct 2026): la sal es pública y el resultado de cada tiro se puede calcular
-    // ANTES de girar (sha256 de datos conocidos), así que se puede jugar solo cuando conviene.
-    // Para reabrirla hace falta azar secreto (servidor) — ver panel/README. Mientras: false.
-    function ruletaActiva() { return false; }
-    function costoRuleta() { return 5000; }
-    function salRuleta() { return 'dondefelipe-ruleta-v1'; }
+    // ═════ Ruleta de Hipopesos (v2: azar con la hora del servidor) ═════
+    // La v1 se suspendió: el resultado salía de datos conocidos (sal | cuenta | n° de tiro) y se
+    // podía calcular ANTES de girar. Ahora cada tiro tiene DOS pasos:
+    //  1) APOSTAR (movimiento 'ruleta-apuesta'): se retiene min(saldo, 330.000) y ruleta/<cuenta>
+    //     anota la hora EXACTA del servidor (ms) en tFecha. Nadie la conoce antes de escribir.
+    //  2) RESOLVER (movimiento 'ruleta'): resultado = sha256(sal | cuenta | n° | ms de tFecha);
+    //     se devuelve max(0, retenido + premio − costo). Abandonar un tiro malo no sirve:
+    //     lo retenido queda retenido hasta resolverlo (la página lo resuelve sola al volver).
+    // Máximo tirosPorDia() tiros por día. Mismo cálculo en ruleta.html (objeto RULETA).
+    function ruletaActiva() { return true; }
+    function costoRuleta() { return 30000; }
+    function maxRetener() { return 330000; }   // costo + el peor castigo
+    function tirosPorDia() { return 20; }
+    function salRuleta() { return 'dondefelipe-ruleta-v2'; }
     function rutaRuleta(c) { return /databases/$(database)/documents/ruleta/$(c); }
-    function tirosAntes(c) { return exists(rutaRuleta(c)) ? get(rutaRuleta(c)).data.n : 0; }
-    function hashTiro(c, n) { return hashing.sha256(salRuleta() + '|' + c + '|' + string(n)).toHexString().lower(); }
-    function dineroRuleta(h) {
-      return h.matches('^[0-2].*') ? 10000
-        : (h.matches('^[34].*') ? 20000
-        : (h.matches('^5.*') ? 50000
-        : (h.matches('^[6-8].*') ? -10000
-        : (h.matches('^[9a].*') ? -20000
-        : (h.matches('^b.*') ? -50000 : 0)))));
+    function ruletaDe(c) { return exists(rutaRuleta(c)) ? get(rutaRuleta(c)).data : { 'n': 0 }; }
+    function hashTiro(c, n, ms) { return hashing.sha256(salRuleta() + '|' + c + '|' + string(n) + '|' + string(ms)).toHexString().lower(); }
+    // LAS 32 CASILLAS en el orden de la rueda (igual que TABLA en ruleta.html), todas con
+    // probabilidad 1/32. Casilla = (1er carácter del hash impar ? 16 : 0) + valor del 2° carácter.
+    // Los premios y castigos caen en las COSAS del jugador:
+    //   'd' dinero v · 'b' beneficio o décimas por canjear (texto v) · 'D' castigo: disertación (tema elegible)
+    //   'g' gatito común · 'G' gatito sorpresa (hasta ₣1.000.000; ambos según el 3er carácter)
+    //   'A' acciones de regalo por ₣v · 'V' pierde acciones por hasta ₣v · 'E' se escapa un gatito común
+    //   o poco común · 'P' pierde un beneficio por canjear. Si no tiene la cosa: v en Hipopesos.
+    function tablaRuleta() {
+      return [
+        {'t':'d','v':500000}, {'t':'D','v':'Ruleta: disertación'}, {'t':'b','v':'Ruleta: 1 décima formativa'}, {'t':'d','v':-120000},
+        {'t':'A','v':100000}, {'t':'d','v':-60000}, {'t':'g','v':0}, {'t':'V','v':150000},
+        {'t':'d','v':200000}, {'t':'d','v':-30000}, {'t':'b','v':'Ruleta: pase de tarea'}, {'t':'E','v':60000},
+        {'t':'d','v':90000}, {'t':'d','v':-200000}, {'t':'b','v':'Ruleta: 1 décima sumativa'}, {'t':'d','v':0},
+        {'t':'d','v':300000}, {'t':'D','v':'Ruleta: disertación'}, {'t':'b','v':'Ruleta: 2 décimas formativas'}, {'t':'d','v':-90000},
+        {'t':'G','v':0}, {'t':'P','v':100000}, {'t':'d','v':60000}, {'t':'d','v':-300000},
+        {'t':'b','v':'Ruleta: 5 minutos extra en una prueba'}, {'t':'d','v':-60000}, {'t':'d','v':120000}, {'t':'g','v':0},
+        {'t':'d','v':30000}, {'t':'b','v':'Ruleta: elegir la música de una clase'}, {'t':'d','v':60000}, {'t':'b','v':'Ruleta: cambio de puesto por una clase'}
+      ];
     }
-    // Beneficios (el texto queda tal cual en "Compras por canjear" del panel).
-    function beneficioRuleta(h) { return h.matches('^c.*') ? 'Ruleta: pase de tarea' : 'Ruleta: 5 minutos extra en una prueba'; }
-    // Gatito gratis: uno de los comunes, según el 2° carácter del hash.
+    function hexv(ch) {
+      return {'0':0,'1':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'a':10,'b':11,'c':12,'d':13,'e':14,'f':15}[ch];
+    }
+    function casillaRuleta(h) { return tablaRuleta()[(h[0:1] in ['1','3','5','7','9','b','d','f'] ? 16 : 0) + hexv(h[1:2])]; }
+    // Gatito común: según el 3er carácter del hash.
     function gatitoRuleta(h) {
-      return h.matches('^.[0-3].*') ? 'naranjo'
-        : (h.matches('^.[4-7].*') ? 'gris'
-        : (h.matches('^.[89ab].*') ? 'dormilon' : 'patitas'));
+      return h.matches('^..[0-3].*') ? 'naranjo'
+        : (h.matches('^..[4-7].*') ? 'gris'
+        : (h.matches('^..[89ab].*') ? 'dormilon' : 'patitas'));
     }
-    function opRuleta(d) {
+    // Gatito sorpresa: 1 de 16 según el 3er carácter (nunca los de edición limitada, héroes ni los de más de ₣1.000.000).
+    function gatitoSorpresa(h) {
+      return ['aseo', 'blanconegro', 'tricolor', 'comelon', 'siames', 'negro', 'estirado', 'jugueton',
+              'caja', 'tronco', 'barril', 'muro', 'fantasma', 'nietzsche', 'cosmico', 'dorado'][hexv(h[2:3])];
+    }
+    // Los únicos que se pueden escapar: comunes y poco comunes.
+    function escapables() { return ['naranjo', 'gris', 'dormilon', 'patitas', 'aseo', 'blanconegro', 'tricolor', 'comelon']; }
+    function itemDisertacion() { return 'Ruleta: disertación'; }
+    // Claves de «cosas» que puede llevar un movimiento de la ruleta; cada casilla permite solo las suyas.
+    function soloCosas(d, ks) {
+      return d.keys().toSet().intersection(['item', 'canje', 'tema', 'gatito', 'escapa', 'pierde', 'ticker', 'acciones', 'precio'].toSet())
+        .difference(ks.toSet()).size() == 0;
+    }
+    function pagoRuleta(ret, premio) { return ret + premio - costoRuleta() < 0 ? 0 : ret + premio - costoRuleta(); }
+    function rutaMov(id) { return /databases/$(database)/documents/banco_movs/$(id); }
+    // Paso 1: apostar.
+    function opApuesta(d) {
       let c = d.cuenta;
-      let n = tirosAntes(c) + 1;
-      let h = hashTiro(c, n);
+      let r = ruletaDe(c);
       let saldo = get(rutaCuenta(c)).data.saldo;
-      let esBenef = h.matches('^[cd].*');
-      let esGatito = h.matches('^[ef].*');
-      let g = gatitoRuleta(h);
-      let yaTiene = g in gatitosAntes(request.auth.uid);
-      // Si ya tenía ese gatito, recibe su precio en Hipopesos.
-      let premio = esGatito ? (yaTiene ? precioGatito(g) : 0) : dineroRuleta(h);
-      let neto = premio - costoRuleta();
+      let ret = saldo < maxRetener() ? saldo : maxRetener();
       return ruletaActiva() && saldo >= costoRuleta()
-        && d.tiro == n
-        && getAfter(rutaRuleta(c)).data.n == n
-        // Un castigo nunca deja el saldo bajo 0: queda en 0.
-        && d.monto == (saldo + neto < 0 ? 0 - saldo : neto)
-        && (esBenef
-              ? (d.item == beneficioRuleta(h) && d.canje == 'pendiente')
-              : !d.keys().hasAny(['item', 'canje']))
-        && ((esGatito && !yaTiene)
-              ? (d.gatito == g && getAfter(rutaGatitos(request.auth.uid)).data.ids.hasAll([g]))
-              : !d.keys().hasAny(['gatito']));
+        && r.get('pendiente', false) == false
+        && d.tiro == r.get('n', 0) + 1
+        && d.monto == 0 - ret
+        && soloCosas(d, [])
+        && getAfter(rutaRuleta(c)).data.retenido == ret;
     }
-    // Contador de tiros de cada cuenta: solo sube de a 1 y junto con un movimiento de ruleta.
+    // Paso 2: resolver el tiro pendiente. Cada tipo de casilla lee SOLO los documentos que necesita
+    // (las reglas permiten pocas lecturas por escritura).
+    function opRuleta(d) {
+      let r = get(rutaRuleta(d.cuenta)).data;
+      let h = hashTiro(d.cuenta, r.n, r.tFecha.toMillis());
+      let k = casillaRuleta(h);
+      return r.get('pendiente', false) == true && d.tiro == r.n
+        && (k.t == 'd' ? (d.monto == pagoRuleta(r.retenido, k.v) && soloCosas(d, []))
+          : (k.t == 'b' ? (d.monto == pagoRuleta(r.retenido, 0) && d.item == k.v && d.canje == 'pendiente' && soloCosas(d, ['item', 'canje']))
+          : (k.t == 'D' ? (d.monto == pagoRuleta(r.retenido, 0) && d.item == k.v && d.canje == 'pendiente' && soloCosas(d, ['item', 'canje', 'tema'])
+                           && texto(d.tema, 120) && d.tema.size() >= 3)
+          : (k.t == 'g' ? gatitoGanado(d, gatitoRuleta(h), r.retenido)
+          : (k.t == 'G' ? gatitoGanado(d, gatitoSorpresa(h), r.retenido)
+          : (k.t == 'A' ? (d.keys().hasAny(['ticker']) ? (d.monto == pagoRuleta(r.retenido, 0) && soloCosas(d, ['ticker', 'acciones', 'precio']) && accionesRegalo(d, k.v))
+                                                       : (d.monto == pagoRuleta(r.retenido, k.v) && soloCosas(d, [])))
+          : (k.t == 'V' ? (d.keys().hasAny(['ticker']) ? (d.monto == pagoRuleta(r.retenido, 0) && soloCosas(d, ['ticker', 'acciones', 'precio']) && accionesQuitadas(d, k.v))
+                                                       : (d.monto == pagoRuleta(r.retenido, 0 - k.v) && soloCosas(d, [])))
+          : (k.t == 'E' ? (d.keys().hasAny(['escapa']) ? (d.monto == pagoRuleta(r.retenido, 0) && soloCosas(d, ['escapa']) && gatitoEscapa(d))
+                                                       : (d.monto == pagoRuleta(r.retenido, 0 - k.v) && soloCosas(d, [])
+                                                          && !gatitosAntes(request.auth.uid).hasAny(escapables())))
+          : (k.t == 'P' && (d.keys().hasAny(['pierde']) ? (d.monto == pagoRuleta(r.retenido, 0) && soloCosas(d, ['pierde']) && beneficioPerdido(d))
+                                                       : (d.monto == pagoRuleta(r.retenido, 0 - k.v) && soloCosas(d, []))))))))))));
+    }
+    // Gatito ganado: entra a la colección; si ya lo tenía, recibe su precio en Hipopesos.
+    function gatitoGanado(d, g, ret) {
+      return g in gatitosAntes(request.auth.uid)
+        ? (d.monto == pagoRuleta(ret, precioGatito(g)) && soloCosas(d, []))
+        : (d.monto == pagoRuleta(ret, 0) && d.gatito == g && soloCosas(d, ['gatito'])
+           && getAfter(rutaGatitos(request.auth.uid)).data.ids.hasAll([g]));
+    }
+    // Acciones de regalo: ⌊v / precio⌋ acciones (mínimo 1) de una empresa activa, al precio de hoy.
+    function accionesRegalo(d, v) {
+      let e = get(rutaEmpresa(d.ticker)).data;
+      return e.activa == true && d.precio == e.precio
+        && d.acciones == (e.precio >= v ? 1 : math.floor(v * 1.0 / e.precio))
+        && getAfter(rutaPos(d.cuenta, d.ticker)).data.acciones == accAntes(d.cuenta, d.ticker) + d.acciones;
+    }
+    // Acciones perdidas: ⌈v / precio⌉ acciones (o todas, si tiene menos) de una empresa donde tiene.
+    function accionesQuitadas(d, v) {
+      let e = get(rutaEmpresa(d.ticker)).data;
+      let a = accAntes(d.cuenta, d.ticker);
+      let q = math.ceil(v * 1.0 / e.precio);
+      return a > 0 && d.precio == e.precio
+        && d.acciones == 0 - (a < q ? a : q)
+        && getAfter(rutaPos(d.cuenta, d.ticker)).data.acciones == a + d.acciones;
+    }
+    // Se escapa un gatito común o poco común de su colección.
+    function gatitoEscapa(d) {
+      let ids = gatitosAntes(request.auth.uid);
+      return d.escapa in escapables() && d.escapa in ids
+        && getAfter(rutaGatitos(request.auth.uid)).data.ids == ids.removeAll([d.escapa]);
+    }
+    // Pierde un beneficio por canjear (nunca una disertación): queda «perdida».
+    function beneficioPerdido(d) {
+      let m = get(rutaMov(d.pierde)).data;
+      return m.cuenta == d.cuenta && m.get('canje', '') == 'pendiente' && m.get('item', '') != itemDisertacion()
+        && getAfter(rutaMov(d.pierde)).data.canje == 'perdida';
+    }
+    // Estado de la ruleta de cada cuenta: n° de tiros, tiro pendiente, hora del servidor y tiros de hoy.
     match /ruleta/{c} {
       allow read: if esProfe() || (c == miCuentaBanco() && c != '');
       allow write: if esProfe();
-      allow create, update: if ruletaActiva() && esColegio() && c == miCuentaBanco() && c != ''
-        && request.resource.data.keys().hasOnly(['n', 'actualizado'])
-        && request.resource.data.n == tirosAntes(c) + 1
+      allow create, update: if esColegio() && c == miCuentaBanco() && c != ''
+        && request.resource.data.keys().hasOnly(['n', 'actualizado', 'pendiente', 'tFecha', 'retenido', 'dia', 'hoy'])
         && request.resource.data.actualizado == request.time
         && opsDespues(c) == opsAntes(c) + 1
-        && getAfter(rutaOp(c, opsDespues(c))).data.tipo == 'ruleta';
+        && (
+          // apostar: nuevo tiro pendiente con la hora del servidor
+          (getAfter(rutaOp(c, opsDespues(c))).data.tipo == 'ruleta-apuesta'
+            && request.resource.data.n == ruletaDe(c).get('n', 0) + 1
+            && request.resource.data.pendiente == true
+            && request.resource.data.tFecha == request.time
+            && request.resource.data.retenido is int
+            && request.resource.data.dia == diaHoy()
+            && request.resource.data.hoy == (ruletaDe(c).get('dia', 0) == diaHoy() ? ruletaDe(c).get('hoy', 0) + 1 : 1)
+            && request.resource.data.hoy <= tirosPorDia())
+          // resolver: solo se cierra el pendiente (nada más cambia)
+          || (getAfter(rutaOp(c, opsDespues(c))).data.tipo == 'ruleta' && resource != null
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pendiente', 'actualizado'])
+            && request.resource.data.pendiente == false)
+        );
     }
     // ═════ Perfil público (opcional) ═════
     // Lo ven solo las personas del colegio con sesión, y solo si la persona lo hizo público y el profe no lo ocultó.
@@ -466,7 +556,7 @@ service cloud.firestore {
               'siames': 60000, 'negro': 70000, 'estirado': 80000, 'jugueton': 100000,
               'caja': 150000, 'tronco': 200000, 'barril': 250000,
               'muro': 400000, 'fantasma': 500000,
-              'cosmico': 750000, 'dorado': 1000000}.get(g, 0);
+              'cosmico': 750000, 'dorado': 1000000, 'cesar': 1000000, 'grunona': 5000000}.get(g, 0);
     }
     function rutaGatitos(uid) { return /databases/$(database)/documents/gatitos/$(uid); }
     function gatitosAntes(uid) { return exists(rutaGatitos(uid)) ? get(rutaGatitos(uid)).data.ids : []; }
@@ -517,26 +607,32 @@ service cloud.firestore {
         && opsDespues(request.resource.data.cuenta) == opsAntes(request.resource.data.cuenta) + 1
         && getAfter(rutaOp(request.resource.data.cuenta, opsDespues(request.resource.data.cuenta))).data.tipo == 'premio-gatito';
     }
-    // ── Poder mensual: Gato Nietzsche da 5 formativas y 2 sumativas una vez por mes (debe coincidir con gatitos/catalogo.js) ──
+    // ── Poder mensual: Gato Nietzsche y Gato del tío César dan, CADA UNO, 5 formativas y 2 sumativas
+    //    una vez por mes (debe coincidir con gatitos/catalogo.js: mensualesDe, idPoderMes, textoMensual) ──
     function mesHoy() { let t = request.time - duration.value(4, 'h'); return t.year() * 12 + t.month() - 1; }
-    function rutaPoderMes(c, m) { return /databases/$(database)/documents/gatitos_poderes_mes/$(c + '__' + string(m)); }
+    function nombreMensual(g) { return g == 'cesar' ? 'Gato del tío César' : (g == 'grunona' ? 'Gruñona' : 'Gato Nietzsche'); }
+    // El de Nietzsche conserva el formato antiguo (<cuenta>__<mes>); los demás llevan el gatito al final.
+    function idPoderMes(c, m, g) { return g == 'nietzsche' ? c + '__' + string(m) : c + '__' + string(m) + '__' + g; }
+    function rutaPoderMes(c, m, g) { return /databases/$(database)/documents/gatitos_poderes_mes/$(idPoderMes(c, m, g)); }
     function opPoderMes(d) {
-      return 'nietzsche' in gatitosAntes(request.auth.uid)
+      let g = d.get('gatito', 'nietzsche');
+      return g in ['nietzsche', 'cesar', 'grunona'] && g in gatitosAntes(request.auth.uid)
         && d.monto == 0 && d.canje == 'pendiente'
-        && d.item == 'Gato Nietzsche: 5 décimas formativas y 2 décimas sumativas del mes'
-        && !d.keys().hasAny(['gatito', 'oferta', 'precio', 'pedido', 'transferencia'])
-        && !exists(rutaPoderMes(d.cuenta, mesHoy()))
-        && getAfter(rutaPoderMes(d.cuenta, mesHoy())).data.mes == mesHoy();
+        && d.item == nombreMensual(g) + ': 5 décimas formativas y 2 décimas sumativas del mes'
+        && !d.keys().hasAny(['oferta', 'precio', 'pedido', 'transferencia'])
+        && !exists(rutaPoderMes(d.cuenta, mesHoy(), g))
+        && getAfter(rutaPoderMes(d.cuenta, mesHoy(), g)).data.mes == mesHoy();
     }
     match /gatitos_poderes_mes/{pid} {
       allow read: if esProfe() || (miCuentaBanco() != '' && pid.split('__')[0] == miCuentaBanco());
       allow write: if esProfe();
       allow create: if esColegio()
         && request.resource.data.cuenta == miCuentaBanco() && miCuentaBanco() != ''
-        && request.resource.data.keys().hasOnly(['cuenta', 'uid', 'mes', 'fecha'])
+        && request.resource.data.keys().hasOnly(['cuenta', 'uid', 'mes', 'fecha', 'gatito'])
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.mes == mesHoy()
-        && pid == request.resource.data.cuenta + '__' + string(mesHoy())
+        && request.resource.data.get('gatito', 'nietzsche') in ['nietzsche', 'cesar', 'grunona']
+        && pid == idPoderMes(request.resource.data.cuenta, mesHoy(), request.resource.data.get('gatito', 'nietzsche'))
         && request.resource.data.fecha == request.time
         && opsDespues(request.resource.data.cuenta) == opsAntes(request.resource.data.cuenta) + 1
         && getAfter(rutaOp(request.resource.data.cuenta, opsDespues(request.resource.data.cuenta))).data.tipo == 'poder-mensual';
@@ -777,6 +873,14 @@ service cloud.firestore {
         && getAfter(rutaOp(c, opsDespues(c))).data.tipo in ['gatito-compra', 'ruleta']
         && request.resource.data.ids == gatitosAntes(uid).concat([getAfter(rutaOp(c, opsDespues(c))).data.gatito]);
     }
+    // Castigo de la ruleta: se escapa el gatito que indica el movimiento de la misma escritura.
+    function gatitoEscapado(uid) {
+      let c = miCuentaBanco();
+      return resource != null && c != '' && opsDespues(c) == opsAntes(c) + 1
+        && getAfter(rutaOp(c, opsDespues(c))).data.tipo == 'ruleta'
+        && getAfter(rutaOp(c, opsDespues(c))).data.get('escapa', '') in resource.data.ids
+        && request.resource.data.ids == resource.data.ids.removeAll([getAfter(rutaOp(c, opsDespues(c))).data.escapa]);
+    }
     // Publicar un gatito lo saca de la colección (queda congelado en la publicación); retirarlo lo devuelve.
     function gatitoACustodia(uid) {
       return resource != null && request.resource.data.ids.size() == resource.data.ids.size() - 1
@@ -806,7 +910,7 @@ service cloud.firestore {
             || (request.resource.data.ids.size() == 0 && request.resource.data.favorito == null))
         && request.resource.data.actualizado == request.time
         && ((resource != null && request.resource.data.ids == resource.data.ids)   // solo cambia el favorito
-            || compraDeGatito(uid) || gatitoACustodia(uid) || gatitoDeVuelta(uid));
+            || compraDeGatito(uid) || gatitoACustodia(uid) || gatitoDeVuelta(uid) || gatitoEscapado(uid));
       // El profe traspasa gatitos al autorizar una venta entre estudiantes.
       allow create, update, delete: if esProfe();
     }
@@ -826,10 +930,15 @@ service cloud.firestore {
 
     function posCuadra(p, m) {
       return opsDespues(p.cuenta) == opsAntes(p.cuenta) + 1
-        && m.ticker == p.ticker && m.tipo in ['bolsa-compra', 'bolsa-venta']
+        && m.ticker == p.ticker
         && p.acciones == accAntes(p.cuenta, p.ticker) + m.acciones && p.acciones >= 0
-        && p.invertido == posAntes(p.cuenta, p.ticker, 'invertido') + (m.acciones > 0 ? 0 - m.monto : 0)
-        && p.retirado == posAntes(p.cuenta, p.ticker, 'retirado') + (m.acciones < 0 ? m.monto : 0);
+        && (m.tipo in ['bolsa-compra', 'bolsa-venta']
+          ? (p.invertido == posAntes(p.cuenta, p.ticker, 'invertido') + (m.acciones > 0 ? 0 - m.monto : 0)
+             && p.retirado == posAntes(p.cuenta, p.ticker, 'retirado') + (m.acciones < 0 ? m.monto : 0))
+          // ruleta: acciones de regalo o perdidas; lo invertido y retirado no cambian
+          : (m.tipo == 'ruleta'
+             && p.invertido == posAntes(p.cuenta, p.ticker, 'invertido')
+             && p.retirado == posAntes(p.cuenta, p.ticker, 'retirado')));
     }
 
     // ── Banco de Hipopesos ──
@@ -907,19 +1016,31 @@ service cloud.firestore {
       allow create: if esProfe();
       allow create: if esColegio() && opValida(id, request.resource.data);
       allow update: if esProfe()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['canje', 'canjeNota', 'canjeFecha', 'canjeProfe']);
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['canje', 'canjeNota', 'canjeFecha', 'canjeProfe', 'tema']);
       allow update: if esColegio() && miCuentaBanco() != '' && resource.data.cuenta == miCuentaBanco()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['canje'])
         && (
           // poner a la venta: el beneficio queda congelado mientras está publicado
           (resource.data.get('canje', '') == 'pendiente' && request.resource.data.canje == 'en-venta'
+            && resource.data.get('item', '') != itemDisertacion()
             && getAfter(rutaItem('b-' + id)).data.estado == 'venta')
           // retirar la publicación: vuelve a estar por usar
           || (resource.data.get('canje', '') == 'en-venta' && request.resource.data.canje == 'pendiente'
             && get(rutaItem('b-' + id)).data.estado == 'venta' && getAfter(rutaItem('b-' + id)).data.estado == 'retirado')
+          // castigo de la ruleta: pierde este beneficio (lo indica el movimiento de la misma escritura)
+          || (resource.data.get('canje', '') == 'pendiente' && request.resource.data.canje == 'perdida'
+            && resource.data.get('item', '') != itemDisertacion()
+            && opsDespues(miCuentaBanco()) == opsAntes(miCuentaBanco()) + 1
+            && getAfter(rutaOp(miCuentaBanco(), opsDespues(miCuentaBanco()))).data.tipo == 'ruleta'
+            && getAfter(rutaOp(miCuentaBanco(), opsDespues(miCuentaBanco()))).data.get('pierde', '') == id)
           // cancelar un pedido: la compra retenida se anula (el dinero vuelve con un movimiento «devolucion»)
           || (resource.data.get('canje', '') == 'retenida' && request.resource.data.canje == 'anulada'
             && getAfter(rutaPedido(resource.data.pedido)).data.estado == 'cancelada'));
+      // Disertación de la ruleta: mientras no se haga, el estudiante puede cambiar el tema.
+      allow update: if esColegio() && miCuentaBanco() != '' && resource.data.cuenta == miCuentaBanco()
+        && resource.data.get('item', '') == itemDisertacion() && resource.data.get('canje', '') == 'pendiente'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['tema'])
+        && texto(request.resource.data.tema, 120) && request.resource.data.tema.size() >= 3;
       allow delete: if false;
     }
       // ═════ Bolsa de Comercio y bono diario ═════
