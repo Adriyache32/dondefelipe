@@ -5,16 +5,19 @@
 (function () {
   'use strict';
   // Cada gatito animado: carpeta de sus cuadros y cuántos cuadros tiene cada acción.
-  var VEL = { caminar: [130, 4], correr: [85, 4], jugar: [260, 2], sentarse: [320, 1], dormir: [650, 1] };   // ms por cuadro, vueltas
+  var VEL = { caminar: [130, 4], correr: [85, 4], jugar: [260, 2], sentarse: [320, 1], dormir: [650, 1],
+              bailar: [170, 3], guitarra: [1400, 1], girar: [110, 1] };   // ms por cuadro, vueltas
   var ANIMADOS = {
     ava:       { dir: 'gatitos/anim/',           n: { caminar: 4, correr: 5, jugar: 4, sentarse: 3, dormir: 4 } },
     calha:     { dir: 'gatitos/anim/',           n: { caminar: 4, correr: 5, jugar: 4, sentarse: 3, dormir: 4 } },
     nietzsche: { dir: 'gatitos/anim/nietzsche/', n: { caminar: 4, correr: 5, sentarse: 3, dormir: 3 } },
     rayo:      { dir: 'gatitos/anim/rayo/',      n: { sentarse: 3 } },
     sombra:    { dir: 'gatitos/anim/sombra/',    n: { sentarse: 3, caminar: 4 } },
-    luna:      { dir: 'gatitos/anim/luna/',      n: { sentarse: 3, caminar: 4, correr: 4 } }
+    luna:      { dir: 'gatitos/anim/luna/',      n: { sentarse: 3, caminar: 4, correr: 4 } },
+    cesar:     { dir: 'gatitos/anim/cesar/',     n: { caminar: 4, bailar: 5, sentarse: 3, guitarra: 1, dormir: 2, girar: 9 } }
   };
-  var RUTINAS = [['caminar'], ['correr'], ['jugar'], ['sentarse', 'dormir'], ['caminar', 'sentarse'], ['sentarse', 'sentarse']];
+  var RUTINAS = [['caminar'], ['correr'], ['jugar'], ['sentarse', 'dormir'], ['caminar', 'sentarse'], ['sentarse', 'sentarse'],
+                 ['bailar'], ['bailar', 'girar'], ['sentarse', 'guitarra'], ['girar']];   // cada gatito usa solo las que puede
   var guion = document.currentScript && document.currentScript.src || '';
   var raiz = guion.replace(/gatitos\/anim\.js.*$/, '');
   var quieto = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;

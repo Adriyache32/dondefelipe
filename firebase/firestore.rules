@@ -502,7 +502,7 @@ service cloud.firestore {
               'siames': 60000, 'negro': 70000, 'estirado': 80000, 'jugueton': 100000,
               'caja': 150000, 'tronco': 200000, 'barril': 250000,
               'muro': 400000, 'fantasma': 500000,
-              'cosmico': 750000, 'dorado': 1000000}.get(g, 0);
+              'cosmico': 750000, 'dorado': 1000000, 'cesar': 1000000}.get(g, 0);
     }
     function rutaGatitos(uid) { return /databases/$(database)/documents/gatitos/$(uid); }
     function gatitosAntes(uid) { return exists(rutaGatitos(uid)) ? get(rutaGatitos(uid)).data.ids : []; }
@@ -553,26 +553,32 @@ service cloud.firestore {
         && opsDespues(request.resource.data.cuenta) == opsAntes(request.resource.data.cuenta) + 1
         && getAfter(rutaOp(request.resource.data.cuenta, opsDespues(request.resource.data.cuenta))).data.tipo == 'premio-gatito';
     }
-    // ── Poder mensual: Gato Nietzsche da 5 formativas y 2 sumativas una vez por mes (debe coincidir con gatitos/catalogo.js) ──
+    // ── Poder mensual: Gato Nietzsche y Gato del tío César dan, CADA UNO, 5 formativas y 2 sumativas
+    //    una vez por mes (debe coincidir con gatitos/catalogo.js: mensualesDe, idPoderMes, textoMensual) ──
     function mesHoy() { let t = request.time - duration.value(4, 'h'); return t.year() * 12 + t.month() - 1; }
-    function rutaPoderMes(c, m) { return /databases/$(database)/documents/gatitos_poderes_mes/$(c + '__' + string(m)); }
+    function nombreMensual(g) { return g == 'cesar' ? 'Gato del tío César' : 'Gato Nietzsche'; }
+    // El de Nietzsche conserva el formato antiguo (<cuenta>__<mes>); los demás llevan el gatito al final.
+    function idPoderMes(c, m, g) { return g == 'nietzsche' ? c + '__' + string(m) : c + '__' + string(m) + '__' + g; }
+    function rutaPoderMes(c, m, g) { return /databases/$(database)/documents/gatitos_poderes_mes/$(idPoderMes(c, m, g)); }
     function opPoderMes(d) {
-      return 'nietzsche' in gatitosAntes(request.auth.uid)
+      let g = d.get('gatito', 'nietzsche');
+      return g in ['nietzsche', 'cesar'] && g in gatitosAntes(request.auth.uid)
         && d.monto == 0 && d.canje == 'pendiente'
-        && d.item == 'Gato Nietzsche: 5 décimas formativas y 2 décimas sumativas del mes'
-        && !d.keys().hasAny(['gatito', 'oferta', 'precio', 'pedido', 'transferencia'])
-        && !exists(rutaPoderMes(d.cuenta, mesHoy()))
-        && getAfter(rutaPoderMes(d.cuenta, mesHoy())).data.mes == mesHoy();
+        && d.item == nombreMensual(g) + ': 5 décimas formativas y 2 décimas sumativas del mes'
+        && !d.keys().hasAny(['oferta', 'precio', 'pedido', 'transferencia'])
+        && !exists(rutaPoderMes(d.cuenta, mesHoy(), g))
+        && getAfter(rutaPoderMes(d.cuenta, mesHoy(), g)).data.mes == mesHoy();
     }
     match /gatitos_poderes_mes/{pid} {
       allow read: if esProfe() || (miCuentaBanco() != '' && pid.split('__')[0] == miCuentaBanco());
       allow write: if esProfe();
       allow create: if esColegio()
         && request.resource.data.cuenta == miCuentaBanco() && miCuentaBanco() != ''
-        && request.resource.data.keys().hasOnly(['cuenta', 'uid', 'mes', 'fecha'])
+        && request.resource.data.keys().hasOnly(['cuenta', 'uid', 'mes', 'fecha', 'gatito'])
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.mes == mesHoy()
-        && pid == request.resource.data.cuenta + '__' + string(mesHoy())
+        && request.resource.data.get('gatito', 'nietzsche') in ['nietzsche', 'cesar']
+        && pid == idPoderMes(request.resource.data.cuenta, mesHoy(), request.resource.data.get('gatito', 'nietzsche'))
         && request.resource.data.fecha == request.time
         && opsDespues(request.resource.data.cuenta) == opsAntes(request.resource.data.cuenta) + 1
         && getAfter(rutaOp(request.resource.data.cuenta, opsDespues(request.resource.data.cuenta))).data.tipo == 'poder-mensual';
